@@ -1,9 +1,12 @@
 package com.strange.demo.spring
 
+import com.strange.demo.spring.api.ApiAuthConfig
 import com.strange.demo.spring.api.CategoriesApi
 import com.strange.demo.spring.api.FailuresApi
 import com.strange.demo.spring.api.NotificationsApi
+import com.strange.demo.spring.api.SessionApi
 import com.strange.demo.spring.api.TagsApi
+import com.strange.demo.spring.api.apiAuthFilter
 import com.strange.demo.spring.api.apiErrorFilter
 import com.strange.demo.spring.api.apiOperationProcessor
 import com.strange.demo.spring.api.model.registerApiEnumConverters
@@ -24,7 +27,16 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory
  */
 public class SpringDemoClient(
     baseUrl: String,
+    /**
+     * The bearer token to attach to the operations the document says need one — and to nothing
+     * else. Called per request, so a token that expires can be replaced behind it.
+     */
+    token: (suspend () -> String?)? = null,
 ) {
+    // Generated: one credential slot per scheme the document declares. The same class the Ktorfit
+    // client configures, because a credential is a fact about the document, not about the client.
+    private val credentials = ApiAuthConfig().apply { bearer = token }
+
     private val webClient =
         WebClient
             .builder()
@@ -33,6 +45,7 @@ public class SpringDemoClient(
             .baseUrl(baseUrl)
             // Generated: turns a documented failure into the exception the document describes,
             // reading the operation out of the attribute apiOperationProcessor() put there.
+            .filter(apiAuthFilter(credentials))
             .filter(apiErrorFilter())
             .build()
 
@@ -53,6 +66,7 @@ public class SpringDemoClient(
     public val tags: TagsApi = factory.createClient(TagsApi::class.java)
     public val notifications: NotificationsApi = factory.createClient(NotificationsApi::class.java)
     public val failures: FailuresApi = factory.createClient(FailuresApi::class.java)
+    public val session: SessionApi = factory.createClient(SessionApi::class.java)
 }
 
 public fun main(): Unit =

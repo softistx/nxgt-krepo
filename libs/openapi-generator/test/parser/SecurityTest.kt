@@ -90,6 +90,11 @@ class SecurityTest :
                 model.securitySchemes.single { it.name == "Basic" }.kind shouldBe SecurityKind.HttpBasic
             }
 
+            scenario("each scheme carries the Kotlin name of the slot a client offers for it") {
+                model.securitySchemes.map { it.propertyName } shouldContainExactly
+                    listOf("bearer", "basic", "apiKey", "query", "oAuth")
+            }
+
             scenario("an apiKey carries where it goes and what it is called") {
                 val header = model.securitySchemes.single { it.name == "ApiKey" }
                 header.kind shouldBe SecurityKind.ApiKeyHeader
@@ -99,8 +104,8 @@ class SecurityTest :
                 query.parameterName shouldBe "token"
             }
 
-            scenario("a flow this generator cannot satisfy is carried, not rejected") {
-                model.securitySchemes.single { it.name == "OAuth" }.kind shouldBe SecurityKind.Unsupported
+            scenario("a flow becomes the token it produces, which goes in the bearer header") {
+                model.securitySchemes.single { it.name == "OAuth" }.kind shouldBe SecurityKind.OAuthToken
             }
         }
 
