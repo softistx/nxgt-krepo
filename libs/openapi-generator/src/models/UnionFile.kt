@@ -48,7 +48,7 @@ internal fun unionFile(
     return FileSpec
         .builder(options.modelPackage, model.name)
         // Only a fallback subtype reaches for experimental API; a deduced union needs no opt-in.
-        .apply { if (fallbackClass != null) binding.decorateFile(this) }
+        .apply { if (fallbackClass != null) style.decorateFile(this) }
         .addType(base)
         .apply {
             fallbackClass?.let { addType(fallbackType(model, it, baseClass, binding, style)) }

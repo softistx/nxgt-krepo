@@ -83,6 +83,15 @@ class ModelEmitterTest :
                 render(OPTIONALITY_MODEL) shouldContain "public val tags: List<String>? = null,"
             }
 
+            scenario("every model tolerates fields the document did not describe") {
+                // Both libraries are strict by default and neither switch is the generator's to
+                // set, so the tolerance has to be on the class.
+                render(OPTIONALITY_MODEL) shouldContain "@JsonIgnoreUnknownKeys"
+                ModelsOnlyEmitter(ModelStyle.Jackson)
+                    .render(OPTIONALITY_MODEL)
+                    .getValue("com.example.api.model.Thing") shouldContain "@JsonIgnoreProperties(ignoreUnknown = true)"
+            }
+
             scenario("additionalProperties reaches the source as a typed map") {
                 render(OPTIONALITY_MODEL) shouldContain "public val counts: Map<String, Long>? = null,"
             }

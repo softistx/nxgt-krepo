@@ -38,10 +38,14 @@ components:
   schemas:
     Defaults:
       type: object
+      description: A schema that exercises every use-site fact.
       required: [id, note]
       properties:
-        id: { type: string }
+        id: { type: string, description: '  The unique identifier.  ' }
         note: { type: string, nullable: true }
+        legacy: { type: string, deprecated: true }
+        ref: { type: string, format: uuid }
+        day: { type: string, format: date }
         size: { type: integer, default: 20 }
         ratio: { type: number, default: 0.5 }
         label: { type: string, default: '' }
@@ -105,6 +109,26 @@ class SchemaFidelityTest :
 
             scenario("an explicit null default says nothing optionality does not already say") {
                 field(SPEC_30, "Defaults", "debug").default.shouldBeNull()
+            }
+        }
+
+        feature("the document's own words") {
+            scenario("a description survives onto the declaration and the property") {
+                models(SPEC_30).first { it.name == "Defaults" }.doc shouldBe
+                    "A schema that exercises every use-site fact."
+                field(SPEC_30, "Defaults", "id").doc shouldBe "The unique identifier."
+            }
+
+            scenario("a deprecated property is marked, not dropped") {
+                field(SPEC_30, "Defaults", "legacy").deprecated shouldBe true
+                field(SPEC_30, "Defaults", "id").deprecated shouldBe false
+            }
+        }
+
+        feature("formats with a real Kotlin type") {
+            scenario("uuid and date stop being strings") {
+                field(SPEC_30, "Defaults", "ref").type shouldBe TypeRef.UuidRef
+                field(SPEC_30, "Defaults", "day").type shouldBe TypeRef.LocalDateRef
             }
         }
 
