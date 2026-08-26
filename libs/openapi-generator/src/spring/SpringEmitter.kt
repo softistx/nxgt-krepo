@@ -18,6 +18,7 @@ import com.strange.openapi.emit.apiExceptionFile
 import com.strange.openapi.emit.apiFile
 import com.strange.openapi.emit.apiOperationFile
 import com.strange.openapi.emit.optionality
+import com.strange.openapi.emit.requireEverySchemeSatisfiable
 import com.strange.openapi.emit.requireExceptionNamesFree
 import com.strange.openapi.emit.typeNameOf
 import com.strange.openapi.models.ModelStyle
@@ -59,11 +60,17 @@ public class SpringEmitter(
         options: EmitOptions,
     ): List<FileSpec> {
         model.requireExceptionNamesFree()
+        model.requireEverySchemeSatisfiable()
         return model.groups.map { emitGroup(it, options) } +
             modelFiles(model, options, style) +
             apiOperationFile(options) +
             apiExceptionFile(model, options) +
-            listOfNotNull(enumConverterFile(model, options), apiErrorFilterFile(model, options))
+            proxySupportFile(options) +
+            listOfNotNull(
+                enumConverterFile(model, options),
+                apiErrorFilterFile(model, options),
+                apiAuthFile(model, options),
+            )
     }
 
     private fun emitGroup(

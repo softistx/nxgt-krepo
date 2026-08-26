@@ -1228,6 +1228,41 @@ paths:
                 $ref: '#/components/schemas/Notification'
         '404':
           $ref: '#/components/responses/NotFound'
+  /session/whoami:
+    get:
+      tags:
+        - session-controller
+      summary: Who the credential says you are
+      description: >
+        Inherits the document's root `security`, so a generated client must attach a bearer token
+        to reach it. Answers 401 when none arrives.
+      operationId: whoAmI
+      responses:
+        '200':
+          description: The caller, as the credential describes them.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /session/echo:
+    get:
+      tags:
+        - session-controller
+      summary: Echo the Authorization header, if any
+      description: >
+        Overrides the root with `security: []`, so a generated client must attach nothing — which
+        is only observable by asking the server what it received.
+      operationId: echoSession
+      security: []
+      responses:
+        '200':
+          description: What the server saw.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
   /failures/{mode}:
     get:
       tags:
@@ -1295,6 +1330,16 @@ components:
         - uid
         - access
         - refresh
+    SessionInfo:
+      type: object
+      description: What the server made of the credential on a request.
+      properties:
+        subject:
+          type: string
+          description: Who the credential says the caller is.
+        authorization:
+          type: string
+          description: The Authorization header exactly as it arrived, if one did.
     ErrorResponse:
       type: object
       properties:

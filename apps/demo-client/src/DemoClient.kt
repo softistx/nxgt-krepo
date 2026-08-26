@@ -1,13 +1,16 @@
 package com.strange.demo.client
 
+import com.strange.demo.client.api.ApiAuth
 import com.strange.demo.client.api.ApiErrors
 import com.strange.demo.client.api.CategoriesApi
 import com.strange.demo.client.api.FailuresApi
 import com.strange.demo.client.api.NotificationsApi
+import com.strange.demo.client.api.SessionApi
 import com.strange.demo.client.api.TagsApi
 import com.strange.demo.client.api.createCategoriesApi
 import com.strange.demo.client.api.createFailuresApi
 import com.strange.demo.client.api.createNotificationsApi
+import com.strange.demo.client.api.createSessionApi
 import com.strange.demo.client.api.createTagsApi
 import com.strange.demo.client.api.model.CategoryRequest
 import com.strange.demo.client.api.model.SearchRequest
@@ -25,13 +28,25 @@ import kotlinx.coroutines.runBlocking
  */
 public class DemoClient(
     baseUrl: String,
+    /**
+     * The bearer token to attach to the operations the document says need one — and to nothing
+     * else. Called per request, so a token that expires can be replaced behind it.
+     */
+    token: (suspend () -> String?)? = null,
 ) : AutoCloseable {
+    /** The URL this client was built against, so a test can build a second one beside it. */
+    public val baseUrl: String = baseUrl
+
     private val http =
         HttpClient(CIO) {
             install(ContentNegotiation) { json() }
             // Generated: without it a documented failure reaches the caller as a deserialization
             // error about the success type, and the status and body the document describes are lost.
             install(ApiErrors)
+            // Generated: attaches the credential each operation's `security` asks for. The
+            // document's sign-in operations override the root with `security: []`, so this is
+            // also what keeps the token off the endpoints that hand it out.
+            install(ApiAuth) { bearer = token }
         }
 
     private val ktorfit =
@@ -47,6 +62,7 @@ public class DemoClient(
     public val tags: TagsApi = ktorfit.createTagsApi()
     public val notifications: NotificationsApi = ktorfit.createNotificationsApi()
     public val failures: FailuresApi = ktorfit.createFailuresApi()
+    public val session: SessionApi = ktorfit.createSessionApi()
 
     override fun close(): Unit = http.close()
 }
