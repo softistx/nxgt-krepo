@@ -18,6 +18,8 @@ public data class ObjectType(
     /** The schema's `description`, if it gave one. */
     val doc: String? = null,
     val deprecated: Boolean = false,
+    /** `x-deprecated-reason`, which replaces this generator's boilerplate inside `@Deprecated`. */
+    val deprecatedReason: String? = null,
     /**
      * Union bases this schema is a member of, empty for a standalone schema.
      *
@@ -42,6 +44,8 @@ public data class Field(
     /** The property's `description`, if it gave one. */
     val doc: String? = null,
     val deprecated: Boolean = false,
+    /** `x-deprecated-reason`, which replaces this generator's boilerplate inside `@Deprecated`. */
+    val deprecatedReason: String? = null,
     /** True when this field realises a property the union base already declares. */
     val overrides: Boolean = false,
     /**
@@ -112,8 +116,26 @@ public data class EnumType(
     val fallback: EnumEntry,
 ) : ModelType
 
+/**
+ * A scalar alias the document asks to be a type of its own: one `@JvmInline value class`.
+ *
+ * `OrderId` rather than `String` costs nothing at runtime — the JVM erases it back to the scalar —
+ * and stops an order id being passed where a customer id belongs. Both serialization libraries bind
+ * it with no annotation beyond the style's own, which was checked by round-tripping it rather than
+ * assumed.
+ */
+public data class ValueClassType(
+    override val name: String,
+    /** The scalar underneath: [TypeRef.StringRef], [TypeRef.IntRef], [TypeRef.UuidRef] and so on. */
+    val base: TypeRef,
+    /** The schema's `description`, if it gave one. */
+    val doc: String? = null,
+) : ModelType
+
 public data class EnumEntry(
     val name: String,
     /** The value as the document writes it — not necessarily a valid Kotlin identifier. */
     val wireValue: String,
+    /** This entry's line of `x-enum-descriptions`, if the document gave one. */
+    val doc: String? = null,
 )

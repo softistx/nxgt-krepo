@@ -6,13 +6,15 @@ import io.swagger.v3.oas.models.media.Schema
  * Whether the document says this may be `null`.
  *
  * One of the facts a schema states about a *use* of a type rather than about the type itself, which
- * is why it lives beside [typeOf] rather than inside it. Two spellings mean the same thing: 3.0's
- * `nullable: true`, and 3.1's `type: [string, "null"]`. Neither is the same question as `required`
- * — a required property can still hold `null`.
+ * is why it lives beside [typeOf] rather than inside it. Three spellings mean the same thing: 3.0's
+ * `nullable: true`, 3.1's `type: [string, "null"]`, and `x-nullable`, which is how a document
+ * converted from Swagger 2 still says it. Neither is the same question as `required` — a required
+ * property can still hold `null`.
  */
-internal fun Schema<*>.isNullable(): Boolean =
+internal fun Schema<*>.isNullable(where: String = "schema"): Boolean =
     nullable == true ||
         types?.contains("null") == true ||
+        extensions.extensionBoolean(Ext.NULLABLE, where) == true ||
         (oneOf ?: anyOf).orEmpty().any { it.isNullOnly() }
 
 /**

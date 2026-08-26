@@ -67,6 +67,13 @@ alongside `spring-web`; neither arrives transitively. Its conversion service als
 argument with `Enum.name()`, so a Spring client registers the generated `ApiEnumConverters.kt` with
 the factory — without it every enum path, query or header parameter goes out as the Kotlin name.
 
+The generator also reads vendor extensions: `x-kotlin-name` renames anything it would otherwise
+derive, `x-kotlin-type` binds a schema to a type the consumer owns, `x-kotlin-value-class` turns a
+scalar alias into a `@JvmInline value class`, and `x-kotlin-skip`/`x-internal`,
+`x-enum-varnames`/`x-enumNames`, `x-enum-descriptions`, `x-deprecated-reason` and `x-nullable` do
+what their names say. **An unrecognised `x-kotlin-*` key fails the parse**, naming the nearest key
+that exists; everything outside that namespace is ignored, because it belongs to another toolchain.
+
 ## Instruction files
 
 - **`AGENTS.md`** (this file) — the shared, tool-agnostic instructions. Codex, Cursor, Gemini CLI, Zed, Aider and friends read it natively.

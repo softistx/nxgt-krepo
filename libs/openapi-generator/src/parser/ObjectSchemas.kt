@@ -25,14 +25,17 @@ internal fun OpenAPI.objectTypeOf(
         composed.properties.map { (propertyName, propertySchema) ->
             val tag = unions.firstOrNull { it.discriminatorWireName == propertyName }
             Field(
-                name = Naming.propertyName(propertyName),
+                name =
+                    propertySchema.extensions.kotlinName("$where property '$propertyName'")
+                        ?: Naming.propertyName(propertyName),
                 wireName = propertyName,
                 type = typeOf(propertySchema, "$where property '$propertyName'"),
                 required = propertyName in composed.required || propertyName in discriminators,
-                nullable = propertySchema.isNullable(),
+                nullable = propertySchema.isNullable("$where property '$propertyName'"),
                 default = propertySchema.defaultLiteral(),
                 doc = propertySchema.doc(),
                 deprecated = propertySchema.deprecated == true,
+                deprecatedReason = propertySchema.extensions.deprecatedReason("$where property '$propertyName'"),
                 overrides = propertyName in discriminators,
                 constant = tag?.wireValue,
             )
@@ -54,11 +57,12 @@ internal fun OpenAPI.objectTypeOf(
                 )
             }
     return ObjectType(
-        name = Naming.pascal(name),
+        name = modelNameOf(name),
         fields = fields + implied,
         doc = schema.doc(),
         deprecated = schema.deprecated == true,
-        implements = unions.map { Naming.pascal(it.baseName) },
+        deprecatedReason = schema.extensions.deprecatedReason(where),
+        implements = unions.map { modelNameOf(it.baseName) },
     )
 }
 

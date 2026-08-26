@@ -44,6 +44,7 @@ components:
         id: { type: string, description: '  The unique identifier.  ' }
         note: { type: string, nullable: true }
         legacy: { type: string, deprecated: true }
+        migrated: { type: string, x-nullable: true }
         ref: { type: string, format: uuid }
         day: { type: string, format: date }
         size: { type: integer, default: 20 }
@@ -83,6 +84,10 @@ class SchemaFidelityTest :
                     it.type shouldBe TypeRef.StringRef
                     it.nullable shouldBe true
                 }
+            }
+
+            scenario("a document converted from Swagger 2 still says it with x-nullable") {
+                field(SPEC_30, "Defaults", "migrated").nullable shouldBe true
             }
 
             scenario("a required property can still be nullable") {

@@ -25,6 +25,9 @@ public data class Operation(
     val parameters: List<Param>,
     val returnType: TypeRef,
     val summary: String? = null,
+    val deprecated: Boolean = false,
+    /** `x-deprecated-reason`, which replaces this generator's boilerplate inside `@Deprecated`. */
+    val deprecatedReason: String? = null,
 )
 
 public enum class ParamKind { Path, Query, Header, Body, Part }
@@ -32,7 +35,11 @@ public enum class ParamKind { Path, Query, Header, Body, Part }
 public data class Param(
     /** Kotlin parameter name. */
     val name: String,
-    /** Name as it appears on the wire, which may not be a valid Kotlin identifier. */
+    /**
+     * Name as it appears on the wire, which may not be a valid Kotlin identifier — and which
+     * [name] is free to differ from, whether because it was derived or because `x-kotlin-name`
+     * said so.
+     */
     val wireName: String,
     val kind: ParamKind,
     val type: TypeRef,
