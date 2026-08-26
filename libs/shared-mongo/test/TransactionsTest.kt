@@ -5,14 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.count
-import kotlinx.serialization.Serializable
 import org.bson.BsonDocument
-
-@Serializable
-private data class Note(
-    val _id: String,
-    val text: String,
-)
 
 /**
  * Rollback is the half that is easy to get wrong and impossible to prove without a server, so these
@@ -25,9 +18,7 @@ class TransactionsTest :
 
         feature("a transaction that returns").config(enabled = MongoTestCluster.available) {
             scenario("its writes are committed and its value is handed back") {
-                MongoTestCluster.withDatabase { client, database ->
-                    val notes = database.collection<Note>("notes")
-
+                withNotesAndClient { notes, client ->
                     val id =
                         client.withTransaction { session ->
                             notes.insertOne(session, Note("n1", "kept"))
@@ -42,9 +33,7 @@ class TransactionsTest :
 
         feature("a transaction whose block throws").config(enabled = MongoTestCluster.available) {
             scenario("the exception is the caller's own, and the writes are gone") {
-                MongoTestCluster.withDatabase { client, database ->
-                    val notes = database.collection<Note>("notes")
-
+                withNotesAndClient { notes, client ->
                     shouldThrow<IllegalStateException> {
                         client.withTransaction { session ->
                             notes.insertOne(session, Note("n2", "rolled back"))
