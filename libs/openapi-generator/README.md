@@ -44,9 +44,26 @@ written down:
 | Renamed property | `@SerialName("created_at")` | `@JsonProperty("created_at")` |
 | `date-time` | `kotlin.time.Instant` | `java.time.Instant` |
 | Free-form object | `kotlinx.serialization.json.JsonObject` | `Map<String, Any?>` |
+| `date` | `kotlinx.datetime.LocalDate` | `java.time.LocalDate` |
+| `uuid` | `kotlin.uuid.Uuid` | `java.util.UUID` |
+| Unknown fields | `@JsonIgnoreUnknownKeys` | `@JsonIgnoreProperties(ignoreUnknown = true)` |
 
 A style governs the interfaces too, so a client's signatures always line up with its models.
 `ModelsOnlyEmitter` is the `client: None` case — the same models, no API surface.
+
+**One classpath consequence**: `format: date` in the kotlinx style emits `kotlinx.datetime.LocalDate`,
+so a module whose document uses it needs `$libs.kotlinx.datetime`. Everything else the kotlinx style
+emits is stdlib or kotlinx-serialization — `kotlin.uuid.Uuid` needs no opt-in on Kotlin 2.4, and
+kotlinx-serialization binds it out of the box.
+
+**Every generated model tolerates fields the document does not describe.** Both libraries are strict
+by default — kotlinx always, Jackson whenever the consumer turns `FAIL_ON_UNKNOWN_PROPERTIES` on —
+and neither switch belongs to this generator, so the tolerance is on the class. It is the same
+reasoning as a tolerant enum: reading is where a client should bend.
+
+A schema's `description` becomes KDoc on the generated class and its properties, and `deprecated:
+true` becomes `@Deprecated`, so the document's own explanation reaches the IDE rather than stopping
+at the YAML.
 
 Parsing uses swagger-parser with `isResolve = true` but **not** `isResolveFully`: resolving fully
 inlines every `$ref` and loses the component names, which are exactly what the generated model
@@ -77,6 +94,21 @@ Two differences are not stylistic and will bite if they are "cleaned up":
 - **A Spring named parameter needs `required = false` when it is optional.** Spring's argument
   resolver throws on a null value for a required named parameter, so nullability alone is not
   enough.
+- **Spring writes an enum argument with `Enum.name()`.** Its `ConversionService` never consults
+  `toString()`, and the documented "the enum implements an interface with a converter" escape does
+  not apply to a converter it has not been given — both checked against
+  `DefaultFormattingConversionService` rather than assumed. So a generated enum used as a path,
+  query or header parameter would go out as `IN_PROGRESS` where the document says `in-progress`: a
+  request that succeeds and matches nothing. The Spring style therefore emits one extra file,
+  `ApiEnumConverters.kt`, and the consumer hands it to the proxy factory:
+
+  ```kotlin
+  val conversions = DefaultFormattingConversionService().also(::registerApiEnumConverters)
+  HttpServiceProxyFactory.builderFor(adapter).conversionService(conversions).build()
+  ```
+
+  Ktorfit needs none of this: it converts a parameter with `toString()`, which a generated enum
+  overrides to return its wire value.
 - **Spring has no annotation past the five common verbs.** `@GetExchange` and friends cover
   GET/POST/PUT/PATCH/DELETE; `HEAD`, `OPTIONS` and `TRACE` fall back to the generic
   `@HttpExchange(method = "HEAD")`. Anything else is an `EmitException` naming the method, because a
@@ -88,13 +120,16 @@ Two differences are not stylistic and will bite if they are "cleaned up":
 | --- | --- |
 | `string` | `String` |
 | `string` / `date-time` | `Instant` (which one follows the `ModelStyle`) |
+| `string` / `date` | `LocalDate` (kotlinx.datetime, or `java.time` for Jackson) |
+| `string` / `uuid` | `Uuid` (`kotlin.uuid`, or `java.util.UUID` for Jackson) |
 | `string` / `binary` | `ByteArray` |
 | `integer`, `integer` / `int64` | `Int`, `Long` |
 | `number` | `Double` |
 | `boolean` | `Boolean` |
 | `array` | `List<T>` |
 | object with properties | a generated model class |
-| object without properties | the free-form type |
+| object with typed `additionalProperties` | `Map<String, T>` |
+| object with neither | the free-form type |
 | no 2xx response schema | `Unit` |
 
 A `$ref` to a schema with no properties resolves to the underlying type rather than to a class name
@@ -102,7 +137,144 @@ A `$ref` to a schema with no properties resolves to the underlying type rather t
 ever emit.
 
 Optional properties and parameters are nullable and default to `null`, and parameters are ordered so
-that everything with a default comes last.
+that everything with a default comes last. Nullability is read from the schema, not inferred from
+`required`: a required `nullable: true` property is a non-optional parameter of a nullable type, and
+3.1's `type: ["string", "null"]` means the same thing in either order.
+
+## Inline schemas
+
+A schema written in place rather than behind a `$ref` describes exactly as much as a named one, but
+the rest of the parser is name-driven — so before anything else reads the document, every inline
+schema that would become a declaration is added to `components.schemas` and replaced by a `$ref` to
+it (`parser/InlineSchemas.kt`). Nothing downstream knows this happened.
+
+The name comes from the path that reached the schema, so it is predictable from the document alone:
+
+| Where | Name |
+| --- | --- |
+| `Order.shippingAddress` | `OrderShippingAddress` |
+| `Order.lines` items | `OrderLinesItem` |
+| `Order.totals` `additionalProperties` | `OrderTotalsValue` |
+| `createOrder` JSON request body | `CreateOrderRequest` |
+| `createOrder` success response body | `CreateOrderResponse` |
+| `createOrder`'s `mode` parameter | `CreateOrderMode` |
+
+`Item` and `Value` are suffixes rather than a guessed singular: `OrderTagsItem` is uglier than
+`OrderTag` would be, but singularising `status` gives `Statu`, and a predictable name beats a pretty
+one that is sometimes wrong.
+
+Two things are deliberately *not* promoted. A composition branch stays inline — an `allOf` branch is
+merged into its container, and a `oneOf` branch must be a `$ref` to be a union member at all, so
+promoting either would emit a class no signature mentions. And a schema that becomes no declaration
+is left exactly as it was: `{type: object}` with nothing in it is genuinely free-form, and naming it
+would generate an empty class rather than describe anything.
+
+The same inline schema written in two places generates **one** class, reused — a document that
+repeats one status enum across five operations should not produce five enums a caller cannot pass
+between. The name is the first site in document order. Reuse is limited to schemas this pass
+created: quietly retyping a property to a component the document never pointed it at would be a
+different and much larger claim. A derived name the document already uses is a build failure naming
+both, never a silent overwrite.
+
+## Composition
+
+### `allOf`
+
+Flattened into one data class: the branches' properties in document order, then the schema's own,
+with `required` the **union** across all of them. Kotlin data classes cannot inherit constructor
+properties, so extracting an interface would emit every field twice anyway — the only interface a
+generated model set owns is a union base, which is anchored to a real schema name.
+
+Two branches declaring the same property with different types is a document contradiction and fails
+the build naming the property and both types. Letting the last branch win is how a generated class
+silently acquires the wrong shape, which is exactly the bug this used to have.
+
+### `oneOf` / `anyOf`
+
+A union over object schemas becomes a **sealed interface** its members implement. Members are told
+apart either by a declared `discriminator` or, failing that, by the properties they carry.
+
+| | with `discriminator` | without |
+| --- | --- | --- |
+| kotlinx | `JsonContentPolymorphicSerializer` keyed on the tag | the same, keyed on the properties present |
+| Jackson | `@JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, visible = true)` + `@JsonSubTypes` | `@JsonTypeInfo(use = DEDUCTION)` |
+| Unknown variant | a generated `Unknown<Union>` subtype carrying the tag | an error naming the keys seen |
+
+The whole design turns on one thing: **the discriminator is a property the document already
+declares**, so neither library may write a second one.
+
+- kotlinx's built-in polymorphism refuses outright — *"cannot be serialized as base class … because
+  it has property name that conflicts with JSON class discriminator"* — so the generated serializer
+  selects from the content and leaves the property to write itself. The tag is emitted as a constant
+  default with `@EncodeDefault(ALWAYS)`, because kotlinx does not encode defaults otherwise and the
+  discriminator would go missing from everything the client sends.
+- Jackson needs `As.EXISTING_PROPERTY` for the same reason, plus `visible = true` — without it
+  Jackson consumes the tag and the Kotlin property has nothing to bind to.
+
+Both were verified by compiling the generated output and round-tripping it: the two styles emit
+byte-identical JSON for the same value.
+
+Three limits worth stating rather than discovering:
+
+- **`anyOf` is generated identically to `oneOf`**, which is a real narrowing. `anyOf` means *at
+  least* one branch validates, so a payload legal against two of them loses the second.
+- **A union over anything but object schemas is not generated.** A sealed hierarchy needs its
+  members to implement an interface and `String` cannot, so `oneOf: [{type: string}, {type: integer}]`
+  stays raw JSON rather than becoming a type nothing could deserialize into.
+- **Members nothing can tell apart fail at parse time**, naming both — not at the consumer's first
+  request. `oneOf: [X, {type: "null"}]` is not such a case: that is 3.1's nullable idiom, and it
+  resolves to a nullable `X`.
+
+## Enums
+
+A schema with `enum:` becomes an `enum class`, not a `String`. Generated enums are **tolerant**: they
+carry an extra entry for values the document does not list, so a server that deploys a new value
+does not break clients compiled against the older document.
+
+```kotlin
+public enum class Status(
+    @get:JsonValue public val wireValue: String,   // @get:JsonValue in the Jackson style only
+) {
+    ACTIVE("active"),
+    IN_PROGRESS("in-progress"),
+    UNKNOWN("__unknown__"),
+    ;
+
+    override fun toString(): String = wireValue
+
+    public companion object {
+        @JvmStatic
+        @JsonCreator
+        public fun fromWireValue(wireValue: String): Status =
+            entries.firstOrNull { it.wireValue == wireValue } ?: UNKNOWN
+    }
+}
+```
+
+Four decisions worth knowing, each of which was measured rather than assumed:
+
+- **The wire value is a property, never an annotation.** That is what frees an entry name from the
+  value it stands for — `in-progress` and `2xx` and `""` are all legal in a document and none is a
+  Kotlin identifier. It also gives `toString` something correct to return, so an enum works as a
+  path, query or header parameter and not only inside a JSON body.
+- **Tolerance is inside the generated code, not in the consumer's configuration.** Jackson's
+  `@JsonEnumDefaultValue` needs `READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE` on their
+  `ObjectMapper`, and kotlinx's `coerceInputValues` needs it on their `Json` — and this generator
+  owns neither. So kotlinx gets a generated primitive `KSerializer` and Jackson gets a `@JsonValue`
+  getter plus a `@JvmStatic @JsonCreator` factory. Both work on a bare `Json {}` and on a mapper
+  carrying only the Kotlin module.
+- **`UNKNOWN`'s wire value is a sentinel no server accepts**, rather than `""` or a plausible one.
+  A caller that reads an object holding an unrecognised value and writes it back unchanged then
+  fails at the server with a clear error, instead of quietly replacing the real value.
+- **The unrecognised raw value does not survive.** An enum constant is a singleton with nowhere to
+  keep it. A client that must echo unknown values byte-for-byte needs a different shape than an
+  enum, and this generator does not offer one.
+
+The fallback's name is `UNKNOWN` unless the document already uses that value, in which case the real
+value keeps the name and the fallback escalates to `UNKNOWN_`. Two values that would produce the same
+entry name — `in-progress` and `in_progress` — fail the build naming both, like any other collision.
+Only string and integer enums are generated; a float or mixed-type `enum:` keeps the underlying
+scalar, which is a stated limit rather than a wrong answer.
 
 ## Colliding names
 
@@ -125,10 +297,18 @@ left to document order: an operation with several 2xx responses takes its return
 
 ## What it does not handle
 
-`allOf` / `oneOf` / `anyOf`, enums, and `additionalProperties` are not modelled; a schema using them
-falls back to the free-form type or to its first resolvable shape. An unsupported request media type
-is an error naming the operation, not a silently skipped endpoint — the same is true of a multipart
-body with no declared properties.
+- **`not`, and the validation keywords.** `minLength`, `pattern`, `minimum`, `maxItems` and the rest
+  are read by nobody: they constrain values, and this generator emits types. A schema using them is
+  generated as though they were absent rather than rejected.
+- **`anyOf`'s "more than one may match" semantics.** It emits identically to `oneOf`, so a document
+  that genuinely means "either shape, possibly both" gets a type that can hold only one.
+- **A `oneOf` whose branches are not all `$ref`s to object schemas.** That is not a union this
+  generator can name, so the property keeps the free-form type.
+- **Float and mixed-type enums.** Only `string` and `integer` enums become enum classes; the rest
+  keep the scalar underneath, which is a visible limitation rather than a wrong one.
+An unsupported request media type is an error naming the operation, not a silently skipped endpoint
+— the same is true of a multipart body with no declared properties, and of every case above where
+the text says "failure" rather than "falls back".
 
 ## Adding a client style
 

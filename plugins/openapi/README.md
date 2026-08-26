@@ -93,10 +93,33 @@ their primary constructors — note Jackson 3 lives under the `tools.jackson` gr
 annotations deliberately stayed at `com.fasterxml.jackson.core`. `apps/demo-spring-client` is the
 worked example.
 
+Two runtime dependencies do not arrive transitively behind `spring-web`, and both fail as a
+`NoClassDefFoundError` on the first call rather than at compile time: `$libs.spring.aop` (the proxy
+is an AOP proxy) and `$libs.spring.context` (argument values are formatted through a conversion
+service).
+
+If the document declares any enum, the generator also emits `ApiEnumConverters.kt`, and the module
+has to wire it into the factory — one line, but a required one:
+
+```kotlin
+val conversions = DefaultFormattingConversionService().also(::registerApiEnumConverters)
+HttpServiceProxyFactory.builderFor(adapter).conversionService(conversions).build()
+```
+
+Spring writes an enum argument with `Enum.name()`, never `toString()`, so without it a path, query
+or header parameter goes out as the Kotlin name — `IN_PROGRESS` where the document says
+`in-progress`. That request succeeds and matches nothing, which is why it is called out here rather
+than left to be discovered.
+
 **`client: None`** — models only. They default to kotlinx.serialization, so the module needs
 `settings.kotlin.serialization: json`; set `models: Jackson` instead if that is what binds them.
 Use it where the API surface is hand-written or lives elsewhere but the payload types should still
 follow the document.
+
+**Any style, if the document uses `format: date`** — the kotlinx model style maps it to
+`kotlinx.datetime.LocalDate`, so the module needs `$libs.kotlinx.datetime`. It is the only type
+either style emits that is not already on the classpath the style implies; Jackson's side is
+`java.time.LocalDate`, and `format: uuid` is `kotlin.uuid.Uuid` or `java.util.UUID`, both stdlib.
 
 ## Where the output goes
 

@@ -2,6 +2,7 @@ package com.strange.demo.api
 
 import com.strange.demo.api.routes.DemoData
 import com.strange.demo.api.routes.categoryRoutes
+import com.strange.demo.api.routes.notificationRoutes
 import com.strange.demo.api.routes.tagRoutes
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -12,13 +13,14 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.runBlocking
 
-/** Installs the categories and tags slice of `openapi.yaml` on this application. */
+/** Installs the categories, tags and notifications slice of `openapi.yaml` on this application. */
 public fun Application.demoApi() {
     val data = DemoData()
     install(ContentNegotiation) { json() }
     routing {
         categoryRoutes(data)
         tagRoutes(data)
+        notificationRoutes(data)
     }
 }
 

@@ -30,7 +30,10 @@ Two modules, each with its own README — read those before changing either:
   the spec into an intermediate representation, and a `SourceEmitter` turns that into KotlinPoet
   files. The root package holds only that IR; `parser` reads, `emit` holds the emitter contract and
   what every emitter shares, `models` emits the schemas, and `ktorfit` and `spring` are the two
-  client styles — the parser knows about none of them.
+  client styles — the parser knows about none of them. The type layer models `allOf`, `oneOf`/`anyOf`
+  (discriminated or deduced), enums, `nullable`, `default`, typed `additionalProperties` and the
+  common `format`s; inline schemas are promoted to named components in a pass that runs before
+  anything else reads the document, so every later stage only ever resolves a name.
 - [`plugins/openapi`](plugins/openapi/README.md) — the toolchain plugin around it:
   typed `@Configurable` settings, one `@TaskAction`, and a `generated.sources` entry so the output
   compiles into the consuming module.
@@ -60,7 +63,9 @@ Both demo apps drive their generated client against the real `demo-api` server o
 `HttpServiceProxyFactory` proxy and Jackson 3 — which also pins down that a Jackson client and a
 kotlinx server read the same document the same way. `HttpServiceProxyFactory` builds an AOP proxy
 and formats argument values, so a Spring client module needs `spring-aop` and `spring-context`
-alongside `spring-web`; neither arrives transitively.
+alongside `spring-web`; neither arrives transitively. Its conversion service also writes an enum
+argument with `Enum.name()`, so a Spring client registers the generated `ApiEnumConverters.kt` with
+the factory — without it every enum path, query or header parameter goes out as the Kotlin name.
 
 ## Instruction files
 

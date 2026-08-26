@@ -1,5 +1,6 @@
 package com.strange.openapi.parser
 
+import com.strange.openapi.ObjectType
 import com.strange.openapi.ParamKind
 import com.strange.openapi.TypeRef
 import io.kotest.assertions.throwables.shouldThrow
@@ -130,7 +131,7 @@ class OpenApiParserTest :
 
         feature("models") {
             scenario("models keep their component names and map formats") {
-                val category = model.models.first { it.name == "Category" }
+                val category = model.models.filterIsInstance<ObjectType>().first { it.name == "Category" }
                 category.fields.map { it.name } shouldContainExactly listOf("id", "name", "createdAt", "weight")
                 category.fields.first { it.name == "createdAt" }.let {
                     it.type shouldBe TypeRef.InstantRef

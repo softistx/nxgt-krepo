@@ -3,7 +3,6 @@ package com.strange.openapi.parser
 import com.strange.openapi.Param
 import com.strange.openapi.ParamKind
 import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.Operation as SwaggerOperation
 
 /**
@@ -42,6 +41,8 @@ private fun OpenAPI.namedParameters(
             type = typeOf(parameter.schema, "$where parameter '${parameter.name}'"),
             // A path parameter is required whether or not the document bothers to say so.
             required = parameter.required == true || kind == ParamKind.Path,
+            nullable = parameter.schema?.isNullable() == true,
+            default = parameter.schema?.defaultLiteral(),
         )
     }
 
@@ -49,7 +50,7 @@ private fun OpenAPI.bodyParameters(
     operation: SwaggerOperation,
     where: String,
 ): List<Param> {
-    val body = operation.requestBody ?: return emptyList()
+    val body = resolveRequestBody(operation.requestBody ?: return emptyList(), where)
     val content = body.content ?: return emptyList()
 
     content["application/json"]?.schema?.let { schema ->
@@ -60,6 +61,7 @@ private fun OpenAPI.bodyParameters(
                 kind = ParamKind.Body,
                 type = typeOf(schema, "$where request body"),
                 required = body.required != false,
+                nullable = schema.isNullable(),
             ),
         )
     }
@@ -89,16 +91,8 @@ private fun OpenAPI.multipartParts(
             kind = ParamKind.Part,
             type = typeOf(propertySchema, "$where part '$name'"),
             required = name in requiredNames,
+            nullable = propertySchema.isNullable(),
+            default = propertySchema.defaultLiteral(),
         )
     }
-}
-
-private fun OpenAPI.resolveParameter(
-    parameter: Parameter,
-    where: String,
-): Parameter {
-    val ref = parameter.`$ref` ?: return parameter
-    val name = ref.substringAfterLast('/')
-    return components?.parameters?.get(name)
-        ?: throw OpenApiParseException("$where: cannot resolve parameter ${'$'}ref '$ref'")
 }
