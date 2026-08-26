@@ -10,7 +10,10 @@ import io.swagger.v3.oas.models.media.Schema
  * `nullable: true`, and 3.1's `type: [string, "null"]`. Neither is the same question as `required`
  * — a required property can still hold `null`.
  */
-internal fun Schema<*>.isNullable(): Boolean = nullable == true || types?.contains("null") == true
+internal fun Schema<*>.isNullable(): Boolean =
+    nullable == true ||
+        types?.contains("null") == true ||
+        (oneOf ?: anyOf).orEmpty().any { it.isNullOnly() }
 
 /**
  * The document's `default`, as it appears on the wire, or null when it gave none.

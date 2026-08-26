@@ -104,6 +104,55 @@ ever emit.
 Optional properties and parameters are nullable and default to `null`, and parameters are ordered so
 that everything with a default comes last.
 
+## Composition
+
+### `allOf`
+
+Flattened into one data class: the branches' properties in document order, then the schema's own,
+with `required` the **union** across all of them. Kotlin data classes cannot inherit constructor
+properties, so extracting an interface would emit every field twice anyway — the only interface a
+generated model set owns is a union base, which is anchored to a real schema name.
+
+Two branches declaring the same property with different types is a document contradiction and fails
+the build naming the property and both types. Letting the last branch win is how a generated class
+silently acquires the wrong shape, which is exactly the bug this used to have.
+
+### `oneOf` / `anyOf`
+
+A union over object schemas becomes a **sealed interface** its members implement. Members are told
+apart either by a declared `discriminator` or, failing that, by the properties they carry.
+
+| | with `discriminator` | without |
+| --- | --- | --- |
+| kotlinx | `JsonContentPolymorphicSerializer` keyed on the tag | the same, keyed on the properties present |
+| Jackson | `@JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, visible = true)` + `@JsonSubTypes` | `@JsonTypeInfo(use = DEDUCTION)` |
+| Unknown variant | a generated `Unknown<Union>` subtype carrying the tag | an error naming the keys seen |
+
+The whole design turns on one thing: **the discriminator is a property the document already
+declares**, so neither library may write a second one.
+
+- kotlinx's built-in polymorphism refuses outright — *"cannot be serialized as base class … because
+  it has property name that conflicts with JSON class discriminator"* — so the generated serializer
+  selects from the content and leaves the property to write itself. The tag is emitted as a constant
+  default with `@EncodeDefault(ALWAYS)`, because kotlinx does not encode defaults otherwise and the
+  discriminator would go missing from everything the client sends.
+- Jackson needs `As.EXISTING_PROPERTY` for the same reason, plus `visible = true` — without it
+  Jackson consumes the tag and the Kotlin property has nothing to bind to.
+
+Both were verified by compiling the generated output and round-tripping it: the two styles emit
+byte-identical JSON for the same value.
+
+Three limits worth stating rather than discovering:
+
+- **`anyOf` is generated identically to `oneOf`**, which is a real narrowing. `anyOf` means *at
+  least* one branch validates, so a payload legal against two of them loses the second.
+- **A union over anything but object schemas is not generated.** A sealed hierarchy needs its
+  members to implement an interface and `String` cannot, so `oneOf: [{type: string}, {type: integer}]`
+  stays raw JSON rather than becoming a type nothing could deserialize into.
+- **Members nothing can tell apart fail at parse time**, naming both — not at the consumer's first
+  request. `oneOf: [X, {type: "null"}]` is not such a case: that is 3.1's nullable idiom, and it
+  resolves to a nullable `X`.
+
 ## Enums
 
 A schema with `enum:` becomes an `enum class`, not a `String`. Generated enums are **tolerant**: they

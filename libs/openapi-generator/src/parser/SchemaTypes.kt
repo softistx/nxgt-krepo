@@ -23,11 +23,15 @@ internal fun OpenAPI.typeOf(
         // Only a schema that becomes a declaration keeps its name. A $ref to a scalar or array
         // alias (e.g. `Upload: {type: string, format: binary}`) must resolve to the underlying
         // type, or it would name a class that is never emitted.
-        if (target != null && !target.isModelled() && ref !in seenRefs) {
+        if (target != null && schemaKindOf(target) == null && ref !in seenRefs) {
             return typeOf(target, "$where -> $name", seenRefs + ref)
         }
         return TypeRef.ModelRef(Naming.pascal(name))
     }
+
+    // `oneOf: [Cat, {type: "null"}]` is another way of writing a nullable Cat. The nullability
+    // is read separately, by isNullable(); what is left here is the type it wraps.
+    schema.soleBranch()?.let { return typeOf(it, where, seenRefs) }
 
     // OpenAPI 3.1 allows `type` to be a set, and `["string", "null"]` is how it spells a nullable
     // string. The null carries no type information — it is read back by isNullable() — so the
