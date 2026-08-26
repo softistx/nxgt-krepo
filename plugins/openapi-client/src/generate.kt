@@ -1,6 +1,8 @@
 package dev.nxgt.openapi.plugin
 
+import dev.nxgt.openapi.EmitOptions
 import dev.nxgt.openapi.Grouping
+import dev.nxgt.openapi.KtorfitEmitter
 import dev.nxgt.openapi.OpenApiParser
 import org.jetbrains.amper.plugins.Input
 import org.jetbrains.amper.plugins.Output
@@ -38,13 +40,15 @@ public fun generateClient(
     outputDir.deleteRecursively()
     outputDir.createDirectories()
 
+    require(packageName.isNotBlank()) { "openapi-client: packageName must not be blank" }
+
     val model = OpenApiParser(groupBy.toGrouping()).parse(specFile)
+    val files = KtorfitEmitter().emit(model, EmitOptions(packageName, generateModels))
+    files.forEach { it.writeTo(outputDir) }
+
     println(
-        "openapi-client: parsed ${model.groups.size} interface(s), " +
-            "${model.groups.sumOf { it.operations.size }} operation(s), ${model.models.size} model(s) " +
-            "from ${specFile.fileName}"
+        "openapi-client: generated ${model.groups.size} interface(s), " +
+            "${model.groups.sumOf { it.operations.size }} operation(s) and " +
+            "${if (generateModels) model.models.size else 0} model(s) from ${specFile.fileName}"
     )
-    // Emission lands in feat/oag-ktorfit; packageName/generateModels are consumed there.
-    check(packageName.isNotBlank()) { "openapi-client: packageName must not be blank" }
-    check(generateModels || model.models.isEmpty() || true)
 }

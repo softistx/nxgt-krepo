@@ -2,7 +2,9 @@ product: jvm/lib
 
 dependencies:
   - $libs.swagger.parser
-  - $libs.kotlinpoet
+  # FileSpec appears in ClientEmitter's signature, so KotlinPoet is part of this
+  # module's public API and must be visible to modules that compile against it
+  - $libs.kotlinpoet: exported
 
 test-dependencies:
   - $libs.kotest.runner.junit5

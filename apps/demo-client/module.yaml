@@ -2,9 +2,11 @@ product: jvm/app
 
 dependencies:
   - $libs.ktorfit.lib
+  - $libs.kotlinx.datetime
 
 settings:
   kotlin:
+    serialization: json
     ksp:
       processors:
         - $libs.ktorfit.ksp

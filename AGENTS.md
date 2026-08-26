@@ -44,36 +44,36 @@ Skills are budgeted: a `description` is in context every session (keep it ≤250
 The toolchain finds the project by walking up from the working directory, so these work anywhere inside the repo.
 
 ```bash
-kotlin build                      # compile + link everything
-kotlin build -m <module>          # one module (repeatable)
-kotlin build -v release           # debug is the default variant
-kotlin test                       # run all tests
-kotlin check                      # run all checks; kotlin show checks lists them
-kotlin run -m <module>            # run an application module
-kotlin publish <repository-id>    # e.g. mavenCentral, or an id from the repositories list
-kotlin clean                      # drop build/ and project caches
+./kotlin build                      # compile + link everything
+./kotlin build -m <module>          # one module (repeatable)
+./kotlin build -v release           # debug is the default variant
+./kotlin test                       # run all tests
+./kotlin check                      # run all checks; ./kotlin show checks lists them
+./kotlin run -m <module>            # run an application module
+./kotlin publish <repository-id>    # e.g. mavenCentral, or an id from the repositories list
+./kotlin clean                      # drop build/ and project caches
 ```
 
 Running a single test:
 
 ```bash
-kotlin test --include-test com.example.MyTest.myTestMethod
-kotlin test --include-test 'com.example.MyTest/Nested.myTestMethod'   # '/' separates nested classes
-kotlin test --include-classes 'com.example.*ServiceTest'              # wildcard pattern, repeatable
+./kotlin test --include-test com.example.MyTest.myTestMethod
+./kotlin test --include-test 'com.example.MyTest/Nested.myTestMethod'   # '/' separates nested classes
+./kotlin test --include-classes 'com.example.*ServiceTest'              # wildcard pattern, repeatable
 ```
 
 Inspecting the resolved project model — cheap, and it catches manifest errors without a compile:
 
 ```bash
-kotlin show modules                    # module names accepted by -m
-kotlin show settings -m <module>       # effective config after templates merge
-kotlin show dependencies -m <module>   # proves a dependency actually resolves
-kotlin show tasks
+./kotlin show modules                    # module names accepted by -m
+./kotlin show settings -m <module>       # effective config after templates merge
+./kotlin show dependencies -m <module>   # proves a dependency actually resolves
+./kotlin show tasks
 ```
 
 ### Toolchain wrapper
 
-The CLI currently warns `Found a project.yaml ... but the wrapper script is missing`, so builds use whatever `kotlin` is on `PATH` (0.12.0 here) instead of a version pinned by the repo. Generate the wrappers with `kotlin update -c` (add `--target-version=<v>` to pin) and commit them; after that, prefer `./kotlin <command>` so everyone builds with the same toolchain version.
+`./kotlin` and `kotlin.bat` are committed wrappers pinning the toolchain to the `kotlin_cli_version` at the top of the script (0.12.0). **Use `./kotlin <command>`, not a bare `kotlin`**, so everyone builds with the same version regardless of what is on `PATH`. Regenerate with `kotlin update -c` (add `--target-version=<v>` to move the pin).
 
 ## Module layout
 

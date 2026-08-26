@@ -47,7 +47,7 @@ public class OpenApiParser(private val grouping: Grouping = Grouping.Tag) {
                     httpMethod = method.name,
                     path = path.trimStart('/'),
                     parameters = parseParameters(openApi, operation, "$method $path"),
-                    returnType = parseReturnType(operation),
+                    returnType = parseReturnType(openApi, operation),
                     summary = operation.summary,
                 )
             }
@@ -75,7 +75,7 @@ public class OpenApiParser(private val grouping: Grouping = Grouping.Tag) {
                 name = Naming.propertyName(parameter.name),
                 wireName = parameter.name,
                 kind = kind,
-                type = typeOf(parameter.schema, "$where parameter '${parameter.name}'"),
+                type = typeOf(openApi, parameter.schema, "$where parameter '${parameter.name}'"),
                 required = parameter.required == true || kind == ParamKind.Path,
             )
         }
@@ -89,7 +89,7 @@ public class OpenApiParser(private val grouping: Grouping = Grouping.Tag) {
                 name = "body",
                 wireName = "body",
                 kind = ParamKind.Body,
-                type = typeOf(schema, "$where request body"),
+                type = typeOf(openApi, schema, "$where request body"),
                 required = required,
             )
         }
@@ -106,7 +106,7 @@ public class OpenApiParser(private val grouping: Grouping = Grouping.Tag) {
                     name = Naming.propertyName(name),
                     wireName = name,
                     kind = ParamKind.Part,
-                    type = typeOf(propertySchema, "$where part '$name'"),
+                    type = typeOf(openApi, propertySchema, "$where part '$name'"),
                     required = name in requiredNames,
                 )
             }
@@ -132,25 +132,40 @@ public class OpenApiParser(private val grouping: Grouping = Grouping.Tag) {
             ?: throw OpenApiParseException("$where: cannot resolve parameter \$ref '$ref'")
     }
 
-    private fun parseReturnType(operation: io.swagger.v3.oas.models.Operation): TypeRef {
+    private fun parseReturnType(openApi: OpenAPI, operation: io.swagger.v3.oas.models.Operation): TypeRef {
         val success = operation.responses?.entries
             ?.firstOrNull { (code, _) -> code.startsWith("2") }
             ?.value
             ?: return TypeRef.UnitRef
         val content = success.content ?: return TypeRef.UnitRef
-        content["application/json"]?.schema?.let { return typeOf(it, "${operation.operationId} response") }
+        content["application/json"]?.schema?.let { return typeOf(openApi, it, "${operation.operationId} response") }
         if (content.keys.any { it.startsWith("text/") }) return TypeRef.StringRef
         return TypeRef.UnitRef
     }
 
-    private fun typeOf(schema: Schema<*>?, where: String): TypeRef {
+    private fun typeOf(
+        openApi: OpenAPI,
+        schema: Schema<*>?,
+        where: String,
+        seenRefs: Set<String> = emptySet(),
+    ): TypeRef {
         if (schema == null) return TypeRef.JsonObjectRef
-        schema.`$ref`?.let { return TypeRef.ModelRef(Naming.pascal(it.substringAfterLast('/'))) }
+        schema.`$ref`?.let { ref ->
+            val name = ref.substringAfterLast('/')
+            val target = openApi.components?.schemas?.get(name)
+            // Only object schemas become generated classes. A $ref to a scalar or array
+            // alias (e.g. `Upload: {type: string, format: binary}`) must resolve to the
+            // underlying type, or it would name a class that is never emitted.
+            if (target != null && target.properties.isNullOrEmpty() && ref !in seenRefs) {
+                return typeOf(openApi, target, "$where -> $name", seenRefs + ref)
+            }
+            return TypeRef.ModelRef(Naming.pascal(name))
+        }
 
         // OpenAPI 3.1 allows `type` to be a set; 3.0 uses a single value.
         val type = schema.type ?: schema.types?.firstOrNull()
         return when (type) {
-            "array" -> TypeRef.ListRef(typeOf(schema.items, "$where item"))
+            "array" -> TypeRef.ListRef(typeOf(openApi, schema.items, "$where item", seenRefs))
             "string" -> when (schema.format) {
                 "date-time" -> TypeRef.InstantRef
                 "binary" -> TypeRef.BinaryRef
@@ -176,7 +191,7 @@ public class OpenApiParser(private val grouping: Grouping = Grouping.Tag) {
                     Field(
                         name = Naming.propertyName(propertyName),
                         wireName = propertyName,
-                        type = typeOf(propertySchema, "model $name property '$propertyName'"),
+                        type = typeOf(openApi, propertySchema, "model $name property '$propertyName'"),
                         required = propertyName in required,
                     )
                 },
