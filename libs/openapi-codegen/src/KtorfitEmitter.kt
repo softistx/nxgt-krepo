@@ -1,4 +1,4 @@
-package dev.nxgt.openapi
+package com.strange.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.BOOLEAN

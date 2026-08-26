@@ -1,4 +1,4 @@
-package dev.nxgt.openapi
+package com.strange.openapi
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec

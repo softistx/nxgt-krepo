@@ -1,9 +1,9 @@
-package dev.nxgt.openapi.plugin
+package com.strange.openapi.plugin
 
-import dev.nxgt.openapi.EmitOptions
-import dev.nxgt.openapi.Grouping
-import dev.nxgt.openapi.KtorfitEmitter
-import dev.nxgt.openapi.OpenApiParser
+import com.strange.openapi.EmitOptions
+import com.strange.openapi.Grouping
+import com.strange.openapi.KtorfitEmitter
+import com.strange.openapi.OpenApiParser
 import org.jetbrains.amper.plugins.Input
 import org.jetbrains.amper.plugins.Output
 import org.jetbrains.amper.plugins.TaskAction

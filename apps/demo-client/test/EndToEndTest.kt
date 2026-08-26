@@ -1,10 +1,10 @@
-package dev.nxgt.demo.client
+package com.strange.demo.client
 
-import dev.nxgt.demo.api.startDemoServer
-import dev.nxgt.demo.client.api.model.CategoryRequest
-import dev.nxgt.demo.client.api.model.PatchTagRequest
-import dev.nxgt.demo.client.api.model.SearchRequest
-import dev.nxgt.demo.client.api.model.TagRequest
+import com.strange.demo.api.startDemoServer
+import com.strange.demo.client.api.model.CategoryRequest
+import com.strange.demo.client.api.model.PatchTagRequest
+import com.strange.demo.client.api.model.SearchRequest
+import com.strange.demo.client.api.model.TagRequest
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly

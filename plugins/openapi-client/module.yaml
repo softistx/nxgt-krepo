@@ -6,4 +6,4 @@ dependencies:
   - $libs.slf4j.nop
 
 pluginInfo:
-  settingsClass: dev.nxgt.openapi.plugin.OpenApiClientSettings
+  settingsClass: com.strange.openapi.plugin.OpenApiClientSettings

@@ -1,4 +1,4 @@
-package dev.nxgt.demo.api
+package com.strange.demo.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive

@@ -1,20 +1,20 @@
-package dev.nxgt.demo.client
+package com.strange.demo.client
 
 import de.jensklingenberg.ktorfit.Ktorfit
-import dev.nxgt.demo.client.api.CategoriesApi
-import dev.nxgt.demo.client.api.TagsApi
-import dev.nxgt.demo.client.api.createCategoriesApi
-import dev.nxgt.demo.client.api.createTagsApi
+import com.strange.demo.client.api.CategoriesApi
+import com.strange.demo.client.api.TagsApi
+import com.strange.demo.client.api.createCategoriesApi
+import com.strange.demo.client.api.createTagsApi
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
-import dev.nxgt.demo.client.api.model.CategoryRequest
-import dev.nxgt.demo.client.api.model.SearchRequest
+import com.strange.demo.client.api.model.CategoryRequest
+import com.strange.demo.client.api.model.SearchRequest
 
 /**
- * Everything under `dev.nxgt.demo.client.api` is generated: the `openapi-client` plugin turns
+ * Everything under `com.strange.demo.client.api` is generated: the `openapi-client` plugin turns
  * `../demo-api/openapi.yaml` into the annotated interfaces, and ktorfit-ksp then generates the
  * `createXxxApi()` builders below from those interfaces.
  */

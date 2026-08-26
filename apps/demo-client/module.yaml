@@ -25,4 +25,4 @@ plugins:
   openapi-client:
     enabled: true
     specFile: ../demo-api/openapi.yaml
-    packageName: dev.nxgt.demo.client.api
+    packageName: com.strange.demo.client.api

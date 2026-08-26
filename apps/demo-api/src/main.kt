@@ -1,4 +1,4 @@
-package dev.nxgt.demo.api
+package com.strange.demo.api
 
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application

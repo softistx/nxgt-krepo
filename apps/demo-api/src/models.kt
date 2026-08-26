@@ -1,4 +1,4 @@
-package dev.nxgt.demo.api
+package com.strange.demo.api
 
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable

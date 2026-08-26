@@ -1,4 +1,4 @@
-package dev.nxgt.openapi
+package com.strange.openapi
 
 /** Name derivation shared by every emitter, so generated names stay stable across clients. */
 public object Naming {

@@ -1,4 +1,4 @@
-package dev.nxgt.openapi
+package com.strange.openapi
 
 /**
  * Frontend-agnostic description of a client to generate.

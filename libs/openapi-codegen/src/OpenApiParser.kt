@@ -1,4 +1,4 @@
-package dev.nxgt.openapi
+package com.strange.openapi
 
 import io.swagger.parser.OpenAPIParser
 import io.swagger.v3.oas.models.OpenAPI

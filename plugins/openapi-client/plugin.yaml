@@ -1,6 +1,6 @@
 tasks:
   generate:
-    action: !dev.nxgt.openapi.plugin.generateClient
+    action: !com.strange.openapi.plugin.generateClient
       specFile: ${module.rootDir}/${pluginSettings.specFile}
       outputDir: ${taskOutputDir}
       packageName: ${pluginSettings.packageName}

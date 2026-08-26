@@ -1,4 +1,4 @@
-package dev.nxgt.demo.api
+package com.strange.demo.api
 
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Clock
