@@ -19,5 +19,6 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - Never pipe a `./kotlin` command into `tail`/`grep` — the pipeline reports the filter's exit code, so a failed build reads as success. Redirect to a file, echo `$?`, then read the file. A KSP or compile failure was masked this way twice in this repo.
 - Give build and test commands a generous timeout. The first `./kotlin build`/`./kotlin test` after a toolchain change downloads the compiler, a JRE, and dependencies into `~/.cache/JetBrains/Kotlin`, which can far exceed the default two-minute Bash timeout.
 - Never introduce Gradle files to "fix" a build. If something needs a build feature this repo lacks, it belongs in a toolchain plugin module under `plugins/`, not in a `build.gradle.kts`.
+- Keep files short and single-purpose and follow SOLID — AGENTS.md spells out what each principle means in this repo. If a change makes a file mix two concerns, split the file in the same change rather than leaving it for later.
 - New code goes under `com.strange.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.
 - Add dependencies by adding a catalog alias to `libs.versions.toml` and referencing `$libs.<alias>` from the module — never paste raw versioned coordinates into a `module.yaml`, and remember `$libs.bundles.*` does not work here.

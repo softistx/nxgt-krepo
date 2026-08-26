@@ -13,39 +13,49 @@ What exists:
 | `project.yaml` | Project manifest — lists the modules, and registers local toolchain plugins |
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
-| `libs/openapi-codegen` | Reads an OpenAPI spec, emits a typed client with KotlinPoet |
-| `plugins/openapi-client` | Toolchain plugin wrapping the codegen as a build task |
+| `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
+| `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
-| `apps/demo-client` | Generates its client from that spec and calls the server |
+| `apps/demo-client` | Generates a Ktorfit client from that spec and calls the server |
+| `apps/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
 
-## The OpenAPI client generator
+## The OpenAPI generator
 
-`libs/openapi-codegen` is a plain `jvm/lib` and holds all the work: swagger-parser reads the
-spec into an intermediate representation, and a `ClientEmitter` turns that into KotlinPoet
-files. `KtorfitEmitter` is the only implementation today; a Spring `HttpExchange` emitter is
-the next one, and the IR exists so the parser never has to know which.
+Two modules, each with its own README — read those before changing either:
 
-`plugins/openapi-client` is a thin `jvm/amper-plugin` around it: typed `@Configurable`
-settings, one `@TaskAction`, and a `generated.sources` entry so the output compiles into the
-consuming module. A module opts in from its own `module.yaml`:
+- [`libs/openapi-generator`](libs/openapi-generator/README.md) — the generator. swagger-parser reads
+  the spec into an intermediate representation, and a `SourceEmitter` turns that into KotlinPoet
+  files. `parser` reads, `emit` and `models` hold what every emitter shares, and `ktorfit` and
+  `spring` are the two client styles — the parser knows about none of them.
+- [`plugins/openapi`](plugins/openapi/README.md) — the toolchain plugin around it:
+  typed `@Configurable` settings, one `@TaskAction`, and a `generated.sources` entry so the output
+  compiles into the consuming module.
+
+A module opts in from its own `module.yaml`:
 
 ```yaml
 plugins:
-  openapi-client:
+  openapi:
     enabled: true
-    specFile: ../demo-api/openapi.yaml   # relative to the module root
-    packageName: dev.nxgt.demo.client.api
+    client: Ktorfit                       # or Spring, or None for models only
+    specFile: ../demo-api/openapi.yaml
+    packageName: com.strange.demo.client.api
 ```
 
-Everything else has a default: `client: Ktorfit`, `groupBy: Tag`, `generateModels: true`.
-Grouping by tag turns `categories-controller` into `CategoriesApi`.
+Everything else has a default: `groupBy: Tag`, `interfacePrefix: ""`, `interfaceSuffix: "Api"`.
+Grouping by tag turns `categories-controller` into `CategoriesApi`. The spec's schemas are always
+generated; only the API surface is optional.
 
-For Ktorfit, the generated interfaces are then picked up by `ktorfit-ksp`, which generates the
-`createXxxApi()` builders — plugin-generated sources do reach KSP. `apps/demo-client` shows the
-whole chain, and its `EndToEndTest` drives it against the real `demo-api` server over HTTP.
+For Ktorfit the generated interfaces are then picked up by `ktorfit-ksp`, which generates the
+`createXxxApi()` builders — plugin-generated sources do reach KSP. For Spring there is no
+processing step; the interfaces go to `HttpServiceProxyFactory` at runtime.
+
+`apps/demo-client` shows the Ktorfit chain end to end, driving the generated client against the
+real `demo-api` server over HTTP; `apps/demo-spring-client` compiles the Spring output and reads
+its annotations back through reflection.
 
 ## Instruction files
 
@@ -157,5 +167,31 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
 
 ## Conventions
 
+- **Formatting is ktlint's job**, configured by `.editorconfig` at the repo root (wildcard imports
+  are allowed there; everything else is ktlint's `ktlint_official` style, including the 140-column
+  limit and trailing commas on multi-line argument lists). `./kotlin check` does *not* run it —
+  `./kotlin show checks` lists only `tests` — so formatting is enforced by the IDE or a ktlint CLI
+  run, not by the build. Write code that already satisfies it rather than leaving it to a later
+  reformat.
+- **Keep files short and single-purpose.** One file holds one concern; when two things could be
+  separated cleanly, separate them. A file growing past roughly 150 lines is a signal to split it,
+  not a threshold to argue with — split by responsibility, never by line count.
+- **Follow SOLID, strictly.** In practice, here:
+  - *Single responsibility* — the parser reads the spec, an emitter shapes output, the plugin wires
+    it into the build. None of them does another's job.
+  - *Open/closed* — a new client style is a new `SourceEmitter` and one `ClientKind` value; it must
+    not require editing the parser or the existing emitters.
+  - *Liskov* — every `SourceEmitter` is usable wherever the interface is, including the models-only
+    one; no implementation may need special handling by its caller.
+  - *Interface segregation* — keep interfaces narrow. `SourceEmitter` is one method because that is
+    all a caller needs.
+  - *Dependency inversion* — depend on the abstraction: the plugin's task action talks to
+    `SourceEmitter`, and picks the implementation in exactly one place.
+- **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `apps/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
+- **Organise `src/` by package, not as a flat pile of files.** A module with more than one concern
+  gets a directory per concern, and the directory matches the package — `src/parser/` is
+  `com.strange.openapi.parser`. The root package holds only what every package depends on: the
+  shared contract, nothing else. When a file lands in the root because it did not obviously belong
+  anywhere, that is the signal a package is missing.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.
 - Work on `develop`; `main` is the PR target.

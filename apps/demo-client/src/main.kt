@@ -1,17 +1,17 @@
 package com.strange.demo.client
 
-import de.jensklingenberg.ktorfit.Ktorfit
 import com.strange.demo.client.api.CategoriesApi
 import com.strange.demo.client.api.TagsApi
 import com.strange.demo.client.api.createCategoriesApi
 import com.strange.demo.client.api.createTagsApi
+import com.strange.demo.client.api.model.CategoryRequest
+import com.strange.demo.client.api.model.SearchRequest
+import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
-import com.strange.demo.client.api.model.CategoryRequest
-import com.strange.demo.client.api.model.SearchRequest
 
 /**
  * Everything under `com.strange.demo.client.api` is generated: the `openapi-client` plugin turns

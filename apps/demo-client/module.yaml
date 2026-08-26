@@ -22,7 +22,7 @@ settings:
         - $libs.ktorfit.ksp
 
 plugins:
-  openapi-client:
+  openapi:
     enabled: true
     specFile: ../demo-api/openapi.yaml
     packageName: com.strange.demo.client.api

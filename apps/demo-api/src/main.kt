@@ -1,5 +1,8 @@
 package com.strange.demo.api
 
+import com.strange.demo.api.routes.DemoData
+import com.strange.demo.api.routes.categoryRoutes
+import com.strange.demo.api.routes.tagRoutes
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
