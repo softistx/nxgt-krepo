@@ -3,7 +3,6 @@ package com.strange.openapi.parser
 import com.strange.openapi.Param
 import com.strange.openapi.ParamKind
 import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.Operation as SwaggerOperation
 
 /**
@@ -51,7 +50,7 @@ private fun OpenAPI.bodyParameters(
     operation: SwaggerOperation,
     where: String,
 ): List<Param> {
-    val body = operation.requestBody ?: return emptyList()
+    val body = resolveRequestBody(operation.requestBody ?: return emptyList(), where)
     val content = body.content ?: return emptyList()
 
     content["application/json"]?.schema?.let { schema ->
@@ -96,14 +95,4 @@ private fun OpenAPI.multipartParts(
             default = propertySchema.defaultLiteral(),
         )
     }
-}
-
-private fun OpenAPI.resolveParameter(
-    parameter: Parameter,
-    where: String,
-): Parameter {
-    val ref = parameter.`$ref` ?: return parameter
-    val name = ref.substringAfterLast('/')
-    return components?.parameters?.get(name)
-        ?: throw OpenApiParseException("$where: cannot resolve parameter ${'$'}ref '$ref'")
 }
