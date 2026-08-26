@@ -56,7 +56,18 @@ public class KtorfitEmitter : ClientEmitter {
         if (operation.parameters.any { it.kind == ParamKind.Part }) {
             builder.addAnnotation(ktorfit("Multipart"))
         }
-        operation.parameters.sortedBy { it.required.not() }.forEach { builder.addParameter(emitParam(it, options)) }
+        if (operation.parameters.any { it.kind == ParamKind.Body }) {
+            // Ktor refuses to serialize a body it has no Content-Type for ("Fail to prepare
+            // request body for sending ... with Content-Type: null"), and the parser only
+            // produces a @Body param for an application/json request body.
+            builder.addAnnotation(
+                AnnotationSpec.builder(ktorfit("Headers"))
+                    .addMember("%S", "Content-Type: application/json")
+                    .build()
+            )
+        }
+        // Parameters that get a `= null` default must come last, or callers could not omit them.
+        operation.parameters.sortedBy { it.isOptional }.forEach { builder.addParameter(emitParam(it, options)) }
         return builder.build()
     }
 
@@ -68,12 +79,21 @@ public class KtorfitEmitter : ClientEmitter {
             ParamKind.Part -> AnnotationSpec.builder(ktorfit("Part")).addMember("%S", param.wireName).build()
             ParamKind.Body -> AnnotationSpec.builder(ktorfit("Body")).build()
         }
-        val type = typeNameOf(param.type, options).copy(nullable = !param.required)
+        val type = typeNameOf(param.type, options).copy(nullable = param.isOptional)
         return ParameterSpec.builder(param.name, type)
             .addAnnotation(annotation)
-            .apply { if (!param.required) defaultValue("null") }
+            .apply { if (param.isOptional) defaultValue("null") }
             .build()
     }
+
+    /**
+     * Whether the parameter is emitted as nullable with a `null` default.
+     *
+     * Ktorfit's KSP processor rejects a nullable `@Part` ("Part parameter type may not be
+     * nullable"), so multipart parts stay non-null even when the spec marks them optional.
+     */
+    private val Param.isOptional: Boolean
+        get() = !required && kind != ParamKind.Part
 
     private fun emitModel(model: ModelType, options: EmitOptions): FileSpec {
         val constructor = FunSpec.constructorBuilder()
@@ -128,7 +148,9 @@ public class KtorfitEmitter : ClientEmitter {
         const val KTORFIT_HTTP = "de.jensklingenberg.ktorfit.http"
         val SERIALIZABLE = ClassName("kotlinx.serialization", "Serializable")
         val SERIAL_NAME = ClassName("kotlinx.serialization", "SerialName")
-        val INSTANT = ClassName("kotlinx.datetime", "Instant")
+        // kotlin.time.Instant, not kotlinx.datetime.Instant: the latter is a deprecated
+        // typealias for it, and the stdlib type needs no dependency in the consuming module.
+        val INSTANT = ClassName("kotlin.time", "Instant")
         val JSON_OBJECT = ClassName("kotlinx.serialization.json", "JsonObject")
     }
 }

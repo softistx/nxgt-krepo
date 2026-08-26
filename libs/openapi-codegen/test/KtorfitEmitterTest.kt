@@ -76,11 +76,21 @@ class KtorfitEmitterTest : FunSpec({
         api shouldContain "@Body body: CategoryRequest"
     }
 
+    test("operations with a body declare the JSON Content-Type") {
+        // without it Ktor fails at runtime with "Content-Type: null"
+        api shouldContain """@Headers("Content-Type: application/json")"""
+    }
+
     test("multipart operations get @Multipart and @Part") {
         api shouldContain "@Multipart"
         // KotlinPoet backticks `file`, which is a soft keyword; still valid Kotlin
         api shouldContain """@Part("file")"""
         api shouldContain "ByteArray"
+    }
+
+    test("@Part stays non-nullable even when the spec marks the part optional") {
+        // ktorfit-ksp fails the build with "Part parameter type may not be nullable"
+        api shouldNotContain "ByteArray?"
     }
 
     test("return types resolve to model classes in the model package") {
@@ -96,6 +106,8 @@ class KtorfitEmitterTest : FunSpec({
         category shouldContain "public data class Category"
         category shouldContain """@SerialName("created_at")"""
         category shouldContain "createdAt: Instant? = null"
+        // the stdlib type, not the deprecated kotlinx.datetime typealias
+        category shouldContain "import kotlin.time.Instant"
         category shouldContain "meta: JsonObject? = null"
         // `id` matches the wire name, so it needs no @SerialName
         category.substringAfter("public val id").substringBefore("\n") shouldNotContain "SerialName"

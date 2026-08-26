@@ -45,6 +45,12 @@ Add both to `libs.versions.toml` (`de.jensklingenberg.ktorfit:ktorfit-lib` and `
 
 **Call `createExampleApi()`, never `create<ExampleApi>()`.** The generic form is rewritten by Ktorfit's *compiler* plugin, which the Gradle plugin applies and this build system does not. It still compiles here — Ktorfit emits a warning saying the call "will not trigger the compiler plugin" — so the failure is silent at build time. The standalone `de.jensklingenberg.ktorfit:compiler-plugin` artifact stopped publishing at 2.3.5 while the library is at 2.7.5, so there is no matching version to declare. If Ktorfit resumes publishing it, the toolchain can apply it via `settings.kotlin.compilerPlugins` (see `../kotlin-toolchain/references/user-guide-advanced-kotlin-compiler-plugins.md`).
 
+## Constraints that only surface at build or run time
+
+- **A `@Part` parameter may not be nullable.** ktorfit-ksp fails the build with `Part parameter type may not be nullable`, so an optional multipart field still has to be declared non-null.
+- **A `@Body` request needs a `Content-Type`.** Ktor's ContentNegotiation alone is not enough: without one the call fails at runtime with `Fail to prepare request body for sending ... with Content-Type: null`. Put `@Headers("Content-Type: application/json")` on the function, or set a default on the `HttpClient`.
+- Deserializing responses needs `ContentNegotiation` with `json()` installed on the `HttpClient` you hand to `Ktorfit.Builder().httpClient(...)`, plus an engine (`$ktor.client.cio`).
+
 `ktorfit-lib` pins Ktor 3.5.0; Ktor plugins added alongside it (serialization, auth, logging) must be compatible with that line.
 
 ## Reference index
