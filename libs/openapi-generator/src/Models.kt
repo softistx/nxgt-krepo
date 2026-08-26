@@ -18,6 +18,8 @@ public data class ObjectType(
     /** The schema's `description`, if it gave one. */
     val doc: String? = null,
     val deprecated: Boolean = false,
+    /** `x-deprecated-reason`, which replaces this generator's boilerplate inside `@Deprecated`. */
+    val deprecatedReason: String? = null,
     /**
      * Union bases this schema is a member of, empty for a standalone schema.
      *
@@ -42,6 +44,8 @@ public data class Field(
     /** The property's `description`, if it gave one. */
     val doc: String? = null,
     val deprecated: Boolean = false,
+    /** `x-deprecated-reason`, which replaces this generator's boilerplate inside `@Deprecated`. */
+    val deprecatedReason: String? = null,
     /** True when this field realises a property the union base already declares. */
     val overrides: Boolean = false,
     /**

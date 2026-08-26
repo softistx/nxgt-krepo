@@ -39,6 +39,7 @@ public class OpenApiParser(
                 )
         // Before anything reads the document: an inline schema that would become a declaration is
         // given a name and a place in `components`, so every later stage only ever sees a `$ref`.
+        openApi.requireKnownKotlinExtensions()
         openApi.hoistInlineSchemas()
         return ApiModel(groups = parseGroups(openApi), models = openApi.parseModels())
     }
@@ -54,19 +55,36 @@ public class OpenApiParser(
                         )
                 byGroup.getOrPut(groupKeyOf(operation, path)) { mutableListOf() } +=
                     Operation(
-                        name = Naming.functionName(id),
+                        name = operation.extensions.kotlinName("$method $path") ?: Naming.functionName(id),
                         httpMethod = method.name,
                         path = path.trimStart('/'),
                         parameters = openApi.parseParameters(operation, "$method $path"),
                         returnType = openApi.parseReturnType(operation),
                         summary = operation.summary,
+                        deprecated = operation.deprecated == true,
+                        deprecatedReason = operation.extensions.deprecatedReason("$method $path"),
                     )
             }
         }
         return byGroup
-            .map { (tag, ops) -> ApiGroup(Naming.interfaceName(tag, naming), ops.sortedBy { it.name }) }
+            .map { (tag, ops) -> ApiGroup(interfaceNameOf(openApi, tag), ops.sortedBy { it.name }) }
             .mergeSameNamedGroups()
     }
+
+    /**
+     * A tag's `x-kotlin-name` names the interface outright: prefix and suffix are this generator's
+     * derivation, and a document that states the name is not asking for it to be derived.
+     */
+    private fun interfaceNameOf(
+        openApi: OpenAPI,
+        tag: String,
+    ): String =
+        openApi.tags
+            .orEmpty()
+            .firstOrNull { it.name == tag }
+            ?.extensions
+            .kotlinName("tag '$tag'")
+            ?: Naming.interfaceName(tag, naming)
 
     private fun groupKeyOf(
         operation: io.swagger.v3.oas.models.Operation,
