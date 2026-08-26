@@ -42,6 +42,8 @@ private fun OpenAPI.namedParameters(
             type = typeOf(parameter.schema, "$where parameter '${parameter.name}'"),
             // A path parameter is required whether or not the document bothers to say so.
             required = parameter.required == true || kind == ParamKind.Path,
+            nullable = parameter.schema?.isNullable() == true,
+            default = parameter.schema?.defaultLiteral(),
         )
     }
 
@@ -60,6 +62,7 @@ private fun OpenAPI.bodyParameters(
                 kind = ParamKind.Body,
                 type = typeOf(schema, "$where request body"),
                 required = body.required != false,
+                nullable = schema.isNullable(),
             ),
         )
     }
@@ -89,6 +92,8 @@ private fun OpenAPI.multipartParts(
             kind = ParamKind.Part,
             type = typeOf(propertySchema, "$where part '$name'"),
             required = name in requiredNames,
+            nullable = propertySchema.isNullable(),
+            default = propertySchema.defaultLiteral(),
         )
     }
 }
