@@ -40,26 +40,43 @@ import com.strange.openapi.models.types
  * Models are plain data classes: Jackson binds them without annotations, so nothing is emitted
  * unless a wire name differs from its Kotlin name.
  */
-public class SpringEmitter : SourceEmitter {
+public class SpringEmitter(
+    /**
+     * Spring binds with Jackson by default, but a `WebClient` configured with
+     * `KotlinSerializationJsonEncoder` wants kotlinx-serializable models instead.
+     */
+    private val style: ModelStyle = ModelStyle.Jackson,
+) : SourceEmitter {
+    override fun emit(
+        model: ApiModel,
+        options: EmitOptions,
+    ): List<FileSpec> = model.groups.map { emitGroup(it, options) } + modelFiles(model, options, style)
 
-    override fun emit(model: ApiModel, options: EmitOptions): List<FileSpec> =
-        model.groups.map { emitGroup(it, options) } + modelFiles(model, options, STYLE)
-
-    private fun emitGroup(group: ApiGroup, options: EmitOptions): FileSpec =
+    private fun emitGroup(
+        group: ApiGroup,
+        options: EmitOptions,
+    ): FileSpec =
         apiFile(group, options, annotations = listOf(AnnotationSpec.builder(HTTP_EXCHANGE).build())) {
             emitOperation(it, options)
         }
 
-    private fun emitOperation(operation: Operation, options: EmitOptions): FunSpec {
-        val exchange = AnnotationSpec.builder(exchangeAnnotation(operation.httpMethod))
-            .addMember("url = %S", operation.path)
-            .apply { contentTypeOf(operation)?.let { addMember("contentType = %S", it) } }
-            .build()
+    private fun emitOperation(
+        operation: Operation,
+        options: EmitOptions,
+    ): FunSpec {
+        val exchange =
+            AnnotationSpec
+                .builder(exchangeAnnotation(operation.httpMethod))
+                .addMember("url = %S", operation.path)
+                .apply { contentTypeOf(operation)?.let { addMember("contentType = %S", it) } }
+                .build()
 
-        val builder = FunSpec.builder(operation.name)
-            .addModifiers(KModifier.PUBLIC, KModifier.ABSTRACT, KModifier.SUSPEND)
-            .addAnnotation(exchange)
-            .returns(typeNameOf(operation.returnType, options, STYLE.types))
+        val builder =
+            FunSpec
+                .builder(operation.name)
+                .addModifiers(KModifier.PUBLIC, KModifier.ABSTRACT, KModifier.SUSPEND)
+                .addAnnotation(exchange)
+                .returns(typeNameOf(operation.returnType, options, style.types))
 
         operation.summary?.takeIf { it.isNotBlank() }?.let { builder.addKdoc("%L", it) }
         // Parameters that get a `= null` default must come last, or callers could not omit them.
@@ -72,43 +89,54 @@ public class SpringEmitter : SourceEmitter {
      * request carries a body; being explicit keeps the generated client from depending on how
      * the caller happened to configure its `WebClient`.
      */
-    private fun contentTypeOf(operation: Operation): String? = when {
-        operation.parameters.any { it.kind == ParamKind.Part } -> "multipart/form-data"
-        operation.parameters.any { it.kind == ParamKind.Body } -> "application/json"
-        else -> null
-    }
+    private fun contentTypeOf(operation: Operation): String? =
+        when {
+            operation.parameters.any { it.kind == ParamKind.Part } -> "multipart/form-data"
+            operation.parameters.any { it.kind == ParamKind.Body } -> "application/json"
+            else -> null
+        }
 
-    private fun emitParam(param: Param, options: EmitOptions): ParameterSpec {
+    private fun emitParam(
+        param: Param,
+        options: EmitOptions,
+    ): ParameterSpec {
         // Spring's argument resolvers reject a null value for a required named parameter, so an
         // optional one has to say required = false as well as being nullable.
-        val annotation = when (param.kind) {
-            ParamKind.Path -> named(PATH_VARIABLE, param)
-            ParamKind.Query -> named(REQUEST_PARAM, param)
-            ParamKind.Header -> named(REQUEST_HEADER, param)
-            ParamKind.Part -> named(REQUEST_PART, param)
-            ParamKind.Body -> AnnotationSpec.builder(REQUEST_BODY).build()
-        }
-        val type = typeNameOf(param.type, options, STYLE.types).copy(nullable = !param.required)
-        return ParameterSpec.builder(param.name, type)
+        val annotation =
+            when (param.kind) {
+                ParamKind.Path -> named(PATH_VARIABLE, param)
+                ParamKind.Query -> named(REQUEST_PARAM, param)
+                ParamKind.Header -> named(REQUEST_HEADER, param)
+                ParamKind.Part -> named(REQUEST_PART, param)
+                ParamKind.Body -> AnnotationSpec.builder(REQUEST_BODY).build()
+            }
+        val type = typeNameOf(param.type, options, style.types).copy(nullable = !param.required)
+        return ParameterSpec
+            .builder(param.name, type)
             .addAnnotation(annotation)
             .apply { if (!param.required) defaultValue("null") }
             .build()
     }
 
-    private fun named(annotation: ClassName, param: Param): AnnotationSpec =
-        AnnotationSpec.builder(annotation)
+    private fun named(
+        annotation: ClassName,
+        param: Param,
+    ): AnnotationSpec =
+        AnnotationSpec
+            .builder(annotation)
             .addMember("name = %S", param.wireName)
             .apply { if (!param.required) addMember("required = false") }
             .build()
 
-    private fun exchangeAnnotation(method: String) = when (method.uppercase()) {
-        "GET" -> exchange("GetExchange")
-        "POST" -> exchange("PostExchange")
-        "PUT" -> exchange("PutExchange")
-        "PATCH" -> exchange("PatchExchange")
-        "DELETE" -> exchange("DeleteExchange")
-        else -> throw OpenApiParseException("unsupported HTTP method '$method'")
-    }
+    private fun exchangeAnnotation(method: String) =
+        when (method.uppercase()) {
+            "GET" -> exchange("GetExchange")
+            "POST" -> exchange("PostExchange")
+            "PUT" -> exchange("PutExchange")
+            "PATCH" -> exchange("PatchExchange")
+            "DELETE" -> exchange("DeleteExchange")
+            else -> throw OpenApiParseException("unsupported HTTP method '$method'")
+        }
 
     private fun exchange(simpleName: String) = ClassName(SERVICE_ANNOTATION, simpleName)
 
@@ -121,6 +149,5 @@ public class SpringEmitter : SourceEmitter {
         val REQUEST_HEADER = ClassName(BIND_ANNOTATION, "RequestHeader")
         val REQUEST_BODY = ClassName(BIND_ANNOTATION, "RequestBody")
         val REQUEST_PART = ClassName(BIND_ANNOTATION, "RequestPart")
-        val STYLE = ModelStyle.Jackson
     }
 }

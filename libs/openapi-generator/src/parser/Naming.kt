@@ -2,7 +2,6 @@ package com.strange.openapi.parser
 
 /** Name derivation shared by every emitter, so generated names stay stable across clients. */
 public object Naming {
-
     private val separators = Regex("[^A-Za-z0-9]+")
 
     /**
@@ -11,7 +10,10 @@ public object Naming {
      * A `-controller` suffix is dropped first: it names the server class in specs generated from
      * one, and carrying it into a client interface reads wrong.
      */
-    public fun interfaceName(tag: String, naming: InterfaceNaming = InterfaceNaming()): String {
+    public fun interfaceName(
+        tag: String,
+        naming: InterfaceNaming = InterfaceNaming(),
+    ): String {
         val cleaned = tag.removeSuffix("-controller").removeSuffix("Controller")
         return naming.prefix + pascal(cleaned).ifEmpty { "Default" } + naming.suffix
     }
@@ -23,10 +25,10 @@ public object Naming {
     public fun propertyName(wireName: String): String = camel(wireName)
 
     public fun pascal(value: String): String =
-        value.split(separators)
+        value
+            .split(separators)
             .filter { it.isNotEmpty() }
             .joinToString("") { part -> part.replaceFirstChar { it.uppercaseChar() } }
 
-    public fun camel(value: String): String =
-        pascal(value).replaceFirstChar { it.lowercaseChar() }
+    public fun camel(value: String): String = pascal(value).replaceFirstChar { it.lowercaseChar() }
 }

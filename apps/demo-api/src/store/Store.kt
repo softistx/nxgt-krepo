@@ -9,7 +9,9 @@ import java.util.concurrent.atomic.AtomicLong
  * Cursor pagination is keyed on the item id: `cursor` names the last item of the previous
  * page, and `first`/`last` take from the start or the end of what remains.
  */
-internal class Store<T : Any>(private val idOf: (T) -> String) {
+internal class Store<T : Any>(
+    private val idOf: (T) -> String,
+) {
     private val items = LinkedHashMap<String, T>()
 
     fun all(): List<T> = synchronized(items) { items.values.toList() }
@@ -20,14 +22,19 @@ internal class Store<T : Any>(private val idOf: (T) -> String) {
 
     fun remove(id: String): Boolean = synchronized(items) { items.remove(id) != null }
 
-    fun page(cursor: String?, first: Int?, last: Int?): Page<T> {
+    fun page(
+        cursor: String?,
+        first: Int?,
+        last: Int?,
+    ): Page<T> {
         val all = all()
         val rest = if (cursor == null) all else all.drop(all.indexOfFirst { idOf(it) == cursor } + 1)
-        val window = when {
-            first != null -> rest.take(first)
-            last != null -> rest.takeLast(last)
-            else -> rest
-        }
+        val window =
+            when {
+                first != null -> rest.take(first)
+                last != null -> rest.takeLast(last)
+                else -> rest
+            }
         return Page(
             items = window,
             startCursor = window.firstOrNull()?.let(idOf),

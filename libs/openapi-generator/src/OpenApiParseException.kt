@@ -8,4 +8,6 @@ package com.strange.openapi
  * what and where. Nothing is ever skipped silently, because a quietly missing endpoint is a bug
  * that surfaces far from its cause.
  */
-public class OpenApiParseException(message: String) : IllegalArgumentException(message)
+public class OpenApiParseException(
+    message: String,
+) : IllegalArgumentException(message)

@@ -32,11 +32,31 @@ plugins:
 | `packageName` | `generated.api` | Package for the interfaces; models go in `<packageName>.model`. Set it — the default only exists so `enabled: true` alone works. |
 | `client` | `Ktorfit` | `Ktorfit`, `Spring`, or `None`. Decides what is generated, and therefore what the module needs on its classpath. |
 | `groupBy` | `Tag` | `Tag`, `Path` or `None`. `Tag` turns `categories-controller` into `CategoriesApi`. Ignored when `client: None`. |
+| `models` | `Auto` | `Auto`, `Kotlinx` or `Jackson`. `Auto` follows the client. |
 | `interfacePrefix` | `""` | Prepended to every interface name — `"I"` gives `ICategoriesApi`. |
 | `interfaceSuffix` | `"Api"` | Appended to every interface name — `"Client"` gives `CategoriesClient`. |
 
 Models are always generated; they are the part of the document every consumer needs, and making them
 optional only ever produced a client whose payload types came from somewhere else.
+
+`models` decides what binds them:
+
+| `client` | `models: Auto` | Overridable? |
+| --- | --- | --- |
+| `Ktorfit` | kotlinx.serialization | No. `models: Jackson` fails the build. |
+| `Spring` | Jackson 3 | Yes — `models: Kotlinx` for a `WebClient` using `KotlinSerializationJsonEncoder`. |
+| `None` | kotlinx.serialization | Yes — either. |
+
+Ktorfit is fixed because it deserializes through Ktor's `ContentNegotiation`, which this repo
+configures with kotlinx.serialization; generating Jackson models for it would produce a client that
+compiles and then fails at the first response. Asking for that combination is an error, not a
+setting the plugin quietly overrides:
+
+```
+ERROR: Task ':demo-client:generate@openapi' failed: java.lang.IllegalArgumentException:
+openapi: client Ktorfit always generates kotlinx.serialization models;
+remove `models: Jackson`, or switch to `client: Spring`
+```
 
 Settings are typed and KDoc'd in `src/settings.kt`, so the IDE completes them and an unknown key
 fails `./kotlin show modules` with a line pointer rather than at build time.
@@ -68,12 +88,15 @@ generic form silently misbehaves here. `apps/demo-client` is the worked example.
 **`client: Spring`** — no processing step; `$libs.spring.web` is enough to compile, and the
 interfaces are handed to `HttpServiceProxyFactory` at runtime. Because the functions are `suspend`,
 the proxy needs a reactive adapter (`WebClientAdapter`, from spring-webflux) rather than
-`RestClientAdapter`. Models are Jackson-shaped, so a Jackson `ObjectMapper` with the Kotlin module
-binds them. `apps/demo-spring-client` is the worked example.
+`RestClientAdapter`. Models are Jackson 3 by default, so add `$libs.jackson.module.kotlin` to read
+their primary constructors — note Jackson 3 lives under the `tools.jackson` group id, while its
+annotations deliberately stayed at `com.fasterxml.jackson.core`. `apps/demo-spring-client` is the
+worked example.
 
-**`client: None`** — models only, in kotlinx.serialization's shape, so the module needs
-`settings.kotlin.serialization: json`. Use it where the API surface is hand-written or lives
-elsewhere but the payload types should still follow the document.
+**`client: None`** — models only. They default to kotlinx.serialization, so the module needs
+`settings.kotlin.serialization: json`; set `models: Jackson` instead if that is what binds them.
+Use it where the API surface is hand-written or lives elsewhere but the payload types should still
+follow the document.
 
 ## Where the output goes
 

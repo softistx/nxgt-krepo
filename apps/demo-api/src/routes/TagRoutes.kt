@@ -23,15 +23,16 @@ internal fun Route.tagRoutes(data: DemoData) {
     route("/tags") {
         post {
             val body = call.receive<TagRequest>()
-            val tag = data.tags.put(
-                Tag(
-                    id = data.ids.next(),
-                    name = body.name,
-                    family = body.family,
-                    description = body.description,
-                    metadata = audit(),
-                ),
-            )
+            val tag =
+                data.tags.put(
+                    Tag(
+                        id = data.ids.next(),
+                        name = body.name,
+                        family = body.family,
+                        description = body.description,
+                        metadata = audit(),
+                    ),
+                )
             call.respond(HttpStatusCode.Created, tag)
         }
 

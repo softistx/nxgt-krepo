@@ -7,5 +7,4 @@ import kotlin.time.Instant
 public fun audit(now: Instant = Clock.System.now()): AuditMetadata =
     AuditMetadata(createdBy = "demo", createdDate = now, lastModifiedBy = "demo", lastModifiedDate = now)
 
-public fun AuditMetadata.touched(now: Instant = Clock.System.now()): AuditMetadata =
-    copy(lastModifiedBy = "demo", lastModifiedDate = now)
+public fun AuditMetadata.touched(now: Instant = Clock.System.now()): AuditMetadata = copy(lastModifiedBy = "demo", lastModifiedDate = now)

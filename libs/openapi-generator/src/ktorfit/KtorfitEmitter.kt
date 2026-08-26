@@ -29,22 +29,30 @@ import com.strange.openapi.models.types
  * `settings.kotlin.serialization: json`.
  */
 public class KtorfitEmitter : SourceEmitter {
+    override fun emit(
+        model: ApiModel,
+        options: EmitOptions,
+    ): List<FileSpec> = model.groups.map { emitGroup(it, options) } + modelFiles(model, options, STYLE)
 
-    override fun emit(model: ApiModel, options: EmitOptions): List<FileSpec> =
-        model.groups.map { emitGroup(it, options) } + modelFiles(model, options, STYLE)
+    private fun emitGroup(
+        group: ApiGroup,
+        options: EmitOptions,
+    ): FileSpec = apiFile(group, options) { emitOperation(it, options) }
 
-    private fun emitGroup(group: ApiGroup, options: EmitOptions): FileSpec =
-        apiFile(group, options) { emitOperation(it, options) }
-
-    private fun emitOperation(operation: Operation, options: EmitOptions): FunSpec {
-        val builder = FunSpec.builder(operation.name)
-            .addModifiers(KModifier.PUBLIC, KModifier.ABSTRACT, KModifier.SUSPEND)
-            .addAnnotation(
-                AnnotationSpec.builder(methodAnnotation(operation.httpMethod))
-                    .addMember("%S", operation.path)
-                    .build()
-            )
-            .returns(typeNameOf(operation.returnType, options, STYLE.types))
+    private fun emitOperation(
+        operation: Operation,
+        options: EmitOptions,
+    ): FunSpec {
+        val builder =
+            FunSpec
+                .builder(operation.name)
+                .addModifiers(KModifier.PUBLIC, KModifier.ABSTRACT, KModifier.SUSPEND)
+                .addAnnotation(
+                    AnnotationSpec
+                        .builder(methodAnnotation(operation.httpMethod))
+                        .addMember("%S", operation.path)
+                        .build(),
+                ).returns(typeNameOf(operation.returnType, options, STYLE.types))
 
         operation.summary?.takeIf { it.isNotBlank() }?.let { builder.addKdoc("%L", it) }
         if (operation.parameters.any { it.kind == ParamKind.Part }) {
@@ -55,9 +63,10 @@ public class KtorfitEmitter : SourceEmitter {
             // request body for sending ... with Content-Type: null"), and the parser only
             // produces a @Body param for an application/json request body.
             builder.addAnnotation(
-                AnnotationSpec.builder(ktorfit("Headers"))
+                AnnotationSpec
+                    .builder(ktorfit("Headers"))
                     .addMember("%S", "Content-Type: application/json")
-                    .build()
+                    .build(),
             )
         }
         // Parameters that get a `= null` default must come last, or callers could not omit them.
@@ -65,16 +74,21 @@ public class KtorfitEmitter : SourceEmitter {
         return builder.build()
     }
 
-    private fun emitParam(param: Param, options: EmitOptions): ParameterSpec {
-        val annotation = when (param.kind) {
-            ParamKind.Path -> AnnotationSpec.builder(ktorfit("Path")).addMember("%S", param.wireName).build()
-            ParamKind.Query -> AnnotationSpec.builder(ktorfit("Query")).addMember("%S", param.wireName).build()
-            ParamKind.Header -> AnnotationSpec.builder(ktorfit("Header")).addMember("%S", param.wireName).build()
-            ParamKind.Part -> AnnotationSpec.builder(ktorfit("Part")).addMember("%S", param.wireName).build()
-            ParamKind.Body -> AnnotationSpec.builder(ktorfit("Body")).build()
-        }
+    private fun emitParam(
+        param: Param,
+        options: EmitOptions,
+    ): ParameterSpec {
+        val annotation =
+            when (param.kind) {
+                ParamKind.Path -> AnnotationSpec.builder(ktorfit("Path")).addMember("%S", param.wireName).build()
+                ParamKind.Query -> AnnotationSpec.builder(ktorfit("Query")).addMember("%S", param.wireName).build()
+                ParamKind.Header -> AnnotationSpec.builder(ktorfit("Header")).addMember("%S", param.wireName).build()
+                ParamKind.Part -> AnnotationSpec.builder(ktorfit("Part")).addMember("%S", param.wireName).build()
+                ParamKind.Body -> AnnotationSpec.builder(ktorfit("Body")).build()
+            }
         val type = typeNameOf(param.type, options, STYLE.types).copy(nullable = param.isOptional)
-        return ParameterSpec.builder(param.name, type)
+        return ParameterSpec
+            .builder(param.name, type)
             .addAnnotation(annotation)
             .apply { if (param.isOptional) defaultValue("null") }
             .build()
@@ -91,13 +105,17 @@ public class KtorfitEmitter : SourceEmitter {
 
     private fun ktorfit(simpleName: String) = ClassName(KTORFIT_HTTP, simpleName)
 
-    private fun methodAnnotation(method: String) = when (method.uppercase()) {
-        "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" -> ktorfit(method.uppercase())
-        else -> throw OpenApiParseException("unsupported HTTP method '$method'")
-    }
+    private fun methodAnnotation(method: String) =
+        when (method.uppercase()) {
+            "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" -> ktorfit(method.uppercase())
+            else -> throw OpenApiParseException("unsupported HTTP method '$method'")
+        }
 
     private companion object {
         const val KTORFIT_HTTP = "de.jensklingenberg.ktorfit.http"
+
+        // Not a constructor parameter, unlike SpringEmitter's: Ktorfit deserializes through
+        // Ktor's ContentNegotiation, which this repo configures with kotlinx.serialization.
         val STYLE = ModelStyle.Kotlinx
     }
 }

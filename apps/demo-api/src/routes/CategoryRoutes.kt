@@ -22,16 +22,17 @@ internal fun Route.categoryRoutes(data: DemoData) {
     route("/categories") {
         post {
             val body = call.receive<CategoryRequest>()
-            val category = data.categories.put(
-                Category(
-                    id = data.ids.next(),
-                    name = body.name,
-                    family = body.family,
-                    description = body.description,
-                    attributes = body.attributes,
-                    metadata = audit(),
-                ),
-            )
+            val category =
+                data.categories.put(
+                    Category(
+                        id = data.ids.next(),
+                        name = body.name,
+                        family = body.family,
+                        description = body.description,
+                        attributes = body.attributes,
+                        metadata = audit(),
+                    ),
+                )
             call.respond(HttpStatusCode.Created, category)
         }
 

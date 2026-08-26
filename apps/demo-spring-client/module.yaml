@@ -3,6 +3,8 @@ product: jvm/app
 dependencies:
   # spring-web carries both the @HttpExchange annotations and HttpServiceProxyFactory
   - $libs.spring.web
+  # Jackson 3 binds the generated models; the Kotlin module reads their primary constructors
+  - $libs.jackson.module.kotlin
 
 test-dependencies:
   - $libs.kotest.runner.junit5

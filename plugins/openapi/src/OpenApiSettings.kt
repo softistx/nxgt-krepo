@@ -16,8 +16,26 @@ public enum class ClientKind {
     /** `@HttpExchange` interfaces for Spring's `HttpServiceProxyFactory`, with Jackson models. */
     Spring,
 
-    /** Models only. They follow kotlinx.serialization, this repo's default serializer. */
+    /** Models only, in whichever style [OpenApiSettings.models] names. */
     None,
+}
+
+/**
+ * Which serialization library the generated models target.
+ *
+ * [Auto] follows the client, which is almost always what you want. Naming one explicitly matters
+ * for `client: None`, and for a Spring client whose `WebClient` is configured with
+ * kotlinx.serialization codecs rather than Jackson.
+ */
+public enum class ModelKind {
+    /** Follow the client: Jackson for Spring, kotlinx.serialization for Ktorfit and for no client. */
+    Auto,
+
+    /** kotlinx.serialization: `@Serializable`, `kotlin.time.Instant`, `JsonObject`. */
+    Kotlinx,
+
+    /** Jackson 3: `@JsonProperty` where names differ, `java.time.Instant`, a plain `Map`. */
+    Jackson,
 }
 
 /**
@@ -47,6 +65,14 @@ public interface OpenApiSettings {
 
     /** How operations are split into interfaces: by OpenAPI tag, by first path segment, or not at all. */
     public val groupBy: GroupBy get() = GroupBy.Tag
+
+    /**
+     * Which serialization library the models target. [ModelKind.Auto] follows the client.
+     *
+     * A Ktorfit client is always kotlinx.serialization; asking for [ModelKind.Jackson] alongside
+     * one fails the build rather than quietly generating models it cannot deserialize.
+     */
+    public val models: ModelKind get() = ModelKind.Auto
 
     /** Prepended to every generated interface name — `"I"` gives `ICategoriesApi`. */
     public val interfacePrefix: String get() = ""
