@@ -1,6 +1,8 @@
 package com.strange.demo.client
 
 import com.strange.demo.api.startDemoServer
+import com.strange.demo.client.api.NotificationsApi
+import com.strange.demo.client.api.model.DeliveryAttempt
 import com.strange.demo.client.api.model.EmailPayload
 import com.strange.demo.client.api.model.GroupRecipient
 import com.strange.demo.client.api.model.NotificationChannel
@@ -10,6 +12,7 @@ import com.strange.demo.client.api.model.PushPayload
 import com.strange.demo.client.api.model.SmsPayload
 import com.strange.demo.client.api.model.UserRecipient
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.datetime.LocalDate
@@ -45,7 +48,7 @@ class PolymorphismTest :
                 val queued =
                     client.notifications.queueNotification(
                         NotificationRequest(
-                            channel = NotificationChannel.EMAIL,
+                            channel = NotificationChannel.BY_EMAIL,
                             recipient = UserRecipient(userId = "u-1", email = "someone@example.com"),
                             payload = EmailPayload(subject = "hello", body = "there"),
                         ),
@@ -62,7 +65,7 @@ class PolymorphismTest :
                 val queued =
                     client.notifications.queueNotification(
                         NotificationRequest(
-                            channel = NotificationChannel.PUSH,
+                            channel = NotificationChannel.BY_PUSH,
                             recipient = UserRecipient(userId = "u-2"),
                             payload = PushPayload(title = "ping", badge = 3),
                         ),
@@ -77,7 +80,7 @@ class PolymorphismTest :
                 val toGroup =
                     client.notifications.queueNotification(
                         NotificationRequest(
-                            channel = NotificationChannel.SMS,
+                            channel = NotificationChannel.BY_SMS,
                             recipient = GroupRecipient(groupId = "g-1", size = 12),
                             payload = SmsPayload(text = "everyone"),
                         ),
@@ -98,7 +101,7 @@ class PolymorphismTest :
                 val queued =
                     client.notifications.queueNotification(
                         NotificationRequest(
-                            channel = NotificationChannel.EMAIL,
+                            channel = NotificationChannel.BY_EMAIL,
                             recipient = UserRecipient(userId = "u-3"),
                             payload = EmailPayload(subject = "later", body = "not yet"),
                             traceId = traceId,
@@ -127,15 +130,60 @@ class PolymorphismTest :
             scenario("a query parameter goes out as its wire value, not its Kotlin name") {
                 client.notifications.queueNotification(
                     NotificationRequest(
-                        channel = NotificationChannel.SMS,
+                        channel = NotificationChannel.BY_SMS,
                         recipient = UserRecipient(userId = "u-4"),
                         payload = SmsPayload(text = "filtered"),
                     ),
                 )
 
-                val smsOnly = client.notifications.findNotifications(channel = NotificationChannel.SMS)
-                smsOnly.map { it.channel }.toSet() shouldBe setOf(NotificationChannel.SMS)
+                val smsOnly = client.notifications.findNotifications(channel = NotificationChannel.BY_SMS)
+                smsOnly.map { it.channel }.toSet() shouldBe setOf(NotificationChannel.BY_SMS)
                 smsOnly.size shouldBe 2
+            }
+        }
+        feature("what the document said about becoming Kotlin") {
+            scenario("a value class is a real type here and a bare string on the wire") {
+                // The server knows nothing of NotificationId: it stores a String and reads the path
+                // segment as one. If the wrapper reached the wire, neither call would resolve.
+                val queued =
+                    client.notifications.queueNotification(
+                        NotificationRequest(
+                            channel = NotificationChannel.BY_EMAIL,
+                            recipient = UserRecipient(userId = "u-9"),
+                            payload = EmailPayload(subject = "typed", body = "id"),
+                        ),
+                    )
+
+                val fetched = client.notifications.findNotification(queued.id)
+                fetched.id shouldBe queued.id
+                fetched.id.value
+                    .toIntOrNull()
+                    .shouldNotBeNull()
+            }
+
+            scenario("an enum's Kotlin names are the document's, its wire values are untouched") {
+                NotificationChannel.BY_SMS.toString() shouldBe "sms"
+                NotificationChannel.BY_EMAIL.wireValue shouldBe "email"
+            }
+
+            scenario("a renamed inline schema is what the property holds") {
+                val queued =
+                    client.notifications.queueNotification(
+                        NotificationRequest(
+                            channel = NotificationChannel.BY_PUSH,
+                            recipient = UserRecipient(userId = "u-10"),
+                            payload = PushPayload(title = "named"),
+                        ),
+                    )
+
+                // `delivery` would be `NotificationDelivery` without x-kotlin-name; the type here is
+                // the assertion, and it is checked at compile time.
+                val delivery: DeliveryAttempt? = queued.delivery
+                delivery.shouldNotBeNull().attempts shouldBe 0
+            }
+
+            scenario("an operation the document keeps internal is not on the interface at all") {
+                NotificationsApi::class.java.methods.none { it.name == "purgeNotifications" } shouldBe true
             }
         }
     })
