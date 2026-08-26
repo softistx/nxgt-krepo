@@ -24,6 +24,12 @@ public sealed interface TypeRef {
     /** `string` with `format: date-time`. */
     public data object InstantRef : TypeRef
 
+    /** `string` with `format: date` — a calendar day, with no time and no zone. */
+    public data object LocalDateRef : TypeRef
+
+    /** `string` with `format: uuid`. */
+    public data object UuidRef : TypeRef
+
     /** A schema with no declared properties, carried as raw JSON. */
     public data object JsonObjectRef : TypeRef
 

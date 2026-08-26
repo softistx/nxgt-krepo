@@ -3,7 +3,6 @@ package com.strange.openapi.models
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -33,8 +32,7 @@ internal object KotlinxUnionBinding : UnionBinding {
     }
 
     override fun decorateFallback(builder: TypeSpec.Builder) {
-        // Every key but the discriminator belongs to a variant this client cannot name, and
-        // kotlinx fails on an unknown key unless the consumer set ignoreUnknownKeys themselves.
+        // Every key but the discriminator belongs to a variant this client cannot name.
         builder.addAnnotation(JSON_IGNORE_UNKNOWN_KEYS)
     }
 
@@ -43,16 +41,6 @@ internal object KotlinxUnionBinding : UnionBinding {
         // discriminator would be missing from everything this client sends.
         builder.addAnnotation(
             AnnotationSpec.builder(ENCODE_DEFAULT).addMember("%T.Mode.ALWAYS", ENCODE_DEFAULT).build(),
-        )
-    }
-
-    override fun decorateFile(builder: FileSpec.Builder) {
-        builder.addAnnotation(
-            AnnotationSpec
-                .builder(ClassName("kotlin", "OptIn"))
-                .addMember("%T::class", EXPERIMENTAL_SERIALIZATION_API)
-                .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
-                .build(),
         )
     }
 
