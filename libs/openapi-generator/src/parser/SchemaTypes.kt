@@ -45,6 +45,8 @@ internal fun OpenAPI.typeOf(
         "string" -> {
             when (schema.format) {
                 "date-time" -> TypeRef.InstantRef
+                "date" -> TypeRef.LocalDateRef
+                "uuid" -> TypeRef.UuidRef
                 "binary" -> TypeRef.BinaryRef
                 else -> TypeRef.StringRef
             }

@@ -1,7 +1,6 @@
 package com.strange.openapi.models
 
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.strange.openapi.UnionType
@@ -36,9 +35,6 @@ internal interface UnionBinding {
         subtypeNames: Map<String, ClassName>,
         fallback: ClassName?,
     ): List<TypeSpec> = emptyList()
-
-    /** Anything the file itself needs — an opt-in, typically. */
-    fun decorateFile(builder: FileSpec.Builder) = Unit
 }
 
 internal val ModelStyle.unionBinding: UnionBinding

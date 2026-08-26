@@ -22,3 +22,6 @@ internal fun Schema<*>.isNullable(): Boolean =
  * say, and it appears in real documents on properties typed `string`, where it is not even valid.
  */
 internal fun Schema<*>.defaultLiteral(): String? = default?.toString()
+
+/** The document's `description`, trimmed, or null when it gave none worth carrying. */
+internal fun Schema<*>.doc(): String? = description?.trim()?.takeIf { it.isNotEmpty() }
