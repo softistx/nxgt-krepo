@@ -1,0 +1,335 @@
+<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/plugins/topics/tasks/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+
+# Tasks
+
+## Task action definition
+
+Task actions are top-level Kotlin functions annotated with `@TaskAction`. Restrictions for a task action function:
+
+- must be a top-level, public function
+- must return `Unit`
+- must not be an extension, generic, `suspend`, `inline`, or have context parameters
+- parameter types must be [configurable types](../configuration/#configurable-types)
+
+Parameters are allowed to have default values as per [configurable defaults](../configuration/#default-values).
+
+### Path parameters
+
+Parameters of type `Path` require an explicit role:
+
+- `@Input` if the path points to files/directories read by the action
+- `@Output` if the path points to files/directories written by the action
+
+The requirement applies transitively: if a parameter’s type contains a `Path` anywhere inside, the parameter must still be marked with either `@Input` or `@Output`, so the build tool knows their semantics.
+
+> **Example**
+
+Examples of types that require the parameters to be annotated with input/output marker:
+
+- `List<Path>`
+- `Map<String, Path>`
+- `Distribution`, defined as: 
+
+```kotlin
+@Configurable interface Distribution {
+  val manifestPath: Path
+  val binaryPath: Path
+}
+```
+- built‑in configurable interfaces that request files, e.g., `ModuleSources`, `Classpath`, etc.
+
+> **Info**
+
+Special built‑in configurable interfaces that are used to request *files* from the build — such as `ModuleSources`, `Classpath`, or `CompilationArtifact` — are **always required to be annotated with `@Input`**.
+
+All non‑`Path`‑referencing parameters are considered **inputs** and do not require any additional annotations.
+
+## Tasks runtime
+
+Tasks are executed inside an isolated JVM environment, and no guarantees are made about the state of static globals from one task action invocation to the other.
+
+At the moment tasks are effectively executed inside the Kotlin Toolchain JVM using an isolated plugin classloader that contains only the plugin's runtime classpath. This concrete implementation is very much likely to change in the future, so it is advised not to rely on it.
+
+### Runtime API
+
+There is no currently available runtime API exposed for tasks, besides the configuration system. So plugin authors are free to use whatever libraries they need to implement things. In the future some runtime APIs that the Kotlin Toolchain can provide and support will be added.
+
+#### Logging
+
+Use `System.out/err`, the Kotlin Toolchain will associate the output with the task name in its build log. Structured logging support is coming soon.
+
+## Execution avoidance
+
+The Kotlin Toolchain uses a built‑in execution‑avoidance mechanism for task actions by default. When not disabled, the Kotlin Toolchain decides whether to rerun an action based on:
+
+- the action execution classpath changes (if the action code is recompiled, tasks using the action need to be rerun)
+- effective values of the action arguments that are non‑paths, including property values of configurable interfaces, recursively
+- the state of all gathered file-tree inputs and file-tree outputs declared via `@Input`/`@Output`
+
+> **Note**
+
+Currently, only file attributes and modification time are inspected to compute if a file tree changed. No file content checking is performed.
+
+This behavior is controlled per action by the `executionAvoidance` parameter of `@TaskAction` annotation:
+
+- `ExecutionAvoidance.Automatic` (default) — compute up‑to‑dateness as described above. If a task action declares no outputs, it always re‑runs.
+- `ExecutionAvoidance.Disabled` — always re‑run the action regardless of inputs/outputs. Use this if the task has side effects and/or its up‑to‑date state needs to be computed in a more complex way.
+
+> **Tip**
+
+When implementing the desired build logic as task actions, keep the execution avoidance in mind. For example, for a deployment plugin that builds and publishes a distribution, it is better to have two separate tasks: `build` and `publish`. The `build` task can be "incremental" and benefit from automatic execution avoidance because it's easy to declare its inputs and outputs; while `publish` task has undeclarable side effects and cannot be incremental at the build system level.
+
+## Task Dependencies
+
+Dependencies between user‑registered tasks are inferred automatically from matching `@Input` and `@Output` paths in their actions:
+
+- If task A declares an `@Output` path and task B declares an `@Input` path that *matches* it, the Kotlin Toolchain adds a dependency from B to A.
+- Paths are considered *matching* when they are either equal or one is an ancestor or descendant of the other. For example:
+  - `/foo/bar` and `/foo/bar/out.txt` are matching
+  - `/foo/bar` and `/foo/baz` are not matching
+
+> **Info**
+
+If an `@Input` points inside the build directory but no task produces a matching `@Output`, a warning is issued to help catch misconfigured paths.
+
+There is no way to specify task dependencies **manually** for now.
+
+### Disabling dependency inference for a particular input
+
+Use `@Input(inferTaskDependency = false)` on a path parameter when you do not want a dependency to be inferred, even if another task writes to the same path.
+
+> **Example**
+
+This is needed for “baseline” files where an “update” task writes the baseline and a “check” task reads and compares it. If a dependency were inferred, “update” would always run before “check”, hiding problems.
+
+A good example of this case could be seen in the [Binary Compatibility Validator](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/build-sources/binary-compatibility-validator/plugin.yaml).
+
+> **Note**
+
+Disabling dependency inference on an input with `@Input(inferTaskDependency = false)` only affects task wiring. The file(s) pointed to by that input are still considered for execution‑avoidance decisions.
+
+## Task Registration
+
+Tasks are registered declaratively in the plugin’s `plugin.yaml` under the `tasks` map. Each entry creates a task instance with a short name (the map key):
+
+```
+tasks:
+  myTaskName:
+    action: !fully.qualified.function.name
+      param1: ...
+      param2: ...
+```
+
+The task action is specified using the `action` property. This property requires an explicit YAML type tag, in this example `!fully.qualified.function.name`, to express which exact action the task uses. The tag starts with the bang (`!`) and then goes the fully qualified name of the Kotlin `@TaskAction` function. There is a [note](../configuration/#task-action-types) on how this works on the configuration level.
+
+The properties of the `action` object correspond to parameters of the Kotlin function.
+
+The same task action can be registered multiple times under different task names and with different argument values. Tasks are registered once in `plugin.yaml`, but they are instantiated per module where the plugin is enabled.
+
+**Why does the concept of a task feel split between Kotlin and YAML?**
+
+As we want to provide the best tooling and IDE assistance, we want the most information available "declaratively" so it can be easily traced and made available quickly and safely.
+
+The build tool still needs to preprocess Kotlin code to extract task signatures and configurable types. So we want to have the least amount of information in Kotlin, mostly only implementation.
+
+Custom task actions can be reused multiple times in different tasks. Also, there can be shared/built‑in universal task actions like `copy`, `download`, `unzip`, etc.
+
+So registering a new task can be as easy as dropping a few lines of YAML (for now) and reusing the ready task action.
+
+Now, inputs/outputs markup is done in Kotlin because it is inherently bound to the action itself (if the action reads from the file, it is an input), while declaring the kind of generated content in `generated:` is not necessarily so: a generic `unzip` action may be actually unzipping some sources, and only a concrete plugin may know that, so it needs to convey it at the registration site.
+
+### Naming and addressing
+
+The task name is local to the plugin. Different plugins may use the same task names without conflicts.
+
+#### Internal name
+
+In logs and in the CLI, a task is addressed as `:<module-name>:<task-name>@<plugin-id>`. This is also what you see in tasks output and what you pass to the task command to run a task manually.
+
+> **Info**
+
+The plugin ID is part of the internal task name. By default, it is the plugin module name, unless overridden in `pluginInfo.id` (read more [here](../structure/#plugin-structure)).
+
+The internal name of a task should not ideally be exposed and used externally. We are working on making it so.
+
+## Contributing back to the build
+
+There are a bunch of things the Kotlin Toolchain build can consume that can be produced by a custom task. In order to contribute some typed files back to the build, we need the following:
+
+1. To have a necessary path marked as an `@Output` in the task action
+2. To add a `generated:` block at the top level of the `plugin.yaml`, declaring the kind of content and referencing the output path.
+
+Currently supported kinds of generated content:
+
+| Section | Description |
+| --- | --- |
+| `generated.sources` | A directory containing **sources** to be compiled together with the module (`language: kotlin` (default) or `language: java`) |
+| `generated.resources` | A directory containing **resources** to be bundled together with the module |
+| `generated.cinteropDefinitions` | A [`.def` file](https://kotlinlang.org/docs/native-definition-file.html) to be processed by the [`cinterop`](https://kotlinlang.org/docs/native-c-interop.html) tool |
+
+> **Example**
+
+```
+tasks:
+  generate:
+    action: !com.example.generateSources
+      propertiesFile: ${module.rootDir}/config.properties
+      generatedSourceDir: ${taskOutputDir} #(1)!
+
+generated:
+  sources:
+    - language: kotlin
+      directory: ${tasks.generate.action.generatedSourceDir}
+```
+
+1. `generatedSourceDir` is `@Output generatedSourceDir: Path` in Kotlin
+
+### Advanced
+
+One can customize the platform and/or main/test scope the content is associated with using the `fragment` clause of each entry in the `generated.\*` block. It has two properties: `modifier: string` and `isTest: boolean`. The `modifier` string has the same semantics as the suffix one can put after the `@` in the `module.yaml` configuration or in the names of `src` directories. For example, having: 
+
+```
+generated:
+  sources:
+    - language: kotlin
+      directory: ${tasks.generate.action.generatedSourceDir}
+      fragment:
+        isTest: true
+        modifier: ios
+
+  cinteropDefinitions:
+    - defFile: ${tasks.provideNativeLibs.action.generatedDefFile}
+      fragment: native
+```
+
+ would make the Kotlin Toolchain treat the generated sources as if they were put into the `test@ios` directory.
+
+## Consuming things from the build
+
+> **Warning**
+
+Currently, most of the built‑in configurables used to request things from the build are JVM‑only.
+
+### Requesting layout-agnostic module sources
+
+To request module sources, we can use the built‑in `org.jetbrains.amper.plugins.ModuleSources` configurable. It should always be marked as `@Input`. The `includeGenerated` property allows the task to depend on the other code generating steps in the build, like other custom tasks or KSP, and include their results in `sourceDirectories` as well.
+
+> **Example**
+
+someKindOfLinter.kt
+
+plugin.yaml (just user sources)
+
+plugin.yaml (including generated sources)
+
+```kotlin
+@TaskAction
+fun someKindOfLinter(
+    @Input sources: ModuleSources,
+    moduleName: String,
+) {
+    sources.sourceDirectories.forEach { dir ->
+        println("Module `$moduleName` has $dir as its source directory")
+    }
+}
+```
+
+```
+tasks:
+  lint:
+    action: !someKindOfLinter
+      moduleName: ${module.name}
+      sources: ${module.kotlinJavaSources}
+```
+
+```
+tasks:
+  lint:
+    action: !someKindOfLinter
+      moduleName: ${module.name}
+      sources:
+        from: ${module.self}
+        includeGenerated: true
+```
+
+> **Tip**
+
+Using `ModuleSources` even in the simple case is more robust than just referring to `${module.rootDir}/src`, because it takes module layout into account (and multiplatform source directories — coming soon).
+
+### Requesting classpath/ad-hoc dependency resolution
+
+The Kotlin Toolchain models a request to get a resolved classpath as the built‑in `org.jetbrains.amper.plugins.Classpath` configurable. It also must always be an `@Input`. There are a bunch of convenience reference‑only properties like `module.runtimeClasspath` or `module.compileClasspath`, but one can also construct a `Classpath` spec to request an ad hoc dependency resolution.
+
+> **Example**
+
+packageClasspath.kt
+
+plugin.yaml
+
+```kotlin
+@TaskAction
+fun packageClasspath(
+    @Input appClasspath: Classpath,
+    @Input extraClasspath: Classpath?,
+) {
+    appClasspath.resolvedFiles.forEach {  it.copyTo(...) }
+    ...
+}
+```
+
+```
+tasks:
+  package:
+    action: !packageClasspath
+      appClasspath: ${module.runtimeClasspath} #(1)!
+      extraClasspath: #(2)!
+        - foo:bar:1.0
+        - ${pluginSettings.extraDependency}
+```
+
+1. A convenience value for the `{ dependencies: \[ ${module.self} \], scope: runtime }`
+2. Resolves arbitrary dependencies (local, Maven) in the specified scope (`runtime` by default)
+
+### Requesting a module compilation result
+
+As opposed to the `runtimeClasspath`, sometimes we want to get just the JAR that is the result of the module's compilation. To do that we can refer to the `${module.jar}` which has the `org.jetbrains.amper.plugins.CompilationArtifact` type.
+
+> **Example**
+
+copyJar.kt
+
+plugin.yaml
+
+```kotlin
+@TaskAction
+fun copyJar(jar: CompilationArtifact) {
+    jar.artifact.copyTo(...)
+}
+```
+
+```
+tasks:
+  copy:
+    action: !copyJar
+      jar: ${module.jar} #(1)!
+```
+
+1. A convenience value for the `{ from: ${module.self} }`
+
+## Run a task
+
+If the task contributes something to the build, it probably doesn't ever need to be invoked explicitly by hand. It is invoked automatically by the build system or tooling to ensure that generated contents are up to date.
+
+However, there are scenarios where it is necessary to run a task manually. Currently, there are two use cases that we support: [checks](../checks/#create-checks) and [custom commands](../custom-commands/#create-custom-commands).
+
+> **Note**
+
+There is a way to run a task manually using the `task` command using its internal mangled name. We don't recommend doing that for purposes other than debugging.
+
+```bash
+$ ./kotlin task :moduleName:taskName@pluginId
+```
+
+## Learn more
+
+To see more practical examples of how to write tasks, you are welcome to check out the [quick start guide](../../quick-start/) and our plugin samples in the `build-sources` directory of the Kotlin project.

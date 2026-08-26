@@ -1,0 +1,12 @@
+{
+  "title": "Ktorfit",
+  "base": "https://foso.github.io/Ktorfit/",
+  "exclude": [
+    "^CHANGELOG/$",
+    "^License/$",
+    "^responseconverter/$",
+    "^suspendresponseconverter/$"
+  ],
+  "version": "",
+  "last_sync": "2026-08-26"
+}
