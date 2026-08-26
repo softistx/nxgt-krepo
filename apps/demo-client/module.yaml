@@ -1,0 +1,10 @@
+product: jvm/app
+
+dependencies:
+  - $libs.ktorfit.lib
+
+settings:
+  kotlin:
+    ksp:
+      processors:
+        - $libs.ktorfit.ksp

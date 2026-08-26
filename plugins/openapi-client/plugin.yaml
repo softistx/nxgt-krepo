@@ -1,0 +1,11 @@
+tasks:
+  generate:
+    action: !dev.nxgt.openapi.plugin.generateClient
+      specFile: ${module.rootDir}/${pluginSettings.specFile}
+      outputDir: ${taskOutputDir}
+      packageName: ${pluginSettings.packageName}
+
+generated:
+  sources:
+    - language: kotlin
+      directory: ${tasks.generate.action.outputDir}

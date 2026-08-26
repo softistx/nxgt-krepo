@@ -1,1 +1,8 @@
 modules:
+  - apps/demo-api
+  - apps/demo-client
+  - libs/openapi-codegen
+  - plugins/openapi-client
+
+plugins:
+  - ./plugins/openapi-client

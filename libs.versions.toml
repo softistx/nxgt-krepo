@@ -28,7 +28,9 @@ logback = "1.5.38"
 mongodb = "5.9.0"
 coroutines = "1.11.0"
 graalvm-native = "1.1.4"
-openapi = "7.23.0"
+swagger-parser = "2.1.47"
+kotlinpoet = "2.3.0"
+ktorfit = "2.7.5"
 koin = "4.2.2"
 koin-compiler = "1.0.1"
 kotest = "6.2.2"
@@ -105,6 +107,12 @@ koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+
+swagger-parser = { module = "io.swagger.parser.v3:swagger-parser", version.ref = "swagger-parser" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
+ktorfit-lib-light = { module = "de.jensklingenberg.ktorfit:ktorfit-lib-light", version.ref = "ktorfit" }
+ktorfit-ksp = { module = "de.jensklingenberg.ktorfit:ktorfit-ksp", version.ref = "ktorfit" }
 
 kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css", version = "2026.7.1" }
 
