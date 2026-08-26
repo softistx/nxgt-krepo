@@ -19,6 +19,7 @@ internal val SAMPLE_MODEL: ApiModel =
                     operations =
                         listOf(
                             Operation(
+                                id = "findCategory",
                                 name = "findCategory",
                                 httpMethod = "GET",
                                 path = "categories/{id}",
@@ -31,6 +32,7 @@ internal val SAMPLE_MODEL: ApiModel =
                                 summary = "Get category by ID",
                             ),
                             Operation(
+                                id = "createCategory",
                                 name = "createCategory",
                                 httpMethod = "POST",
                                 path = "categories",
@@ -41,6 +43,7 @@ internal val SAMPLE_MODEL: ApiModel =
                                 returnType = TypeRef.ListRef(TypeRef.ModelRef("Category")),
                             ),
                             Operation(
+                                id = "changePhoto",
                                 name = "changePhoto",
                                 httpMethod = "PUT",
                                 path = "categories/{id}/photo",

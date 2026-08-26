@@ -28,10 +28,39 @@ public fun apiFile(
             .interfaceBuilder(group.name)
             .addKdoc(GENERATED_KDOC)
             .addAnnotations(annotations)
-            .apply { group.operations.forEach { addFunction(deprecate(it, operation(it))) } }
+            .apply { group.operations.forEach { addFunction(identify(it, options, deprecate(it, operation(it)))) } }
             .build()
     return FileSpec.builder(options.packageName, group.name).addType(type).build()
 }
+
+/**
+ * `@ApiOperation` on a generated function.
+ *
+ * Here rather than in each emitter, and on *every* function rather than only the ones that need
+ * it: what reads the annotation is a plugin below the interface, and a plugin that had to cope
+ * with the annotation sometimes being absent could not tell "this operation declares no failures"
+ * apart from "this call did not come from a generated interface".
+ */
+private fun identify(
+    operation: Operation,
+    options: EmitOptions,
+    spec: FunSpec,
+): FunSpec =
+    spec
+        .toBuilder()
+        .addAnnotation(
+            AnnotationSpec
+                .builder(apiOperationName(options))
+                .addMember("id = %S", operation.id)
+                .apply {
+                    if (operation.security.isNotEmpty()) {
+                        addMember(
+                            "security = [%L]",
+                            operation.security.joinToString(", ") { "\"${it.scheme}\"" },
+                        )
+                    }
+                }.build(),
+        ).build()
 
 /**
  * `@Deprecated` on a generated function.
