@@ -1,8 +1,11 @@
 package com.strange.demo.spring
 
 import com.strange.demo.spring.api.CategoriesApi
+import com.strange.demo.spring.api.NotificationsApi
 import com.strange.demo.spring.api.TagsApi
+import com.strange.demo.spring.api.model.registerApiEnumConverters
 import kotlinx.coroutines.runBlocking
+import org.springframework.format.support.DefaultFormattingConversionService
 import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.support.WebClientAdapter
@@ -27,13 +30,19 @@ public class SpringDemoClient(
             .baseUrl(baseUrl)
             .build()
 
+    // Generated: without it Spring writes an enum argument as its Kotlin name rather than the
+    // value the document lists, and a query filter silently matches nothing.
+    private val conversions = DefaultFormattingConversionService().also(::registerApiEnumConverters)
+
     private val factory =
         HttpServiceProxyFactory
             .builderFor(WebClientAdapter.create(webClient))
+            .conversionService(conversions)
             .build()
 
     public val categories: CategoriesApi = factory.createClient(CategoriesApi::class.java)
     public val tags: TagsApi = factory.createClient(TagsApi::class.java)
+    public val notifications: NotificationsApi = factory.createClient(NotificationsApi::class.java)
 }
 
 public fun main(): Unit =

@@ -20,17 +20,23 @@ internal fun OpenAPI.typeOf(
     schema.`$ref`?.let { ref ->
         val name = ref.substringAfterLast('/')
         val target = components?.schemas?.get(name)
-        // Only object schemas become generated classes. A $ref to a scalar or array alias
-        // (e.g. `Upload: {type: string, format: binary}`) must resolve to the underlying type,
-        // or it would name a class that is never emitted.
-        if (target != null && target.properties.isNullOrEmpty() && ref !in seenRefs) {
+        // Only a schema that becomes a declaration keeps its name. A $ref to a scalar or array
+        // alias (e.g. `Upload: {type: string, format: binary}`) must resolve to the underlying
+        // type, or it would name a class that is never emitted.
+        if (target != null && schemaKindOf(target) == null && ref !in seenRefs) {
             return typeOf(target, "$where -> $name", seenRefs + ref)
         }
         return TypeRef.ModelRef(Naming.pascal(name))
     }
 
-    // OpenAPI 3.1 allows `type` to be a set; 3.0 uses a single value.
-    val type = schema.type ?: schema.types?.firstOrNull()
+    // `oneOf: [Cat, {type: "null"}]` is another way of writing a nullable Cat. The nullability
+    // is read separately, by isNullable(); what is left here is the type it wraps.
+    schema.soleBranch()?.let { return typeOf(it, where, seenRefs) }
+
+    // OpenAPI 3.1 allows `type` to be a set, and `["string", "null"]` is how it spells a nullable
+    // string. The null carries no type information — it is read back by isNullable() — so the
+    // meaningful entry is the other one, whichever order the document happens to list them in.
+    val type = schema.type ?: schema.types?.firstOrNull { it != "null" } ?: schema.types?.firstOrNull()
     return when (type) {
         "array" -> {
             TypeRef.ListRef(typeOf(schema.items, "$where item", seenRefs))
@@ -39,6 +45,8 @@ internal fun OpenAPI.typeOf(
         "string" -> {
             when (schema.format) {
                 "date-time" -> TypeRef.InstantRef
+                "date" -> TypeRef.LocalDateRef
+                "uuid" -> TypeRef.UuidRef
                 "binary" -> TypeRef.BinaryRef
                 else -> TypeRef.StringRef
             }
@@ -57,7 +65,14 @@ internal fun OpenAPI.typeOf(
         }
 
         "object", null -> {
-            TypeRef.JsonObjectRef
+            // `additionalProperties` with a schema means open keys but typed values. Declared
+            // properties win: a schema that has both is a class with an escape hatch, not a map.
+            val values = schema.additionalProperties
+            if (schema.properties.isNullOrEmpty() && values is Schema<*>) {
+                TypeRef.MapRef(typeOf(values, "$where value", seenRefs))
+            } else {
+                TypeRef.JsonObjectRef
+            }
         }
 
         else -> {

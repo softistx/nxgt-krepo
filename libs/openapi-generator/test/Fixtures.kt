@@ -55,7 +55,7 @@ internal val SAMPLE_MODEL: ApiModel =
             ),
         models =
             listOf(
-                ModelType(
+                ObjectType(
                     name = "Category",
                     fields =
                         listOf(

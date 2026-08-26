@@ -1,51 +1,52 @@
 package com.strange.openapi.parser
 
-import com.strange.openapi.Field
 import com.strange.openapi.ModelType
-import com.strange.openapi.TypeRef
 import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.Operation as SwaggerOperation
 
 /**
- * Turning the document's component schemas into [ModelType]s, and an operation's success
- * response into the type its function returns.
+ * Turning the document's component schemas into [ModelType]s.
+ *
+ * Unions are resolved first, because a subtype cannot be parsed until its union is known: the
+ * `oneOf` is what says a hierarchy is closed, and it lives on the base rather than on any member.
  */
-internal fun OpenAPI.parseModels(): List<ModelType> =
-    components
+internal fun OpenAPI.parseModels(): List<ModelType> {
+    val memberships = unionMemberships()
+    return components
         ?.schemas
         .orEmpty()
         .mapNotNull { (name, schema) ->
-            val properties = schema.properties.orEmpty()
-            // A schema with no properties has no class worth generating; it is carried as raw JSON.
-            if (properties.isEmpty()) return@mapNotNull null
-            val required = schema.required.orEmpty().toSet()
-            ModelType(
-                name = Naming.pascal(name),
-                fields =
-                    properties.map { (propertyName, propertySchema) ->
-                        Field(
-                            name = Naming.propertyName(propertyName),
-                            wireName = propertyName,
-                            type = typeOf(propertySchema, "model $name property '$propertyName'"),
-                            required = propertyName in required,
-                        )
-                    },
-            )
+            when (schemaKindOf(schema)) {
+                SchemaKind.Enum -> enumTypeOf(schema, Naming.pascal(name), "model $name")
+
+                SchemaKind.Union -> unionTypeOf(schema, Naming.pascal(name), "model $name")
+
+                SchemaKind.Object -> objectTypeOf(schema, name, "model $name", memberships)
+
+                // A schema that becomes no declaration is carried as its underlying type instead.
+                null -> null
+            }
         }.sortedBy { it.name }
         .requireDistinctNames()
+}
 
-internal fun OpenAPI.parseReturnType(operation: SwaggerOperation): TypeRef {
-    // The lowest 2xx, not whichever the document happened to list first: an operation declaring
-    // both 200 and 201 should always generate the same return type.
-    val success =
-        operation.responses
-            ?.entries
-            ?.filter { (code, _) -> code.startsWith("2") }
-            ?.minByOrNull { (code, _) -> code }
-            ?.value
-            ?: return TypeRef.UnitRef
-    val content = success.content ?: return TypeRef.UnitRef
-    content["application/json"]?.schema?.let { return typeOf(it, "${operation.operationId} response") }
-    if (content.keys.any { it.startsWith("text/") }) return TypeRef.StringRef
-    return TypeRef.UnitRef
+/** Which schemas are members of which unions, keyed by the member's own component name. */
+private fun OpenAPI.unionMemberships(): Map<String, List<UnionMembership>> {
+    val memberships = mutableMapOf<String, MutableList<UnionMembership>>()
+    components?.schemas.orEmpty().forEach { (baseSchemaName, schema) ->
+        if (schemaKindOf(schema) != SchemaKind.Union) return@forEach
+        val union = unionTypeOf(schema, Naming.pascal(baseSchemaName), "model $baseSchemaName")
+        unionMembersOf(schema).orEmpty().forEachIndexed { index, member ->
+            memberships
+                .getOrPut(member) { mutableListOf() }
+                .add(
+                    UnionMembership(
+                        baseName = baseSchemaName,
+                        baseSchemaName = baseSchemaName,
+                        discriminatorWireName = union.discriminator?.wireName,
+                        wireValue = union.subtypes[index].wireValue,
+                    ),
+                )
+        }
+    }
+    return memberships
 }
