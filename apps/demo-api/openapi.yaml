@@ -21,6 +21,8 @@ tags:
     description: Categories controller
   - name: uploads-controller
     description: Uploads controller
+  - name: notifications-controller
+    description: Notifications controller
 paths:
   /auth/login:
     post:
@@ -1133,6 +1135,80 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /notifications:
+    post:
+      tags:
+        - notifications-controller
+      summary: Queue a notification
+      operationId: queueNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequest'
+      responses:
+        '201':
+          description: The newly queued notification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    get:
+      tags:
+        - notifications-controller
+      summary: List notifications
+      operationId: findNotifications
+      parameters:
+        - name: channel
+          in: query
+          description: Only notifications going out over this channel.
+          schema:
+            $ref: '#/components/schemas/NotificationChannel'
+      responses:
+        '200':
+          description: The notifications queued so far.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+  /notifications/legacy:
+    get:
+      tags:
+        - notifications-controller
+      summary: Read the notification this document does not fully describe
+      description: >
+        Serves a notification whose channel this document does not list, standing in for a server
+        deployed ahead of the spec a client was generated from.
+      operationId: findLegacyNotification
+      responses:
+        '200':
+          description: A notification on a channel added after this document was written.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+  /notifications/{id}:
+    get:
+      tags:
+        - notifications-controller
+      summary: Read notification
+      operationId: findNotification
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The notification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     Basic:
@@ -1666,6 +1742,140 @@ components:
           items:
             type: string
           description: The roles to be assigned to the user.
+    NotificationChannel:
+      type: string
+      description: How a notification reaches whoever it is for.
+      enum:
+        - email
+        - sms
+        - push
+    NotificationStatus:
+      type: string
+      description: Where a notification has got to.
+      enum:
+        - queued
+        - sent
+        - failed
+    NotificationPayload:
+      description: What a notification actually says, which differs per channel.
+      oneOf:
+        - $ref: '#/components/schemas/EmailPayload'
+        - $ref: '#/components/schemas/SmsPayload'
+        - $ref: '#/components/schemas/PushPayload'
+      discriminator:
+        propertyName: kind
+        mapping:
+          email: '#/components/schemas/EmailPayload'
+          sms: '#/components/schemas/SmsPayload'
+          push: '#/components/schemas/PushPayload'
+    EmailPayload:
+      type: object
+      required:
+        - subject
+        - body
+      properties:
+        kind:
+          type: string
+        subject:
+          type: string
+          description: The subject line.
+        body:
+          type: string
+    SmsPayload:
+      type: object
+      required:
+        - text
+      properties:
+        kind:
+          type: string
+        text:
+          type: string
+    PushPayload:
+      type: object
+      required:
+        - title
+      properties:
+        kind:
+          type: string
+        title:
+          type: string
+        badge:
+          type: integer
+    Recipient:
+      description: >
+        Who a notification is for. There is no discriminator: the two shapes are told apart by the
+        keys they carry.
+      oneOf:
+        - $ref: '#/components/schemas/UserRecipient'
+        - $ref: '#/components/schemas/GroupRecipient'
+    UserRecipient:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+        email:
+          type: string
+    GroupRecipient:
+      type: object
+      required:
+        - groupId
+      properties:
+        groupId:
+          type: string
+        size:
+          type: integer
+    NotificationRequest:
+      type: object
+      description: A notification to queue.
+      required:
+        - channel
+        - recipient
+        - payload
+      properties:
+        channel:
+          $ref: '#/components/schemas/NotificationChannel'
+        recipient:
+          $ref: '#/components/schemas/Recipient'
+        payload:
+          $ref: '#/components/schemas/NotificationPayload'
+        traceId:
+          type: string
+          format: uuid
+          description: Correlates this notification with the request that asked for it.
+        scheduledOn:
+          type: string
+          format: date
+          description: The day it should go out, if not immediately.
+        legacyRef:
+          type: string
+          deprecated: true
+          description: Superseded by traceId.
+    Notification:
+      description: One queued notification, and what became of it.
+      allOf:
+        - $ref: '#/components/schemas/NotificationRequest'
+        - type: object
+          required:
+            - id
+            - status
+            - metadata
+          properties:
+            id:
+              type: string
+            status:
+              $ref: '#/components/schemas/NotificationStatus'
+            delivery:
+              type: object
+              description: What the last delivery attempt did.
+              properties:
+                attempts:
+                  type: integer
+                lastError:
+                  type: string
+            metadata:
+              $ref: '#/components/schemas/AuditMetadata'
   responses:
     BadRequest:
       description: The request was invalid.

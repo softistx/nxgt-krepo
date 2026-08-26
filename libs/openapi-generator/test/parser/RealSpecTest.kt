@@ -30,12 +30,13 @@ class RealSpecTest :
                     listOf(
                         "AuthApi",
                         "CategoriesApi",
+                        "NotificationsApi",
                         "RolesApi",
                         "TagsApi",
                         "UploadsApi",
                         "UsersApi",
                     )
-                model.groups.sumOf { it.operations.size } shouldBe 44
+                model.groups.sumOf { it.operations.size } shouldBe 48
                 model.models.size shouldBeGreaterThan 10
 
                 // every operation must resolve to a usable return type and named parameters
