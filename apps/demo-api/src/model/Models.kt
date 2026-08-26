@@ -93,3 +93,10 @@ public data class ErrorResponse(
     public val message: String = "",
     public val debugMessage: String? = null,
 )
+
+/** What the server made of the credential on a request. */
+@Serializable
+public data class SessionInfo(
+    val subject: String? = null,
+    val authorization: String? = null,
+)

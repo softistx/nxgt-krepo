@@ -16,27 +16,15 @@ import com.strange.openapi.emit.EmitOptions
 import com.strange.openapi.emit.GENERATED_COMMENT
 import com.strange.openapi.emit.apiErrorDispatch
 import com.strange.openapi.emit.apiExceptionName
-import com.strange.openapi.emit.apiOperationName
 import com.strange.openapi.emit.errorSchemas
 import com.strange.openapi.emit.exceptionNameFor
 import com.strange.openapi.emit.parserNameFor
 
-private const val ATTRIBUTE = "OPERATION_ATTRIBUTE"
-
 /**
- * `ApiErrors.kt`: the two pieces of Spring wiring that turn a documented failure into its exception.
+ * `ApiErrors.kt`: the Spring filter that turns a documented failure into its exception.
  *
- * Spring's proxy sees the method; its `WebClient` sees the response; nothing sees both. So the
- * operation travels between them as a request attribute:
- *
- * - `apiOperationProcessor()` is an `HttpRequestValues.Processor`, which the proxy factory hands
- *   the reflective `Method` — enough to read `@ApiOperation` off the generated interface — and a
- *   builder with `addAttribute`.
- * - `WebClientAdapter` copies those attributes onto the `ClientRequest`, where `apiErrorFilter()`
- *   reads them back beside the response.
- *
- * Both halves were checked against the real stack before this was written, not inferred from the
- * API surface.
+ * It reads which operation is failing out of the attribute `apiOperationProcessor()` put there —
+ * see `ApiProxySupport.kt` for why the operation has to travel that way at all.
  *
  * Generated because the mapping follows the document; installed by the consumer, because the
  * consumer owns the `WebClient` and the factory — the same split as `ApiEnumConverters.kt`:
@@ -55,45 +43,6 @@ internal fun apiErrorFilterFile(
 ): FileSpec? {
     val schemas = model.errorSchemas()
     if (schemas.isEmpty()) return null
-
-    val attribute =
-        PropertySpec
-            .builder(ATTRIBUTE, STRING)
-            .addModifiers(KModifier.PUBLIC, KModifier.CONST)
-            .initializer("%S", "${options.packageName}.operationId")
-            .addKdoc(
-                """
-                The request attribute the operation's id travels in.
-
-                From the proxy, which knows the method but not the response, to the filter, which
-                sees the response but not the method.
-                """.trimIndent(),
-            ).build()
-
-    val processor =
-        FunSpec
-            .builder("apiOperationProcessor")
-            .addModifiers(KModifier.PUBLIC)
-            .returns(PROCESSOR)
-            .addKdoc(
-                """
-                Puts the calling operation's id where [apiErrorFilter] can find it.
-
-                Give it to the proxy factory with `httpRequestValuesProcessor(...)`. Without it the
-                filter has a status and a body but no way to know which operation they came from,
-                and every failure falls back to [$API_EXCEPTION].
-                """.trimIndent(),
-            ).addCode(
-                CodeBlock
-                    .builder()
-                    .beginControlFlow("return %T { method, _, _, builder ->", PROCESSOR)
-                    .addStatement(
-                        "method.getAnnotation(%T::class.java)?.let { builder.addAttribute(%L, it.id) }",
-                        apiOperationName(options),
-                        ATTRIBUTE,
-                    ).endControlFlow()
-                    .build(),
-            ).build()
 
     val filter =
         FunSpec
@@ -131,7 +80,7 @@ internal fun apiErrorFilterFile(
                         "response.bodyToMono(%T::class.java).defaultIfEmpty(%S).flatMap { rawBody ->",
                         STRING,
                         "",
-                    ).addStatement("val operationId = request.attributes()[%L] as %T?", ATTRIBUTE, STRING)
+                    ).addStatement("val operationId = request.attributes()[%L] as %T?", OPERATION_ATTRIBUTE, STRING)
                     .addStatement(
                         "%T.error<%T>(%L(mapper, operationId, response.statusCode().value(), rawBody))",
                         MONO,
@@ -183,8 +132,6 @@ internal fun apiErrorFilterFile(
     return FileSpec
         .builder(options.packageName, "ApiErrors")
         .addFileComment(GENERATED_COMMENT)
-        .addProperty(attribute)
-        .addFunction(processor)
         .addFunction(filter)
         .addFunction(apiErrorDispatch(model, options, decoder, "mapper, status, rawBody"))
         .apply { parsers.forEach { addFunction(it) } }
@@ -196,7 +143,6 @@ private val OBJECT_MAPPER = ClassName("tools.jackson.databind", "ObjectMapper")
 private val JSON_MAPPER = ClassName("tools.jackson.databind.json", "JsonMapper")
 private val EXCHANGE_FILTER = ClassName("org.springframework.web.reactive.function.client", "ExchangeFilterFunction")
 private val CLIENT_RESPONSE = ClassName("org.springframework.web.reactive.function.client", "ClientResponse")
-private val PROCESSOR = ClassName("org.springframework.web.service.invoker", "HttpRequestValues", "Processor")
 private val MONO = ClassName("reactor.core.publisher", "Mono")
 
 // The broadest catch on purpose: Jackson throws for a body of the wrong shape and for one that is

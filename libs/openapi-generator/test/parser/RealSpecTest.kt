@@ -45,9 +45,9 @@ class RealSpecTest :
                         "UploadsApi",
                         "UsersApi",
                     )
-                // The document declares 50; `purgeNotifications` is marked x-internal, so a
+                // The document declares 52; `purgeNotifications` is marked x-internal, so a
                 // generated client is one operation smaller than the document it came from.
-                model.groups.sumOf { it.operations.size } shouldBe 49
+                model.groups.sumOf { it.operations.size } shouldBe 51
                 operationsOf(model).none { it.name == "purgeNotifications" } shouldBe true
                 model.models.size shouldBeGreaterThan 10
 
@@ -62,10 +62,11 @@ class RealSpecTest :
 
                 // Every one of these is a `$ref` into components/responses, so this count is also
                 // the check that they are followed rather than skipped.
-                operations.sumOf { it.errors.size } shouldBe 171
-                // Not every operation declares one: the two `/notifications` reads do not, and a
-                // document is entitled to say nothing about how an operation fails.
-                operations.count { it.errors.isEmpty() } shouldBe 2
+                operations.sumOf { it.errors.size } shouldBe 172
+                // Not every operation declares one: the two `/notifications` reads and
+                // `/session/echo` do not, and a document is entitled to say nothing about how an
+                // operation fails.
+                operations.count { it.errors.isEmpty() } shouldBe 3
                 // One error schema throughout, which is what makes one generated exception enough.
                 operations
                     .flatMap { it.errors }
@@ -80,8 +81,8 @@ class RealSpecTest :
                 model.securitySchemes.map { it.name to it.kind } shouldContainAll
                     listOf("Basic" to SecurityKind.HttpBasic, "Bearer" to SecurityKind.HttpBearer)
                 // The document's root is `security: - Bearer: []`, which 36 operations inherit;
-                // the remaining 13 override it with `security: []`.
-                operations.count { it.security.isEmpty() } shouldBe 13
+                // the remaining 14 override it with `security: []`.
+                operations.count { it.security.isEmpty() } shouldBe 14
                 operations
                     .filter { it.security.isNotEmpty() }
                     .all { it.security == listOf(SecurityRequirement("Bearer")) } shouldBe true
