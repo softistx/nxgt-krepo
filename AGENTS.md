@@ -6,17 +6,46 @@ Shared guidance for any coding agent working in this repository.
 
 `nxgt-krepo` is a multi-module Kotlin library repository built with the **JetBrains Kotlin Toolchain 0.12+** (the `kotlin` CLI, formerly Amper) — *not* Gradle and *not* Maven. There is no `build.gradle.kts`, no `settings.gradle.kts`, and no `gradlew`.
 
-The repo is currently a scaffold. What exists:
+What exists:
 
 | Path | Role |
 | --- | --- |
-| `project.yaml` | Project manifest — lists the modules (currently empty) |
+| `project.yaml` | Project manifest — lists the modules, and registers local toolchain plugins |
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
-| `libs/` | Library modules (empty) |
-| `plugins/` | Toolchain plugin modules (empty) |
+| `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
+| `libs/openapi-codegen` | Reads an OpenAPI spec, emits a typed client with KotlinPoet |
+| `plugins/openapi-client` | Toolchain plugin wrapping the codegen as a build task |
+| `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
+| `apps/demo-client` | Generates its client from that spec and calls the server |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
+
+## The OpenAPI client generator
+
+`libs/openapi-codegen` is a plain `jvm/lib` and holds all the work: swagger-parser reads the
+spec into an intermediate representation, and a `ClientEmitter` turns that into KotlinPoet
+files. `KtorfitEmitter` is the only implementation today; a Spring `HttpExchange` emitter is
+the next one, and the IR exists so the parser never has to know which.
+
+`plugins/openapi-client` is a thin `jvm/amper-plugin` around it: typed `@Configurable`
+settings, one `@TaskAction`, and a `generated.sources` entry so the output compiles into the
+consuming module. A module opts in from its own `module.yaml`:
+
+```yaml
+plugins:
+  openapi-client:
+    enabled: true
+    specFile: ../demo-api/openapi.yaml   # relative to the module root
+    packageName: dev.nxgt.demo.client.api
+```
+
+Everything else has a default: `client: Ktorfit`, `groupBy: Tag`, `generateModels: true`.
+Grouping by tag turns `categories-controller` into `CategoriesApi`.
+
+For Ktorfit, the generated interfaces are then picked up by `ktorfit-ksp`, which generates the
+`createXxxApi()` builders — plugin-generated sources do reach KSP. `apps/demo-client` shows the
+whole chain, and its `EndToEndTest` drives it against the real `demo-api` server over HTTP.
 
 ## Instruction files
 
