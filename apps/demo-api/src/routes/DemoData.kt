@@ -2,6 +2,7 @@ package com.strange.demo.api.routes
 
 import com.strange.demo.api.model.Category
 import com.strange.demo.api.model.ErrorResponse
+import com.strange.demo.api.model.Notification
 import com.strange.demo.api.model.Tag
 import com.strange.demo.api.store.Ids
 import com.strange.demo.api.store.Store
@@ -14,6 +15,7 @@ internal class DemoData {
     val ids = Ids()
     val categories = Store<Category> { it.id }
     val tags = Store<Tag> { it.id }
+    val notifications = Store<Notification> { it.id }
 }
 
 internal fun ApplicationCall.id(): String = parameters["id"].orEmpty()

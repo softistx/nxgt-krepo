@@ -94,6 +94,21 @@ Two differences are not stylistic and will bite if they are "cleaned up":
 - **A Spring named parameter needs `required = false` when it is optional.** Spring's argument
   resolver throws on a null value for a required named parameter, so nullability alone is not
   enough.
+- **Spring writes an enum argument with `Enum.name()`.** Its `ConversionService` never consults
+  `toString()`, and the documented "the enum implements an interface with a converter" escape does
+  not apply to a converter it has not been given — both checked against
+  `DefaultFormattingConversionService` rather than assumed. So a generated enum used as a path,
+  query or header parameter would go out as `IN_PROGRESS` where the document says `in-progress`: a
+  request that succeeds and matches nothing. The Spring style therefore emits one extra file,
+  `ApiEnumConverters.kt`, and the consumer hands it to the proxy factory:
+
+  ```kotlin
+  val conversions = DefaultFormattingConversionService().also(::registerApiEnumConverters)
+  HttpServiceProxyFactory.builderFor(adapter).conversionService(conversions).build()
+  ```
+
+  Ktorfit needs none of this: it converts a parameter with `toString()`, which a generated enum
+  overrides to return its wire value.
 - **Spring has no annotation past the five common verbs.** `@GetExchange` and friends cover
   GET/POST/PUT/PATCH/DELETE; `HEAD`, `OPTIONS` and `TRACE` fall back to the generic
   `@HttpExchange(method = "HEAD")`. Anything else is an `EmitException` naming the method, because a

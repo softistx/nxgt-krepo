@@ -1,8 +1,10 @@
 package com.strange.demo.client
 
 import com.strange.demo.client.api.CategoriesApi
+import com.strange.demo.client.api.NotificationsApi
 import com.strange.demo.client.api.TagsApi
 import com.strange.demo.client.api.createCategoriesApi
+import com.strange.demo.client.api.createNotificationsApi
 import com.strange.demo.client.api.createTagsApi
 import com.strange.demo.client.api.model.CategoryRequest
 import com.strange.demo.client.api.model.SearchRequest
@@ -37,6 +39,7 @@ public class DemoClient(
     // the generic form does not resolve to the generated implementation.
     public val categories: CategoriesApi = ktorfit.createCategoriesApi()
     public val tags: TagsApi = ktorfit.createTagsApi()
+    public val notifications: NotificationsApi = ktorfit.createNotificationsApi()
 
     override fun close(): Unit = http.close()
 }
