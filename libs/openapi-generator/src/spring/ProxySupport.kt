@@ -71,7 +71,7 @@ internal fun proxySupportFile(options: EmitOptions): FileSpec {
             ).build()
 
     return FileSpec
-        .builder(options.packageName, "ApiProxySupport")
+        .builder(options.utilPackage, "ApiProxySupport")
         .addFileComment(GENERATED_COMMENT)
         .addProperty(operation)
         .addProperty(security)

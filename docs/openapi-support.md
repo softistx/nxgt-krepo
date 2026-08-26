@@ -17,6 +17,21 @@ Two rules hold across everything below:
 - **A name is derived, unless the document states one.** Every derivation is written down here, and
   every one of them can be overridden with `x-kotlin-name`.
 
+## Where it lands
+
+Nothing is written to the package you name. Every generated file goes in one of three sub-packages
+below it:
+
+```
+<packageName>.apis      one interface per group
+<packageName>.models    one declaration per schema
+<packageName>.utils     the machinery a client needs and a caller mostly does not
+```
+
+This is why a document can have a `tags` endpoint group *and* a `Tag` schema: they are `apis.TagsApi`
+and `models.Tag`, and neither has to give way. Names still collide **within** a package, and those
+are [listed below](#colliding-names).
+
 ## Type mapping
 
 | OpenAPI | Kotlin |
@@ -331,14 +346,16 @@ collision is either merged or fatal — never silently resolved by whichever one
   `pageInfo` are both `PageInfo`.
 - **`writeAllTo` refuses a batch containing two files with the same fully-qualified name**, which
   catches anything the earlier checks did not — writing them in sequence would let the last win.
+- **A generated exception that would take a name the `utils` package already uses fails.** The
+  exception for a schema is its name plus `Exception`, so a schema called `Api` derives
+  `ApiException`, the base class every other one extends. Rename the schema with `x-kotlin-name`.
+
+An interface and a schema are *not* on that list. They are in different packages now, so `Tag` the
+endpoint group and `Tag` the schema coexist.
 
 Where a spec is merely *ambiguous* rather than contradictory, the choice is pinned down instead of
 left to document order: an operation with several 2xx responses takes its return type from the
 **lowest** one, so `200` wins over `201` however the YAML lists them.
-
-A generated exception shares a package with the generated interfaces, so an interface that would be
-named `ErrorResponseException` — reachable with `interfaceSuffix: ""` and a tag to match — fails the
-emit rather than colliding.
 
 ## What it does not handle
 

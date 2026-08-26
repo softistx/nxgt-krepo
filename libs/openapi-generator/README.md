@@ -92,8 +92,19 @@ classes are named after.
 | Operation → HTTP layer | `request.annotations` | `apiOperationProcessor()` + request attributes |
 
 Both emit `suspend` functions, group by OpenAPI tag by default (`categories-controller` →
-`CategoriesApi`), and put models in a `<packageName>.model` sub-package so an interface and a schema
-can share a name. `InterfaceNaming` decides the interface name's prefix and suffix — the defaults
+`CategoriesApi`), and write nothing to `packageName` itself — every file lands in one of three
+sub-packages, by what it is rather than by what produced it:
+
+```
+<packageName>.apis      one interface per group
+<packageName>.models    one declaration per schema
+<packageName>.utils     the machinery a client needs and a caller mostly does not
+```
+
+That is what lets `Tag` the endpoint group and `Tag` the schema both exist, and it keeps the
+surface a caller reads apart from the plumbing underneath it — `ApiProxySupport` is not an API. The
+names are fixed: nothing about the layout depends on the consuming module, so a setting would only
+be a second way to arrange the same files. `InterfaceNaming` decides the interface name's prefix and suffix — the defaults
 are `""` and `"Api"`.
 
 Two differences are not stylistic and will bite if they are "cleaned up":

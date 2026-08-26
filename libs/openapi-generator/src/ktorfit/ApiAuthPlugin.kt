@@ -67,7 +67,7 @@ internal fun apiAuthFile(
 
     val plugin =
         PropertySpec
-            .builder("ApiAuth", CLIENT_PLUGIN.parameterizedBy(ClassName(options.packageName, AUTH_CONFIG)))
+            .builder("ApiAuth", CLIENT_PLUGIN.parameterizedBy(ClassName(options.utilPackage, AUTH_CONFIG)))
             .addModifiers(KModifier.PUBLIC)
             .addKdoc(
                 """
@@ -80,7 +80,7 @@ internal fun apiAuthFile(
             .build()
 
     return FileSpec
-        .builder(options.packageName, "ApiAuth")
+        .builder(options.utilPackage, "ApiAuth")
         .addFileComment(GENERATED_COMMENT)
         .addType(authConfigType(model, options))
         .apply { if (model.needsBasicCredentials()) addType(basicCredentialsType()) }

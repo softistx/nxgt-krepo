@@ -2,9 +2,9 @@ package com.strange.demo.spring
 
 import com.strange.demo.api.DemoServer
 import com.strange.demo.api.startDemoServer
-import com.strange.demo.spring.api.model.CategoryRequest
-import com.strange.demo.spring.api.model.SearchRequest
-import com.strange.demo.spring.api.model.TagRequest
+import com.strange.demo.spring.api.models.CategoryRequest
+import com.strange.demo.spring.api.models.SearchRequest
+import com.strange.demo.spring.api.models.TagRequest
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe

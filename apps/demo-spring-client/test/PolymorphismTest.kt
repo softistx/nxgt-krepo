@@ -2,14 +2,14 @@ package com.strange.demo.spring
 
 import com.strange.demo.api.DemoServer
 import com.strange.demo.api.startDemoServer
-import com.strange.demo.spring.api.NotificationsApi
-import com.strange.demo.spring.api.model.EmailPayload
-import com.strange.demo.spring.api.model.GroupRecipient
-import com.strange.demo.spring.api.model.NotificationChannel
-import com.strange.demo.spring.api.model.NotificationRequest
-import com.strange.demo.spring.api.model.NotificationStatus
-import com.strange.demo.spring.api.model.SmsPayload
-import com.strange.demo.spring.api.model.UserRecipient
+import com.strange.demo.spring.api.apis.NotificationsApi
+import com.strange.demo.spring.api.models.EmailPayload
+import com.strange.demo.spring.api.models.GroupRecipient
+import com.strange.demo.spring.api.models.NotificationChannel
+import com.strange.demo.spring.api.models.NotificationRequest
+import com.strange.demo.spring.api.models.NotificationStatus
+import com.strange.demo.spring.api.models.SmsPayload
+import com.strange.demo.spring.api.models.UserRecipient
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf

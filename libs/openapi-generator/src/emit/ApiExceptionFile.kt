@@ -17,7 +17,7 @@ internal const val API_EXCEPTION: String = "ApiException"
 internal const val EXCEPTIONS_FILE: String = "ApiExceptions"
 
 /** The base exception, by the name it has in the generated package. */
-internal fun apiExceptionName(options: EmitOptions): ClassName = ClassName(options.packageName, API_EXCEPTION)
+internal fun apiExceptionName(options: EmitOptions): ClassName = ClassName(options.utilPackage, API_EXCEPTION)
 
 /** `ErrorResponse` -> `ErrorResponseException`. */
 internal fun exceptionNameFor(schema: String): String = "${schema}Exception"
@@ -109,7 +109,7 @@ internal fun apiExceptionFile(
                     "A documented failure whose body is a [%T].\n\nThe document declares this " +
                         "schema for at least one non-2xx response, and the body parsed as one.",
                     bodyType,
-                ).superclass(ClassName(options.packageName, API_EXCEPTION))
+                ).superclass(ClassName(options.utilPackage, API_EXCEPTION))
                 .addSuperclassConstructorParameter("status")
                 .addSuperclassConstructorParameter("rawBody")
                 .addSuperclassConstructorParameter("%P", "HTTP \$status: \$error")
@@ -130,7 +130,7 @@ internal fun apiExceptionFile(
         }
 
     return FileSpec
-        .builder(options.packageName, EXCEPTIONS_FILE)
+        .builder(options.utilPackage, EXCEPTIONS_FILE)
         .addFileComment(GENERATED_COMMENT)
         .addType(base)
         .apply { typed.forEach { addType(it) } }
@@ -138,18 +138,42 @@ internal fun apiExceptionFile(
 }
 
 /**
- * The generated exception names share a package with the generated interfaces, so an interface
- * named `ErrorResponseException` — reachable with `interfaceSuffix: ""` and a tag to match — would
- * be two declarations with one name in one file set.
+ * A generated exception name must not be one the utils package already uses.
+ *
+ * The names in [RESERVED] are this generator's own and do not come from the document; the rest are
+ * derived by appending `Exception` to a schema name, which is enough to reach one — a schema called
+ * `Api` derives `ApiException`, the base class every other exception extends. That would be two
+ * declarations with one name in one file set, and the last one written would win.
+ *
+ * Since the three packages were split apart this is the only collision left here: an interface and
+ * a schema can now share a name freely, because they no longer share a package.
  */
 internal fun ApiModel.requireExceptionNamesFree() {
-    val interfaces = groups.mapTo(mutableSetOf()) { it.name }
-    val clash = errorSchemas().map(::exceptionNameFor).filter { it in interfaces } + listOf(API_EXCEPTION).filter { it in interfaces }
+    val clash = errorSchemas().map(::exceptionNameFor).filter { it in RESERVED }
     if (clash.isEmpty()) return
     throw EmitException(
-        "generated exception ${clash.joinToString(", ") { "'$it'" }} would collide with an interface of " +
-            "the same name; rename the tag, or set an interfacePrefix or interfaceSuffix",
+        clash.joinToString(
+            prefix =
+                "these generated exceptions would collide with a declaration this generator " +
+                    "already emits into the utils package: ",
+            separator = ", ",
+        ) { "'$it'" } + ". Rename the schema they come from with x-kotlin-name.",
     )
 }
+
+/** Every name the generator writes into the utils package that a document did not choose. */
+private val RESERVED =
+    setOf(
+        API_EXCEPTION,
+        API_OPERATION,
+        AUTH_CONFIG,
+        BASIC_CREDENTIALS,
+        EXCEPTIONS_FILE,
+        "ApiAuth",
+        "ApiEnumConverters",
+        "ApiErrors",
+        "ApiErrorsConfig",
+        "ApiProxySupport",
+    )
 
 private val RUNTIME_EXCEPTION = ClassName("kotlin", "RuntimeException")
