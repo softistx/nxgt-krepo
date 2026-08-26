@@ -15,6 +15,9 @@ import kotlin.io.path.readText
  * `$ref`s are deliberately *not* inlined: resolving fully would erase the component names that
  * generated model classes are named after.
  *
+ * Inline schemas are promoted to named components first (`InlineSchemas.kt`), so the rest of the
+ * parser only ever resolves names.
+ *
  * The parser knows nothing about any client style. Schema-to-type resolution lives in
  * `SchemaTypes.kt`, parameters in `ParameterParsing.kt`, and models in `ModelParsing.kt`.
  */
@@ -34,6 +37,9 @@ public class OpenApiParser(
                 ?: throw OpenApiParseException(
                     "could not parse $source: ${result.messages?.joinToString("; ").orEmpty()}",
                 )
+        // Before anything reads the document: an inline schema that would become a declaration is
+        // given a name and a place in `components`, so every later stage only ever sees a `$ref`.
+        openApi.hoistInlineSchemas()
         return ApiModel(groups = parseGroups(openApi), models = openApi.parseModels())
     }
 

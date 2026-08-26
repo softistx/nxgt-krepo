@@ -113,7 +113,8 @@ Two differences are not stylistic and will bite if they are "cleaned up":
 | `boolean` | `Boolean` |
 | `array` | `List<T>` |
 | object with properties | a generated model class |
-| object without properties | the free-form type |
+| object with typed `additionalProperties` | `Map<String, T>` |
+| object with neither | the free-form type |
 | no 2xx response schema | `Unit` |
 
 A `$ref` to a schema with no properties resolves to the underlying type rather than to a class name
@@ -121,7 +122,44 @@ A `$ref` to a schema with no properties resolves to the underlying type rather t
 ever emit.
 
 Optional properties and parameters are nullable and default to `null`, and parameters are ordered so
-that everything with a default comes last.
+that everything with a default comes last. Nullability is read from the schema, not inferred from
+`required`: a required `nullable: true` property is a non-optional parameter of a nullable type, and
+3.1's `type: ["string", "null"]` means the same thing in either order.
+
+## Inline schemas
+
+A schema written in place rather than behind a `$ref` describes exactly as much as a named one, but
+the rest of the parser is name-driven — so before anything else reads the document, every inline
+schema that would become a declaration is added to `components.schemas` and replaced by a `$ref` to
+it (`parser/InlineSchemas.kt`). Nothing downstream knows this happened.
+
+The name comes from the path that reached the schema, so it is predictable from the document alone:
+
+| Where | Name |
+| --- | --- |
+| `Order.shippingAddress` | `OrderShippingAddress` |
+| `Order.lines` items | `OrderLinesItem` |
+| `Order.totals` `additionalProperties` | `OrderTotalsValue` |
+| `createOrder` JSON request body | `CreateOrderRequest` |
+| `createOrder` success response body | `CreateOrderResponse` |
+| `createOrder`'s `mode` parameter | `CreateOrderMode` |
+
+`Item` and `Value` are suffixes rather than a guessed singular: `OrderTagsItem` is uglier than
+`OrderTag` would be, but singularising `status` gives `Statu`, and a predictable name beats a pretty
+one that is sometimes wrong.
+
+Two things are deliberately *not* promoted. A composition branch stays inline — an `allOf` branch is
+merged into its container, and a `oneOf` branch must be a `$ref` to be a union member at all, so
+promoting either would emit a class no signature mentions. And a schema that becomes no declaration
+is left exactly as it was: `{type: object}` with nothing in it is genuinely free-form, and naming it
+would generate an empty class rather than describe anything.
+
+The same inline schema written in two places generates **one** class, reused — a document that
+repeats one status enum across five operations should not produce five enums a caller cannot pass
+between. The name is the first site in document order. Reuse is limited to schemas this pass
+created: quietly retyping a property to a component the document never pointed it at would be a
+different and much larger claim. A derived name the document already uses is a build failure naming
+both, never a silent overwrite.
 
 ## Composition
 
@@ -244,10 +282,18 @@ left to document order: an operation with several 2xx responses takes its return
 
 ## What it does not handle
 
-`allOf` / `oneOf` / `anyOf`, enums, and `additionalProperties` are not modelled; a schema using them
-falls back to the free-form type or to its first resolvable shape. An unsupported request media type
-is an error naming the operation, not a silently skipped endpoint — the same is true of a multipart
-body with no declared properties.
+- **`not`, and the validation keywords.** `minLength`, `pattern`, `minimum`, `maxItems` and the rest
+  are read by nobody: they constrain values, and this generator emits types. A schema using them is
+  generated as though they were absent rather than rejected.
+- **`anyOf`'s "more than one may match" semantics.** It emits identically to `oneOf`, so a document
+  that genuinely means "either shape, possibly both" gets a type that can hold only one.
+- **A `oneOf` whose branches are not all `$ref`s to object schemas.** That is not a union this
+  generator can name, so the property keeps the free-form type.
+- **Float and mixed-type enums.** Only `string` and `integer` enums become enum classes; the rest
+  keep the scalar underneath, which is a visible limitation rather than a wrong one.
+An unsupported request media type is an error naming the operation, not a silently skipped endpoint
+— the same is true of a multipart body with no declared properties, and of every case above where
+the text says "failure" rather than "falls back".
 
 ## Adding a client style
 
