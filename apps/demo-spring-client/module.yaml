@@ -1,0 +1,17 @@
+product: jvm/app
+
+dependencies:
+  # spring-web carries both the @HttpExchange annotations and HttpServiceProxyFactory
+  - $libs.spring.web
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+plugins:
+  openapi:
+    enabled: true
+    client: Spring
+    specFile: ../demo-api/openapi.yaml
+    packageName: com.strange.demo.spring.api

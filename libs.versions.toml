@@ -34,6 +34,7 @@ ktorfit = "2.7.5"
 koin = "4.2.2"
 koin-compiler = "1.0.1"
 kotest = "6.2.2"
+spring = "7.0.9"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -114,6 +115,9 @@ kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
 ktorfit-lib-light = { module = "de.jensklingenberg.ktorfit:ktorfit-lib-light", version.ref = "ktorfit" }
 ktorfit-ksp = { module = "de.jensklingenberg.ktorfit:ktorfit-ksp", version.ref = "ktorfit" }
+
+spring-web = { module = "org.springframework:spring-web", version.ref = "spring" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.21.1" }
 
 kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css", version = "2026.7.1" }
 
