@@ -55,4 +55,14 @@ public sealed interface TypeRef {
     public data class ModelRef(
         val name: String,
     ) : TypeRef
+
+    /**
+     * A type the consumer already owns, named by `x-kotlin-type`. Nothing is generated for it.
+     *
+     * Distinct from [ModelRef] because the two have opposite obligations: a [ModelRef] must name a
+     * declaration this run emits, and an [ExternalRef] must name one it does not.
+     */
+    public data class ExternalRef(
+        val qualifiedName: String,
+    ) : TypeRef
 }

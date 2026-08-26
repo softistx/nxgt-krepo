@@ -19,6 +19,10 @@ internal object Ext {
 
     const val SKIP: String = "x-kotlin-skip"
 
+    const val TYPE: String = "x-kotlin-type"
+
+    const val VALUE_CLASS: String = "x-kotlin-value-class"
+
     /** Not in our namespace: these are the spellings other toolchains already write. */
     const val DEPRECATED_REASON: String = "x-deprecated-reason"
 
@@ -34,7 +38,7 @@ internal object Ext {
     const val ENUM_DESCRIPTIONS: String = "x-enum-descriptions"
 
     /** Every key in [KOTLIN_PREFIX] this generator implements. Adding a key means adding it here. */
-    val kotlinKeys: Set<String> = setOf(NAME, SKIP)
+    val kotlinKeys: Set<String> = setOf(NAME, SKIP, TYPE, VALUE_CLASS)
 }
 
 /**
@@ -63,6 +67,26 @@ internal fun requireIdentifier(
             "Use letters, digits and underscores, starting with a letter or an underscore.",
     )
 }
+
+/**
+ * A type the consumer already owns, in place of one generated from the schema.
+ *
+ * Validated as a qualified name here, because `ClassName.bestGuess` would otherwise fail deep
+ * inside KotlinPoet with a message about neither the document nor the key.
+ */
+internal fun Map<String, Any?>?.externalType(where: String): String? {
+    val value = extensionString(Ext.TYPE, where) ?: return null
+    if (!QUALIFIED_NAME.matches(value)) {
+        throw OpenApiParseException(
+            "$where: ${Ext.TYPE} is '$value', which is not a qualified Kotlin type name. " +
+                "Write it in full, as in 'com.example.money.Money'.",
+        )
+    }
+    return value
+}
+
+/** Whether the document asks for this scalar to become a type of its own. */
+internal fun Map<String, Any?>?.isValueClass(where: String): Boolean = extensionBoolean(Ext.VALUE_CLASS, where) == true
 
 /** The text that goes inside `@Deprecated`, in place of this generator's boilerplate. */
 internal fun Map<String, Any?>?.deprecatedReason(where: String): String? =
@@ -118,6 +142,8 @@ internal fun describe(value: Any?): String =
     }
 
 private val IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
+
+private val QUALIFIED_NAME = Regex("[a-zA-Z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)+")
 
 internal fun Map<String, Any?>?.extensionBoolean(
     key: String,

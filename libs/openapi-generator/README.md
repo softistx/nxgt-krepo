@@ -283,6 +283,8 @@ A document can say how it wants to become Kotlin, through `x-*`. What is read:
 | Key | Where | Becomes |
 | --- | --- | --- |
 | `x-kotlin-name` | schema, property, operation, parameter, tag | the Kotlin name; the wire name is untouched |
+| `x-kotlin-type` | schema, property | a type the consumer already owns; nothing is generated |
+| `x-kotlin-value-class` | scalar schema | a `@JvmInline value class` over that scalar |
 | `x-kotlin-skip` / `x-internal` | schema, operation | left out of the generated client |
 | `x-deprecated-reason` | schema, property, operation | the message inside `@Deprecated` |
 | `x-enum-varnames` / `x-enumNames` | enum schema | the entry names |
@@ -296,6 +298,20 @@ through the same collision check, so renaming one half of a collision onto the o
 rather than overwriting it. On a tag it names the interface outright: prefix and suffix are this
 generator's derivation, and a document that states the name is not asking for one to be derived. On
 an inline schema it replaces the name derived from the path (`OrderShippingAddressGeo`).
+
+`x-kotlin-type` hands a schema to a type the consuming module already has —
+`x-kotlin-type: com.example.money.Money` — and nothing is generated for it. The consumer owns that
+type *and* its binding: kotlinx needs it `@Serializable` (or a contextual serializer), Jackson needs
+it bindable. That is the trade, and it is why the key is in our namespace rather than inferred.
+
+`x-kotlin-value-class` turns a scalar alias into a `@JvmInline value class`, so an `OrderId` cannot
+be passed where a `CustomerId` belongs and still costs nothing at runtime. Only a scalar: a value
+class holds exactly one value, so a schema with properties or an `enum` is a document saying two
+things, and fails. Neither library needs an annotation beyond the style's own — kotlinx binds it
+through `@Serializable` on the wrapper, and Jackson's Kotlin module handles value classes itself —
+which was settled by round-tripping the exact emitted shape through both, including a nullable
+field and byte-for-byte agreement between them. `toString` returns the value underneath, for the
+same reason a generated enum's does: a path, query or header argument is converted with `toString`.
 
 `x-enum-varnames` is the other escape hatch: two values that derive one entry name (`in-progress`
 and `in_progress`) are a build failure otherwise. `x-enumNames` is NSwag's spelling of the same

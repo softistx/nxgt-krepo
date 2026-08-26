@@ -17,9 +17,13 @@ internal fun OpenAPI.typeOf(
     seenRefs: Set<String> = emptySet(),
 ): TypeRef {
     if (schema == null) return TypeRef.JsonObjectRef
+    schema.extensions.externalType(where)?.let { return TypeRef.ExternalRef(it) }
     schema.`$ref`?.let { ref ->
         val name = ref.substringAfterLast('/')
         val target = components?.schemas?.get(name)
+        // A type the consumer owns is named by the extension, not by this generator, so it is read
+        // before anything else the target says.
+        target?.extensions?.externalType("schema $name")?.let { return TypeRef.ExternalRef(it) }
         // Only a schema that becomes a declaration keeps its name. A $ref to a scalar or array
         // alias (e.g. `Upload: {type: string, format: binary}`) must resolve to the underlying
         // type, or it would name a class that is never emitted.

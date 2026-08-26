@@ -21,6 +21,8 @@ internal fun OpenAPI.parseModels(): List<ModelType> {
 
                 SchemaKind.Union -> unionTypeOf(schema, modelNameOf(name), "model $name")
 
+                SchemaKind.ValueClass -> valueClassTypeOf(schema, modelNameOf(name), "model $name")
+
                 SchemaKind.Object -> objectTypeOf(schema, name, "model $name", memberships)
 
                 // A schema that becomes no declaration is carried as its underlying type instead.
