@@ -60,7 +60,7 @@ internal fun enumConverterFile(
             }.build()
 
     return FileSpec
-        .builder(options.modelPackage, "ApiEnumConverters")
+        .builder(options.utilPackage, "ApiEnumConverters")
         .addFileComment("Generated from the OpenAPI document. Do not edit.")
         .addFunction(register)
         .build()

@@ -52,6 +52,11 @@ plugins:
     packageName: com.strange.demo.client.api
 ```
 
+Nothing is written to `packageName` itself: interfaces go to `<packageName>.apis`, schemas to
+`.models`, and the client machinery — the operation annotation, the exception hierarchy, the plugins
+and filters — to `.utils`. Fixed, not configurable, and the reason a document can have both a `tags`
+endpoint group and a `Tag` schema.
+
 Everything else has a default: `groupBy: Tag`, `models: Auto`, `interfacePrefix: ""`,
 `interfaceSuffix: "Api"`. Grouping by tag turns `categories-controller` into `CategoriesApi`. The
 spec's schemas are always generated; only the API surface is optional. `models` decides what binds

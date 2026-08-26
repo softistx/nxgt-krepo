@@ -30,7 +30,7 @@ public fun apiFile(
             .addAnnotations(annotations)
             .apply { group.operations.forEach { addFunction(identify(it, options, deprecate(it, operation(it)))) } }
             .build()
-    return FileSpec.builder(options.packageName, group.name).addType(type).build()
+    return FileSpec.builder(options.apiPackage, group.name).addType(type).build()
 }
 
 /**

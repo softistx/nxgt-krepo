@@ -50,7 +50,7 @@ internal fun apiAuthFile(
         FunSpec
             .builder("apiAuthFilter")
             .addModifiers(KModifier.PUBLIC)
-            .addParameter("credentials", ClassName(options.packageName, AUTH_CONFIG))
+            .addParameter("credentials", ClassName(options.utilPackage, AUTH_CONFIG))
             .returns(EXCHANGE_FILTER)
             .addKdoc(
                 """
@@ -95,7 +95,7 @@ internal fun apiAuthFile(
             ).build()
 
     return FileSpec
-        .builder(options.packageName, "ApiAuth")
+        .builder(options.utilPackage, "ApiAuth")
         .addFileComment(GENERATED_COMMENT)
         .addType(authConfigType(model, options))
         .apply { if (model.needsBasicCredentials()) addType(basicCredentialsType()) }

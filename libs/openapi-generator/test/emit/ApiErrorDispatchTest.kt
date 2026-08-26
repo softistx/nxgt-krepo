@@ -68,8 +68,8 @@ private val MODEL =
 class ApiErrorDispatchTest :
     FeatureSpec({
 
-        val ktorfit = KtorfitEmitter().render(MODEL).getValue("com.example.api.ApiErrors")
-        val spring = SpringEmitter().render(MODEL).getValue("com.example.api.ApiErrors")
+        val ktorfit = KtorfitEmitter().render(MODEL).getValue("com.example.api.utils.ApiErrors")
+        val spring = SpringEmitter().render(MODEL).getValue("com.example.api.utils.ApiErrors")
 
         feature("how a status becomes an exception") {
 
@@ -122,7 +122,7 @@ class ApiErrorDispatchTest :
             }
 
             scenario("Spring carries the operation from the proxy to the filter as an attribute") {
-                val support = SpringEmitter().render(MODEL).getValue("com.example.api.ApiProxySupport")
+                val support = SpringEmitter().render(MODEL).getValue("com.example.api.utils.ApiProxySupport")
                 support shouldContain "method.getAnnotation(ApiOperation::class.java)"
                 support shouldContain "builder.addAttribute(OPERATION_ATTRIBUTE, it.id)"
                 spring shouldContain "request.attributes()[OPERATION_ATTRIBUTE]"
@@ -133,8 +133,8 @@ class ApiErrorDispatchTest :
 
             scenario("no typed failure anywhere means no error file at all") {
                 val plain = MODEL.copy(groups = MODEL.groups.map { group -> group.copy(operations = listOf(operation("ping"))) })
-                KtorfitEmitter().render(plain) shouldNotContainKey "com.example.api.ApiErrors"
-                SpringEmitter().render(plain) shouldNotContainKey "com.example.api.ApiErrors"
+                KtorfitEmitter().render(plain) shouldNotContainKey "com.example.api.utils.ApiErrors"
+                SpringEmitter().render(plain) shouldNotContainKey "com.example.api.utils.ApiErrors"
             }
         }
     })

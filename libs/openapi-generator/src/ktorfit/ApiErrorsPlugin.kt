@@ -78,7 +78,7 @@ internal fun apiErrorsFile(
 
     val plugin =
         PropertySpec
-            .builder("ApiErrors", CLIENT_PLUGIN.parameterizedBy(ClassName(options.packageName, CONFIG)))
+            .builder("ApiErrors", CLIENT_PLUGIN.parameterizedBy(ClassName(options.utilPackage, CONFIG)))
             .addModifiers(KModifier.PUBLIC)
             .addKdoc(
                 """
@@ -135,7 +135,7 @@ internal fun apiErrorsFile(
                         .beginControlFlow("return try")
                         .addStatement(
                             "%T(status, rawBody, json.decodeFromString(%T.serializer(), rawBody))",
-                            ClassName(options.packageName, exceptionNameFor(schema)),
+                            ClassName(options.utilPackage, exceptionNameFor(schema)),
                             ClassName(options.modelPackage, schema),
                         ).nextControlFlow("catch (e: %T)", EXCEPTION)
                         .addStatement("%T(status, rawBody)", apiExceptionName(options))
@@ -145,7 +145,7 @@ internal fun apiErrorsFile(
         }
 
     return FileSpec
-        .builder(options.packageName, "ApiErrors")
+        .builder(options.utilPackage, "ApiErrors")
         .addFileComment(GENERATED_COMMENT)
         .addType(config)
         .addProperty(plugin)

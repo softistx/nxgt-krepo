@@ -1,15 +1,15 @@
 package com.strange.demo.spring
 
-import com.strange.demo.spring.api.ApiAuthConfig
-import com.strange.demo.spring.api.CategoriesApi
-import com.strange.demo.spring.api.FailuresApi
-import com.strange.demo.spring.api.NotificationsApi
-import com.strange.demo.spring.api.SessionApi
-import com.strange.demo.spring.api.TagsApi
-import com.strange.demo.spring.api.apiAuthFilter
-import com.strange.demo.spring.api.apiErrorFilter
-import com.strange.demo.spring.api.apiOperationProcessor
-import com.strange.demo.spring.api.model.registerApiEnumConverters
+import com.strange.demo.spring.api.apis.CategoriesApi
+import com.strange.demo.spring.api.apis.FailuresApi
+import com.strange.demo.spring.api.apis.NotificationsApi
+import com.strange.demo.spring.api.apis.SessionApi
+import com.strange.demo.spring.api.apis.TagsApi
+import com.strange.demo.spring.api.utils.ApiAuthConfig
+import com.strange.demo.spring.api.utils.apiAuthFilter
+import com.strange.demo.spring.api.utils.apiErrorFilter
+import com.strange.demo.spring.api.utils.apiOperationProcessor
+import com.strange.demo.spring.api.utils.registerApiEnumConverters
 import kotlinx.coroutines.runBlocking
 import org.springframework.format.support.DefaultFormattingConversionService
 import org.springframework.http.client.reactive.JdkClientHttpConnector

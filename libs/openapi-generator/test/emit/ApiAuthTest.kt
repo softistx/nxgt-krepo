@@ -55,8 +55,8 @@ private val MODEL =
 class ApiAuthTest :
     FeatureSpec({
 
-        val ktorfit = KtorfitEmitter().render(MODEL).getValue("com.example.api.ApiAuth")
-        val spring = SpringEmitter().render(MODEL).getValue("com.example.api.ApiAuth")
+        val ktorfit = KtorfitEmitter().render(MODEL).getValue("com.example.api.utils.ApiAuth")
+        val spring = SpringEmitter().render(MODEL).getValue("com.example.api.utils.ApiAuth")
 
         feature("the credential slots") {
 
@@ -119,7 +119,7 @@ class ApiAuthTest :
             }
 
             scenario("an operation that asks for nothing is left alone") {
-                val orders = KtorfitEmitter().render(MODEL).getValue("com.example.api.OrdersApi")
+                val orders = KtorfitEmitter().render(MODEL).getValue("com.example.api.apis.OrdersApi")
                 orders shouldContain """id = "signIn""""
                 orders shouldNotContain """id = "signIn",
     security"""
@@ -130,7 +130,7 @@ class ApiAuthTest :
 
             scenario("it gets no slot, because a slot for it could not work") {
                 val digest = MODEL.copy(securitySchemes = SCHEMES + SecurityScheme("Digest", "digest", SecurityKind.Unsupported))
-                KtorfitEmitter().render(digest).getValue("com.example.api.ApiAuth") shouldNotContain "public var digest"
+                KtorfitEmitter().render(digest).getValue("com.example.api.utils.ApiAuth") shouldNotContain "public var digest"
             }
 
             scenario("an operation requiring one fails the emit, naming the operation") {
@@ -148,8 +148,8 @@ class ApiAuthTest :
 
             scenario("gets no auth file at all") {
                 val open = MODEL.copy(securitySchemes = emptyList(), groups = listOf(ApiGroup("OrdersApi", listOf(operation("signIn")))))
-                KtorfitEmitter().render(open) shouldNotContainKey "com.example.api.ApiAuth"
-                SpringEmitter().render(open) shouldNotContainKey "com.example.api.ApiAuth"
+                KtorfitEmitter().render(open) shouldNotContainKey "com.example.api.utils.ApiAuth"
+                SpringEmitter().render(open) shouldNotContainKey "com.example.api.utils.ApiAuth"
             }
         }
     })

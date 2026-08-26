@@ -108,7 +108,7 @@ private fun supplierOf(
     options: EmitOptions,
 ): TypeName {
     val credential =
-        if (scheme.kind == SecurityKind.HttpBasic) ClassName(options.packageName, BASIC_CREDENTIALS) else STRING
+        if (scheme.kind == SecurityKind.HttpBasic) ClassName(options.utilPackage, BASIC_CREDENTIALS) else STRING
     return LambdaTypeName
         .get(returnType = credential.copy(nullable = true))
         .copy(suspending = true, nullable = true)
