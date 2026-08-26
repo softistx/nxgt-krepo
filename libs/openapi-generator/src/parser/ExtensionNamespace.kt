@@ -50,6 +50,13 @@ private class NamespaceWalk {
             if (!key.startsWith(Ext.KOTLIN_PREFIX) || key in Ext.kotlinKeys) return@forEach
             throw OpenApiParseException("$where: unknown extension '$key'${suggestion(key)}")
         }
+        // Reading each known key here as well means every later read is already known to be of the
+        // right type, and the complaint carries the place in the document rather than the place in
+        // the parser that happened to look first.
+        extensions.kotlinName(where)
+        extensions.externalType(where)
+        extensions.extensionBoolean(Ext.SKIP, where)
+        extensions.extensionBoolean(Ext.VALUE_CLASS, where)
     }
 
     fun parameter(
