@@ -14,8 +14,11 @@ import com.strange.openapi.ParamKind
 import com.strange.openapi.emit.EmitException
 import com.strange.openapi.emit.EmitOptions
 import com.strange.openapi.emit.SourceEmitter
+import com.strange.openapi.emit.apiExceptionFile
 import com.strange.openapi.emit.apiFile
+import com.strange.openapi.emit.apiOperationFile
 import com.strange.openapi.emit.optionality
+import com.strange.openapi.emit.requireExceptionNamesFree
 import com.strange.openapi.emit.typeNameOf
 import com.strange.openapi.models.ModelStyle
 import com.strange.openapi.models.modelFiles
@@ -54,10 +57,14 @@ public class SpringEmitter(
     override fun emit(
         model: ApiModel,
         options: EmitOptions,
-    ): List<FileSpec> =
-        model.groups.map { emitGroup(it, options) } +
+    ): List<FileSpec> {
+        model.requireExceptionNamesFree()
+        return model.groups.map { emitGroup(it, options) } +
             modelFiles(model, options, style) +
+            apiOperationFile(options) +
+            apiExceptionFile(model, options) +
             listOfNotNull(enumConverterFile(model, options))
+    }
 
     private fun emitGroup(
         group: ApiGroup,

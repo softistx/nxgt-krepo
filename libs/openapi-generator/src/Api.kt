@@ -26,6 +26,14 @@ public data class ApiGroup(
 )
 
 public data class Operation(
+    /**
+     * The document's own `operationId`, which OpenAPI requires to be unique across the document.
+     *
+     * Kept beside [name] rather than replaced by it: [name] is derived, and `x-kotlin-name` can
+     * change it, so it is not a key. This is what generated code uses to say *which* operation a
+     * response belongs to, and what a reader greps the document for.
+     */
+    val id: String,
     val name: String,
     val httpMethod: String,
     /** Path relative to the base URL, without a leading slash. */
