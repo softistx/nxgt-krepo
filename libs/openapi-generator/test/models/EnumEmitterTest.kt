@@ -56,6 +56,19 @@ class EnumEmitterTest :
                 source shouldNotContain "@SerialName"
             }
 
+            scenario("an entry's own description reaches the generated source") {
+                val documented =
+                    STATUS.copy(
+                        entries =
+                            listOf(
+                                EnumEntry("ACTIVE", "active", doc = "Taking new work."),
+                                EnumEntry("IN_PROGRESS", "in-progress"),
+                            ),
+                    )
+
+                render(documented) shouldContain "Taking new work."
+            }
+
             scenario("an unlisted value has an entry, and a wire value no server will take") {
                 val source = render(STATUS)
 
