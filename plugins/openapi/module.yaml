@@ -1,0 +1,9 @@
+product: jvm/amper-plugin
+
+dependencies:
+  - //libs/openapi-generator
+  # swagger-parser logs through SLF4J; without a provider every build prints a warning
+  - $libs.slf4j.nop
+
+pluginInfo:
+  settingsClass: com.strange.openapi.plugin.OpenApiSettings
