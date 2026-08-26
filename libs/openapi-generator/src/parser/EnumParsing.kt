@@ -18,11 +18,21 @@ internal fun enumTypeOf(
     where: String,
 ): EnumType {
     val base = enumBase(schema, where)
+    val values = schema.enum.orEmpty()
+    // Indices are kept against the raw list: `x-enum-varnames` lines up with `enum` as the document
+    // writes it, and a null entry in it is nullability rather than a value to name.
+    val names = schema.extensions.enumEntryNames(where)?.alignedWith(values, Ext.ENUM_VARNAMES, where)
+    val docs = schema.extensions.enumDescriptions(where)?.alignedWith(values, Ext.ENUM_DESCRIPTIONS, where)
     val entries =
-        schema.enum
-            .orEmpty()
-            .filterNotNull()
-            .map { EnumEntry(name = Naming.enumEntry(it.toString()), wireValue = it.toString()) }
+        values.withIndex().filter { it.value != null }.map { (index, value) ->
+            EnumEntry(
+                name =
+                    names?.get(index)?.also { requireIdentifier(it, Ext.ENUM_VARNAMES, where) }
+                        ?: Naming.enumEntry(value.toString()),
+                wireValue = value.toString(),
+                doc = docs?.get(index)?.trim()?.takeIf { it.isNotEmpty() },
+            )
+        }
     if (entries.isEmpty()) throw OpenApiParseException("$where: enum lists no values")
     entries.requireDistinctEntryNames(where)
     return EnumType(
@@ -96,5 +106,23 @@ private fun List<EnumEntry>.requireDistinctEntryNames(where: String) {
         ) { (entryName, colliding) ->
             "$entryName (from ${colliding.joinToString(", ") { "'${it.wireValue}'" }})"
         } + ". Rename the values so their Kotlin names differ.",
+    )
+}
+
+/**
+ * A parallel list, checked against the values it is parallel to.
+ *
+ * A shorter list would silently rename the wrong entries and leave the rest derived, which is worse
+ * than either doing nothing or failing — the generated enum would look deliberate and be wrong.
+ */
+private fun List<String>.alignedWith(
+    values: List<Any?>,
+    key: String,
+    where: String,
+): List<String> {
+    if (size == values.size) return this
+    throw OpenApiParseException(
+        "$where: $key has $size entries but the enum lists ${values.size}. " +
+            "They are read in order, so the lists have to be the same length.",
     )
 }
