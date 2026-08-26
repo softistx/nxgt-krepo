@@ -8,3 +8,9 @@ settings:
     ksp:
       processors:
         - $libs.ktorfit.ksp
+
+plugins:
+  openapi-client:
+    enabled: true
+    specFile: ../demo-api/openapi.yaml
+    packageName: dev.nxgt.demo.client.api

@@ -4,6 +4,9 @@ tasks:
       specFile: ${module.rootDir}/${pluginSettings.specFile}
       outputDir: ${taskOutputDir}
       packageName: ${pluginSettings.packageName}
+      client: ${pluginSettings.client}
+      groupBy: ${pluginSettings.groupBy}
+      generateModels: ${pluginSettings.generateModels}
 
 generated:
   sources:

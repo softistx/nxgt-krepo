@@ -7,3 +7,4 @@ dependencies:
 test-dependencies:
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
