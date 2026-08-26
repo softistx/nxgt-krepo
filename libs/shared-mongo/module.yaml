@@ -1,0 +1,26 @@
+product: jvm/lib
+
+dependencies:
+  # Every org.mongodb artifact below takes its version from this BOM, which is why the
+  # catalog declares them without one
+  - bom: $libs.mongodb.driver.bom
+  # MongoCollection, ClientSession, Bson and Flow are all over this module's public API,
+  # so a consuming module has to see them to call anything here
+  - $libs.mongodb.driver: exported
+  - $libs.mongodb.driver.extensions: exported
+  - $libs.mongodb.bsonx: exported
+  - $libs.kotlinx.coroutines.core: exported
+  # PaginationOptions carries `sort` and `filter` as a JsonObject
+  - $libs.kotlinx.serialization: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.testcontainers.mongodb
+  # the driver logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    serialization: json
