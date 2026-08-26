@@ -15,6 +15,13 @@ public sealed interface ModelType {
 public data class ObjectType(
     override val name: String,
     val fields: List<Field>,
+    /**
+     * Union bases this schema is a member of, empty for a standalone schema.
+     *
+     * The link comes from a `oneOf` naming this schema, never from this schema's own `allOf`:
+     * inheriting a base's fields does not make a hierarchy closed, and only the `oneOf` says it is.
+     */
+    val implements: List<String> = emptyList(),
 ) : ModelType
 
 public data class Field(
@@ -29,6 +36,49 @@ public data class Field(
     val nullable: Boolean = false,
     /** The document's `default`, as it appears on the wire. Null means the document gave none. */
     val default: String? = null,
+    /** True when this field realises a property the union base already declares. */
+    val overrides: Boolean = false,
+    /**
+     * A value this field always holds — a discriminator's tag.
+     *
+     * Unlike [default] it is not a suggestion: it identifies the subtype, so it is always written.
+     */
+    val constant: String? = null,
+)
+
+/**
+ * A `oneOf` or `anyOf` over object schemas: one sealed interface.
+ *
+ * Only over object schemas. A sealed hierarchy needs its members to implement an interface, and
+ * neither `String` nor `List` can — a union over scalars stays raw JSON rather than becoming a type
+ * that cannot be deserialized.
+ */
+public data class UnionType(
+    override val name: String,
+    val subtypes: List<UnionSubtype>,
+    /** Null when the document declared no `discriminator`, which means members are told apart by shape. */
+    val discriminator: UnionDiscriminator?,
+    /**
+     * Generated catch-all subtype for a tag the document does not list.
+     *
+     * Only a discriminated union has one: with no discriminator there is nothing to put in it.
+     */
+    val fallback: String?,
+) : ModelType
+
+public data class UnionSubtype(
+    /** Name of the [ObjectType] that implements the base. */
+    val name: String,
+    /** The discriminator value selecting this subtype, or null in a union told apart by shape. */
+    val wireValue: String?,
+    /** Wire names no sibling declares, for a union that has to be told apart by shape. */
+    val distinguishingKeys: List<String> = emptyList(),
+)
+
+public data class UnionDiscriminator(
+    /** Kotlin property name on the base interface. */
+    val name: String,
+    val wireName: String,
 )
 
 /**
