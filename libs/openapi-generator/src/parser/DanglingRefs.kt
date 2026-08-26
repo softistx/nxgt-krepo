@@ -5,6 +5,7 @@ import com.strange.openapi.EnumType
 import com.strange.openapi.ObjectType
 import com.strange.openapi.TypeRef
 import com.strange.openapi.UnionType
+import com.strange.openapi.ValueClassType
 
 /**
  * Every [TypeRef.ModelRef] must name a declaration this run actually generates.
@@ -58,7 +59,9 @@ internal fun ApiModel.requireEveryRefGenerated() {
                 model.subtypes.forEach { record(it.name, "${model.name} has it as a member") }
             }
 
-            is EnumType -> {
+            // Neither declares a reference of its own: an enum's values and a value class's
+            // scalar are both types this generator already knows how to write.
+            is EnumType, is ValueClassType -> {
                 Unit
             }
         }
