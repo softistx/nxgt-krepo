@@ -1,7 +1,14 @@
 product: jvm/app
 
 dependencies:
-  - $libs.kotlinx.serialization
+  - $ktor.server.core
+  - $ktor.server.netty
+  - $ktor.server.contentNegotiation
+  - $ktor.serialization.kotlinx.json
+  # Ktor logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
 
 settings:
   ktor: enabled
+  kotlin:
+    serialization: json
