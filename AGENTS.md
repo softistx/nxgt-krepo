@@ -77,6 +77,26 @@ scalar alias into a `@JvmInline value class`, and `x-kotlin-skip`/`x-internal`,
 what their names say. **An unrecognised `x-kotlin-*` key fails the parse**, naming the nearest key
 that exists; everything outside that namespace is ignored, because it belongs to another toolchain.
 
+It also reads the half of an operation that is not the happy path. Every non-2xx response becomes
+a typed failure: one generated exception per error *schema*, so `ErrorResponseException` carries a
+parsed `ErrorResponse`, with a base `ApiException(status, rawBody)` for a status the document did
+not declare, one it declared without a body, and a body that does not parse. `securitySchemes` and
+`security` become `ApiAuthConfig`, one suspending credential slot per declared scheme, resolved
+against the document root — `security: []` on an operation means *no* credential, not the root's.
+
+Both need the same thing: the operation has to reach the HTTP layer, where the status and the body
+live but the operation is anonymous. Every generated function therefore carries `@ApiOperation(id,
+security)`, added once in `emit/ApiFile.kt`, and each style reads it its own way — Ktorfit through
+`HttpRequest.annotations` in a client plugin, Spring through an `HttpRequestValues.Processor` that
+reads the reflective `Method` and puts the operation in a request attribute. **Both were proved
+against the running demo server before being written**, which is also how the Spring default mapper
+turned out to need `findAndAddModules()`: without it Jackson binds a generated data class to an
+object whose every property is null.
+
+The wiring is generated but installed by the consumer, because the consumer owns the HTTP client —
+`install(ApiErrors)` / `install(ApiAuth)` for Ktorfit, `apiErrorFilter()` / `apiAuthFilter()` plus
+`apiOperationProcessor()` for Spring. The same split as `ApiEnumConverters.kt`.
+
 ## Instruction files
 
 - **`AGENTS.md`** (this file) — the shared, tool-agnostic instructions. Codex, Cursor, Gemini CLI, Zed, Aider and friends read it natively.
