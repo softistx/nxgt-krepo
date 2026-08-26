@@ -62,9 +62,3 @@ internal fun ModelStyle.wireNameAnnotation(wireName: String): AnnotationSpec =
         ModelStyle.Kotlinx -> AnnotationSpec.builder(SERIAL_NAME).addMember("%S", wireName).build()
         ModelStyle.Jackson -> AnnotationSpec.builder(JSON_PROPERTY).addMember("%S", wireName).build()
     }
-
-private val SERIALIZABLE = ClassName("kotlinx.serialization", "Serializable")
-private val SERIAL_NAME = ClassName("kotlinx.serialization", "SerialName")
-
-// Jackson 3 moved its databind packages, but the annotations stayed at com.fasterxml.
-private val JSON_PROPERTY = ClassName("com.fasterxml.jackson.annotation", "JsonProperty")
