@@ -1228,6 +1228,33 @@ paths:
                 $ref: '#/components/schemas/Notification'
         '404':
           $ref: '#/components/responses/NotFound'
+  /failures/{mode}:
+    get:
+      tags:
+        - failures-controller
+      summary: Fail in a chosen way
+      description: >
+        Exists so a generated client's error path can be driven deliberately. Each mode answers
+        with a different kind of failure: one this document describes, one it describes without a
+        body, one it does not describe at all, and one whose body does not parse as the schema the
+        document names.
+      operationId: triggerFailure
+      security: []
+      parameters:
+        - name: mode
+          in: path
+          required: true
+          description: Which kind of failure to answer with.
+          schema:
+            type: string
+            enum: [ok, typed, bodiless, undocumented, garbled]
+      responses:
+        '204':
+          description: The mode asked for no failure.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          description: The service is unavailable, and says nothing else about it.
 components:
   securitySchemes:
     Basic:
