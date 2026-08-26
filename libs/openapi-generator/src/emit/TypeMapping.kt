@@ -48,4 +48,5 @@ public fun typeNameOf(
         is TypeRef.ListRef -> LIST.parameterizedBy(typeNameOf(type.element, options, style))
         is TypeRef.MapRef -> MAP.parameterizedBy(STRING, typeNameOf(type.value, options, style))
         is TypeRef.ModelRef -> ClassName(options.modelPackage, type.name)
+        is TypeRef.ExternalRef -> ClassName.bestGuess(type.qualifiedName)
     }

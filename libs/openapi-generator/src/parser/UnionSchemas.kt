@@ -24,7 +24,7 @@ internal fun OpenAPI.unionTypeOf(
     val subtypes =
         members.map { member ->
             UnionSubtype(
-                name = Naming.pascal(member),
+                name = modelNameOf(member),
                 wireValue = tags[member],
                 distinguishingKeys = if (discriminator == null) distinguishingKeys(member, members) else emptyList(),
             )
@@ -38,7 +38,7 @@ internal fun OpenAPI.unionTypeOf(
                 UnionDiscriminator(name = Naming.propertyName(it), wireName = it)
             },
         // Only a discriminated union can be tolerant: with no tag there is nothing to carry.
-        fallback = discriminator?.let { fallbackName(name, members) },
+        fallback = discriminator?.let { fallbackName(name, subtypes.map { subtype -> subtype.name }) },
     )
 }
 
@@ -138,8 +138,8 @@ private fun requireTellableApart(
 
 private fun fallbackName(
     union: String,
-    members: List<String>,
+    memberNames: List<String>,
 ): String {
-    val taken = members.mapTo(mutableSetOf()) { Naming.pascal(it) }
+    val taken = memberNames.toSet()
     return generateSequence("Unknown$union") { "${it}_" }.first { it !in taken }
 }

@@ -36,13 +36,18 @@ class RealSpecTest :
                         "UploadsApi",
                         "UsersApi",
                     )
+                // The document declares 49; `purgeNotifications` is marked x-internal, so a
+                // generated client is one operation smaller than the document it came from.
                 model.groups.sumOf { it.operations.size } shouldBe 48
+                operationsOf(model).none { it.name == "purgeNotifications" } shouldBe true
                 model.models.size shouldBeGreaterThan 10
 
                 // every operation must resolve to a usable return type and named parameters
-                val operations = model.groups.flatMap { it.operations }
+                val operations = operationsOf(model)
                 operations.all { it.name.isNotBlank() } shouldBe true
                 operations.flatMap { it.parameters }.all { it.name.isNotBlank() } shouldBe true
             }
         }
     })
+
+private fun operationsOf(model: com.strange.openapi.ApiModel) = model.groups.flatMap { it.operations }

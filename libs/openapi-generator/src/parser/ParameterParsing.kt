@@ -35,13 +35,15 @@ private fun OpenAPI.namedParameters(
                 )
             }
         Param(
-            name = Naming.propertyName(parameter.name),
+            name =
+                parameter.extensions.kotlinName("$where parameter '${parameter.name}'")
+                    ?: Naming.propertyName(parameter.name),
             wireName = parameter.name,
             kind = kind,
             type = typeOf(parameter.schema, "$where parameter '${parameter.name}'"),
             // A path parameter is required whether or not the document bothers to say so.
             required = parameter.required == true || kind == ParamKind.Path,
-            nullable = parameter.schema?.isNullable() == true,
+            nullable = parameter.schema?.isNullable("$where parameter '${parameter.name}'") == true,
             default = parameter.schema?.defaultLiteral(),
         )
     }
@@ -56,12 +58,12 @@ private fun OpenAPI.bodyParameters(
     content["application/json"]?.schema?.let { schema ->
         return listOf(
             Param(
-                name = "body",
+                name = body.extensions.kotlinName("$where request body") ?: "body",
                 wireName = "body",
                 kind = ParamKind.Body,
                 type = typeOf(schema, "$where request body"),
                 required = body.required != false,
-                nullable = schema.isNullable(),
+                nullable = schema.isNullable("$where request body"),
             ),
         )
     }
@@ -86,12 +88,12 @@ private fun OpenAPI.multipartParts(
     val requiredNames = schema.required.orEmpty().toSet()
     return properties.map { (name, propertySchema) ->
         Param(
-            name = Naming.propertyName(name),
+            name = propertySchema.extensions.kotlinName("$where part '$name'") ?: Naming.propertyName(name),
             wireName = name,
             kind = ParamKind.Part,
             type = typeOf(propertySchema, "$where part '$name'"),
             required = name in requiredNames,
-            nullable = propertySchema.isNullable(),
+            nullable = propertySchema.isNullable("$where part '$name'"),
             default = propertySchema.defaultLiteral(),
         )
     }

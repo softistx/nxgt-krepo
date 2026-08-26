@@ -15,10 +15,13 @@ internal fun OpenAPI.parseModels(): List<ModelType> {
         ?.schemas
         .orEmpty()
         .mapNotNull { (name, schema) ->
+            if (schema.extensions.isExcluded("schema $name")) return@mapNotNull null
             when (schemaKindOf(schema)) {
-                SchemaKind.Enum -> enumTypeOf(schema, Naming.pascal(name), "model $name")
+                SchemaKind.Enum -> enumTypeOf(schema, modelNameOf(name), "model $name")
 
-                SchemaKind.Union -> unionTypeOf(schema, Naming.pascal(name), "model $name")
+                SchemaKind.Union -> unionTypeOf(schema, modelNameOf(name), "model $name")
+
+                SchemaKind.ValueClass -> valueClassTypeOf(schema, modelNameOf(name), "model $name")
 
                 SchemaKind.Object -> objectTypeOf(schema, name, "model $name", memberships)
 
@@ -34,7 +37,7 @@ private fun OpenAPI.unionMemberships(): Map<String, List<UnionMembership>> {
     val memberships = mutableMapOf<String, MutableList<UnionMembership>>()
     components?.schemas.orEmpty().forEach { (baseSchemaName, schema) ->
         if (schemaKindOf(schema) != SchemaKind.Union) return@forEach
-        val union = unionTypeOf(schema, Naming.pascal(baseSchemaName), "model $baseSchemaName")
+        val union = unionTypeOf(schema, modelNameOf(baseSchemaName), "model $baseSchemaName")
         unionMembersOf(schema).orEmpty().forEachIndexed { index, member ->
             memberships
                 .getOrPut(member) { mutableListOf() }

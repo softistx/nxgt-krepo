@@ -6,6 +6,7 @@ import com.strange.openapi.EnumType
 import com.strange.openapi.ModelType
 import com.strange.openapi.ObjectType
 import com.strange.openapi.UnionType
+import com.strange.openapi.ValueClassType
 import com.strange.openapi.emit.EmitOptions
 
 /**
@@ -27,5 +28,6 @@ internal fun modelFiles(
             is ObjectType -> objectFile(declaration, options, style)
             is EnumType -> enumFile(declaration, options, style)
             is UnionType -> unionFile(declaration, options, style)
+            is ValueClassType -> valueClassFile(declaration, options, style)
         }
     }

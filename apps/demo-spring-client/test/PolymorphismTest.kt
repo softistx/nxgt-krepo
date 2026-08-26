@@ -2,6 +2,7 @@ package com.strange.demo.spring
 
 import com.strange.demo.api.DemoServer
 import com.strange.demo.api.startDemoServer
+import com.strange.demo.spring.api.NotificationsApi
 import com.strange.demo.spring.api.model.EmailPayload
 import com.strange.demo.spring.api.model.GroupRecipient
 import com.strange.demo.spring.api.model.NotificationChannel
@@ -43,7 +44,7 @@ class PolymorphismTest :
                 val queued =
                     client.notifications.queueNotification(
                         NotificationRequest(
-                            channel = NotificationChannel.EMAIL,
+                            channel = NotificationChannel.BY_EMAIL,
                             recipient = UserRecipient(userId = "u-1"),
                             payload = EmailPayload(subject = "hello", body = "there"),
                         ),
@@ -65,7 +66,7 @@ class PolymorphismTest :
                 val queued =
                     client.notifications.queueNotification(
                         NotificationRequest(
-                            channel = NotificationChannel.SMS,
+                            channel = NotificationChannel.BY_SMS,
                             recipient = UserRecipient(userId = "u-2"),
                             payload = SmsPayload(text = "once"),
                         ),
@@ -80,7 +81,7 @@ class PolymorphismTest :
                 val queued =
                     client.notifications.queueNotification(
                         NotificationRequest(
-                            channel = NotificationChannel.SMS,
+                            channel = NotificationChannel.BY_SMS,
                             recipient = GroupRecipient(groupId = "g-1", size = 4),
                             payload = SmsPayload(text = "everyone"),
                         ),
@@ -96,7 +97,7 @@ class PolymorphismTest :
                 val queued =
                     client.notifications.queueNotification(
                         NotificationRequest(
-                            channel = NotificationChannel.EMAIL,
+                            channel = NotificationChannel.BY_EMAIL,
                             recipient = UserRecipient(userId = "u-3"),
                             payload = EmailPayload(subject = "later", body = "not yet"),
                             traceId = traceId,
@@ -118,10 +119,35 @@ class PolymorphismTest :
         feature("an enum outside a JSON body") {
             scenario("a query parameter goes out as its wire value") {
                 client.notifications
-                    .findNotifications(channel = NotificationChannel.SMS)
+                    .findNotifications(channel = NotificationChannel.BY_SMS)
                     .map { it.channel }
                     .toSet() shouldBe
-                    setOf(NotificationChannel.SMS)
+                    setOf(NotificationChannel.BY_SMS)
+            }
+        }
+        feature("what the document said about becoming Kotlin") {
+            scenario("a value class survives a path parameter through Spring's own conversion") {
+                // Spring formats an argument through its ConversionService, which is where the
+                // generated enums needed help. A value class over String is erased before it gets
+                // there — asserted here rather than assumed.
+                val queued =
+                    client.notifications.queueNotification(
+                        NotificationRequest(
+                            channel = NotificationChannel.BY_EMAIL,
+                            recipient = UserRecipient(userId = "u-9"),
+                            payload = EmailPayload(subject = "typed", body = "id"),
+                        ),
+                    )
+
+                client.notifications.findNotification(queued.id).id shouldBe queued.id
+            }
+
+            scenario("an enum's Kotlin names are the document's, its wire values are untouched") {
+                NotificationChannel.BY_SMS.toString() shouldBe "sms"
+            }
+
+            scenario("an operation the document keeps internal is not on the interface at all") {
+                NotificationsApi::class.java.methods.none { it.name == "purgeNotifications" } shouldBe true
             }
         }
     })

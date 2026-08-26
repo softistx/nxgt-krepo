@@ -46,7 +46,11 @@ internal fun objectFile(
                 .builder(field.name, type)
                 .apply {
                     field.doc?.let { addKdoc("%L", it) }
-                    if (field.deprecated) addAnnotation(deprecated("This property is deprecated in the OpenAPI document."))
+                    if (field.deprecated) {
+                        addAnnotation(
+                            deprecated(field.deprecatedReason ?: "This property is deprecated in the OpenAPI document."),
+                        )
+                    }
                     if (field.overrides) addModifiers(KModifier.OVERRIDE)
                     if (field.constant != null) style.unionBinding.decorateConstant(this)
                 }.initializer(field.name)
@@ -60,7 +64,11 @@ internal fun objectFile(
             .addAnnotation(style.unknownFieldTolerance)
             .addKdoc(kdoc(model))
             .apply {
-                if (model.deprecated) addAnnotation(deprecated("This schema is deprecated in the OpenAPI document."))
+                if (model.deprecated) {
+                    addAnnotation(
+                        deprecated(model.deprecatedReason ?: "This schema is deprecated in the OpenAPI document."),
+                    )
+                }
             }.apply { model.implements.forEach { addSuperinterface(ClassName(options.modelPackage, it)) } }
             .primaryConstructor(constructor.build())
             .addProperties(properties)
