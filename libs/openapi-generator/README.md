@@ -276,6 +276,30 @@ entry name — `in-progress` and `in_progress` — fail the build naming both, l
 Only string and integer enums are generated; a float or mixed-type `enum:` keeps the underlying
 scalar, which is a stated limit rather than a wrong answer.
 
+## Vendor extensions
+
+A document can say how it wants to become Kotlin, through `x-*`. What is read:
+
+| Key | Where | Becomes |
+| --- | --- | --- |
+| `x-kotlin-name` | schema, property, operation, parameter, tag | the Kotlin name; the wire name is untouched |
+| `x-deprecated-reason` | schema, property, operation | the message inside `@Deprecated` |
+
+`x-kotlin-name` is also the escape hatch from the three failures in **Colliding names** below: two
+schemas that derive one class name, two operations that derive one function name. Renaming is a
+Kotlin-side change only, so it never alters a single byte on the wire — and a rename still goes
+through the same collision check, so renaming one half of a collision onto the other half fails
+rather than overwriting it. On a tag it names the interface outright: prefix and suffix are this
+generator's derivation, and a document that states the name is not asking for one to be derived. On
+an inline schema it replaces the name derived from the path (`OrderShippingAddressGeo`).
+
+**`x-kotlin-*` is this generator's namespace, and an unrecognised key in it fails the parse**,
+naming the key, where it sits, and the nearest key that does exist. A misspelled `x-kotlin-nmae` is
+a setting the author meant; generating as though they had said nothing is exactly the silent
+degradation the rest of this generator refuses. Everything outside the namespace —
+`x-amazon-apigateway-*`, `x-codegen-*`, `x-stoplight`, `x-faker` — is ignored without comment,
+because it is not ours to interpret.
+
 ## Colliding names
 
 Two different things in a spec can want the same Kotlin name, and the generator's rule is that a

@@ -35,7 +35,9 @@ private fun OpenAPI.namedParameters(
                 )
             }
         Param(
-            name = Naming.propertyName(parameter.name),
+            name =
+                parameter.extensions.kotlinName("$where parameter '${parameter.name}'")
+                    ?: Naming.propertyName(parameter.name),
             wireName = parameter.name,
             kind = kind,
             type = typeOf(parameter.schema, "$where parameter '${parameter.name}'"),
@@ -56,7 +58,7 @@ private fun OpenAPI.bodyParameters(
     content["application/json"]?.schema?.let { schema ->
         return listOf(
             Param(
-                name = "body",
+                name = body.extensions.kotlinName("$where request body") ?: "body",
                 wireName = "body",
                 kind = ParamKind.Body,
                 type = typeOf(schema, "$where request body"),
@@ -86,7 +88,7 @@ private fun OpenAPI.multipartParts(
     val requiredNames = schema.required.orEmpty().toSet()
     return properties.map { (name, propertySchema) ->
         Param(
-            name = Naming.propertyName(name),
+            name = propertySchema.extensions.kotlinName("$where part '$name'") ?: Naming.propertyName(name),
             wireName = name,
             kind = ParamKind.Part,
             type = typeOf(propertySchema, "$where part '$name'"),

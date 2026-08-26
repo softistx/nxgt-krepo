@@ -26,7 +26,7 @@ internal fun OpenAPI.typeOf(
         if (target != null && schemaKindOf(target) == null && ref !in seenRefs) {
             return typeOf(target, "$where -> $name", seenRefs + ref)
         }
-        return TypeRef.ModelRef(Naming.pascal(name))
+        return TypeRef.ModelRef(modelNameOf(name))
     }
 
     // `oneOf: [Cat, {type: "null"}]` is another way of writing a nullable Cat. The nullability
