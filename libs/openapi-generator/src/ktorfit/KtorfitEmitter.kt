@@ -13,8 +13,10 @@ import com.strange.openapi.Param
 import com.strange.openapi.ParamKind
 import com.strange.openapi.emit.EmitException
 import com.strange.openapi.emit.EmitOptions
+import com.strange.openapi.emit.Optionality
 import com.strange.openapi.emit.SourceEmitter
 import com.strange.openapi.emit.apiFile
+import com.strange.openapi.emit.optionalityOf
 import com.strange.openapi.emit.typeNameOf
 import com.strange.openapi.models.ModelStyle
 import com.strange.openapi.models.modelFiles
@@ -79,7 +81,11 @@ public class KtorfitEmitter : SourceEmitter {
             )
         }
         // Parameters that get a `= null` default must come last, or callers could not omit them.
-        operation.parameters.sortedBy { it.isOptional }.forEach { builder.addParameter(emitParam(it, options)) }
+        operation.parameters.sortedBy { it.partSafeOptionality.defaultSource != null }.forEach {
+            builder.addParameter(
+                emitParam(it, options),
+            )
+        }
         return builder.build()
     }
 
@@ -95,22 +101,28 @@ public class KtorfitEmitter : SourceEmitter {
                 ParamKind.Part -> AnnotationSpec.builder(ktorfit("Part")).addMember("%S", param.wireName).build()
                 ParamKind.Body -> AnnotationSpec.builder(ktorfit("Body")).build()
             }
-        val type = typeNameOf(param.type, options, STYLE.types).copy(nullable = param.isOptional)
+        val optionality = param.partSafeOptionality
+        val type = typeNameOf(param.type, options, STYLE.types).copy(nullable = optionality.nullable)
         return ParameterSpec
             .builder(param.name, type)
             .addAnnotation(annotation)
-            .apply { if (param.isOptional) defaultValue("null") }
+            .apply { optionality.defaultSource?.let { defaultValue(it) } }
             .build()
     }
 
     /**
-     * Whether the parameter is emitted as nullable with a `null` default.
+     * How the parameter is written, with one Ktorfit-specific override.
      *
      * Ktorfit's KSP processor rejects a nullable `@Part` ("Part parameter type may not be
-     * nullable"), so multipart parts stay non-null even when the spec marks them optional.
+     * nullable"), so multipart parts stay non-null and undefaulted even when the spec makes them
+     * optional. Everything else follows the shared rule, so a parameter and the model property it
+     * carries agree about nullability.
      */
-    private val Param.isOptional: Boolean
-        get() = !required && kind != ParamKind.Part
+    private val Param.partSafeOptionality: Optionality
+        get() =
+            optionalityOf(type, required, nullable, default)
+                .takeIf { kind != ParamKind.Part }
+                ?: Optionality(nullable = false, defaultSource = null)
 
     private fun ktorfit(simpleName: String) = ClassName(KTORFIT_HTTP, simpleName)
 
