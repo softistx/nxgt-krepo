@@ -28,8 +28,9 @@ Two modules, each with its own README — read those before changing either:
 
 - [`libs/openapi-generator`](libs/openapi-generator/README.md) — the generator. swagger-parser reads
   the spec into an intermediate representation, and a `SourceEmitter` turns that into KotlinPoet
-  files. `parser` reads, `emit` and `models` hold what every emitter shares, and `ktorfit` and
-  `spring` are the two client styles — the parser knows about none of them.
+  files. The root package holds only that IR; `parser` reads, `emit` holds the emitter contract and
+  what every emitter shares, `models` emits the schemas, and `ktorfit` and `spring` are the two
+  client styles — the parser knows about none of them.
 - [`plugins/openapi`](plugins/openapi/README.md) — the toolchain plugin around it:
   typed `@Configurable` settings, one `@TaskAction`, and a `generated.sources` entry so the output
   compiles into the consuming module.
@@ -54,9 +55,12 @@ For Ktorfit the generated interfaces are then picked up by `ktorfit-ksp`, which 
 `createXxxApi()` builders — plugin-generated sources do reach KSP. For Spring there is no
 processing step; the interfaces go to `HttpServiceProxyFactory` at runtime.
 
-`apps/demo-client` shows the Ktorfit chain end to end, driving the generated client against the
-real `demo-api` server over HTTP; `apps/demo-spring-client` compiles the Spring output and reads
-its annotations back through reflection.
+Both demo apps drive their generated client against the real `demo-api` server over HTTP:
+`apps/demo-client` through Ktorfit and kotlinx.serialization, `apps/demo-spring-client` through a
+`HttpServiceProxyFactory` proxy and Jackson 3 — which also pins down that a Jackson client and a
+kotlinx server read the same document the same way. `HttpServiceProxyFactory` builds an AOP proxy
+and formats argument values, so a Spring client module needs `spring-aop` and `spring-context`
+alongside `spring-web`; neither arrives transitively.
 
 ## Instruction files
 
@@ -195,6 +199,23 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
     all a caller needs.
   - *Dependency inversion* — depend on the abstraction: the plugin's task action talks to
     `SourceEmitter`, and picks the implementation in exactly one place.
+- **Tests are kotest `FeatureSpec`, grouped by scenario.** Every spec extends `FeatureSpec`, with
+  `feature("...")` naming the behaviour under test and `scenario("...")` naming one case of it:
+
+  ```kotlin
+  class OpenApiParserTest :
+      FeatureSpec({
+          feature("grouping") {
+              scenario("groups operations by tag, one interface per tag") { /* ... */ }
+              scenario("falls back to the path segment when a tag is missing") { /* ... */ }
+          }
+      })
+  ```
+
+  Features are the unit of grouping, so a spec that would hold a single flat list of tests is
+  telling you the feature names are missing, not that grouping does not apply. Nest a `feature`
+  inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
+  to the other spec styles. One spec class per file, named after the file.
 - **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `apps/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
 - **Organise `src/` by package, not as a flat pile of files.** A module with more than one concern
   gets a directory per concern, and the directory matches the package — `src/parser/` is

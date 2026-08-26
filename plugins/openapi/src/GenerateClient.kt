@@ -1,7 +1,8 @@
 package com.strange.openapi.plugin
 
-import com.strange.openapi.EmitOptions
-import com.strange.openapi.SourceEmitter
+import com.strange.openapi.emit.EmitOptions
+import com.strange.openapi.emit.SourceEmitter
+import com.strange.openapi.emit.writeAllTo
 import com.strange.openapi.ktorfit.KtorfitEmitter
 import com.strange.openapi.models.ModelStyle
 import com.strange.openapi.models.ModelsOnlyEmitter
@@ -18,7 +19,7 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.isRegularFile
 
-private fun ClientKind.emitter(models: ModelKind): SourceEmitter =
+internal fun ClientKind.emitter(models: ModelKind): SourceEmitter =
     when (this) {
         // Ktorfit deserializes through kotlinx.serialization here, so its models are not a choice.
         // An explicit Jackson request is a mistake worth failing on rather than quietly overriding.
@@ -40,14 +41,14 @@ private fun ClientKind.emitter(models: ModelKind): SourceEmitter =
     }
 
 /** Resolves [ModelKind.Auto] against the style the caller's client implies. */
-private fun ModelKind.orElse(default: ModelStyle): ModelStyle =
+internal fun ModelKind.orElse(default: ModelStyle): ModelStyle =
     when (this) {
         ModelKind.Auto -> default
         ModelKind.Kotlinx -> ModelStyle.Kotlinx
         ModelKind.Jackson -> ModelStyle.Jackson
     }
 
-private fun GroupBy.toGrouping(): Grouping =
+internal fun GroupBy.toGrouping(): Grouping =
     when (this) {
         GroupBy.Tag -> Grouping.Tag
         GroupBy.Path -> Grouping.Path
@@ -78,7 +79,7 @@ public fun generateClient(
     val naming = InterfaceNaming(prefix = interfacePrefix, suffix = interfaceSuffix)
     val model = OpenApiParser(groupBy.toGrouping(), naming).parse(specFile)
     val files = client.emitter(models).emit(model, EmitOptions(packageName))
-    files.forEach { it.writeTo(outputDir) }
+    files.writeAllTo(outputDir)
 
     val surface =
         when (client) {

@@ -1,6 +1,5 @@
 package com.strange.openapi.parser
 
-import com.strange.openapi.OpenApiParseException
 import com.strange.openapi.Param
 import com.strange.openapi.ParamKind
 import io.swagger.v3.oas.models.OpenAPI

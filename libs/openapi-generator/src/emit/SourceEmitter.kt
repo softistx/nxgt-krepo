@@ -1,9 +1,10 @@
-package com.strange.openapi
+package com.strange.openapi.emit
 
 import com.squareup.kotlinpoet.FileSpec
+import com.strange.openapi.ApiModel
 
 /**
- * Turns an [ApiModel] into Kotlin source files. One implementation per output style.
+ * Turns an [com.strange.openapi.ApiModel] into Kotlin source files. One implementation per output style.
  *
  * Every implementation emits the spec's component schemas as data classes; what varies is
  * whether it also emits an API surface for them, and in which client's shape.

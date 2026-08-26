@@ -11,7 +11,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.UNIT
-import com.strange.openapi.EmitOptions
 import com.strange.openapi.TypeRef
 
 /**

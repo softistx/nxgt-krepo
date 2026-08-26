@@ -117,16 +117,18 @@ ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref =
 ktorfit-lib-light = { module = "de.jensklingenberg.ktorfit:ktorfit-lib-light", version.ref = "ktorfit" }
 ktorfit-ksp = { module = "de.jensklingenberg.ktorfit:ktorfit-ksp", version.ref = "ktorfit" }
 
+spring-context = { module = "org.springframework:spring-context", version.ref = "spring" }
+spring-aop = { module = "org.springframework:spring-aop", version.ref = "spring" }
 spring-web = { module = "org.springframework:spring-web", version.ref = "spring" }
-# Jackson 3 moved core and databind to the tools.jackson group; the annotations deliberately
-# stayed at com.fasterxml.jackson.core, per jackson-databind's own POM.
-jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
+spring-webflux = { module = "org.springframework:spring-webflux", version.ref = "spring" }
+# Jackson 3 lives under the tools.jackson group; its annotations deliberately stayed at
+# com.fasterxml.jackson.core, per jackson-databind's own POM. The Kotlin module pulls databind.
 jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
-jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "3.0-rc5" }
 
 kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css", version = "2026.7.1" }
 
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "coroutines" }
+kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "coroutines" }
 
 kotlinx-rpc-bom = { module = "org.jetbrains.kotlinx:kotlinx-rpc-bom", version.ref = "kotlinx-rpc" }
 kotlinx-rpc-krpc-client = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krpc-client" }

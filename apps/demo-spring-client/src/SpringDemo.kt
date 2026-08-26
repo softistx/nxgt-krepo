@@ -2,24 +2,42 @@ package com.strange.demo.spring
 
 import com.strange.demo.spring.api.CategoriesApi
 import com.strange.demo.spring.api.TagsApi
+import kotlinx.coroutines.runBlocking
+import org.springframework.http.client.reactive.JdkClientHttpConnector
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.support.WebClientAdapter
+import org.springframework.web.service.invoker.HttpServiceProxyFactory
 
 /**
- * Compiles the Spring output of the `openapi-client` plugin.
+ * Everything under `com.strange.demo.spring.api` is generated from `../demo-api/openapi.yaml` with
+ * `client: Spring`. Unlike the Ktorfit client there is no annotation processing step: the
+ * interfaces are handed to [HttpServiceProxyFactory], which builds the implementation at runtime.
  *
- * Everything under `com.strange.demo.spring.api` is generated from `../demo-api/openapi.yaml`
- * with `client: Spring`. Unlike the Ktorfit client there is no annotation processing step: the
- * interfaces are handed to `HttpServiceProxyFactory` at runtime, so what has to be verified
- * here is that they compile against spring-web and carry the annotations Spring will read.
- *
- * ```kotlin
- * val factory = HttpServiceProxyFactory
- *     .builderFor(WebClientAdapter.create(WebClient.create(baseUrl)))  // needs spring-webflux
- *     .build()
- * val categories = factory.createClient(CategoriesApi::class.java)
- * ```
+ * The proxy needs a *reactive* adapter because the generated functions are `suspend`;
+ * `RestClientAdapter` would not do.
  */
-public fun main() {
-    listOf(CategoriesApi::class.java, TagsApi::class.java).forEach { api ->
-        println("${api.simpleName}: ${api.methods.size} operation(s)")
-    }
+public class SpringDemoClient(
+    baseUrl: String,
+) {
+    private val webClient =
+        WebClient
+            .builder()
+            // The JDK connector keeps this to spring-webflux plus the JDK — no Reactor Netty.
+            .clientConnector(JdkClientHttpConnector())
+            .baseUrl(baseUrl)
+            .build()
+
+    private val factory =
+        HttpServiceProxyFactory
+            .builderFor(WebClientAdapter.create(webClient))
+            .build()
+
+    public val categories: CategoriesApi = factory.createClient(CategoriesApi::class.java)
+    public val tags: TagsApi = factory.createClient(TagsApi::class.java)
 }
+
+public fun main(): Unit =
+    runBlocking {
+        val client = SpringDemoClient(System.getenv("DEMO_API_URL") ?: "http://127.0.0.1:8080/")
+        println("categories: " + client.categories.findCategory("1"))
+    }

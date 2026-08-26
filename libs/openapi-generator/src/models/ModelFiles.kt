@@ -7,8 +7,8 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.strange.openapi.ApiModel
-import com.strange.openapi.EmitOptions
 import com.strange.openapi.ModelType
+import com.strange.openapi.emit.EmitOptions
 import com.strange.openapi.emit.GENERATED_KDOC
 import com.strange.openapi.emit.typeNameOf
 
