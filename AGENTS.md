@@ -134,6 +134,18 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 
 `./kotlin` and `kotlin.bat` are committed wrappers pinning the toolchain to the `kotlin_cli_version` at the top of the script (0.12.0). **Use `./kotlin <command>`, not a bare `kotlin`**, so everyone builds with the same version regardless of what is on `PATH`. Regenerate with `kotlin update -c` (add `--target-version=<v>` to move the pin).
 
+### Local services
+
+The databases this workspace runs against are **already containerised and usually already up** —
+`~/workspace/docker/apps/` holds one compose file per service, and `database/mongo` is an `rs0`
+replica set published on `localhost:27017`, transactions included. Check `docker ps` before pulling
+an image or starting a Testcontainers container: the pull costs a gigabyte and the second container
+either clashes on the port or silently tests a different server than the one everything else uses.
+
+Integration tests therefore point at the running service — `MONGO_TEST_URI`, defaulting to
+`mongodb://localhost:27017` — and skip themselves when it is unreachable, so a machine without it
+reports skipped tests rather than a red build.
+
 ## Module layout
 
 Sources in `src/`, tests in `test/`, test-only resources in `testResources/`:

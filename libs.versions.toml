@@ -34,7 +34,6 @@ ktorfit = "2.7.5"
 koin = "4.2.2"
 koin-compiler = "1.0.1"
 kotest = "6.2.2"
-testcontainers = "1.21.4"
 spring = "7.0.9"
 jackson = "3.2.2"
 
@@ -162,8 +161,6 @@ kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", versio
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-ktor = { module = "io.kotest:kotest-assertions-ktor", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
-
-testcontainers-mongodb = { module = "org.testcontainers:mongodb", version.ref = "testcontainers" }
 
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
 icu4j = { module = "com.ibm.icu:icu4j", version = "78.3" }
