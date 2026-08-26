@@ -2,9 +2,19 @@ product: jvm/app
 
 dependencies:
   - $libs.ktorfit.lib
-  - $libs.kotlinx.datetime
+  - $ktor.client.cio
+  - $ktor.client.contentNegotiation
+  - $ktor.serialization.kotlinx.json
+
+test-dependencies:
+  # the end-to-end test drives the generated client against the real server
+  - //apps/demo-api
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
 
 settings:
+  ktor: enabled
   kotlin:
     serialization: json
     ksp:
