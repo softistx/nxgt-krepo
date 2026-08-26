@@ -20,6 +20,7 @@ private val MODEL =
                     operations =
                         listOf(
                             Operation(
+                                id = "findOrder",
                                 name = "findOrder",
                                 httpMethod = "GET",
                                 path = "orders/{id}",
@@ -29,6 +30,7 @@ private val MODEL =
                                 deprecatedReason = "Use findOrderV2; this drops the totals block.",
                             ),
                             Operation(
+                                id = "listOrders",
                                 name = "listOrders",
                                 httpMethod = "GET",
                                 path = "orders",

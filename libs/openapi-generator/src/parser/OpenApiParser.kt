@@ -60,6 +60,7 @@ public class OpenApiParser(
                         )
                 byGroup.getOrPut(groupKeyOf(operation, path)) { mutableListOf() } +=
                     Operation(
+                        id = id,
                         name = operation.extensions.kotlinName("$method $path") ?: Naming.functionName(id),
                         httpMethod = method.name,
                         path = path.trimStart('/'),
