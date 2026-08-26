@@ -120,4 +120,6 @@ public data class EnumEntry(
     val name: String,
     /** The value as the document writes it — not necessarily a valid Kotlin identifier. */
     val wireValue: String,
+    /** This entry's line of `x-enum-descriptions`, if the document gave one. */
+    val doc: String? = null,
 )

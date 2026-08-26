@@ -15,6 +15,7 @@ internal fun OpenAPI.parseModels(): List<ModelType> {
         ?.schemas
         .orEmpty()
         .mapNotNull { (name, schema) ->
+            if (schema.extensions.isExcluded("schema $name")) return@mapNotNull null
             when (schemaKindOf(schema)) {
                 SchemaKind.Enum -> enumTypeOf(schema, modelNameOf(name), "model $name")
 

@@ -51,7 +51,15 @@ internal fun enumFile(
                     .build(),
             )
 
-    model.entries.forEach { builder.addEnumConstant(it.name, constant(it, model.base)) }
+    model.entries.forEach { entry ->
+        builder.addEnumConstant(
+            entry.name,
+            constant(entry, model.base)
+                .toBuilder()
+                .apply { entry.doc?.let { addKdoc("%L", it) } }
+                .build(),
+        )
+    }
     builder.addEnumConstant(
         model.fallback.name,
         constant(model.fallback, model.base)

@@ -42,12 +42,14 @@ public class OpenApiParser(
         openApi.requireKnownKotlinExtensions()
         openApi.hoistInlineSchemas()
         return ApiModel(groups = parseGroups(openApi), models = openApi.parseModels())
+            .also { it.requireEveryRefGenerated() }
     }
 
     private fun parseGroups(openApi: OpenAPI): List<ApiGroup> {
         val byGroup = linkedMapOf<String, MutableList<Operation>>()
         openApi.paths.orEmpty().forEach { (path, item) ->
             item.readOperationsMap().forEach { (method, operation) ->
+                if (operation.extensions.isExcluded("$method $path")) return@forEach
                 val id =
                     operation.operationId
                         ?: throw OpenApiParseException(
