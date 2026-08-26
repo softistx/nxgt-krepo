@@ -1,0 +1,9 @@
+product: jvm/lib
+
+dependencies:
+  - $libs.swagger.parser
+  - $libs.kotlinpoet
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine

@@ -1,0 +1,7 @@
+product: jvm/amper-plugin
+
+dependencies:
+  - //libs/openapi-codegen
+
+pluginInfo:
+  settingsClass: dev.nxgt.openapi.plugin.OpenApiClientSettings

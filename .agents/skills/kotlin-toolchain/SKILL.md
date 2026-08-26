@@ -88,6 +88,19 @@ Key rules that are easy to get wrong:
 
 The toolchain-native way to share a dependency *set* across modules is a **template**: a `<name>.module-template.yaml` with the same shape as `module.yaml` (but no `product:`), pulled in via `apply:`. Templates merge dependencies, settings, and repositories, and can apply other templates. Verify the result with `kotlin show settings -m <module>`.
 
+## Plugins and generated sources
+
+A plugin module (`product: jvm/amper-plugin`) registers a `@TaskAction` in `plugin.yaml` and declares its output under `generated.sources`, which the build compiles into every module the plugin is enabled in. Plugins are registered in `project.yaml`'s `plugins:` block and enabled per module with `plugins: { <id>: enabled }`.
+
+**Plugin-generated sources are processed by KSP** — undocumented, verified on toolchain 0.12.0 with ktorfit-ksp 2.7.5 by generating an annotated interface and calling the resulting client over HTTP. The two outputs land in different places, which is how to confirm both stages ran:
+
+```
+build/tasks/_<module>_<task>@<plugin>/…     # the plugin's output
+build/generated/<module>/main/src/ksp/…     # KSP's output, derived from it
+```
+
+Re-check this after a toolchain upgrade. A plugin cannot be enabled in its own module if it contributes to that module's compilation (cyclic dependency), and KSP output stays invisible to common source sets in multiplatform modules.
+
 ## Toolchain version
 
 The wrapper scripts (`./kotlin`) pin the toolchain version per project; without them the CLI warns `Found a project.yaml ... but the wrapper script is missing` and falls back to whatever is on `PATH`. Create/refresh them with `kotlin update -c [--target-version=<v>]` and commit them, then prefer `./kotlin <command>`.
