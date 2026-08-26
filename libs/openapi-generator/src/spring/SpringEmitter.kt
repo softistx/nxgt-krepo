@@ -63,7 +63,7 @@ public class SpringEmitter(
             modelFiles(model, options, style) +
             apiOperationFile(options) +
             apiExceptionFile(model, options) +
-            listOfNotNull(enumConverterFile(model, options))
+            listOfNotNull(enumConverterFile(model, options), apiErrorFilterFile(model, options))
     }
 
     private fun emitGroup(

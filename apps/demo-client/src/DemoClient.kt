@@ -1,9 +1,12 @@
 package com.strange.demo.client
 
+import com.strange.demo.client.api.ApiErrors
 import com.strange.demo.client.api.CategoriesApi
+import com.strange.demo.client.api.FailuresApi
 import com.strange.demo.client.api.NotificationsApi
 import com.strange.demo.client.api.TagsApi
 import com.strange.demo.client.api.createCategoriesApi
+import com.strange.demo.client.api.createFailuresApi
 import com.strange.demo.client.api.createNotificationsApi
 import com.strange.demo.client.api.createTagsApi
 import com.strange.demo.client.api.model.CategoryRequest
@@ -26,6 +29,9 @@ public class DemoClient(
     private val http =
         HttpClient(CIO) {
             install(ContentNegotiation) { json() }
+            // Generated: without it a documented failure reaches the caller as a deserialization
+            // error about the success type, and the status and body the document describes are lost.
+            install(ApiErrors)
         }
 
     private val ktorfit =
@@ -40,6 +46,7 @@ public class DemoClient(
     public val categories: CategoriesApi = ktorfit.createCategoriesApi()
     public val tags: TagsApi = ktorfit.createTagsApi()
     public val notifications: NotificationsApi = ktorfit.createNotificationsApi()
+    public val failures: FailuresApi = ktorfit.createFailuresApi()
 
     override fun close(): Unit = http.close()
 }

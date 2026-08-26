@@ -1,8 +1,11 @@
 package com.strange.demo.spring
 
 import com.strange.demo.spring.api.CategoriesApi
+import com.strange.demo.spring.api.FailuresApi
 import com.strange.demo.spring.api.NotificationsApi
 import com.strange.demo.spring.api.TagsApi
+import com.strange.demo.spring.api.apiErrorFilter
+import com.strange.demo.spring.api.apiOperationProcessor
 import com.strange.demo.spring.api.model.registerApiEnumConverters
 import kotlinx.coroutines.runBlocking
 import org.springframework.format.support.DefaultFormattingConversionService
@@ -28,6 +31,9 @@ public class SpringDemoClient(
             // The JDK connector keeps this to spring-webflux plus the JDK — no Reactor Netty.
             .clientConnector(JdkClientHttpConnector())
             .baseUrl(baseUrl)
+            // Generated: turns a documented failure into the exception the document describes,
+            // reading the operation out of the attribute apiOperationProcessor() put there.
+            .filter(apiErrorFilter())
             .build()
 
     // Generated: without it Spring writes an enum argument as its Kotlin name rather than the
@@ -38,11 +44,15 @@ public class SpringDemoClient(
         HttpServiceProxyFactory
             .builderFor(WebClientAdapter.create(webClient))
             .conversionService(conversions)
+            // Generated: the proxy knows the method, the filter sees the response, and this is
+            // what carries the operation from one to the other.
+            .httpRequestValuesProcessor(apiOperationProcessor())
             .build()
 
     public val categories: CategoriesApi = factory.createClient(CategoriesApi::class.java)
     public val tags: TagsApi = factory.createClient(TagsApi::class.java)
     public val notifications: NotificationsApi = factory.createClient(NotificationsApi::class.java)
+    public val failures: FailuresApi = factory.createClient(FailuresApi::class.java)
 }
 
 public fun main(): Unit =
