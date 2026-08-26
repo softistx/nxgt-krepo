@@ -17,7 +17,6 @@ test-dependencies:
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
-  - $libs.testcontainers.mongodb
   # the driver logs through SLF4J; a no-op provider keeps the test output readable
   - $libs.slf4j.nop
 
