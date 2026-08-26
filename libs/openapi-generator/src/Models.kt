@@ -30,3 +30,32 @@ public data class Field(
     /** The document's `default`, as it appears on the wire. Null means the document gave none. */
     val default: String? = null,
 )
+
+/**
+ * A schema constrained to a fixed set of values: one `enum class`.
+ *
+ * Generated enums are *tolerant* — they carry a fallback entry for values the document does not
+ * list, so a server that deploys a new value does not break clients compiled against the old
+ * document. The raw unlisted value does not survive: an enum constant is a singleton with nowhere
+ * to keep it.
+ */
+public data class EnumType(
+    override val name: String,
+    val entries: List<EnumEntry>,
+    /** The scalar the values are written as: [TypeRef.StringRef], [TypeRef.IntRef] or [TypeRef.LongRef]. */
+    val base: TypeRef,
+    /**
+     * Entry standing for a value the document does not list.
+     *
+     * Its wire value is a sentinel the server will reject rather than a plausible one: a caller
+     * that reads an object holding an unknown value and writes it back unchanged then fails at the
+     * server with a clear error, instead of quietly rewriting the field to something wrong.
+     */
+    val fallback: EnumEntry,
+) : ModelType
+
+public data class EnumEntry(
+    val name: String,
+    /** The value as the document writes it — not necessarily a valid Kotlin identifier. */
+    val wireValue: String,
+)

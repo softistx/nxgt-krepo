@@ -20,10 +20,10 @@ internal fun OpenAPI.typeOf(
     schema.`$ref`?.let { ref ->
         val name = ref.substringAfterLast('/')
         val target = components?.schemas?.get(name)
-        // Only object schemas become generated classes. A $ref to a scalar or array alias
-        // (e.g. `Upload: {type: string, format: binary}`) must resolve to the underlying type,
-        // or it would name a class that is never emitted.
-        if (target != null && target.properties.isNullOrEmpty() && ref !in seenRefs) {
+        // Only a schema that becomes a declaration keeps its name. A $ref to a scalar or array
+        // alias (e.g. `Upload: {type: string, format: binary}`) must resolve to the underlying
+        // type, or it would name a class that is never emitted.
+        if (target != null && !target.isModelled() && ref !in seenRefs) {
             return typeOf(target, "$where -> $name", seenRefs + ref)
         }
         return TypeRef.ModelRef(Naming.pascal(name))
