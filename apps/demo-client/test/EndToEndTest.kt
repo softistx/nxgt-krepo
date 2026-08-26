@@ -1,6 +1,7 @@
 package com.strange.demo.client
 
 import com.strange.demo.api.startDemoServer
+import com.strange.demo.client.api.ErrorResponseException
 import com.strange.demo.client.api.model.CategoryRequest
 import com.strange.demo.client.api.model.PatchTagRequest
 import com.strange.demo.client.api.model.SearchRequest
@@ -59,7 +60,7 @@ class EndToEndTest :
                 val tag = client.tags.createTag(TagRequest(name = "gone"))
                 client.tags.deleteTag(tag.id)
 
-                shouldThrow<Exception> { client.tags.findTag(tag.id) }
+                shouldThrow<ErrorResponseException> { client.tags.findTag(tag.id) }.status shouldBe 404
             }
         }
 

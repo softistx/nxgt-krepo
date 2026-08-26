@@ -42,7 +42,8 @@ public class KtorfitEmitter : SourceEmitter {
         return model.groups.map { emitGroup(it, options) } +
             modelFiles(model, options, STYLE) +
             apiOperationFile(options) +
-            apiExceptionFile(model, options)
+            apiExceptionFile(model, options) +
+            listOfNotNull(apiErrorsFile(model, options))
     }
 
     private fun emitGroup(
