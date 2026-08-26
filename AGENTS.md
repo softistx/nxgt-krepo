@@ -63,7 +63,9 @@ Both demo apps drive their generated client against the real `demo-api` server o
 `HttpServiceProxyFactory` proxy and Jackson 3 — which also pins down that a Jackson client and a
 kotlinx server read the same document the same way. `HttpServiceProxyFactory` builds an AOP proxy
 and formats argument values, so a Spring client module needs `spring-aop` and `spring-context`
-alongside `spring-web`; neither arrives transitively.
+alongside `spring-web`; neither arrives transitively. Its conversion service also writes an enum
+argument with `Enum.name()`, so a Spring client registers the generated `ApiEnumConverters.kt` with
+the factory — without it every enum path, query or header parameter goes out as the Kotlin name.
 
 ## Instruction files
 
