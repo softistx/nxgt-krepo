@@ -1,0 +1,197 @@
+<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/publishing/ (docs 0.12) on 2026-08-26. Do not edit by hand; run sync_docs.py to refresh. -->
+
+# Publishing libraries
+
+> **The publishing feature is in preview, and is likely to change. Don't hesitate to share your feedback!**
+
+Library modules inside your project are useful for modularization, but you can take it one step further by publishing your libraries so they can be used by other projects.
+
+With a little bit of configuration, you'll be able to publish using the `kotlin publish` command.
+
+## Supported components
+
+All library modules (JVM and multiplatform) can be published to Maven repositories. All Kotlin platforms are supported.
+
+Libraries that bind to native C libraries are covered as well: the `cinterop` bindings are published both in their commonized form, for use from common code, and per platform, so your users get the same C API you compiled against without setting up interop themselves.
+
+> **Compose Multiplatform resources**
+
+Resources of Compose Multiplatform libraries are not part of the publication yet (see [KTC-5698](https://youtrack.jetbrains.com/issue/KTC-5698/Support-publication-of-composeResources-as-a-part-of-KMP-library-publication)).
+
+## Interoperability with Maven/Gradle
+
+The Kotlin Toolchain's publication format is compatible with other build tools that consume libraries from Maven repositories. This includes Maven and Gradle, but also any build tools that understands the same format.
+
+Your consumers don't need to use the Kotlin Toolchain to depend on your published libraries.
+
+## Publishing to a regular Maven repository
+
+To publish to a Maven repository, you essentially need 3 things:
+
+- the publication configuration
+- the target repository's URL
+- the credentials to publish
+
+This is how your `module.yaml` should look like:
+
+module.yaml
+
+```yaml
+product: jvm/lib
+
+repositories:
+  - id: someIdOfYourChoosing #(1)!
+    url: https://maven.pkg.github.com/my-org/my-repo #(2)!
+    publish: true #(3)!
+    credentials:
+      file: creds.properties # a properties file containing your credentials
+      usernameKey: username # not the username, but the name of the property containing it
+      passwordKey: password # not the password, but the name of the property containing it
+
+settings:
+  publishing:
+    enabled: true
+    group: org.example # enter your own groupID here
+    version: 1.0.0
+    # artifactId is optional, and defaults to your module's name
+```
+
+1. This is the ID you will use in the `publish` command when you want to publish to this repository: 
+
+```bash
+kotlin publish <id>
+```
+2. The URL of your custom repository
+3. Enables publishing to this repository via the `kotlin publish <repoId>` command
+
+You must then also create a `creds.properties` file (or whichever name you chose above), with two properties for the username and password to use for publishing:
+
+```
+username=adele
+password=imRollingInTheDeep
+```
+
+Once everything is set up, use the following command to publish all modules that enabled publishing (and that have configured a repository with ID `someIdOfYourChoosing`):
+
+```bash
+kotlin publish someIdOfYourChoosing
+```
+
+If you only want to publish some specific modules, use the `-m`/`--module` option (which can be repeated to select multiple modules). Add the `--transitive` option to also publish the local modules that the selected modules depend on:
+
+```bash
+kotlin publish -m my-lib --transitive someIdOfYourChoosing
+```
+
+> **Don't forget to publish your dependencies**
+
+If your module depends on other local modules, you must enable publishing for these other modules too. We recommend using a template to share the publishing configuration across all your published modules.
+
+## Publishing to the local Maven repository
+
+To install your library into your local Maven repository, declare it with the special `mavenLocal` URL:
+
+module.yaml
+
+```yaml
+repositories:
+  - url: mavenLocal
+    publish: true
+```
+
+Then publish with `kotlin publish mavenLocal`. No credentials are needed. This is the quickest way to try your library out in another project on your machine.
+
+## Publishing to Maven Central
+
+Maven Central is the most popular Maven repository. Most OSS libraries are published there. Publishing your library to Maven Central makes it easier for your users to consume it.
+
+### Prerequisites
+
+To publish to Maven Central, you need to have:
+
+- a Central Portal [account](https://central.sonatype.org/register/central-portal/)
+- a Central Portal [namespace](https://central.sonatype.org/register/namespace/)
+- a Central Portal [user token](https://central.sonatype.org/publish/generate-portal-token/) - remember the username and password parts.
+
+### Configuration
+
+There are a handful of requirements1 imposed by Sonatype to publish to Maven Central:
+
+- javadocs and sources JARs must be published
+- checksums for all artifacts must be published2
+- artifacts need to be signed with a PGP signature
+- some mandatory metadata about the module must be present
+
+You can satisfy all of these requirements with a little bit of configuration:
+
+```yaml
+product: jvm/lib
+
+description: A meaningful description for this specific module
+
+settings:
+  publishing:
+    enabled: true
+    group: com.example #(1)!
+    version: 1.0.0
+    # artifactId is optional, and defaults to your module's name
+    mavenCentral: enabled
+    signArtifacts: true
+    publishSources: true
+    pom:
+      url: https://example.com
+      scm: https://github.com/my-org/example.git #(2)!
+      developers:
+        - name: Joffrey Bion
+      licenses:
+        - name: MIT
+          url: https://opensource.org/license/mit
+```
+
+1. The `group` should correspond to the `groupId` of your Maven Central [namespace](https://central.sonatype.org/register/namespace/)
+2. This is a shorthand for `pom.scm.url`. The `pom.scm.connection` and `pom.scm.developerConnection` are automatically derived from it using the value `scm:git:$url`. If this default doesn't work for you, you can set these properties explicitly to any value.
+
+> **Empty JavaDoc jar**
+
+At the moment, an empty JavaDoc JAR is added to the publication by default. We will soon add more control over this.
+
+### Passing credentials
+
+In order to publish using `kotlin publish mavenCentral`, you'll need to provide credentials in the form of environment variables (usually done on the CI):
+
+| Variable | Description |
+| --- | --- |
+| `KOTLIN\_TOOLCHAIN\_MAVEN\_CENTRAL\_USERNAME` | The `username` part of your Central Portal [user token](https://central.sonatype.org/publish/generate-portal-token/). |
+| `KOTLIN\_TOOLCHAIN\_MAVEN\_CENTRAL\_PASSWORD` | The `password` part of your Central Portal [user token](https://central.sonatype.org/publish/generate-portal-token/). |
+| `KOTLIN\_TOOLCHAIN\_SIGNING\_KEY` | The ASCII-armored PGP signing key to use to sign artifacts. You can export a private key in this format using the `gpg --export-secret-keys --armor <KEY\_ID>` command. |
+| `KOTLIN\_TOOLCHAIN\_SIGNING\_KEY\_PASSPHRASE` | (optional) The passphrase to unlock the PGP key, if there is one. |
+
+> **How do I get a PGP signing key?**
+
+If you have never needed a PGP signing key before, it might not be obvious to get started. Follow the instructions to [create and prepare a key](https://central.sonatype.org/publish/requirements/gpg) on the Maven Central website.
+
+### Publishing command
+
+Use the following command to publish all modules that have `mavenCentral` publication enabled:
+
+```bash
+kotlin publish mavenCentral
+```
+
+This is usually done in a CI job.
+
+### Publishing mode
+
+The Kotlin Toolchain provides 2 modes for publishing:
+
+- `manual` (default): in this mode, the `kotlin publish` command uploads the bundle, then waits for its validation, and then stops for manual verification. Once you're ready, you can use the [Central Portal UI](https://central.sonatype.com/publishing/deployments) to manually publish (release) your artifacts.
+- `auto`: the `kotlin publish` command does everything automatically from end to finish. This is useful when you want to fully automate your publications.
+
+By default, the Kotlin Toolchain uses the `manual` mode, to avoid surprises. Once the first deployment is successful, you might want to streamline the publication by switching to `auto` mode. This can be done using `settings.publishing.mavenCentral.publishingMode: auto`.
+
+> **One does not simply remove artifacts from Maven Central**
+
+When using the `auto` mode, you will not get a chance to look at the published artifacts before they are released to the public and set in stone in Maven Central. If there is a mistake in your publication, you will not be able to remove artifacts from Maven Central, because Sonatype has a strict policy about this.
+
+1. You can learn more about them [on the official website](https://central.sonatype.org/publish/requirements/) ↩
+2. By default, the Kotlin Toolchain publishes the checksums required by Maven Central (`md5` and `sha1`) for each artifact. You can customize this list using `settings.publishing.checksums`, with any combination of `md5`, `sha1`, `sha256`, and `sha512`. ↩

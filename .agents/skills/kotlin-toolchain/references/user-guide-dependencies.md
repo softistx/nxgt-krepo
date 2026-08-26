@@ -1,0 +1,423 @@
+<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/dependencies/ (docs 0.12) on 2026-08-26. Do not edit by hand; run sync_docs.py to refresh. -->
+
+# Dependencies
+
+Dependencies are pieces of code (e.g., libraries or other modules) that your module depends on.
+
+## Declaring dependencies
+
+Dependencies are declared in the `dependencies` list of the `module.yaml` file:
+
+```yaml
+dependencies:
+  - //my-other-module #(1)!
+  - org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1 #(2)!
+  - $libs.apache.commons.lang3 #(3)!
+  - $compose.ui #(4)!
+```
+
+1. Dependency on another module of the project (see Module dependencies).
+2. Dependency on an external Maven library, with the provided coordinates (see External Maven dependencies).
+3. Dependency on a library from the project's Library Catalog.
+4. Dependency on a library from a built-in Library Catalog (in this case, the `$compose` catalog brought by the Compose "toolchain").
+
+### Module dependencies
+
+To depend on another module of your project, use the [path](../basics/#path-notation) to that module. Such a path usually starts with `//` and is relative to the project root directory (where `project.yaml` is located).
+
+For example, here the `app` module declares a dependency on the `nested-lib` and `ui/utils` modules:
+
+app/module.yaml
+
+```yaml
+product: jvm/app
+
+dependencies:
+- //app/nested-lib
+- //ui/utils
+```
+
+project.yaml
+
+```yaml
+modules:
+  - app
+  - app/nested-lib
+  - ui/utils
+```
+
+Project structure
+
+```
+root/
+├─ app/
+│  ├─ nested-lib/
+│  │  ├─ src/
+│  │  ╰─ module.yaml
+│  ├─ src/
+│  ╰─ module.yaml
+├─ ui/
+│  ╰─ utils/
+│     ├─ src/
+│     ╰─ module.yaml
+╰─ project.yaml
+‎
+```
+
+> **Note**
+
+Dependencies between modules are only allowed within the project scope. That is, they must be listed in the `project.yaml` file and cannot be outside the project root directory.
+
+**Using relative paths for dependencies (not recommended)**
+
+If there is a need to use a relative path to depend on a module, explicit path notation is required, i.e., the path has to start with the dot (`.`). For example: `./my-nested-module` instead of `my-nested-module`. The latter would be recognized as an external dependency. Sibling or parent paths, e.g., `../my-sibling-module` are also supported.
+
+However it's preferrable to always use `//` paths for module dependencies. *Using relative paths there may be deprecated and removed in the future.*
+
+### External Maven dependencies
+
+Maven dependencies can be added via their coordinates1 in the usual `group:artifact:version` notation:
+
+```yaml
+dependencies:
+  - org.jetbrains.kotlin:kotlin-serialization:1.8.0
+  - io.ktor:ktor-client-core:2.2.0
+```
+
+Maven dependencies are fetched from a Maven repository2 before being cached locally. Default repositories are provided out of the box, so you don't have to configure anything. If you need to customize the repositories, see Managing Maven repositories.
+
+#### Classifiers and packaging types
+
+Maven coordinates can be extended with a classifier and a packaging type, using the notation `group:artifact:version:classifier@packagingType`. Both additions are optional.
+
+A classifier picks one of several artifacts published under the same coordinates, for example, a platform-specific build. A packaging type picks the kind of artifact to fetch, for example, an executable, an Android library, or an archive, instead of the default library archive (jar).
+
+The packaging type only plays a role for libraries published in the Maven format alone, and the kind of artifact to fetch is determined as follows:
+
+- the type you declare in the coordinates wins;
+- otherwise, the type the library declares for itself in the pom.xml is used;
+- if neither declares one, a regular library archive is expected.
+
+Declaring the type `pom` means that only the library's descriptor is used and no artifact is fetched, which is handy for libraries that merely aggregate other dependencies. Conversely, a library that declares that type for itself in the pom.xml still contributes its regular jar artifact when it publishes one (and it is not an error when it doesn't).
+
+Declaring a packaging type doesn't turn the dependency into an artifact-only dependency: transitive dependencies keep being resolved as usual.
+
+Libraries published with Gradle metadata describe their artifacts themselves, so declaring a packaging type has no effect on them.
+
+### Catalog dependencies
+
+See Library Catalogs below.
+
+### Transitivity and scope
+
+#### Scope
+
+The ***scope*** of a dependency defines whether it is available during compilation (*compile classpath*) and/or available at runtime (*runtime classpath*):
+
+| Scope | Compilation | Runtime |
+| --- | --- | --- |
+| `all` (default) |   |   |
+| `compile-only` |   |   |
+| `runtime-only` |   |   |
+
+By default, the scope is `all`. You can restrict a dependency's scope as follows:
+
+Short form
+
+Long form
+
+```yaml
+dependencies:
+  - io.ktor:ktor-client-core:2.2.0: compile-only
+  - //ui/utils: runtime-only
+```
+
+```yaml
+dependencies:
+  - io.ktor:ktor-client-core:2.2.0:
+      scope: compile-only
+  - //ui/utils:
+      scope: runtime-only
+```
+
+> **Note**
+
+The long form is necessary when you also need to mark the dependency as `exported`:
+
+```yaml
+dependencies:
+  - io.ktor:ktor-client-core:2.2.0:
+      exported: true
+      scope: compile-only
+```
+
+#### Transitivity
+
+By default, the dependencies of your module are not added to the compilation of dependent modules. In the following setup, `app` cannot directly use Ktor classes in its code:
+
+lib/module.yaml
+
+```yaml
+dependencies:
+  - io.ktor:ktor-client-core:2.2.0
+```
+
+app/module.yaml
+
+```yaml
+dependencies:
+  - //lib #(1)!
+```
+
+1. The `//lib` dependency is added to the compilation and runtime of the `app` module (scope `all` by default). It brings the transitive dependency on `ktor-client-core` at runtime, but doesn't expose it at compile time.
+
+To make a dependency accessible to all dependent modules during their compilation, you need to explicitly mark it as `exported` (this is equivalent to declaring a dependency using the `api()` configuration in Gradle).
+
+Short form
+
+Long form
+
+```yaml
+dependencies:
+  - io.ktor:ktor-client-core:2.2.0: exported
+  - //ui/utils: exported
+```
+
+```yaml
+dependencies:
+  - io.ktor:ktor-client-core:2.2.0:
+      exported: true
+  - //ui/utils:
+      exported: true
+```
+
+> **Note**
+
+The long form is necessary when you also need to customize the scope
+
+```yaml
+dependencies:
+  - io.ktor:ktor-client-core:2.2.0:
+      exported: true
+      scope: compile-only
+```
+
+**`exported` is like a scope for transitive consumers**
+
+We can see `exported` as a way to modify the scope of a transitive dependency in the context of the consuming module. For example, say some module named `app` depends on `lib`, which depends on `ktor`. The `ktor` dependency is transitively part of the dependencies of `app`.
+
+- If `lib` doesn't export `ktor`, the `ktor` dependency effectively has a `scope: runtime-only` in `app`
+- If `lib` marks `ktor` as `exported`, the `ktor` dependency effectively has a `scope: all` in `app`
+
+##### When to use `exported`
+
+Ideally, you should use `exported` dependencies as little as possible. The rule of thumb is that, if your module uses some types from the dependency in its public API, you should mark it as `exported`. If not, you should probably avoid it.
+
+For example, if you depend on `ktor-client-core` in your module, and you have the following class:
+
+```kotlin
+class MyApi(private val client: HttpClient) {
+    // ...
+}
+```
+
+The `HttpClient` type is used in your public constructor, so your consumers will need to see it at compile time. You should therefore mark `ktor-client-core` as `exported`.
+
+## Library Catalogs
+
+A library catalog associates keys to library coordinates (including the version), and allows adding the same libraries as dependencies to multiple modules without having to repeat the coordinates or the versions of the libraries.
+
+The Kotlin Toolchain currently supports the following library catalogs:
+
+- one project catalog (user-defined)
+- several toolchain catalogs (a.k.a built-in catalogs, such as Kotlin or Compose Multiplatform)
+
+### Project catalog
+
+The **project catalog** is the user-defined catalog for the project.
+
+It is defined in a file named `libs.versions.toml`, and is written in the TOML format3 of [Gradle version catalogs](https://docs.gradle.org/current/userguide/version_catalogs.html#sec:version-catalog-declaration). It can be located at the root of the project or at `gradle/libs.versions.toml` (the default from Gradle, to ease migration).
+
+> **You can only have one project catalog**
+
+You can choose between `libs.versions.toml` and `gradle/libs.versions.toml`, but you cannot use both at the same time.
+
+To use dependencies from the project catalog, use the syntax `$libs.<key>` instead of the coordinates, where `$libs` is the catalog name of the project catalog, and `<key>` is defined according to the [Gradle name mapping rules](https://docs.gradle.org/current/userguide/version_catalogs.html#sec:mapping-aliases-to-accessors).
+
+Example:
+
+libs.versions.toml
+
+```toml
+[versions]
+ktor = "3.3.2"
+
+[libraries]
+ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+```
+
+app/module.yaml
+
+```yaml
+dependencies:
+  - $libs.ktor.client.auth
+  - $libs.ktor.client.cio
+  - $libs.ktor.client.contentNegotiation
+```
+
+### Toolchain catalogs
+
+The **toolchain catalogs** are implicitly defined, and contain libraries that relate to the corresponding toolchain. The name of such a catalog corresponds to the name of the toolchain in the [settings section](../basics/#settings). All dependencies in such catalogs usually have the same version, which is the toolchain version.
+
+For example, dependencies for the Compose Multiplatform framework are accessible using the `$compose` catalog name, and take their versions from the `settings.compose.version` setting.
+
+To use dependencies from toolchain catalogs, use the syntax `$<catalog-name>.<key>` instead of the coordinates, for example: 
+
+```yaml
+dependencies:
+  - $kotlin.reflect      # dependency from the Kotlin catalog
+  - $compose.material3   # dependency from the Compose Multiplatform catalog
+```
+
+Catalog dependencies can still have a scope and visibility even when coming from a catalog:
+
+```yaml
+dependencies:
+  - $compose.foundation: exported
+  - $my-catalog.db-engine: runtime-only
+```
+
+## Managing Maven repositories
+
+The Kotlin Toolchain needs to fetch Maven dependencies from a Maven repository to use them in your project. This section describes the default repositories and how to configure more.
+
+### Default repositories
+
+| Name | ID | URL |
+| --- | --- | --- |
+| Maven Central | `mavenCentral` | `https://repo1.maven.org/maven2` |
+| Google | `mavenGoogle` | `https://maven.google.com` |
+
+### Adding repositories
+
+To add more repositories on top of the default ones, add a `repositories` list to your `module.yaml` file:
+
+module.yaml
+
+```yaml
+repositories:
+  - https://repo.spring.io/ui/native/release #(1)!
+  - url: https://dl.google.com/dl/android/maven2/ #(2)!
+  - id: jitpack #(3)!
+    url: https://jitpack.io
+```
+
+1. When using just a string, it is used as both the `url` and `id` of the repository.
+2. When only the `url` is set, the `id` defaults to the URL. This is equivalent to just using the URL string without the `url:` key.
+3. You can use a custom `id` that is different from the URL by specifying the `id:` key explicitly.
+
+### Overriding or disabling default repositories
+
+Declaring a repository with the `id` of a default one replaces it. This is how you point Maven Central or Google at a company mirror, or add credentials to them:
+
+module.yaml
+
+```yaml
+repositories:
+  - id: mavenCentral
+    url: https://repo.mycompany.com/maven-central-mirror
+    credentials:
+      file: creds.properties
+      usernameKey: username
+      passwordKey: password
+```
+
+Setting `resolve: false` on such an entry disables the default repository instead of replacing it, so dependencies are never looked up there:
+
+module.yaml
+
+```yaml
+repositories:
+  - id: mavenGoogle
+    url: https://maven.google.com #(1)!
+    resolve: false
+```
+
+1. The `url` is always required, even for a repository that is only disabled.
+
+### The local Maven repository
+
+Use the special `mavenLocal` URL to resolve dependencies from your local Maven repository:
+
+module.yaml
+
+```yaml
+repositories:
+  - mavenLocal
+```
+
+This is handy to consume libraries that you install locally, for example while testing them before a release. The same URL can also be used to [publish](../publishing/#publishing-to-the-local-maven-repository) into it.
+
+### Authentication
+
+Private Maven repositories require authentication. The Kotlin Toolchain only supports username/password authentication via a `.properties` file at the moment. You can configure it this way:
+
+module.yaml
+
+```yaml
+repositories:
+  - url: https://repo.company.com
+    credentials:
+      file: ../local.properties #(1)!
+      usernameKey: my.username
+      passwordKey: my.password
+```
+
+1. The relative path to a `.properties` file containing the repository's credentials
+
+local.properties
+
+```
+my.username=joffrey.bion
+my.password=YouWishYouKnewIt
+```
+
+## Using a Maven BOM
+
+To import a BOM, specify its coordinates prefixed by `bom:`
+
+```yaml
+dependencies:
+  - bom: io.ktor:ktor-bom:2.2.0
+  - io.ktor:ktor-client-core
+```
+
+The effects are the following:
+
+- Maven dependencies that are listed in the BOM no longer need a version (e.g., `io.ktor:ktor-client-core`). The version from the BOM is used in this case.
+- Dependency versions declared in the BOM participate in version conflict resolution.
+
+> **This also applies to catalog dependencies!**
+
+If a dependency in the library catalog is only used in modules that declare a BOM that provides a version for it, then the version can be omitted there:
+
+libs.versions.toml
+
+```toml
+[libraries]
+ktor-client-core = "io.ktor:ktor-client-core"
+```
+
+ module.yaml
+
+```yaml
+dependencies:
+  - bom: io.ktor:ktor-bom:3.2.0
+  - $libs.ktor.client.core
+```
+
+1. If you're not familiar with Maven coordinates, check out Maven's [POM reference ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.](https://maven.apache.org/pom.html#Maven_Coordinates). ↩
+2. If you're not familiar with Maven repositories, check out Maven's [Introduction to repositories ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.](https://maven.apache.org/guides/introduction/introduction-to-repositories.html). ↩
+3. Only `\[versions\]` and `\[libraries\]` sections are supported from the Gradle format, not `\[bundles\]` and `\[plugins\]`. ↩
