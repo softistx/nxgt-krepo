@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/multiplatform/ (docs 0.12) on 2026-08-26. Do not edit by hand; run sync_docs.py to refresh. -->
+<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/multiplatform/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
 
 # Multiplatform modules
 

@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/product-types/native-app/ (docs 0.12) on 2026-08-26. Do not edit by hand; run sync_docs.py to refresh. -->
+<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/product-types/native-app/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
 
 # ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc. Kotlin/Native application
 

@@ -1,0 +1,7 @@
+{
+  "title": "Kotlin Toolchain",
+  "base": "https://kotlin-toolchain.org/latest/",
+  "exclude": [],
+  "version": "0.12",
+  "last_sync": "2026-08-26"
+}

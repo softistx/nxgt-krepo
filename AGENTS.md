@@ -26,10 +26,18 @@ A module is a directory with a `module.yaml`, registered by path in `project.yam
 
 ## Skills
 
-Two skills in `.agents/skills/` carry the toolchain knowledge; use them instead of reasoning from memory about toolchain behavior:
+The skills in `.agents/skills/` carry this repo's working knowledge; use them instead of reasoning from memory:
 
-- **`kotlin-toolchain`** — the working reference: manifest schema, catalog and template rules, commands, and `references/`, a markdown cache of the full official documentation from <https://kotlin-toolchain.org/> (50 pages, docs version recorded in `references/INDEX.md`).
-- **`kotlin-toolchain-docs`** — fetches the official docs and regenerates that cache via `scripts/sync_docs.py`; run it after a toolchain upgrade or whenever a cached page disagrees with the CLI.
+- **`kotlin-toolchain`** — manifest schema, catalog and template rules, commands, plus `references/`: a markdown cache of the full official documentation (50 pages, version recorded in `references/INDEX.md`).
+- **`ktorfit`** — the Ktorfit HTTP client, including how it is wired up here through KSP alone, without its Gradle plugin.
+- **`skill-from-docs`** — builds and refreshes docs-backed skills. Each such skill declares its source in a `docs-source.json`; refresh one with:
+  ```bash
+  python3 .agents/skills/skill-from-docs/scripts/fetch_docs.py --skill <name>
+  ```
+  Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
+- **`large-feature-branch-workflow`** — two-level branching for work too large for a single PR.
+
+Skills are budgeted: a `description` is in context every session (keep it ≤250 chars), a SKILL.md body loads on activation (≤~120 lines), and `references/` pages load only when opened. Put cost in the deepest tier that can hold it.
 
 ## Commands
 

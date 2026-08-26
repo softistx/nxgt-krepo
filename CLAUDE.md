@@ -8,8 +8,9 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 
 ## Skills
 
-- Invoke the **`kotlin-toolchain`** skill before writing or debugging a `module.yaml`/`project.yaml`, adding a dependency, or wiring a new module. It carries the manifest rules plus `references/`, a full markdown cache of <https://kotlin-toolchain.org/>. Read the relevant `references/` page rather than answering from memory — this toolchain is young and its schema moves between 0.x releases.
-- Invoke the **`kotlin-toolchain-docs`** skill to re-fetch the official docs (after a `kotlin update`, when a cached page conflicts with observed CLI behavior, or when asked to add a toolchain skill). Files under `references/` are generated: change `scripts/sync_docs.py` and re-run, never hand-edit them.
+- **`kotlin-toolchain`** before writing or debugging a `module.yaml`/`project.yaml`, adding a dependency, or wiring a module; **`ktorfit`** for Ktorfit API interfaces. Both carry a `references/` cache of their official docs — read the relevant page rather than answering from memory, since both move faster than memory does.
+- **`skill-from-docs`** to add a skill for another library or tool, or to refresh a cached one. It owns the token budget rules that every skill here follows.
+- **`large-feature-branch-workflow`** when a feature needs more than one PR.
 
 ## Working here
 

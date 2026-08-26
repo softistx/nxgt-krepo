@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/advanced/ksp/ (docs 0.12) on 2026-08-26. Do not edit by hand; run sync_docs.py to refresh. -->
+<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/advanced/ksp/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
 
 # Kotlin Symbol Processing (KSP)
 

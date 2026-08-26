@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/builtin-tech/kotlinx-rpc/ (docs 0.12) on 2026-08-26. Do not edit by hand; run sync_docs.py to refresh. -->
+<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/builtin-tech/kotlinx-rpc/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
 
 # xml version="1.0" encoding="UTF-8"? - Copyright 2023-2024 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.   Kotlinx RPC
 

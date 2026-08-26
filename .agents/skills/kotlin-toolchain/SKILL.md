@@ -1,13 +1,13 @@
 ---
 name: kotlin-toolchain
-description: Reference for building this repo with the JetBrains Kotlin Toolchain (the `kotlin` CLI, formerly Amper) — project.yaml/module.yaml schema, the libs.versions.toml catalog, module templates, product types, testing, publishing, and toolchain plugins. Use whenever writing or debugging a module manifest, adding a dependency, wiring a new module, or running a build/test/publish command in this project.
+description: Building this repo with the JetBrains Kotlin Toolchain (`kotlin` CLI, formerly Amper): project.yaml/module.yaml schema, the libs.versions.toml catalog, templates, testing, publishing. Use when writing a manifest or adding a dependency.
 ---
 
 # Kotlin Toolchain
 
 This repo builds with the JetBrains Kotlin Toolchain (`kotlin` CLI), **not Gradle or Maven**. Never add `build.gradle.kts`, `settings.gradle.kts`, or `pom.xml` to "fix" a build.
 
-`references/` holds the official documentation for the pinned docs version, cached as markdown. Read the relevant page there before answering from memory — the toolchain is young and its schema changes between releases. Refresh it with the `kotlin-toolchain-docs` skill.
+`references/` holds the official documentation for the pinned docs version, cached as markdown. Read the relevant page there before answering from memory — the toolchain is young and its schema changes between releases. Refresh it with the `skill-from-docs` skill.
 
 ## Commands
 
