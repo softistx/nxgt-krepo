@@ -2,6 +2,7 @@ package com.strange.openapi.parser
 
 import com.strange.openapi.Field
 import com.strange.openapi.ModelType
+import com.strange.openapi.ObjectType
 import com.strange.openapi.TypeRef
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation as SwaggerOperation
@@ -19,7 +20,7 @@ internal fun OpenAPI.parseModels(): List<ModelType> =
             // A schema with no properties has no class worth generating; it is carried as raw JSON.
             if (properties.isEmpty()) return@mapNotNull null
             val required = schema.required.orEmpty().toSet()
-            ModelType(
+            ObjectType(
                 name = Naming.pascal(name),
                 fields =
                     properties.map { (propertyName, propertySchema) ->
@@ -28,6 +29,8 @@ internal fun OpenAPI.parseModels(): List<ModelType> =
                             wireName = propertyName,
                             type = typeOf(propertySchema, "model $name property '$propertyName'"),
                             required = propertyName in required,
+                            nullable = propertySchema.isNullable(),
+                            default = propertySchema.defaultLiteral(),
                         )
                     },
             )

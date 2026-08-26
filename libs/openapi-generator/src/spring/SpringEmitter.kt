@@ -15,6 +15,7 @@ import com.strange.openapi.emit.EmitException
 import com.strange.openapi.emit.EmitOptions
 import com.strange.openapi.emit.SourceEmitter
 import com.strange.openapi.emit.apiFile
+import com.strange.openapi.emit.optionality
 import com.strange.openapi.emit.typeNameOf
 import com.strange.openapi.models.ModelStyle
 import com.strange.openapi.models.modelFiles
@@ -79,7 +80,7 @@ public class SpringEmitter(
 
         operation.summary?.takeIf { it.isNotBlank() }?.let { builder.addKdoc("%L", it) }
         // Parameters that get a `= null` default must come last, or callers could not omit them.
-        operation.parameters.sortedBy { !it.required }.forEach { builder.addParameter(emitParam(it, options)) }
+        operation.parameters.sortedBy { it.optionality.defaultSource != null }.forEach { builder.addParameter(emitParam(it, options)) }
         return builder.build()
     }
 
@@ -109,11 +110,12 @@ public class SpringEmitter(
                 ParamKind.Part -> named(REQUEST_PART, param)
                 ParamKind.Body -> AnnotationSpec.builder(REQUEST_BODY).build()
             }
-        val type = typeNameOf(param.type, options, style.types).copy(nullable = !param.required)
+        val optionality = param.optionality
+        val type = typeNameOf(param.type, options, style.types).copy(nullable = optionality.nullable)
         return ParameterSpec
             .builder(param.name, type)
             .addAnnotation(annotation)
-            .apply { if (!param.required) defaultValue("null") }
+            .apply { optionality.defaultSource?.let { defaultValue(it) } }
             .build()
     }
 
