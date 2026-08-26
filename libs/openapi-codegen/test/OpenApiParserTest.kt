@@ -147,3 +147,53 @@ class OpenApiParserTest : FunSpec({
             listOf("CategoriesApi", "TagsApi")
     }
 })
+
+class ScalarAliasRefTest : FunSpec({
+
+    val spec = """
+openapi: 3.1.0
+info: { title: T, version: 1.0.0 }
+paths:
+  /uploads:
+    post:
+      operationId: upload
+      requestBody:
+        content:
+          multipart/form-data:
+            schema: { ${'$'}ref: '#/components/schemas/UploadRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { ${'$'}ref: '#/components/schemas/Search' }
+components:
+  schemas:
+    Upload: { type: string, format: binary, description: File to upload }
+    FreeForm: { type: object }
+    UploadRequest:
+      type: object
+      properties:
+        file: { ${'$'}ref: '#/components/schemas/Upload' }
+    Search:
+      type: object
+      properties:
+        filter: { ${'$'}ref: '#/components/schemas/FreeForm' }
+""".trimIndent()
+
+    val model = OpenApiParser().parse(spec)
+
+    test("a ref to a binary scalar becomes a binary part, not a phantom model class") {
+        val part = model.groups.single().operations.single().parameters.single()
+        part.kind shouldBe ParamKind.Part
+        part.type shouldBe TypeRef.BinaryRef
+    }
+
+    test("a ref to a property-less object becomes raw JSON") {
+        val search = model.models.first { it.name == "Search" }
+        search.fields.single().type shouldBe TypeRef.JsonObjectRef
+    }
+
+    test("only object schemas are emitted as models") {
+        model.models.map { it.name } shouldContainExactly listOf("Search", "UploadRequest")
+    }
+})
