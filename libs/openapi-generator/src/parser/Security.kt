@@ -15,6 +15,7 @@ internal fun OpenAPI.parseSecuritySchemes(): List<SecurityScheme> =
         .map { (name, scheme) ->
             SecurityScheme(
                 name = name,
+                propertyName = Naming.camel(name),
                 kind = kindOf(scheme),
                 parameterName = scheme.name.takeIf { scheme.type == SwaggerSecurityScheme.Type.APIKEY },
                 description = scheme.description,
@@ -67,17 +68,18 @@ private fun kindOf(scheme: SwaggerSecurityScheme): SecurityKind =
         SwaggerSecurityScheme.Type.APIKEY -> {
             when (scheme.`in`) {
                 SwaggerSecurityScheme.In.HEADER -> SecurityKind.ApiKeyHeader
-
                 SwaggerSecurityScheme.In.QUERY -> SecurityKind.ApiKeyQuery
-
-                // A cookie is set by the server, not chosen by the caller; there is no credential
-                // slot a generated client could offer for it.
+                SwaggerSecurityScheme.In.COOKIE -> SecurityKind.ApiKeyCookie
                 else -> SecurityKind.Unsupported
             }
         }
 
-        // oauth2 and openIdConnect need a flow rather than a value. Carried, not rejected: a
-        // document may declare one without any operation requiring it.
+        // A flow is not something this generator can run, but what a flow produces is a token, and
+        // a token goes in the same header a bearer scheme uses.
+        SwaggerSecurityScheme.Type.OAUTH2, SwaggerSecurityScheme.Type.OPENIDCONNECT -> {
+            SecurityKind.OAuthToken
+        }
+
         else -> {
             SecurityKind.Unsupported
         }

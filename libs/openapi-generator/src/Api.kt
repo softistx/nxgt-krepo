@@ -83,17 +83,38 @@ public data class SecurityRequirement(
 )
 
 /**
- * What a scheme asks a caller for.
+ * What a scheme asks a caller for, reduced to where the credential goes.
  *
- * Only the shapes a generated client can satisfy from a credential it is handed. [Unsupported]
- * covers `oauth2` and `openIdConnect`, which need a flow rather than a value — it is carried rather
- * than rejected at parse time, so a document that *declares* one without requiring it still parses.
+ * `oauth2` and `openIdConnect` become [OAuthToken] rather than being refused: this generator
+ * cannot *run* a flow, but the thing a flow produces is an access token, and RFC 6749 sends it in
+ * the same `Authorization: Bearer` header as [HttpBearer]. A client that is handed a token can
+ * therefore use one, and refusing the whole document would be refusing an API it can in fact call.
+ *
+ * [Unsupported] is what is left: an `http` scheme this generator does not know — `digest`,
+ * `negotiate` — where the credential is the answer to a challenge rather than a value a caller
+ * holds. It is carried rather than rejected at parse time, so a document that *declares* one
+ * without requiring it still parses.
  */
-public enum class SecurityKind { HttpBearer, HttpBasic, ApiKeyHeader, ApiKeyQuery, Unsupported }
+public enum class SecurityKind {
+    HttpBearer,
+    HttpBasic,
+    ApiKeyHeader,
+    ApiKeyQuery,
+    ApiKeyCookie,
+    OAuthToken,
+    Unsupported,
+}
 
 public data class SecurityScheme(
     /** The document's own name for it — `Bearer`, `Basic` — not a derived one. */
     val name: String,
+    /**
+     * The Kotlin name of the credential slot a client offers for it — `Bearer` -> `bearer`.
+     *
+     * Derived by the parser, like every other Kotlin name in this model, so an emitter never has
+     * to decide what a document's word looks like in Kotlin.
+     */
+    val propertyName: String,
     val kind: SecurityKind,
     /** For [SecurityKind.ApiKeyHeader] and [SecurityKind.ApiKeyQuery]: the name the key is sent under. */
     val parameterName: String? = null,

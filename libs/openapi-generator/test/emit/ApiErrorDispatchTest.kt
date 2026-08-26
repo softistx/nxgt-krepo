@@ -122,8 +122,9 @@ class ApiErrorDispatchTest :
             }
 
             scenario("Spring carries the operation from the proxy to the filter as an attribute") {
-                spring shouldContain "method.getAnnotation(ApiOperation::class.java)"
-                spring shouldContain "builder.addAttribute(OPERATION_ATTRIBUTE, it.id)"
+                val support = SpringEmitter().render(MODEL).getValue("com.example.api.ApiProxySupport")
+                support shouldContain "method.getAnnotation(ApiOperation::class.java)"
+                support shouldContain "builder.addAttribute(OPERATION_ATTRIBUTE, it.id)"
                 spring shouldContain "request.attributes()[OPERATION_ATTRIBUTE]"
             }
         }
