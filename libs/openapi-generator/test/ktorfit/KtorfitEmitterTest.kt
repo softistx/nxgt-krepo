@@ -9,8 +9,8 @@ class KtorfitEmitterTest :
     FeatureSpec({
 
         val files = KtorfitEmitter().render()
-        val api = files.getValue("com.example.api.CategoriesApi")
-        val category = files.getValue("com.example.api.model.Category")
+        val api = files.getValue("com.example.api.apis.CategoriesApi")
+        val category = files.getValue("com.example.api.models.Category")
 
         feature("interfaces") {
             scenario("emits one suspend function per operation with its HTTP annotation") {
@@ -21,7 +21,7 @@ class KtorfitEmitterTest :
             }
 
             scenario("return types resolve to model classes in the model package") {
-                api shouldContain "import com.example.api.model.Category"
+                api shouldContain "import com.example.api.models.Category"
                 api shouldContain "): Category"
                 api shouldContain "): List<Category>"
                 // KotlinPoet omits an explicit Unit return type

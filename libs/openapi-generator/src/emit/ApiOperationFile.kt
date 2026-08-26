@@ -16,7 +16,7 @@ import com.strange.openapi.Operation
 internal const val API_OPERATION: String = "ApiOperation"
 
 /** The [ApiOperation] annotation, by the name it has in the generated package. */
-internal fun apiOperationName(options: EmitOptions): ClassName = ClassName(options.packageName, API_OPERATION)
+internal fun apiOperationName(options: EmitOptions): ClassName = ClassName(options.utilPackage, API_OPERATION)
 
 /**
  * The annotation that tells the HTTP layer which operation it is looking at.
@@ -88,7 +88,7 @@ internal fun apiOperationFile(options: EmitOptions): FileSpec {
             ).build()
 
     return FileSpec
-        .builder(options.packageName, API_OPERATION)
+        .builder(options.utilPackage, API_OPERATION)
         .addFileComment(GENERATED_COMMENT)
         .addType(annotation)
         .build()

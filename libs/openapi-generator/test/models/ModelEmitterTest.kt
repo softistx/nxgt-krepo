@@ -17,12 +17,12 @@ class ModelEmitterTest :
             scenario("models only: no interfaces, just the schemas") {
                 val files = ModelsOnlyEmitter().render()
 
-                files.keys.none { it == "com.example.api.CategoriesApi" } shouldBe true
-                files.keys.toList() shouldBe listOf("com.example.api.model.Category")
+                files.keys.none { it == "com.example.api.apis.CategoriesApi" } shouldBe true
+                files.keys.toList() shouldBe listOf("com.example.api.models.Category")
             }
 
             scenario("the kotlinx style is what a client-less module gets by default") {
-                val category = ModelsOnlyEmitter().render().getValue("com.example.api.model.Category")
+                val category = ModelsOnlyEmitter().render().getValue("com.example.api.models.Category")
 
                 category shouldContain "@Serializable"
                 category shouldContain """@SerialName("created_at")"""
@@ -36,7 +36,7 @@ class ModelEmitterTest :
                 val category =
                     ModelsOnlyEmitter(ModelStyle.Jackson)
                         .render()
-                        .getValue("com.example.api.model.Category")
+                        .getValue("com.example.api.models.Category")
 
                 category shouldNotContain "@Serializable"
                 category shouldContain """@JsonProperty("created_at")"""
@@ -45,8 +45,8 @@ class ModelEmitterTest :
             }
 
             scenario("both styles agree on everything the spec does pin down") {
-                val kotlinx = ModelsOnlyEmitter(ModelStyle.Kotlinx).render().getValue("com.example.api.model.Category")
-                val jackson = ModelsOnlyEmitter(ModelStyle.Jackson).render().getValue("com.example.api.model.Category")
+                val kotlinx = ModelsOnlyEmitter(ModelStyle.Kotlinx).render().getValue("com.example.api.models.Category")
+                val jackson = ModelsOnlyEmitter(ModelStyle.Jackson).render().getValue("com.example.api.models.Category")
 
                 listOf(kotlinx, jackson).forEach { source ->
                     source shouldContain "public data class Category"
@@ -89,7 +89,7 @@ class ModelEmitterTest :
                 render(OPTIONALITY_MODEL) shouldContain "@JsonIgnoreUnknownKeys"
                 ModelsOnlyEmitter(ModelStyle.Jackson)
                     .render(OPTIONALITY_MODEL)
-                    .getValue("com.example.api.model.Thing") shouldContain "@JsonIgnoreProperties(ignoreUnknown = true)"
+                    .getValue("com.example.api.models.Thing") shouldContain "@JsonIgnoreProperties(ignoreUnknown = true)"
             }
 
             scenario("additionalProperties reaches the source as a typed map") {
@@ -120,4 +120,4 @@ private val OPTIONALITY_MODEL =
             ),
     )
 
-private fun render(model: ApiModel) = ModelsOnlyEmitter().render(model).getValue("com.example.api.model.Thing")
+private fun render(model: ApiModel) = ModelsOnlyEmitter().render(model).getValue("com.example.api.models.Thing")

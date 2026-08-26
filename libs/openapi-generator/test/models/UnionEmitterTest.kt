@@ -48,7 +48,7 @@ private fun render(
     name: String,
 ) = ModelsOnlyEmitter(style)
     .render(ApiModel(groups = emptyList(), models = listOf(PET, DOG, PAYMENT)))
-    .getValue("com.example.api.model.$name")
+    .getValue("com.example.api.models.$name")
 
 /**
  * The two libraries reach the same wire format by opposite routes, and the interesting failures are

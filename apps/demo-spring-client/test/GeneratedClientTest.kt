@@ -1,6 +1,6 @@
 package com.strange.demo.spring
 
-import com.strange.demo.spring.api.CategoriesApi
+import com.strange.demo.spring.api.apis.CategoriesApi
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
