@@ -1,0 +1,1727 @@
+openapi: 3.1.0
+info:
+  description: REST API with Ktor
+  title: NXGT Ktor
+  version: 1.0.0
+servers:
+  - description: Dev server
+    url: http://localhost:8080
+security:
+  - Bearer: []
+tags:
+  - name: auth-controller
+    description: Auth controller
+  - name: users-controller
+    description: Users controller
+  - name: roles-controller
+    description: Roles controller
+  - name: tags-controller
+    description: Tags controller
+  - name: categories-controller
+    description: Categories controller
+  - name: uploads-controller
+    description: Uploads controller
+paths:
+  /auth/login:
+    post:
+      tags:
+        - auth-controller
+      summary: Login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        '200':
+          description: The newly created token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+  /auth/register:
+    post:
+      tags:
+        - auth-controller
+      summary: Create Account
+      operationId: createAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '201':
+          description: The newly created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+  /auth/refresh-token:
+    post:
+      tags:
+        - auth-controller
+      summary: Refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: The refreshed token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+  /auth/logout:
+    post:
+      tags:
+        - auth-controller
+      summary: Logout
+      operationId: logout
+      responses:
+        '204':
+          description: Logout successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+  /categories:
+    post:
+      tags:
+        - categories-controller
+      summary: Create category.
+      operationId: createCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '201':
+          description: The newly created category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /categories/search:
+    post:
+      tags:
+        - categories-controller
+      summary: Get categories
+      operationId: findCategories
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/first'
+        - $ref: '#/components/parameters/last'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: A paginated list of categories.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategory'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /categories/{id}:
+    get:
+      tags:
+        - categories-controller
+      summary: Get category by ID
+      operationId: findCategory
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The category that matches the provided id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags:
+        - categories-controller
+      summary: Update category
+      operationId: updateCategory
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '200':
+          description: The newly updated category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - categories-controller
+      summary: Update partially category
+      operationId: patchCategory
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '200':
+          description: The newly patched category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - categories-controller
+      summary: Delete category
+      operationId: deleteCategory
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          $ref: '#/components/responses/ResourceDeleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /categories/{id}/photo:
+    put:
+      tags:
+        - categories-controller
+      summary: Change photo
+      operationId: changePhoto
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadRequest'
+      responses:
+        '200':
+          description: The newly updated category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+    delete:
+      tags:
+        - categories-controller
+      summary: Delete photo
+      operationId: deletePhoto
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResourceDeleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+  /permissions:
+    post:
+      tags:
+        - permissions-controller
+      summary: Create permission.
+      operationId: createPermission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionRequest'
+      responses:
+        '201':
+          description: The newly created permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /permissions/search:
+    post:
+      tags:
+        - permissions-controller
+      summary: Get permissions
+      operationId: findPermissions
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/first'
+        - $ref: '#/components/parameters/last'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: A paginated list of permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPermission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /permissions/{id}:
+    get:
+      tags:
+        - permissions-controller
+      summary: Get permission by ID
+      operationId: findPermission
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The permission that matches the provided id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags:
+        - permissions-controller
+      summary: Update permission
+      operationId: updatePermission
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionRequest'
+      responses:
+        '200':
+          description: The newly updated permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - permissions-controller
+      summary: Update partially permission
+      operationId: patchPermission
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchPermissionRequest'
+      responses:
+        '200':
+          description: The newly patched permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - permissions-controller
+      summary: Delete permission
+      operationId: deletePermission
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          $ref: '#/components/responses/ResourceDeleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /roles:
+    post:
+      tags:
+        - roles-controller
+      summary: Create role.
+      operationId: createRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+      responses:
+        '201':
+          description: The newly created role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /roles/search:
+    post:
+      tags:
+        - roles-controller
+      summary: Get roles
+      operationId: findRoles
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/first'
+        - $ref: '#/components/parameters/last'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: A paginated list of roles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRole'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /roles/{id}:
+    get:
+      tags:
+        - roles-controller
+      summary: Get role by ID
+      operationId: findRole
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The role that matches the provided id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags:
+        - roles-controller
+      summary: Update role
+      operationId: updateRole
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+      responses:
+        '200':
+          description: The newly updated role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - roles-controller
+      summary: Update partially role
+      operationId: patchRole
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchRoleRequest'
+      responses:
+        '200':
+          description: The newly patched role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - roles-controller
+      summary: Delete role
+      operationId: deleteRole
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          $ref: '#/components/responses/ResourceDeleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /tags:
+    post:
+      tags:
+        - tags-controller
+      summary: Create tag.
+      operationId: createTag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+      responses:
+        '201':
+          description: The newly created tag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/search:
+    post:
+      tags:
+        - tags-controller
+      summary: Get tags
+      operationId: findTags
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/first'
+        - $ref: '#/components/parameters/last'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: A paginated list of tags.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /tags/{id}:
+    get:
+      tags:
+        - tags-controller
+      summary: Get tag by ID
+      operationId: findTag
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The tag that matches the provided id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags:
+        - tags-controller
+      summary: Update tag
+      operationId: updateTag
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+      responses:
+        '200':
+          description: The newly updated tag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - tags-controller
+      summary: Update partially tag
+      operationId: patchTag
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchTagRequest'
+      responses:
+        '200':
+          description: The newly patched tag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - tags-controller
+      summary: Delete tag
+      operationId: deleteTag
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          $ref: '#/components/responses/ResourceDeleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /uploads:
+    post:
+      tags:
+        - uploads-controller
+      summary: Upload file
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadRequest'
+      responses:
+        '200':
+          description: The newly created file's id
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+  /uploads/search:
+    post:
+      tags:
+        - uploads-controller
+      summary: Get files
+      operationId: findFiles
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/first'
+        - $ref: '#/components/parameters/last'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: A paginated list of files.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /uploads/{id}:
+    get:
+      tags:
+        - uploads-controller
+      summary: Get file by ID
+      operationId: findFile
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: attachment
+          in: query
+          schema:
+            type: boolean
+            default: true
+          required: true
+          description: Set content disposition to attachment if true, inline otherwise(default value to true).
+      responses:
+        '200':
+          description: The file that matches the provided id
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+    delete:
+      tags:
+        - uploads-controller
+      summary: Delete file
+      operationId: deleteFile
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          $ref: '#/components/responses/ResourceDeleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/me:
+    get:
+      tags:
+        - users-controller
+      summary: Get user profile
+      operationId: getProfile
+      responses:
+        '200':
+          description: The current logged in user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+    patch:
+      tags:
+        - users-controller
+      summary: Update account
+      operationId: updateAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchProfileRequest'
+      responses:
+        '200':
+          description: The updated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/avatar:
+    put:
+      tags:
+        - users-controller
+      summary: Change avatar
+      operationId: uploadAvatar
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadRequest'
+      responses:
+        '200':
+          description: The newly updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+    delete:
+      tags:
+        - users-controller
+      summary: Delete avatar
+      operationId: deleteAvatar
+      responses:
+        '200':
+          $ref: '#/components/responses/ResourceDeleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+  /users/search:
+    post:
+      tags:
+        - users-controller
+      summary: Get users
+      operationId: findUsers
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/first'
+        - $ref: '#/components/parameters/last'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: A paginated list of users.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUser'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /users:
+    post:
+      tags:
+        - users-controller
+      summary: Create user.
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '201':
+          description: The newly created user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /users/{id}:
+    get:
+      tags:
+        - users-controller
+      summary: Get user by ID
+      operationId: findUser
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The user that matches the provided id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+      security: []
+    put:
+      tags:
+        - users-controller
+      summary: Update user
+      operationId: updateUser
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: The newly updated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - users-controller
+      summary: Update partially user
+      operationId: patchUser
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchUserRequest'
+      responses:
+        '200':
+          description: The newly patched user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - users-controller
+      summary: Delete user
+      operationId: deleteUser
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          $ref: '#/components/responses/ResourceDeleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    Basic:
+      type: http
+      scheme: basic
+      description: Basic authentication
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT bearer token
+  schemas:
+    SignInRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: The username or email address(if applicable) of the user.
+        password:
+          type: string
+          description: The password for the user account.
+      required:
+        - username
+        - password
+    Token:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: The user identifier associated with the token.
+        access:
+          type: string
+          description: The access token.
+        refresh:
+          type: string
+          description: The refresh token.
+      required:
+        - uid
+        - access
+        - refresh
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: Error status code
+        message:
+          type: string
+          description: A human-readable error message.
+          default: ''
+        debugMessage:
+          type: string
+          description: An optional debug message for troubleshooting.
+          default: null
+    SignUpRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 4
+          maxLength: 20
+          description: The username of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        password:
+          type: string
+          minLength: 4
+          maxLength: 100
+          description: The password for the user account.
+      required:
+        - username
+        - password
+        - email
+    AuditMetadata:
+      type: object
+      properties:
+        createdBy:
+          type: string
+          description: The user who created the attribute.
+        createdDate:
+          type: string
+          format: date-time
+          description: The date and time when the attribute was created.
+        lastModifiedBy:
+          type: string
+          description: The user who last updated the attribute.
+        lastModifiedDate:
+          type: string
+          format: date-time
+          description: The date and time when the attribute was last updated.
+      required:
+        - createdBy
+        - createdDate
+        - lastModifiedBy
+        - lastModifiedDate
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        username:
+          type: string
+          description: The username of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        avatar:
+          type: string
+          description: The URL of the user's avatar image.
+        disabled:
+          type: boolean
+          description: Indicates if the user account is disabled.
+        roles:
+          type: array
+          items:
+            type: string
+          description: The roles assigned to the user.
+        metadata:
+          $ref: '#/components/schemas/AuditMetadata'
+          description: Metadata related to the creation and update of the user.
+      required:
+        - id
+        - username
+        - email
+        - disabled
+        - roles
+        - metadata
+    RefreshTokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          description: The refresh token.
+        uid:
+          type: string
+          description: The user identifier associated with the token.
+      required:
+        - uid
+        - token
+    CategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the category.
+        family:
+          type: string
+          description: The family or group to which the category belongs.
+        description:
+          type: string
+          description: A brief description of the category.
+        attributes:
+          type: array
+          items:
+            type: string
+          description: A set of attribute IDs to be associated with the category.
+      required:
+        - name
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the category.
+        name:
+          type: string
+          description: The name of the category.
+        family:
+          type: string
+          description: The family or group to which the category belongs.
+        description:
+          type: string
+          description: A brief description of the category.
+        photo:
+          type: string
+          description: A URL to a photo representing the category.
+        attributes:
+          type: array
+          items:
+            type: string
+          description: A set of attribute IDs associated with the category.
+        metadata:
+          $ref: '#/components/schemas/AuditMetadata'
+          description: Metadata related to the creation and update of the category.
+      required:
+        - id
+        - name
+        - metadata
+    JsonObject:
+      type: object
+      format: json
+    SearchRequest:
+      type: object
+      properties:
+        filter:
+          $ref: '#/components/schemas/JsonObject'
+          description: The search filter object
+        sort:
+          $ref: '#/components/schemas/JsonObject'
+          description: The search sort object
+    PageInfo:
+      type: object
+      properties:
+        startCursor:
+          type: string
+          description: The cursor corresponding to the first node in edges
+        endCursor:
+          type: string
+          description: The cursor corresponding to the last node in edges
+        hasPreviousPage:
+          type: boolean
+          description: Whether there is a previous page
+        hasNextPage:
+          type: boolean
+          description: Whether there is a next page
+    PaginatedCategory:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          description: A list of category objects.
+        metadata:
+          $ref: '#/components/schemas/PageInfo'
+    Upload:
+      type: string
+      format: binary
+      description: File to upload
+    UploadRequest:
+      type: object
+      properties:
+        file:
+          $ref: '#/components/schemas/Upload'
+    PermissionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the permission being requested.
+        description:
+          type: string
+          description: A human-readable description of the permission.
+      required:
+        - name
+    Permission:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the permission.
+          readOnly: true
+        name:
+          type: string
+          description: The name of the permission.
+        description:
+          type: string
+          description: A human-readable description of the permission.
+        metadata:
+          $ref: '#/components/schemas/AuditMetadata'
+          description: Metadata related to the creation and update of the permission.
+      required:
+        - id
+        - name
+        - metadata
+    PaginatedPermission:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+          description: A list of permission objects.
+        metadata:
+          $ref: '#/components/schemas/PageInfo'
+    PatchPermissionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the permission being requested.
+        description:
+          type: string
+          description: A human-readable description of the permission.
+    RoleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 4
+          maxLength: 20
+          description: The name of the role.
+        description:
+          type: string
+          description: A brief description of the role.
+        permissions:
+          type: array
+          items:
+            type: string
+          description: The permissions to be assigned to the role.
+      required:
+        - name
+    Role:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the role.
+        name:
+          type: string
+          description: The name of the role.
+        description:
+          type: string
+          description: A brief description of the role.
+        permissions:
+          type: array
+          items:
+            type: string
+          description: The permissions associated with the role.
+        metadata:
+          $ref: '#/components/schemas/AuditMetadata'
+          description: Metadata related to the creation and update of the role.
+      required:
+        - id
+        - name
+        - permissions
+        - metadata
+    PaginatedRole:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+          description: A list of role objects.
+        metadata:
+          $ref: '#/components/schemas/PageInfo'
+    PatchRoleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 4
+          maxLength: 20
+          description: The name of the role.
+        description:
+          type: string
+          description: A brief description of the role.
+        permissions:
+          type: array
+          items:
+            type: string
+          description: The permissions to be assigned to the role.
+    TagRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 20
+          description: The name of the tag.
+        family:
+          type: string
+          description: The family or category of the tag.
+        description:
+          type: string
+          description: A brief description of the tag.
+      required:
+        - name
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the tag.
+        name:
+          type: string
+          description: The name of the tag.
+        family:
+          type: string
+          description: The family or category of the tag.
+        description:
+          type: string
+          description: A brief description of the tag.
+        metadata:
+          $ref: '#/components/schemas/AuditMetadata'
+          description: Metadata related to the creation and update of the tag.
+      required:
+        - id
+        - name
+        - metadata
+    PaginatedTag:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          description: A list of tag objects.
+        metadata:
+          $ref: '#/components/schemas/PageInfo'
+    PatchTagRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 20
+          description: The name of the tag.
+        family:
+          type: string
+          description: The family or category of the tag.
+        description:
+          type: string
+          description: A brief description of the tag.
+    FileUpload:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the file.
+        uploadDate:
+          type: string
+          format: date-time
+        contentType:
+          type: string
+        size:
+          type: integer
+        chunkSize:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/AuditMetadata'
+          description: Metadata related to the creation and update of the file.
+      required:
+        - name
+        - version
+        - uploadDate
+        - size
+        - chunkSize
+        - contentType
+        - metadata
+    PaginatedFile:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileUpload'
+          description: A list of file objects.
+        metadata:
+          $ref: '#/components/schemas/PageInfo'
+    PatchProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 4
+          maxLength: 20
+          description: The name of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        password:
+          type: string
+          minLength: 4
+          maxLength: 100
+          description: The password for the user account.
+    PaginatedUser:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+          description: A list of user objects.
+        metadata:
+          $ref: '#/components/schemas/PageInfo'
+    UserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 4
+          maxLength: 20
+          description: The username of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        password:
+          type: string
+          minLength: 4
+          maxLength: 100
+          description: The password for the user account.
+        disabled:
+          type: boolean
+          description: Indicates if the user account is disabled.
+        roles:
+          type: array
+          items:
+            type: string
+          description: The roles to be assigned to the user.
+      required:
+        - username
+        - password
+        - email
+    PatchUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        password:
+          type: string
+          minLength: 4
+          maxLength: 100
+          description: The password for the user account.
+        disabled:
+          type: boolean
+          description: Indicates if the user account is disabled.
+        roles:
+          type: array
+          items:
+            type: string
+          description: The roles to be assigned to the user.
+  responses:
+    BadRequest:
+      description: The request was invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: An unexpected error occurred on the server.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: The user is not authorized to access the requested resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: The user does not have permission to access the requested resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ResourceDeleted:
+      description: The resource was successfully deleted
+  parameters:
+    cursor:
+      in: query
+      name: cursor
+      description: The cursor to use for pagination. This should be the endCursor value from the previous page of results. If not provided, the first page of results will be returned.
+      schema:
+        type: string
+    first:
+      in: query
+      name: first
+      description: The number of items to return per page. If not provided, the default is 20.
+      schema:
+        type: integer
+    last:
+      in: query
+      name: last
+      description: The number of items to return per page. If not provided, the default is 20.
+      schema:
+        type: integer
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the entity.

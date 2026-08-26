@@ -1,0 +1,14 @@
+product: jvm/amper-plugin
+
+dependencies:
+  - //libs/openapi-generator
+  # swagger-parser logs through SLF4J; without a provider every build prints a warning
+  - $libs.slf4j.nop
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+pluginInfo:
+  settingsClass: com.strange.openapi.plugin.OpenApiSettings

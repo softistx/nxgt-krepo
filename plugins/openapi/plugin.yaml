@@ -1,0 +1,16 @@
+tasks:
+  generate:
+    action: !com.strange.openapi.plugin.generateClient
+      specFile: ${module.rootDir}/${pluginSettings.specFile}
+      outputDir: ${taskOutputDir}
+      packageName: ${pluginSettings.packageName}
+      client: ${pluginSettings.client}
+      groupBy: ${pluginSettings.groupBy}
+      models: ${pluginSettings.models}
+      interfacePrefix: ${pluginSettings.interfacePrefix}
+      interfaceSuffix: ${pluginSettings.interfaceSuffix}
+
+generated:
+  sources:
+    - language: kotlin
+      directory: ${tasks.generate.action.outputDir}
