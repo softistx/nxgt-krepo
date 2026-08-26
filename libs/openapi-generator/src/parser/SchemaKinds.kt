@@ -4,7 +4,7 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media.Schema
 
 /** What a schema becomes in the model package, or nothing when it becomes no declaration at all. */
-internal enum class SchemaKind { Object, Enum, Union }
+internal enum class SchemaKind { Object, Enum, Union, ValueClass }
 
 /**
  * The one answer to "does this schema become a generated declaration, and which kind?".
@@ -16,6 +16,11 @@ internal enum class SchemaKind { Object, Enum, Union }
  */
 internal fun OpenAPI.schemaKindOf(schema: Schema<*>): SchemaKind? =
     when {
+        // A type the consumer owns becomes nothing here: that is the whole request.
+        schema.extensions?.containsKey(Ext.TYPE) == true -> null
+
+        schema.extensions.isValueClass("schema") -> SchemaKind.ValueClass
+
         schema.hasGeneratableEnum() -> SchemaKind.Enum
 
         unionMembersOf(schema) != null -> SchemaKind.Union
