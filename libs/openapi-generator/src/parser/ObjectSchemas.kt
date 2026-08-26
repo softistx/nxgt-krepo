@@ -31,7 +31,7 @@ internal fun OpenAPI.objectTypeOf(
                 wireName = propertyName,
                 type = typeOf(propertySchema, "$where property '$propertyName'"),
                 required = propertyName in composed.required || propertyName in discriminators,
-                nullable = propertySchema.isNullable(),
+                nullable = propertySchema.isNullable("$where property '$propertyName'"),
                 default = propertySchema.defaultLiteral(),
                 doc = propertySchema.doc(),
                 deprecated = propertySchema.deprecated == true,

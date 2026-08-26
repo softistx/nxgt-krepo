@@ -283,7 +283,11 @@ A document can say how it wants to become Kotlin, through `x-*`. What is read:
 | Key | Where | Becomes |
 | --- | --- | --- |
 | `x-kotlin-name` | schema, property, operation, parameter, tag | the Kotlin name; the wire name is untouched |
+| `x-kotlin-skip` / `x-internal` | schema, operation | left out of the generated client |
 | `x-deprecated-reason` | schema, property, operation | the message inside `@Deprecated` |
+| `x-enum-varnames` / `x-enumNames` | enum schema | the entry names |
+| `x-enum-descriptions` | enum schema | KDoc on each entry |
+| `x-nullable` | schema | nullability, beside `nullable` and 3.1's type sets |
 
 `x-kotlin-name` is also the escape hatch from the three failures in **Colliding names** below: two
 schemas that derive one class name, two operations that derive one function name. Renaming is a
@@ -292,6 +296,19 @@ through the same collision check, so renaming one half of a collision onto the o
 rather than overwriting it. On a tag it names the interface outright: prefix and suffix are this
 generator's derivation, and a document that states the name is not asking for one to be derived. On
 an inline schema it replaces the name derived from the path (`OrderShippingAddressGeo`).
+
+`x-enum-varnames` is the other escape hatch: two values that derive one entry name (`in-progress`
+and `in_progress`) are a build failure otherwise. `x-enumNames` is NSwag's spelling of the same
+list; both are accepted, and a document carrying both with different values fails rather than one
+winning. A list whose length does not match `enum` fails naming both counts — a short list would
+rename the wrong entries and leave the rest derived, which looks deliberate and is wrong.
+
+`x-kotlin-skip` and `x-internal` mean the same thing, and `x-internal` is what Redocly, Bump and
+ReadMe already write to keep an endpoint out of a published reference. **Leaving out a schema that
+something still points at fails the parse**, naming the schema and every place that refers to it:
+the generated source would otherwise name a class nobody declares, and the error would land in a
+file the author never wrote. The same check now catches a `$ref` to a component the document does
+not define, which used to become a reference to a name nothing would ever generate.
 
 **`x-kotlin-*` is this generator's namespace, and an unrecognised key in it fails the parse**,
 naming the key, where it sits, and the nearest key that does exist. A misspelled `x-kotlin-nmae` is
