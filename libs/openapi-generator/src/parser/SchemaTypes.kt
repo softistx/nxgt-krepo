@@ -29,8 +29,10 @@ internal fun OpenAPI.typeOf(
         return TypeRef.ModelRef(Naming.pascal(name))
     }
 
-    // OpenAPI 3.1 allows `type` to be a set; 3.0 uses a single value.
-    val type = schema.type ?: schema.types?.firstOrNull()
+    // OpenAPI 3.1 allows `type` to be a set, and `["string", "null"]` is how it spells a nullable
+    // string. The null carries no type information — it is read back by isNullable() — so the
+    // meaningful entry is the other one, whichever order the document happens to list them in.
+    val type = schema.type ?: schema.types?.firstOrNull { it != "null" } ?: schema.types?.firstOrNull()
     return when (type) {
         "array" -> {
             TypeRef.ListRef(typeOf(schema.items, "$where item", seenRefs))
@@ -57,7 +59,14 @@ internal fun OpenAPI.typeOf(
         }
 
         "object", null -> {
-            TypeRef.JsonObjectRef
+            // `additionalProperties` with a schema means open keys but typed values. Declared
+            // properties win: a schema that has both is a class with an escape hatch, not a map.
+            val values = schema.additionalProperties
+            if (schema.properties.isNullOrEmpty() && values is Schema<*>) {
+                TypeRef.MapRef(typeOf(values, "$where value", seenRefs))
+            } else {
+                TypeRef.JsonObjectRef
+            }
         }
 
         else -> {

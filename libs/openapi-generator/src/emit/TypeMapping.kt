@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.DOUBLE
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
@@ -41,5 +42,6 @@ public fun typeNameOf(
         TypeRef.BinaryRef -> BYTE_ARRAY
         TypeRef.UnitRef -> UNIT
         is TypeRef.ListRef -> LIST.parameterizedBy(typeNameOf(type.element, options, style))
+        is TypeRef.MapRef -> MAP.parameterizedBy(STRING, typeNameOf(type.value, options, style))
         is TypeRef.ModelRef -> ClassName(options.modelPackage, type.name)
     }

@@ -1,5 +1,6 @@
 package com.strange.openapi.parser
 
+import com.strange.openapi.ObjectType
 import com.strange.openapi.ParamKind
 import com.strange.openapi.TypeRef
 import io.kotest.core.spec.style.FeatureSpec
@@ -60,7 +61,7 @@ class ScalarAliasRefTest :
             }
 
             scenario("a ref to a property-less object becomes raw JSON") {
-                val search = model.models.first { it.name == "Search" }
+                val search = model.models.filterIsInstance<ObjectType>().first { it.name == "Search" }
                 search.fields.single().type shouldBe TypeRef.JsonObjectRef
             }
         }
