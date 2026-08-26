@@ -31,6 +31,8 @@ internal fun OpenAPI.objectTypeOf(
                 required = propertyName in composed.required || propertyName in discriminators,
                 nullable = propertySchema.isNullable(),
                 default = propertySchema.defaultLiteral(),
+                doc = propertySchema.doc(),
+                deprecated = propertySchema.deprecated == true,
                 overrides = propertyName in discriminators,
                 constant = tag?.wireValue,
             )
@@ -54,6 +56,8 @@ internal fun OpenAPI.objectTypeOf(
     return ObjectType(
         name = Naming.pascal(name),
         fields = fields + implied,
+        doc = schema.doc(),
+        deprecated = schema.deprecated == true,
         implements = unions.map { Naming.pascal(it.baseName) },
     )
 }

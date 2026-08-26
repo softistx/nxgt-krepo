@@ -1,5 +1,6 @@
 package com.strange.openapi.models
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -44,6 +45,8 @@ internal fun objectFile(
             PropertySpec
                 .builder(field.name, type)
                 .apply {
+                    field.doc?.let { addKdoc("%L", it) }
+                    if (field.deprecated) addAnnotation(deprecated("This property is deprecated in the OpenAPI document."))
                     if (field.overrides) addModifiers(KModifier.OVERRIDE)
                     if (field.constant != null) style.unionBinding.decorateConstant(this)
                 }.initializer(field.name)
@@ -54,14 +57,23 @@ internal fun objectFile(
             .classBuilder(model.name)
             .addModifiers(KModifier.DATA)
             .addAnnotations(style.classAnnotations)
-            .addKdoc(GENERATED_KDOC)
-            .apply { model.implements.forEach { addSuperinterface(ClassName(options.modelPackage, it)) } }
+            .addAnnotation(style.unknownFieldTolerance)
+            .addKdoc(kdoc(model))
+            .apply {
+                if (model.deprecated) addAnnotation(deprecated("This schema is deprecated in the OpenAPI document."))
+            }.apply { model.implements.forEach { addSuperinterface(ClassName(options.modelPackage, it)) } }
             .primaryConstructor(constructor.build())
             .addProperties(properties)
             .build()
     return FileSpec
         .builder(options.modelPackage, model.name)
-        .apply { if (model.fields.any { field -> field.constant != null }) style.unionBinding.decorateFile(this) }
+        // Both the constant discriminator and unknown-field tolerance are experimental in kotlinx.
+        .apply { style.decorateFile(this) }
         .addType(type)
         .build()
 }
+
+/** The schema's own prose above the boilerplate, so the document's explanation survives. */
+private fun kdoc(model: ObjectType) = model.doc?.let { "$it\n\n$GENERATED_KDOC" } ?: GENERATED_KDOC
+
+private fun deprecated(message: String) = AnnotationSpec.builder(Deprecated::class).addMember("%S", message).build()

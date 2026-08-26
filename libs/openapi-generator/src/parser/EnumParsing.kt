@@ -25,7 +25,13 @@ internal fun enumTypeOf(
             .map { EnumEntry(name = Naming.enumEntry(it.toString()), wireValue = it.toString()) }
     if (entries.isEmpty()) throw OpenApiParseException("$where: enum lists no values")
     entries.requireDistinctEntryNames(where)
-    return EnumType(name = name, entries = entries, base = base, fallback = fallbackEntry(entries, base))
+    return EnumType(
+        name = name,
+        entries = entries,
+        doc = schema.doc(),
+        base = base,
+        fallback = fallbackEntry(entries, base),
+    )
 }
 
 /**

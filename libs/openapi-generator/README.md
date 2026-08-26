@@ -44,9 +44,26 @@ written down:
 | Renamed property | `@SerialName("created_at")` | `@JsonProperty("created_at")` |
 | `date-time` | `kotlin.time.Instant` | `java.time.Instant` |
 | Free-form object | `kotlinx.serialization.json.JsonObject` | `Map<String, Any?>` |
+| `date` | `kotlinx.datetime.LocalDate` | `java.time.LocalDate` |
+| `uuid` | `kotlin.uuid.Uuid` | `java.util.UUID` |
+| Unknown fields | `@JsonIgnoreUnknownKeys` | `@JsonIgnoreProperties(ignoreUnknown = true)` |
 
 A style governs the interfaces too, so a client's signatures always line up with its models.
 `ModelsOnlyEmitter` is the `client: None` case — the same models, no API surface.
+
+**One classpath consequence**: `format: date` in the kotlinx style emits `kotlinx.datetime.LocalDate`,
+so a module whose document uses it needs `$libs.kotlinx.datetime`. Everything else the kotlinx style
+emits is stdlib or kotlinx-serialization — `kotlin.uuid.Uuid` needs no opt-in on Kotlin 2.4, and
+kotlinx-serialization binds it out of the box.
+
+**Every generated model tolerates fields the document does not describe.** Both libraries are strict
+by default — kotlinx always, Jackson whenever the consumer turns `FAIL_ON_UNKNOWN_PROPERTIES` on —
+and neither switch belongs to this generator, so the tolerance is on the class. It is the same
+reasoning as a tolerant enum: reading is where a client should bend.
+
+A schema's `description` becomes KDoc on the generated class and its properties, and `deprecated:
+true` becomes `@Deprecated`, so the document's own explanation reaches the IDE rather than stopping
+at the YAML.
 
 Parsing uses swagger-parser with `isResolve = true` but **not** `isResolveFully`: resolving fully
 inlines every `$ref` and loses the component names, which are exactly what the generated model
@@ -88,6 +105,8 @@ Two differences are not stylistic and will bite if they are "cleaned up":
 | --- | --- |
 | `string` | `String` |
 | `string` / `date-time` | `Instant` (which one follows the `ModelStyle`) |
+| `string` / `date` | `LocalDate` (kotlinx.datetime, or `java.time` for Jackson) |
+| `string` / `uuid` | `Uuid` (`kotlin.uuid`, or `java.util.UUID` for Jackson) |
 | `string` / `binary` | `ByteArray` |
 | `integer`, `integer` / `int64` | `Int`, `Long` |
 | `number` | `Double` |

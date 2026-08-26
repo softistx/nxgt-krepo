@@ -15,6 +15,9 @@ public sealed interface ModelType {
 public data class ObjectType(
     override val name: String,
     val fields: List<Field>,
+    /** The schema's `description`, if it gave one. */
+    val doc: String? = null,
+    val deprecated: Boolean = false,
     /**
      * Union bases this schema is a member of, empty for a standalone schema.
      *
@@ -36,6 +39,9 @@ public data class Field(
     val nullable: Boolean = false,
     /** The document's `default`, as it appears on the wire. Null means the document gave none. */
     val default: String? = null,
+    /** The property's `description`, if it gave one. */
+    val doc: String? = null,
+    val deprecated: Boolean = false,
     /** True when this field realises a property the union base already declares. */
     val overrides: Boolean = false,
     /**
@@ -92,6 +98,8 @@ public data class UnionDiscriminator(
 public data class EnumType(
     override val name: String,
     val entries: List<EnumEntry>,
+    /** The schema's `description`, if it gave one. */
+    val doc: String? = null,
     /** The scalar the values are written as: [TypeRef.StringRef], [TypeRef.IntRef] or [TypeRef.LongRef]. */
     val base: TypeRef,
     /**
