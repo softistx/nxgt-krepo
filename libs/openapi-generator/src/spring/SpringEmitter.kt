@@ -40,6 +40,9 @@ import com.strange.openapi.models.types
  *
  * Models are plain data classes: Jackson binds them without annotations, so nothing is emitted
  * unless a wire name differs from its Kotlin name.
+ *
+ * One generated file is not a model or an interface: `ApiEnumConverters.kt`, which exists because
+ * Spring writes an enum argument with `Enum.name()`. See [enumConverterFile].
  */
 public class SpringEmitter(
     /**
@@ -51,7 +54,10 @@ public class SpringEmitter(
     override fun emit(
         model: ApiModel,
         options: EmitOptions,
-    ): List<FileSpec> = model.groups.map { emitGroup(it, options) } + modelFiles(model, options, style)
+    ): List<FileSpec> =
+        model.groups.map { emitGroup(it, options) } +
+            modelFiles(model, options, style) +
+            listOfNotNull(enumConverterFile(model, options))
 
     private fun emitGroup(
         group: ApiGroup,
