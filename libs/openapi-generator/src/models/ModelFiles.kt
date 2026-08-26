@@ -2,6 +2,7 @@ package com.strange.openapi.models
 
 import com.squareup.kotlinpoet.FileSpec
 import com.strange.openapi.ApiModel
+import com.strange.openapi.EnumType
 import com.strange.openapi.ModelType
 import com.strange.openapi.ObjectType
 import com.strange.openapi.emit.EmitOptions
@@ -23,5 +24,6 @@ internal fun modelFiles(
     model.models.map { declaration ->
         when (declaration) {
             is ObjectType -> objectFile(declaration, options, style)
+            is EnumType -> enumFile(declaration, options, style)
         }
     }

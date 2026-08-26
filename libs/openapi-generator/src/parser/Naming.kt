@@ -24,6 +24,22 @@ public object Naming {
     /** Property and parameter names: `postId` stays, `post_id` becomes `postId`. */
     public fun propertyName(wireName: String): String = camel(wireName)
 
+    /**
+     * A wire value as an enum entry name: `active` -> `ACTIVE`, `in-progress` -> `IN_PROGRESS`.
+     *
+     * Kotlin entry names cannot start with a digit and cannot be empty, and a wire value is under
+     * no obligation to respect either — `2xx` and `""` are both legal in a document.
+     */
+    public fun enumEntry(wireValue: String): String {
+        val parts = wireValue.split(separators).filter { it.isNotEmpty() }
+        val joined = parts.joinToString("_") { it.uppercase() }
+        return when {
+            joined.isEmpty() -> "EMPTY"
+            joined.first().isDigit() -> "V$joined"
+            else -> joined
+        }
+    }
+
     public fun pascal(value: String): String =
         value
             .split(separators)

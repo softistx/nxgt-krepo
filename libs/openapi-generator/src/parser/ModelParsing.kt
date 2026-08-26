@@ -16,9 +16,12 @@ internal fun OpenAPI.parseModels(): List<ModelType> =
         ?.schemas
         .orEmpty()
         .mapNotNull { (name, schema) ->
+            // A schema that becomes no declaration is carried as its underlying type instead.
+            if (!schema.isModelled()) return@mapNotNull null
+            if (schema.hasGeneratableEnum()) {
+                return@mapNotNull enumTypeOf(schema, Naming.pascal(name), "model $name")
+            }
             val properties = schema.properties.orEmpty()
-            // A schema with no properties has no class worth generating; it is carried as raw JSON.
-            if (properties.isEmpty()) return@mapNotNull null
             val required = schema.required.orEmpty().toSet()
             ObjectType(
                 name = Naming.pascal(name),
