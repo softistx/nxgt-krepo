@@ -1,12 +1,21 @@
 product: jvm/app
 
 dependencies:
-  # spring-web carries both the @HttpExchange annotations and HttpServiceProxyFactory
+  # spring-web carries the @HttpExchange annotations and HttpServiceProxyFactory
   - $libs.spring.web
+  # HttpServiceProxyFactory builds an AOP proxy and formats argument values; neither
+  # spring-aop nor spring-context comes in transitively through spring-web
+  - $libs.spring.aop
+  - $libs.spring.context
+  # WebClient and its adapter live in webflux; suspend functions need a reactive adapter
+  - $libs.spring.webflux
+  - $libs.kotlinx.coroutines.reactor
   # Jackson 3 binds the generated models; the Kotlin module reads their primary constructors
   - $libs.jackson.module.kotlin
 
 test-dependencies:
+  # the end-to-end test drives the generated client against the real server
+  - //apps/demo-api
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core

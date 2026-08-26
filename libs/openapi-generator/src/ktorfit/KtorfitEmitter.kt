@@ -8,12 +8,12 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.strange.openapi.ApiGroup
 import com.strange.openapi.ApiModel
-import com.strange.openapi.EmitOptions
-import com.strange.openapi.OpenApiParseException
 import com.strange.openapi.Operation
 import com.strange.openapi.Param
 import com.strange.openapi.ParamKind
-import com.strange.openapi.SourceEmitter
+import com.strange.openapi.emit.EmitException
+import com.strange.openapi.emit.EmitOptions
+import com.strange.openapi.emit.SourceEmitter
 import com.strange.openapi.emit.apiFile
 import com.strange.openapi.emit.typeNameOf
 import com.strange.openapi.models.ModelStyle
@@ -55,6 +55,15 @@ public class KtorfitEmitter : SourceEmitter {
                 ).returns(typeNameOf(operation.returnType, options, STYLE.types))
 
         operation.summary?.takeIf { it.isNotBlank() }?.let { builder.addKdoc("%L", it) }
+        // The signature cannot show that the spec called these parts optional, so the KDoc does.
+        operation.parameters
+            .filter { it.kind == ParamKind.Part && !it.required }
+            .forEach {
+                builder.addKdoc(
+                    "\n\n@param %L optional in the OpenAPI document, but Ktorfit does not allow a nullable @Part.",
+                    it.name,
+                )
+            }
         if (operation.parameters.any { it.kind == ParamKind.Part }) {
             builder.addAnnotation(ktorfit("Multipart"))
         }
@@ -108,7 +117,7 @@ public class KtorfitEmitter : SourceEmitter {
     private fun methodAnnotation(method: String) =
         when (method.uppercase()) {
             "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS" -> ktorfit(method.uppercase())
-            else -> throw OpenApiParseException("unsupported HTTP method '$method'")
+            else -> throw EmitException("Ktorfit has no annotation for HTTP method '$method'")
         }
 
     private companion object {

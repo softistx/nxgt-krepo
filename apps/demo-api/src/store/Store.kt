@@ -28,19 +28,26 @@ internal class Store<T : Any>(
         last: Int?,
     ): Page<T> {
         val all = all()
-        val rest = if (cursor == null) all else all.drop(all.indexOfFirst { idOf(it) == cursor } + 1)
+        // An unknown cursor means the item it named is gone, so there is nothing after it.
+        val start = if (cursor == null) 0 else all.indexOfFirst { idOf(it) == cursor } + 1
+        if (cursor != null && start == 0) return Page(emptyList(), null, null, false, false)
+
+        val rest = all.drop(start)
         val window =
             when {
                 first != null -> rest.take(first)
                 last != null -> rest.takeLast(last)
                 else -> rest
             }
+        // Positions, not `indexOf`: two items with equal contents would otherwise report the
+        // index of whichever came first, and page flags would be wrong for both.
+        val from = if (last != null && first == null) start + rest.size - window.size else start
         return Page(
             items = window,
             startCursor = window.firstOrNull()?.let(idOf),
             endCursor = window.lastOrNull()?.let(idOf),
-            hasPreviousPage = window.firstOrNull()?.let { all.indexOf(it) > 0 } ?: false,
-            hasNextPage = window.lastOrNull()?.let { all.indexOf(it) < all.size - 1 } ?: false,
+            hasPreviousPage = from > 0,
+            hasNextPage = from + window.size < all.size,
         )
     }
 }

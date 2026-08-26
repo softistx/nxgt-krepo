@@ -118,12 +118,15 @@ result:
 
 ```
 ERROR: Task ':demo-client:generate@openapi' failed:
-com.strange.openapi.OpenApiParseException: could not parse /…/openapi.yaml:
+com.strange.openapi.parser.OpenApiParseException: could not parse /…/openapi.yaml:
 malformed or unreadable swagger supplied
 ```
 
 A missing spec, a blank `packageName`, an unsupported request media type, and a multipart body with
-no declared properties are all reported the same way.
+no declared properties are all reported the same way, as are two operations or two schemas whose
+generated names would collide — the message names the pair rather than letting one overwrite the
+other. `EmitException` is the neighbouring case: the document parsed, but the chosen client cannot
+express something in it, such as a `TRACE` operation with `client: Spring`.
 
 One trap when reading build output: never pipe `./kotlin` into `tail` or `grep`. The pipeline
 reports the filter's exit code, so a failed KSP or compile stage reads as a successful build.

@@ -2,8 +2,8 @@ package com.strange.openapi.models
 
 import com.squareup.kotlinpoet.FileSpec
 import com.strange.openapi.ApiModel
-import com.strange.openapi.EmitOptions
-import com.strange.openapi.SourceEmitter
+import com.strange.openapi.emit.EmitOptions
+import com.strange.openapi.emit.SourceEmitter
 
 /**
  * Emits the spec's schemas and nothing else — the `client: None` case.

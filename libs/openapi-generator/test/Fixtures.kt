@@ -1,5 +1,8 @@
 package com.strange.openapi
 
+import com.strange.openapi.emit.EmitOptions
+import com.strange.openapi.emit.SourceEmitter
+
 /**
  * One model both emitter tests work from, so a difference between the two clients is visible
  * as a difference in what they emit rather than in what they were asked to emit.

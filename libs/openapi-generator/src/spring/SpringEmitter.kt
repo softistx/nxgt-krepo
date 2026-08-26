@@ -8,12 +8,12 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.strange.openapi.ApiGroup
 import com.strange.openapi.ApiModel
-import com.strange.openapi.EmitOptions
-import com.strange.openapi.OpenApiParseException
 import com.strange.openapi.Operation
 import com.strange.openapi.Param
 import com.strange.openapi.ParamKind
-import com.strange.openapi.SourceEmitter
+import com.strange.openapi.emit.EmitException
+import com.strange.openapi.emit.EmitOptions
+import com.strange.openapi.emit.SourceEmitter
 import com.strange.openapi.emit.apiFile
 import com.strange.openapi.emit.typeNameOf
 import com.strange.openapi.models.ModelStyle
@@ -65,8 +65,7 @@ public class SpringEmitter(
         options: EmitOptions,
     ): FunSpec {
         val exchange =
-            AnnotationSpec
-                .builder(exchangeAnnotation(operation.httpMethod))
+            exchangeAnnotation(operation)
                 .addMember("url = %S", operation.path)
                 .apply { contentTypeOf(operation)?.let { addMember("contentType = %S", it) } }
                 .build()
@@ -128,14 +127,20 @@ public class SpringEmitter(
             .apply { if (!param.required) addMember("required = false") }
             .build()
 
-    private fun exchangeAnnotation(method: String) =
-        when (method.uppercase()) {
-            "GET" -> exchange("GetExchange")
-            "POST" -> exchange("PostExchange")
-            "PUT" -> exchange("PutExchange")
-            "PATCH" -> exchange("PatchExchange")
-            "DELETE" -> exchange("DeleteExchange")
-            else -> throw OpenApiParseException("unsupported HTTP method '$method'")
+    /**
+     * `@GetExchange` and friends cover the five verbs Spring gives a shortcut for; the rest go
+     * through the generic `@HttpExchange(method = ...)`, which is the same annotation the
+     * shortcuts are themselves meta-annotated with.
+     */
+    private fun exchangeAnnotation(operation: Operation): AnnotationSpec.Builder =
+        when (val method = operation.httpMethod.uppercase()) {
+            "GET" -> AnnotationSpec.builder(exchange("GetExchange"))
+            "POST" -> AnnotationSpec.builder(exchange("PostExchange"))
+            "PUT" -> AnnotationSpec.builder(exchange("PutExchange"))
+            "PATCH" -> AnnotationSpec.builder(exchange("PatchExchange"))
+            "DELETE" -> AnnotationSpec.builder(exchange("DeleteExchange"))
+            in GENERIC_METHODS -> AnnotationSpec.builder(HTTP_EXCHANGE).addMember("method = %S", method)
+            else -> throw EmitException("Spring cannot express HTTP method '$method'")
         }
 
     private fun exchange(simpleName: String) = ClassName(SERVICE_ANNOTATION, simpleName)
@@ -149,5 +154,6 @@ public class SpringEmitter(
         val REQUEST_HEADER = ClassName(BIND_ANNOTATION, "RequestHeader")
         val REQUEST_BODY = ClassName(BIND_ANNOTATION, "RequestBody")
         val REQUEST_PART = ClassName(BIND_ANNOTATION, "RequestPart")
+        val GENERIC_METHODS = setOf("HEAD", "OPTIONS", "TRACE")
     }
 }

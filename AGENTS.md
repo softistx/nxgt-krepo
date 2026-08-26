@@ -28,8 +28,9 @@ Two modules, each with its own README — read those before changing either:
 
 - [`libs/openapi-generator`](libs/openapi-generator/README.md) — the generator. swagger-parser reads
   the spec into an intermediate representation, and a `SourceEmitter` turns that into KotlinPoet
-  files. `parser` reads, `emit` and `models` hold what every emitter shares, and `ktorfit` and
-  `spring` are the two client styles — the parser knows about none of them.
+  files. The root package holds only that IR; `parser` reads, `emit` holds the emitter contract and
+  what every emitter shares, `models` emits the schemas, and `ktorfit` and `spring` are the two
+  client styles — the parser knows about none of them.
 - [`plugins/openapi`](plugins/openapi/README.md) — the toolchain plugin around it:
   typed `@Configurable` settings, one `@TaskAction`, and a `generated.sources` entry so the output
   compiles into the consuming module.
@@ -54,9 +55,12 @@ For Ktorfit the generated interfaces are then picked up by `ktorfit-ksp`, which 
 `createXxxApi()` builders — plugin-generated sources do reach KSP. For Spring there is no
 processing step; the interfaces go to `HttpServiceProxyFactory` at runtime.
 
-`apps/demo-client` shows the Ktorfit chain end to end, driving the generated client against the
-real `demo-api` server over HTTP; `apps/demo-spring-client` compiles the Spring output and reads
-its annotations back through reflection.
+Both demo apps drive their generated client against the real `demo-api` server over HTTP:
+`apps/demo-client` through Ktorfit and kotlinx.serialization, `apps/demo-spring-client` through a
+`HttpServiceProxyFactory` proxy and Jackson 3 — which also pins down that a Jackson client and a
+kotlinx server read the same document the same way. `HttpServiceProxyFactory` builds an AOP proxy
+and formats argument values, so a Spring client module needs `spring-aop` and `spring-context`
+alongside `spring-web`; neither arrives transitively.
 
 ## Instruction files
 

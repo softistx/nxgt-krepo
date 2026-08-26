@@ -2,7 +2,6 @@ package com.strange.openapi.parser
 
 import com.strange.openapi.ApiGroup
 import com.strange.openapi.ApiModel
-import com.strange.openapi.OpenApiParseException
 import com.strange.openapi.Operation
 import io.swagger.parser.OpenAPIParser
 import io.swagger.v3.oas.models.OpenAPI
@@ -60,7 +59,7 @@ public class OpenApiParser(
         }
         return byGroup
             .map { (tag, ops) -> ApiGroup(Naming.interfaceName(tag, naming), ops.sortedBy { it.name }) }
-            .sortedBy { it.name }
+            .mergeSameNamedGroups()
     }
 
     private fun groupKeyOf(

@@ -5,7 +5,6 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.strange.openapi.ApiGroup
-import com.strange.openapi.EmitOptions
 import com.strange.openapi.Operation
 
 /** Marks generated files, so nobody edits one by hand and loses the change on the next build. */

@@ -32,12 +32,16 @@ internal fun OpenAPI.parseModels(): List<ModelType> =
                     },
             )
         }.sortedBy { it.name }
+        .requireDistinctNames()
 
 internal fun OpenAPI.parseReturnType(operation: SwaggerOperation): TypeRef {
+    // The lowest 2xx, not whichever the document happened to list first: an operation declaring
+    // both 200 and 201 should always generate the same return type.
     val success =
         operation.responses
             ?.entries
-            ?.firstOrNull { (code, _) -> code.startsWith("2") }
+            ?.filter { (code, _) -> code.startsWith("2") }
+            ?.minByOrNull { (code, _) -> code }
             ?.value
             ?: return TypeRef.UnitRef
     val content = success.content ?: return TypeRef.UnitRef
