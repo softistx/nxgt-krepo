@@ -6,6 +6,10 @@ work is in [`libs/openapi-generator`](../../libs/openapi-generator/README.md), a
 contributes the task, the typed settings, and the `generated.sources` entry that makes the output
 part of the consuming module's compilation.
 
+For what the generator makes of a document — type mapping, composition, enums, vendor extensions,
+and what it does not handle — see [`docs/openapi-support.md`](../../docs/openapi-support.md). This
+README is about turning it on and what that needs on your classpath.
+
 The plugin is registered once, in `project.yaml`:
 
 ```yaml

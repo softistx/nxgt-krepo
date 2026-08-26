@@ -24,7 +24,10 @@ A module is a directory with a `module.yaml`, registered by path in `project.yam
 
 ## The OpenAPI generator
 
-Two modules, each with its own README — read those before changing either:
+Two modules and one reference document — read those before changing either module:
+
+- [`docs/openapi-support.md`](docs/openapi-support.md) — what the generator understands of a
+  document, and what each part becomes in Kotlin. This is the file that grows.
 
 - [`libs/openapi-generator`](libs/openapi-generator/README.md) — the generator. swagger-parser reads
   the spec into an intermediate representation, and a `SourceEmitter` turns that into KotlinPoet
@@ -197,6 +200,24 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
   Without the `!build/**` exclusion it lints KSP and plugin output and drowns you in thousands of
   violations in files nobody edits. The `filename` rule is the one `-F` cannot fix: a file's name
   must be PascalCase, so `Main.kt`/`DemoServer.kt`, never `main.kt`.
+- **Documentation is written in the same change as the code**, not collected at the end. A branch
+  that adds a capability adds its paragraph; a branch that changes a behaviour edits the paragraph
+  that described the old one. A "what it does not handle" list that still describes a previous
+  phase is worse than no list.
+- **Each documentation file has one audience, and they do not mix.**
+
+  | File | Answers |
+  | --- | --- |
+  | `README.md` | What is this repo, and where do I read next? Stays short. |
+  | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
+  | `libs/openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
+  | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
+  | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
+
+  When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
+  the signal to keep appending. `libs/openapi-generator/README.md` reached 394 lines before its
+  reference half moved out; splitting on *audience* rather than on length is what made the seam
+  obvious.
 - **Keep files short and single-purpose.** One file holds one concern; when two things could be
   separated cleanly, separate them. A file growing past roughly 150 lines is a signal to split it,
   not a threshold to argue with — split by responsibility, never by line count.
