@@ -99,6 +99,8 @@ build/tasks/_<module>_<task>@<plugin>/…     # the plugin's output
 build/generated/<module>/main/src/ksp/…     # KSP's output, derived from it
 ```
 
+Plugin settings are an `@Configurable` interface named by `pluginInfo.settingsClass`. Their property types must be declared **in the plugin's own source directory** — a `Boolean`/`String`/`Int`/`Path`, an enum, or another `@Configurable` interface from that same directory. An enum imported from a dependency module is rejected with `Unexpected schema type`, so mirror it in the plugin and map across.
+
 Re-check this after a toolchain upgrade. A plugin cannot be enabled in its own module if it contributes to that module's compilation (cyclic dependency), and KSP output stays invisible to common source sets in multiplatform modules.
 
 ## Toolchain version

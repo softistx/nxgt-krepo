@@ -105,6 +105,7 @@ koin-annotations = { module = "io.insert-koin:koin-annotations" }
 koin-ktor = { module = "io.insert-koin:koin-ktor" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 
+slf4j-nop = { module = "org.slf4j:slf4j-nop", version = "2.0.18" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 
@@ -144,6 +145,7 @@ kotlin-faker-databases = { module = "io.github.serpro69:kotlin-faker-databases" 
 kotlin-faker-tvshows = { module = "io.github.serpro69:kotlin-faker-tvshows" }
 
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-ktor = { module = "io.kotest:kotest-assertions-ktor", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 
