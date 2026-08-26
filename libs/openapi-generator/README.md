@@ -104,6 +104,57 @@ ever emit.
 Optional properties and parameters are nullable and default to `null`, and parameters are ordered so
 that everything with a default comes last.
 
+## Enums
+
+A schema with `enum:` becomes an `enum class`, not a `String`. Generated enums are **tolerant**: they
+carry an extra entry for values the document does not list, so a server that deploys a new value
+does not break clients compiled against the older document.
+
+```kotlin
+public enum class Status(
+    @get:JsonValue public val wireValue: String,   // @get:JsonValue in the Jackson style only
+) {
+    ACTIVE("active"),
+    IN_PROGRESS("in-progress"),
+    UNKNOWN("__unknown__"),
+    ;
+
+    override fun toString(): String = wireValue
+
+    public companion object {
+        @JvmStatic
+        @JsonCreator
+        public fun fromWireValue(wireValue: String): Status =
+            entries.firstOrNull { it.wireValue == wireValue } ?: UNKNOWN
+    }
+}
+```
+
+Four decisions worth knowing, each of which was measured rather than assumed:
+
+- **The wire value is a property, never an annotation.** That is what frees an entry name from the
+  value it stands for — `in-progress` and `2xx` and `""` are all legal in a document and none is a
+  Kotlin identifier. It also gives `toString` something correct to return, so an enum works as a
+  path, query or header parameter and not only inside a JSON body.
+- **Tolerance is inside the generated code, not in the consumer's configuration.** Jackson's
+  `@JsonEnumDefaultValue` needs `READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE` on their
+  `ObjectMapper`, and kotlinx's `coerceInputValues` needs it on their `Json` — and this generator
+  owns neither. So kotlinx gets a generated primitive `KSerializer` and Jackson gets a `@JsonValue`
+  getter plus a `@JvmStatic @JsonCreator` factory. Both work on a bare `Json {}` and on a mapper
+  carrying only the Kotlin module.
+- **`UNKNOWN`'s wire value is a sentinel no server accepts**, rather than `""` or a plausible one.
+  A caller that reads an object holding an unrecognised value and writes it back unchanged then
+  fails at the server with a clear error, instead of quietly replacing the real value.
+- **The unrecognised raw value does not survive.** An enum constant is a singleton with nowhere to
+  keep it. A client that must echo unknown values byte-for-byte needs a different shape than an
+  enum, and this generator does not offer one.
+
+The fallback's name is `UNKNOWN` unless the document already uses that value, in which case the real
+value keeps the name and the fallback escalates to `UNKNOWN_`. Two values that would produce the same
+entry name — `in-progress` and `in_progress` — fail the build naming both, like any other collision.
+Only string and integer enums are generated; a float or mixed-type `enum:` keeps the underlying
+scalar, which is a stated limit rather than a wrong answer.
+
 ## Colliding names
 
 Two different things in a spec can want the same Kotlin name, and the generator's rule is that a
