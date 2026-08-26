@@ -1176,6 +1176,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Notification'
+  /notifications/purge:
+    delete:
+      tags:
+        - notifications-controller
+      summary: Drop every queued notification
+      description: Operational tooling, not part of the published client surface.
+      operationId: purgeNotifications
+      x-internal: true
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+      responses:
+        '204':
+          $ref: '#/components/responses/ResourceDeleted'
   /notifications/legacy:
     get:
       tags:
@@ -1199,7 +1213,12 @@ paths:
       summary: Read notification
       operationId: findNotification
       parameters:
-        - $ref: '#/components/parameters/id'
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the notification.
+          schema:
+            $ref: '#/components/schemas/NotificationId'
       responses:
         '200':
           description: The notification.
@@ -1749,6 +1768,18 @@ components:
         - email
         - sms
         - push
+      x-enum-varnames:
+        - BY_EMAIL
+        - BY_SMS
+        - BY_PUSH
+      x-enum-descriptions:
+        - Sent to an address.
+        - Sent to a phone number.
+        - Sent to a registered device.
+    NotificationId:
+      type: string
+      description: Identifies one queued notification.
+      x-kotlin-value-class: true
     NotificationStatus:
       type: string
       description: Where a notification has got to.
@@ -1852,6 +1883,7 @@ components:
           type: string
           deprecated: true
           description: Superseded by traceId.
+          x-deprecated-reason: Use traceId; legacyRef is dropped after the 2.0 migration.
     Notification:
       description: One queued notification, and what became of it.
       allOf:
@@ -1863,12 +1895,13 @@ components:
             - metadata
           properties:
             id:
-              type: string
+              $ref: '#/components/schemas/NotificationId'
             status:
               $ref: '#/components/schemas/NotificationStatus'
             delivery:
               type: object
               description: What the last delivery attempt did.
+              x-kotlin-name: DeliveryAttempt
               properties:
                 attempts:
                   type: integer
