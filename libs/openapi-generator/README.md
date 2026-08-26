@@ -22,7 +22,8 @@ about the module: its shape, what each client emitter produces, and how to add o
 com.strange.openapi            the shared contract: the IR every other package speaks
 com.strange.openapi.parser     reading a document — OpenApiParser, its options, OpenApiParseException
 com.strange.openapi.emit       what every emitter needs: SourceEmitter, EmitOptions, type mapping,
-                               interface files, writeAllTo, EmitException
+                               interface files, the @ApiOperation seam and the exception hierarchy,
+                               the error dispatch, writeAllTo, EmitException
 com.strange.openapi.models     model emission — shared by every client style
 com.strange.openapi.ktorfit    KtorfitEmitter — @GET/@POST interfaces
 com.strange.openapi.spring     SpringEmitter  — @HttpExchange interfaces
@@ -86,6 +87,9 @@ classes are named after.
 | Optional multipart part | non-null (see below) | nullable |
 | `HEAD` / `OPTIONS` / `TRACE` | `@HEAD` / `@OPTIONS` / not supported | `@HttpExchange(method = "…")` |
 | Models | `ModelStyle.Kotlinx` | `ModelStyle.Jackson` |
+| Failures | `install(ApiErrors)` | `.filter(apiErrorFilter(mapper))` |
+| Credentials | `install(ApiAuth) { … }` | `.filter(apiAuthFilter(credentials))` |
+| Operation → HTTP layer | `request.annotations` | `apiOperationProcessor()` + request attributes |
 
 Both emit `suspend` functions, group by OpenAPI tag by default (`categories-controller` →
 `CategoriesApi`), and put models in a `<packageName>.model` sub-package so an interface and a schema
@@ -119,6 +123,35 @@ Two differences are not stylistic and will bite if they are "cleaned up":
   `@HttpExchange(method = "HEAD")`. Anything else is an `EmitException` naming the method, because a
   proxy that quietly sent the wrong verb would be worse than a build failure.
 
+## The one seam both clients share
+
+Two things a client has to do — decide which error type a status maps to, and decide whether to
+attach a credential — are per-operation facts, and both have to happen at the HTTP layer, where the
+status code and the body live but the operation is anonymous. So every generated function carries
+`@ApiOperation(id, security)`, added in `emit/ApiFile.kt` rather than by either emitter, and each
+style reads it its own way:
+
+- **Ktorfit** puts a function's own annotations on the request; a `createClientPlugin` reads them
+  through `HttpRequest.annotations`. `ApiErrors` hooks `on(Send)`, which is the one hook that sees
+  both the annotations and the response before anything reads the body as the success type.
+- **Spring** cannot: by the time a `ClientRequest` exists the method is gone. The proxy factory does
+  hand an `HttpRequestValues.Processor` the reflective `Method`, though, and `WebClientAdapter`
+  copies the attributes it sets onto the request — so `ApiProxySupport.kt` carries the operation
+  across as two request attributes and the filters read them back.
+
+Both paths were checked against the running demo server before being written, not inferred from the
+API surface — the same rule that produced `ApiEnumConverters.kt` in the phase before.
+
+The annotation carries the operation's **id**, not the error mapping. An annotation could hold
+`Array<KClass<*>>`, but turning a `KClass` back into a deserializer is reflection, and
+kotlinx.serialization wants a `KSerializer` the generator can write down statically. So the
+annotation carries a key and the mapping is generated code — a `when` over the operation and then
+the status, in `emit/ApiErrorDispatch.kt`, shared by both styles and differing only in the
+per-schema parse helper each one calls.
+
+`ModelsOnlyEmitter` emits none of it. `client: None` means no API surface, and an exception nothing
+can throw is API surface.
+
 ## Adding a client style
 
 1. Add a package under `src/`, and a `SourceEmitter` in it.
@@ -140,8 +173,9 @@ Two differences are not stylistic and will bite if they are "cleaned up":
 Specs are kotest `FeatureSpec`s grouped by scenario, per the repo convention in
 [AGENTS.md](../../AGENTS.md).
 
-`RealSpecTest` runs the parser over `apps/demo-api/openapi.yaml` — 49 declared operations across 8
-tags, one of them `x-internal` — so a parser change that breaks on a real document fails here rather
+`RealSpecTest` runs the parser over `apps/demo-api/openapi.yaml` — 52 declared operations across 10
+tags, one of them `x-internal`, with 172 declared failures and a root `security` that 37 operations
+inherit — so a parser change that breaks on a real document fails here rather
 than in a consuming module. It finds
 the spec by walking up to the directory holding `project.yaml`, so it does not care what the working
 directory is.

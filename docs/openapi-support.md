@@ -6,8 +6,8 @@ The module's own README covers the shape of the code and what each client emitte
 file covers the document.
 
 It is kept apart because it is the part that grows. Every phase of work on the generator adds to it
-— composition and enums, then inline schemas and vendor extensions — while the module README stays
-roughly the size it was.
+— composition and enums, then inline schemas and vendor extensions, then failures and
+authentication — while the module README stays roughly the size it was.
 
 Two rules hold across everything below:
 
@@ -236,6 +236,87 @@ degradation the rest of this generator refuses. Everything outside the namespace
 `x-amazon-apigateway-*`, `x-codegen-*`, `x-stoplight`, `x-faker` — is ignored without comment,
 because it is not ours to interpret.
 
+## Failures
+
+Every response that is not 2xx is read. The lowest 2xx becomes the return type, exactly as before;
+everything else becomes a `List<ErrorResponse>` on the operation, and a failed call throws.
+
+```kotlin
+try {
+    client.tags.findTag(id)
+} catch (e: ErrorResponseException) {
+    e.status          // 404
+    e.error.message   // the body, parsed as the schema the document named
+}
+```
+
+**One exception class per error schema**, named `<Schema>Exception` and generated into the API
+package beside a base `ApiException(status, rawBody)`. Per schema, not per status code: the schema
+is the document's own vocabulary, while `NotFoundException` would be this generator's invention and
+two documents rarely mean the same thing by the same code. A document that uses one `ErrorResponse`
+everywhere — as `apps/demo-api/openapi.yaml` does, for all 172 of its declared failures — gets
+exactly one.
+
+Thrown, not returned. A sealed result type would let the compiler force the caller to handle the
+failure, but it would change every generated signature and would have to be built twice, once per
+client style — and the two styles agreeing on their signatures is the property this generator has
+kept since its first version.
+
+Four things end at the base `ApiException`, with `rawBody` carrying whatever arrived:
+
+| The document says | What you get |
+| --- | --- |
+| `404` with a schema | `<Schema>Exception`, `error` parsed |
+| `401` with no body | `ApiException(401, null)` |
+| nothing about `418` | `ApiException(418, "…")` |
+| `404` with a schema, but the body does not parse | `ApiException(404, "…")` |
+
+The last one is deliberate: an error path that throws its own exception while reporting a failure
+hides the failure it was reporting.
+
+The document's `default` response becomes the client's `else` — it is what the document says about
+a status it did not enumerate. An error body that is not a `$ref` to a component schema (a bare
+string, a list, a type named by `x-kotlin-type`) gets no typed exception, because that is the only
+shape the generated dispatch can decode without reflection; the failure still reaches the caller as
+`ApiException`.
+
+Each style needs one piece of wiring, generated but installed by the consumer, because the consumer
+owns the HTTP client — see [`plugins/openapi/README.md`](../plugins/openapi/README.md).
+
+## Authentication
+
+`components.securitySchemes` and `security` are read, including the override rule: an operation
+that declares its own `security` **replaces** the document root's rather than adding to it, and
+`security: []` replaces it with nothing. Both "declares nothing anywhere" and "`security: []`"
+arrive at the client as *no credential*, because to a caller they are the same instruction.
+
+`ApiAuthConfig` is generated with one slot per declared scheme — including schemes no operation
+currently requires, since a document that declares one is describing a surface its author expects
+to use. Each slot is a suspending function called per request, so a token that expires can be
+replaced behind it, and a slot that is null or returns null sends nothing.
+
+| Scheme | Slot | Where the credential goes |
+| --- | --- | --- |
+| `http` / `bearer` | `(suspend () -> String?)?` | `Authorization: Bearer <token>` |
+| `http` / `basic` | `(suspend () -> BasicCredentials?)?` | `Authorization: Basic <base64>`, encoded here |
+| `apiKey` in `header` | `(suspend () -> String?)?` | that header |
+| `apiKey` in `query` | `(suspend () -> String?)?` | that query parameter |
+| `apiKey` in `cookie` | `(suspend () -> String?)?` | that cookie |
+| `oauth2`, `openIdConnect` | `(suspend () -> String?)?` | `Authorization: Bearer <token>` |
+
+The slot name is the scheme's own name in camel case: `Bearer` becomes `bearer`, `X-Api-Key`
+becomes `xApiKey`.
+
+**`oauth2` and `openIdConnect` are not refused.** This generator cannot run a flow, but what a flow
+produces is an access token, and RFC 6749 sends it in the same header a bearer scheme uses — so a
+caller that has obtained a token can use one. What the slot's KDoc says is that obtaining it is the
+caller's job.
+
+What *is* refused is an `http` scheme this generator does not know — `digest`, `negotiate` — where
+the credential is the answer to a server challenge rather than a value the caller holds. Declaring
+one parses; an operation **requiring** one is an `EmitException` naming the operation and the
+scheme.
+
 ## Colliding names
 
 Two different things in a spec can want the same Kotlin name, and the generator's rule is that a
@@ -254,6 +335,10 @@ collision is either merged or fatal — never silently resolved by whichever one
 Where a spec is merely *ambiguous* rather than contradictory, the choice is pinned down instead of
 left to document order: an operation with several 2xx responses takes its return type from the
 **lowest** one, so `200` wins over `201` however the YAML lists them.
+
+A generated exception shares a package with the generated interfaces, so an interface that would be
+named `ErrorResponseException` — reachable with `interfaceSuffix: ""` and a tag to match — fails the
+emit rather than colliding.
 
 ## What it does not handle
 
