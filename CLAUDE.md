@@ -16,6 +16,7 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 
 - Prefer `./kotlin show modules` / `show settings -m <module>` / `show dependencies -m <module>` over reading manifests and inferring. They resolve the real model in seconds and surface manifest errors with a line pointer, without a compile.
 - Verify load-bearing toolchain claims against the CLI before writing them into docs or skills. Build a throwaway project in the session scratchpad — never inside `libs/` or `plugins/` — and confirm with `./kotlin show`.
+- Never pipe a `./kotlin` command into `tail`/`grep` — the pipeline reports the filter's exit code, so a failed build reads as success. Redirect to a file, echo `$?`, then read the file. A KSP or compile failure was masked this way twice in this repo.
 - Give build and test commands a generous timeout. The first `./kotlin build`/`./kotlin test` after a toolchain change downloads the compiler, a JRE, and dependencies into `~/.cache/JetBrains/Kotlin`, which can far exceed the default two-minute Bash timeout.
 - Never introduce Gradle files to "fix" a build. If something needs a build feature this repo lacks, it belongs in a toolchain plugin module under `plugins/`, not in a `build.gradle.kts`.
 - Add dependencies by adding a catalog alias to `libs.versions.toml` and referencing `$libs.<alias>` from the module — never paste raw versioned coordinates into a `module.yaml`, and remember `$libs.bundles.*` does not work here.
