@@ -34,7 +34,7 @@ private fun render(
     style: ModelStyle = ModelStyle.Kotlinx,
 ) = ModelsOnlyEmitter(style)
     .render(ApiModel(groups = emptyList(), models = listOf(enum)))
-    .getValue("com.example.api.model.${enum.name}")
+    .getValue("com.example.api.models.${enum.name}")
 
 /**
  * A generated enum has to survive a server that knows more values than the document did. Neither

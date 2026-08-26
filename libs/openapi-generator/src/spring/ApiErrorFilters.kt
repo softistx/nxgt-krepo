@@ -120,7 +120,7 @@ internal fun apiErrorFilterFile(
                         .beginControlFlow("return try")
                         .addStatement(
                             "%T(status, rawBody, mapper.readValue(rawBody, %T::class.java))",
-                            ClassName(options.packageName, exceptionNameFor(schema)),
+                            ClassName(options.utilPackage, exceptionNameFor(schema)),
                             ClassName(options.modelPackage, schema),
                         ).nextControlFlow("catch (e: %T)", EXCEPTION)
                         .addStatement("%T(status, rawBody)", apiExceptionName(options))
@@ -130,7 +130,7 @@ internal fun apiErrorFilterFile(
         }
 
     return FileSpec
-        .builder(options.packageName, "ApiErrors")
+        .builder(options.utilPackage, "ApiErrors")
         .addFileComment(GENERATED_COMMENT)
         .addFunction(filter)
         .addFunction(apiErrorDispatch(model, options, decoder, "mapper, status, rawBody"))

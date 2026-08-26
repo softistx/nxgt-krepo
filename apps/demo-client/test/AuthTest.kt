@@ -1,7 +1,7 @@
 package com.strange.demo.client
 
 import com.strange.demo.api.startDemoServer
-import com.strange.demo.client.api.ErrorResponseException
+import com.strange.demo.client.api.utils.ErrorResponseException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

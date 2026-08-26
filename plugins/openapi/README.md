@@ -33,7 +33,7 @@ plugins:
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `specFile` | `openapi.yaml` | Path to the document, relative to the module root. May point outside it. |
-| `packageName` | `generated.api` | Package for the interfaces; models go in `<packageName>.model`. Set it — the default only exists so `enabled: true` alone works. |
+| `packageName` | `generated.api` | Root of the generated output; nothing is written here directly — see [where the output goes](#where-the-output-goes). Set it — the default only exists so `enabled: true` alone works. |
 | `client` | `Ktorfit` | `Ktorfit`, `Spring`, or `None`. Decides what is generated, and therefore what the module needs on its classpath. |
 | `groupBy` | `Tag` | `Tag`, `Path` or `None`. `Tag` turns `categories-controller` into `CategoriesApi`. Ignored when `client: None`. |
 | `models` | `Auto` | `Auto`, `Kotlinx` or `Jackson`. `Auto` follows the client. |
@@ -186,6 +186,19 @@ either style emits that is not already on the classpath the style implies; Jacks
 build/tasks/_<module>_generate@openapi/    what this plugin emits
 build/generated/<module>/main/src/ksp/     what ktorfit-ksp then generates from it
 ```
+
+Under the first, three packages below `packageName` — and nothing directly in it:
+
+```
+<packageName>.apis      CategoriesApi, TagsApi, …            one per tag
+<packageName>.models    Category, Tag, ErrorResponse, …      one per schema
+<packageName>.utils     ApiOperation, ApiExceptions,         what the client needs underneath
+                        ApiErrors, ApiAuth,
+                        ApiProxySupport, ApiEnumConverters
+```
+
+So a document with a `tags` endpoint group *and* a `Tag` schema generates both without a collision,
+and the two imports say which one you meant. The names are fixed and not configurable.
 
 Two directories, because two stages ran. If the second is empty for a Ktorfit client, KSP never saw
 the interfaces.

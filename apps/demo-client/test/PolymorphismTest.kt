@@ -1,16 +1,16 @@
 package com.strange.demo.client
 
 import com.strange.demo.api.startDemoServer
-import com.strange.demo.client.api.NotificationsApi
-import com.strange.demo.client.api.model.DeliveryAttempt
-import com.strange.demo.client.api.model.EmailPayload
-import com.strange.demo.client.api.model.GroupRecipient
-import com.strange.demo.client.api.model.NotificationChannel
-import com.strange.demo.client.api.model.NotificationRequest
-import com.strange.demo.client.api.model.NotificationStatus
-import com.strange.demo.client.api.model.PushPayload
-import com.strange.demo.client.api.model.SmsPayload
-import com.strange.demo.client.api.model.UserRecipient
+import com.strange.demo.client.api.apis.NotificationsApi
+import com.strange.demo.client.api.models.DeliveryAttempt
+import com.strange.demo.client.api.models.EmailPayload
+import com.strange.demo.client.api.models.GroupRecipient
+import com.strange.demo.client.api.models.NotificationChannel
+import com.strange.demo.client.api.models.NotificationRequest
+import com.strange.demo.client.api.models.NotificationStatus
+import com.strange.demo.client.api.models.PushPayload
+import com.strange.demo.client.api.models.SmsPayload
+import com.strange.demo.client.api.models.UserRecipient
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
