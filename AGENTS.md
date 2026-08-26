@@ -45,9 +45,10 @@ plugins:
     packageName: com.strange.demo.client.api
 ```
 
-Everything else has a default: `groupBy: Tag`, `interfacePrefix: ""`, `interfaceSuffix: "Api"`.
-Grouping by tag turns `categories-controller` into `CategoriesApi`. The spec's schemas are always
-generated; only the API surface is optional.
+Everything else has a default: `groupBy: Tag`, `models: Auto`, `interfacePrefix: ""`,
+`interfaceSuffix: "Api"`. Grouping by tag turns `categories-controller` into `CategoriesApi`. The
+spec's schemas are always generated; only the API surface is optional. `models` decides what binds
+them — `Auto` follows the client, and a Ktorfit client is always kotlinx.serialization.
 
 For Ktorfit the generated interfaces are then picked up by `ktorfit-ksp`, which generates the
 `createXxxApi()` builders — plugin-generated sources do reach KSP. For Spring there is no
@@ -168,11 +169,18 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
 ## Conventions
 
 - **Formatting is ktlint's job**, configured by `.editorconfig` at the repo root (wildcard imports
-  are allowed there; everything else is ktlint's `ktlint_official` style, including the 140-column
-  limit and trailing commas on multi-line argument lists). `./kotlin check` does *not* run it —
-  `./kotlin show checks` lists only `tests` — so formatting is enforced by the IDE or a ktlint CLI
-  run, not by the build. Write code that already satisfies it rather than leaving it to a later
-  reformat.
+  are allowed there; everything else is ktlint's `ktlint_official` style). `./kotlin check` does
+  *not* run it — `./kotlin show checks` lists only `tests` — so run it yourself before committing,
+  excluding generated output:
+
+  ```bash
+  ktlint --relative "**/*.kt" "!build/**"        # report
+  ktlint -F  --relative "**/*.kt" "!build/**"    # fix what it can
+  ```
+
+  Without the `!build/**` exclusion it lints KSP and plugin output and drowns you in thousands of
+  violations in files nobody edits. The `filename` rule is the one `-F` cannot fix: a file's name
+  must be PascalCase, so `Main.kt`/`DemoServer.kt`, never `main.kt`.
 - **Keep files short and single-purpose.** One file holds one concern; when two things could be
   separated cleanly, separate them. A file growing past roughly 150 lines is a signal to split it,
   not a threshold to argue with — split by responsibility, never by line count.

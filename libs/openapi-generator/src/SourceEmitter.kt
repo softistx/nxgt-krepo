@@ -9,7 +9,10 @@ import com.squareup.kotlinpoet.FileSpec
  * whether it also emits an API surface for them, and in which client's shape.
  */
 public interface SourceEmitter {
-    public fun emit(model: ApiModel, options: EmitOptions): List<FileSpec>
+    public fun emit(
+        model: ApiModel,
+        options: EmitOptions,
+    ): List<FileSpec>
 }
 
 public data class EmitOptions(

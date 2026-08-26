@@ -6,6 +6,7 @@ tasks:
       packageName: ${pluginSettings.packageName}
       client: ${pluginSettings.client}
       groupBy: ${pluginSettings.groupBy}
+      models: ${pluginSettings.models}
       interfacePrefix: ${pluginSettings.interfacePrefix}
       interfaceSuffix: ${pluginSettings.interfaceSuffix}
 

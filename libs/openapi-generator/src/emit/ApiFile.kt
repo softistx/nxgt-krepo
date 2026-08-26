@@ -24,10 +24,12 @@ public fun apiFile(
     annotations: List<AnnotationSpec> = emptyList(),
     operation: (Operation) -> FunSpec,
 ): FileSpec {
-    val type = TypeSpec.interfaceBuilder(group.name)
-        .addKdoc(GENERATED_KDOC)
-        .addAnnotations(annotations)
-        .apply { group.operations.forEach { addFunction(operation(it)) } }
-        .build()
+    val type =
+        TypeSpec
+            .interfaceBuilder(group.name)
+            .addKdoc(GENERATED_KDOC)
+            .addAnnotations(annotations)
+            .apply { group.operations.forEach { addFunction(operation(it)) } }
+            .build()
     return FileSpec.builder(options.packageName, group.name).addType(type).build()
 }

@@ -18,12 +18,20 @@ import kotlinx.coroutines.runBlocking
  * `../demo-api/openapi.yaml` into the annotated interfaces, and ktorfit-ksp then generates the
  * `createXxxApi()` builders below from those interfaces.
  */
-public class DemoClient(baseUrl: String) : AutoCloseable {
-    private val http = HttpClient(CIO) {
-        install(ContentNegotiation) { json() }
-    }
+public class DemoClient(
+    baseUrl: String,
+) : AutoCloseable {
+    private val http =
+        HttpClient(CIO) {
+            install(ContentNegotiation) { json() }
+        }
 
-    private val ktorfit = Ktorfit.Builder().baseUrl(baseUrl).httpClient(http).build()
+    private val ktorfit =
+        Ktorfit
+            .Builder()
+            .baseUrl(baseUrl)
+            .httpClient(http)
+            .build()
 
     // createCategoriesApi(), never create<CategoriesApi>(): without Ktorfit's compiler plugin
     // the generic form does not resolve to the generated implementation.
@@ -33,12 +41,13 @@ public class DemoClient(baseUrl: String) : AutoCloseable {
     override fun close(): Unit = http.close()
 }
 
-public fun main(): Unit = runBlocking {
-    val baseUrl = System.getenv("DEMO_API_URL") ?: "http://127.0.0.1:8080/"
-    DemoClient(baseUrl).use { client ->
-        val created = client.categories.createCategory(CategoryRequest(name = "books", family = "media"))
-        println("created ${created.id} -> ${created.name}")
-        val page = client.categories.findCategories(SearchRequest(), first = 10)
-        println("categories: ${page.data?.map { it.name }}")
+public fun main(): Unit =
+    runBlocking {
+        val baseUrl = System.getenv("DEMO_API_URL") ?: "http://127.0.0.1:8080/"
+        DemoClient(baseUrl).use { client ->
+            val created = client.categories.createCategory(CategoryRequest(name = "books", family = "media"))
+            println("created ${created.id} -> ${created.name}")
+            val page = client.categories.findCategories(SearchRequest(), first = 10)
+            println("categories: ${page.data?.map { it.name }}")
+        }
     }
-}

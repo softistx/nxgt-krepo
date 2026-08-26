@@ -15,6 +15,8 @@ import com.strange.openapi.SourceEmitter
 public class ModelsOnlyEmitter(
     private val style: ModelStyle = ModelStyle.Kotlinx,
 ) : SourceEmitter {
-    override fun emit(model: ApiModel, options: EmitOptions): List<FileSpec> =
-        modelFiles(model, options, style)
+    override fun emit(
+        model: ApiModel,
+        options: EmitOptions,
+    ): List<FileSpec> = modelFiles(model, options, style)
 }

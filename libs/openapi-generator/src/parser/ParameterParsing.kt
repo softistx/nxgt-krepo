@@ -4,8 +4,8 @@ import com.strange.openapi.OpenApiParseException
 import com.strange.openapi.Param
 import com.strange.openapi.ParamKind
 import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.Operation as SwaggerOperation
 import io.swagger.v3.oas.models.parameters.Parameter
+import io.swagger.v3.oas.models.Operation as SwaggerOperation
 
 /**
  * Turning an operation's parameters and request body into [Param]s.
@@ -13,20 +13,29 @@ import io.swagger.v3.oas.models.parameters.Parameter
  * Nothing here is ever skipped quietly: a parameter location or a request media type this
  * generator cannot represent fails the parse, naming the operation and the reason.
  */
-internal fun OpenAPI.parseParameters(operation: SwaggerOperation, where: String): List<Param> =
-    namedParameters(operation, where) + bodyParameters(operation, where)
+internal fun OpenAPI.parseParameters(
+    operation: SwaggerOperation,
+    where: String,
+): List<Param> = namedParameters(operation, where) + bodyParameters(operation, where)
 
-private fun OpenAPI.namedParameters(operation: SwaggerOperation, where: String): List<Param> =
+private fun OpenAPI.namedParameters(
+    operation: SwaggerOperation,
+    where: String,
+): List<Param> =
     operation.parameters.orEmpty().map { raw ->
         val parameter = resolveParameter(raw, where)
-        val kind = when (parameter.`in`) {
-            "path" -> ParamKind.Path
-            "query" -> ParamKind.Query
-            "header" -> ParamKind.Header
-            else -> throw OpenApiParseException(
-                "$where: parameter '${parameter.name}' is in '${parameter.`in`}', which is not supported"
-            )
-        }
+        val kind =
+            when (parameter.`in`) {
+                "path" -> ParamKind.Path
+
+                "query" -> ParamKind.Query
+
+                "header" -> ParamKind.Header
+
+                else -> throw OpenApiParseException(
+                    "$where: parameter '${parameter.name}' is in '${parameter.`in`}', which is not supported",
+                )
+            }
         Param(
             name = Naming.propertyName(parameter.name),
             wireName = parameter.name,
@@ -37,7 +46,10 @@ private fun OpenAPI.namedParameters(operation: SwaggerOperation, where: String):
         )
     }
 
-private fun OpenAPI.bodyParameters(operation: SwaggerOperation, where: String): List<Param> {
+private fun OpenAPI.bodyParameters(
+    operation: SwaggerOperation,
+    where: String,
+): List<Param> {
     val body = operation.requestBody ?: return emptyList()
     val content = body.content ?: return emptyList()
 
@@ -49,18 +61,21 @@ private fun OpenAPI.bodyParameters(operation: SwaggerOperation, where: String): 
                 kind = ParamKind.Body,
                 type = typeOf(schema, "$where request body"),
                 required = body.required != false,
-            )
+            ),
         )
     }
     content["multipart/form-data"]?.schema?.let { return multipartParts(it, where) }
 
     throw OpenApiParseException(
         "$where: request body media types ${content.keys} are not supported " +
-            "(expected application/json or multipart/form-data)"
+            "(expected application/json or multipart/form-data)",
     )
 }
 
-private fun OpenAPI.multipartParts(rawSchema: io.swagger.v3.oas.models.media.Schema<*>, where: String): List<Param> {
+private fun OpenAPI.multipartParts(
+    rawSchema: io.swagger.v3.oas.models.media.Schema<*>,
+    where: String,
+): List<Param> {
     // The multipart schema is often a $ref to a component; its parts live there.
     val schema = resolveSchema(rawSchema, where)
     val properties = schema.properties.orEmpty()
@@ -79,7 +94,10 @@ private fun OpenAPI.multipartParts(rawSchema: io.swagger.v3.oas.models.media.Sch
     }
 }
 
-private fun OpenAPI.resolveParameter(parameter: Parameter, where: String): Parameter {
+private fun OpenAPI.resolveParameter(
+    parameter: Parameter,
+    where: String,
+): Parameter {
     val ref = parameter.`$ref` ?: return parameter
     val name = ref.substringAfterLast('/')
     return components?.parameters?.get(name)

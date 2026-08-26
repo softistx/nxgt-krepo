@@ -43,7 +43,13 @@ public class DemoServer internal constructor(
 public fun startDemoServer(port: Int = 0): DemoServer {
     val server = embeddedServer(Netty, port = port, module = Application::demoApi)
     server.start(wait = false)
-    val bound = runBlocking { server.engine.resolvedConnectors().first().port }
+    val bound =
+        runBlocking {
+            server.engine
+                .resolvedConnectors()
+                .first()
+                .port
+        }
     return DemoServer(bound) { server.stop(gracePeriodMillis = 0, timeoutMillis = 1_000) }
 }
 

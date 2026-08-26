@@ -23,15 +23,18 @@ public class OpenApiParser(
     private val grouping: Grouping = Grouping.Tag,
     private val naming: InterfaceNaming = InterfaceNaming(),
 ) {
-
     public fun parse(specFile: Path): ApiModel = parse(specFile.readText(), specFile.toString())
 
-    public fun parse(spec: String, source: String = "<spec>"): ApiModel {
+    public fun parse(
+        spec: String,
+        source: String = "<spec>",
+    ): ApiModel {
         val result = OpenAPIParser().readContents(spec, null, ParseOptions().apply { isResolve = true })
-        val openApi = result.openAPI
-            ?: throw OpenApiParseException(
-                "could not parse $source: ${result.messages?.joinToString("; ").orEmpty()}",
-            )
+        val openApi =
+            result.openAPI
+                ?: throw OpenApiParseException(
+                    "could not parse $source: ${result.messages?.joinToString("; ").orEmpty()}",
+                )
         return ApiModel(groups = parseGroups(openApi), models = openApi.parseModels())
     }
 
@@ -39,18 +42,20 @@ public class OpenApiParser(
         val byGroup = linkedMapOf<String, MutableList<Operation>>()
         openApi.paths.orEmpty().forEach { (path, item) ->
             item.readOperationsMap().forEach { (method, operation) ->
-                val id = operation.operationId
-                    ?: throw OpenApiParseException(
-                        "$method $path has no operationId; cannot name a function for it",
+                val id =
+                    operation.operationId
+                        ?: throw OpenApiParseException(
+                            "$method $path has no operationId; cannot name a function for it",
+                        )
+                byGroup.getOrPut(groupKeyOf(operation, path)) { mutableListOf() } +=
+                    Operation(
+                        name = Naming.functionName(id),
+                        httpMethod = method.name,
+                        path = path.trimStart('/'),
+                        parameters = openApi.parseParameters(operation, "$method $path"),
+                        returnType = openApi.parseReturnType(operation),
+                        summary = operation.summary,
                     )
-                byGroup.getOrPut(groupKeyOf(operation, path)) { mutableListOf() } += Operation(
-                    name = Naming.functionName(id),
-                    httpMethod = method.name,
-                    path = path.trimStart('/'),
-                    parameters = openApi.parseParameters(operation, "$method $path"),
-                    returnType = openApi.parseReturnType(operation),
-                    summary = operation.summary,
-                )
             }
         }
         return byGroup
@@ -58,7 +63,10 @@ public class OpenApiParser(
             .sortedBy { it.name }
     }
 
-    private fun groupKeyOf(operation: io.swagger.v3.oas.models.Operation, path: String): String =
+    private fun groupKeyOf(
+        operation: io.swagger.v3.oas.models.Operation,
+        path: String,
+    ): String =
         when (grouping) {
             Grouping.Tag -> operation.tags?.firstOrNull() ?: "default"
             Grouping.Path -> path.trim('/').substringBefore('/').ifEmpty { "default" }

@@ -53,9 +53,13 @@ public data class Field(
 
 public sealed interface TypeRef {
     public data object StringRef : TypeRef
+
     public data object IntRef : TypeRef
+
     public data object LongRef : TypeRef
+
     public data object DoubleRef : TypeRef
+
     public data object BooleanRef : TypeRef
 
     /** `string` with `format: date-time`. */
@@ -70,8 +74,12 @@ public sealed interface TypeRef {
     /** No response body. */
     public data object UnitRef : TypeRef
 
-    public data class ListRef(val element: TypeRef) : TypeRef
+    public data class ListRef(
+        val element: TypeRef,
+    ) : TypeRef
 
     /** Reference to a generated model class by its simple name. */
-    public data class ModelRef(val name: String) : TypeRef
+    public data class ModelRef(
+        val name: String,
+    ) : TypeRef
 }

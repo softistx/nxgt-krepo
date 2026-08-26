@@ -1,8 +1,8 @@
 package com.strange.demo.api.model
 
-import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.time.Instant
 
 /**
  * The slice of `openapi.yaml` this demo server implements.
