@@ -86,7 +86,32 @@ Key rules that are easy to get wrong:
 
 **The toolchain does not support `[bundles]`.** `$libs.bundles.<name>` fails with `No catalog value for the key`; only `[versions]` and `[libraries]` are read. The bundles in this repo's catalog are inert for toolchain modules — treat them as documentation of which stack a dependency belongs to, and as the contract for Gradle-based consumers.
 
+`settings.ktor: enabled` contributes a `$ktor.*` catalog whose keys are **not** a mechanical dashes-to-dots mapping of the artifact ids — verify a key with `./kotlin show dependencies -m <module>` before relying on it. Confirmed on 0.12.0:
+
+| Key | Artifact |
+| --- | --- |
+| `$ktor.server.core` / `$ktor.server.netty` | `ktor-server-core` / `ktor-server-netty` |
+| `$ktor.server.contentNegotiation` | `ktor-server-content-negotiation` (camelCase, *not* `content.negotiation`) |
+| `$ktor.server.testHost` | `ktor-server-test-host` (the `$ktor.server.test` used by the shipped project templates is stale and fails) |
+| `$ktor.client.core` / `$ktor.client.cio` / `$ktor.client.contentNegotiation` | the matching client artifacts |
+| `$ktor.serialization.kotlinx.json` | `ktor-serialization-kotlinx-json` (dots here) |
+
 The toolchain-native way to share a dependency *set* across modules is a **template**: a `<name>.module-template.yaml` with the same shape as `module.yaml` (but no `product:`), pulled in via `apply:`. Templates merge dependencies, settings, and repositories, and can apply other templates. Verify the result with `kotlin show settings -m <module>`.
+
+## Plugins and generated sources
+
+A plugin module (`product: jvm/amper-plugin`) registers a `@TaskAction` in `plugin.yaml` and declares its output under `generated.sources`, which the build compiles into every module the plugin is enabled in. Plugins are registered in `project.yaml`'s `plugins:` block and enabled per module with `plugins: { <id>: enabled }`.
+
+**Plugin-generated sources are processed by KSP** — undocumented, verified on toolchain 0.12.0 with ktorfit-ksp 2.7.5 by generating an annotated interface and calling the resulting client over HTTP. The two outputs land in different places, which is how to confirm both stages ran:
+
+```
+build/tasks/_<module>_<task>@<plugin>/…     # the plugin's output
+build/generated/<module>/main/src/ksp/…     # KSP's output, derived from it
+```
+
+Plugin settings are an `@Configurable` interface named by `pluginInfo.settingsClass`. Their property types must be declared **in the plugin's own source directory** — a `Boolean`/`String`/`Int`/`Path`, an enum, or another `@Configurable` interface from that same directory. An enum imported from a dependency module is rejected with `Unexpected schema type`, so mirror it in the plugin and map across.
+
+Re-check this after a toolchain upgrade. A plugin cannot be enabled in its own module if it contributes to that module's compilation (cyclic dependency), and KSP output stays invisible to common source sets in multiplatform modules.
 
 ## Toolchain version
 

@@ -6,17 +6,46 @@ Shared guidance for any coding agent working in this repository.
 
 `nxgt-krepo` is a multi-module Kotlin library repository built with the **JetBrains Kotlin Toolchain 0.12+** (the `kotlin` CLI, formerly Amper) — *not* Gradle and *not* Maven. There is no `build.gradle.kts`, no `settings.gradle.kts`, and no `gradlew`.
 
-The repo is currently a scaffold. What exists:
+What exists:
 
 | Path | Role |
 | --- | --- |
-| `project.yaml` | Project manifest — lists the modules (currently empty) |
+| `project.yaml` | Project manifest — lists the modules, and registers local toolchain plugins |
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
-| `libs/` | Library modules (empty) |
-| `plugins/` | Toolchain plugin modules (empty) |
+| `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
+| `libs/openapi-codegen` | Reads an OpenAPI spec, emits a typed client with KotlinPoet |
+| `plugins/openapi-client` | Toolchain plugin wrapping the codegen as a build task |
+| `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
+| `apps/demo-client` | Generates its client from that spec and calls the server |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
+
+## The OpenAPI client generator
+
+`libs/openapi-codegen` is a plain `jvm/lib` and holds all the work: swagger-parser reads the
+spec into an intermediate representation, and a `ClientEmitter` turns that into KotlinPoet
+files. `KtorfitEmitter` is the only implementation today; a Spring `HttpExchange` emitter is
+the next one, and the IR exists so the parser never has to know which.
+
+`plugins/openapi-client` is a thin `jvm/amper-plugin` around it: typed `@Configurable`
+settings, one `@TaskAction`, and a `generated.sources` entry so the output compiles into the
+consuming module. A module opts in from its own `module.yaml`:
+
+```yaml
+plugins:
+  openapi-client:
+    enabled: true
+    specFile: ../demo-api/openapi.yaml   # relative to the module root
+    packageName: dev.nxgt.demo.client.api
+```
+
+Everything else has a default: `client: Ktorfit`, `groupBy: Tag`, `generateModels: true`.
+Grouping by tag turns `categories-controller` into `CategoriesApi`.
+
+For Ktorfit, the generated interfaces are then picked up by `ktorfit-ksp`, which generates the
+`createXxxApi()` builders — plugin-generated sources do reach KSP. `apps/demo-client` shows the
+whole chain, and its `EndToEndTest` drives it against the real `demo-api` server over HTTP.
 
 ## Instruction files
 
@@ -44,36 +73,36 @@ Skills are budgeted: a `description` is in context every session (keep it ≤250
 The toolchain finds the project by walking up from the working directory, so these work anywhere inside the repo.
 
 ```bash
-kotlin build                      # compile + link everything
-kotlin build -m <module>          # one module (repeatable)
-kotlin build -v release           # debug is the default variant
-kotlin test                       # run all tests
-kotlin check                      # run all checks; kotlin show checks lists them
-kotlin run -m <module>            # run an application module
-kotlin publish <repository-id>    # e.g. mavenCentral, or an id from the repositories list
-kotlin clean                      # drop build/ and project caches
+./kotlin build                      # compile + link everything
+./kotlin build -m <module>          # one module (repeatable)
+./kotlin build -v release           # debug is the default variant
+./kotlin test                       # run all tests
+./kotlin check                      # run all checks; ./kotlin show checks lists them
+./kotlin run -m <module>            # run an application module
+./kotlin publish <repository-id>    # e.g. mavenCentral, or an id from the repositories list
+./kotlin clean                      # drop build/ and project caches
 ```
 
 Running a single test:
 
 ```bash
-kotlin test --include-test com.example.MyTest.myTestMethod
-kotlin test --include-test 'com.example.MyTest/Nested.myTestMethod'   # '/' separates nested classes
-kotlin test --include-classes 'com.example.*ServiceTest'              # wildcard pattern, repeatable
+./kotlin test --include-test com.example.MyTest.myTestMethod
+./kotlin test --include-test 'com.example.MyTest/Nested.myTestMethod'   # '/' separates nested classes
+./kotlin test --include-classes 'com.example.*ServiceTest'              # wildcard pattern, repeatable
 ```
 
 Inspecting the resolved project model — cheap, and it catches manifest errors without a compile:
 
 ```bash
-kotlin show modules                    # module names accepted by -m
-kotlin show settings -m <module>       # effective config after templates merge
-kotlin show dependencies -m <module>   # proves a dependency actually resolves
-kotlin show tasks
+./kotlin show modules                    # module names accepted by -m
+./kotlin show settings -m <module>       # effective config after templates merge
+./kotlin show dependencies -m <module>   # proves a dependency actually resolves
+./kotlin show tasks
 ```
 
 ### Toolchain wrapper
 
-The CLI currently warns `Found a project.yaml ... but the wrapper script is missing`, so builds use whatever `kotlin` is on `PATH` (0.12.0 here) instead of a version pinned by the repo. Generate the wrappers with `kotlin update -c` (add `--target-version=<v>` to pin) and commit them; after that, prefer `./kotlin <command>` so everyone builds with the same toolchain version.
+`./kotlin` and `kotlin.bat` are committed wrappers pinning the toolchain to the `kotlin_cli_version` at the top of the script (0.12.0). **Use `./kotlin <command>`, not a bare `kotlin`**, so everyone builds with the same version regardless of what is on `PATH`. Regenerate with `kotlin update -c` (add `--target-version=<v>` to move the pin).
 
 ## Module layout
 
