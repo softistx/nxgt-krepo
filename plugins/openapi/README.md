@@ -116,6 +116,10 @@ than left to be discovered.
 Use it where the API surface is hand-written or lives elsewhere but the payload types should still
 follow the document.
 
+**Any style, if the document uses `x-kotlin-type`** — the named type and its serializer belong to
+the consuming module: kotlinx needs it `@Serializable`, Jackson needs it bindable. Nothing is
+generated for such a schema, so a missing type is an ordinary unresolved reference.
+
 **Any style, if the document uses `format: date`** — the kotlinx model style maps it to
 `kotlinx.datetime.LocalDate`, so the module needs `$libs.kotlinx.datetime`. It is the only type
 either style emits that is not already on the classpath the style implies; Jackson's side is
