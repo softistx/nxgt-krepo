@@ -6,7 +6,7 @@ import com.strange.demo.client.api.model.PatchTagRequest
 import com.strange.demo.client.api.model.SearchRequest
 import com.strange.demo.client.api.model.TagRequest
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
+import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -18,7 +18,7 @@ import io.kotest.matchers.shouldBe
  * implementations of them, and the server's own hand-written view of the same spec.
  */
 class EndToEndTest :
-    FunSpec({
+    FeatureSpec({
         lateinit var server: AutoCloseable
         lateinit var client: DemoClient
 
@@ -33,54 +33,58 @@ class EndToEndTest :
             server.close()
         }
 
-        test("creates a category and reads it back by id") {
-            val created =
-                client.categories.createCategory(
-                    CategoryRequest(name = "books", family = "media", description = "printed things"),
-                )
-            created.name shouldBe "books"
-            created.metadata.createdBy shouldBe "demo"
+        feature("reading and writing a resource") {
+            scenario("creates a category and reads it back by id") {
+                val created =
+                    client.categories.createCategory(
+                        CategoryRequest(name = "books", family = "media", description = "printed things"),
+                    )
+                created.name shouldBe "books"
+                created.metadata.createdBy shouldBe "demo"
 
-            val fetched = client.categories.findCategory(created.id)
-            fetched shouldBe created
+                val fetched = client.categories.findCategory(created.id)
+                fetched shouldBe created
+            }
+
+            scenario("patch leaves omitted fields alone") {
+                val tag = client.tags.createTag(TagRequest(name = "kotlin", family = "lang"))
+                val patched = client.tags.patchTag(tag.id, PatchTagRequest(description = "the language"))
+
+                patched.name shouldBe "kotlin"
+                patched.family shouldBe "lang"
+                patched.description shouldBe "the language"
+            }
+
+            scenario("delete removes the resource and a later read fails") {
+                val tag = client.tags.createTag(TagRequest(name = "gone"))
+                client.tags.deleteTag(tag.id)
+
+                shouldThrow<Exception> { client.tags.findTag(tag.id) }
+            }
         }
 
-        test("paginates through a search") {
-            repeat(3) { client.categories.createCategory(CategoryRequest(name = "bulk-$it")) }
-            val all =
-                client.categories
-                    .findCategories(SearchRequest())
-                    .data
-                    .shouldNotBeNull()
+        feature("pagination") {
+            scenario("paginates through a search") {
+                repeat(3) { client.categories.createCategory(CategoryRequest(name = "bulk-$it")) }
+                val all =
+                    client.categories
+                        .findCategories(SearchRequest())
+                        .data
+                        .shouldNotBeNull()
 
-            val firstPage = client.categories.findCategories(SearchRequest(), first = 2)
-            firstPage.data.shouldNotBeNull().map { it.id } shouldContainExactly all.take(2).map { it.id }
-            val page = firstPage.metadata.shouldNotBeNull()
-            page.hasNextPage shouldBe true
+                val firstPage = client.categories.findCategories(SearchRequest(), first = 2)
+                firstPage.data.shouldNotBeNull().map { it.id } shouldContainExactly all.take(2).map { it.id }
+                val page = firstPage.metadata.shouldNotBeNull()
+                page.hasNextPage shouldBe true
 
-            val nextPage =
-                client.categories.findCategories(
-                    SearchRequest(),
-                    cursor = page.endCursor,
-                    first = 2,
-                )
-            nextPage.data.shouldNotBeNull().map { it.id } shouldContainExactly
-                all.drop(2).take(2).map { it.id }
-        }
-
-        test("patch leaves omitted fields alone") {
-            val tag = client.tags.createTag(TagRequest(name = "kotlin", family = "lang"))
-            val patched = client.tags.patchTag(tag.id, PatchTagRequest(description = "the language"))
-
-            patched.name shouldBe "kotlin"
-            patched.family shouldBe "lang"
-            patched.description shouldBe "the language"
-        }
-
-        test("delete removes the resource and a later read fails") {
-            val tag = client.tags.createTag(TagRequest(name = "gone"))
-            client.tags.deleteTag(tag.id)
-
-            shouldThrow<Exception> { client.tags.findTag(tag.id) }
+                val nextPage =
+                    client.categories.findCategories(
+                        SearchRequest(),
+                        cursor = page.endCursor,
+                        first = 2,
+                    )
+                nextPage.data.shouldNotBeNull().map { it.id } shouldContainExactly
+                    all.drop(2).take(2).map { it.id }
+            }
         }
     })

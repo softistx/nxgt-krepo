@@ -199,6 +199,23 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
     all a caller needs.
   - *Dependency inversion* — depend on the abstraction: the plugin's task action talks to
     `SourceEmitter`, and picks the implementation in exactly one place.
+- **Tests are kotest `FeatureSpec`, grouped by scenario.** Every spec extends `FeatureSpec`, with
+  `feature("...")` naming the behaviour under test and `scenario("...")` naming one case of it:
+
+  ```kotlin
+  class OpenApiParserTest :
+      FeatureSpec({
+          feature("grouping") {
+              scenario("groups operations by tag, one interface per tag") { /* ... */ }
+              scenario("falls back to the path segment when a tag is missing") { /* ... */ }
+          }
+      })
+  ```
+
+  Features are the unit of grouping, so a spec that would hold a single flat list of tests is
+  telling you the feature names are missing, not that grouping does not apply. Nest a `feature`
+  inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
+  to the other spec styles. One spec class per file, named after the file.
 - **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `apps/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
 - **Organise `src/` by package, not as a flat pile of files.** A module with more than one concern
   gets a directory per concern, and the directory matches the package — `src/parser/` is
