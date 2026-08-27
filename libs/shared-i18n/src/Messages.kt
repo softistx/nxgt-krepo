@@ -46,6 +46,42 @@ class Messages internal constructor(
     fun keys(): Set<String> = catalogs.values.flatMapTo(mutableSetOf()) { it.keys } + root.keys
 
     /**
+     * A view for the best catalog an `Accept-Language` header asks for.
+     *
+     * ```kotlin
+     * messages.negotiate(call.request.headers[HttpHeaders.AcceptLanguage])
+     * ```
+     */
+    fun negotiate(acceptLanguage: String?): Translator = forLocale(negotiate(acceptLanguage, locales, fallback))
+
+    /**
+     * Each catalog measured against the fallback's: what it cannot answer, and what only it has.
+     *
+     * A locale is measured through its own chain, so `fr-CA` overriding two keys is complete as
+     * long as `fr` is — otherwise every regional overlay would report itself as almost entirely
+     * missing, and an audit nobody can act on is an audit nobody runs.
+     */
+    fun audit(): CatalogAudit {
+        val reference = catalogs[fallback]?.keys.orEmpty() + root.keys
+
+        return CatalogAudit(
+            fallback = fallback,
+            reference = reference,
+            locales =
+                catalogs.keys.filter { it != fallback }.map { locale ->
+                    val answerable = locale.chain().mapNotNull { catalogs[it] }.flatMapTo(mutableSetOf()) { it.keys }
+                    LocaleAudit(
+                        locale = locale,
+                        missing = reference - answerable,
+                        /* Its own keys only: an extra in `fr` is `fr`'s to fix, and reporting it
+                           again under every region over it is noise. */
+                        extra = catalogs[locale].orEmpty().keys - reference,
+                    )
+                },
+        )
+    }
+
+    /**
      * The message for [key] in the first catalog along [locale]'s chain that has one.
      *
      * Internal because a caller wants a [Translator]: this is the walk, not the API.
