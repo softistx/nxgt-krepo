@@ -1,5 +1,10 @@
 package com.strange.jpa
 
+import com.strange.jpa.entity.AutoId
+import com.strange.jpa.entity.IdentityId
+import com.strange.jpa.entity.JavaUuidId
+import com.strange.jpa.entity.SequenceId
+import com.strange.jpa.entity.UuidId
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow

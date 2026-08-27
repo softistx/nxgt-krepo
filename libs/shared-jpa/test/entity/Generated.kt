@@ -1,4 +1,4 @@
-package com.strange.jpa
+package com.strange.jpa.entity
 
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue

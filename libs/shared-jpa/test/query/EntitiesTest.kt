@@ -2,7 +2,7 @@ package com.strange.jpa.query
 
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.Thing
+import com.strange.jpa.entity.Thing
 import com.strange.jpa.session.session
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

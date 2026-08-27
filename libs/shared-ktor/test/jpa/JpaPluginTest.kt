@@ -4,6 +4,7 @@ import com.strange.jpa.Jpa
 import com.strange.jpa.JpaConfig
 import com.strange.jpa.SchemaMode
 import com.strange.jpa.session.transaction
+import com.strange.ktor.jpa.entity.Note
 import com.strange.testing.containers.postgresContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
@@ -132,7 +133,7 @@ class JpaPluginTest :
                     application {
                         install(JpaConnection) {
                             config = config()
-                            packages("com.strange.ktor.jpa")
+                            packages("com.strange.ktor.jpa.entity")
                         }
                         routing {
                             get("/") {
