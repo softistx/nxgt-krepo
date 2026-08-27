@@ -34,14 +34,14 @@ class MappedClassesTest :
                 }
             }
 
-            scenario("and names the columns as the properties are written, not in snake case") {
+            scenario("and its columns are named the way SQL is written, through the mapped superclass too") {
                 JpaTestDatabase.withJpa(Invoice::class) { jpa ->
-                    // Worth pinning because it surprises everyone who has met this through Spring,
-                    // which installs a camel-case-to-underscores strategy of its own. Hibernate on
-                    // its own keeps the property name, and Postgres folds the unquoted identifier to
-                    // lower case — so `createdBy` is the column `createdby`, and not `created_by`.
+                    // `createdBy` is declared on the `@MappedSuperclass`, not on the entity, which is
+                    // the half worth pinning here: the naming strategy is applied to what the mapping
+                    // model ends up holding rather than to one class's own properties. `NamingTest`
+                    // owns the rule itself.
                     JpaTestDatabase.columns(jpa.config.schema!!, "invoices") shouldContainExactly
-                        listOf("amount", "createdby", "currency", "id")
+                        listOf("amount", "created_by", "currency", "id")
                 }
             }
         }
