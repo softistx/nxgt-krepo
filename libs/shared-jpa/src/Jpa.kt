@@ -2,6 +2,8 @@ package com.strange.jpa
 
 import com.strange.common.lifecycle.CloseGuard
 import com.strange.jpa.convert.kotlinConverters
+import com.strange.jpa.scan.scanConverters
+import com.strange.jpa.scan.scanEntities
 import io.vertx.core.Vertx
 import jakarta.persistence.AttributeConverter
 import kotlinx.coroutines.Dispatchers
@@ -126,5 +128,40 @@ class Jpa internal constructor(
             config: JpaConfig,
             vararg entities: KClass<*>,
         ): Jpa = connect(config, entities.toList())
+
+        /**
+         * The same, with the entities found by reading [packages] off the classpath.
+         *
+         * ```kotlin
+         * val jpa = Jpa.scan(config, "com.acme.orders.domain")
+         * ```
+         *
+         * Converters are picked up too, which is the one thing this does that [connect] cannot be
+         * asked to do: `addAnnotatedClass` finds no `@Converter`, so an application that maps its
+         * own types otherwise has to name every one.
+         *
+         * [entities] and [converters] are added to whatever the scan found, for the class that lives
+         * somewhere the scan does not reach. A scan that finds no entity at all throws — see
+         * [scanEntities] for why that is the right answer and why naming the classes is still safer.
+         */
+        suspend fun scan(
+            config: JpaConfig,
+            packages: List<String>,
+            entities: List<KClass<*>> = emptyList(),
+            converters: List<KClass<out AttributeConverter<*, *>>> = emptyList(),
+            vertx: Vertx? = null,
+        ): Jpa =
+            connect(
+                config = config,
+                entities = entities + scanEntities(packages),
+                converters = converters + scanConverters(packages),
+                vertx = vertx,
+            )
+
+        /** The same, spelled for the common case. */
+        suspend fun scan(
+            config: JpaConfig,
+            vararg packages: String,
+        ): Jpa = scan(config, packages.toList())
     }
 }

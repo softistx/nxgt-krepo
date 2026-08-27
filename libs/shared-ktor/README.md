@@ -105,9 +105,11 @@ library cannot read back. Every step succeeds until the data is already written,
 it rather than each service remembering to. A round trip through a real server is the only spec that
 can tell the difference, and there is one.
 
-**`JpaConnection` maps what it is told about, and nothing else.** There is no classpath scan, so
-`entities(Order::class, Customer::class)` is the mapping — a class missing from it is not a startup
-error but an `IllegalArgumentException` on the first query that names it. It blocks once at install
+**`JpaConnection` maps what it is told about.** `entities(Order::class, Customer::class)` is the
+mapping — a class missing from it is not a startup error but an `IllegalArgumentException` on the
+first query that names it. `packages("com.acme.orders.domain")` reads the classpath instead, and
+fails the install when it finds no entity there, because a mistyped package is otherwise silent.
+It blocks once at install
 for the same reason `AmqpConnection` does, and it connects to nothing there: the pool opens its
 first connection when a route asks for a session, which is why `SchemaMode.VALIDATE` is worth having
 when the schema is managed elsewhere.
