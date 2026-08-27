@@ -35,6 +35,7 @@ koin = "4.2.2"
 koin-compiler = "1.0.1"
 kotest = "6.2.2"
 lettuce = "7.7.0.RELEASE"
+minio = "9.0.3"
 spring = "7.0.9"
 jackson = "3.2.2"
 
@@ -164,6 +165,7 @@ kotest-assertions-ktor = { module = "io.kotest:kotest-assertions-ktor", version.
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+minio = { module = "io.minio:minio", version.ref = "minio" }
 
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
 icu4j = { module = "com.ibm.icu:icu4j", version = "78.3" }
