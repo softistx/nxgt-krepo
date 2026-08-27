@@ -1,5 +1,6 @@
 package com.strange.kafka
 
+import com.strange.testing.containers.kafkaContainer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.kafka.clients.admin.Admin
@@ -14,29 +15,59 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The Kafka this workspace already runs, not one a test starts — `~/workspace/docker/apps/kafka`
- * is a three-broker KRaft cluster, and `KAFKA_TEST_BOOTSTRAP` points the specs somewhere else when
- * needed.
+ * The Kafka the integration specs talk to: a single-broker container started for this run, unless
+ * `KAFKA_TEST_BOOTSTRAP` names a cluster that is already up.
  *
- * The brokers advertise their container hostnames and publish no host ports, so reaching them from
- * the host needs those names resolvable:
+ * **One broker is not free, and the cost is [replicationFactor].** The workspace cluster at
+ * `~/workspace/docker/apps/kafka` is three brokers with `min.insync.replicas = 2`, so a topic there
+ * has three replicas and `acks = all` genuinely waits for a quorum. A container can only give one
+ * replica, so there `acks = all` waits for one broker: the ack path is exercised, the quorum is not.
+ * Every spec asks for [replicationFactor] rather than a hard three, so both run — and the one that
+ * checks the replication factor checks the number it actually asked for.
+ *
+ * Three brokers in containers would be faithful, and would cost roughly 3 GiB and half a minute per
+ * run. Point `KAFKA_TEST_BOOTSTRAP` at a real cluster to exercise the quorum:
  *
  * ```
- * # /etc/hosts
+ * # /etc/hosts — the workspace brokers advertise container hostnames and publish no host ports
  * 172.22.0.115 kafka1
  * 172.22.0.116 kafka2
  * 172.22.0.117 kafka3
  * ```
  *
- * Without that the specs skip rather than fail — a machine that cannot see the cluster should
- * report skipped tests, not a red build.
+ * ```bash
+ * KAFKA_TEST_BOOTSTRAP="kafka1:9092,kafka2:9094,kafka3:9096" ./kotlin test -m shared-kafka
+ * ```
  *
- * The cluster is shared, so the specs leave it as they found it: every topic they use is created
- * here with a name nothing else would choose, and deleted afterwards, and so is every consumer
- * group. Nothing here touches a topic or a group it did not create.
+ * A reused cluster is shared, so the specs leave it as they found it: every topic they use is
+ * created here with a name nothing else would choose, and deleted afterwards, and so is every
+ * consumer group. Nothing here touches a topic or a group it did not create.
  */
 internal object KafkaTestCluster {
-    val bootstrap: String = System.getenv("KAFKA_TEST_BOOTSTRAP") ?: "kafka1:9092,kafka2:9094,kafka3:9096"
+    private val cluster = kafkaContainer()
+
+    val bootstrap: String get() = requireNotNull(cluster.endpoint) { cluster.describe() }
+
+    /**
+     * As many replicas as this cluster can actually give, capped at three.
+     *
+     * Asked of the cluster rather than assumed, because the answer differs between the container and
+     * the workspace's three brokers, and a topic asking for more replicas than there are brokers is
+     * refused outright.
+     */
+    val replicationFactor: Short by lazy {
+        val brokers =
+            runCatching {
+                admin().use {
+                    it
+                        .describeCluster()
+                        .nodes()
+                        .get()
+                        .size
+                }
+            }.getOrDefault(1)
+        minOf(brokers, 3).toShort()
+    }
 
     /** The cluster handle the specs build their clients from. */
     fun kafka(properties: Map<String, String> = emptyMap()): Kafka = Kafka(KafkaConfig(bootstrap, properties = properties))
@@ -55,7 +86,7 @@ internal object KafkaTestCluster {
         )
 
     val available: Boolean by lazy {
-        runCatching { admin().use { it.describeCluster().nodes().get() } }.isSuccess
+        cluster.available && runCatching { admin().use { it.describeCluster().nodes().get() } }.isSuccess
     }
 
     fun topicName(): String = "shared-kafka-test-${counter.incrementAndGet()}-${System.nanoTime()}"
@@ -63,12 +94,14 @@ internal object KafkaTestCluster {
     /**
      * A topic of its own, deleted when [block] returns.
      *
-     * Three replicas because that is what this cluster is for: `min.insync.replicas` is 2, so a
-     * single-replica topic would quietly not exercise `acks=all` at all.
+     * [replicationFactor] replicas rather than a hard three: against the workspace's cluster that is
+     * three and `acks = all` waits for a quorum, and against a one-broker container it is one and
+     * waits for that broker. Asking for three on a cluster that has one is not a weaker test, it is
+     * a refused `createTopics`.
      */
     suspend fun withTopic(
         partitions: Int = 1,
-        replication: Short = 3,
+        replication: Short = replicationFactor,
         block: suspend (String) -> Unit,
     ) {
         val name = topicName()
