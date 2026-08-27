@@ -14,6 +14,7 @@ dependencies:
   - //libs/shared-amqp: compile-only
   - //libs/shared-kafka: compile-only
   - //libs/shared-storage: compile-only
+  - //libs/shared-jpa: compile-only
 
 test-dependencies:
   # the specs start real containers through Koin, so here the libraries are on the runtime classpath
@@ -23,8 +24,24 @@ test-dependencies:
   - //libs/shared-amqp
   - //libs/shared-kafka
   - //libs/shared-storage
+  - //libs/shared-jpa
   - //libs/shared-testing
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
   - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    # For the entity the JPA module's spec maps, in this module's test sources. Every module that
+    # *holds* entities needs these two, and an application calling `jpaModule` will need the same
+    # block in its own manifest. Nothing in `src/` carries a JPA annotation.
+    noArg:
+      enabled: true
+      presets: [ jpa ]
+    allOpen:
+      enabled: true
+      annotations:
+        - jakarta.persistence.Entity
+        - jakarta.persistence.MappedSuperclass
+        - jakarta.persistence.Embeddable
