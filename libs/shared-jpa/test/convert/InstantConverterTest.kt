@@ -1,6 +1,7 @@
 package com.strange.jpa.convert
 
 import com.strange.jpa.JpaTestDatabase
+import com.strange.jpa.entity.Stamped
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec

@@ -1,5 +1,6 @@
 package com.strange.jpa
 
+import com.strange.jpa.entity.Validated
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow

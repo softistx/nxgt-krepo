@@ -3,7 +3,7 @@ package com.strange.jpa.query
 import com.strange.jpa.JpaNoResultException
 import com.strange.jpa.JpaNonUniqueResultException
 import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.Thing
+import com.strange.jpa.entity.Thing
 import com.strange.jpa.session.JpaSession
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
