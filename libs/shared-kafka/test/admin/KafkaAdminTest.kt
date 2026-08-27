@@ -20,9 +20,14 @@ class KafkaAdminTest :
                 KafkaTestCluster.kafka().admin().use { admin ->
                     val topic = KafkaTestCluster.topicName()
 
-                    admin.ensureTopic(topic, partitions = 2) shouldBe true
-                    admin.ensureTopic(topic, partitions = 2) shouldBe false
+                    // Not `shouldBe true`: under the load of a full-suite run the client retries
+                    // its own create and is told by the controller that the topic exists, so the
+                    // first call can answer false about a name nothing else has ever seen. What it
+                    // promises on return is that the topic is there.
+                    admin.ensureTopic(topic, partitions = 2)
                     admin.exists(topic) shouldBe true
+
+                    admin.ensureTopic(topic, partitions = 2) shouldBe false
                     admin.topics() shouldContain topic
 
                     admin.deleteTopic(topic)
