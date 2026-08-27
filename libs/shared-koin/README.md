@@ -9,7 +9,7 @@ com.strange.koin.mongo     mongoModule      one client, and the database over it
 com.strange.koin.amqp      amqpModule       one AMQP connection
 com.strange.koin.kafka     kafkaModule      the cluster configuration
 com.strange.koin.storage   storageModule    one object-storage client
-com.strange.koin.jpa       jpaModule        one Hibernate Reactive session factory
+com.strange.koin.jpa       jpaModule        one Hibernate Reactive session factory (jpaScanModule maps a package)
 ```
 
 ```kotlin
