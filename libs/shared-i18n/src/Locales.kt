@@ -18,3 +18,36 @@ fun Locale.chain(): List<Locale> =
         if (variant.isNotEmpty()) add(Locale.of(language, country))
         if (country.isNotEmpty() && language.isNotEmpty()) add(Locale.of(language))
     }.distinct().filter { it.language.isNotEmpty() }
+
+/**
+ * The best of [available] for an `Accept-Language` header, or [fallback] when none of them fit.
+ *
+ * ```
+ * fr-CA,fr;q=0.9,en;q=0.8   →   fr-CA if it is shipped, else fr, else en
+ * ```
+ *
+ * This is the half of i18n a server needs and an application with a settings screen does not: the
+ * locale is not a preference stored somewhere, it is a ranked list arriving on every request, and
+ * honouring the ranking is the difference between a Québécois reader getting French and getting
+ * whatever happened to be first in the list.
+ *
+ * `Locale.lookup` is RFC 4647 lookup: it takes the highest-weighted range that matches and
+ * truncates towards the language when the region is not shipped. A **malformed header falls back
+ * rather than throwing** — it is user input, and no request should fail over one.
+ */
+fun negotiate(
+    acceptLanguage: String?,
+    available: Collection<Locale>,
+    fallback: Locale,
+): Locale {
+    if (acceptLanguage.isNullOrBlank()) return fallback
+
+    val ranges =
+        try {
+            Locale.LanguageRange.parse(acceptLanguage)
+        } catch (_: IllegalArgumentException) {
+            return fallback
+        }
+
+    return Locale.lookup(ranges, available) ?: fallback
+}
