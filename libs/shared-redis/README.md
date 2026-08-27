@@ -31,7 +31,7 @@ do, and both hand back a connection the caller owns and closes.
 
 ```
 com.strange.redis          the connection and its lifecycle — Redis, RedisConfig, commands
-com.strange.redis.codec    values as their kotlinx.serialization form, keys as strings
+com.strange.redis.codec    the Json every layer serializes through, and the escape hatch under it
 com.strange.redis.cache    RedisCache<T> — get, put with a TTL, getOrLoad, invalidate
 com.strange.redis.lock     RedisLock — a lock only its holder can release
 com.strange.redis.pubsub   RedisTopic<T> — publish, and subscribe as a Flow
@@ -41,10 +41,39 @@ com.strange.redis.stream   RedisStream<T> — append, and consume a group as a F
 Lettuce's own `RedisCoroutinesCommands` stays reachable for everything these four do not cover:
 `redis.commands` is the full surface, RediSearch and vector sets included.
 
+## Serialization
+
+Values are kotlinx.serialization first: a `@Serializable` type needs no plumbing, and the connection
+owns the `Json` every typed layer uses.
+
+```kotlin
+val redis = Redis.connect(RedisConfig(uri, namespace = "billing"))
+
+val sessions = redis.cache<Session>("sessions", ttl = 30.minutes)
+val events   = redis.topic<OrderEvent>("orders")
+val orders   = redis.stream<OrderEvent>("orders", maxLength = 100_000)
+```
+
+That `Json` is configured once, on `RedisConfig`, rather than once per cache, topic and stream — the
+alternative is a service whose Redis values are configured in as many places as they are
+constructed, with nothing making them agree. The default (`redisJson`) is lenient about unknown
+keys, because a Redis value is a copy and not the record: one written by the previous deploy,
+carrying a field this version has since dropped, should still read, or a rolling deploy becomes a
+fleet half of which cannot decode the other half's entries. Pass a strict `Json` in `RedisConfig`
+when that skew should be loud instead — the read then fails as `RedisValueException` naming the key.
+
+Two ways past the reified factories, both narrow:
+
+- `RedisCache(redis, "sessions", Session.serializer())` — the same thing named by its serializer,
+  for a call site whose `T` cannot be reified. Every layer has this constructor.
+- `RedisCache(redis, "flags", ValueCodec.string)` — for a value that must **not** be JSON, because
+  something else reads the same key: a flag that should be `on` and not `"on"`, or a counter that has
+  to stay a number `INCR` can touch. `ValueCodec` is that seam, and it is the exception.
+
 ## Cache
 
 ```kotlin
-val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>(), ttl = 30.minutes)
+val sessions = redis.cache<Session>("sessions", ttl = 30.minutes)
 val session = sessions.getOrLoad(id) { database.loadSession(id) }
 ```
 
@@ -57,7 +86,7 @@ val session = sessions.getOrLoad(id) { database.loadSession(id) }
   enough for the stampede to matter, wrap it in a `RedisLock` at the call site, where the cost is a
   decision instead of a default.
 - **A null is an absence, not a cached value.** Caching "this does not exist" is a real technique,
-  and it belongs in the codec — `RedisCache<Session?>` — rather than in a special case here.
+  and it belongs in the type — `redis.cache<Session?>("sessions")` — not in a special case here.
 - **`putAll` is not `MSET`.** `MSET` cannot carry a TTL, so entries written with one would live
   forever. The writes go out concurrently instead, which Lettuce multiplexes into a pipeline.
 - **`invalidateAll` scans, it does not `KEYS`.** `KEYS` walks the whole keyspace with the server
@@ -93,7 +122,7 @@ to put between two writers and a corrupted invoice — that writer needs its own
 ## Topics
 
 ```kotlin
-val events = RedisTopic(redis, "orders", ValueCodec.json<OrderEvent>())
+val events = redis.topic<OrderEvent>("orders")
 events.subscribe().collect { handle(it) }
 events.publish(OrderEvent.Placed(id))
 ```
@@ -123,7 +152,7 @@ entry until it is trimmed, hands each one to exactly one consumer in a group, an
 hand-over until somebody acknowledges it.
 
 ```kotlin
-val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>(), maxLength = 100_000)
+val orders = redis.stream<OrderEvent>("orders", maxLength = 100_000)
 orders.append(OrderEvent.Placed(id))
 orders.process(group = "billing", consumer = "worker-1") { event -> charge(event) }
 ```

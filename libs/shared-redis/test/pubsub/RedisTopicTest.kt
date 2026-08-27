@@ -29,7 +29,7 @@ class RedisTopicTest :
         feature("publishing to a subscriber").config(enabled = RedisTestServer.available) {
             scenario("what was published is what arrives, typed") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisTopic(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.topic<OrderEvent>("orders")
 
                     coroutineScope {
                         val received = async { orders.subscribe().first() }

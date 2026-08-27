@@ -1,7 +1,6 @@
 package com.strange.redis.stream
 
 import com.strange.redis.RedisTestServer
-import com.strange.redis.codec.ValueCodec
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -31,7 +30,7 @@ class RedisStreamTest :
         feature("appending").config(enabled = RedisTestServer.available) {
             scenario("entries keep their order and their ids") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.stream<OrderEvent>("orders")
 
                     val first = orders.append(OrderEvent("o1"))
                     orders.append(OrderEvent("o2"))
@@ -44,7 +43,7 @@ class RedisStreamTest :
 
             scenario("an exact trim holds the bound") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.stream<OrderEvent>("orders")
                     repeat(10) { orders.append(OrderEvent("o$it")) }
 
                     orders.trim(4, approximate = false) shouldBe 6
@@ -55,7 +54,7 @@ class RedisStreamTest :
 
             scenario("a capped stream stops growing") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>(), maxLength = 100)
+                    val orders = redis.stream<OrderEvent>("orders", maxLength = 100)
                     repeat(500) { orders.append(OrderEvent("o$it")) }
 
                     /* Approximate trimming drops whole macro-nodes, so the length lands near the cap
@@ -69,7 +68,7 @@ class RedisStreamTest :
         feature("a consumer group").config(enabled = RedisTestServer.available) {
             scenario("creating it twice is not an error") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.stream<OrderEvent>("orders")
 
                     orders.createGroup("billing")
                     orders.createGroup("billing")
@@ -80,7 +79,7 @@ class RedisStreamTest :
 
             scenario("it starts at the end — a group is a subscription, not a backfill") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.stream<OrderEvent>("orders")
                     orders.append(OrderEvent("before"))
                     orders.createGroup("billing")
                     orders.append(OrderEvent("after"))
@@ -96,7 +95,7 @@ class RedisStreamTest :
 
             scenario("two consumers in one group split the entries between them") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.stream<OrderEvent>("orders")
                     orders.createGroup("billing")
                     repeat(6) { orders.append(OrderEvent("o$it")) }
 
@@ -129,7 +128,7 @@ class RedisStreamTest :
         feature("acknowledgement").config(enabled = RedisTestServer.available) {
             scenario("an entry stays pending until it is acknowledged") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.stream<OrderEvent>("orders")
                     orders.createGroup("billing")
                     orders.append(OrderEvent("o1"))
 
@@ -146,7 +145,7 @@ class RedisStreamTest :
 
             scenario("process acknowledges what its handler returned from") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.stream<OrderEvent>("orders")
                     orders.createGroup("billing")
                     orders.append(OrderEvent("o1"))
 
@@ -166,7 +165,7 @@ class RedisStreamTest :
 
             scenario("a handler that throws leaves the entry for somebody else to claim") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>())
+                    val orders = redis.stream<OrderEvent>("orders")
                     orders.createGroup("billing")
                     orders.append(OrderEvent("o1"))
 
