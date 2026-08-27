@@ -56,7 +56,7 @@ class AmqpConsumer<T> internal constructor(
     private val channel: Channel,
     val queue: String,
     private val codec: AmqpCodec<T>,
-    private val options: ConsumerOptions,
+    internal val options: ConsumerOptions,
 ) : AutoCloseable {
     private val autoAck = options.ack is AckStrategy.OnDelivery
 
