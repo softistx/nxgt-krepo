@@ -1,4 +1,4 @@
-package com.strange.koin
+package com.strange.koin.entity
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

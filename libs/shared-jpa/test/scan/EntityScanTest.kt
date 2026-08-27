@@ -6,6 +6,9 @@ import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.SchemaMode
 import com.strange.jpa.convert.InstantConverter
 import com.strange.jpa.convert.UuidConverter
+import com.strange.jpa.entity.scan.Auditable
+import com.strange.jpa.entity.scan.Invoice
+import com.strange.jpa.entity.scan.Money
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
@@ -21,7 +24,7 @@ class EntityScanTest :
 
         feature("scanning a package") {
             scenario("finds the entity, and the superclass and embeddable beside it") {
-                scanEntities("com.strange.jpa.scan") shouldContainExactlyInAnyOrder
+                scanEntities("com.strange.jpa.entity.scan") shouldContainExactlyInAnyOrder
                     listOf(Invoice::class, Auditable::class, Money::class)
             }
 
@@ -43,7 +46,7 @@ class EntityScanTest :
             }
 
             scenario("is content to find no converter, which is an addition rather than the mapping") {
-                scanConverters("com.strange.jpa.scan") shouldBe emptyList()
+                scanConverters("com.strange.jpa.entity.scan") shouldBe emptyList()
             }
         }
 
@@ -59,7 +62,7 @@ class EntityScanTest :
                                 schema = schema,
                                 schemaMode = SchemaMode.CREATE_DROP,
                             ),
-                            "com.strange.jpa.scan",
+                            "com.strange.jpa.entity.scan",
                         ).use { jpa ->
                             jpa.transaction { it.persist(Invoice(1, Money(99, "GBP"))) }
 
