@@ -25,6 +25,7 @@ Alongside it are the shared service libraries, which have nothing to do with the
 
 | | |
 | --- | --- |
+| `libs/shared-kafka` | A cluster and the clients over it: sends that suspend until the broker acknowledges them, records as a `Flow` with the offsets looked after, and topics and group lag from an admin client |
 | `libs/shared-mongo` | Session-aware collection extensions, keyset pagination, a CRUD repository and the write flow over it, and a coroutine GridFS bucket |
 | `libs/shared-redis` | A namespaced connection over Lettuce owning one `Json`, and the four kotlinx-serialized things built on one: a typed cache, a lock, topics, and streams with consumer groups |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets and objects as coroutines, and presigned URLs and upload forms for browsers |
@@ -45,6 +46,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | --- | --- |
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |
 | [`libs/openapi-generator/README.md`](libs/openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
+| [`libs/shared-kafka/README.md`](libs/shared-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/shared-mongo/README.md`](libs/shared-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
 | [`libs/shared-redis/README.md`](libs/shared-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
 | [`libs/shared-storage/README.md`](libs/shared-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
