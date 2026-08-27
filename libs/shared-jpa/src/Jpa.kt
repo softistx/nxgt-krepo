@@ -1,7 +1,9 @@
 package com.strange.jpa
 
 import com.strange.common.lifecycle.CloseGuard
+import com.strange.jpa.convert.kotlinConverters
 import io.vertx.core.Vertx
+import jakarta.persistence.AttributeConverter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.hibernate.cfg.Configuration
@@ -75,10 +77,16 @@ class Jpa internal constructor(
          *
          * Nothing connects yet. The pool opens its first connection when something asks for a
          * session, so a wrong password surfaces on first use and not here.
+         *
+         * [converters] are added to this module's own — an entity's `kotlin.time.Instant` and
+         * `kotlin.uuid.Uuid` attributes are mapped whether a caller passes anything or not. They
+         * have to be named here because `addAnnotatedClass` does not find an `@Converter` the way a
+         * classpath scan would; that is the cost of a programmatic bootstrap, and it is paid once.
          */
         suspend fun connect(
             config: JpaConfig,
             entities: List<KClass<*>>,
+            converters: List<KClass<out AttributeConverter<*, *>>> = emptyList(),
             vertx: Vertx? = null,
         ): Jpa =
             withContext(Dispatchers.IO) {
@@ -92,6 +100,7 @@ class Jpa internal constructor(
                         Configuration().apply {
                             config.settings().forEach { (key, value) -> setProperty(key, value) }
                             entities.forEach { addAnnotatedClass(it.java) }
+                            (kotlinConverters + converters).forEach { addAttributeConverter(it.java) }
                         }
 
                     val registry =
