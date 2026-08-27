@@ -47,6 +47,12 @@ class KafkaAdmin internal constructor(
      * A null [partitions] or [replication] leaves the broker's own default in place, which is
      * usually what a deployment wants — the cluster, not the application, is where "how many
      * replicas" belongs.
+     *
+     * **`false` does not prove somebody else got there first.** The admin client retries a request
+     * it did not hear back from, and a create that reached the controller before the timeout comes
+     * back as `TopicExists` on the retry — so a caller that has just made up a unique name can still
+     * be told the topic was already there. Use the answer for logging and for "did I have to do
+     * anything", never as a lock: what is guaranteed on return is that the topic exists.
      */
     suspend fun ensureTopic(
         topic: String,
