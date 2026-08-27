@@ -12,10 +12,7 @@ import org.bson.conversions.Bson
 suspend fun <T : Any> MongoCollection<T>.exists(
     filter: Bson,
     session: ClientSession? = null,
-): Boolean {
-    val options = CountOptions().limit(1)
-    return session.select({ countDocuments(it, filter, options) }, { countDocuments(filter, options) }) > 0
-}
+): Boolean = count(filter, CountOptions().limit(1), session) > 0
 
 suspend fun <T : Any> MongoCollection<T>.existsById(
     id: Any,
@@ -31,10 +28,10 @@ suspend fun <T : Any> MongoCollection<T>.existsById(
  * The lookup reads raw [Document]s rather than `T`: only `_id` is projected, and a projection that
  * drops required fields is not decodable as the entity.
  */
-suspend fun <T : Any> MongoCollection<T>.existingIds(
-    ids: Collection<Any>,
+suspend fun <T : Any, ID : Any> MongoCollection<T>.existingIds(
+    ids: Collection<ID>,
     session: ClientSession? = null,
-): List<Any> {
+): List<ID> {
     if (ids.isEmpty()) return emptyList()
 
     val filter = byIds(ids)
