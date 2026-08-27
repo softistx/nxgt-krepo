@@ -1,6 +1,5 @@
 package com.strange.jpa
 
-import com.strange.jpa.query.find
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
@@ -8,7 +7,6 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import jakarta.validation.ConstraintViolationException
-import kotlinx.coroutines.future.await
 
 /**
  * That Bean Validation actually runs here.
@@ -25,7 +23,7 @@ class ValidationTest :
             scenario("is refused before it reaches the database") {
                 JpaTestDatabase.withJpa(Validated::class) { jpa ->
                     shouldThrow<ConstraintViolationException> {
-                        jpa.transaction { it.persist(Validated(1, "x")).await() }
+                        jpa.transaction { it.persist(Validated(1, "x")) }
                     }
 
                     jpa.session { it.find<Validated>(1) }.shouldBeNull()
@@ -35,14 +33,14 @@ class ValidationTest :
             scenario("is refused for a null the column would have taken") {
                 JpaTestDatabase.withJpa(Validated::class) { jpa ->
                     shouldThrow<ConstraintViolationException> {
-                        jpa.transaction { it.persist(Validated(2, null)).await() }
+                        jpa.transaction { it.persist(Validated(2, null)) }
                     }
                 }
             }
 
             scenario("is stored when it satisfies them") {
                 JpaTestDatabase.withJpa(Validated::class) { jpa ->
-                    jpa.transaction { it.persist(Validated(3, "acceptable")).await() }
+                    jpa.transaction { it.persist(Validated(3, "acceptable")) }
 
                     jpa.session { it.find<Validated>(3) }?.name shouldBe "acceptable"
                 }

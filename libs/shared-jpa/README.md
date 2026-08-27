@@ -25,9 +25,12 @@ val recent = jpa.session { session ->
 }
 
 jpa.transaction { session ->
-    session.persist(Order(customer = id)).await()
+    session.persist(Order(customer = id))
 }
 ```
+
+Nothing above awaits anything. `find`, `get`, `persist`, `merge`, `remove`, `refresh` and `flush`
+all suspend and answer with values.
 
 ## The rule this library is built around
 
@@ -96,6 +99,26 @@ trees.
 
 There is no static metamodel and no Criteria DSL, because there is no `kapt` in this toolchain and
 `hibernate-jpamodelgen` cannot process Kotlin sources without one. HQL is the query language here.
+
+## The session is ours, not Hibernate's
+
+`session { }` and `transaction { }` hand you a `JpaSession`, not a `Stage.Session`. Every operation
+on it suspends and returns a value; nothing returns a `CompletionStage`, and there is no `.await()`
+to forget.
+
+**That is a wrapper rather than extension functions, and not by preference.** `persist`, `merge`,
+`remove`, `refresh` and `flush` are already members of `Stage.Session`, and in Kotlin a member always
+beats an extension of the same name and arity. A `suspend fun Stage.Session.flush()` compiles
+perfectly and is then unreachable — `session.flush()` still resolves to the member returning
+`CompletionStage<Void>`. That was settled with a throwaway file and the compiler rather than reasoned
+about; the only way to keep the JPA vocabulary *and* suspend is to be a different receiver.
+
+`find` gains something beyond ergonomics. Hibernate's returns a `CompletionStage<T>` whose `T` is a
+platform type, so nothing warns that a missing row is null; here `find` returns `T?` and `get` throws
+`JpaNotFoundException`, and choosing between them is a question about the caller rather than the data.
+
+Everything not wrapped is on `session.raw`. The wrapper is a convenience over Hibernate's API, not a
+fence around it.
 
 ## Four ways in
 
