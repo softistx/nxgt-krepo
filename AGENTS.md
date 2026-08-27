@@ -14,6 +14,7 @@ What exists:
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
+| `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, and the one lenient `Json` the storage and messaging libraries read through |
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
@@ -164,6 +165,26 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 
 `./kotlin` and `kotlin.bat` are committed wrappers pinning the toolchain to the `kotlin_cli_version` at the top of the script (0.12.0). **Use `./kotlin <command>`, not a bare `kotlin`**, so everyone builds with the same version regardless of what is on `PATH`. Regenerate with `kotlin update -c` (add `--target-version=<v>` to move the pin).
 
+### Shared code
+
+`libs/shared-common` holds what **more than one module** needs, expressed without knowing anything
+about any of them. It depends on kotlinx-coroutines and kotlinx-serialization and on nothing else,
+ever: the moment something in there knows what a topic or a collection is, every library depending
+on it inherits that, and a shared module that depends on everything is a cycle waiting for its
+second commit.
+
+Look there before writing a helper, and move one there when a *second* caller appears — not in
+anticipation of one. A helper with a single caller belongs next to it, where it can be read
+alongside the code that explains why it exists.
+
+The three concurrency types are not interchangeable, and the question that separates them is who is
+calling: `CoroutineSafeMap` when every caller is a coroutine and each operation stands alone,
+`KeyedMutex` when the work behind a key suspends and only callers wanting the *same* key should
+wait, and `Mailbox` when a caller is not a coroutine at all — a Java listener or a driver's callback,
+which cannot take a mutex and must not be made to block. `libs/shared-common/README.md` has the
+reasoning; the short version is that reaching for `runBlocking` to get out of the third case is how
+a client deadlocks against its own I/O thread.
+
 ### Local services
 
 The databases this workspace runs against are **already containerised and usually already up** —
@@ -297,6 +318,7 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
   | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
   | `libs/openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
+  | `libs/shared-common/README.md` | What belongs in the shared module, and which of the three concurrency types a given caller wants |
   | `libs/shared-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
   | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |

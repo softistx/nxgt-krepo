@@ -125,7 +125,7 @@ class AmqpConsumer<T> internal constructor(
             if (options.concurrency == 1) {
                 handle(message, handler, onFailure)
             } else {
-                launch { inFlight.withPermit { handle(message, handler, onFailure) } }
+                this@coroutineScope.launch { inFlight.withPermit { handle(message, handler, onFailure) } }
             }
         }
     }

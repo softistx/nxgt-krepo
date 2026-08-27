@@ -1,0 +1,16 @@
+product: jvm/lib
+
+dependencies:
+  # Mutex, Channel and the rest of the coroutine primitives these are built from
+  - $libs.kotlinx.coroutines.core: exported
+  # the shared Json and the decoding helpers over it
+  - $libs.kotlinx.serialization: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  kotlin:
+    serialization: json

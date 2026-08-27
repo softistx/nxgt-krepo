@@ -1,15 +1,14 @@
 package com.strange.kafka.serde
 
+import com.strange.common.serialization.lenientJson
 import kotlinx.serialization.json.Json
 
 /**
- * The `Json` every typed producer and consumer serializes through unless the cluster was given
- * another.
+ * What a record's value is serialized through unless the caller says otherwise.
  *
- * Lenient about unknown keys because of what a Kafka record is: a message from another service,
- * often an older or newer deploy of it. A producer that adds a field must not break every consumer
- * that has not been rebuilt yet — that is the whole reason a log is decoupling anything. A caller
- * who wants that skew to be loud passes a strict `Json` in `KafkaConfig`, and gets a
- * `KafkaValueException` naming the record it could not read.
+ * The shared [lenientJson]: unknown keys are ignored, because a record is written by whoever
+ * deployed last and read by whoever deployed first — a consumer that throws on a field a newer
+ * producer added is a consumer that stops on a rolling deploy. Configured once on `KafkaConfig`,
+ * so a service decides this for its Kafka values in one place rather than per topic.
  */
-val kafkaJson: Json = Json { ignoreUnknownKeys = true }
+val kafkaJson: Json = lenientJson
