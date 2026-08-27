@@ -9,7 +9,7 @@ import org.hibernate.reactive.stage.Stage
  * ```kotlin
  * jpa.transaction { session ->
  *     session
- *         .mutation("delete from Order where placedAt < :before")
+ *         .mutate("delete from Order where placedAt < :before")
  *         .parameter("before", cutoff)
  *         .execute()
  * }
@@ -41,4 +41,4 @@ class JpaMutation
     }
 
 /** A bulk `update` or `delete` in HQL. Use [query] for anything that returns rows. */
-fun Stage.QueryProducer.mutation(hql: String): JpaMutation = JpaMutation(createMutationQuery(hql))
+fun Stage.QueryProducer.mutate(hql: String): JpaMutation = JpaMutation(createMutationQuery(hql))

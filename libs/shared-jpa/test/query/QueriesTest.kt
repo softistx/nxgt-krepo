@@ -156,7 +156,7 @@ class QueriesTest :
 
                     val table = "${jpa.config.schema}.things"
 
-                    jpa.transaction { it.nativeMutation("update $table set name = 'x'").execute() } shouldBe 2
+                    jpa.transaction { it.nativeMutate("update $table set name = 'x'").execute() } shouldBe 2
                 }
             }
         }
@@ -168,7 +168,7 @@ class QueriesTest :
 
                     val deleted =
                         jpa.transaction { session ->
-                            session.mutation("delete from Thing where name = :name").parameter("name", "drop").execute()
+                            session.mutate("delete from Thing where name = :name").parameter("name", "drop").execute()
                         }
 
                     deleted shouldBe 2

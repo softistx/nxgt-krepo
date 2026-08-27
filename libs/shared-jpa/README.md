@@ -181,7 +181,7 @@ Terminals suspend, so a result is a value:
 .count()           // how many it would return, ignoring limit and offset
 ```
 
-`mutation(hql)` and `nativeMutation(sql)` are the write side and answer with the number of rows they
+`mutate(hql)` and `nativeMutate(sql)` are the write side and answer with the number of rows they
 touched. Both go straight to the database, past everything the session knows — no cascades, no
 `@PreRemove`, and entities already loaded keep the values they had.
 
