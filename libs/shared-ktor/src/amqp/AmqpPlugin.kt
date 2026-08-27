@@ -2,7 +2,7 @@ package com.strange.ktor.amqp
 
 import com.strange.amqp.Amqp
 import com.strange.amqp.AmqpConfig
-import com.strange.ktor.own
+import com.strange.ktor.resource
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.util.AttributeKey
 import kotlinx.coroutines.runBlocking
@@ -28,7 +28,7 @@ import kotlinx.coroutines.runBlocking
  */
 val AmqpConnection =
     createApplicationPlugin(name = "Amqp", createConfiguration = ::AmqpConnectionConfiguration) {
-        application.own(AmqpKey, runBlocking { Amqp.connect(pluginConfig.config) })
+        application.resource(AmqpKey, pluginConfig.instance) { runBlocking { Amqp.connect(pluginConfig.config) } }
     }
 
 /** What [AmqpConnection] connects with. */
@@ -40,6 +40,15 @@ class AmqpConnectionConfiguration {
      * beats an anonymous connection when something has to be traced back to a service.
      */
     var config: AmqpConfig = AmqpConfig()
+
+    /**
+     * A connection built elsewhere — by a DI container, or by hand.
+     *
+     * When set, [config] is ignored and this is **not** closed when the application stops: whoever created
+     * it closes it. That is what lets a container own the connection while routes still reach it
+     * through `call.amqp`.
+     */
+    var instance: Amqp? = null
 }
 
 internal val AmqpKey = AttributeKey<Amqp>("com.strange.amqp.Amqp")

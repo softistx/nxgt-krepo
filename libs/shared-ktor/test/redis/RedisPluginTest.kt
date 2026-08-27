@@ -1,5 +1,6 @@
 package com.strange.ktor.redis
 
+import com.strange.redis.Redis
 import com.strange.redis.RedisConfig
 import com.strange.testing.containers.redisContainer
 import io.kotest.assertions.throwables.shouldThrow
@@ -7,6 +8,7 @@ import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
@@ -19,7 +21,7 @@ import io.ktor.server.testing.testApplication
  * The plugin against a real server, because what it promises — one connection, closed on stop — is
  * not observable from a mock.
  */
-class RedisConnectionTest :
+class RedisPluginTest :
     FeatureSpec({
 
         val server = redisContainer()
@@ -55,7 +57,7 @@ class RedisConnectionTest :
             }
 
             scenario("and it is closed when the application stops") {
-                lateinit var captured: com.strange.redis.Redis
+                lateinit var captured: Redis
                 testApplication {
                     application {
                         install(RedisConnection) { config = RedisConfig(uri = server.endpoint!!) }
@@ -72,6 +74,36 @@ class RedisConnectionTest :
                 // Leaking a pool per redeploy is invisible until a server runs out of handles, so
                 // this is the assertion the plugin exists for.
                 shouldThrowAny { captured.ping() }
+            }
+        }
+
+        feature("a connection handed in rather than opened").config(enabled = server.available) {
+            scenario("is the one routes get, and is still open after the application stops") {
+                val mine = Redis.connect(RedisConfig(uri = server.endpoint!!, namespace = "adopted"))
+                try {
+                    lateinit var captured: Redis
+                    testApplication {
+                        application {
+                            install(RedisConnection) { instance = mine }
+                            routing {
+                                get("/") {
+                                    captured = call.redis
+                                    call.respondText(call.redis.namespace)
+                                }
+                            }
+                        }
+                        client.get("/").bodyAsText() shouldBe "adopted"
+                    }
+
+                    captured shouldBeSameInstanceAs mine
+
+                    // The whole point of the split between `own` and `publish`, and invisible any
+                    // other way: a DI container closes what it built, so a plugin that closed this
+                    // one too would be the second close.
+                    mine.ping()
+                } finally {
+                    mine.close()
+                }
             }
         }
 

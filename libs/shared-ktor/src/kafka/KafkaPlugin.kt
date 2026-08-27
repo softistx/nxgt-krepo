@@ -2,6 +2,7 @@ package com.strange.ktor.kafka
 
 import com.strange.kafka.Kafka
 import com.strange.kafka.KafkaConfig
+import com.strange.ktor.publish
 import com.strange.ktor.required
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
@@ -32,13 +33,20 @@ import io.ktor.util.AttributeKey
  */
 val KafkaCluster =
     createApplicationPlugin(name = "Kafka", createConfiguration = ::KafkaClusterConfiguration) {
-        application.attributes.put(KafkaKey, Kafka(pluginConfig.config))
+        application.publish(KafkaKey, pluginConfig.instance ?: Kafka(pluginConfig.config))
     }
 
 /** What [KafkaCluster] holds. */
 class KafkaClusterConfiguration {
     /** Bootstrap servers, client id, the `Json` values are serialized through, and raw properties. */
     var config: KafkaConfig = KafkaConfig()
+
+    /**
+     * A cluster built elsewhere — by a DI container, or by hand. When set, [config] is ignored.
+     *
+     * No ownership question here, unlike the other plugins: this one has never opened anything.
+     */
+    var instance: Kafka? = null
 }
 
 internal val KafkaKey = AttributeKey<Kafka>("com.strange.kafka.Kafka")

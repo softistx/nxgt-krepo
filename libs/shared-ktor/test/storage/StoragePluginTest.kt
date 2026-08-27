@@ -6,6 +6,7 @@ import com.strange.testing.containers.minioContainer
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
@@ -15,7 +16,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 
 /** One object-storage client for the application, closed on stop. */
-class StorageTest :
+class StoragePluginTest :
     FeatureSpec({
 
         val server = minioContainer()
@@ -58,6 +59,32 @@ class StorageTest :
                 }
 
                 shouldThrowAny { captured.buckets() }
+            }
+        }
+
+        feature("a client handed in rather than built").config(enabled = server.available) {
+            scenario("is the one routes get, and is still open after the application stops") {
+                val mine = ObjectStorage.connect(config())
+                try {
+                    lateinit var captured: ObjectStorage
+                    testApplication {
+                        application {
+                            install(Storage) { instance = mine }
+                            routing {
+                                get("/") {
+                                    captured = call.storage
+                                    call.respondText("ok")
+                                }
+                            }
+                        }
+                        client.get("/").bodyAsText() shouldBe "ok"
+                    }
+
+                    captured shouldBeSameInstanceAs mine
+                    mine.buckets()
+                } finally {
+                    mine.close()
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 package com.strange.ktor.redis
 
-import com.strange.ktor.own
+import com.strange.ktor.resource
 import com.strange.redis.Redis
 import com.strange.redis.RedisConfig
 import io.ktor.server.application.createApplicationPlugin
@@ -22,7 +22,7 @@ import io.ktor.util.AttributeKey
  */
 val RedisConnection =
     createApplicationPlugin(name = "Redis", createConfiguration = ::RedisConnectionConfiguration) {
-        application.own(RedisKey, Redis.connect(pluginConfig.config))
+        application.resource(RedisKey, pluginConfig.instance) { Redis.connect(pluginConfig.config) }
     }
 
 /** What [RedisConnection] connects with. */
@@ -35,6 +35,15 @@ class RedisConnectionConfiguration {
      * disagree.
      */
     var config: RedisConfig = RedisConfig()
+
+    /**
+     * A connection built elsewhere — by a DI container, or by hand.
+     *
+     * When set, [config] is ignored and this is **not** closed when the application stops: whoever created
+     * it closes it. That is what lets a container own the connection while routes still reach it
+     * through `call.redis`.
+     */
+    var instance: Redis? = null
 }
 
 internal val RedisKey = AttributeKey<Redis>("com.strange.redis.Redis")
