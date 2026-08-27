@@ -25,9 +25,12 @@ val recent = jpa.session { session ->
 }
 
 jpa.transaction { session ->
-    session.persist(Order(customer = id)).await()
+    session.persist(Order(customer = id))
 }
 ```
+
+Nothing above awaits anything. `find`, `get`, `persist`, `merge`, `remove`, `refresh` and `flush`
+all suspend and answer with values.
 
 ## The rule this library is built around
 
@@ -97,6 +100,26 @@ trees.
 There is no static metamodel and no Criteria DSL, because there is no `kapt` in this toolchain and
 `hibernate-jpamodelgen` cannot process Kotlin sources without one. HQL is the query language here.
 
+## The session is ours, not Hibernate's
+
+`session { }` and `transaction { }` hand you a `JpaSession`, not a `Stage.Session`. Every operation
+on it suspends and returns a value; nothing returns a `CompletionStage`, and there is no `.await()`
+to forget.
+
+**That is a wrapper rather than extension functions, and not by preference.** `persist`, `merge`,
+`remove`, `refresh` and `flush` are already members of `Stage.Session`, and in Kotlin a member always
+beats an extension of the same name and arity. A `suspend fun Stage.Session.flush()` compiles
+perfectly and is then unreachable — `session.flush()` still resolves to the member returning
+`CompletionStage<Void>`. That was settled with a throwaway file and the compiler rather than reasoned
+about; the only way to keep the JPA vocabulary *and* suspend is to be a different receiver.
+
+`find` gains something beyond ergonomics. Hibernate's returns a `CompletionStage<T>` whose `T` is a
+platform type, so nothing warns that a missing row is null; here `find` returns `T?` and `get` throws
+`JpaNotFoundException`, and choosing between them is a question about the caller rather than the data.
+
+Everything not wrapped is on `session.raw`. The wrapper is a convenience over Hibernate's API, not a
+fence around it.
+
 ## Four ways in
 
 ```kotlin
@@ -150,6 +173,32 @@ jpa.removeById<Order>(id)    // answers whether there was anything there
 Two of these in a row are two transactions. Anything that touches the database twice belongs in a
 `transaction { }`.
 
+## Which database
+
+Postgres, MySQL and DB2. Hibernate Reactive names none of them: it picks a driver at runtime from
+the URI scheme, so the only thing that changes is `postgresql://`, `mysql://` or `db2://` — the
+entity, the session, the transaction and the HQL are the same, which is what `MySqlTest` exists to
+show rather than assert in prose.
+
+All three drivers are declared `runtime-only`. They reach an application's runtime classpath and are
+kept off its compile classpath, which is right twice over: nothing in this library references a
+driver class, and a `PgBuilder` in application code is a second connection pool nobody is managing.
+Two unused drivers cost about a megabyte and load no class. `DriversTest` asserts all three are
+actually there, since a dependency scope is a claim about a classpath that nothing else would notice
+being wrong.
+
+**MySQL 8.4 needs one thing said out loud.** Every account it creates uses `caching_sha2_password`,
+whose first authentication requires either TLS the client trusts or the server's RSA public key.
+A reactive client given neither drops the connection, and the error —
+`ClosedConnectionException: Failed to read any response from the server` — reads like a network
+fault. It is an authentication one. `mysqlContainer()` in `shared-testing` moves its `root` account
+onto `mysql_native_password` for exactly this reason, and says so at the point it does it.
+
+DB2 is shipped and unproven here: the driver is on the classpath and `DriversTest` covers that, but
+no spec has run against a DB2 server, because `icr.io/db2_community/db2` wants a privileged container
+and several gigabytes and this repo does not put a machine under that unasked. Point `DB2_TEST_URI`
+at one and the same specs are what should run.
+
 ## Identifiers
 
 `@GeneratedValue` works as it does anywhere: `AUTO` and `SEQUENCE` both use a sequence on Postgres,
@@ -179,6 +228,35 @@ with itself.
 An attribute that wants something else opts out with `@Convert(disableConversion = true)`. An
 application's own converters are named in `Jpa.connect(config, entities, converters)` — a
 programmatic bootstrap finds no `@Converter` by scanning.
+
+## Validation
+
+Hibernate Validator is on the classpath and exported, so constraints on an entity are checked before
+it is written — no configuration, no explicit `Validator`, nothing to call:
+
+```kotlin
+@Entity
+class Order(
+    @Id @GeneratedValue var id: Long = 0,
+    @field:NotNull @field:Size(min = 2, max = 64) var reference: String? = null,
+)
+```
+
+Note `@field:`. A Kotlin constructor property is a parameter, a property and a field at once, and a
+constraint annotation that lands on the parameter is one Hibernate never sees.
+
+Whether this works at all was worth asking rather than assuming: Hibernate ORM applies constraints
+through event listeners, and Hibernate Reactive replaces the listeners it fires. It keeps them —
+`ValidationTest` persists a violating entity and gets a `ConstraintViolationException` with nothing
+written, and the alternative would have been a library that silently stores whatever it is handed.
+
+**The constraints reach the schema too.** `@Size(max = 64)` exports as `varchar(64)` rather than the
+default 255, which the same spec asserts against `information_schema` — so a constraint is one
+statement of a rule rather than two that can drift apart.
+
+`expressly` comes along as a runtime-only dependency. Hibernate Validator interpolates a message like
+*"must be between {min} and {max}"* through Jakarta Expression Language and ships no implementation
+of one; without it the first constraint is a `NoClassDefFoundError`.
 
 ## Configuration and lifecycle
 
@@ -216,7 +294,7 @@ nor a Koin `single { }` does.
 
 Every spec runs against a real Postgres: `POSTGRES_TEST_URI` with `POSTGRES_TEST_USER` and
 `POSTGRES_TEST_PASSWORD` when one is already up, a `postgres:18-alpine` container for the run
-otherwise, and skipped when neither. A mock cannot show a session used from the wrong thread, which
+otherwise, and skipped when neither. MySQL is the same with `MYSQL_TEST_*` and `mysql:8.4`. A mock cannot show a session used from the wrong thread, which
 is the failure this library exists to prevent.
 
 **Each spec gets a schema of its own**, created before it and dropped `cascade` after it, with

@@ -2,13 +2,12 @@ package com.strange.jpa.session
 
 import com.strange.jpa.Jpa
 import kotlinx.coroutines.future.await
-import org.hibernate.reactive.stage.Stage
 
 /**
  * Runs [block] in a session, and closes it afterwards.
  *
  * ```kotlin
- * val order = jpa.session { session -> session.find(Order::class.java, id).await() }
+ * val order = jpa.session { session -> session.find<Order>(id) }
  * ```
  *
  * **The block runs on a Vert.x event loop, so it must not block.** That is not this library's rule
@@ -19,12 +18,12 @@ import org.hibernate.reactive.stage.Stage
  * **Nothing is flushed here.** A session flushes at the end of a unit of work if and only if there
  * is a transaction, so a `persist` or a change to a loaded entity inside this block is discarded
  * without a word when the block returns. That is Hibernate's rule and it is quiet enough to be worth
- * repeating: this is for reads. Use [transaction] to write, or call `session.flush().await()` and
+ * repeating: this is for reads. Use [transaction] to write, or call `session.flush()` and
  * accept that each statement is then its own transaction.
  */
-suspend fun <T> Jpa.session(block: suspend (Stage.Session) -> T): T {
+suspend fun <T> Jpa.session(block: suspend (JpaSession) -> T): T {
     val caller = callerContext()
-    return factory.withSession { session -> confined(caller) { block(session) } }.await()
+    return factory.withSession { session -> confined(caller) { block(JpaSession(session)) } }.await()
 }
 
 /**
@@ -32,15 +31,15 @@ suspend fun <T> Jpa.session(block: suspend (Stage.Session) -> T): T {
  * back when it throws.
  *
  * ```kotlin
- * jpa.transaction { session -> session.persist(order).await() }
+ * jpa.transaction { session -> session.persist(order) }
  * ```
  *
  * The same rule as [session] applies, and more sharply: a blocked event loop inside a transaction
  * holds a database connection as well as the loop.
  */
-suspend fun <T> Jpa.transaction(block: suspend (Stage.Session) -> T): T {
+suspend fun <T> Jpa.transaction(block: suspend (JpaSession) -> T): T {
     val caller = callerContext()
-    return factory.withTransaction { session -> confined(caller) { block(session) } }.await()
+    return factory.withTransaction { session -> confined(caller) { block(JpaSession(session)) } }.await()
 }
 
 /**
@@ -51,13 +50,15 @@ suspend fun <T> Jpa.transaction(block: suspend (Stage.Session) -> T): T {
  * one everywhere else. What looks like a faster session is a session that has stopped doing the
  * work an ORM is for.
  */
-suspend fun <T> Jpa.statelessSession(block: suspend (Stage.StatelessSession) -> T): T {
+suspend fun <T> Jpa.statelessSession(block: suspend (JpaStatelessSession) -> T): T {
     val caller = callerContext()
-    return factory.withStatelessSession { session -> confined(caller) { block(session) } }.await()
+    return factory.withStatelessSession { session -> confined(caller) { block(JpaStatelessSession(session)) } }.await()
 }
 
 /** A stateless session with a transaction around it. See [statelessSession] for when to want one. */
-suspend fun <T> Jpa.statelessTransaction(block: suspend (Stage.StatelessSession) -> T): T {
+suspend fun <T> Jpa.statelessTransaction(block: suspend (JpaStatelessSession) -> T): T {
     val caller = callerContext()
-    return factory.withStatelessTransaction { session -> confined(caller) { block(session) } }.await()
+    return factory
+        .withStatelessTransaction { session -> confined(caller) { block(JpaStatelessSession(session)) } }
+        .await()
 }
