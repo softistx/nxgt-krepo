@@ -43,3 +43,30 @@ val session = sessions.getOrLoad(id) { database.loadSession(id) }
   forever. The writes go out concurrently instead, which Lettuce multiplexes into a pipeline.
 - **`invalidateAll` scans, it does not `KEYS`.** `KEYS` walks the whole keyspace with the server
   single-threaded throughout; on a shared instance that is a stall charged to everyone else.
+
+## Lock
+
+```kotlin
+RedisLock(redis, "invoice:42").withLock(wait = 5.seconds) { chargeCard() }
+```
+
+`SET key token NX PX ttl` is the whole acquisition — one round trip, and the TTL is what makes a
+holder that dies mid-task recoverable, since there is nobody left to release it. Three details do
+the real work:
+
+- **Release and extend are Lua.** `GET` then `DEL` from the client looks equivalent and is not:
+  between the two, the lock can expire and be taken by someone else, and the `DEL` then frees a lock
+  this caller does not hold — the one failure a lock exists to prevent. The test releases with the
+  wrong token and asserts the right lock survived.
+- **A watchdog puts the TTL back** every third of it while the block runs. Without it the TTL is a
+  deadline on the work rather than a lock: a slow block loses it silently and a second holder starts
+  the same task. `renew = false` where the work genuinely must not outlive the TTL — both halves
+  have a test.
+- **`withLock` polls**, because a lock has no queue to block on. The last attempt lands within one
+  retry interval of `wait`; `withLockOrNull` answers null where the caller would rather skip the work
+  than fail.
+
+**What this is not**: a lock on one Redis, not Redlock across several. If that Redis fails over to a
+replica that had not yet received the `SET`, two holders can believe they have it. That is fine for
+keeping a scheduled job from running twice or serialising a cache rebuild, and it is not the thing
+to put between two writers and a corrupted invoice — that writer needs its own conditional write.
