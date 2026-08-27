@@ -14,6 +14,7 @@ What exists:
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
+| `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
@@ -167,13 +168,27 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 The databases this workspace runs against are **already containerised and usually already up** —
 `~/workspace/docker/apps/` holds one compose file per service: `database/mongo` is an `rs0` replica
 set on `localhost:27017`, transactions included, `database/redis` is Redis Stack on
-`localhost:6379`, and `minio` is an S3-compatible store on `localhost:9000`. Check `docker ps` before pulling an image or starting a Testcontainers container:
+`localhost:6379`, `minio` is an S3-compatible store on `localhost:9000`, `kafka` is a three-broker
+KRaft cluster, and `rabbitmq` is on `localhost:5672` with its management UI on `15672`. Check `docker ps` before pulling an image or starting a Testcontainers container:
 the pull costs a gigabyte and the second container either clashes on the port or silently tests a
 different server than the one everything else uses.
 
 Integration tests therefore point at the running service — `MONGO_TEST_URI` and `REDIS_TEST_URI`,
 defaulting to `mongodb://localhost:27017` and `redis://localhost:6379/15` — and skip themselves when
 it is unreachable, so a machine without it reports skipped tests rather than a red build.
+
+The Kafka specs default `KAFKA_TEST_BOOTSTRAP` to `kafka1:9092,kafka2:9094,kafka3:9096`, which
+resolves only once the broker names are in `/etc/hosts` — the brokers advertise container hostnames
+and publish no host ports, so an address the host can reach is not enough on its own:
+
+```
+172.22.0.115 kafka1
+172.22.0.116 kafka2
+172.22.0.117 kafka3
+```
+
+Without them the broker-backed specs skip and the rest of the module still runs, since its loop and
+publisher specs use Kafka's own `MockConsumer` and `MockProducer`.
 
 The storage specs are the exception to the defaulting: `MINIO_TEST_ENDPOINT` defaults to
 `http://localhost:9000`, but `MINIO_TEST_ACCESS_KEY` and `MINIO_TEST_SECRET_KEY` have **no
@@ -188,8 +203,9 @@ MINIO_TEST_ACCESS_KEY=$MINIO_ROOT_USER MINIO_TEST_SECRET_KEY=$MINIO_ROOT_PASSWOR
 
 They also have to leave the server as they found it, because it is not theirs: the Mongo specs use a
 database per spec and drop it, the Redis specs use database 15 with a key namespace per spec and
-delete it, and the storage specs create a bucket per scenario and empty and remove it. Nothing here
-calls `FLUSHDB`, and nothing touches a bucket it did not create.
+delete it, the storage specs create a bucket per scenario and empty and remove it, and the Kafka
+specs create only the topics and groups they delete. Nothing here calls `FLUSHDB`, and nothing
+touches a bucket or a topic it did not create.
 
 ## Module layout
 
@@ -269,6 +285,7 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
   | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
   | `libs/openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
+  | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/shared-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |

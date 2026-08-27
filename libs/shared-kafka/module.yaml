@@ -1,0 +1,20 @@
+product: jvm/lib
+
+dependencies:
+  # ProducerRecord, ConsumerRecord, TopicPartition and the config keys are all over this module's
+  # public API
+  - $libs.kafka.clients: exported
+  - $libs.kotlinx.coroutines.core: exported
+  # values are stored as their kotlinx.serialization form
+  - $libs.kotlinx.serialization: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # the Kafka clients log through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    serialization: json
