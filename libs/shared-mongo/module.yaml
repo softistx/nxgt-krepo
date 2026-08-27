@@ -12,6 +12,10 @@ dependencies:
   - $libs.kotlinx.coroutines.core: exported
   # PaginationOptions carries `sort` and `filter` as a JsonObject
   - $libs.kotlinx.serialization: exported
+  # GridFS has no coroutine driver of its own, so the bucket wraps the Reactive Streams one and
+  # its type is part of this module's public API
+  - $libs.mongodb.driver.reactivestreams: exported
+  - $libs.kotlinx.coroutines.reactive
 
 test-dependencies:
   - $libs.kotest.runner.junit5
