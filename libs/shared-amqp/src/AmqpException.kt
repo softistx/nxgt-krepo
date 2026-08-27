@@ -51,3 +51,15 @@ class AmqpUnroutableException(
     val routingKey: String,
     val replyText: String,
 ) : AmqpException("nothing is bound to '$exchange' for routing key '$routingKey': $replyText")
+
+/**
+ * A publish that was still waiting for its confirm when the publisher closed.
+ *
+ * The message may or may not have reached the broker — that is the whole point of a confirm, and
+ * closing is the caller saying they will not wait to find out. Reported rather than left hanging,
+ * because a coroutine awaiting an answer nobody will ever give is the worst of the three outcomes.
+ */
+class AmqpClosedException(
+    val exchange: String,
+    val routingKey: String,
+) : AmqpException("the publisher closed before the broker confirmed the message to '$exchange' with routing key '$routingKey'")
