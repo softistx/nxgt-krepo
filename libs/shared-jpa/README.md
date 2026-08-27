@@ -8,6 +8,8 @@ com.strange.jpa            Jpa, JpaConfig, JpaException — connect, close, and 
 com.strange.jpa.session    session / transaction / stateless, and the confinement bridge underneath
 com.strange.jpa.query      HQL and SQL through one builder, and the one-shot operations on Jpa
 com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.time.Instant, kotlin.uuid.Uuid
+com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
+com.strange.jpa.scan       reading entities and converters off the classpath
 ```
 
 ```kotlin
@@ -225,7 +227,8 @@ onto `mysql_native_password` for exactly this reason, and says so at the point i
 DB2 is shipped and unproven here: the driver is on the classpath and `DriversTest` covers that, but
 no spec has run against a DB2 server, because `icr.io/db2_community/db2` wants a privileged container
 and several gigabytes and this repo does not put a machine under that unasked. Point `DB2_TEST_URI`
-at one and the same specs are what should run.
+at one and the same specs are what should run — except the JSON ones, which cannot: `DB2Dialect`
+registers no DDL type for `SqlTypes.JSON` at all.
 
 ## Identifiers
 
@@ -257,6 +260,80 @@ An attribute that wants something else opts out with `@Convert(disableConversion
 application's own converters are named in `Jpa.connect(config, entities, converters)`, because
 `addAnnotatedClass` finds no `@Converter` — or found for it by `Jpa.scan`, which is the one job the
 scan does that naming the classes cannot.
+
+## JSON columns
+
+A structured value in one column, two ways. **Reach for the first one.**
+
+```kotlin
+@Embeddable
+class Coordinates(var latitude: Double = 0.0, var longitude: Double = 0.0)
+
+@Entity
+class Place(
+    @Id var id: Long = 0,
+    @Embedded @JdbcTypeCode(SqlTypes.JSON) var at: Coordinates = Coordinates(),
+)
+
+jpa.session { it.query<Long>("select p.id from Place p where p.at.latitude > :south").parameter("south", 50.0).single() }
+```
+
+An `@Embeddable` needs no `@Serializable` and nothing from this module: Hibernate builds the document
+from its own mapping model. That is worth having for what it buys — **HQL paths into it**, checked
+against the mapping at startup, and every field keeping its own mapping, so the `Instant` and `Uuid`
+converters apply *inside* the document. A shape you know is a shape the database should know.
+
+The second way is for a shape you deliberately do not map — an open-ended payload, a versioned
+document, a sealed hierarchy:
+
+```kotlin
+@Serializable
+data class Address(val street: String, val city: String, val country: String = "DE")
+
+@Entity
+class Customer(
+    @Id var id: Long = 0,
+    @JdbcTypeCode(SqlTypes.JSON) var address: Address = Address("", ""),
+    @JdbcTypeCode(SqlTypes.JSON) var tags: Map<String, String> = emptyMap(),
+    @JdbcTypeCode(SqlTypes.JSON_ARRAY) var labels: List<String> = emptyList(),
+)
+```
+
+**This is the part that does not work without this library.** Hibernate resolves the JSON mapper by
+looking for Jackson, then Jackson 3, then JSON-B, and none of the three is a dependency here — so
+without a mapper of ours the annotation above compiles, exports a `jsonb` column, and throws on the
+first write telling a Kotlin codebase to install Jackson. `Jpa.connect` registers a `FormatMapper`
+over kotlinx.serialization instead, so `@Serializable` is what makes a JSON column work. Generic
+attributes resolve from the reflective type, so `Map<String, String>` keeps its type arguments.
+
+**Two codes, and the wrong one used to be a runtime accident.** `SqlTypes.JSON` is for a document that
+is an object, `SqlTypes.JSON_ARRAY` for one that is a list. Both make a `jsonb` column; given the
+wrong one the reactive binder wraps the document in the wrong Vert.x type and every write fails with
+`DecodeException: Failed to decode` and nothing else. `Jpa.connect` refuses the mismatch at startup
+instead, naming the attribute and the code to use.
+
+**What the stored document looks like, and why.** `jpaJson` is `lenientJson` with
+`encodeDefaults = true`. kotlinx otherwise omits a property that equals its default, and a `jsonb`
+column is read by SQL as well as by the class that wrote it — `address->>'country'` would be null for
+exactly the rows whose country happened to be the default, and a functional index over it would miss
+them. Nulls stay explicit for the same reason: `jsonb_exists(address, 'note')` and `is null` are
+different questions, and only a document that writes the key can answer both. Unknown keys are
+ignored on the way in, so a document written by an older version of a class still reads. Override the
+whole thing with `JpaConfig(json = …)`.
+
+**Editing a document is not free.** Hibernate's dirty check for a JSON attribute is
+`fromString(toString(value))` — a real round trip through the mapper on every check — so an in-place
+mutation *is* noticed, at the cost of serializing the document to find out. Keep such a column small,
+and prefer a mapped column for anything you filter or sort on.
+
+**Not on DB2.** `DB2Dialect` registers no DDL type for `SqlTypes.JSON`, so schema export fails with
+*No type mapping for org.hibernate.type.SqlTypes code: 3001 (JSON)*. Postgres gives `jsonb`, MySQL
+`json`, and both are pinned by a scenario asking `information_schema` what the column really is.
+
+Hibernate 7.4 also has HQL `json_value`, `json_query` and `json_exists`, disabled by default behind
+`hibernate.query.hql.json_functions_enabled` while they incubate. This library does not enable them
+and no spec here has run one — set it through `JpaConfig.properties` if you want them, or query a
+document through `nativeQuery` and the database's own operators.
 
 ## Validation
 

@@ -1,5 +1,7 @@
 package com.strange.jpa
 
+import com.strange.jpa.json.jpaJson
+import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 
 /**
@@ -59,6 +61,15 @@ data class JpaConfig(
     val batchSize: Int? = null,
     /** Logs every statement. Useful once, expensive always. */
     val showSql: Boolean = false,
+    /**
+     * What a JSON column is written and read with.
+     *
+     * Only the opaque form goes through it — an attribute whose type is a `@Serializable` class, a
+     * `Map` or a `List`. An `@Embeddable` marked `@JdbcTypeCode(SqlTypes.JSON)` is written by
+     * Hibernate from its own mapping model and never sees this. See [jpaJson] for what the default
+     * changes and why.
+     */
+    val json: Json = jpaJson,
     /** Anything else, applied last, overriding everything above. */
     val properties: Map<String, String> = emptyMap(),
 ) {

@@ -48,5 +48,13 @@ class JpaConfigTest :
 
                 settings["hibernate.connection.pool_size"] shouldBe "40"
             }
+
+            scenario("says nothing about the JSON mapper, which is an object and not a string") {
+                // Pinned because the obvious place to put it is here, and it cannot go here: the
+                // mapper carries `JpaConfig.json`, so it reaches the factory as an instance through
+                // the registry builder. A future edit that moved it into this map would be a class
+                // name at best and silently ignored at worst.
+                JpaConfig().settings() shouldNotContainKey "hibernate.type.json_format_mapper"
+            }
         }
     })
