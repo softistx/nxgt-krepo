@@ -130,6 +130,26 @@ internal object JpaTestDatabase {
                 ?.getString("data_type")
         }
 
+    /** How wide Postgres made a character column, or null when it is not one. */
+    suspend fun columnMaxLength(
+        schema: String,
+        table: String,
+        column: String,
+    ): Int? =
+        withClient { client ->
+            client
+                .preparedQuery(
+                    """
+                    select character_maximum_length from information_schema.columns
+                    where table_schema = $1 and table_name = $2 and column_name = $3
+                    """.trimIndent(),
+                ).execute(Tuple.of(schema, table, column))
+                .toCompletionStage()
+                .await()
+                .firstOrNull()
+                ?.getInteger("character_maximum_length")
+        }
+
     /** A pool and the Vert.x behind it, both closed however [block] ends. */
     private suspend fun <T> withClient(block: suspend (Pool) -> T): T {
         val vertx = Vertx.vertx()

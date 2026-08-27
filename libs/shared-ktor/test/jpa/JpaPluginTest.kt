@@ -3,7 +3,6 @@ package com.strange.ktor.jpa
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaConfig
 import com.strange.jpa.SchemaMode
-import com.strange.jpa.query.get
 import com.strange.jpa.session.transaction
 import com.strange.testing.containers.postgresContainer
 import io.kotest.assertions.throwables.shouldThrow
@@ -93,7 +92,7 @@ class JpaPluginTest :
                             get("/") {
                                 val text =
                                     call.jpa.transaction { session ->
-                                        session.persist(Note(1, "written")).await()
+                                        session.persist(Note(1, "written"))
                                         delay(1)
                                         session.get<Note>(1).text
                                     }
