@@ -6,6 +6,7 @@ import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.coroutines
 import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection
+import kotlinx.serialization.json.Json
 import java.time.Duration as JavaDuration
 
 /**
@@ -16,9 +17,11 @@ import java.time.Duration as JavaDuration
  * deliberately leaves open — one place that owns the client's lifecycle, and one place that decides
  * what a key looks like.
  *
- * Values are strings on the wire, not bytes. Every typed layer here serializes through
- * `ValueCodec`, so what is stored stays readable in `redis-cli` and indexable by RediSearch and
- * RedisJSON; binary payloads are the case that pays for it, and they pay in base64.
+ * Values are strings on the wire, not bytes. Every typed layer here serializes with
+ * kotlinx.serialization through this connection's [json], so what is stored stays readable in
+ * `redis-cli` and indexable by RediSearch and RedisJSON; binary payloads are the case that pays for
+ * it, and they pay in base64. A value that must not be JSON goes through a `ValueCodec` instead,
+ * which is what the typed layers hold underneath.
  *
  * One connection is the right number. Lettuce multiplexes every command over it and is thread-safe,
  * so a pool buys nothing until something blocks the connection — a transaction, a blocking pop, or
@@ -28,6 +31,8 @@ class Redis internal constructor(
     private val client: RedisClient,
     private val connection: StatefulRedisConnection<String, String>,
     val namespace: String,
+    /** What `cache`, `topic`, `topicPattern` and `stream` serialize through unless handed another. */
+    val json: Json,
 ) : AutoCloseable {
     /** The whole of Lettuce's suspending API, for everything the typed layers do not cover. */
     val commands: RedisCoroutinesCommands<String, String> by lazy { connection.coroutines() }
@@ -65,7 +70,7 @@ class Redis internal constructor(
         fun connect(config: RedisConfig = RedisConfig()): Redis {
             val uri = RedisURI.create(config.uri).apply { timeout = JavaDuration.ofMillis(config.timeout.inWholeMilliseconds) }
             val client = RedisClient.create(uri)
-            return Redis(client, client.connect(), config.namespace)
+            return Redis(client, client.connect(), config.namespace, config.json)
         }
     }
 }

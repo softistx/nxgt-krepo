@@ -1,18 +1,22 @@
 package com.strange.redis.pubsub
 
 import com.strange.redis.Redis
+import com.strange.redis.codec.JsonValueCodec
 import com.strange.redis.codec.ValueCodec
 import io.lettuce.core.pubsub.RedisPubSubAdapter
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 /**
  * One pub/sub channel, typed.
  *
  * ```kotlin
- * val events = RedisTopic(redis, "orders", ValueCodec.json<OrderEvent>())
+ * val events = redis.topic<OrderEvent>("orders")
  * events.subscribe().collect { handle(it) }
  * events.publish(OrderEvent.Placed(id))
  * ```
@@ -28,6 +32,14 @@ class RedisTopic<T>(
     val name: String,
     private val codec: ValueCodec<T>,
 ) {
+    /** The same topic, named by its serializer — for a call site whose `T` cannot be reified. */
+    constructor(
+        redis: Redis,
+        name: String,
+        serializer: KSerializer<T>,
+        json: Json = redis.json,
+    ) : this(redis, name, JsonValueCodec(json, serializer))
+
     val channel: String get() = redis.key("topic", name)
 
     /** How many subscribers the server handed it to. Zero means it is gone. */
@@ -74,3 +86,15 @@ class RedisTopic<T>(
             }
         }
 }
+
+/**
+ * A topic carrying `T`, serialized with kotlinx.serialization through this connection's `Json`.
+ *
+ * ```kotlin
+ * redis.topic<OrderEvent>("orders").subscribe().collect { handle(it) }
+ * ```
+ */
+inline fun <reified T> Redis.topic(
+    name: String,
+    json: Json = this.json,
+): RedisTopic<T> = RedisTopic(this, name, ValueCodec.json<T>(json))

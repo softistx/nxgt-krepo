@@ -1,6 +1,7 @@
 package com.strange.redis.cache
 
 import com.strange.redis.Redis
+import com.strange.redis.codec.JsonValueCodec
 import com.strange.redis.codec.ValueCodec
 import com.strange.redis.deleteKeys
 import io.lettuce.core.SetArgs
@@ -8,6 +9,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -15,7 +19,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * A typed cache over one keyspace prefix.
  *
  * ```kotlin
- * val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>(), ttl = 30.minutes)
+ * val sessions = redis.cache<Session>("sessions", ttl = 30.minutes)
  * val session = sessions.getOrLoad(id) { database.loadSession(id) }
  * ```
  *
@@ -26,8 +30,11 @@ import kotlin.time.Duration.Companion.milliseconds
  * site, where the cost is a decision rather than a default.
  *
  * **A null is an absence, not a cached value.** Caching "this does not exist" is a real technique
- * against a lookup storm on missing ids, and it needs a codec for a nullable type rather than a
- * special case here — `RedisCache<Session?>` with a codec that encodes null.
+ * against a lookup storm on missing ids, and it belongs in the type rather than in a special case
+ * here — `redis.cache<Session?>("sessions")`, whose serializer encodes null.
+ *
+ * The constructor taking a `ValueCodec` is the escape hatch for a value that must not be JSON; see
+ * [ValueCodec]. Everything else should come through [cache].
  */
 class RedisCache<T>(
     private val redis: Redis,
@@ -35,6 +42,18 @@ class RedisCache<T>(
     private val codec: ValueCodec<T>,
     private val ttl: Duration? = null,
 ) {
+    /**
+     * The same cache, named by its serializer — for a call site whose `T` cannot be reified.
+     * [cache] is the one to reach for otherwise.
+     */
+    constructor(
+        redis: Redis,
+        name: String,
+        serializer: KSerializer<T>,
+        ttl: Duration? = null,
+        json: Json = redis.json,
+    ) : this(redis, name, JsonValueCodec(json, serializer), ttl)
+
     fun key(id: String): String = redis.key(name, id)
 
     suspend fun get(id: String): T? = redis.commands.get(key(id))?.let(codec::decode)
@@ -101,3 +120,19 @@ class RedisCache<T>(
     /** Everything under this cache's prefix, and how many that was. */
     suspend fun invalidateAll(): Long = redis.deleteKeys("${redis.key(name)}:*")
 }
+
+/**
+ * A cache of `T`, serialized with kotlinx.serialization through this connection's `Json`.
+ *
+ * ```kotlin
+ * val sessions = redis.cache<Session>("sessions", ttl = 30.minutes)
+ * ```
+ *
+ * [ttl] is what entries get when [RedisCache.put] is not told otherwise; null means they stay until
+ * something invalidates them, which for a cache is a decision worth making on purpose.
+ */
+inline fun <reified T> Redis.cache(
+    name: String,
+    ttl: Duration? = null,
+    json: Json = this.json,
+): RedisCache<T> = RedisCache(this, name, ValueCodec.json<T>(json), ttl)
