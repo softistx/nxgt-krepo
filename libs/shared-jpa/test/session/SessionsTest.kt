@@ -1,7 +1,7 @@
 package com.strange.jpa.session
 
 import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.Thing
+import com.strange.jpa.entity.Thing
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull

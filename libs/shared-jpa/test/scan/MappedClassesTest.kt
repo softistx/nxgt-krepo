@@ -1,6 +1,9 @@
 package com.strange.jpa.scan
 
 import com.strange.jpa.JpaTestDatabase
+import com.strange.jpa.entity.scan.Auditable
+import com.strange.jpa.entity.scan.Invoice
+import com.strange.jpa.entity.scan.Money
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec

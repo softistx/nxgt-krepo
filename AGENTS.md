@@ -559,10 +559,22 @@ the same each time, and the mistakes are the same each time too.
   inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
   to the other spec styles. One spec class per file, named after the file.
 - **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `apps/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
-- **Organise `src/` by package, not as a flat pile of files.** A module with more than one concern
-  gets a directory per concern, and the directory matches the package — `src/parser/` is
-  `com.strange.openapi.parser`. The root package holds only what every package depends on: the
-  shared contract, nothing else. When a file lands in the root because it did not obviously belong
-  anywhere, that is the signal a package is missing.
+- **Organise by package, not as a flat pile of files — `test/` exactly as much as `src/`.** A module
+  with more than one concern gets a directory per concern, and the directory matches the package —
+  `src/parser/` is `com.strange.openapi.parser`. The root package holds only what every package
+  depends on: the shared contract, nothing else. When a file lands in the root because it did not
+  obviously belong anywhere, that is the signal a package is missing.
+
+  A test tree is not exempt, and it is where this slips: a fixture gets written beside whichever spec
+  needed it first, and three specs later the fixtures are scattered across four packages with no rule
+  anyone could state. **Test fixtures live in a package named for what they are, not for the spec that
+  happened to need them first** — entities in `test/entity/`, and the same for any other family of
+  fixture a module grows. A spec imports its fixtures; it does not host them. `shared-jpa`,
+  `shared-ktor` and `shared-koin` all keep their JPA entities in `…entity`.
+
+  One exception, and it has to be argued in the file: a spec that is *about* a package boundary owns
+  the package it scans. `shared-jpa`'s `EntityScanTest` needs a package holding nothing but the
+  classes it expects to find, which is why those fixtures sit in `test/entity/scan/` instead of
+  beside the rest.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.
 - Work on `develop`; `main` is the PR target.

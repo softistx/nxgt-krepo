@@ -12,6 +12,7 @@ import com.strange.jpa.session.session
 import com.strange.kafka.Kafka
 import com.strange.kafka.KafkaConfig
 import com.strange.koin.amqp.amqpModule
+import com.strange.koin.entity.Entry
 import com.strange.koin.i18n.messagesModule
 import com.strange.koin.jpa.jpaModule
 import com.strange.koin.jpa.jpaScanModule
@@ -120,7 +121,7 @@ class ModulesTest :
                                     username = postgres.endpoint!!.username,
                                     password = postgres.endpoint!!.password,
                                 ),
-                                "com.strange.koin",
+                                "com.strange.koin.entity",
                             ),
                         )
                     }
