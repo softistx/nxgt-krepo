@@ -291,6 +291,66 @@ The catalog's `[bundles]` groupings map to the intended consumer surfaces of thi
 
 The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.10 with CLI 0.12.0), so that entry does not control what this repo compiles with.
 
+## Coroutine-first Kotlin
+
+Every library here wraps a blocking, callback-driven Java client. The shape that keeps working is
+the same each time, and the mistakes are the same each time too.
+
+- **Blocking calls go on `Dispatchers.IO`, and everything in these clients blocks.** A declare, a
+  poll, a send, a `basicPublish` — each is a round trip however small it looks. A blocking call left
+  on a caller's dispatcher is a thread the rest of the application needed.
+- **Prove the client's threading rule before designing around it.** Two of these libraries were
+  built on a guess that turned out to be wrong. `KafkaConsumer` was assumed to be thread-*affine*
+  and was given a dedicated thread; `ConsumerConfinementTest` showed it wants *exclusion during a
+  call*, so `Dispatchers.IO.limitedParallelism(1)` does the job and the thread went. `AmqpPublisher`
+  carried a `@Volatile` between two callbacks; `ConfirmThreadsTest` showed both arrive on one
+  connection thread, so it was insuring against nothing. Both specs need no server and run in
+  milliseconds. Write the spec, then design.
+- **A callback that cannot suspend gets a `Mailbox`, never `runBlocking`.** There is no other
+  correct bridge: a `Mutex` may suspend and a callback may not, and `runBlocking` on a client's own
+  I/O thread parks the thread it needs for heartbeats and deliveries. See the shared code section
+  for which of the three concurrency types fits which caller.
+- **Prefer a single owner to a lock.** One coroutine draining a mailbox owns everything the messages
+  touch, so the state under it is plain `var`s and plain maps — no `@Volatile`, no concurrent
+  collection. It also buys what no pair of guarded flags can: two facts that must be applied in
+  order *are*, because a channel is FIFO. Reach for a concurrent collection only after establishing
+  that a single owner will not do.
+- **Never hold a lock across suspending work.** A mutex held while a loader runs turns *n*
+  concurrent loads of *n* different keys into one queue. `CoroutineSafeMap.getOrPut` takes a value
+  rather than a loader for exactly this reason; `KeyedMutex` is the type for when the work suspends.
+- **A loop that never suspends starves its own dispatcher.** `KafkaSubscriber`'s poll loop owns its
+  dispatcher for the whole poll timeout and has no suspension point between turns, so anything that
+  tried to `withContext(thatDispatcher)` waited forever — a real deadlock, found by a spec that hung
+  for ten minutes. Work reaches such a loop as a message it applies on its next turn, never as a
+  call that waits to be scheduled.
+
+## Performance
+
+- **One client per configuration, not per call.** A Lettuce connection multiplexes and is
+  thread-safe, a `KafkaProducer` batches across callers and holds connections to the whole cluster,
+  and an AMQP connection carries any number of channels on one socket. Two of any of them halves the
+  batching and doubles the sockets. What *does* need one each is the thing whose state is
+  per-conversation: an AMQP channel per publisher and per consumer, because delivery tags and
+  confirm sequence numbers mean nothing anywhere else.
+- **Batch by enqueueing in order and awaiting together.** `sendAll` and `publishAll` hand the whole
+  collection to the client and then await the acknowledgements, rather than launching a coroutine
+  per record. One coroutine each gives up the ordering these APIs promise and buys nothing, since
+  the client batches either way — this was a bug before it was a rule.
+- **Backpressure is a default, not an option.** Both consumers bound what may sit between the broker
+  and the handler — `SubscriberOptions.prefetch` at 64, `ConsumerOptions.prefetch` at 32 — because
+  the protocols' own default is *everything*: one consumer holding a queue's worth of messages in
+  memory while its peers hold none. In Kafka the loop also keeps polling while paused, since not
+  polling is what gets a consumer evicted mid-batch.
+- **Keep the fast tests fast and the slow ones optional.** Timing claims — a full buffer pausing, a
+  strategy committing when it says it does, partitions running concurrently — belong on Kafka's own
+  `MockConsumer`/`MockProducer` and run in about two seconds. A real server is for behaviour that
+  *is* the server's: an acknowledgement removing a message, a TTL expiring one. Those specs skip
+  when the server is unreachable, so a machine without it reports skipped rather than red.
+- **Watch what the machine is carrying.** The workspace's containers do not all fit at once: the
+  three-broker Kafka cluster is around 1.9 GiB, and starting it alongside everything else once drove
+  this machine into the OOM killer, which chose the running IDE. Check `docker ps` first, stop what
+  you started, and prefer the specs that need nothing running.
+
 ## Conventions
 
 - **Formatting is ktlint's job**, configured by `.editorconfig` at the repo root (wildcard imports
