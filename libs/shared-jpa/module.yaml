@@ -34,6 +34,12 @@ dependencies:
   # EL, so it is needed to run and not to compile.
   - $libs.expressly: runtime-only
   - $libs.kotlinx.coroutines.core: exported
+  # The JSON a JSON column is written with. Hibernate looks for Jackson, Jackson 3 and JSON-B and
+  # finds none of them here, so this module supplies the mapper itself. Exported because `Json`
+  # reaches the public API through `JpaConfig.json`, and a consumer configuring it needs to compile
+  # against the same one — it arrives transitively through shared-common either way, which is not a
+  # promise this module should rely on for its own signatures.
+  - $libs.kotlinx.serialization: exported
   # Classpath scanning for `Jpa.scan`. Not exported: an application names packages as strings and
   # never touches a ClassGraph type, so this is an implementation detail of one function.
   - $libs.classgraph
@@ -72,3 +78,6 @@ settings:
         - jakarta.persistence.Entity
         - jakarta.persistence.MappedSuperclass
         - jakarta.persistence.Embeddable
+    # Nothing in `src/` is @Serializable — the mapper resolves a serializer reflectively — but the
+    # fixtures the JSON specs store are, and module settings cover `test/` as noArg and allOpen do.
+    serialization: json
