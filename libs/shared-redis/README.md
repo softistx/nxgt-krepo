@@ -96,3 +96,32 @@ listening to.
 replayed, and a subscriber that was reconnecting missed whatever went past — `publish` returning 0
 is the honest signal that nobody heard it. Right for a cache invalidation or a "go and look" nudge;
 wrong for anything that has to happen, which is what `RedisStream` is for.
+
+## Streams
+
+The durable half. Where a topic delivers to whoever is listening and forgets, a stream keeps every
+entry until it is trimmed, hands each one to exactly one consumer in a group, and remembers the
+hand-over until somebody acknowledges it.
+
+```kotlin
+val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>(), maxLength = 100_000)
+orders.append(OrderEvent.Placed(id))
+orders.process(group = "billing", consumer = "worker-1") { event -> charge(event) }
+```
+
+- **Delivery is at least once.** `process` acknowledges *after* the handler returns, so a handler
+  that succeeds and then loses the connection sees its entry again — handlers have to be idempotent.
+  Acknowledging first would trade that for losing the entry, which is the worse half of the same
+  coin. A handler that throws does not acknowledge and the exception reaches the caller, because a
+  consumer that swallows failures is a queue that has quietly stopped working.
+- **`consume` opens its own connection.** `XREADGROUP BLOCK` holds one, and Lettuce multiplexes
+  everything else over the shared connection, so a blocking read there would stall the application
+  for the length of the block.
+- **`block` is a poll interval, not a timeout.** The loop comes round and re-checks whether anyone is
+  still collecting. Blocking forever saves a round trip and buys a consumer that ignores cancellation
+  until the next entry arrives — on a quiet stream, a very long time.
+- **A group starts at the end of the stream.** It is a subscription, not a backfill; `history()` is
+  how to read what came before.
+- **`claimStale` is the recovery path**, and there is no free one: an entry handed to a worker that
+  then died stays pending forever, because the group has already delivered it. Run it on an interval
+  with a `minIdle` comfortably longer than a normal handler takes.
