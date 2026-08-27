@@ -16,7 +16,7 @@ import kotlin.reflect.KClass
 /**
  * A Hibernate Reactive session factory, its Vert.x, and the entities it was told about.
  *
- * ```kotlin
+ * ```kotlin+
  * val jpa = Jpa.connect(JpaConfig(uri = System.getenv("POSTGRES_URI"), username = …), Order::class)
  *
  * val order = jpa.transaction { session -> session.find(Order::class.java, id).await() }
