@@ -5,7 +5,13 @@ import kotlinx.coroutines.withContext
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.AdminClientConfig
 import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.common.serialization.StringDeserializer
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The Kafka this workspace already runs, not one a test starts — `~/workspace/docker/apps/kafka`
@@ -79,6 +85,37 @@ internal object KafkaTestCluster {
             }
         }
     }
+
+    /**
+     * Reads [count] records off [topic] with no deserialization of our own — the bytes as another
+     * service would see them, which is the only way a spec can check the wire form rather than
+     * checking this module against itself.
+     */
+    suspend fun readRaw(
+        topic: String,
+        count: Int,
+        timeout: Duration = 10.seconds,
+    ): List<ConsumerRecord<String, String>> =
+        withContext(Dispatchers.IO) {
+            KafkaConsumer(
+                mapOf(
+                    ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrap,
+                    ConsumerConfig.GROUP_ID_CONFIG to "shared-kafka-test-raw-${counter.incrementAndGet()}",
+                    ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+                    ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
+                ),
+                StringDeserializer(),
+                StringDeserializer(),
+            ).use { consumer ->
+                consumer.subscribe(listOf(topic))
+                val records = mutableListOf<ConsumerRecord<String, String>>()
+                val deadline = System.nanoTime() + timeout.inWholeNanoseconds
+                while (records.size < count && System.nanoTime() < deadline) {
+                    consumer.poll(java.time.Duration.ofMillis(500)).forEach { records += it }
+                }
+                records
+            }
+        }
 
     /** Deletes a consumer group the spec created, ignoring one that never came into being. */
     suspend fun deleteGroup(group: String) {
