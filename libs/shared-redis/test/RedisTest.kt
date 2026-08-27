@@ -1,5 +1,6 @@
 package com.strange.redis
 
+import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 
@@ -24,6 +25,19 @@ class RedisTest :
                 RedisTestServer.withRedis { redis ->
                     redis.key("cache", "user") shouldBe "${redis.namespace}:cache:user"
                 }
+            }
+        }
+
+        feature("a connection that is closed").config(enabled = RedisTestServer.available) {
+            scenario("closing it twice is not an error") {
+                // Not a hypothetical: Ktor's DI closes every AutoCloseable it hands out when the
+                // application stops, and whoever built this one has its own claim to closing it.
+                val redis = RedisTestServer.connect("shared-redis-close")
+
+                redis.close()
+                redis.close()
+
+                shouldThrowAny { redis.ping() }
             }
         }
 

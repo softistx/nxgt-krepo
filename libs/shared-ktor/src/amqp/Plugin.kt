@@ -29,6 +29,7 @@ import kotlinx.coroutines.runBlocking
 val AmqpConnection =
     createApplicationPlugin(name = "Amqp", createConfiguration = ::AmqpConnectionConfiguration) {
         application.resource(AmqpKey, pluginConfig.instance) { runBlocking { Amqp.connect(pluginConfig.config) } }
+        if (pluginConfig.injectable) application.provideAmqp()
     }
 
 /** What [AmqpConnection] connects with. */
@@ -49,6 +50,21 @@ class AmqpConnectionConfiguration {
      * through `call.amqp`.
      */
     var instance: Amqp? = null
+
+    /**
+     * Registers the connection with Ktor's DI as well, so a class the container builds can take a
+     * [Amqp] in its constructor — the same one `call.amqp` hands a route.
+     *
+     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
+     * application that never asks for this must not be made to carry it at runtime. Setting it
+     * calls [provideAmqp], which lives in its own file for that reason — nothing loads a class
+     * from Ktor's DI until the flag is true.
+     *
+     * The container closes what it hands out when the application stops, so this hands it a second
+     * claim on closing the connection. That is safe — these clients close idempotently — but a
+     * connection that has to outlive the application does not belong in it.
+     */
+    var injectable: Boolean = false
 }
 
 internal val AmqpKey = AttributeKey<Amqp>("com.strange.amqp.Amqp")

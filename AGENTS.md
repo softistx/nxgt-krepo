@@ -14,7 +14,7 @@ What exists:
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
-| `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, and the one lenient `Json` the storage and messaging libraries read through |
+| `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, `CloseGuard`, and the one lenient `Json` the storage and messaging libraries read through |
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
@@ -215,6 +215,30 @@ observable from a mock.
 The plugins are not in the libraries they wrap because `shared-i18n` and `shared-redis` have callers
 with no server in them — a worker, a CLI, a consumer. The library knows the backend, `shared-ktor`
 knows the framework, and neither has to know both.
+
+**A framework integration must assume the resource is not its own, and must not be the only way to
+reach it.** Three rules, and the next integration is built to them rather than retrofitted:
+
+- **Take an instance as well as a config.** Every plugin's configuration has an `instance`; set it
+  and the plugin adopts what an application or a container already built, instead of opening a
+  second one.
+- **Whoever created it closes it.** `Resources.kt` says this once, as `own` (we opened it, we close
+  it on `ApplicationStopped`) and `publish` (someone else's, we leave it alone). A plugin that
+  adopts a connection and also closes it is the second close.
+- **Reaching a resource only through `call.x` is a service locator.** A class a container builds
+  has no `ApplicationCall`, so each plugin can register what it installed —
+  `install(RedisConnection) { config = …; injectable = true }` — and the same connection is then
+  both `call.redis` and a constructor parameter. `injectable` is off by default because
+  `ktor-server-di` is compile-only, and each `provideX` lives in its own file so nothing loads a
+  class from Ktor's DI until it is switched on.
+
+**And close idempotently, through `CloseGuard`.** A resource that is handed around is closed more
+than once, and the rule above says who *should* close it, not what happens when two of them do.
+Ktor's DI closes every `AutoCloseable` it hands out at application stop — one a provider merely
+passed through included, and a per-key `cleanup` runs beside that hook rather than instead of it, so
+a library cannot opt out. The drivers do not agree here either: Lettuce and the MinIO client tolerate
+a second close, the RabbitMQ client throws. Any new `AutoCloseable` in these libraries closes through
+the guard, so that all of it stays a question of tidiness rather than of correctness.
 
 ### Local services
 

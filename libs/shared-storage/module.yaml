@@ -4,6 +4,8 @@ dependencies:
   # MinioAsyncClient and the SDK's argument types are part of this module's public API
   - $libs.minio: exported
   - $libs.kotlinx.coroutines.core: exported
+  # CloseGuard, so closing this twice is not an error
+  - //libs/shared-common
 
 test-dependencies:
   # the object store the integration specs talk to, started for the run when no credentials name
