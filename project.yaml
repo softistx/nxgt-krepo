@@ -6,8 +6,8 @@ modules:
   - libs/shared-amqp
   - libs/shared-common
   - libs/shared-i18n
-  - libs/shared-ktor-i18n
   - libs/shared-kafka
+  - libs/shared-ktor
   - libs/shared-mongo
   - libs/shared-redis
   - libs/shared-storage
