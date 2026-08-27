@@ -8,6 +8,17 @@ import io.kotest.matchers.shouldBe
 class ObjectStorageTest :
     FeatureSpec({
 
+        feature("a client that is closed").config(enabled = MinioTestServer.available) {
+            scenario("closing it twice is not an error") {
+                // Not a hypothetical: Ktor's DI closes every AutoCloseable it hands out when the
+                // application stops, and whoever built this one has its own claim to closing it.
+                val storage = MinioTestServer.connect()
+
+                storage.close()
+                storage.close()
+            }
+        }
+
         feature("buckets").config(enabled = MinioTestServer.available) {
             scenario("one is created, listed, and removed again") {
                 MinioTestServer.withStorage { storage ->
