@@ -1,5 +1,6 @@
 package com.strange.ktor.kafka
 
+import com.strange.kafka.Kafka
 import com.strange.kafka.KafkaConfig
 import com.strange.kafka.admin.admin
 import com.strange.testing.containers.kafkaContainer
@@ -8,6 +9,7 @@ import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
@@ -44,6 +46,32 @@ class KafkaClusterTest :
                     first.substringBefore(':') shouldBe "example"
                     client.get("/").bodyAsText() shouldBe first
                 }
+            }
+        }
+
+        feature("a cluster handed in rather than built") {
+            scenario("is the one routes get") {
+                // No ownership question to settle here — this plugin has never opened anything —
+                // so what is left to check is that `instance` wins over `config`.
+                val mine = Kafka(KafkaConfig(bootstrap = "handed-in:9092"))
+                lateinit var captured: Kafka
+                testApplication {
+                    application {
+                        install(KafkaCluster) {
+                            config = KafkaConfig(bootstrap = "ignored:9092")
+                            instance = mine
+                        }
+                        routing {
+                            get("/") {
+                                captured = call.kafka
+                                call.respondText(call.kafka.bootstrap)
+                            }
+                        }
+                    }
+                    client.get("/").bodyAsText() shouldBe "handed-in:9092"
+                }
+
+                captured shouldBeSameInstanceAs mine
             }
         }
 
