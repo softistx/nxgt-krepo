@@ -16,7 +16,8 @@ com.strange.mongo.codec      codecs the driver has no built-in for, and the regi
 com.strange.mongo.query      what a collection is asked to do — filters, indexes, find/insert/update/delete
 com.strange.mongo.page       Page, PageInfo, PaginationOptions and the cursor-paginated find
 com.strange.mongo.repository MongoCrudRepository — one collection, as an object
-com.strange.mongo.service    MongoCrudService — the write flow over a repository, and its audit stamp
+com.strange.mongo.service    MongoCrudService — the write flow over a repository
+com.strange.mongo.audit      AuditMetadata and Audited — who wrote a document, and when
 com.strange.mongo.gridfs     a coroutine GridFS bucket over the Reactive Streams driver
 ```
 
@@ -109,3 +110,33 @@ Two decisions worth stating:
 
 It knows nothing about *why* a document is being written — no hooks, no audit, no transactions.
 That is `MongoCrudService`, one layer up.
+
+## Service
+
+`MongoCrudService<T, ID, C, U>` is the write flow every collection-backed service repeats — read it,
+check it exists, write it, read it back, stamp who did it — with the two parts that are genuinely
+about this collection left abstract:
+
+```kotlin
+class NoteService(repository: NoteRepository, principal: String?) :
+    MongoCrudService<Note, String, NewNote, EditNote>(repository, principal) {
+    override suspend fun buildCreate(input: NewNote) = Note(ObjectId().toHexString(), input.text)
+    override suspend fun buildUpdate(existing: Note, input: EditNote) = listOf(Updates.set("text", input.text))
+}
+```
+
+`beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete` and `afterDelete` are
+the seams for everything else; each of the delete and after hooks receives the session it is running
+in, so a cascade lands in the same transaction as the delete that triggered it.
+
+**Transactions are opt-in.** Pass a `MongoCluster` and every write that is not already in a session
+opens one; leave it out and writes run as they come. That is a real choice, not a default: a
+single-document update is atomic in Mongo on its own, so the transaction only begins to matter once
+a hook writes something else. `MongoCrudServiceTest` has the pair — the same failing hook, rolled
+back with a cluster and standing without one.
+
+**Auditing is opt-in by the entity.** An update is stamped only when the document implements
+`Audited` and a principal is known, so a collection that never asked for a `metadata` object does
+not quietly grow one. Creation-time metadata belongs in `buildCreate`, where the entity is being
+built anyway — `AuditMetadata.by(principal)`. An update that changes nothing writes nothing and is
+not stamped either: the audit trail is for changes, not for requests.
