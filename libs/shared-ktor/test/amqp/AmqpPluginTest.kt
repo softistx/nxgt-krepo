@@ -18,7 +18,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 
 /** One connection for the application, and channels that belong to whoever opened them. */
-class AmqpConnectionTest :
+class AmqpPluginTest :
     FeatureSpec({
 
         val broker = rabbitContainer()

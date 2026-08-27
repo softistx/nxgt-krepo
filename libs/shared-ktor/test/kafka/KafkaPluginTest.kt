@@ -25,7 +25,7 @@ import io.ktor.server.testing.testApplication
  * configured, it is the same one every time, and an admin client built from it actually talks to a
  * broker — which is the only way to know the bootstrap survived the trip.
  */
-class KafkaClusterTest :
+class KafkaPluginTest :
     FeatureSpec({
 
         val cluster = kafkaContainer()

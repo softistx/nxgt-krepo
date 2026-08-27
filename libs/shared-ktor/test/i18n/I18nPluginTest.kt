@@ -23,7 +23,7 @@ import java.util.Locale
  * route can reach afterwards — so these go through the HTTP client rather than calling the
  * negotiation directly. `shared-i18n` already has specs for the negotiation itself.
  */
-class I18nTest :
+class I18nPluginTest :
     FeatureSpec({
 
         val messages =

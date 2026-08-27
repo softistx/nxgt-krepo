@@ -21,7 +21,7 @@ import io.ktor.server.testing.testApplication
  * The plugin against a real server, because what it promises — one connection, closed on stop — is
  * not observable from a mock.
  */
-class RedisConnectionTest :
+class RedisPluginTest :
     FeatureSpec({
 
         val server = redisContainer()

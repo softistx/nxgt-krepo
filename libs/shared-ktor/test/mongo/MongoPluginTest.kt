@@ -41,7 +41,7 @@ internal data class Note(
  * `mongoCodecRegistry()` stores it as something this library cannot read back, and every step up to
  * that one succeeds. Round-tripping it is the only way to see the difference.
  */
-class MongoDBTest :
+class MongoPluginTest :
     FeatureSpec({
 
         val server = mongoContainer()

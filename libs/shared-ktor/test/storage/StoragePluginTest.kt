@@ -16,7 +16,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 
 /** One object-storage client for the application, closed on stop. */
-class StorageTest :
+class StoragePluginTest :
     FeatureSpec({
 
         val server = minioContainer()
