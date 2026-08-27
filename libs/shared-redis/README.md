@@ -8,6 +8,25 @@ a topic, and a stream consumer.
 It is a plain `jvm/lib`. Nothing here knows about a server framework, so the same code serves a Ktor
 route, a background worker or a CLI.
 
+## Getting a connection
+
+```kotlin
+val redis = Redis.connect(RedisConfig(uri = "redis://localhost:6379/0", namespace = "billing"))
+
+redis.commands.get("some:key")           // Lettuce's own suspending API, unwrapped
+redis.key("cache", "user", "42")         // billing:cache:user:42
+```
+
+**The namespace is the point of `RedisConfig`.** Redis has no schemas — one instance is one flat
+keyspace, usually shared by every service that was pointed at it — so every key this module writes is
+prefixed, and two applications, or an application and its own tests, can share an instance without
+being able to delete each other's keys by accident. The database index belongs in the URI, where
+Lettuce reads it from.
+
+One connection is the right number: Lettuce multiplexes commands over it and is thread-safe, so a
+pool buys nothing until something *blocks* it. `pubSub()` and `dedicated()` are the two cases that
+do, and both hand back a connection the caller owns and closes.
+
 ## Shape
 
 ```
