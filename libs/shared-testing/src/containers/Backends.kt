@@ -10,6 +10,7 @@ import org.testcontainers.containers.RabbitMQContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.ConfluentKafkaContainer
 import org.testcontainers.utility.DockerImageName
+import java.time.Duration
 
 // The services this repo's libraries test against, each declared once. A backend's particulars —
 // which image, what a replica set needs, how its connection string is spelled — belong here rather
@@ -289,6 +290,10 @@ private class ReactiveMySQLContainer(
 ) : MySQLContainer<ReactiveMySQLContainer>(image) {
     init {
         waitingFor(Wait.forLogMessage(".*ready for connections.*", 2))
+        // MySQL initialises a data directory before it serves anything, and the default minute is
+        // not enough for that plus an image start when a full-suite run has several backends coming
+        // up at once. Being slow here reads as being absent, which is a skip and not a failure.
+        withStartupTimeout(Duration.ofMinutes(3))
         // Enables a plugin 8.4 ships disabled. It is not the default for anything here — it is what
         // makes the ALTER below legal, and that ALTER is the point.
         withCommand("--mysql-native-password=ON")
