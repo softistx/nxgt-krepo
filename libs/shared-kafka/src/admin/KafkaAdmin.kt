@@ -112,7 +112,13 @@ class KafkaAdmin internal constructor(
             .mapValues { (_, offset) -> offset.offset() }
     }
 
-    suspend fun groups(): Set<String> = admin.listGroups().all().await().map { it.groupId() }.toSet()
+    suspend fun groups(): Set<String> =
+        admin
+            .listGroups()
+            .all()
+            .await()
+            .map { it.groupId() }
+            .toSet()
 
     /** Where [group] has committed to, per partition. Empty for a group that has never committed. */
     suspend fun groupOffsets(group: String): Map<TopicPartition, Long> =
