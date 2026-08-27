@@ -46,6 +46,15 @@ class Redis internal constructor(
      */
     fun pubSub(): StatefulRedisPubSubConnection<String, String> = client.connectPubSub()
 
+    /**
+     * A connection of this application's own, for a command that will block.
+     *
+     * `XREADGROUP BLOCK`, `BLPOP` and their kind hold the connection until they answer, and Lettuce
+     * multiplexes every other command over the same one — so a blocking read on [commands] stalls
+     * the whole application for as long as it blocks. The caller closes what it opens.
+     */
+    fun dedicated(): StatefulRedisConnection<String, String> = client.connect()
+
     /** Closes the connection and shuts the client down; safe to call twice. */
     override fun close() {
         connection.close()
