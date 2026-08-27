@@ -130,6 +130,24 @@ internal object JpaTestDatabase {
                 ?.getString("data_type")
         }
 
+    /** Every column Hibernate exported for a table, so a spec can assert names it did not choose. */
+    suspend fun columns(
+        schema: String,
+        table: String,
+    ): List<String> =
+        withClient { client ->
+            client
+                .preparedQuery(
+                    """
+                    select column_name from information_schema.columns
+                    where table_schema = $1 and table_name = $2 order by column_name
+                    """.trimIndent(),
+                ).execute(Tuple.of(schema, table))
+                .toCompletionStage()
+                .await()
+                .map { it.getString("column_name") }
+        }
+
     /** How wide Postgres made a character column, or null when it is not one. */
     suspend fun columnMaxLength(
         schema: String,
