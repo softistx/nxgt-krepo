@@ -7,6 +7,7 @@ dependencies:
   # depending on this for Mongo has no use for the Kafka one — but they are test-only wherever this
   # module is used, so the weight lands on a test classpath and never on a published artifact.
   - $libs.testcontainers.mongodb: exported
+  - $libs.testcontainers.rabbitmq: exported
 
 test-dependencies:
   - $libs.kotest.runner.junit5
