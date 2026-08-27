@@ -6,7 +6,6 @@ import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.future.await
 
 /** The factory itself: what it needs to be built, and what closing it means. */
 class JpaTest :
@@ -55,7 +54,7 @@ class JpaTest :
                     val jpa = JpaTestDatabase.connect(schema, Thing::class)
                     jpa.close()
 
-                    shouldThrowAny { jpa.transaction { it.find(Thing::class.java, 1L).await() } }
+                    shouldThrowAny { jpa.transaction { it.find<Thing>(1L) } }
                 }
             }
         }

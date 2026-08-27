@@ -4,6 +4,7 @@ import com.strange.jpa.JpaNoResultException
 import com.strange.jpa.JpaNonUniqueResultException
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.Thing
+import com.strange.jpa.session.JpaSession
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
@@ -12,15 +13,13 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.future.await
-import org.hibernate.reactive.stage.Stage
 
 /** The HQL surface: what it selects, what it refuses, and what it says when it refuses. */
 class QueriesTest :
     FeatureSpec({
 
-        suspend fun Stage.Session.seed(vararg names: String) {
-            names.forEachIndexed { index, name -> persist(Thing((index + 1).toLong(), name)).await() }
+        suspend fun JpaSession.seed(vararg names: String) {
+            names.forEachIndexed { index, name -> persist(Thing((index + 1).toLong(), name)) }
         }
 
         feature("a selection").config(enabled = JpaTestDatabase.available) {

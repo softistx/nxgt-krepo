@@ -4,7 +4,6 @@ import com.strange.jpa.Jpa
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
-import kotlinx.coroutines.future.await
 
 /**
  * One operation, one transaction.
@@ -14,10 +13,10 @@ import kotlinx.coroutines.future.await
  * own — two of these are two transactions, and a caller who wanted one and got two has a bug that
  * only shows under a partial failure.
  */
-suspend fun Jpa.persist(vararg entities: Any): Unit = transaction { it.persist(*entities).await() }
+suspend fun Jpa.persist(vararg entities: Any): Unit = transaction { it.persist(*entities) }
 
 /** Copies a detached instance's state onto the managed one, and answers with that. */
-suspend fun <T : Any> Jpa.merge(entity: T): T = transaction { it.merge(entity).await() }
+suspend fun <T : Any> Jpa.merge(entity: T): T = transaction { it.merge(entity) }
 
 /**
  * Deletes them, whichever session they came from.
@@ -30,7 +29,7 @@ suspend fun <T : Any> Jpa.merge(entity: T): T = transaction { it.merge(entity).a
  */
 suspend fun Jpa.remove(vararg entities: Any): Unit =
     transaction { session ->
-        entities.forEach { entity -> session.remove(session.merge(entity).await()).await() }
+        entities.forEach { entity -> session.remove(session.merge(entity)) }
     }
 
 /** By id, or null. */
@@ -49,6 +48,6 @@ suspend inline fun <reified T : Any> Jpa.get(id: Any): T = session { it.get<T>(i
 suspend inline fun <reified T : Any> Jpa.removeById(id: Any): Boolean =
     transaction { session ->
         val entity = session.find<T>(id)
-        if (entity != null) session.remove(entity).await()
+        if (entity != null) session.remove(entity)
         entity != null
     }

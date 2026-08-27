@@ -22,22 +22,22 @@ class SessionsTest :
         feature("a session without a transaction").config(enabled = JpaTestDatabase.available) {
             scenario("discards a write, because nothing flushes it") {
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
-                    jpa.session { it.persist(Thing(1, "never written")).await() }
+                    jpa.session { it.persist(Thing(1, "never written")) }
 
                     // No error, no warning, no row. A session flushes at the end of a unit of work
                     // only when there is a transaction — which is why `session` is for reads.
-                    jpa.session { it.find(Thing::class.java, 1L).await() }.shouldBeNull()
+                    jpa.session { it.find<Thing>(1L) }.shouldBeNull()
                 }
             }
 
             scenario("unless the block flushes it itself") {
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
                     jpa.session {
-                        it.persist(Thing(2, "flushed")).await()
-                        it.flush().await()
+                        it.persist(Thing(2, "flushed"))
+                        it.flush()
                     }
 
-                    jpa.session { it.find(Thing::class.java, 2L).await() }?.name shouldBe "flushed"
+                    jpa.session { it.find<Thing>(2L) }?.name shouldBe "flushed"
                 }
             }
         }
@@ -47,12 +47,12 @@ class SessionsTest :
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
                     val written =
                         jpa.transaction {
-                            it.persist(Thing(1, "committed")).await()
+                            it.persist(Thing(1, "committed"))
                             "done"
                         }
 
                     written shouldBe "done"
-                    jpa.session { it.find(Thing::class.java, 1L).await() }.name shouldBe "committed"
+                    jpa.session { it.get<Thing>(1L) }.name shouldBe "committed"
                 }
             }
 
@@ -60,12 +60,12 @@ class SessionsTest :
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
                     shouldThrow<IllegalStateException> {
                         jpa.transaction {
-                            it.persist(Thing(2, "rolled back")).await()
+                            it.persist(Thing(2, "rolled back"))
                             error("no")
                         }
                     }
 
-                    jpa.session { it.find(Thing::class.java, 2L).await() }.shouldBeNull()
+                    jpa.session { it.find<Thing>(2L) }.shouldBeNull()
                 }
             }
 
@@ -96,9 +96,9 @@ class SessionsTest :
         feature("a stateless transaction").config(enabled = JpaTestDatabase.available) {
             scenario("inserts without a persistence context behind it") {
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
-                    jpa.statelessTransaction { it.insert(Thing(3, "bulk")).await() }
+                    jpa.statelessTransaction { it.insert(Thing(3, "bulk")) }
 
-                    jpa.statelessSession { it.get(Thing::class.java, 3L).await() }.name shouldBe "bulk"
+                    jpa.statelessSession { it.get<Thing>(3L) }.name shouldBe "bulk"
                 }
             }
         }
