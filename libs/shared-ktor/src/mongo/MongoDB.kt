@@ -12,7 +12,7 @@ import io.ktor.util.AttributeKey
  * One Mongo client for the application and one database handle over it, closed when it stops.
  *
  * ```kotlin
- * install(MongoPlugin) { uri = System.getenv("MONGO_URI"); database = "orders" }
+ * install(MongoDB) { uri = System.getenv("MONGO_URI"); database = "orders" }
  *
  * get("/orders/{id}") { call.respond(call.database.collection<Order>("orders").findById(id)) }
  * ```
@@ -26,10 +26,10 @@ import io.ktor.util.AttributeKey
  * The driver's client is a pool and is thread-safe, so one is right; [configure] is there for the
  * TLS, pool and read-concern settings a deployment has opinions about and this module should not.
  */
-val MongoPlugin =
-    createApplicationPlugin(name = "Mongo", createConfiguration = ::MongoPluginConfiguration) {
-        val uri = requireNotNull(pluginConfig.uri) { "install(MongoPlugin) needs `uri`" }
-        val name = requireNotNull(pluginConfig.database) { "install(MongoPlugin) needs `database`" }
+val MongoDB =
+    createApplicationPlugin(name = "Mongo", createConfiguration = ::MongoDBConfiguration) {
+        val uri = requireNotNull(pluginConfig.uri) { "install(MongoDB) needs `uri`" }
+        val name = requireNotNull(pluginConfig.database) { "install(MongoDB) needs `database`" }
 
         val client = mongoClient(uri, pluginConfig.configure)
 
@@ -37,8 +37,8 @@ val MongoPlugin =
         application.attributes.put(MongoDatabaseKey, client.getDatabase(name))
     }
 
-/** What [MongoPlugin] connects with. */
-class MongoPluginConfiguration {
+/** What [MongoDB] connects with. */
+class MongoDBConfiguration {
     /** The connection string. Required — a default here would be a guess about someone's cluster. */
     var uri: String? = null
 

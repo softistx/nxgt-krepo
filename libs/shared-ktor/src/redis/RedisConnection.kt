@@ -10,7 +10,7 @@ import io.ktor.util.AttributeKey
  * One Redis connection for the application, closed when it stops.
  *
  * ```kotlin
- * install(RedisPlugin) { config = RedisConfig(uri = System.getenv("REDIS_URI"), namespace = "orders") }
+ * install(RedisConnection) { config = RedisConfig(uri = System.getenv("REDIS_URI"), namespace = "orders") }
  *
  * get("/cart/{id}") { call.respondText(call.redis.commands.get(call.redis.key("cart", id)) ?: "") }
  * ```
@@ -20,13 +20,13 @@ import io.ktor.util.AttributeKey
  * Closing it is the half that gets forgotten, which costs nothing visible until a redeploy loop has
  * left a server holding connections nobody is on the other end of.
  */
-val RedisPlugin =
-    createApplicationPlugin(name = "Redis", createConfiguration = ::RedisPluginConfiguration) {
+val RedisConnection =
+    createApplicationPlugin(name = "Redis", createConfiguration = ::RedisConnectionConfiguration) {
         application.own(RedisKey, Redis.connect(pluginConfig.config))
     }
 
-/** What [RedisPlugin] connects with. */
-class RedisPluginConfiguration {
+/** What [RedisConnection] connects with. */
+class RedisConnectionConfiguration {
     /**
      * The connection, its namespace and its `Json`.
      *

@@ -23,7 +23,7 @@ import io.ktor.server.testing.testApplication
  * configured, it is the same one every time, and an admin client built from it actually talks to a
  * broker — which is the only way to know the bootstrap survived the trip.
  */
-class KafkaPluginTest :
+class KafkaClusterTest :
     FeatureSpec({
 
         val cluster = kafkaContainer()
@@ -32,7 +32,7 @@ class KafkaPluginTest :
             scenario("gets the configuration it was installed with, and the same instance each time") {
                 testApplication {
                     application {
-                        install(KafkaPlugin) { config = KafkaConfig(bootstrap = "example:9092", clientId = "spec") }
+                        install(KafkaCluster) { config = KafkaConfig(bootstrap = "example:9092", clientId = "spec") }
                         routing {
                             get("/") {
                                 call.respondText("${call.kafka.bootstrap}:${System.identityHashCode(call.kafka)}")
@@ -51,7 +51,7 @@ class KafkaPluginTest :
             scenario("an admin client built from it reaches a broker") {
                 testApplication {
                     application {
-                        install(KafkaPlugin) { config = KafkaConfig(bootstrap = cluster.endpoint!!) }
+                        install(KafkaCluster) { config = KafkaConfig(bootstrap = cluster.endpoint!!) }
                         routing {
                             get("/") {
                                 // The caller owns what it opens: this admin client is closed here,
@@ -78,7 +78,7 @@ class KafkaPluginTest :
                     application {
                         val failure = shouldThrow<IllegalStateException> { kafka }
 
-                        failure.message shouldContain "KafkaPlugin"
+                        failure.message shouldContain "KafkaCluster"
                     }
 
                     startApplication()

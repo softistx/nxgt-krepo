@@ -15,7 +15,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 
 /** One object-storage client for the application, closed on stop. */
-class StoragePluginTest :
+class StorageTest :
     FeatureSpec({
 
         val server = minioContainer()
@@ -26,7 +26,7 @@ class StoragePluginTest :
             scenario("gets a client that can make and drop a bucket") {
                 testApplication {
                     application {
-                        install(StoragePlugin) { config = config() }
+                        install(Storage) { config = config() }
                         routing {
                             get("/") {
                                 val name = "shared-ktor-spec-${System.nanoTime()}"
@@ -46,7 +46,7 @@ class StoragePluginTest :
                 lateinit var captured: ObjectStorage
                 testApplication {
                     application {
-                        install(StoragePlugin) { config = config() }
+                        install(Storage) { config = config() }
                         routing {
                             get("/") {
                                 captured = call.storage
@@ -65,7 +65,7 @@ class StoragePluginTest :
             scenario("no config is a failure to start, since two of its fields are credentials") {
                 shouldThrowAny {
                     testApplication {
-                        application { install(StoragePlugin) {} }
+                        application { install(Storage) {} }
                         client.get("/")
                     }
                 }

@@ -10,7 +10,7 @@ import io.ktor.util.AttributeKey
  * One object-storage client for the application, closed when it stops.
  *
  * ```kotlin
- * install(StoragePlugin) { config = StorageConfig(endpoint, accessKey, secretKey) }
+ * install(Storage) { config = StorageConfig(endpoint, accessKey, secretKey) }
  *
  * get("/avatar/{key}") { call.respondText(call.storage.bucket("avatars").presignedGet(key)) }
  * ```
@@ -18,14 +18,14 @@ import io.ktor.util.AttributeKey
  * [StorageConfig] is required and has no default, unlike the other plugins here, because two of its
  * three fields are credentials — and a credential with a default is a credential in source control.
  */
-val StoragePlugin =
-    createApplicationPlugin(name = "Storage", createConfiguration = ::StoragePluginConfiguration) {
-        val config = requireNotNull(pluginConfig.config) { "install(StoragePlugin) needs `config`" }
+val Storage =
+    createApplicationPlugin(name = "Storage", createConfiguration = ::StorageConfiguration) {
+        val config = requireNotNull(pluginConfig.config) { "install(Storage) needs `config`" }
         application.own(StorageKey, ObjectStorage.connect(config))
     }
 
-/** What [StoragePlugin] connects with. */
-class StoragePluginConfiguration {
+/** What [Storage] connects with. */
+class StorageConfiguration {
     /** Endpoint and credentials. Required: there is no safe default for somebody else's keys. */
     var config: StorageConfig? = null
 }
