@@ -74,6 +74,19 @@ class QueriesTest :
                 }
             }
 
+            scenario("projects to a primitive type") {
+                JpaTestDatabase.withJpa(Thing::class) { jpa ->
+                    jpa.transaction { it.seed("a", "b") }
+
+                    // Worth pinning, because it reads like it should not work: a reified
+                    // `Long::class.java` is `long.class`, not `Long.class`, and that is what the
+                    // builders hand Hibernate. It boxes it. Nothing here needs a `javaObjectType`,
+                    // and this scenario is what would notice if that stopped being true.
+                    jpa.session { it.query<Long>("select count(id) from Thing").single() } shouldBe 2L
+                    jpa.session { it.nativeQuery<Long>("select count(*) from ${jpa.config.schema}.things").single() } shouldBe 2L
+                }
+            }
+
             scenario("answers null for a first that matched nothing") {
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
                     jpa.session { it.query<Thing>("from Thing").first() }.shouldBeNull()
