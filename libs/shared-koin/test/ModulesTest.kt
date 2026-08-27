@@ -5,10 +5,15 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.strange.amqp.Amqp
 import com.strange.amqp.AmqpConfig
 import com.strange.i18n.Messages
+import com.strange.jpa.Jpa
+import com.strange.jpa.JpaConfig
+import com.strange.jpa.query.nativeQuery
+import com.strange.jpa.session.session
 import com.strange.kafka.Kafka
 import com.strange.kafka.KafkaConfig
 import com.strange.koin.amqp.amqpModule
 import com.strange.koin.i18n.messagesModule
+import com.strange.koin.jpa.jpaModule
 import com.strange.koin.kafka.kafkaModule
 import com.strange.koin.mongo.mongoModule
 import com.strange.koin.redis.redisModule
@@ -19,6 +24,7 @@ import com.strange.storage.ObjectStorage
 import com.strange.storage.StorageConfig
 import com.strange.testing.containers.minioContainer
 import com.strange.testing.containers.mongoContainer
+import com.strange.testing.containers.postgresContainer
 import com.strange.testing.containers.rabbitContainer
 import com.strange.testing.containers.redisContainer
 import io.kotest.assertions.throwables.shouldThrowAny
@@ -43,6 +49,7 @@ class ModulesTest :
         val broker = rabbitContainer()
         val mongo = mongoContainer()
         val minio = minioContainer()
+        val postgres = postgresContainer()
 
         feature("the Redis module").config(enabled = redis.available) {
             scenario("hands out one connection and closes it when the container stops") {
@@ -68,6 +75,35 @@ class ModulesTest :
                 app.close()
 
                 connection.isOpen shouldBe false
+            }
+        }
+
+        feature("the JPA module").config(enabled = postgres.available) {
+            scenario("builds one factory, and it is a working one") {
+                val app =
+                    koinApplication {
+                        modules(
+                            jpaModule(
+                                JpaConfig(
+                                    uri = postgres.endpoint!!.uri,
+                                    username = postgres.endpoint!!.username,
+                                    password = postgres.endpoint!!.password,
+                                ),
+                                Entry::class,
+                            ),
+                        )
+                    }
+                val jpa = app.koin.get<Jpa>()
+
+                jpa shouldBeSameInstanceAs app.koin.get<Jpa>()
+
+                // Building a factory connects to nothing, so without this the scenario would pass
+                // against a server that refused every credential it was given.
+                jpa.session { it.nativeQuery<Int>("select 1").single() } shouldBe 1
+
+                app.close()
+
+                jpa.isOpen shouldBe false
             }
         }
 
