@@ -28,11 +28,12 @@ import java.util.concurrent.CopyOnWriteArrayList
  * a namespace of its own inside the shared container — cheap, and the same discipline the specs
  * already follow against the workspace's own servers.
  */
-class ContainerService<C : GenericContainer<*>> internal constructor(
+class ContainerService<C : GenericContainer<*>, E : Any> internal constructor(
     private val name: String,
     private val reusing: String,
+    private val fromEnvironment: () -> E?,
     private val create: () -> C,
-    private val endpointOf: (C) -> String,
+    private val fromContainer: (C) -> E,
 ) {
     private var container: C? = null
 
@@ -45,7 +46,7 @@ class ContainerService<C : GenericContainer<*>> internal constructor(
      * Resolving happens on first read and never again — `lazy` is synchronized, so concurrent specs
      * asking at once still start one container between them.
      */
-    val endpoint: String? by lazy { resolve() }
+    val endpoint: E? by lazy { resolve() }
 
     /** Whether a spec that needs this service can run. */
     val available: Boolean get() = endpoint != null
@@ -70,8 +71,8 @@ class ContainerService<C : GenericContainer<*>> internal constructor(
         container = null
     }
 
-    private fun resolve(): String? {
-        System.getenv(reusing)?.takeIf { it.isNotBlank() }?.let {
+    private fun resolve(): E? {
+        fromEnvironment()?.let {
             origin = Origin.REUSED
             return it
         }
@@ -84,7 +85,7 @@ class ContainerService<C : GenericContainer<*>> internal constructor(
                 origin = Origin.CONTAINER
                 Registry.add(this@ContainerService)
             }
-        }.map(endpointOf).getOrNull()
+        }.map(fromContainer).getOrNull()
     }
 
     /** Where the endpoint came from. Not the same question as whether a container is still running. */
@@ -92,18 +93,42 @@ class ContainerService<C : GenericContainer<*>> internal constructor(
 
     companion object {
         /**
-         * Declares a service without starting anything.
+         * Declares a service whose connection details are one string in one variable.
          *
          * [reusing] names the environment variable that points at an already-running server;
          * [create] builds the container used when it is unset; [endpointOf] reads the connection
-         * string out of the started container.
+         * string out of the started container. This is the shape every backend but MinIO has.
          */
         fun <C : GenericContainer<*>> declare(
             name: String,
             reusing: String,
             create: () -> C,
             endpointOf: (C) -> String,
-        ): ContainerService<C> = ContainerService(name, reusing, create, endpointOf)
+        ): ContainerService<C, String> =
+            declare(
+                name = name,
+                reusing = reusing,
+                fromEnvironment = { System.getenv(reusing)?.takeIf(String::isNotBlank) },
+                create = create,
+                fromContainer = endpointOf,
+            )
+
+        /**
+         * The same, for a service that needs more than a URI.
+         *
+         * MinIO is the reason: an endpoint is useless without the key pair, and the two have to be
+         * resolved *together* — a run with `MINIO_TEST_ENDPOINT` set and no credentials must fall
+         * through to a container rather than reach half of somebody's server. [fromEnvironment]
+         * returns null unless it can supply the whole value, and [reusing] is then a description of
+         * what it reads rather than one variable's name.
+         */
+        fun <C : GenericContainer<*>, E : Any> declare(
+            name: String,
+            reusing: String,
+            fromEnvironment: () -> E?,
+            create: () -> C,
+            fromContainer: (C) -> E,
+        ): ContainerService<C, E> = ContainerService(name, reusing, fromEnvironment, create, fromContainer)
 
         /**
          * Whether this machine has a Docker daemon at all.
@@ -118,18 +143,43 @@ class ContainerService<C : GenericContainer<*>> internal constructor(
 /**
  * Every service that started a container, so the JVM can stop them on the way out.
  *
- * Plain Java concurrency rather than this repo's coroutine primitives, and deliberately: a shutdown
- * hook is an ordinary thread with no scope to suspend in, and the list is written once per service
- * and read once per run.
+ * **A virtual thread, and an `unstarted` one.** `Runtime.addShutdownHook` takes a `Thread`, which is
+ * the whole reason there is a thread here at all — nothing in this file suspends, and a coroutine
+ * cannot be handed to that API. Given that a thread is forced, it is a virtual one: a few hundred
+ * bytes against a megabyte of committed stack, for something that exists only to block on Docker.
+ *
+ * `Thread.startVirtualThread` would be the wrong half of the API and fails *silently*, which is why
+ * this comment exists. It starts the thread immediately, so the body runs here at class-init with
+ * nothing registered yet, and the hook is then an already-terminated thread — at exit
+ * `ApplicationShutdownHooks` calls `start()` on it, gets an `IllegalThreadStateException`, and
+ * `Shutdown.runHooks` swallows it. Nothing is torn down and nothing says so.
+ *
+ * The list is plain Java concurrency rather than this repo's coroutine primitives, and deliberately:
+ * a shutdown hook has no scope to suspend in, and the list is written once per service and read once
+ * per run.
  */
-private object Registry {
-    private val started = CopyOnWriteArrayList<ContainerService<*>>()
+internal object Registry {
+    private val started = CopyOnWriteArrayList<ContainerService<*, *>>()
+
+    /** Registered, never started here. Exposed so a spec can assert both of those things. */
+    val hook: Thread = Thread.ofVirtual().name("testcontainers-teardown").unstarted(::teardown)
 
     init {
-        Runtime.getRuntime().addShutdownHook(Thread({ started.forEach { it.stop() } }, "testcontainers-teardown"))
+        Runtime.getRuntime().addShutdownHook(hook)
     }
 
-    fun add(service: ContainerService<*>) {
+    fun add(service: ContainerService<*, *>) {
         started += service
+    }
+
+    /**
+     * Stops every container this run started.
+     *
+     * Serial, and measured rather than assumed: with four backends this is four `docker stop` round
+     * trips at exit. Fanning them out over virtual threads is a two-line change if that ever costs
+     * enough to matter.
+     */
+    internal fun teardown() {
+        started.forEach { it.stop() }
     }
 }

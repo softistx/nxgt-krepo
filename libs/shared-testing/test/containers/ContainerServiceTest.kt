@@ -85,4 +85,43 @@ class ContainerServiceTest :
                 service.describe() shouldContain "a container started for this run"
             }
         }
+
+        feature("the teardown the run ends with") {
+            // This was dead for a while and nothing noticed: the hook was built with
+            // `Thread.startVirtualThread`, which starts it on the spot, so the JVM was handed a
+            // terminated thread and never ran a teardown. Containers still vanished — Ryuk was doing
+            // it — so the only way to see the bug is to assert on the hook itself.
+            scenario("is registered unstarted, so the JVM has something left to start") {
+                Registry.hook.state shouldBe Thread.State.NEW
+            }
+
+            scenario("is a virtual thread, since addShutdownHook leaves no choice but a thread") {
+                Registry.hook.isVirtual shouldBe true
+            }
+
+            scenario("actually stops what the run started").config(
+                enabled = ContainerService.dockerReachable(),
+            ) {
+                var built: GenericContainer<*>? = null
+                val disposable =
+                    ContainerService.declare(
+                        name = "nginx-teardown",
+                        reusing = "NXGT_ABSENT_TEST_VARIABLE",
+                        create = {
+                            GenericContainer("nginx:alpine")
+                                .withExposedPorts(80)
+                                .waitingFor(Wait.forListeningPort())
+                                .also { built = it }
+                        },
+                        endpointOf = { "http://${it.host}:${it.getMappedPort(80)}" },
+                    )
+
+                disposable.available shouldBe true
+                built?.isRunning shouldBe true
+
+                Registry.teardown()
+
+                built?.isRunning shouldBe false
+            }
+        }
     })
