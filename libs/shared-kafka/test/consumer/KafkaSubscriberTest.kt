@@ -8,6 +8,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -144,6 +145,26 @@ class KafkaSubscriberTest :
                     until { mock.committed(setOf(orders0))[orders0]?.offset() == 5L }
 
                     processing.cancel()
+                }
+
+                subscriber.close()
+            }
+        }
+
+        feature("reporting what it owns") {
+            scenario("the assignment flow names the partitions it was given") {
+                /* A flow rather than a getter: a caller can wait for a rebalance instead of polling
+                   for one, which is what the routing DSL's onAssigned hook needs. */
+                val (subscriber, mock) = subscriber()
+                mock.assign(orders0, orders1)
+
+                coroutineScope {
+                    val collector = launch { subscriber.records().collect { } }
+
+                    val owned = withTimeout(10.seconds) { subscriber.assignment.first { it.isNotEmpty() } }
+                    owned shouldBe setOf(orders0, orders1)
+
+                    collector.cancel()
                 }
 
                 subscriber.close()
