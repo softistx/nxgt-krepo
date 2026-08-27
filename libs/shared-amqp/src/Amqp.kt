@@ -3,6 +3,7 @@ package com.strange.amqp
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
+import com.strange.common.lifecycle.CloseGuard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -36,6 +37,8 @@ class Amqp internal constructor(
     val connection: Connection,
     val config: AmqpConfig,
 ) : AutoCloseable {
+    private val guard = CloseGuard()
+
     /** What the typed factories serialize through unless handed another. */
     val json: Json get() = config.json
 
@@ -64,10 +67,13 @@ class Amqp internal constructor(
             }
         }
 
-    /** Closes the connection, and with it every channel opened on it. */
-    override fun close() {
-        runCatching { connection.close() }
-    }
+    /**
+     * Closes the connection, and with it every channel opened on it. Calling it again does nothing.
+     *
+     * The `runCatching` is for a connection the broker has already dropped, which the client
+     * reports by throwing; the guard is for the second caller, which it reports the same way.
+     */
+    override fun close() = guard.once { runCatching { connection.close() } }
 
     companion object {
         /**
