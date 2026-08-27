@@ -47,6 +47,11 @@ hibernate-reactive = "4.5.5.Final"
 vertx = "5.1.6"
 hibernate-orm = "7.4.5.Final"
 jakarta-persistence = "3.2.0"
+# Bean Validation: the reference implementation, the API an entity writes against, and the
+# expression language its default message interpolator needs at runtime.
+hibernate-validator = "9.0.1.Final"
+jakarta-validation = "3.1.1"
+expressly = "6.0.0"
 spring = "7.0.9"
 jackson = "3.2.2"
 
@@ -187,6 +192,7 @@ testcontainers-rabbitmq = { module = "org.testcontainers:rabbitmq", version.ref 
 testcontainers-minio = { module = "org.testcontainers:minio", version.ref = "testcontainers" }
 testcontainers-kafka = { module = "org.testcontainers:kafka", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
 
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 minio = { module = "io.minio:minio", version.ref = "minio" }
@@ -200,7 +206,20 @@ minio = { module = "io.minio:minio", version.ref = "minio" }
 hibernate-reactive-core = { module = "org.hibernate.reactive:hibernate-reactive-core", version.ref = "hibernate-reactive" }
 hibernate-core = { module = "org.hibernate.orm:hibernate-core", version.ref = "hibernate-orm" }
 jakarta-persistence = { module = "jakarta.persistence:jakarta.persistence-api", version.ref = "jakarta-persistence" }
+# The Vert.x API `Jpa` itself speaks — an application can hand in the loop it already runs.
+vertx-core = { module = "io.vertx:vertx-core", version.ref = "vertx" }
+# The three drivers Hibernate Reactive can speak to. Nothing compiles against them: the one that is
+# used is chosen at runtime from the URI scheme, which is why `shared-jpa` declares all three
+# runtime-only. Each carries the SCRAM or authentication support its own protocol needs.
 vertx-pg-client = { module = "io.vertx:vertx-pg-client", version.ref = "vertx" }
+vertx-mysql-client = { module = "io.vertx:vertx-mysql-client", version.ref = "vertx" }
+vertx-db2-client = { module = "io.vertx:vertx-db2-client", version.ref = "vertx" }
+hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator" }
+jakarta-validation = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
+# Hibernate Validator interpolates a message like "must be between {min} and {max}" through Jakarta
+# Expression Language, and ships no implementation of it. Runtime-only: nobody writes EL here, and
+# without it every validator built is a `NoClassDefFoundError` at the first constraint.
+expressly = { module = "org.glassfish.expressly:expressly", version.ref = "expressly" }
 
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 amqp-client = { module = "com.rabbitmq:amqp-client", version.ref = "amqp-client" }

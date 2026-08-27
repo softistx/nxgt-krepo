@@ -5,7 +5,6 @@ import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.future.await
 import kotlin.time.Instant
 
 /** That a `kotlin.time.Instant` reaches Postgres as a timestamp, and comes back to the nanosecond. */
@@ -25,9 +24,9 @@ class InstantConverterTest :
                 JpaTestDatabase.withJpa(Stamped::class) { jpa ->
                     val at = Instant.parse("2026-08-27T10:15:30.123456Z")
 
-                    jpa.transaction { it.persist(Stamped(1, at = at)).await() }
+                    jpa.transaction { it.persist(Stamped(1, at = at)) }
 
-                    jpa.session { it.find(Stamped::class.java, 1L).await() }.at shouldBe at
+                    jpa.session { it.get<Stamped>(1L) }.at shouldBe at
                 }
             }
         }
