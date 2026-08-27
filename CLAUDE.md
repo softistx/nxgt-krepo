@@ -24,5 +24,6 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   support for a new OpenAPI keyword, format or extension goes in `docs/openapi-support.md`, not in
   a module README. AGENTS.md has the table.
 - Keep files short and single-purpose and follow SOLID — AGENTS.md spells out what each principle means in this repo. If a change makes a file mix two concerns, split the file in the same change rather than leaving it for later.
+- Look in `libs/shared-common` before writing a helper, and move one there when a second module wants it — it holds what is reusable across libraries and apps, and depends on nothing but kotlinx. AGENTS.md explains which of its three concurrency types fits a given caller; the short version is that a Java callback cannot take a `Mutex`, so it gets a `Mailbox`.
 - New code goes under `com.strange.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.
 - Add dependencies by adding a catalog alias to `libs.versions.toml` and referencing `$libs.<alias>` from the module — never paste raw versioned coordinates into a `module.yaml`, and remember `$libs.bundles.*` does not work here.
