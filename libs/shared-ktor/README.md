@@ -50,6 +50,44 @@ shutdown rather than by the caller.
 **A missing `install` names itself.** `call.redis` without `install(RedisConnection)` throws saying
 exactly that, rather than surfacing as a null three layers down.
 
+## Dependency injection
+
+**`call.redis` is a service locator, and a class the container builds has no call.** So each plugin
+can register what it installed:
+
+```kotlin
+install(RedisConnection) { config = RedisConfig(uri = …); injectable = true }
+
+class CartStore(private val redis: Redis)          // built by the container
+fun Application.orders(redis: Redis) { … }         // injected by type
+```
+
+`injectable = true` is `provideRedis()`, which every package also exposes on its own for an
+application that would rather write the two lines. Either way it registers **the connection the
+plugin installed** — `call.redis` and an injected `Redis` are one connection, not two.
+
+It is off by default because `ktor-server-di` is compile-only here like every backend, and each
+`provideX` sits in its own file so that nothing loads a class from Ktor's DI until the flag is set.
+
+**The other direction works too**, for a connection something else owns — a Koin module, a
+`main` that built it, a test:
+
+```kotlin
+val redis: Redis by dependencies                   // `resolve` suspends; the delegate does not
+install(RedisConnection) { instance = redis }
+```
+
+Then the plugin adopts it and never closes it. **Whoever created it closes it** — that is the whole
+rule, and `Resources.kt` is where it is written: `own` for what a plugin opened, `publish` for what
+it was handed.
+
+**What the container does with it is not negotiable.** Ktor's DI closes every `AutoCloseable` it
+hands out at application stop, including one a provider merely passed through, and a per-key
+`cleanup` runs beside that hook rather than instead of it — `test/di/DependenciesTest.kt` pins both.
+So `injectable = true` hands the container a second claim on closing the connection. That is safe
+because these clients close through `CloseGuard`, and it is the reason a connection which has to
+outlive the application should not be registered at all.
+
 ## The two that are not like the others
 
 **`KafkaCluster` opens nothing and closes nothing.** That is not an omission — it is what `Kafka`
