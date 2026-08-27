@@ -206,6 +206,35 @@ An attribute that wants something else opts out with `@Convert(disableConversion
 application's own converters are named in `Jpa.connect(config, entities, converters)` — a
 programmatic bootstrap finds no `@Converter` by scanning.
 
+## Validation
+
+Hibernate Validator is on the classpath and exported, so constraints on an entity are checked before
+it is written — no configuration, no explicit `Validator`, nothing to call:
+
+```kotlin
+@Entity
+class Order(
+    @Id @GeneratedValue var id: Long = 0,
+    @field:NotNull @field:Size(min = 2, max = 64) var reference: String? = null,
+)
+```
+
+Note `@field:`. A Kotlin constructor property is a parameter, a property and a field at once, and a
+constraint annotation that lands on the parameter is one Hibernate never sees.
+
+Whether this works at all was worth asking rather than assuming: Hibernate ORM applies constraints
+through event listeners, and Hibernate Reactive replaces the listeners it fires. It keeps them —
+`ValidationTest` persists a violating entity and gets a `ConstraintViolationException` with nothing
+written, and the alternative would have been a library that silently stores whatever it is handed.
+
+**The constraints reach the schema too.** `@Size(max = 64)` exports as `varchar(64)` rather than the
+default 255, which the same spec asserts against `information_schema` — so a constraint is one
+statement of a rule rather than two that can drift apart.
+
+`expressly` comes along as a runtime-only dependency. Hibernate Validator interpolates a message like
+*"must be between {min} and {max}"* through Jakarta Expression Language and ships no implementation
+of one; without it the first constraint is a `NoClassDefFoundError`.
+
 ## Configuration and lifecycle
 
 `Jpa.connect` suspends: reading annotations off every entity and building the metadata model is
