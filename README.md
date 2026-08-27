@@ -25,6 +25,7 @@ Alongside it are the shared service libraries, which have nothing to do with the
 
 | | |
 | --- | --- |
+| `libs/shared-common` | The coroutine primitives and the one lenient `Json` the libraries below share: a mutex-guarded map, a lock per key, and the mailbox that carries a Java callback's work into a coroutine |
 | `libs/shared-amqp` | An AMQP connection over the RabbitMQ client: topology declared in one block, publishes that wait for the broker's confirm, deliveries as a `Flow`, and retries that are delay queues rather than a loop |
 | `libs/shared-kafka` | A cluster and the clients over it: sends that suspend until the broker acknowledges them, records as a `Flow` with the offsets looked after, and topics and group lag from an admin client |
 | `libs/shared-mongo` | Session-aware collection extensions, keyset pagination, a CRUD repository and the write flow over it, and a coroutine GridFS bucket |
@@ -47,6 +48,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | --- | --- |
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |
 | [`libs/openapi-generator/README.md`](libs/openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
+| [`libs/shared-common/README.md`](libs/shared-common/README.md) | The shared module — what belongs in it, and which concurrency type a given caller wants |
 | [`libs/shared-amqp/README.md`](libs/shared-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
 | [`libs/shared-kafka/README.md`](libs/shared-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/shared-mongo/README.md`](libs/shared-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
