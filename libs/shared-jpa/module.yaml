@@ -8,6 +8,8 @@ dependencies:
   # and it carries com.ongres.scram:scram-client, which SASL authentication needs.
   - $libs.vertx.pg.client: exported
   - $libs.kotlinx.coroutines.core: exported
+  # CloseGuard: the factory is closed by whoever built it, and by a DI container too
+  - //libs/shared-common
 
 test-dependencies:
   # the Postgres the integration specs talk to, started for the run when the workspace's own is not
