@@ -7,6 +7,8 @@ dependencies:
   - $libs.kotlinx.coroutines.core: exported
   # values are stored as their kotlinx.serialization form
   - $libs.kotlinx.serialization: exported
+  # the shared Json every record is read through, and the decode over it
+  - //libs/shared-common
 
 test-dependencies:
   - $libs.kotest.runner.junit5
