@@ -1,5 +1,6 @@
 package com.strange.redis
 
+import com.strange.common.lifecycle.CloseGuard
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulRedisConnection
@@ -34,6 +35,8 @@ class Redis internal constructor(
     /** What `cache`, `topic`, `topicPattern` and `stream` serialize through unless handed another. */
     val json: Json,
 ) : AutoCloseable {
+    private val guard = CloseGuard()
+
     /** The whole of Lettuce's suspending API, for everything the typed layers do not cover. */
     val commands: RedisCoroutinesCommands<String, String> by lazy { connection.coroutines() }
 
@@ -60,11 +63,12 @@ class Redis internal constructor(
      */
     fun dedicated(): StatefulRedisConnection<String, String> = client.connect()
 
-    /** Closes the connection and shuts the client down; safe to call twice. */
-    override fun close() {
-        connection.close()
-        client.shutdown()
-    }
+    /** Closes the connection and shuts the client down. Calling it again does nothing. */
+    override fun close() =
+        guard.once {
+            connection.close()
+            client.shutdown()
+        }
 
     companion object {
         fun connect(config: RedisConfig = RedisConfig()): Redis {

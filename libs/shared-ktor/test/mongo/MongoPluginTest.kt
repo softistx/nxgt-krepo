@@ -1,12 +1,15 @@
 package com.strange.ktor.mongo
 
+import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.strange.mongo.collection
+import com.strange.mongo.mongoClient
 import com.strange.testing.containers.mongoContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
@@ -47,7 +50,7 @@ class MongoPluginTest :
             scenario("gets the one the plugin was configured with") {
                 testApplication {
                     application {
-                        install(MongoPlugin) {
+                        install(MongoDB) {
                             uri = server.endpoint!!
                             database = "shared-ktor-spec"
                         }
@@ -60,7 +63,7 @@ class MongoPluginTest :
             scenario("with the codec registry, so an Instant survives the round trip") {
                 testApplication {
                     application {
-                        install(MongoPlugin) {
+                        install(MongoDB) {
                             uri = server.endpoint!!
                             database = "shared-ktor-spec"
                         }
@@ -96,7 +99,7 @@ class MongoPluginTest :
                 lateinit var captured: com.mongodb.kotlin.client.coroutine.MongoDatabase
                 testApplication {
                     application {
-                        install(MongoPlugin) {
+                        install(MongoDB) {
                             uri = server.endpoint!!
                             database = "shared-ktor-spec"
                         }
@@ -114,6 +117,37 @@ class MongoPluginTest :
             }
         }
 
+        feature("a client handed in rather than built").config(enabled = server.available) {
+            scenario("is the one routes get, and is still open after the application stops") {
+                val mine = mongoClient(server.endpoint!!)
+                try {
+                    lateinit var captured: MongoClient
+                    testApplication {
+                        application {
+                            install(MongoDB) {
+                                instance = mine
+                                database = "adopted"
+                            }
+                            routing {
+                                get("/") {
+                                    captured = call.mongo
+                                    call.respondText(call.database.name)
+                                }
+                            }
+                        }
+                        client.get("/").bodyAsText() shouldBe "adopted"
+                    }
+
+                    captured shouldBeSameInstanceAs mine
+
+                    // Closed by whoever built it — here, this spec's `finally`.
+                    mine.listDatabaseNames().firstOrNull()
+                } finally {
+                    mine.close()
+                }
+            }
+        }
+
         feature("reaching for it without installing it") {
             scenario("names the plugin") {
                 // Asserted on the accessor rather than through the client: Ktor's test engine turns
@@ -123,7 +157,7 @@ class MongoPluginTest :
                     application {
                         val failure = shouldThrow<IllegalStateException> { database }
 
-                        failure.message shouldContain "MongoPlugin"
+                        failure.message shouldContain "MongoDB"
                     }
 
                     startApplication()

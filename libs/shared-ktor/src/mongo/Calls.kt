@@ -6,11 +6,11 @@ import com.strange.ktor.required
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 
-/** The application's Mongo client, as [MongoPlugin] opened it — for a second database, or a session. */
-val Application.mongo: MongoClient get() = required(MongoKey, "MongoPlugin")
+/** The application's Mongo client, as [MongoDB] opened it — for a second database, or a session. */
+val Application.mongo: MongoClient get() = required(MongoKey, "MongoDB")
 
-/** The database [MongoPlugin] was configured with. What a route almost always wants. */
-val Application.database: MongoDatabase get() = required(MongoDatabaseKey, "MongoPlugin")
+/** The database [MongoDB] was configured with. What a route almost always wants. */
+val Application.database: MongoDatabase get() = required(MongoDatabaseKey, "MongoDB")
 
 /** The application's Mongo client, from a route. */
 val ApplicationCall.mongo: MongoClient get() = application.mongo

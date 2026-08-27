@@ -1,0 +1,121 @@
+package com.strange.koin
+
+import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import com.strange.amqp.Amqp
+import com.strange.amqp.AmqpConfig
+import com.strange.i18n.Messages
+import com.strange.kafka.Kafka
+import com.strange.kafka.KafkaConfig
+import com.strange.koin.amqp.amqpModule
+import com.strange.koin.i18n.messagesModule
+import com.strange.koin.kafka.kafkaModule
+import com.strange.koin.mongo.mongoModule
+import com.strange.koin.redis.redisModule
+import com.strange.koin.storage.storageModule
+import com.strange.redis.Redis
+import com.strange.redis.RedisConfig
+import com.strange.storage.ObjectStorage
+import com.strange.storage.StorageConfig
+import com.strange.testing.containers.minioContainer
+import com.strange.testing.containers.mongoContainer
+import com.strange.testing.containers.rabbitContainer
+import com.strange.testing.containers.redisContainer
+import io.kotest.assertions.throwables.shouldThrowAny
+import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
+import kotlinx.coroutines.flow.firstOrNull
+import org.koin.dsl.koinApplication
+import java.util.Locale
+
+/**
+ * The modules against real backends, because what they promise — one instance, closed when the
+ * container stops — is not observable from a mock.
+ *
+ * Each spec builds its own [koinApplication] rather than `startKoin`, so no two of them share a
+ * global container and none of them leaves one behind for the next.
+ */
+class ModulesTest :
+    FeatureSpec({
+
+        val redis = redisContainer()
+        val broker = rabbitContainer()
+        val mongo = mongoContainer()
+        val minio = minioContainer()
+
+        feature("the Redis module").config(enabled = redis.available) {
+            scenario("hands out one connection and closes it when the container stops") {
+                val app = koinApplication { modules(redisModule(RedisConfig(uri = redis.endpoint!!, namespace = "koin"))) }
+                val connection = app.koin.get<Redis>()
+
+                connection.ping() shouldBe "PONG"
+                connection shouldBeSameInstanceAs app.koin.get<Redis>()
+
+                app.close()
+
+                shouldThrowAny { connection.ping() }
+            }
+        }
+
+        feature("the AMQP module").config(enabled = broker.available) {
+            scenario("connects, though Koin cannot suspend and Amqp.connect does") {
+                val app = koinApplication { modules(amqpModule(AmqpConfig(uri = broker.endpoint!!, connectionName = "koin"))) }
+                val connection = app.koin.get<Amqp>()
+
+                connection.isOpen shouldBe true
+
+                app.close()
+
+                connection.isOpen shouldBe false
+            }
+        }
+
+        feature("the Mongo module").config(enabled = mongo.available) {
+            scenario("registers the client and the database over it, and closes the client") {
+                val app = koinApplication { modules(mongoModule(mongo.endpoint!!, database = "koin-spec")) }
+                val client = app.koin.get<MongoClient>()
+
+                app.koin.get<MongoDatabase>().name shouldBe "koin-spec"
+                client.listDatabaseNames().firstOrNull() shouldBe "admin"
+
+                app.close()
+
+                shouldThrowAny { client.listDatabaseNames().firstOrNull() }
+            }
+        }
+
+        feature("the object-storage module").config(enabled = minio.available) {
+            scenario("hands out a client that works, and closes it") {
+                val endpoint = minio.endpoint!!
+                val app =
+                    koinApplication {
+                        modules(storageModule(StorageConfig(endpoint.url, endpoint.accessKey, endpoint.secretKey)))
+                    }
+                val storage = app.koin.get<ObjectStorage>()
+
+                storage.buckets()
+
+                app.close()
+            }
+        }
+
+        feature("the modules that open nothing") {
+            scenario("the cluster is a description, and needs no broker to be injected") {
+                val app = koinApplication { modules(kafkaModule(KafkaConfig(bootstrap = "example:9092"))) }
+
+                app.koin.get<Kafka>().bootstrap shouldBe "example:9092"
+
+                app.close()
+            }
+
+            scenario("the catalogs are the ones the caller loaded") {
+                val messages = Messages.load(locales = listOf(Locale.ENGLISH))
+                val app = koinApplication { modules(messagesModule(messages)) }
+
+                app.koin.get<Messages>() shouldBeSameInstanceAs messages
+
+                app.close()
+            }
+        }
+    })

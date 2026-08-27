@@ -185,6 +185,37 @@ internal object KafkaTestCluster {
         error("$topic never became visible on $bootstrap")
     }
 
+    /**
+     * Waits until [topic] is gone from the cluster's metadata.
+     *
+     * Deletion is the mirror of the race [awaitTopic] answers: `deleteTopics` returns when the
+     * controller has accepted it, and the broker this client asks next can still list the topic for
+     * a moment afterwards. It only ever showed up under the load of a full-suite run, with five
+     * backends up at once, which is exactly when a spec that asserts it immediately is wrong.
+     */
+    suspend fun awaitGone(
+        admin: Admin,
+        topic: String,
+        timeout: Duration = 10.seconds,
+    ) {
+        val deadline = System.nanoTime() + timeout.inWholeNanoseconds
+        while (System.nanoTime() < deadline) {
+            val gone =
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        !admin
+                            .listTopics()
+                            .names()
+                            .get()
+                            .contains(topic)
+                    }.getOrDefault(false)
+                }
+            if (gone) return
+            delay(50.milliseconds)
+        }
+        error("$topic was still on $bootstrap after it was deleted")
+    }
+
     /** Deletes a consumer group the spec created, ignoring one that never came into being. */
     suspend fun deleteGroup(group: String) {
         admin().use { admin ->
