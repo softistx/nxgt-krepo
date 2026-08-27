@@ -5,11 +5,15 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 
 /**
- * How a value becomes the string Redis stores, and back.
+ * How a value becomes the string Redis stores, and back — the seam underneath the typed layers.
  *
- * One interface rather than a `KSerializer` everywhere, because not every value wants to be JSON: a
- * cache of strings should hold `hello`, not `"hello"`, and a counter read by another service should
- * be a number that `INCR` can touch. [string] and [json] are those two answers.
+ * **This is the exception, not the way in.** A `@Serializable` type needs none of it: `redis.cache`,
+ * `redis.topic`, `redis.topicPattern` and `redis.stream` take the type alone and serialize it with
+ * kotlinx.serialization through the connection's `Json`. Reach for a codec when the value must
+ * *not* be JSON — a cache of strings that should hold `hello` rather than `"hello"` because
+ * `redis-cli` and another service read the same key, or a counter that has to stay a number
+ * `INCR` can touch. [string] is the first of those; [json] is the same JSON the factories use,
+ * for the rare call site that has to build one by hand.
  */
 interface ValueCodec<T> {
     fun encode(value: T): String
@@ -25,8 +29,8 @@ interface ValueCodec<T> {
                 override fun decode(raw: String): String = raw
             }
 
-        /** The value as its kotlinx.serialization JSON form. */
-        inline fun <reified T> json(json: Json = Json): ValueCodec<T> = JsonValueCodec(json, serializer())
+        /** The value as its kotlinx.serialization JSON form, through [redisJson] unless told otherwise. */
+        inline fun <reified T> json(json: Json = redisJson): ValueCodec<T> = JsonValueCodec(json, serializer())
 
         fun <T> json(
             json: Json,
