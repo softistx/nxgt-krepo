@@ -10,6 +10,7 @@ import io.vertx.sqlclient.PoolOptions
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.reflect.KClass
 
 /**
  * The Postgres the integration specs talk to: one started for this run, unless `POSTGRES_TEST_URI`
@@ -60,6 +61,47 @@ internal object JpaTestDatabase {
             }
         }
     }
+
+    /** A [Jpa] over [schema] that the caller closes — for the specs that are about closing. */
+    suspend fun connect(
+        schema: String,
+        vararg entities: KClass<*>,
+    ): Jpa =
+        Jpa.connect(
+            JpaConfig(
+                uri = endpoint.uri,
+                username = endpoint.username,
+                password = endpoint.password,
+                schema = schema,
+                schemaMode = SchemaMode.CREATE_DROP,
+            ),
+            entities.toList(),
+        )
+
+    /**
+     * A [Jpa] over a schema of its own, with the tables for [entities] created in it and dropped
+     * with it.
+     *
+     * This is what a spec in this module asks for; [withSchema] is underneath it, for the two specs
+     * that want the schema without the factory.
+     */
+    suspend fun <T> withJpa(
+        vararg entities: KClass<*>,
+        block: suspend (Jpa) -> T,
+    ): T =
+        withSchema { schema ->
+            Jpa
+                .connect(
+                    JpaConfig(
+                        uri = endpoint.uri,
+                        username = endpoint.username,
+                        password = endpoint.password,
+                        schema = schema,
+                        schemaMode = SchemaMode.CREATE_DROP,
+                    ),
+                    entities.toList(),
+                ).use { block(it) }
+        }
 
     /** A pool and the Vert.x behind it, both closed however [block] ends. */
     private suspend fun <T> withClient(block: suspend (Pool) -> T): T {
