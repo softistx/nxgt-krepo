@@ -64,7 +64,7 @@ data class JpaConfig(
      * How many inserts or updates Hibernate sends in one batch.
      *
      * Unset means one statement per row, which is what makes a bulk load slow. It applies to writes
-     * a session flushes, not to `mutation("delete from …")`, which is one statement already.
+     * a session flushes, not to `mutate("delete from …")`, which is one statement already.
      */
     val batchSize: Int? = null,
     /** Logs every statement. Useful once, expensive always. */
