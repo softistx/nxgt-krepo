@@ -39,7 +39,15 @@ import kotlin.reflect.KClass
 val JpaConnection =
     createApplicationPlugin(name = "Jpa", createConfiguration = ::JpaConnectionConfiguration) {
         application.resource(JpaKey, pluginConfig.instance) {
-            runBlocking { Jpa.connect(pluginConfig.config, pluginConfig.entities, pluginConfig.converters) }
+            runBlocking {
+                with(pluginConfig) {
+                    if (packages.isEmpty()) {
+                        Jpa.connect(config, entities, converters)
+                    } else {
+                        Jpa.scan(config, packages, entities, converters)
+                    }
+                }
+            }
         }
         if (pluginConfig.injectable) application.provideJpa()
     }
@@ -52,11 +60,26 @@ class JpaConnectionConfiguration {
     /**
      * The entity classes this factory knows about.
      *
-     * There is no classpath scan: a programmatic bootstrap maps what it is told about and nothing
-     * else. An entity that is missing here is not a mapping error at startup — it is an
-     * `IllegalArgumentException` on the first query that names it.
+     * An entity that is missing here — and not found by [packages] either — is not a mapping error at
+     * startup: it is an `IllegalArgumentException` on the first query that names it.
      */
     var entities: List<KClass<*>> = emptyList()
+
+    /**
+     * Packages to read entities and converters off the classpath instead of naming them.
+     *
+     * ```kotlin
+     * install(JpaConnection) {
+     *     config = JpaConfig(uri = System.getenv("POSTGRES_URI"), username = …, password = …)
+     *     packages("com.acme.orders.domain")
+     * }
+     * ```
+     *
+     * Whatever a scan finds is added to [entities] and [converters], for the class that lives
+     * somewhere it does not reach. A scan that finds no entity fails the install rather than starting
+     * a server that maps nothing.
+     */
+    var packages: List<String> = emptyList()
 
     /** Application converters, on top of the ones `shared-jpa` registers for `Instant` and `Uuid`. */
     var converters: List<KClass<out AttributeConverter<*, *>>> = emptyList()
@@ -64,6 +87,11 @@ class JpaConnectionConfiguration {
     /** The readable spelling: `entities(Order::class, Customer::class)`. */
     fun entities(vararg classes: KClass<*>) {
         entities = classes.toList()
+    }
+
+    /** The readable spelling: `packages("com.acme.orders.domain")`. */
+    fun packages(vararg names: String) {
+        packages = names.toList()
     }
 
     /** The same for converters. */
@@ -75,7 +103,7 @@ class JpaConnectionConfiguration {
      * A factory built elsewhere — by a DI container, or by hand around a Vert.x the application
      * already runs.
      *
-     * When set, [config] and [entities] are ignored and this is **not** closed when the application
+     * When set, [config], [entities] and [packages] are ignored and this is **not** closed when the application
      * stops: whoever created it closes it.
      */
     var instance: Jpa? = null
