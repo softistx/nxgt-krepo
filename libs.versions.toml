@@ -40,6 +40,10 @@ minio = "9.0.3"
 kafka = "4.3.1"
 amqp-client = "5.25.0"
 confluent = "8.3.1"
+hibernate-reactive = "4.5.5.Final"
+# What hibernate-reactive-core 4.5.5.Final declares for vertx-sql-client. The two have to agree:
+# a mismatched pair fails at runtime with a driver it cannot find, not at build time.
+vertx = "5.1.6"
 spring = "7.0.9"
 jackson = "3.2.2"
 
@@ -179,9 +183,16 @@ testcontainers-mongodb = { module = "org.testcontainers:mongodb", version.ref = 
 testcontainers-rabbitmq = { module = "org.testcontainers:rabbitmq", version.ref = "testcontainers" }
 testcontainers-minio = { module = "org.testcontainers:minio", version.ref = "testcontainers" }
 testcontainers-kafka = { module = "org.testcontainers:kafka", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 minio = { module = "io.minio:minio", version.ref = "minio" }
+# Hibernate Reactive brings hibernate-core 7.4.5.Final and the Jakarta Persistence API with it, so
+# neither is named here. vertx-pg-client is: it is the driver, and it is chosen rather than inherited.
+# It carries com.ongres.scram:scram-client transitively, which is what Postgres SASL auth needs.
+hibernate-reactive-core = { module = "org.hibernate.reactive:hibernate-reactive-core", version.ref = "hibernate-reactive" }
+vertx-pg-client = { module = "io.vertx:vertx-pg-client", version.ref = "vertx" }
+
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 amqp-client = { module = "com.rabbitmq:amqp-client", version.ref = "amqp-client" }
 confluent-kafka-avro-serializer = { module = "io.confluent:kafka-avro-serializer", version.ref = "confluent" }
