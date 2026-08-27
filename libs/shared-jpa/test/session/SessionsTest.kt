@@ -19,6 +19,29 @@ import kotlin.time.Duration.Companion.seconds
 class SessionsTest :
     FeatureSpec({
 
+        feature("a session without a transaction").config(enabled = JpaTestDatabase.available) {
+            scenario("discards a write, because nothing flushes it") {
+                JpaTestDatabase.withJpa(Thing::class) { jpa ->
+                    jpa.session { it.persist(Thing(1, "never written")).await() }
+
+                    // No error, no warning, no row. A session flushes at the end of a unit of work
+                    // only when there is a transaction — which is why `session` is for reads.
+                    jpa.session { it.find(Thing::class.java, 1L).await() }.shouldBeNull()
+                }
+            }
+
+            scenario("unless the block flushes it itself") {
+                JpaTestDatabase.withJpa(Thing::class) { jpa ->
+                    jpa.session {
+                        it.persist(Thing(2, "flushed")).await()
+                        it.flush().await()
+                    }
+
+                    jpa.session { it.find(Thing::class.java, 2L).await() }?.name shouldBe "flushed"
+                }
+            }
+        }
+
         feature("a transaction").config(enabled = JpaTestDatabase.available) {
             scenario("commits what it wrote, and hands back what the block returned") {
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
