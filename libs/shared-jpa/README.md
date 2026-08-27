@@ -32,8 +32,11 @@ jpa.transaction { session ->
 ## The rule this library is built around
 
 **A Hibernate Reactive session belongs to the Vert.x context that opened it.** Use it from any other
-thread and it throws `HR000069`. A coroutine that suspends inside a session block resumes wherever
-its dispatcher puts it, which is not that thread — so the obvious wrapper,
+thread and it throws `HR000069`— the [reference
+documentation](https://docs.hibernate.org/reactive/4.5/reference/html_single) quotes `HR000068` for
+this, and 4.5.5 does not; `SessionConfinementTest` asserts what the runtime actually says. A
+coroutine that suspends inside a session block resumes wherever its dispatcher puts it, which is not
+that thread — so the obvious wrapper,
 
 ```kotlin
 factory.withTransaction { session -> scope.future { block(session) } }.await()   // broken
@@ -106,6 +109,11 @@ jpa.statelessTransaction { … }
 Stateless is for volume: a bulk load or an export holds nothing in memory between rows, at the cost
 of everything a persistence context buys — no identity, no cascades, no automatic dirty checking.
 
+**`session { }` flushes nothing.** A session flushes at the end of a unit of work if and only if
+there is a transaction, so a `persist` or a change to a loaded entity inside a plain `session { }` is
+discarded without a word: no error, no warning, no row. It is Hibernate's rule and it is quiet enough
+that `SessionsTest` pins both halves of it. Read in `session`, write in `transaction`.
+
 ## Queries
 
 `query<R>(hql)` and `nativeQuery<R>(sql)` return the same builder, on a session or a stateless one.
@@ -142,6 +150,22 @@ jpa.removeById<Order>(id)    // answers whether there was anything there
 Two of these in a row are two transactions. Anything that touches the database twice belongs in a
 `transaction { }`.
 
+## Identifiers
+
+`@GeneratedValue` works as it does anywhere: `AUTO` and `SEQUENCE` both use a sequence on Postgres,
+`IDENTITY` works, and `UUID` works **on a `java.util.UUID`**. `GeneratedIdTest` runs all four against
+a real server, because Hibernate Reactive is where a generator that needs a round trip has to be a
+`ReactiveIdentifierGenerator`, and a strategy that does not work is a bootstrap error rather than
+something a mock would show.
+
+**A `kotlin.uuid.Uuid` cannot be the identifier, and `Jpa.connect` refuses one.** Hibernate rejects
+an `AttributeConverter` on an `@Id` outright, and the JDBC-bound `UserType` that would otherwise map
+it is what Hibernate Reactive's own documentation says not to reach for. Without a converter nothing
+fails: the type is serialized, the primary key comes out `bytea`, inserts and reads both work, and
+the table is unreadable to every other client of the database. So the check is at `connect`, which is
+the last moment it is still preventable. Use `java.util.UUID` for the key; `kotlin.uuid.Uuid` is fine
+on every other attribute.
+
 ## Instant and Uuid
 
 `kotlin.time.Instant` and `kotlin.uuid.Uuid` are not JPA basic types, and an unmapped type is not
@@ -165,6 +189,12 @@ than a failed startup. `SchemaMode.VALIDATE` turns it back into a startup failur
 managed elsewhere, which it should be: `SchemaMode.NONE` is the default and the only sane answer for
 a deployment, because a schema is migrated by something that keeps a history, not by an ORM
 inferring one from the classes it happens to have been given.
+
+`JpaConfig` names the settings a deployment actually changes and takes anything else in
+`properties`, applied last so it overrides them. Four are worth knowing about: `connectTimeout`, so a
+request queued behind an exhausted pool fails visibly instead of hanging; `idleTimeout`;
+`statementCacheSize`, which is the cheapest performance setting here and is off in the driver by
+default; and `batchSize`, without which a bulk load is one statement per row.
 
 `close()` closes the factory and, if this built it, the Vert.x behind it. It blocks briefly and
 boundedly — `close()` cannot suspend, and returning before the pool is shut leaves connections open

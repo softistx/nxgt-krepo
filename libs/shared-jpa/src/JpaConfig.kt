@@ -1,5 +1,7 @@
 package com.strange.jpa
 
+import kotlin.time.Duration
+
 /**
  * What [Jpa] connects with, and the few Hibernate settings worth naming in Kotlin.
  *
@@ -30,6 +32,31 @@ data class JpaConfig(
      * is much smaller than the number of concurrent requests.
      */
     val poolSize: Int = 10,
+    /**
+     * How long to wait for a connection from the pool before giving up.
+     *
+     * Worth setting. The default waits a long time, and a request queued behind an exhausted pool is
+     * a request that has already lost — failing it frees the caller to retry or degrade, and turns
+     * a saturated database into a visible error rather than a rising latency graph.
+     */
+    val connectTimeout: Duration? = null,
+    /** How long an idle connection is kept before the pool closes it. */
+    val idleTimeout: Duration? = null,
+    /**
+     * How many prepared statements each connection caches.
+     *
+     * Off in the driver by default, and it is the cheapest performance setting here: a cached
+     * statement skips the parse and plan on every execution after the first. The cost is memory per
+     * connection and a plan chosen without seeing that execution's parameters.
+     */
+    val statementCacheSize: Int? = null,
+    /**
+     * How many inserts or updates Hibernate sends in one batch.
+     *
+     * Unset means one statement per row, which is what makes a bulk load slow. It applies to writes
+     * a session flushes, not to `mutation("delete from …")`, which is one statement already.
+     */
+    val batchSize: Int? = null,
     /** Logs every statement. Useful once, expensive always. */
     val showSql: Boolean = false,
     /** Anything else, applied last, overriding everything above. */
@@ -43,6 +70,10 @@ data class JpaConfig(
             schema?.let { put("hibernate.default_schema", it) }
             put("hibernate.hbm2ddl.auto", schemaMode.setting)
             put("hibernate.connection.pool_size", poolSize.toString())
+            connectTimeout?.let { put("hibernate.vertx.pool.connect_timeout", it.inWholeMilliseconds.toString()) }
+            idleTimeout?.let { put("hibernate.vertx.pool.idle_timeout", it.inWholeMilliseconds.toString()) }
+            statementCacheSize?.let { put("hibernate.vertx.prepared_statement_cache.max_size", it.toString()) }
+            batchSize?.let { put("hibernate.jdbc.batch_size", it.toString()) }
             if (showSql) {
                 put("hibernate.show_sql", "true")
                 put("hibernate.format_sql", "true")
