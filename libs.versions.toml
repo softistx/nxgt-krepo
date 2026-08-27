@@ -41,9 +41,12 @@ kafka = "4.3.1"
 amqp-client = "5.25.0"
 confluent = "8.3.1"
 hibernate-reactive = "4.5.5.Final"
-# What hibernate-reactive-core 4.5.5.Final declares for vertx-sql-client. The two have to agree:
-# a mismatched pair fails at runtime with a driver it cannot find, not at build time.
+# What hibernate-reactive-core 4.5.5.Final resolves for each of these. All three have to move with
+# it: a mismatched pair fails at runtime with a driver or a provider it cannot find, not at build
+# time.
 vertx = "5.1.6"
+hibernate-orm = "7.4.5.Final"
+jakarta-persistence = "3.2.0"
 spring = "7.0.9"
 jackson = "3.2.2"
 
@@ -187,10 +190,16 @@ testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.
 
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 minio = { module = "io.minio:minio", version.ref = "minio" }
-# Hibernate Reactive brings hibernate-core 7.4.5.Final and the Jakarta Persistence API with it, so
-# neither is named here. vertx-pg-client is: it is the driver, and it is chosen rather than inherited.
-# It carries com.ongres.scram:scram-client transitively, which is what Postgres SASL auth needs.
+# Hibernate Reactive brings hibernate-core and the Jakarta Persistence API with it, and both are
+# named here anyway: `shared-jpa` imports `org.hibernate.cfg.Configuration` itself, and every entity
+# anyone writes imports `jakarta.persistence.*`. A module declares what it imports rather than
+# inheriting it from somebody else's graph — which is also what the IDE resolves against, since it
+# does not follow that transitive edge and reports the whole file as unresolved when it is missing.
+# vertx-pg-client is named for a different reason: it is the driver, chosen rather than inherited,
+# and it carries com.ongres.scram:scram-client, which Postgres SASL auth needs.
 hibernate-reactive-core = { module = "org.hibernate.reactive:hibernate-reactive-core", version.ref = "hibernate-reactive" }
+hibernate-core = { module = "org.hibernate.orm:hibernate-core", version.ref = "hibernate-orm" }
+jakarta-persistence = { module = "jakarta.persistence:jakarta.persistence-api", version.ref = "jakarta-persistence" }
 vertx-pg-client = { module = "io.vertx:vertx-pg-client", version.ref = "vertx" }
 
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
