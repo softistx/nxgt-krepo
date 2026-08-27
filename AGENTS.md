@@ -266,6 +266,7 @@ library's own test tree.
 | `shared-amqp` | `AMQP_TEST_URI` | `rabbitmq:4-management` |
 | `shared-storage` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `minio/minio:latest` |
 | `shared-kafka` | `KAFKA_TEST_BOOTSTRAP` | `confluentinc/cp-kafka:latest`, one broker |
+| `shared-jpa` | `POSTGRES_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `postgres:18-alpine` |
 
 **The credentials rule is unchanged; what it costs is not.** `AMQP_TEST_URI` and the MinIO key pair
 still have no defaults and must never gain any — a credential with a default is a credential in
@@ -275,7 +276,15 @@ own, so the 78 specs in those two libraries now run on a machine where nobody ex
 They used to report skipped there and prove nothing.
 
 `MINIO_TEST_ENDPOINT` on its own does not take the override — an endpoint with no way in fails later
-and less clearly than a container would.
+and less clearly than a container would. `POSTGRES_TEST_URI` is refused on its own for the same
+reason: a Postgres URI does not carry the password, and a driver that connects without one fails at
+authentication in a way that reads like a network problem.
+
+**Each `shared-jpa` spec gets a schema of its own**, created before it and dropped `cascade` after
+it — the per-spec Mongo database and Redis namespace, in the shape Postgres has for it. It earns its
+keep against a real server: a spec creating its tables in `public` would be working among whatever
+else lives there, and Hibernate's `create-drop` would take that with it on the way out. The workspace
+runs `postgis/postgis:latest` on 5432, which is exactly such a server.
 
 The reuse path is still the fast local loop, and still the seam CI uses to point at a service it
 provisioned. A reused server is shared, so everything below about leaving it as you found it applies
