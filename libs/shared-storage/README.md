@@ -18,6 +18,7 @@ route, a background worker or a CLI.
 ```
 com.strange.storage         ObjectStorage — the client, its lifecycle, and the buckets on it
 com.strange.storage.bucket  StorageBucket — one bucket's objects: put, get, stat, list, copy, delete
+com.strange.storage.presign URLs and forms that carry their own authorisation, for browsers
 ```
 
 ## Getting a client
@@ -73,3 +74,44 @@ A few things are worth knowing before reading the source:
 - **`deleteAll` walks its own result.** The SDK's `removeObjects` deletes nothing until the returned
   `Iterable` is consumed; a caller who ignores the return value deletes nothing and is told nothing.
   This one consumes it and returns the keys the store refused, so an empty list means everything went.
+
+## Presigned URLs
+
+A presigned URL carries its own authorisation: whoever holds it can do exactly the one thing it was
+signed for, until it expires, without ever seeing the credential. That is how an upload or a
+download stops flowing through the application.
+
+```kotlin
+avatars.presignedGet("users/42.png")                            // 15 minutes by default
+avatars.presignedGet("report.pdf", 1.hours, filename = "Q3.pdf")
+avatars.presignedPut("incoming/${'$'}uploadId")
+avatars.presignedDelete("users/42.png")
+```
+
+For a browser upload with terms attached, sign a form instead:
+
+```kotlin
+val form = avatars.presignedPost(
+    key = "users/42.png",
+    expiry = 10.minutes,
+    sizeRange = 1L..5_000_000L,
+    contentType = "image/png",
+)
+// form.url + form.fields go to the browser; it posts them, then the file part, last.
+```
+
+- **PUT signs the key and nothing else.** No size limit, no content-type limit — anyone holding the
+  URL can send a gigabyte of anything to that key. `presignedPost` is the form that can say no:
+  `sizeRange` and `contentType` become conditions inside the signed policy, and the store rejects an
+  upload that breaks them.
+- **Field order in the POST matters.** The signed fields go before the file part, so the store reads
+  the policy on the way past and refuses at the first failed condition rather than after receiving
+  the whole body.
+- **Its URL is path-style** — the endpoint with the bucket as the first path segment, which is how
+  MinIO addresses one. A deployment on virtual-host-style S3 (`bucket.s3.region.amazonaws.com`)
+  needs that URL built from its own hostname.
+- **Signing never touches the store's contents.** A URL for an object that is not there signs
+  happily and answers 404 when it is used; the only round trip signing may make is the first
+  region lookup, which is why these are `suspend`.
+- **Seven days is the ceiling**, and one second the floor — SigV4's limits. Asking for more throws
+  `InvalidExpiryException` here rather than producing a URL the store will reject.

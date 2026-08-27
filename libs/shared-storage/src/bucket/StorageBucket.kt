@@ -40,6 +40,8 @@ import kotlin.time.toKotlinInstant
 class StorageBucket internal constructor(
     internal val client: MinioAsyncClient,
     val name: String,
+    /** Where the store answers, without a trailing slash — a presigned POST needs a URL to post to. */
+    internal val endpoint: String,
 ) {
     // ─── Writes ───────────────────────────────────────────────────────────────
 

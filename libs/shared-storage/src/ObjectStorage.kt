@@ -25,6 +25,7 @@ import kotlinx.coroutines.future.await
  */
 class ObjectStorage internal constructor(
     internal val client: MinioAsyncClient,
+    internal val endpoint: String,
 ) : AutoCloseable {
     /** Every bucket this credential can see. */
     suspend fun buckets(): List<String> = client.listBuckets().await().map { it.name() }
@@ -54,7 +55,7 @@ class ObjectStorage internal constructor(
      * A handle on [name], without asking whether it exists — the check is a round trip, and every
      * operation on the handle will tell the caller soon enough.
      */
-    fun bucket(name: String): StorageBucket = StorageBucket(client, name)
+    fun bucket(name: String): StorageBucket = StorageBucket(client, name, endpoint)
 
     override fun close() = client.close()
 
@@ -67,7 +68,7 @@ class ObjectStorage internal constructor(
                     .credentials(config.accessKey, config.secretKey)
                     .apply { config.region?.let { region(it) } }
                     .build()
-            return ObjectStorage(client)
+            return ObjectStorage(client, config.endpoint.trimEnd('/'))
         }
     }
 }
