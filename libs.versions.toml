@@ -34,6 +34,7 @@ ktorfit = "2.7.5"
 koin = "4.2.2"
 koin-compiler = "1.0.1"
 kotest = "6.2.2"
+testcontainers = "1.21.4"
 lettuce = "7.7.0.RELEASE"
 minio = "9.0.3"
 kafka = "4.3.1"
@@ -166,6 +167,8 @@ kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", versio
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-ktor = { module = "io.kotest:kotest-assertions-ktor", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-mongodb = { module = "org.testcontainers:mongodb", version.ref = "testcontainers" }
 
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 minio = { module = "io.minio:minio", version.ref = "minio" }

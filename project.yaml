@@ -11,6 +11,7 @@ modules:
   - libs/shared-mongo
   - libs/shared-redis
   - libs/shared-storage
+  - libs/shared-testing
   - plugins/openapi
 
 plugins:

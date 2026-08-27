@@ -33,6 +33,7 @@ Alongside it are the shared service libraries, which have nothing to do with the
 | `libs/shared-mongo` | Session-aware collection extensions, keyset pagination, a CRUD repository and the write flow over it, and a coroutine GridFS bucket |
 | `libs/shared-redis` | A namespaced connection over Lettuce owning one `Json`, and the four kotlinx-serialized things built on one: a typed cache, a lock, topics, and streams with consumer groups |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets and objects as coroutines, and presigned URLs and upload forms for browsers |
+| `libs/shared-testing` | What the integration specs run against: a backing service reused from the environment when one is named, and started as a container for the run when it is not |
 
 ## Getting started
 
@@ -58,5 +59,6 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/shared-mongo/README.md`](libs/shared-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
 | [`libs/shared-redis/README.md`](libs/shared-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
 | [`libs/shared-storage/README.md`](libs/shared-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
+| [`libs/shared-testing/README.md`](libs/shared-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |
 | [`plugins/openapi/README.md`](plugins/openapi/README.md) | The build plugin: settings, and what each choice needs on the consuming module's classpath |
 | [`AGENTS.md`](AGENTS.md) | Build commands, module layout, and the conventions this repo holds itself to |
