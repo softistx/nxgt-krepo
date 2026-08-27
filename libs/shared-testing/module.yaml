@@ -1,0 +1,16 @@
+product: jvm/lib
+
+dependencies:
+  # GenericContainer and the wait strategies are all over this module's public API
+  - $libs.testcontainers: exported
+  # One entry per backend a service is declared for. These are heavy and specific — a module
+  # depending on this for Mongo has no use for the Kafka one — but they are test-only wherever this
+  # module is used, so the weight lands on a test classpath and never on a published artifact.
+  - $libs.testcontainers.mongodb: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # Testcontainers logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
