@@ -150,6 +150,32 @@ jpa.removeById<Order>(id)    // answers whether there was anything there
 Two of these in a row are two transactions. Anything that touches the database twice belongs in a
 `transaction { }`.
 
+## Which database
+
+Postgres, MySQL and DB2. Hibernate Reactive names none of them: it picks a driver at runtime from
+the URI scheme, so the only thing that changes is `postgresql://`, `mysql://` or `db2://` — the
+entity, the session, the transaction and the HQL are the same, which is what `MySqlTest` exists to
+show rather than assert in prose.
+
+All three drivers are declared `runtime-only`. They reach an application's runtime classpath and are
+kept off its compile classpath, which is right twice over: nothing in this library references a
+driver class, and a `PgBuilder` in application code is a second connection pool nobody is managing.
+Two unused drivers cost about a megabyte and load no class. `DriversTest` asserts all three are
+actually there, since a dependency scope is a claim about a classpath that nothing else would notice
+being wrong.
+
+**MySQL 8.4 needs one thing said out loud.** Every account it creates uses `caching_sha2_password`,
+whose first authentication requires either TLS the client trusts or the server's RSA public key.
+A reactive client given neither drops the connection, and the error —
+`ClosedConnectionException: Failed to read any response from the server` — reads like a network
+fault. It is an authentication one. `mysqlContainer()` in `shared-testing` moves its `root` account
+onto `mysql_native_password` for exactly this reason, and says so at the point it does it.
+
+DB2 is shipped and unproven here: the driver is on the classpath and `DriversTest` covers that, but
+no spec has run against a DB2 server, because `icr.io/db2_community/db2` wants a privileged container
+and several gigabytes and this repo does not put a machine under that unasked. Point `DB2_TEST_URI`
+at one and the same specs are what should run.
+
 ## Identifiers
 
 `@GeneratedValue` works as it does anywhere: `AUTO` and `SEQUENCE` both use a sequence on Postgres,
@@ -216,7 +242,7 @@ nor a Koin `single { }` does.
 
 Every spec runs against a real Postgres: `POSTGRES_TEST_URI` with `POSTGRES_TEST_USER` and
 `POSTGRES_TEST_PASSWORD` when one is already up, a `postgres:18-alpine` container for the run
-otherwise, and skipped when neither. A mock cannot show a session used from the wrong thread, which
+otherwise, and skipped when neither. MySQL is the same with `MYSQL_TEST_*` and `mysql:8.4`. A mock cannot show a session used from the wrong thread, which
 is the failure this library exists to prevent.
 
 **Each spec gets a schema of its own**, created before it and dropped `cascade` after it, with

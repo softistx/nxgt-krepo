@@ -35,6 +35,9 @@ test-dependencies:
   - //libs/shared-kafka
   - //libs/shared-storage
   - //libs/shared-jpa
+  # the JpaConnection spec creates and drops its own schema with the Postgres client directly;
+  # shared-jpa keeps its three drivers runtime-only, so nothing inherits a compile classpath for one
+  - $libs.vertx.pg.client
   # and the servers they connect to, started for the run
   - //libs/shared-testing
   - $libs.ktor.server.di

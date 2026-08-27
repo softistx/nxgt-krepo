@@ -1,8 +1,10 @@
 package com.strange.testing.containers
 
+import com.github.dockerjava.api.command.InspectContainerResponse
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.MinIOContainer
 import org.testcontainers.containers.MongoDBContainer
+import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.RabbitMQContainer
 import org.testcontainers.containers.wait.strategy.Wait
@@ -213,3 +215,144 @@ fun postgresContainer(image: String = POSTGRES_IMAGE): ContainerService<PostgreS
     )
 
 private const val POSTGRES_PORT = 5432
+
+/** MySQL 8.4 is the current LTS, and the one a deployment is most likely to be on. */
+private const val MYSQL_IMAGE = "mysql:8.4"
+
+/**
+ * Where a MySQL is, what opens it, and which database to open.
+ *
+ * [uri] is the reactive spelling, `mysql://host:port/database` — the Vert.x client's, not JDBC's.
+ */
+data class MysqlEndpoint(
+    val uri: String,
+    val username: String,
+    val password: String,
+    val database: String,
+)
+
+/**
+ * MySQL, with the credentials the container was started with.
+ *
+ * The same three-variable override rule as Postgres, for the same reason: a URI without credentials
+ * would send a run at somebody's real server with no way in.
+ *
+ * **`root`, and only because a spec has to create a database of its own.** The container's ordinary
+ * user has rights on one database and no right to make another, and a spec that instead used the
+ * database it was given would be one `create-drop` away from emptying it — which is exactly the
+ * accident the per-spec database exists to prevent. On a server named through the environment the
+ * account has to be able to `create database` for the same reason, and failing loudly when it cannot
+ * is the right outcome.
+ */
+fun mysqlContainer(image: String = MYSQL_IMAGE): ContainerService<MySQLContainer<*>, MysqlEndpoint> =
+    ContainerService.declare(
+        name = "mysql",
+        reusing = "MYSQL_TEST_URI, MYSQL_TEST_USER and MYSQL_TEST_PASSWORD",
+        fromEnvironment = {
+            val uri = System.getenv("MYSQL_TEST_URI")
+            val user = System.getenv("MYSQL_TEST_USER")
+            val password = System.getenv("MYSQL_TEST_PASSWORD")
+            if (uri.isNullOrBlank() || user.isNullOrBlank() || password.isNullOrBlank()) {
+                null
+            } else {
+                MysqlEndpoint(uri, user, password, uri.substringAfterLast('/').substringBefore('?'))
+            }
+        },
+        create = { ReactiveMySQLContainer(DockerImageName.parse(image).asCompatibleSubstituteFor("mysql")) },
+        fromContainer = {
+            MysqlEndpoint(
+                uri = "mysql://${it.host}:${it.getMappedPort(MYSQL_PORT)}/${it.databaseName}",
+                username = "root",
+                password = it.password,
+                database = it.databaseName,
+            )
+        },
+    )
+
+private const val MYSQL_PORT = 3306
+
+/**
+ * A MySQL container that waits on the log rather than on a JDBC connection.
+ *
+ * `JdbcDatabaseContainer.waitUntilContainerStarted` decides the container is up by opening a JDBC
+ * connection to it, which needs `com.mysql.cj.jdbc.Driver` on the classpath. Nothing in this repo
+ * speaks JDBC — `shared-jpa` is reactive from the driver up — so that probe throws *"Could not get
+ * JDBC Driver"*, `ContainerService` catches it, and every MySQL spec skips without saying why.
+ *
+ * `PostgreSQLContainer` overrides the same method for its own reasons, which is why Postgres has
+ * never needed this. Overriding it here costs six lines against a two-megabyte driver added solely
+ * to answer "are you listening yet". The log line is MySQL's own, and it says it twice: once for the
+ * initialisation server it starts to build the data directory, and once for the real one.
+ */
+private class ReactiveMySQLContainer(
+    image: DockerImageName,
+) : MySQLContainer<ReactiveMySQLContainer>(image) {
+    init {
+        waitingFor(Wait.forLogMessage(".*ready for connections.*", 2))
+        // Enables a plugin 8.4 ships disabled. It is not the default for anything here — it is what
+        // makes the ALTER below legal, and that ALTER is the point.
+        withCommand("--mysql-native-password=ON")
+    }
+
+    override fun waitUntilContainerStarted() {
+        waitStrategy.waitUntilReady(this)
+    }
+
+    /**
+     * Moves `root` onto `mysql_native_password`, because the reactive client cannot authenticate
+     * against the default.
+     *
+     * MySQL 8.4 creates every account with `caching_sha2_password`. Its first authentication for a
+     * given account is a *full* one, which sends the password in a form that requires either TLS the
+     * client trusts or the server's RSA public key — and the container's certificate is self-signed,
+     * so a client that has not been told to trust it drops the connection. The symptom is
+     * `ClosedConnectionException: Failed to read any response from the server`, which reads like a
+     * network fault and is an authentication one.
+     *
+     * Done through `mysql` inside the container rather than over the wire, precisely because nothing
+     * here can get a connection yet. The retry is because MySQL logs *ready for connections* twice
+     * during initialisation and is briefly not, in fact, ready.
+     */
+    override fun containerIsStarted(info: InspectContainerResponse) {
+        val alter = "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '$password'"
+        repeat(ATTEMPTS) { attempt ->
+            val result = runCatching { execInContainer("mysql", "-uroot", "-p$password", "-e", alter) }
+            if (result.getOrNull()?.exitCode == 0) return
+            check(attempt < ATTEMPTS - 1) { "could not switch the MySQL root account to mysql_native_password" }
+            Thread.sleep(INTERVAL_MILLIS)
+        }
+    }
+
+    private companion object {
+        const val ATTEMPTS = 60
+        const val INTERVAL_MILLIS = 500L
+    }
+}
+
+/**
+ * Where a DB2 is, if anyone said — and null if nobody did.
+ *
+ * **The one backend here with no container fallback.** `icr.io/db2_community/db2` needs a privileged
+ * container, several gigabytes and minutes to become ready, and this repo's rule is that a test run
+ * does not put the machine under that kind of load unasked. So DB2 is reused or skipped, never
+ * started: `shared-jpa` ships the driver, and the specs that would exercise it run only where a
+ * server is named.
+ */
+data class Db2Endpoint(
+    val uri: String,
+    val username: String,
+    val password: String,
+    val database: String,
+)
+
+/** The DB2 named by `DB2_TEST_URI`, `DB2_TEST_USER` and `DB2_TEST_PASSWORD`, or null. */
+fun db2Endpoint(): Db2Endpoint? {
+    val uri = System.getenv("DB2_TEST_URI")
+    val user = System.getenv("DB2_TEST_USER")
+    val password = System.getenv("DB2_TEST_PASSWORD")
+    return if (uri.isNullOrBlank() || user.isNullOrBlank() || password.isNullOrBlank()) {
+        null
+    } else {
+        Db2Endpoint(uri, user, password, uri.substringAfterLast('/').substringBefore('?'))
+    }
+}

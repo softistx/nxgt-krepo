@@ -9,9 +9,21 @@ dependencies:
   # reason. Leaving them transitive compiles — and leaves the IDE unable to resolve half this file.
   - $libs.hibernate.core: exported
   - $libs.jakarta.persistence: exported
-  # The driver. Hibernate Reactive names no database of its own — this is what makes it Postgres,
-  # and it carries com.ongres.scram:scram-client, which SASL authentication needs.
-  - $libs.vertx.pg.client: exported
+  # `Jpa.connect` takes a Vert.x and `Jpa` holds one, so this is part of the API and not an
+  # implementation detail that happens to arrive with a driver.
+  - $libs.vertx.core: exported
+
+  # The drivers, all three of them, and none on anyone's compile classpath. Hibernate Reactive names
+  # no database of its own: it picks a driver at runtime from the URI scheme, and nothing in this
+  # module's source references one. `runtime-only` is what says that — they reach an application's
+  # runtime classpath and cannot be coded against through this library, which is right, because a
+  # `PgBuilder` in application code is a second connection pool nobody is managing.
+  #
+  # All three rather than one, because which database this is belongs to the deployment, not to the
+  # library. Two unused drivers cost about a megabyte and load no class.
+  - $libs.vertx.pg.client: runtime-only
+  - $libs.vertx.mysql.client: runtime-only
+  - $libs.vertx.db2.client: runtime-only
   - $libs.kotlinx.coroutines.core: exported
   # CloseGuard: the factory is closed by whoever built it, and by a DI container too
   - //libs/shared-common
@@ -23,6 +35,11 @@ test-dependencies:
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
+  # The harness creates and drops each spec's schema with the Postgres client directly, which the
+  # runtime-only scope above deliberately does not put on a compile classpath.
+  - $libs.vertx.pg.client
+  # and the MySQL one, for the spec that proves this library is not Postgres-only
+  - $libs.vertx.mysql.client
   # Hibernate and Vert.x both log through SLF4J; a no-op provider keeps the test output readable
   - $libs.slf4j.nop
 
