@@ -1,5 +1,6 @@
 package com.strange.jpa
 
+import com.strange.testing.containers.ContainerService
 import com.strange.testing.containers.MysqlEndpoint
 import com.strange.testing.containers.mysqlContainer
 import io.vertx.core.Vertx
@@ -28,8 +29,26 @@ internal object MySqlTestDatabase {
     val endpoint: MysqlEndpoint get() = requireNotNull(mysql.endpoint) { mysql.describe() }
 
     /** Whether a server answered — checked once, so a machine without one skips instead of hanging. */
-    val available: Boolean by lazy {
-        mysql.available && runCatching { runBlocking { withClient(endpoint.uri) { it.ask("select 1") } } }.isSuccess
+    val available: Boolean get() = probe == null
+
+    /**
+     * Why this spec is skipped, or `null` when it is not.
+     *
+     * A skip with no reason has cost an afternoon twice here: a container that timed out under load
+     * and a machine without Docker read identically. [ContainerService.describe] answers the first
+     * half and this answers the second, because a server can be reachable and still refuse the
+     * credentials, and the probe below swallows that.
+     */
+    val skip: String? get() = probe
+
+    private val probe: String? by lazy {
+        if (!mysql.available) {
+            mysql.describe()
+        } else {
+            runCatching { runBlocking { withClient(endpoint.uri) { it.ask("select 1") } } }
+                .exceptionOrNull()
+                ?.let { "mysql: ${endpoint.uri} answered no query — $it" }
+        }
     }
 
     /**

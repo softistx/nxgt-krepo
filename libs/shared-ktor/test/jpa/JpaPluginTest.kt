@@ -126,6 +126,47 @@ class JpaPluginTest :
             }
         }
 
+        feature("a plugin given packages instead of classes").config(enabled = postgres.available) {
+            scenario("maps what the scan found and serves through it") {
+                testApplication {
+                    application {
+                        install(JpaConnection) {
+                            config = config()
+                            packages("com.strange.ktor.jpa")
+                        }
+                        routing {
+                            get("/") {
+                                call.respondText(
+                                    call.jpa.transaction { session ->
+                                        session.persist(Note(2, "scanned"))
+                                        session.get<Note>(2).text
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    client.get("/").bodyAsText() shouldBe "scanned"
+                }
+            }
+
+            scenario("fails the install when a package holds no entity, rather than starting empty") {
+                val failure =
+                    shouldThrow<IllegalStateException> {
+                        testApplication {
+                            application {
+                                install(JpaConnection) {
+                                    config = config()
+                                    packages("com.strange.ktor.redis")
+                                }
+                            }
+                            startApplication()
+                        }
+                    }
+
+                failure.message shouldContain "com.strange.ktor.redis"
+            }
+        }
+
         feature("a factory made injectable").config(enabled = postgres.available) {
             scenario("is the one the plugin built, not a second one") {
                 lateinit var injected: Jpa
