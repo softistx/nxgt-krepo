@@ -14,6 +14,7 @@ import com.strange.kafka.KafkaConfig
 import com.strange.koin.amqp.amqpModule
 import com.strange.koin.i18n.messagesModule
 import com.strange.koin.jpa.jpaModule
+import com.strange.koin.jpa.jpaScanModule
 import com.strange.koin.kafka.kafkaModule
 import com.strange.koin.mongo.mongoModule
 import com.strange.koin.redis.redisModule
@@ -29,6 +30,7 @@ import com.strange.testing.containers.rabbitContainer
 import com.strange.testing.containers.redisContainer
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import kotlinx.coroutines.flow.firstOrNull
@@ -104,6 +106,33 @@ class ModulesTest :
                 app.close()
 
                 jpa.isOpen shouldBe false
+            }
+        }
+
+        feature("the JPA module given a package").config(enabled = postgres.available) {
+            scenario("finds the entity on the classpath rather than being told it") {
+                val app =
+                    koinApplication {
+                        modules(
+                            jpaScanModule(
+                                JpaConfig(
+                                    uri = postgres.endpoint!!.uri,
+                                    username = postgres.endpoint!!.username,
+                                    password = postgres.endpoint!!.password,
+                                ),
+                                "com.strange.koin",
+                            ),
+                        )
+                    }
+                val jpa = app.koin.get<Jpa>()
+
+                // Entry was never named here. The metamodel is what the scan produced, and asking it
+                // rather than querying keeps this scenario off the server's schema, as the module's
+                // other JPA scenario is careful to stay.
+                jpa.factory.metamodel.entities
+                    .map { it.name } shouldContain "Entry"
+
+                app.close()
             }
         }
 
