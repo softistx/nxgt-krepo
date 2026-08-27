@@ -1,5 +1,8 @@
 package com.strange.storage
 
+import com.strange.storage.bucket.StorageBucket
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -42,4 +45,17 @@ internal object MinioTestServer {
     fun bucketName(): String = "shared-storage-test-${buckets.incrementAndGet()}-${System.nanoTime()}"
 
     suspend fun withStorage(block: suspend (ObjectStorage) -> Unit) = connect().use { block(it) }
+
+    /** A bucket of its own, emptied and removed when [block] returns — S3 will not delete a full one. */
+    suspend fun withBucket(block: suspend (StorageBucket) -> Unit) =
+        withStorage { storage ->
+            val name = bucketName()
+            val bucket = storage.ensureBucket(name)
+            try {
+                block(bucket)
+            } finally {
+                bucket.deleteAll(bucket.list().map { it.key }.toList())
+                storage.deleteBucket(name)
+            }
+        }
 }
