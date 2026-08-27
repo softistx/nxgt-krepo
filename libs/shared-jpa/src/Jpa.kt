@@ -91,6 +91,7 @@ class Jpa internal constructor(
         ): Jpa =
             withContext(Dispatchers.IO) {
                 require(entities.isNotEmpty()) { "Jpa.connect needs at least one entity class" }
+                rejectUuidIdentifiers(entities)
 
                 val own = vertx == null
                 val instance = vertx ?: Vertx.vertx()

@@ -15,6 +15,12 @@ import org.hibernate.reactive.stage.Stage
  * but the driver's, and it is the price of never parking a thread on a query. Work that blocks —
  * a file, an HTTP call, anything CPU-bound — belongs outside the block, or inside a
  * `withContext(Dispatchers.IO)` that does not touch the session.
+ *
+ * **Nothing is flushed here.** A session flushes at the end of a unit of work if and only if there
+ * is a transaction, so a `persist` or a change to a loaded entity inside this block is discarded
+ * without a word when the block returns. That is Hibernate's rule and it is quiet enough to be worth
+ * repeating: this is for reads. Use [transaction] to write, or call `session.flush().await()` and
+ * accept that each statement is then its own transaction.
  */
 suspend fun <T> Jpa.session(block: suspend (Stage.Session) -> T): T {
     val caller = callerContext()
