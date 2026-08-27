@@ -5,6 +5,7 @@ modules:
   - libs/openapi-generator
   - libs/shared-mongo
   - libs/shared-redis
+  - libs/shared-storage
   - plugins/openapi
 
 plugins:
