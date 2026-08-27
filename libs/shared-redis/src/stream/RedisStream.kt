@@ -2,6 +2,7 @@ package com.strange.redis.stream
 
 import com.strange.redis.Redis
 import com.strange.redis.RedisValueException
+import com.strange.redis.codec.JsonValueCodec
 import com.strange.redis.codec.ValueCodec
 import io.lettuce.core.Consumer
 import io.lettuce.core.Limit
@@ -17,6 +18,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.isActive
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -31,7 +35,7 @@ import io.lettuce.core.StreamMessage as LettuceStreamMessage
  * it, and [claimStale] is how the next consumer picks it up.
  *
  * ```kotlin
- * val orders = RedisStream(redis, "orders", ValueCodec.json<OrderEvent>(), maxLength = 100_000)
+ * val orders = redis.stream<OrderEvent>("orders", maxLength = 100_000)
  * orders.append(OrderEvent.Placed(id))
  * orders.process(group = "billing", consumer = "worker-1") { event -> charge(event) }
  * ```
@@ -47,6 +51,15 @@ class RedisStream<T>(
     private val codec: ValueCodec<T>,
     private val maxLength: Long? = null,
 ) {
+    /** The same stream, named by its serializer — for a call site whose `T` cannot be reified. */
+    constructor(
+        redis: Redis,
+        name: String,
+        serializer: KSerializer<T>,
+        maxLength: Long? = null,
+        json: Json = redis.json,
+    ) : this(redis, name, JsonValueCodec(json, serializer), maxLength)
+
     val key: String get() = redis.key("stream", name)
 
     /** Appends [value] and answers with the id the stream gave it. */
@@ -204,3 +217,19 @@ class RedisStream<T>(
         const val FIELD = "value"
     }
 }
+
+/**
+ * A stream of `T`, serialized with kotlinx.serialization through this connection's `Json`.
+ *
+ * ```kotlin
+ * val orders = redis.stream<OrderEvent>("orders", maxLength = 100_000)
+ * ```
+ *
+ * [maxLength] is the bound every [RedisStream.append] trims to, approximately — without one the
+ * stream keeps every entry ever appended, which is a decision rather than a default.
+ */
+inline fun <reified T> Redis.stream(
+    name: String,
+    maxLength: Long? = null,
+    json: Json = this.json,
+): RedisStream<T> = RedisStream(this, name, ValueCodec.json<T>(json), maxLength)

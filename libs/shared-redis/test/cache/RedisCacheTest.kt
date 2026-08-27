@@ -26,7 +26,7 @@ class RedisCacheTest :
         feature("a cached value").config(enabled = RedisTestServer.available) {
             scenario("it comes back as the type that was put in") {
                 RedisTestServer.withRedis { redis ->
-                    val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>())
+                    val sessions = redis.cache<Session>("sessions")
                     val session = Session("ada", listOf("admin"))
 
                     sessions.put("s1", session)
@@ -39,7 +39,7 @@ class RedisCacheTest :
 
             scenario("many at once is one round trip, and misses simply are not there") {
                 RedisTestServer.withRedis { redis ->
-                    val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>())
+                    val sessions = redis.cache<Session>("sessions")
                     sessions.putAll(mapOf("s1" to Session("ada"), "s2" to Session("grace")))
 
                     sessions.getAll(listOf("s1", "missing", "s2")) shouldBe
@@ -52,7 +52,7 @@ class RedisCacheTest :
         feature("expiry").config(enabled = RedisTestServer.available) {
             scenario("the cache's default TTL is applied to what it writes") {
                 RedisTestServer.withRedis { redis ->
-                    val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>(), ttl = 30.minutes)
+                    val sessions = redis.cache<Session>("sessions", ttl = 30.minutes)
                     sessions.put("s1", Session("ada"))
 
                     sessions.expiresIn("s1")!! shouldBeLessThanOrEqualTo 30.minutes
@@ -61,7 +61,7 @@ class RedisCacheTest :
 
             scenario("an entry written without one has no expiry, and neither has an absent key") {
                 RedisTestServer.withRedis { redis ->
-                    val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>())
+                    val sessions = redis.cache<Session>("sessions")
                     sessions.put("s1", Session("ada"))
 
                     sessions.expiresIn("s1") shouldBe null
@@ -71,7 +71,7 @@ class RedisCacheTest :
 
             scenario("the value is gone once the TTL passes") {
                 RedisTestServer.withRedis { redis ->
-                    val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>())
+                    val sessions = redis.cache<Session>("sessions")
                     sessions.put("s1", Session("ada"), ttl = 150.milliseconds)
 
                     sessions.get("s1") shouldBe Session("ada")
@@ -84,7 +84,7 @@ class RedisCacheTest :
         feature("getOrLoad").config(enabled = RedisTestServer.available) {
             scenario("it loads once and then stops loading") {
                 RedisTestServer.withRedis { redis ->
-                    val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>())
+                    val sessions = redis.cache<Session>("sessions")
                     val loads = AtomicInteger()
 
                     repeat(3) {
@@ -97,7 +97,7 @@ class RedisCacheTest :
 
             scenario("concurrent misses all load — it is a cache, not a lock") {
                 RedisTestServer.withRedis { redis ->
-                    val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>())
+                    val sessions = redis.cache<Session>("sessions")
                     val loads = AtomicInteger()
 
                     coroutineScope {
@@ -119,7 +119,7 @@ class RedisCacheTest :
         feature("invalidation").config(enabled = RedisTestServer.available) {
             scenario("one entry, and then all of them") {
                 RedisTestServer.withRedis { redis ->
-                    val sessions = RedisCache(redis, "sessions", ValueCodec.json<Session>())
+                    val sessions = redis.cache<Session>("sessions")
                     val flags = RedisCache(redis, "flags", ValueCodec.string)
                     sessions.putAll(mapOf("s1" to Session("ada"), "s2" to Session("grace")))
                     flags.put("beta", "on")

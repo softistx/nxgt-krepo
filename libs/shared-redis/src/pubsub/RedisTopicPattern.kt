@@ -1,18 +1,22 @@
 package com.strange.redis.pubsub
 
 import com.strange.redis.Redis
+import com.strange.redis.codec.JsonValueCodec
 import com.strange.redis.codec.ValueCodec
 import io.lettuce.core.pubsub.RedisPubSubAdapter
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 /**
  * Every topic matching a glob, as one flow.
  *
  * ```kotlin
- * RedisTopicPattern(redis, "orders:*", ValueCodec.json<OrderEvent>())
+ * redis.topicPattern<OrderEvent>("orders:*")
  *     .subscribe()
  *     .collect { (channel, event) -> ... }
  * ```
@@ -29,6 +33,14 @@ class RedisTopicPattern<T>(
     val pattern: String,
     private val codec: ValueCodec<T>,
 ) {
+    /** The same subscription, named by its serializer — for a call site whose `T` cannot be reified. */
+    constructor(
+        redis: Redis,
+        pattern: String,
+        serializer: KSerializer<T>,
+        json: Json = redis.json,
+    ) : this(redis, pattern, JsonValueCodec(json, serializer))
+
     val channelPattern: String get() = redis.key("topic", pattern)
 
     fun subscribe(): Flow<TopicMessage<T>> =
@@ -56,3 +68,15 @@ class RedisTopicPattern<T>(
             }
         }
 }
+
+/**
+ * Every topic matching [pattern], carrying `T`, serialized through this connection's `Json`.
+ *
+ * ```kotlin
+ * redis.topicPattern<OrderEvent>("orders:*").subscribe().collect { (channel, event) -> ... }
+ * ```
+ */
+inline fun <reified T> Redis.topicPattern(
+    pattern: String,
+    json: Json = this.json,
+): RedisTopicPattern<T> = RedisTopicPattern(this, pattern, ValueCodec.json<T>(json))
