@@ -49,8 +49,20 @@ class Amqp internal constructor(
      *
      * On [Dispatchers.IO] because every call in this client blocks — a declare is a round trip to
      * the broker and back, however small it looks.
+     *
+     * The close is deliberately not `use`. A channel the *broker* closed — which is what a failed
+     * passive declare leaves behind — throws again when it is closed a second time, and the caller
+     * would get that exception instead of the answer it came for.
      */
-    suspend fun <T> withChannel(block: (Channel) -> T): T = withContext(Dispatchers.IO) { openChannel().use(block) }
+    suspend fun <T> withChannel(block: (Channel) -> T): T =
+        withContext(Dispatchers.IO) {
+            val channel = openChannel()
+            try {
+                block(channel)
+            } finally {
+                runCatching { channel.close() }
+            }
+        }
 
     /** Closes the connection, and with it every channel opened on it. */
     override fun close() {
