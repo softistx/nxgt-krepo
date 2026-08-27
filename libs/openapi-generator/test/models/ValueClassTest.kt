@@ -41,7 +41,7 @@ class ValueClassTest :
 
         feature("the declaration") {
             scenario("it is an inline value class over the scalar the document described") {
-                val source = render(ModelStyle.Kotlinx).getValue("com.example.api.model.OrderId")
+                val source = render(ModelStyle.Kotlinx).getValue("com.example.api.models.OrderId")
 
                 source shouldContain "@JvmInline"
                 source shouldContain "public value class OrderId"
@@ -51,20 +51,20 @@ class ValueClassTest :
             scenario("toString is the value underneath, so it works as a path or query argument") {
                 // Ktorfit converts an argument with toString, and the default would send
                 // `OrderId(value=o-1)`.
-                render(ModelStyle.Kotlinx).getValue("com.example.api.model.OrderId") shouldContain
+                render(ModelStyle.Kotlinx).getValue("com.example.api.models.OrderId") shouldContain
                     "override fun toString(): String ="
-                render(ModelStyle.Kotlinx).getValue("com.example.api.model.Attempt") shouldContain
+                render(ModelStyle.Kotlinx).getValue("com.example.api.models.Attempt") shouldContain
                     "override fun toString(): String ="
             }
         }
 
         feature("what each style adds") {
             scenario("kotlinx marks it serializable") {
-                render(ModelStyle.Kotlinx).getValue("com.example.api.model.OrderId") shouldContain "@Serializable"
+                render(ModelStyle.Kotlinx).getValue("com.example.api.models.OrderId") shouldContain "@Serializable"
             }
 
             scenario("jackson needs nothing at all: its Kotlin module binds value classes itself") {
-                val source = render(ModelStyle.Jackson).getValue("com.example.api.model.OrderId")
+                val source = render(ModelStyle.Jackson).getValue("com.example.api.models.OrderId")
 
                 source shouldContain "@JvmInline"
                 source shouldNotContain "@Serializable"
@@ -75,7 +75,7 @@ class ValueClassTest :
             scenario("it is imported and used, and no file is generated for it") {
                 val files = render(ModelStyle.Kotlinx)
 
-                files.getValue("com.example.api.model.Order") shouldContain "com.example.money.Money"
+                files.getValue("com.example.api.models.Order") shouldContain "com.example.money.Money"
                 files.keys.none { it.endsWith(".Money") } shouldBe true
             }
         }

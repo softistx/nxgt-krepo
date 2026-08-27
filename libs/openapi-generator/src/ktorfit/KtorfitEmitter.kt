@@ -15,8 +15,12 @@ import com.strange.openapi.emit.EmitException
 import com.strange.openapi.emit.EmitOptions
 import com.strange.openapi.emit.Optionality
 import com.strange.openapi.emit.SourceEmitter
+import com.strange.openapi.emit.apiExceptionFile
 import com.strange.openapi.emit.apiFile
+import com.strange.openapi.emit.apiOperationFile
 import com.strange.openapi.emit.optionalityOf
+import com.strange.openapi.emit.requireEverySchemeSatisfiable
+import com.strange.openapi.emit.requireExceptionNamesFree
 import com.strange.openapi.emit.typeNameOf
 import com.strange.openapi.models.ModelStyle
 import com.strange.openapi.models.modelFiles
@@ -34,7 +38,15 @@ public class KtorfitEmitter : SourceEmitter {
     override fun emit(
         model: ApiModel,
         options: EmitOptions,
-    ): List<FileSpec> = model.groups.map { emitGroup(it, options) } + modelFiles(model, options, STYLE)
+    ): List<FileSpec> {
+        model.requireExceptionNamesFree()
+        model.requireEverySchemeSatisfiable()
+        return model.groups.map { emitGroup(it, options) } +
+            modelFiles(model, options, STYLE) +
+            apiOperationFile(options) +
+            apiExceptionFile(model, options) +
+            listOfNotNull(apiErrorsFile(model, options), apiAuthFile(model, options))
+    }
 
     private fun emitGroup(
         group: ApiGroup,

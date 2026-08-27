@@ -41,8 +41,11 @@ public class OpenApiParser(
         // given a name and a place in `components`, so every later stage only ever sees a `$ref`.
         openApi.requireKnownKotlinExtensions()
         openApi.hoistInlineSchemas()
-        return ApiModel(groups = parseGroups(openApi), models = openApi.parseModels())
-            .also { it.requireEveryRefGenerated() }
+        return ApiModel(
+            groups = parseGroups(openApi),
+            models = openApi.parseModels(),
+            securitySchemes = openApi.parseSecuritySchemes(),
+        ).also { it.requireEveryRefGenerated() }
     }
 
     private fun parseGroups(openApi: OpenAPI): List<ApiGroup> {
@@ -57,6 +60,7 @@ public class OpenApiParser(
                         )
                 byGroup.getOrPut(groupKeyOf(operation, path)) { mutableListOf() } +=
                     Operation(
+                        id = id,
                         name = operation.extensions.kotlinName("$method $path") ?: Naming.functionName(id),
                         httpMethod = method.name,
                         path = path.trimStart('/'),
@@ -65,6 +69,8 @@ public class OpenApiParser(
                         summary = operation.summary,
                         deprecated = operation.deprecated == true,
                         deprecatedReason = operation.extensions.deprecatedReason("$method $path"),
+                        errors = openApi.parseErrorResponses(operation),
+                        security = openApi.parseSecurity(operation, "$method $path"),
                     )
             }
         }

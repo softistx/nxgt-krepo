@@ -45,6 +45,9 @@ internal fun ApiModel.requireEveryRefGenerated() {
     groups.forEach { group ->
         group.operations.forEach { operation ->
             check(operation.returnType, "${group.name}.${operation.name} returns it")
+            operation.errors.forEach { error ->
+                error.type?.let { check(it, "${group.name}.${operation.name} fails with it on ${error.status}") }
+            }
             operation.parameters.forEach { check(it.type, "${group.name}.${operation.name} takes it as '${it.name}'") }
         }
     }
