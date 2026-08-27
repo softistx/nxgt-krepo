@@ -12,7 +12,7 @@ import io.ktor.util.AttributeKey
  * The cluster configuration, in one place, reachable from a route.
  *
  * ```kotlin
- * install(KafkaPlugin) { config = KafkaConfig(bootstrap = System.getenv("KAFKA_BOOTSTRAP")) }
+ * install(KafkaCluster) { config = KafkaConfig(bootstrap = System.getenv("KAFKA_BOOTSTRAP")) }
  *
  * post("/orders") { call.kafka.publisher<OrderPlaced>().use { it.send("orders", order) } }
  * ```
@@ -30,21 +30,21 @@ import io.ktor.util.AttributeKey
  * it once at startup and close it on `ApplicationStopped`, the way the other plugins here do with
  * their connections.
  */
-val KafkaPlugin =
-    createApplicationPlugin(name = "Kafka", createConfiguration = ::KafkaPluginConfiguration) {
+val KafkaCluster =
+    createApplicationPlugin(name = "Kafka", createConfiguration = ::KafkaClusterConfiguration) {
         application.attributes.put(KafkaKey, Kafka(pluginConfig.config))
     }
 
-/** What [KafkaPlugin] holds. */
-class KafkaPluginConfiguration {
+/** What [KafkaCluster] holds. */
+class KafkaClusterConfiguration {
     /** Bootstrap servers, client id, the `Json` values are serialized through, and raw properties. */
     var config: KafkaConfig = KafkaConfig()
 }
 
 internal val KafkaKey = AttributeKey<Kafka>("com.strange.kafka.Kafka")
 
-/** The application's cluster, as [KafkaPlugin] configured it. */
-val Application.kafka: Kafka get() = required(KafkaKey, "KafkaPlugin")
+/** The application's cluster, as [KafkaCluster] configured it. */
+val Application.kafka: Kafka get() = required(KafkaKey, "KafkaCluster")
 
 /** The same cluster, from a route. Nothing is open yet: what you build from it, you close. */
 val ApplicationCall.kafka: Kafka get() = application.kafka

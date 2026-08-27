@@ -17,7 +17,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 
 /** One connection for the application, and channels that belong to whoever opened them. */
-class AmqpPluginTest :
+class AmqpConnectionTest :
     FeatureSpec({
 
         val broker = rabbitContainer()
@@ -26,7 +26,7 @@ class AmqpPluginTest :
             scenario("gets an open connection it can take a channel from") {
                 testApplication {
                     application {
-                        install(AmqpPlugin) { config = AmqpConfig(uri = broker.endpoint!!, connectionName = "spec") }
+                        install(AmqpConnection) { config = AmqpConfig(uri = broker.endpoint!!, connectionName = "spec") }
                         routing {
                             get("/") {
                                 val queue = call.amqp.withChannel { it.queueDeclare().queue }
@@ -42,7 +42,7 @@ class AmqpPluginTest :
                 lateinit var captured: Amqp
                 testApplication {
                     application {
-                        install(AmqpPlugin) { config = AmqpConfig(uri = broker.endpoint!!) }
+                        install(AmqpConnection) { config = AmqpConfig(uri = broker.endpoint!!) }
                         routing {
                             get("/") {
                                 captured = call.amqp
@@ -66,7 +66,7 @@ class AmqpPluginTest :
                     application {
                         val failure = shouldThrow<IllegalStateException> { amqp }
 
-                        failure.message shouldContain "AmqpPlugin"
+                        failure.message shouldContain "AmqpConnection"
                     }
 
                     startApplication()

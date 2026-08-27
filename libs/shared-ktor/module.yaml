@@ -7,9 +7,9 @@ dependencies:
   # One entry per integration, and every one of them compile-only.
   #
   # These are exposed by this module's API — `call.redis` returns a `Redis` — and they still do not
-  # belong on a consumer's runtime classpath. An application that installs RedisPlugin already
+  # belong on a consumer's runtime classpath. An application that installs RedisConnection already
   # depends on shared-redis, because RedisConfig is the only way to configure the plugin at all; and
-  # an application that installs only I18nPlugin never loads a class from any of the others, so
+  # an application that installs only I18n never loads a class from any of the others, so
   # nothing is missing at runtime. That is what keeps one module from handing every app every driver.
   #
   # Verified with `./kotlin show dependencies -m shared-ktor`: a compile-only entry is in the COMPILE

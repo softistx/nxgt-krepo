@@ -5,7 +5,7 @@ import com.strange.ktor.required
 import io.ktor.server.application.ApplicationCall
 
 /**
- * The translator for this request, as [I18nPlugin] resolved it.
+ * The translator for this request, as [I18n] resolved it.
  *
  * Throws when the plugin is not installed, rather than quietly answering in English — a service
  * whose translations silently stopped negotiating is worse off than one that fails on the first
@@ -14,7 +14,7 @@ import io.ktor.server.application.ApplicationCall
 val ApplicationCall.translator: Translator
     get() =
         attributes.getOrNull(TranslatorKey)
-            ?: application.required(TranslatorKey, "I18nPlugin")
+            ?: application.required(TranslatorKey, "I18n")
 
 /** The message for [key] in this request's locale. */
 fun ApplicationCall.translate(
