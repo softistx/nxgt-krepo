@@ -4,14 +4,33 @@ dependencies:
   # ApplicationCall and the plugin API are all over this module's public surface
   - $ktor.server.core: exported
 
-  # One entry per integration. A backend's own library goes in `compile-only` unless the plugin's
-  # public API exposes it: an app installing the Redis plugin already depends on shared-redis, and
-  # an app installing only the i18n plugin must not inherit Lettuce for it. Verified with
-  # `./kotlin show dependencies -m shared-ktor` — a compile-only entry is in the COMPILE scope and
-  # absent from RUNTIME.
-  - //libs/shared-i18n: exported
+  # One entry per integration, and every one of them compile-only.
+  #
+  # These are exposed by this module's API — `call.redis` returns a `Redis` — and they still do not
+  # belong on a consumer's runtime classpath. An application that installs RedisPlugin already
+  # depends on shared-redis, because RedisConfig is the only way to configure the plugin at all; and
+  # an application that installs only I18nPlugin never loads a class from any of the others, so
+  # nothing is missing at runtime. That is what keeps one module from handing every app every driver.
+  #
+  # Verified with `./kotlin show dependencies -m shared-ktor`: a compile-only entry is in the COMPILE
+  # scope and absent from RUNTIME.
+  - //libs/shared-i18n: compile-only
+  - //libs/shared-redis: compile-only
+  - //libs/shared-mongo: compile-only
+  - //libs/shared-amqp: compile-only
+  - //libs/shared-kafka: compile-only
+  - //libs/shared-storage: compile-only
 
 test-dependencies:
+  # the specs run the plugins for real, so here the libraries are on the runtime classpath too
+  - //libs/shared-i18n
+  - //libs/shared-redis
+  - //libs/shared-mongo
+  - //libs/shared-amqp
+  - //libs/shared-kafka
+  - //libs/shared-storage
+  # and the servers they connect to, started for the run
+  - //libs/shared-testing
   - $ktor.server.testHost
   - $ktor.server.netty
   - $libs.kotest.runner.junit5

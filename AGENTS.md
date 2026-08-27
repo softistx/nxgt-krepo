@@ -18,7 +18,7 @@ What exists:
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
-| `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: today `com.strange.ktor.i18n`, one negotiated locale per request |
+| `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
@@ -194,15 +194,23 @@ is kotlinx-and-nothing-else — putting message formatting in it would make `sha
 formatting library it will never call. The same test applies to the next candidate: if it brings
 a dependency, it brings that dependency to everything.
 
-Framework integrations go in `libs/shared-ktor`, **one package per integration** —
-`com.strange.ktor.i18n` today, with Redis, Mongo, Kafka and AMQP to follow. An application wires
-them together in one `install` block and should read them from one dependency.
+Framework integrations go in `libs/shared-ktor`, **one package per integration** — i18n, Redis,
+Mongo, AMQP, Kafka and object storage. An application wires them together in one `install` block and
+should read them from one dependency.
 
-One module holding all of them stays honest through two rules. A backend's own library is declared
-`compile-only` unless the plugin's public API exposes it, so an app installing only the i18n plugin
-does not inherit Lettuce — verified with `./kotlin show dependencies -m shared-ktor`, where a
-compile-only entry sits in the COMPILE scope and is absent from RUNTIME. And integration specs gate
-on server availability as everywhere else here, so the module tests green with nothing running.
+**Every backend is declared `compile-only`, including the ones this module's API returns.**
+`call.redis` hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath, which
+sounds wrong and is not: an application that installs `RedisPlugin` already depends on
+`shared-redis`, because `RedisConfig` is the only way to configure the plugin at all — and one that
+installs only `I18nPlugin` never loads a class from any of the others, so nothing is missing when
+nothing is linked. It is self-enforcing rather than a convention to remember. Verified with
+`./kotlin show dependencies -m shared-ktor`: a compile-only entry sits in the COMPILE scope and is
+absent from RUNTIME.
+
+The tests are the other half: they need the real libraries at runtime, so `test-dependencies`
+carries each of them again at normal scope, plus `//libs/shared-testing` for the servers to talk to.
+Every plugin is specced against a real backend, because "one connection, closed on stop" is not
+observable from a mock.
 
 The plugins are not in the libraries they wrap because `shared-i18n` and `shared-redis` have callers
 with no server in them — a worker, a CLI, a consumer. The library knows the backend, `shared-ktor`
@@ -449,7 +457,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-common/README.md` | What belongs in the shared module, and which of the three concurrency types a given caller wants |
   | `libs/shared-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
   | `libs/shared-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
-  | `libs/shared-ktor/README.md` | The Ktor integrations — how one module holds them without becoming a fat dependency, and where each plugin reads its input from |
+  | `libs/shared-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
   | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
