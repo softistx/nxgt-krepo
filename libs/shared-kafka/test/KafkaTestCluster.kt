@@ -32,6 +32,9 @@ import java.util.concurrent.atomic.AtomicInteger
 internal object KafkaTestCluster {
     val bootstrap: String = System.getenv("KAFKA_TEST_BOOTSTRAP") ?: "kafka1:9092,kafka2:9094,kafka3:9096"
 
+    /** The cluster handle the specs build their clients from. */
+    fun kafka(properties: Map<String, String> = emptyMap()): Kafka = Kafka(KafkaConfig(bootstrap, properties = properties))
+
     private val counter = AtomicInteger()
 
     /** Fails fast rather than retrying into the spec's timeout when the cluster is not there. */
