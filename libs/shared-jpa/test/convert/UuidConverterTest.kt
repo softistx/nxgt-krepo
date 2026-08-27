@@ -5,7 +5,6 @@ import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.future.await
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -27,9 +26,9 @@ class UuidConverterTest :
                 JpaTestDatabase.withJpa(Stamped::class) { jpa ->
                     val reference = Uuid.parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
-                    jpa.transaction { it.persist(Stamped(1, reference = reference)).await() }
+                    jpa.transaction { it.persist(Stamped(1, reference = reference)) }
 
-                    jpa.session { it.find(Stamped::class.java, 1L).await() }.reference shouldBe reference
+                    jpa.session { it.get<Stamped>(1L) }.reference shouldBe reference
                 }
             }
         }

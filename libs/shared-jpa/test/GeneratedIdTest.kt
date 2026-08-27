@@ -1,6 +1,5 @@
 package com.strange.jpa
 
-import com.strange.jpa.query.find
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
@@ -8,7 +7,6 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.future.await
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -21,7 +19,7 @@ class GeneratedIdTest :
             scenario("AUTO") {
                 JpaTestDatabase.withJpa(AutoId::class) { jpa ->
                     val entity = AutoId(name = "auto")
-                    jpa.transaction { it.persist(entity).await() }
+                    jpa.transaction { it.persist(entity) }
 
                     entity.id shouldNotBe 0L
                     jpa.session { it.find<AutoId>(entity.id) }?.name shouldBe "auto"
@@ -31,7 +29,7 @@ class GeneratedIdTest :
             scenario("SEQUENCE") {
                 JpaTestDatabase.withJpa(SequenceId::class) { jpa ->
                     val entity = SequenceId(name = "sequence")
-                    jpa.transaction { it.persist(entity).await() }
+                    jpa.transaction { it.persist(entity) }
 
                     entity.id shouldNotBe 0L
                 }
@@ -40,7 +38,7 @@ class GeneratedIdTest :
             scenario("IDENTITY") {
                 JpaTestDatabase.withJpa(IdentityId::class) { jpa ->
                     val entity = IdentityId(name = "identity")
-                    jpa.transaction { it.persist(entity).await() }
+                    jpa.transaction { it.persist(entity) }
 
                     entity.id shouldNotBe 0L
                 }
@@ -49,7 +47,7 @@ class GeneratedIdTest :
             scenario("UUID, as java.util.UUID") {
                 JpaTestDatabase.withJpa(JavaUuidId::class) { jpa ->
                     val entity = JavaUuidId(name = "java uuid")
-                    jpa.transaction { it.persist(entity).await() }
+                    jpa.transaction { it.persist(entity) }
 
                     entity.id shouldNotBe null
                 }

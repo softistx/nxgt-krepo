@@ -19,7 +19,7 @@ import kotlin.reflect.KClass
  * ```kotlin
  * val jpa = Jpa.connect(JpaConfig(uri = System.getenv("POSTGRES_URI"), username = …), Order::class)
  *
- * val order = jpa.transaction { session -> session.find(Order::class.java, id).await() }
+ * val order = jpa.transaction { session -> session.get<Order>(id) }
  * ```
  *
  * **Configured in code rather than through `persistence.xml`.** Hibernate Reactive supports both;
