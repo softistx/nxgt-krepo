@@ -1,0 +1,37 @@
+product: jvm/lib
+
+dependencies:
+  # Stage.Session, Stage.SessionFactory and the JPA annotations a caller writes on its entities are
+  # all over this module's public API. hibernate-core and jakarta.persistence-api come with it.
+  - $libs.hibernate.reactive.core: exported
+  # The driver. Hibernate Reactive names no database of its own — this is what makes it Postgres,
+  # and it carries com.ongres.scram:scram-client, which SASL authentication needs.
+  - $libs.vertx.pg.client: exported
+  - $libs.kotlinx.coroutines.core: exported
+
+test-dependencies:
+  # the Postgres the integration specs talk to, started for the run when the workspace's own is not
+  # named — test-only, so nothing here reaches a consumer of this library
+  - //libs/shared-testing
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # Hibernate and Vert.x both log through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    # An entity is instantiated reflectively, row by row, through a constructor nobody writes: the
+    # `jpa` preset gives @Entity, @Embeddable and @MappedSuperclass classes a no-arg one.
+    noArg:
+      enabled: true
+      presets: [ jpa ]
+    # And Hibernate subclasses entities to build lazy proxies, which a final Kotlin class refuses.
+    # Spelled out rather than taken from a preset because allOpen has no `jpa` one — only spring,
+    # micronaut and quarkus.
+    allOpen:
+      enabled: true
+      annotations:
+        - jakarta.persistence.Entity
+        - jakarta.persistence.MappedSuperclass
+        - jakarta.persistence.Embeddable
