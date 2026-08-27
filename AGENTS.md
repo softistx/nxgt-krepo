@@ -200,9 +200,9 @@ should read them from one dependency.
 
 **Every backend is declared `compile-only`, including the ones this module's API returns.**
 `call.redis` hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath, which
-sounds wrong and is not: an application that installs `RedisPlugin` already depends on
+sounds wrong and is not: an application that installs `RedisConnection` already depends on
 `shared-redis`, because `RedisConfig` is the only way to configure the plugin at all — and one that
-installs only `I18nPlugin` never loads a class from any of the others, so nothing is missing when
+installs only `I18n` never loads a class from any of the others, so nothing is missing when
 nothing is linked. It is self-enforcing rather than a convention to remember. Verified with
 `./kotlin show dependencies -m shared-ktor`: a compile-only entry sits in the COMPILE scope and is
 absent from RUNTIME.
