@@ -26,6 +26,7 @@ class KafkaAdminTest :
                     admin.topics() shouldContain topic
 
                     admin.deleteTopic(topic)
+                    KafkaTestCluster.awaitGone(admin.admin, topic)
 
                     admin.exists(topic) shouldBe false
                     admin.topics() shouldNotContain topic

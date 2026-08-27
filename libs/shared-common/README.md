@@ -12,8 +12,35 @@ waiting for its second commit.
 
 ```
 com.strange.common.coroutines      CoroutineSafeMap, KeyedMutex, Mailbox
+com.strange.common.lifecycle       CloseGuard
 com.strange.common.serialization   lenientJson, decodeValue, typeName
 ```
+
+## Closing once
+
+`CloseGuard` runs a close the first time and does nothing on every call after it.
+
+```kotlin
+class Redis internal constructor(…) : AutoCloseable {
+    private val guard = CloseGuard()
+
+    override fun close() = guard.once { connection.close(); client.shutdown() }
+}
+```
+
+**A resource that is handed around is closed more than once.** Ktor's DI closes every
+`AutoCloseable` it hands out when the application stops — one a provider merely passed through
+included — and a plugin, a container and the code that built the thing all have a reasonable claim
+to closing it. Ownership rules say who *should*; this says what happens when two of them do, which
+is nothing.
+
+The clients underneath do not agree on this by themselves: Lettuce and the MinIO client tolerate a
+second close, the RabbitMQ client throws `AlreadyClosedException`, and none of them owes us that
+behaviour in the next version. The guard makes one contract out of three.
+
+It holds an `AtomicBoolean` rather than a `Mutex`, which is the same question the three concurrency
+types below answer: `close()` is an ordinary blocking function called from `use` blocks, shutdown
+hooks and container teardown, none of which is a coroutine.
 
 ## Which of the three concurrency types
 
