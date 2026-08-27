@@ -4,12 +4,14 @@ import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import com.mongodb.reactivestreams.client.MongoClients
 import com.strange.mongo.codec.mongoCodecRegistry
 import kotlinx.coroutines.runBlocking
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import com.mongodb.reactivestreams.client.MongoClient as ReactiveMongoClient
 
 /**
  * The MongoDB the integration tests talk to: the replica set this workspace already runs, not one
@@ -45,6 +47,12 @@ internal object MongoTestCluster {
     }
 
     fun client(): MongoClient = MongoClient.create(settings())
+
+    /**
+     * The Reactive Streams client GridFS needs. Built from the same settings as [client], which is
+     * also how an application should do it — one pool behind both APIs.
+     */
+    fun reactiveClient(): ReactiveMongoClient = MongoClients.create(settings())
 
     /**
      * Runs [block] against a database no other test is using, and drops it afterwards — the server

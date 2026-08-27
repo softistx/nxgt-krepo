@@ -8,6 +8,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import org.bson.BsonDocument
+import org.bson.BsonNull
+import org.bson.BsonValue
 import org.bson.conversions.Bson
 
 /** One field of the ordering, and which way it runs. */
@@ -63,15 +65,18 @@ internal fun keysetFilter(
 ): Bson {
     val branches =
         keys.mapIndexed { index, key ->
-            val equalities = keys.take(index).map { Filters.eq(it.field, cursor[it.field]) }
+            val equalities = keys.take(index).map { Filters.eq(it.field, cursor.valueOf(it.field)) }
             val comparison =
                 if (key.ascending == forward) {
-                    Filters.gt(key.field, cursor[key.field])
+                    Filters.gt(key.field, cursor.valueOf(key.field))
                 } else {
-                    Filters.lt(key.field, cursor[key.field])
+                    Filters.lt(key.field, cursor.valueOf(key.field))
                 }
             if (equalities.isEmpty()) comparison else Filters.and(equalities + comparison)
         }
 
     return Filters.or(branches)
 }
+
+/** A key the cursor does not carry sorts as BSON null, which is where a missing field sorts too. */
+private fun BsonDocument.valueOf(field: String): BsonValue = this[field] ?: BsonNull.VALUE
