@@ -47,6 +47,11 @@ hibernate-reactive = "4.5.5.Final"
 vertx = "5.1.6"
 hibernate-orm = "7.4.5.Final"
 jakarta-persistence = "3.2.0"
+# Bean Validation: the reference implementation, the API an entity writes against, and the
+# expression language its default message interpolator needs at runtime.
+hibernate-validator = "9.0.1.Final"
+jakarta-validation = "3.1.1"
+expressly = "6.0.0"
 spring = "7.0.9"
 jackson = "3.2.2"
 
@@ -209,6 +214,12 @@ vertx-core = { module = "io.vertx:vertx-core", version.ref = "vertx" }
 vertx-pg-client = { module = "io.vertx:vertx-pg-client", version.ref = "vertx" }
 vertx-mysql-client = { module = "io.vertx:vertx-mysql-client", version.ref = "vertx" }
 vertx-db2-client = { module = "io.vertx:vertx-db2-client", version.ref = "vertx" }
+hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator" }
+jakarta-validation = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
+# Hibernate Validator interpolates a message like "must be between {min} and {max}" through Jakarta
+# Expression Language, and ships no implementation of it. Runtime-only: nobody writes EL here, and
+# without it every validator built is a `NoClassDefFoundError` at the first constraint.
+expressly = { module = "org.glassfish.expressly:expressly", version.ref = "expressly" }
 
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 amqp-client = { module = "com.rabbitmq:amqp-client", version.ref = "amqp-client" }
