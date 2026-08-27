@@ -15,6 +15,7 @@ What exists:
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
+| `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection, a typed cache, a lock, topics and streams |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
 | `apps/demo-client` | Generates a Ktorfit client from that spec and calls the server |
@@ -138,14 +139,19 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 ### Local services
 
 The databases this workspace runs against are **already containerised and usually already up** —
-`~/workspace/docker/apps/` holds one compose file per service, and `database/mongo` is an `rs0`
-replica set published on `localhost:27017`, transactions included. Check `docker ps` before pulling
-an image or starting a Testcontainers container: the pull costs a gigabyte and the second container
-either clashes on the port or silently tests a different server than the one everything else uses.
+`~/workspace/docker/apps/` holds one compose file per service: `database/mongo` is an `rs0` replica
+set on `localhost:27017`, transactions included, and `database/redis` is Redis Stack on
+`localhost:6379`. Check `docker ps` before pulling an image or starting a Testcontainers container:
+the pull costs a gigabyte and the second container either clashes on the port or silently tests a
+different server than the one everything else uses.
 
-Integration tests therefore point at the running service — `MONGO_TEST_URI`, defaulting to
-`mongodb://localhost:27017` — and skip themselves when it is unreachable, so a machine without it
-reports skipped tests rather than a red build.
+Integration tests therefore point at the running service — `MONGO_TEST_URI` and `REDIS_TEST_URI`,
+defaulting to `mongodb://localhost:27017` and `redis://localhost:6379/15` — and skip themselves when
+it is unreachable, so a machine without it reports skipped tests rather than a red build.
+
+They also have to leave the server as they found it, because it is not theirs: the Mongo specs use a
+database per spec and drop it, and the Redis specs use database 15 with a key namespace per spec and
+delete it. Nothing here calls `FLUSHDB`.
 
 ## Module layout
 
@@ -226,6 +232,7 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
   | `libs/openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
+  | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
