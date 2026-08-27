@@ -1,4 +1,4 @@
-package com.strange.jpa.convert
+package com.strange.jpa.entity
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
