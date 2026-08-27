@@ -20,6 +20,7 @@ dependencies:
   - //libs/shared-amqp: compile-only
   - //libs/shared-kafka: compile-only
   - //libs/shared-storage: compile-only
+  - //libs/shared-jpa: compile-only
 
   # Ktor's DI, for the registrations in `com.strange.ktor.di`. Compile-only for the same reason:
   # an application that never calls `provideRedis` never loads a class from it.
@@ -33,6 +34,7 @@ test-dependencies:
   - //libs/shared-amqp
   - //libs/shared-kafka
   - //libs/shared-storage
+  - //libs/shared-jpa
   # and the servers they connect to, started for the run
   - //libs/shared-testing
   - $libs.ktor.server.di
@@ -44,6 +46,21 @@ test-dependencies:
   - $libs.slf4j.nop
 
 settings:
+  kotlin:
+    # For the entity the JpaConnection spec maps. Every module that *holds* entities needs these two
+    # — this one holds exactly one, in its test sources, and an application installing the plugin
+    # will need the same block in its own module.yaml. Nothing in `src/` carries a JPA annotation, so
+    # neither plugin has anything to do there.
+    noArg:
+      enabled: true
+      presets: [ jpa ]
+    allOpen:
+      enabled: true
+      annotations:
+        - jakarta.persistence.Entity
+        - jakarta.persistence.MappedSuperclass
+        - jakarta.persistence.Embeddable
+
   ktor:
     enabled: true
     # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is

@@ -9,6 +9,7 @@ com.strange.ktor.mongo     MongoDB           one client, and the database over i
 com.strange.ktor.amqp      AmqpConnection    one AMQP connection
 com.strange.ktor.kafka     KafkaCluster      the cluster configuration
 com.strange.ktor.storage   Storage           one object-storage client
+com.strange.ktor.jpa       JpaConnection     one Hibernate Reactive session factory
 ```
 
 ```kotlin
@@ -24,11 +25,11 @@ get("/cart/{id}") {
 
 ## The names
 
-No `Plugin` suffix, the way Ktor's own `install(ContentNegotiation)` carries none. Three of the six
-could not simply take their backend's name: `Redis`, `Amqp` and `Kafka` are the classes these
+No `Plugin` suffix, the way Ktor's own `install(ContentNegotiation)` carries none. Four of the seven
+could not simply take their backend's name: `Redis`, `Amqp`, `Kafka` and `Jpa` are the classes these
 plugins *hand out*, and an application that installs one and also names the type it gets back would
 have two imports of one name. Those three are named for what the plugin puts on the application —
-a connection, a connection, a cluster — and the other three take the product.
+a connection, a connection, a cluster, a connection — and the other three take the product.
 
 Each package is then two files with the same two names: `Plugin.kt` for the plugin and its
 configuration, `Calls.kt` for the `Application.x` and `ApplicationCall.x` a route reaches through.
@@ -88,7 +89,7 @@ So `injectable = true` hands the container a second claim on closing the connect
 because these clients close through `CloseGuard`, and it is the reason a connection which has to
 outlive the application should not be registered at all.
 
-## The two that are not like the others
+## The ones that are not like the others
 
 **`KafkaCluster` opens nothing and closes nothing.** That is not an omission — it is what `Kafka`
 itself says: a Kafka client connects when it is created, and a producer, a consumer and an admin
@@ -103,6 +104,17 @@ way the other plugins do.
 library cannot read back. Every step succeeds until the data is already written, so the plugin does
 it rather than each service remembering to. A round trip through a real server is the only spec that
 can tell the difference, and there is one.
+
+**`JpaConnection` maps what it is told about, and nothing else.** There is no classpath scan, so
+`entities(Order::class, Customer::class)` is the mapping — a class missing from it is not a startup
+error but an `IllegalArgumentException` on the first query that names it. It blocks once at install
+for the same reason `AmqpConnection` does, and it connects to nothing there: the pool opens its
+first connection when a route asks for a session, which is why `SchemaMode.VALIDATE` is worth having
+when the schema is managed elsewhere.
+
+Its spec is the one worth reading in this module. A route persists, `delay`s, then reads back inside
+one transaction — because suspending mid-transaction is the ordinary case for a handler, and it is
+what kills a naive coroutine bridge over Hibernate Reactive. `shared-jpa`'s README has the rule.
 
 **`AmqpConnection` blocks once, at startup.** `Amqp.connect` suspends and plugin installation does not,
 so this is the module's one `runBlocking` — on the thread starting the application, before anything
