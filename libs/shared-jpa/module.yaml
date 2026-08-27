@@ -1,9 +1,14 @@
 product: jvm/lib
 
 dependencies:
-  # Stage.Session, Stage.SessionFactory and the JPA annotations a caller writes on its entities are
-  # all over this module's public API. hibernate-core and jakarta.persistence-api come with it.
+  # Stage.Session and Stage.SessionFactory are all over this module's public API.
   - $libs.hibernate.reactive.core: exported
+  # Both of these arrive with it, and both are declared anyway: this module imports
+  # `org.hibernate.cfg.Configuration` and `jakarta.persistence.AttributeConverter` in its own source,
+  # and every entity a consumer writes imports `jakarta.persistence.*`. Exported for that second
+  # reason. Leaving them transitive compiles — and leaves the IDE unable to resolve half this file.
+  - $libs.hibernate.core: exported
+  - $libs.jakarta.persistence: exported
   # The driver. Hibernate Reactive names no database of its own — this is what makes it Postgres,
   # and it carries com.ongres.scram:scram-client, which SASL authentication needs.
   - $libs.vertx.pg.client: exported
