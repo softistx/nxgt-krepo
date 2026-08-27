@@ -48,3 +48,36 @@ Three of them do more than route a session:
   which case it returns null and leaves the existing one alone. Rebuilding an index on a live
   collection is a migration, not something a startup path should decide; every other error is still
   thrown.
+
+## Pagination
+
+`collection.findPage(options)` returns a `Page<T>` — the documents plus a Relay-shaped `PageInfo`
+of `startCursor`, `endCursor`, `hasNextPage`, `hasPreviousPage`.
+
+```kotlin
+val page = notes.findPage(PaginationOptions(first = 20, sort = json("""{"tag": 1}""")))
+val next = notes.findPage(PaginationOptions.first(20, page.info.endCursor))
+```
+
+It pages by **keyset**, not by `skip`. `skip(n)` makes the server walk and discard n documents, so
+a page costs more the deeper it is and page 500 is a scan; resuming from the previous page's sort
+key costs the same at any depth, and does not skip or repeat a document when one is inserted
+between two requests.
+
+What that requires, and what the implementation therefore does:
+
+- **The sort key has to be unique**, so `_id` is appended to whatever `sort` asks for. Order by
+  `name` alone and every document sharing a name is a coin toss between being served twice and
+  being skipped — which is exactly the case `FindPageTest` walks end to end.
+- **The cursor carries every sort key**, base64url over extended JSON, so a date comes back as a
+  date rather than as a string that compares against nothing. It also carries which keys it was
+  issued for: a cursor from a differently sorted query is refused instead of paging along the wrong
+  field.
+- **Resuming with more than one key is an `$or`**, not a `$gt` — the first key is greater, *or* it
+  is equal and the second is greater, and so on.
+- **One extra document is fetched** beyond the page size. Whether it turned up is the whole answer
+  to "is there another page", at the cost of one document rather than a second count query.
+
+`filter` and `sort` are raw Mongo JSON because that is how they arrive from an HTTP client; both
+are parsed, so a malformed one fails as `InvalidPaginationException` rather than reaching the
+server.
