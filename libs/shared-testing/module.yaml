@@ -10,6 +10,7 @@ dependencies:
   - $libs.testcontainers.rabbitmq: exported
   - $libs.testcontainers.minio: exported
   - $libs.testcontainers.kafka: exported
+  - $libs.testcontainers.postgresql: exported
 
 test-dependencies:
   - $libs.kotest.runner.junit5
