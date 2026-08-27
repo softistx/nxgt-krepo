@@ -3,8 +3,8 @@ package com.strange.jpa.session
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.query.JpaMutation
 import com.strange.jpa.query.JpaQuery
-import com.strange.jpa.query.mutation
-import com.strange.jpa.query.nativeMutation
+import com.strange.jpa.query.mutate
+import com.strange.jpa.query.nativeMutate
 import com.strange.jpa.query.nativeQuery
 import com.strange.jpa.query.query
 import jakarta.persistence.LockModeType
@@ -89,7 +89,7 @@ class JpaSession internal constructor(
      * Writes everything pending, now.
      *
      * A transaction flushes on its way out, so this is for ordering rather than for saving: a bulk
-     * `mutation` that has to see what the session has already changed needs it, and so does anything
+     * `mutate` that has to see what the session has already changed needs it, and so does anything
      * that wants a constraint violation *here* rather than at commit. Outside a transaction it is
      * the only thing that writes at all.
      */
@@ -106,8 +106,8 @@ class JpaSession internal constructor(
     inline fun <reified R : Any> nativeQuery(sql: String): JpaQuery<R> = raw.nativeQuery(sql)
 
     /** A bulk HQL `update` or `delete`. */
-    fun mutation(hql: String): JpaMutation = raw.mutation(hql)
+    fun mutate(hql: String): JpaMutation = raw.mutate(hql)
 
     /** The same in SQL. */
-    fun nativeMutation(sql: String): JpaMutation = raw.nativeMutation(sql)
+    fun nativeMutate(sql: String): JpaMutation = raw.nativeMutate(sql)
 }
