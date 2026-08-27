@@ -59,13 +59,24 @@ class KafkaPublisherTest :
         }
 
         feature("sending many") {
-            scenario("every record is acknowledged, and they are all there") {
+            scenario("every record is acknowledged, and they reach the producer in the order given") {
                 val (publisher, mock) = publisher()
 
-                val sent = publisher.sendAll((1..5).map { ProducerRecord("orders", "k$it", "v$it") })
+                /* The order records enter the accumulator is the order they are written to a
+                   partition, so records sharing a key depend on this not being shuffled. */
+                val sent = publisher.sendAll((1..50).map { ProducerRecord("orders", "same-key", "v$it") })
 
-                sent.size shouldBe 5
-                mock.history().map { it.value() } shouldBe (1..5).map { "v$it" }
+                sent.size shouldBe 50
+                mock.history().map { it.value() } shouldBe (1..50).map { "v$it" }
+            }
+
+            scenario("one refused record fails the call without hiding which one") {
+                val (publisher, mock) = publisher()
+                mock.sendException = RecordTooLargeException("too big")
+
+                shouldThrow<RecordTooLargeException> {
+                    publisher.sendAll(listOf(ProducerRecord("orders", "k1", "v1")))
+                }
             }
         }
 
