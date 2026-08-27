@@ -1,0 +1,76 @@
+package com.strange.jpa.json
+
+import com.strange.common.serialization.decodeValue
+import com.strange.jpa.JpaDocumentException
+import com.strange.jpa.JpaSerializerException
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializerOrNull
+import org.hibernate.type.format.AbstractJsonFormatMapper
+import java.lang.reflect.Type
+import java.util.concurrent.ConcurrentHashMap
+
+/**
+ * Hibernate's JSON `FormatMapper`, implemented over kotlinx.serialization.
+ *
+ * Hibernate finds one of these by looking for Jackson, then Jackson 3, then JSON-B, and throws when
+ * it finds none — telling a Kotlin codebase to put Jackson on its classpath. This is that hook,
+ * filled with the serializer every class in this repo already carries, which is the whole of what
+ * "built-in" means here.
+ *
+ * [AbstractJsonFormatMapper] reduces the SPI to two methods over a `java.lang.reflect.Type`, and
+ * kotlinx answers exactly that shape — so a generic attribute is resolved from the reflective type
+ * Hibernate hands over and nothing here needs to know an attribute's type at compile time.
+ *
+ * **Null never reaches this.** Hibernate's binder short-circuits a null before it binds and
+ * `JsonJdbcType` returns early on a null column, so a nullable attribute is safe even though the
+ * serializer resolved here is not a nullable one.
+ *
+ * **An interface-typed attribute fails later, not here.** kotlinx answers an interface with a
+ * polymorphic serializer rather than nothing, so the failure arrives at the first write as "not
+ * registered for polymorphic serialization" — which is the accurate message for it.
+ */
+internal class KotlinxJsonFormatMapper(
+    private val json: Json,
+) : AbstractJsonFormatMapper() {
+    /**
+     * Resolved serializers, kept because resolving one is reflective.
+     *
+     * `serializerOrNull(Type)` looks up a `serializer()` method by reflection and invokes it on every
+     * call, and this is called once per JSON column per row. A plain `ConcurrentHashMap` rather than
+     * one of `shared-common`'s concurrency types because Hibernate calls this from a binder that
+     * cannot suspend.
+     */
+    private val serializers = ConcurrentHashMap<Type, KSerializer<Any>>()
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> toString(
+        value: T,
+        type: Type,
+    ): String = json.encodeToString(serializerFor(type), value as Any)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> fromString(
+        charSequence: CharSequence,
+        type: Type,
+    ): T {
+        val serializer = serializerFor(type)
+        return json.decodeValue(serializer, charSequence.toString()) {
+            JpaDocumentException(type, it)
+        } as T
+    }
+
+    /**
+     * `serializerOrNull` rather than `serializer`, so a type with no `@Serializable` fails naming the
+     * column mapping that wanted it. kotlinx's own message — "Serializer for class 'X' is not found"
+     * — is accurate and says nothing about *why* the class is being serialized, which from inside a
+     * Hibernate binder is the half that is missing.
+     *
+     * Internal rather than private because the spec that pins that message needs no database and
+     * should not have to start one to ask this question.
+     */
+    internal fun serializerFor(type: Type): KSerializer<Any> =
+        serializers.getOrPut(type) {
+            json.serializersModule.serializerOrNull(type) ?: throw JpaSerializerException(type)
+        }
+}
