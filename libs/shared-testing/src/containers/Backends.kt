@@ -314,6 +314,11 @@ private class ReactiveMySQLContainer(
      * `ClosedConnectionException: Failed to read any response from the server`, which reads like a
      * network fault and is an authentication one.
      *
+     * **A freshly started MySQL says the same words for a different reason**, dropping the first
+     * connection it is offered even after this has run. The two are told apart by trying again — an
+     * authentication failure fails again — which is why `MySqlTestDatabase` probes more than once
+     * rather than skipping on the first refusal.
+     *
      * Done through `mysql` inside the container rather than over the wire, precisely because nothing
      * here can get a connection yet. The retry is because MySQL logs *ready for connections* twice
      * during initialisation and is briefly not, in fact, ready.

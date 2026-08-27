@@ -1,6 +1,7 @@
 package com.strange.jpa
 
 import com.strange.jpa.json.jpaJson
+import com.strange.jpa.naming.Naming
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 
@@ -24,6 +25,13 @@ data class JpaConfig(
     val password: String? = null,
     /** The default schema for unqualified table names. Left to the server's `search_path` when null. */
     val schema: String? = null,
+    /**
+     * What a column is called when the entity does not say. `created_by`, not `createdby`.
+     *
+     * Worth naming here rather than leaving to a default nobody reads: it renames every column that
+     * was not named by hand, so it is a decision to make once, before there is a schema.
+     */
+    val naming: Naming = Naming.SNAKE_CASE,
     /** What Hibernate does to the schema at startup. [SchemaMode.NONE] outside tests. */
     val schemaMode: SchemaMode = SchemaMode.NONE,
     /**
