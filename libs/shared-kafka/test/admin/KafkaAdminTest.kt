@@ -47,10 +47,12 @@ class KafkaAdminTest :
 
                         info.name shouldBe topic
                         info.partitionCount shouldBe 3
-                        info.replicationFactor shouldBe 3
+                        info.replicationFactor shouldBe KafkaTestCluster.replicationFactor.toInt()
 
-                        /* This cluster runs min.insync.replicas 2, so a healthy topic has its
-                           whole replica set caught up — anything less and acks=all is failing. */
+                        /* Whatever the replica set is, all of it should be caught up on a topic
+                           this quiet — anything less and acks=all is failing. On the workspace's
+                           three brokers with min.insync.replicas 2 that is the real check; on a
+                           one-broker container it is the weaker version of the same question. */
                         info.underReplicated shouldBe emptyList()
                         info.partitions.first().leader shouldNotBe null
                     }

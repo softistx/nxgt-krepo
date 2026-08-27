@@ -16,8 +16,9 @@ private data class OrderPlaced(
 
 /**
  * The same publisher against the real cluster, which is the only thing that can answer the
- * questions that matter: does `acks = all` actually come back on a topic with three replicas, is
- * the wire form what another service would read, and does a key really pin a record to a partition.
+ * questions that matter: does `acks = all` actually come back, is the wire form what another
+ * service would read, and does a key really pin a record to a partition. The first of those is only
+ * fully answered against a multi-broker cluster — see `KafkaTestCluster.replicationFactor`.
  */
 class KafkaPublisherIntegrationTest :
     FeatureSpec({
