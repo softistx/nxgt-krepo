@@ -347,6 +347,16 @@ the same each time, and the mistakes are the same each time too.
 - **Never hold a lock across suspending work.** A mutex held while a loader runs turns *n*
   concurrent loads of *n* different keys into one queue. `CoroutineSafeMap.getOrPut` takes a value
   rather than a loader for exactly this reason; `KeyedMutex` is the type for when the work suspends.
+- **When a foreign API forces a real thread, make it virtual.** Coroutines first, as everywhere
+  else here — but `Runtime.addShutdownHook` takes a `Thread` and there is nothing to negotiate.
+  Then it is `Thread.ofVirtual()`, never `Thread(…)`: a few hundred bytes against a megabyte of
+  committed stack, and blocking parks a continuation instead of an OS thread. On the JDK 25 this
+  repo runs, JEP 491 removed the `synchronized` pinning that used to be the argument against them.
+  Mind which half of the API you take — `Thread.startVirtualThread` starts on the spot, so a hook
+  built with it is registered already-dead (never runs) or refused as still-alive (and then the
+  whole holder fails to initialise), and **both outcomes are swallowed without a word**. The form
+  that works is `Thread.ofVirtual().unstarted { … }`. `ContainerService` carries the scar and the
+  spec that would have caught it.
 - **A loop that never suspends starves its own dispatcher.** `KafkaSubscriber`'s poll loop owns its
   dispatcher for the whole poll timeout and has no suspension point between turns, so anything that
   tried to `withContext(thatDispatcher)` waited forever — a real deadlock, found by a spec that hung
