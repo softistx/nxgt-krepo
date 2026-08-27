@@ -21,6 +21,10 @@ dependencies:
   - //libs/shared-kafka: compile-only
   - //libs/shared-storage: compile-only
 
+  # Ktor's DI, for the registrations in `com.strange.ktor.di`. Compile-only for the same reason:
+  # an application that never calls `provideRedis` never loads a class from it.
+  - $libs.ktor.server.di: compile-only
+
 test-dependencies:
   # the specs run the plugins for real, so here the libraries are on the runtime classpath too
   - //libs/shared-i18n
@@ -31,6 +35,7 @@ test-dependencies:
   - //libs/shared-storage
   # and the servers they connect to, started for the run
   - //libs/shared-testing
+  - $libs.ktor.server.di
   - $ktor.server.testHost
   - $ktor.server.netty
   - $libs.kotest.runner.junit5
