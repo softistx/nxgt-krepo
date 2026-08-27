@@ -9,6 +9,7 @@ com.strange.koin.mongo     mongoModule      one client, and the database over it
 com.strange.koin.amqp      amqpModule       one AMQP connection
 com.strange.koin.kafka     kafkaModule      the cluster configuration
 com.strange.koin.storage   storageModule    one object-storage client
+com.strange.koin.jpa       jpaModule        one Hibernate Reactive session factory
 ```
 
 ```kotlin
@@ -54,13 +55,14 @@ register, one `onClose` each, since a publisher owns a producer. `Messages` is c
 loaded by the caller because a catalog comes from a resource, a database or a bundle and
 `Messages.load` is where that choice already lives.
 
-## The one blocking call
+## The blocking calls
 
-`amqpModule` uses `runBlocking`, because `Amqp.connect` suspends — it is a socket, a handshake and
-an authentication round trip — and Koin's `single { }` has no suspending form. It is the same trade
-`AmqpConnection` makes at plugin install, on the thread that is starting the application either way.
-It is also a reason to resolve that connection eagerly at startup rather than on whichever request
-happens to be the first to ask for it.
+`amqpModule` and `jpaModule` use `runBlocking`, because both connects suspend — a socket, a
+handshake and an authentication round trip for one; reading the annotations off every entity and
+building a metadata model for the other — and Koin's `single { }` has no suspending form. It is the
+same trade the Ktor plugins make at install, on the thread that is starting the application either
+way. It is also a reason to resolve both eagerly at startup rather than on whichever request happens
+to be the first to ask.
 
 ## One module without a fat dependency list
 
