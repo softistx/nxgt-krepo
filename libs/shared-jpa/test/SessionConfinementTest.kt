@@ -45,7 +45,7 @@ class SessionConfinementTest :
                                         // A real suspension. Everything after it runs on a
                                         // Dispatchers.Default thread, and the session is not there.
                                         delay(1)
-                                        session.persist(Thing(1, "naive")).await()
+                                        session.persist(Thing(1, "naive"))
                                     }
                                 }.toCompletableFuture()
                                 .await()
@@ -66,7 +66,7 @@ class SessionConfinementTest :
                         jpa.transaction { session ->
                             val before = Thread.currentThread().name
                             delay(1)
-                            session.persist(Thing(2, "confined")).await()
+                            session.persist(Thing(2, "confined"))
                             before to Thread.currentThread().name
                         }
 
@@ -76,7 +76,7 @@ class SessionConfinementTest :
                     jpa
                         .transaction { session ->
                             delay(1)
-                            session.find(Thing::class.java, 2L).await()
+                            session.get<Thing>(2L)
                         }.name shouldBe "confined"
                 }
             }
