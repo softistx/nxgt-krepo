@@ -268,6 +268,8 @@ library's own test tree.
 | `shared-storage` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `minio/minio:latest` |
 | `shared-kafka` | `KAFKA_TEST_BOOTSTRAP` | `confluentinc/cp-kafka:latest`, one broker |
 | `shared-jpa` | `POSTGRES_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `postgres:18-alpine` |
+| `shared-jpa` | `MYSQL_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `mysql:8.4` |
+| `shared-jpa` | `DB2_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | nothing — the DB2 specs skip |
 
 **The credentials rule is unchanged; what it costs is not.** `AMQP_TEST_URI` and the MinIO key pair
 still have no defaults and must never gain any — a credential with a default is a credential in
