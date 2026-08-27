@@ -70,3 +70,29 @@ the real work:
 replica that had not yet received the `SET`, two holders can believe they have it. That is fine for
 keeping a scheduled job from running twice or serialising a cache rebuild, and it is not the thing
 to put between two writers and a corrupted invoice — that writer needs its own conditional write.
+
+## Topics
+
+```kotlin
+val events = RedisTopic(redis, "orders", ValueCodec.json<OrderEvent>())
+events.subscribe().collect { handle(it) }
+events.publish(OrderEvent.Placed(id))
+```
+
+`subscribe()` is a cold flow that opens a connection of its own — a subscribed connection speaks
+only the subscribe protocol, so sharing the main one would take the rest of the application's
+commands down with it — and closes it when collection ends.
+
+It is a `callbackFlow` over Lettuce's listener API rather than its reactive `observeChannels()`,
+because the listener has to be registered *before* `SUBSCRIBE` goes out. With the reactive flux, the
+window between the server accepting the subscription and Reactor attaching its sink is a window
+where messages are dropped.
+
+`RedisTopicPattern` is the glob version, and is a separate class on purpose: a pattern has no
+publish, since `PUBLISH orders:*` sends to a channel literally called `orders:*` that nobody is
+listening to.
+
+**Pub/sub delivers to whoever is listening right now, and forgets.** Nothing is stored, nothing is
+replayed, and a subscriber that was reconnecting missed whatever went past — `publish` returning 0
+is the honest signal that nobody heard it. Right for a cache invalidation or a "go and look" nudge;
+wrong for anything that has to happen, which is what `RedisStream` is for.
