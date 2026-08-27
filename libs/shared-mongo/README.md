@@ -140,3 +140,34 @@ back with a cluster and standing without one.
 not quietly grow one. Creation-time metadata belongs in `buildCreate`, where the entity is being
 built anyway — `AuditMetadata.by(principal)`. An update that changes nothing writes nothing and is
 not stamped either: the audit trail is for changes, not for requests.
+
+## GridFS
+
+The Kotlin coroutine driver has no GridFS — the API stops at collections — so `GridFsBucket` wraps
+the Reactive Streams bucket, which is what the coroutine driver is built on anyway. Build the
+reactive client first and hand it to both, and everything shares one connection pool:
+
+```kotlin
+val reactive = MongoClients.create(settings)
+val client = MongoClient(reactive)                                   // the coroutine API
+val files = GridFsBucket.of(reactive.getDatabase("app"), "uploads")  // the same pool
+
+val id = files.upload("notes.txt", bytes, Document("contentType", "text/plain"))
+val bytes = files.download(id)
+```
+
+It takes the *coroutine* `ClientSession`, so a caller inside `withTransaction` passes the same
+session it passes everywhere else. Three things the API shape is deliberate about:
+
+- **A download reads every chunk.** A GridFS download publishes one `ByteBuffer` per chunk — 255 KB
+  by default — so awaiting the first one truncates anything larger to its first chunk and hands back
+  a file of the right shape and the wrong length. `GridFsBucketTest` uploads 700 KB for exactly this.
+- **A missing file is null, not an exception.** `download` checks the file exists and then streams
+  it; the extra round trip buys the distinction that matters, since `MongoGridFSException` covers a
+  missing file and a corrupt one alike and catching it would turn corruption into an empty 404.
+- **A filename is not a key.** Uploading the same name twice keeps both files, which is what
+  `download(filename, revision)` is for — `-1` is the newest, `0` the oldest.
+
+One thing to know before writing into a transaction: the first upload into a bucket creates its
+indexes, and an index cannot be created inside a transaction. Warm the bucket with one upload
+outside first.
