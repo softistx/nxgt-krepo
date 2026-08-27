@@ -16,8 +16,10 @@ import kotlin.reflect.KClass
  * startKoin { modules(jpaModule(JpaConfig(uri = System.getenv("POSTGRES_URI")), Order::class), appModule) }
  * ```
  *
- * There is no classpath scan: [entities] is the mapping, and a class missing from it is an
- * `IllegalArgumentException` on the first query that names it rather than an error at startup.
+ * [entities] is the mapping, unless [packages] is given — then the classpath is read for the entities
+ * and converters those packages hold, and anything named here is added to what the scan found. A class
+ * missing from both is an `IllegalArgumentException` on the first query that names it rather than an
+ * error at startup, which is the argument for naming them.
  *
  * **`runBlocking`, for the reason `amqpModule` spells out.** `Jpa.connect` suspends — reading
  * annotations off every entity and building the metadata model is real work — and Koin's `single { }`
@@ -31,10 +33,25 @@ fun jpaModule(
     config: JpaConfig = JpaConfig(),
     entities: List<KClass<*>>,
     converters: List<KClass<out AttributeConverter<*, *>>> = emptyList(),
+    packages: List<String> = emptyList(),
 ): Module =
     module {
-        single { runBlocking { Jpa.connect(config, entities, converters) } } onClose { it?.close() }
+        single {
+            runBlocking {
+                if (packages.isEmpty()) {
+                    Jpa.connect(config, entities, converters)
+                } else {
+                    Jpa.scan(config, packages, entities, converters)
+                }
+            }
+        } onClose { it?.close() }
     }
+
+/** The scanning spelling: `jpaScanModule(config, "com.acme.orders.domain")`. */
+fun jpaScanModule(
+    config: JpaConfig = JpaConfig(),
+    vararg packages: String,
+): Module = jpaModule(config, entities = emptyList(), packages = packages.toList())
 
 /** The same, spelled for the common case: `jpaModule(config, Order::class, Customer::class)`. */
 fun jpaModule(
