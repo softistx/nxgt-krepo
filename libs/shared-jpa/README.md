@@ -100,6 +100,34 @@ trees.
 There is no static metamodel and no Criteria DSL, because there is no `kapt` in this toolchain and
 `hibernate-jpamodelgen` cannot process Kotlin sources without one. HQL is the query language here.
 
+## Naming the entities, or scanning for them
+
+```kotlin
+Jpa.connect(config, Order::class, Customer::class)   // the mapping is the argument list
+Jpa.scan(config, "com.acme.orders.domain")           // the mapping is what is on the classpath
+```
+
+**Naming them is the safer of the two, and it is the default for that reason.** A class missing from
+the list is an `IllegalArgumentException` on the first query that names it, which is late; but a
+package name that is wrong — renamed, shaded, relocated by a fat-jar plugin — is *silent*, and a
+scan that finds nothing looks exactly like a scan that ran before the classes were there. `scan`
+therefore refuses to return a factory that mapped nothing: no `@Entity` under the given packages and
+it throws, naming them. That turns the quiet failure into a startup failure, which is the only
+version of it worth having.
+
+A scan collects `@Entity`, `@MappedSuperclass` and `@Embeddable`. The last two are belt and braces —
+Hibernate maps a superclass and an embedded type from the entity that uses them, so registering
+`Order` alone already maps both — and they matter when the pieces live in a package the scan reaches
+and the entity does not.
+
+**Converters are the one thing a scan does that naming cannot.** `addAnnotatedClass` finds no
+`@Converter`, so a programmatic bootstrap has to be told about every one; `scan` picks up the
+`@Converter` classes in those packages as well.
+
+Both forms take the other as an extra: `Jpa.scan(config, packages, entities = listOf(Legacy::class))`
+adds the class that lives somewhere the scan does not reach. `packages(…)` in the Ktor plugin and
+`jpaScanModule(config, …)` in Koin are the same thing at their own call sites.
+
 ## The session is ours, not Hibernate's
 
 `session { }` and `transaction { }` hand you a `JpaSession`, not a `Stage.Session`. Every operation
@@ -226,8 +254,9 @@ a round trip cannot show this, because a mapping that writes a blob reads that b
 with itself.
 
 An attribute that wants something else opts out with `@Convert(disableConversion = true)`. An
-application's own converters are named in `Jpa.connect(config, entities, converters)` — a
-programmatic bootstrap finds no `@Converter` by scanning.
+application's own converters are named in `Jpa.connect(config, entities, converters)`, because
+`addAnnotatedClass` finds no `@Converter` — or found for it by `Jpa.scan`, which is the one job the
+scan does that naming the classes cannot.
 
 ## Validation
 
@@ -285,8 +314,9 @@ context a session was opened on.
 
 ## Integrations
 
-`install(JpaConnection) { … }` in `shared-ktor`, `jpaModule(config, Order::class)` in `shared-koin`.
-Both build one factory for the application and close it with it, both take an `instance` something
+`install(JpaConnection) { … }` in `shared-ktor`, `jpaModule(config, Order::class)` in `shared-koin`,
+and `packages("com.acme.orders.domain")` / `jpaScanModule(config, "com.acme.orders.domain")` for the
+scanning form of each. Both build one factory for the application and close it with it, both take an `instance` something
 else built, and both block once at startup because `connect` suspends and neither an `install` block
 nor a Koin `single { }` does.
 

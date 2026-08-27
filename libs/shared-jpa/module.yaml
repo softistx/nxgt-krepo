@@ -34,6 +34,10 @@ dependencies:
   # EL, so it is needed to run and not to compile.
   - $libs.expressly: runtime-only
   - $libs.kotlinx.coroutines.core: exported
+  # Classpath scanning for `Jpa.scan`. Not exported: an application names packages as strings and
+  # never touches a ClassGraph type, so this is an implementation detail of one function.
+  - $libs.classgraph
+
   # CloseGuard: the factory is closed by whoever built it, and by a DI container too
   - //libs/shared-common
 
