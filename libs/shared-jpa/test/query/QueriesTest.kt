@@ -116,6 +116,39 @@ class QueriesTest :
             }
         }
 
+        feature("SQL, where HQL runs out").config(enabled = JpaTestDatabase.available) {
+            scenario("selects through the same builder, against a table it has to name in full") {
+                JpaTestDatabase.withJpa(Thing::class) { jpa ->
+                    jpa.transaction { it.seed("one", "two") }
+
+                    // Qualified, and that is the rule rather than this harness being awkward:
+                    // Hibernate qualifies the table it renders from HQL, and sends native SQL as
+                    // written. Unqualified here, this is `relation "things" does not exist`.
+                    val table = "${jpa.config.schema}.things"
+
+                    val found =
+                        jpa.session { session ->
+                            session
+                                .nativeQuery<String>("select name from $table where name like :like order by id")
+                                .parameter("like", "t%")
+                                .list()
+                        }
+
+                    found shouldContainExactly listOf("two")
+                }
+            }
+
+            scenario("mutates, and answers with the rows it touched") {
+                JpaTestDatabase.withJpa(Thing::class) { jpa ->
+                    jpa.transaction { it.seed("a", "b") }
+
+                    val table = "${jpa.config.schema}.things"
+
+                    jpa.transaction { it.nativeMutation("update $table set name = 'x'").execute() } shouldBe 2
+                }
+            }
+        }
+
         feature("a bulk mutation").config(enabled = JpaTestDatabase.available) {
             scenario("answers with the number of rows it touched") {
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
