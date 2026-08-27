@@ -1,0 +1,13 @@
+product: jvm/lib
+
+dependencies:
+  # MinioAsyncClient and the SDK's argument types are part of this module's public API
+  - $libs.minio: exported
+  - $libs.kotlinx.coroutines.core: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # the SDK logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
