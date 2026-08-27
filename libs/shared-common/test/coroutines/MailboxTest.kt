@@ -67,6 +67,19 @@ class MailboxTest :
                 received shouldContainExactly listOf("m1", "m2", "m3", "m4", "m5")
             }
 
+            scenario("use closes it, for the block that owns the whole exchange") {
+                /* AutoCloseable because it has a lifetime and something has to end it. Its usual
+                   owner is an object, not a block — but where a block does own it, `use` is what a
+                   reader of this codebase will reach for, so it works. */
+                val mailbox =
+                    Mailbox<String>().use { open ->
+                        open.post("inside") shouldBe true
+                        open
+                    }
+
+                mailbox.post("after") shouldBe false
+            }
+
             scenario("a message posted after closing is refused rather than lost quietly") {
                 val mailbox = Mailbox<String>()
                 mailbox.close()
