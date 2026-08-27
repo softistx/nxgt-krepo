@@ -7,13 +7,19 @@ import com.strange.kafka.serde.KafkaSerde
 import com.strange.kafka.serde.jsonSerde
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -27,8 +33,6 @@ import org.apache.kafka.clients.consumer.ConsumerRebalanceListener
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.WakeupException
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
@@ -45,18 +49,20 @@ import kotlin.time.toJavaDuration
  *
  * Four things about Kafka's consumer shape this exists to deal with:
  *
- * **The client belongs to one thread, and it means the thread, not the turn.** `KafkaConsumer`
- * compares the identity of the calling thread and throws `ConcurrentModificationException` when it
- * changes, so `Dispatchers.IO.limitedParallelism(1)` is not a substitute: it serializes access but
- * resumes on whichever thread is free. Hence one dispatcher over one thread — a *virtual* one, so
- * an application with a dozen subscribers does not pay a dozen platform threads to sit in `poll`.
- * Everything above it is ordinary coroutines: the loop is a coroutine, records cross a `Channel`,
- * handlers are suspend functions on the caller's own dispatcher.
+ * **The client refuses overlapping calls, and only overlapping calls.** Every method takes an owner
+ * slot on the way in and frees it on the way out, so a second caller *during* a call gets
+ * `ConcurrentModificationException` while consecutive calls from different threads are fine — see
+ * `ConsumerConfinementTest`, which establishes exactly that against the real client. What this needs
+ * is therefore mutual exclusion, not a thread of its own, and `Dispatchers.IO.limitedParallelism(1)`
+ * is precisely mutual exclusion: one task at a time, on whichever IO thread is free, which is where
+ * a blocking `poll` belongs anyway.
  *
- * **Nothing except the loop is allowed to want that thread.** A poll holds it for the whole poll
- * timeout, so anything that waits on it waits that long — and if the loop never suspends, forever.
- * Offsets are therefore tracked under a lock rather than on the consumer's thread, and a commit
- * from a handler is a request the loop picks up on its next turn.
+ * **Nothing except the loop is allowed to want that dispatcher.** A poll holds it for the whole poll
+ * timeout, and the loop between turns never suspends, so anything that waits to be scheduled there
+ * waits for the loop to finish — forever, while records keep arriving. Handlers therefore never
+ * touch the dispatcher: a completion or a commit is a message posted to [mailbox], and the loop
+ * applies it on its next turn. That also makes the loop the only writer of [OffsetTracker] and puts
+ * a completion and the commit that must follow it in one queue instead of two racing flags.
  *
  * **A slow handler must not cost the group its membership.** The loop never stops polling: when the
  * buffer between it and the handler fills, it pauses its partitions and keeps calling `poll`, which
@@ -77,44 +83,43 @@ class KafkaSubscriber<K, V> internal constructor(
     private val options: SubscriberOptions,
 ) : AutoCloseable {
     /**
-     * One virtual thread, and the same one every time.
+     * One caller inside the client at a time — the client's whole requirement.
      *
-     * Virtual because a blocking `poll` then unmounts instead of holding a platform thread; single
-     * because that is the client's contract. Do not "simplify" this to a shared dispatcher with
-     * limited parallelism — see the note on identity above.
+     * A view over the IO pool rather than a thread of its own: nothing here is thread-affine, and a
+     * subscriber that is idle costs no thread at all.
      */
-    private val thread =
-        Executors.newSingleThreadExecutor(Thread.ofVirtual().name("kafka-subscriber-", 0).factory())
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(1)
 
-    private val dispatcher: CoroutineDispatcher = thread.asCoroutineDispatcher()
+    /** For [close], which has to outlive the loop it is stopping. */
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
+
+    /** What handlers and collectors ask of the loop. Unlimited, so asking never blocks a handler. */
+    private val mailbox = Channel<LoopMessage>(Channel.UNLIMITED)
+
+    private val polling = MutableStateFlow(false)
+
+    private val assigned = MutableStateFlow<Set<TopicPartition>>(emptySet())
+
+    // ─── Everything below is touched only on the dispatcher ───────────────────
 
     private val tracker = OffsetTracker()
 
-    /** Commits asked for by a handler or a collector, for the loop to carry out and answer. */
-    private val commitRequests = Channel<CompletableDeferred<Unit>>(Channel.UNLIMITED)
+    /** Commits asked for and not yet answered. */
+    private val awaiting = mutableListOf<CompletableDeferred<Unit>>()
 
-    private val handledSinceCommit = AtomicInteger()
+    private var handledSinceCommit = 0
 
-    @Volatile
-    private var commitRequested = false
-
-    @Volatile
-    private var polling = false
-
-    @Volatile
-    private var assigned: Set<TopicPartition> = emptySet()
-
-    /** Touched only by the loop. */
     private var lastCommit = TimeSource.Monotonic.markNow()
 
     /**
      * The partitions this consumer currently owns — empty before the first poll.
      *
-     * Recorded by the rebalance listener, which Kafka calls on the consumer's own thread, rather
-     * than read back from the client: asking the client would mean waiting for the poll loop to let
-     * go of it.
+     * Read off the client by the loop, on the loop's own turn, where it costs nothing: any other
+     * caller asking the client directly would have to wait for a poll to give it up. A flow rather
+     * than a value because a rebalance is an event worth reacting to, and what the routing DSL's
+     * `onAssigned` / `onRevoked` will watch.
      */
-    val assignment: Set<TopicPartition> get() = assigned
+    val assignment: StateFlow<Set<TopicPartition>> get() = assigned.asStateFlow()
 
     /**
      * The records, as they arrive, until the collector stops.
@@ -161,23 +166,21 @@ class KafkaSubscriber<K, V> internal constructor(
     /**
      * Commits everything handled so far, whatever the strategy says, and waits for it.
      *
-     * While records are being collected this is a request the loop carries out on its next turn —
-     * the loop owns the client. With no collection running, the thread is idle and the commit
-     * happens on it directly.
+     * Posted to the loop, which owns the client and answers on its next turn. With no loop running
+     * there is nobody to answer, and the dispatcher is free for this call to serve itself — asking
+     * *before* checking is what makes a loop that stops in between harmless, since a loop on its way
+     * out empties [mailbox] after it stops reporting itself as polling.
      */
     suspend fun commitPending() {
-        if (!polling) {
-            withContext(dispatcher) { commitNow() }
-            return
-        }
         val committed = CompletableDeferred<Unit>()
-        commitRequests.send(committed)
+        mailbox.send(LoopMessage.CommitNow(committed))
+        if (!polling.value) withContext(dispatcher) { serveCommits() }
         committed.await()
     }
 
     /** Marks one record handled and commits up to it — for a [CommitStrategy.Manual] collector. */
     suspend fun commit(record: KafkaRecord<K, V>) {
-        tracker.completed(TopicPartition(record.topic, record.partition), record.offset)
+        mailbox.send(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
         commitPending()
     }
 
@@ -186,23 +189,25 @@ class KafkaSubscriber<K, V> internal constructor(
      *
      * `wakeup` is the one method Kafka documents as safe to call from another thread: it makes an
      * in-flight `poll` throw, which is how a loop that is otherwise blocked gets told to stop. The
-     * close itself is queued onto the consumer's own thread, behind the loop.
+     * close itself is queued onto the dispatcher, where it lands behind the loop it just woke.
      */
     override fun close() {
         consumer.wakeup()
-        runCatching { thread.execute { runCatching { consumer.close() } } }
-        thread.shutdown()
+        scope
+            .launch { runCatching { consumer.close() } }
+            .invokeOnCompletion { scope.cancel() }
     }
 
     // ─── The loop ─────────────────────────────────────────────────────────────
 
     private suspend fun pollInto(buffer: SendChannel<KafkaRecord<K, V>>) {
         val waiting = ArrayDeque<KafkaRecord<K, V>>()
-        val awaiting = mutableListOf<CompletableDeferred<Unit>>()
-        polling = true
+        polling.value = true
         consumer.subscribe(topics, RevocationCommit())
         try {
             while (currentCoroutineContext().isActive) {
+                drainMailbox()
+
                 while (waiting.isNotEmpty() && buffer.trySend(waiting.first()).isSuccess) {
                     waiting.removeFirst()
                 }
@@ -214,34 +219,96 @@ class KafkaSubscriber<K, V> internal constructor(
                     consumer.resume(consumer.paused())
                 }
 
-                while (true) awaiting += commitRequests.tryReceive().getOrNull() ?: break
-
-                val asked = commitRequested
-                if (asked) commitRequested = false
-
+                val due = commitDue()
                 val timeout =
                     when {
-                        asked || awaiting.isNotEmpty() -> Duration.ZERO
+                        due -> Duration.ZERO
                         waiting.isNotEmpty() -> PAUSED_POLL
                         else -> options.pollTimeout
                     }
                 consumer.poll(timeout.toJavaDuration()).forEach { waiting.addLast(KafkaRecord.from(it)) }
+                assigned.value = consumer.assignment().toSet()
 
-                if (asked || awaiting.isNotEmpty() || batchDue()) {
-                    commitNow()
-                    awaiting.forEach { it.complete(Unit) }
-                    awaiting.clear()
-                }
+                if (due) commitAndAnswer()
             }
         } catch (_: WakeupException) {
             // close() asked for this.
         } finally {
-            polling = false
+            /* Reported stopped before the last drain, so a commit that arrives after this either
+               lands in the drain below or finds polling false and serves itself. */
+            polling.value = false
+            drainMailbox()
             runCatching { commitNow() }
-            // Nobody else will answer these now.
-            awaiting.forEach { it.complete(Unit) }
-            while (true) (commitRequests.tryReceive().getOrNull() ?: break).complete(Unit)
+            answer { it.complete(Unit) } // Nobody else will.
         }
+    }
+
+    /** Applies everything handlers and collectors have asked for since the last turn. */
+    private fun drainMailbox() {
+        while (true) {
+            when (val message = mailbox.tryReceive().getOrNull()) {
+                null -> {
+                    return
+                }
+
+                is LoopMessage.Completed -> {
+                    tracker.completed(message.partition, message.offset)
+                    handledSinceCommit++
+                }
+
+                is LoopMessage.CommitNow -> {
+                    awaiting += message.done
+                }
+            }
+        }
+    }
+
+    private fun commitDue(): Boolean {
+        if (awaiting.isNotEmpty()) return true
+        if (!tracker.hasPending()) return false
+        return when (val strategy = options.commit) {
+            is CommitStrategy.AfterEach -> {
+                handledSinceCommit > 0
+            }
+
+            is CommitStrategy.Batched -> {
+                handledSinceCommit >= strategy.count || lastCommit.elapsedNow() >= strategy.every
+            }
+
+            is CommitStrategy.Manual -> {
+                false
+            }
+        }
+    }
+
+    /** A whole turn for a commit asked for while no loop is running. */
+    private fun serveCommits() {
+        drainMailbox()
+        commitAndAnswer()
+    }
+
+    private fun commitAndAnswer() {
+        try {
+            commitNow()
+        } catch (failure: Throwable) {
+            answer { it.completeExceptionally(failure) }
+            throw failure
+        }
+        answer { it.complete(Unit) }
+    }
+
+    private fun answer(outcome: (CompletableDeferred<Unit>) -> Unit) {
+        awaiting.forEach(outcome)
+        awaiting.clear()
+    }
+
+    private fun commitNow() {
+        if (!tracker.hasPending()) return
+        val offsets = tracker.committable()
+        consumer.commitSync(offsets)
+        tracker.committed(offsets)
+        handledSinceCommit = 0
+        lastCommit = TimeSource.Monotonic.markNow()
     }
 
     private suspend fun processPerPartition(
@@ -270,53 +337,31 @@ class KafkaSubscriber<K, V> internal constructor(
     }
 
     /**
-     * Marks a record handled. Deliberately not suspending and deliberately not on the consumer's
-     * thread: a handler that had to wait for the poll loop would be a handler throttled to one
-     * record per poll timeout.
+     * Marks a record handled — a message, not a call. A handler that had to wait for the dispatcher
+     * would be a handler throttled to one record per poll timeout, and one poll away from deadlock.
      */
     private fun handled(record: KafkaRecord<K, V>) {
-        tracker.completed(TopicPartition(record.topic, record.partition), record.offset)
-        handledSinceCommit.incrementAndGet()
-        if (options.commit is CommitStrategy.AfterEach) commitRequested = true
-    }
-
-    private fun batchDue(): Boolean {
-        val strategy = options.commit
-        if (strategy !is CommitStrategy.Batched || !tracker.hasPending()) return false
-        return handledSinceCommit.get() >= strategy.count || lastCommit.elapsedNow() >= strategy.every
-    }
-
-    /** Only ever called on the consumer's thread. */
-    private fun commitNow() {
-        if (!tracker.hasPending()) return
-        val offsets = tracker.committable()
-        consumer.commitSync(offsets)
-        tracker.committed(offsets)
-        handledSinceCommit.set(0)
-        lastCommit = TimeSource.Monotonic.markNow()
+        mailbox.trySend(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
     }
 
     /**
-     * Kafka calls this inside `poll`, on the client's own thread, and waits for it — which is
-     * exactly the window in which a partition's last offsets can still be committed by the
-     * consumer that owns it.
+     * Kafka calls this inside `poll`, on the loop's own turn, and waits for it — which is exactly
+     * the window in which a partition's last offsets can still be committed by the consumer that
+     * owns it. Draining first is what includes the records handled during the poll being rebalanced.
      */
     private inner class RevocationCommit : ConsumerRebalanceListener {
         override fun onPartitionsRevoked(partitions: Collection<TopicPartition>) {
-            commitNow()
+            drainMailbox()
+            runCatching { commitAndAnswer() }
             tracker.forget(partitions)
-            assigned = assigned - partitions.toSet()
         }
 
-        override fun onPartitionsAssigned(partitions: Collection<TopicPartition>) {
-            assigned = consumer.assignment().toSet()
-        }
+        override fun onPartitionsAssigned(partitions: Collection<TopicPartition>) = Unit
 
         override fun onPartitionsLost(partitions: Collection<TopicPartition>) {
             /* Lost, not revoked: the partitions are already someone else's, and committing their
                offsets now would be claiming work this consumer no longer owns. */
             tracker.forget(partitions)
-            assigned = assigned - partitions.toSet()
         }
     }
 
@@ -324,6 +369,20 @@ class KafkaSubscriber<K, V> internal constructor(
         /** How long a paused poll waits — long enough not to spin, short enough to notice room. */
         val PAUSED_POLL = 100.milliseconds
     }
+}
+
+/** What a handler or a collector asks of the poll loop, in the order it asked. */
+private sealed interface LoopMessage {
+    /** This record has been handled; its offset may be committed once the prefix below it is. */
+    data class Completed(
+        val partition: TopicPartition,
+        val offset: Long,
+    ) : LoopMessage
+
+    /** Commit what is committable and say so. */
+    data class CommitNow(
+        val done: CompletableDeferred<Unit>,
+    ) : LoopMessage
 }
 
 /**
