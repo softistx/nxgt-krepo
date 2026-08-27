@@ -1,74 +1,115 @@
 # shared-ktor
 
-Ktor integrations for the shared libraries — one package per integration, one module for all of
-them.
+Ktor integrations for the libraries here — one package per integration, one module for all of them.
 
 ```
-com.strange.ktor.i18n     the Accept-Language plugin over shared-i18n
+com.strange.ktor.i18n      I18nPlugin      a negotiated locale per request
+com.strange.ktor.redis     RedisPlugin     one Redis connection
+com.strange.ktor.mongo     MongoPlugin     one client, and the database over it
+com.strange.ktor.amqp      AmqpPlugin      one AMQP connection
+com.strange.ktor.kafka     KafkaPlugin     the cluster configuration
+com.strange.ktor.storage   StoragePlugin   one object-storage client
 ```
 
-The Redis, Mongo, Kafka and AMQP plugins go here as they appear, as siblings of `i18n`, not as new
-modules: an application wires them together in one `install` block and should read them from one
-dependency.
+```kotlin
+install(RedisPlugin) { config = RedisConfig(uri = System.getenv("REDIS_URI"), namespace = "orders") }
+install(MongoPlugin) { uri = System.getenv("MONGO_URI"); database = "orders" }
+install(I18nPlugin)  { messages = Messages.load(locales = listOf(ENGLISH, FRENCH)) }
 
-## Keeping one module from becoming a fat one
+get("/cart/{id}") {
+    val cart = call.database.collection<Cart>("carts").findById(call.parameters["id"]!!)
+    call.respondText(call.translate("cart.total", mapOf("total" to cart.total)))
+}
+```
 
-The obvious risk is the dependency list: an app that installs only the i18n plugin should not
-inherit Lettuce, the Mongo driver, the Kafka clients and the RabbitMQ client because they happen to
-live in the same jar.
+## What a plugin is for
 
-The answer is the scope. **A backend's library goes in `compile-only` unless the plugin's own public
-API exposes it.** The plugin compiles against it; nothing downstream gets it at runtime. That is
-sound because an app installing the Redis plugin already depends on `shared-redis` — it is using
-Redis — so the driver is on its classpath for its own reasons, not this module's.
+**A connection is a pool, and a pool is the thing you want exactly one of.** One per request spends
+a round trip on every call; one per route leaves as many as there are routes. So each plugin opens
+one at startup and puts it on the application, and `call.<thing>` hands the same one to every route.
+
+**Closing it is the half that gets forgotten.** Every plugin here subscribes the connection to
+`ApplicationStopped` through the same helper, because five plugins each remembering separately is
+four chances to leak a pool per redeploy — a mistake nothing fails on until a server runs out of
+file handles. `ApplicationStopped` and not `ApplicationStopping`: stopping fires while requests may
+still be in flight, and a request that finds its connection already closed is a 500 caused by the
+shutdown rather than by the caller.
+
+**A missing `install` names itself.** `call.redis` without `install(RedisPlugin)` throws saying
+exactly that, rather than surfacing as a null three layers down.
+
+## The two that are not like the others
+
+**`KafkaPlugin` opens nothing and closes nothing.** That is not an omission — it is what `Kafka`
+itself says: a Kafka client connects when it is created, and a producer, a consumer and an admin
+client have different lifetimes, threads and failure modes. A wrapper that owns them all is a
+wrapper that closes a producer something else was still using. So the plugin holds the
+configuration, `call.kafka` reaches it, and whatever a route opens, that route closes. A long-lived
+publisher belongs to the application: open it at startup and close it on `ApplicationStopped`, the
+way the other plugins do.
+
+**`MongoPlugin` exists mostly for the codec registry.** A `MongoClient` built without
+`mongoCodecRegistry()` compiles, connects and reads — and stores an `Instant` as something this
+library cannot read back. Every step succeeds until the data is already written, so the plugin does
+it rather than each service remembering to. A round trip through a real server is the only spec that
+can tell the difference, and there is one.
+
+**`AmqpPlugin` blocks once, at startup.** `Amqp.connect` suspends and plugin installation does not,
+so this is the module's one `runBlocking` — on the thread starting the application, before anything
+is serving. The alternative is a server accepting requests while its broker connection is still
+being made, and answering the first of them with what looks like the broker's fault.
+
+## One module without a fat dependency list
+
+Every backend is `compile-only`, **including the ones this module's API returns**. `call.redis`
+hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath.
+
+That sounds wrong and is not. An application that installs `RedisPlugin` already depends on
+`shared-redis` — `RedisConfig` is the only way to configure the plugin at all — so the driver is on
+its classpath for its own reasons. And an application that installs only `I18nPlugin` never loads a
+class from any of the others, so nothing is missing when nothing is linked. The rule enforces itself
+rather than asking anyone to remember it.
 
 ```
 ./kotlin show dependencies -m shared-ktor    # a compile-only entry: in COMPILE, absent from RUNTIME
 ```
 
-The tests are the other half. Integration specs gate on server availability the way the rest of the
-repo does — `feature("…").config(enabled = RedisTestServer.available)` — so `./kotlin test -m
-shared-ktor` stays green on a machine with nothing running, and exercises what *is* running.
+The tests need the real thing at runtime, so `test-dependencies` carries each library again at
+normal scope plus `//libs/shared-testing` for the servers. Every plugin is specced against a real
+backend: "one connection, closed on stop" is not observable from a mock, and the closed-on-stop
+assertion is the one the plugins exist for.
 
 ## i18n
 
-```kotlin
-install(I18n) { messages = Messages.load(locales = listOf(Locale.ENGLISH, Locale.FRENCH)) }
+The odd one in a good way — it resolves something per request rather than owning a connection.
 
-get("/greeting") {
-    call.respondText(call.translate("hello.world", mapOf("name" to "Ada")))
-}
+```kotlin
+install(I18nPlugin) { messages = Messages.load(locales = listOf(Locale.ENGLISH, Locale.FRENCH)) }
+
+get("/greeting") { call.respondText(call.translate("hello.world", mapOf("name" to "Ada"))) }
 ```
 
-That is the whole API, plus `call.translator` when a handler wants the
-[`Translator`](../shared-i18n/README.md) itself.
-
-**Resolved once per call.** The locale is negotiated at call setup and kept on the call.
-Negotiating inside each handler that needs a message would parse the same header several times
-and — worse — could answer two questions in one response in two different languages.
-
-`call.translator` throws when the plugin is not installed, rather than quietly answering in English.
-A service whose translations silently stopped negotiating is worse off than one that fails on the
-first request after the mistake.
+The locale is negotiated at call setup and kept on the call. Negotiating inside each handler that
+needs a message would parse the same header several times and — worse — could answer two questions
+in one response in two different languages.
 
 ```kotlin
-install(I18n) {
+install(I18nPlugin) {
     messages = catalogs
     header = "X-Language"     // default: Accept-Language
     queryParameter = "lang"   // default: null, i.e. off
 }
 ```
 
-`header` exists for a service behind something that rewrites the client's own.
-
-`queryParameter` is **off by default, deliberately**. `?lang=fr` is genuinely useful for a link
-somebody sends a colleague, and it is also a second thing the same URL can mean, which every cache
-in front of the service has to be told about. That is a decision to take, not a default to inherit.
-When it is on, it beats the header — it is the more deliberate of the two.
+`header` exists for a service behind something that rewrites the client's own. `queryParameter` is
+**off by default, deliberately**: `?lang=fr` is genuinely useful for a link somebody sends a
+colleague, and it is also a second thing the same URL can mean, which every cache in front of the
+service has to be told about. That is a decision to take, not a default to inherit. When it is on,
+it beats the header — it is the more deliberate of the two.
 
 ## Why the plugins are not in the libraries they wrap
 
-So that `shared-i18n` stays free of Ktor. A worker, a CLI or a Kafka consumer translates the same
-messages and has no server in it, and a catalog library that drags a web framework behind it is one
-those callers cannot use. The same is true of `shared-redis` and the rest: the library knows the
-backend, this module knows the framework, and neither has to know both.
+So that `shared-i18n`, `shared-redis` and the rest stay free of Ktor. A worker, a CLI or a Kafka
+consumer uses the same libraries and has no server in it, and a library that drags a web framework
+behind it is one those callers cannot use. The library knows the backend, this module knows the
+framework, and neither has to know both.
