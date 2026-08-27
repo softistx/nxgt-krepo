@@ -7,9 +7,9 @@ dependencies:
   # One entry per integration, and every one of them compile-only.
   #
   # These are exposed by this module's API — `call.redis` returns a `Redis` — and they still do not
-  # belong on a consumer's runtime classpath. An application that installs RedisPlugin already
+  # belong on a consumer's runtime classpath. An application that installs RedisConnection already
   # depends on shared-redis, because RedisConfig is the only way to configure the plugin at all; and
-  # an application that installs only I18nPlugin never loads a class from any of the others, so
+  # an application that installs only I18n never loads a class from any of the others, so
   # nothing is missing at runtime. That is what keeps one module from handing every app every driver.
   #
   # Verified with `./kotlin show dependencies -m shared-ktor`: a compile-only entry is in the COMPILE
@@ -21,6 +21,10 @@ dependencies:
   - //libs/shared-kafka: compile-only
   - //libs/shared-storage: compile-only
 
+  # Ktor's DI, for the registrations in `com.strange.ktor.di`. Compile-only for the same reason:
+  # an application that never calls `provideRedis` never loads a class from it.
+  - $libs.ktor.server.di: compile-only
+
 test-dependencies:
   # the specs run the plugins for real, so here the libraries are on the runtime classpath too
   - //libs/shared-i18n
@@ -31,6 +35,7 @@ test-dependencies:
   - //libs/shared-storage
   # and the servers they connect to, started for the run
   - //libs/shared-testing
+  - $libs.ktor.server.di
   - $ktor.server.testHost
   - $ktor.server.netty
   - $libs.kotest.runner.junit5
@@ -39,4 +44,9 @@ test-dependencies:
   - $libs.slf4j.nop
 
 settings:
-  ktor: enabled
+  ktor:
+    enabled: true
+    # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is
+    # the same number today by coincidence. `$ktor.*` and a `$libs.*` alias on `version.ref = "ktor"`
+    # have to be one version, or a toolchain upgrade splits them silently.
+    version: 3.5.2

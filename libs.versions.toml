@@ -109,9 +109,16 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-androidx-workmanager = { module = "io.insert-koin:koin-androidx-workmanager" }
 koin-androidx-compose-navigation = { module = "io.insert-koin:koin-androidx-compose-navigation" }
+# Versioned, unlike the koin aliases around it: those are resolved through `koin-bom` by the
+# Gradle consumers of this catalog, and the toolchain modules that use this one name no BOM.
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-annotations = { module = "io.insert-koin:koin-annotations" }
 koin-ktor = { module = "io.insert-koin:koin-ktor" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
+
+# Ktor's own dependency injection. Not one of the `$ktor.*` toolchain shortcuts — `$ktor.server.di`
+# resolves to nothing — so it is named here like any other coordinate, on the `ktor` version.
+ktor-server-di = { module = "io.ktor:ktor-server-di", version.ref = "ktor" }
 
 slf4j-nop = { module = "org.slf4j:slf4j-nop", version = "2.0.18" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

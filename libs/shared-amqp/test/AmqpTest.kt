@@ -14,6 +14,19 @@ import io.kotest.matchers.shouldNotBe
 class AmqpTest :
     FeatureSpec({
 
+        feature("a connection that is closed").config(enabled = AmqpTestBroker.available) {
+            scenario("closing it twice is not an error") {
+                // Not a hypothetical: Ktor's DI closes every AutoCloseable it hands out when the
+                // application stops, and whoever built this one has its own claim to closing it.
+                val amqp = AmqpTestBroker.connect("shared-amqp close")
+
+                amqp.close()
+                amqp.close()
+
+                amqp.isOpen shouldBe false
+            }
+        }
+
         feature("connecting").config(enabled = AmqpTestBroker.available) {
             scenario("the connection is open, and hands out channels") {
                 AmqpTestBroker.amqp { amqp ->

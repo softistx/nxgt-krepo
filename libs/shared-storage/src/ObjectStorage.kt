@@ -1,5 +1,6 @@
 package com.strange.storage
 
+import com.strange.common.lifecycle.CloseGuard
 import com.strange.storage.bucket.StorageBucket
 import io.minio.BucketExistsArgs
 import io.minio.CreateBucketArgs
@@ -27,6 +28,8 @@ class ObjectStorage internal constructor(
     internal val client: MinioAsyncClient,
     internal val endpoint: String,
 ) : AutoCloseable {
+    private val guard = CloseGuard()
+
     /** Every bucket this credential can see. */
     suspend fun buckets(): List<String> = client.listBuckets().await().map { it.name() }
 
@@ -57,7 +60,8 @@ class ObjectStorage internal constructor(
      */
     fun bucket(name: String): StorageBucket = StorageBucket(client, name, endpoint)
 
-    override fun close() = client.close()
+    /** Closes the client. Calling it again does nothing. */
+    override fun close() = guard.once { client.close() }
 
     companion object {
         fun connect(config: StorageConfig): ObjectStorage {
