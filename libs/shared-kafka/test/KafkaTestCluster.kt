@@ -2,6 +2,7 @@ package com.strange.kafka
 
 import com.strange.testing.containers.kafkaContainer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.AdminClientConfig
@@ -12,6 +13,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -109,6 +111,7 @@ internal object KafkaTestCluster {
             withContext(Dispatchers.IO) {
                 admin.createTopics(listOf(NewTopic(name, partitions, replication))).all().get()
             }
+            awaitTopic(admin, name)
             try {
                 block(name)
             } finally {
@@ -149,6 +152,38 @@ internal object KafkaTestCluster {
                 records
             }
         }
+
+    /**
+     * Waits until every partition of [topic] has a leader.
+     *
+     * `createTopics` returns when the controller has accepted the creation, which is not when the
+     * broker this client talks to next can answer about it. Asking for offsets in that window fails
+     * with `UnknownTopicOrPartition`, and it is a race rather than a certainty — it showed up once
+     * in a full-suite run and not at all when the module ran on its own.
+     */
+    private suspend fun awaitTopic(
+        admin: Admin,
+        topic: String,
+        timeout: Duration = 10.seconds,
+    ) {
+        val deadline = System.nanoTime() + timeout.inWholeNanoseconds
+        while (System.nanoTime() < deadline) {
+            val ready =
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        admin
+                            .describeTopics(listOf(topic))
+                            .allTopicNames()
+                            .get()[topic]
+                            ?.partitions()
+                            ?.all { it.leader() != null } == true
+                    }.getOrDefault(false)
+                }
+            if (ready) return
+            delay(50.milliseconds)
+        }
+        error("$topic never became visible on $bootstrap")
+    }
 
     /** Deletes a consumer group the spec created, ignoring one that never came into being. */
     suspend fun deleteGroup(group: String) {
