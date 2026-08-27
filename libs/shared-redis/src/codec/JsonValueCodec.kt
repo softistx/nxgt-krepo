@@ -1,8 +1,9 @@
 package com.strange.redis.codec
 
+import com.strange.common.serialization.decodeValue
+import com.strange.common.serialization.typeName
 import com.strange.redis.RedisValueException
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 /**
@@ -20,9 +21,7 @@ class JsonValueCodec<T>(
     override fun encode(value: T): String = json.encodeToString(serializer, value)
 
     override fun decode(raw: String): T =
-        try {
-            json.decodeFromString(serializer, raw)
-        } catch (e: SerializationException) {
-            throw RedisValueException("stored value is not a ${serializer.descriptor.serialName}", e)
+        json.decodeValue(serializer, raw) { failure ->
+            RedisValueException("stored value is not a ${serializer.typeName}", failure)
         }
 }

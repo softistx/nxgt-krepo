@@ -1,6 +1,8 @@
 package com.strange.amqp.codec
 
 import com.strange.amqp.AmqpValueException
+import com.strange.common.serialization.decodeValue
+import com.strange.common.serialization.typeName
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
@@ -61,14 +63,9 @@ internal class JsonCodec<T>(
     override fun encode(value: T): ByteArray = json.encodeToString(serializer, value).toByteArray()
 
     override fun decode(bytes: ByteArray): T =
-        try {
-            json.decodeFromString(serializer, bytes.decodeToString())
-        } catch (failure: Exception) {
-            /* The bytes themselves are deliberately not in the message: a body is somebody's
-               payment details as often as it is a test fixture. */
-            throw AmqpValueException(
-                "a message body is not a valid ${serializer.descriptor.serialName}",
-                cause = failure,
-            )
+        /* The bytes themselves never reach the message: a body is somebody's payment details as
+           often as it is a test fixture, and decodeValue is not given them to pass on. */
+        json.decodeValue(serializer, bytes.decodeToString()) { failure ->
+            AmqpValueException("a message body is not a valid ${serializer.typeName}", cause = failure)
         }
 }
