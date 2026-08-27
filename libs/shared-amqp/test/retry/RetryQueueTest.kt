@@ -106,6 +106,11 @@ class RetryQueueTest :
 
                             // One delay, so: first delivery, one retry, then parked.
                             withTimeout(10.seconds) { while (amqp.messageCount(retries.parked) == 0L) delay(20) }
+                            /* Only *then* is the copy's original acknowledged. Cancelling in between
+                               closes the channel on an unacknowledged delivery, which the broker
+                               rightly puts back on the queue — at-least-once working as designed,
+                               and a race if the count below is read without waiting for it. */
+                            withTimeout(10.seconds) { while (amqp.messageCount(queue) != 0L) delay(20) }
                             consuming.cancel()
                         }
 

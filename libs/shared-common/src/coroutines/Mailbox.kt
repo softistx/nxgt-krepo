@@ -29,7 +29,7 @@ import kotlinx.coroutines.channels.Channel
  * Unbounded on purpose: the producer is a thread that must not be made to wait, so the only
  * question is whether the consumer keeps up, and a bound would answer it by losing messages.
  */
-class Mailbox<T> {
+class Mailbox<T> : AutoCloseable {
     private val messages = Channel<T>(Channel.UNLIMITED)
 
     /**
@@ -63,8 +63,14 @@ class Mailbox<T> {
      *
      * A [consume] loop therefore finishes its backlog and *then* returns, which is what lets a
      * shutdown answer the callers still waiting on it rather than abandoning them.
+     *
+     * **`use` is rarely the right way to call this.** A mailbox usually belongs to an object whose
+     * lifetime it shares — held as a field, closed from that object's own `close` — because the
+     * producer is somebody else's thread and the consumer is a coroutine, and neither is a block.
+     * `use` fits only when one block owns the whole exchange, posts included; anywhere else it ends
+     * the consumer while the producer is still running.
      */
-    fun close() {
+    override fun close() {
         messages.close()
     }
 }
