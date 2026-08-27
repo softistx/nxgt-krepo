@@ -379,6 +379,23 @@ The catalog's `[bundles]` groupings map to the intended consumer surfaces of thi
 - **`shared`** / `shared-test` — code common to both: kotlinx-serialization, kotlinx-rpc client, bson-kotlinx.
 - **`kotlinx`**, **`faker`** — coroutines/datetime, and kotlin-faker for test data.
 
+**A module that turns on `settings.ktor` pins the version to the catalog's.** `ktor: enabled` gives
+`$ktor.server.core` and the rest from the toolchain's *own* default version, which is 3.5.2 today
+and matches `ktor = "3.5.2"` in the catalog by coincidence rather than by construction — a toolchain
+upgrade would move one and not the other, and an artifact this repo names itself (`ktor-server-di`,
+on `version.ref = "ktor"`) would then be a different Ktor from `ktor-server-core`. So:
+
+```yaml
+settings:
+  ktor:
+    enabled: true
+    version: 3.5.2   # matches `ktor` in libs.versions.toml
+```
+
+`./kotlin show settings -m <module>` says which one is in force: `# module.yaml` when it is pinned,
+`# default` when the toolchain is choosing. Three modules enable it — `shared-ktor`, `demo-api`,
+`demo-client` — and all three carry the pin.
+
 The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.10 with CLI 0.12.0), so that entry does not control what this repo compiles with.
 
 ## Coroutine-first Kotlin
