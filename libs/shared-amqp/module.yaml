@@ -1,0 +1,19 @@
+product: jvm/lib
+
+dependencies:
+  # Connection, Channel, AMQP.BasicProperties and Envelope are all over this module's public API
+  - $libs.amqp.client: exported
+  - $libs.kotlinx.coroutines.core: exported
+  # message bodies are carried as their kotlinx.serialization form
+  - $libs.kotlinx.serialization: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # the RabbitMQ client logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    serialization: json
