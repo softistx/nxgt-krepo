@@ -2,6 +2,7 @@ package com.strange.jpa
 
 import com.strange.common.lifecycle.CloseGuard
 import com.strange.jpa.convert.kotlinConverters
+import com.strange.jpa.json.KotlinxJsonFormatMapper
 import com.strange.jpa.scan.scanConverters
 import com.strange.jpa.scan.scanEntities
 import io.vertx.core.Vertx
@@ -9,6 +10,7 @@ import jakarta.persistence.AttributeConverter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.hibernate.cfg.Configuration
+import org.hibernate.cfg.MappingSettings
 import org.hibernate.reactive.provider.ReactiveServiceRegistryBuilder
 import org.hibernate.reactive.stage.Stage
 import org.hibernate.reactive.vertx.VertxInstance
@@ -94,6 +96,7 @@ class Jpa internal constructor(
             withContext(Dispatchers.IO) {
                 require(entities.isNotEmpty()) { "Jpa.connect needs at least one entity class" }
                 rejectUuidIdentifiers(entities)
+                rejectMismatchedJsonShapes(entities, config.json)
 
                 val own = vertx == null
                 val instance = vertx ?: Vertx.vertx()
@@ -108,6 +111,10 @@ class Jpa internal constructor(
 
                     val registry =
                         ReactiveServiceRegistryBuilder()
+                            // An instance rather than a class name, because this one carries the
+                            // caller's `Json`; before the properties, so `JpaConfig.properties` keeps
+                            // its promise of being applied last and can still name another.
+                            .applySetting(MappingSettings.JSON_FORMAT_MAPPER, KotlinxJsonFormatMapper(config.json))
                             .applySettings(configuration.properties)
                             .addService(VertxInstance::class.java, VertxInstance { instance })
                             .build()

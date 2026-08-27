@@ -1,5 +1,6 @@
 package com.strange.jpa
 
+import java.lang.reflect.Type
 import kotlin.reflect.KClass
 
 /**
@@ -45,3 +46,26 @@ class JpaNonUniqueResultException(
     val hql: String,
     cause: Throwable? = null,
 ) : JpaException("the query matched more than one row: $hql", cause)
+
+/**
+ * A JSON column whose type kotlinx.serialization has no serializer for.
+ *
+ * Nearly always a missing `@Serializable`, and worth its own exception because Hibernate's version of
+ * this failure arrives from inside a binder as kotlinx's "serializer for class … not found" and reads
+ * like a bug in this library rather than a missing annotation on the caller's own class.
+ */
+class JpaSerializerException(
+    val type: Type,
+) : JpaException("no serializer for $type: a JSON column needs a @Serializable type")
+
+/**
+ * A stored JSON document that does not decode into the attribute it was read for.
+ *
+ * The document itself is deliberately not in the message. A stored value is somebody's payment
+ * details as often as it is a test fixture, and an exception message ends up in a log nobody meant to
+ * make sensitive — the same rule `decodeValue` in `shared-common` is written around.
+ */
+class JpaDocumentException(
+    val type: Type,
+    cause: Throwable,
+) : JpaException("the stored JSON is not a $type", cause)
