@@ -10,8 +10,8 @@ class SpringEmitterTest :
     FeatureSpec({
 
         val files = SpringEmitter().render()
-        val api = files.getValue("com.example.api.CategoriesApi")
-        val category = files.getValue("com.example.api.model.Category")
+        val api = files.getValue("com.example.api.apis.CategoriesApi")
+        val category = files.getValue("com.example.api.models.Category")
 
         feature("interfaces") {
             scenario("emits an @HttpExchange interface of suspend functions") {
@@ -72,8 +72,8 @@ class SpringEmitterTest :
 
             scenario("the model style is selectable, and carries through to the interfaces") {
                 val kotlinx = SpringEmitter(ModelStyle.Kotlinx).render()
-                val kotlinxApi = kotlinx.getValue("com.example.api.CategoriesApi")
-                val kotlinxModel = kotlinx.getValue("com.example.api.model.Category")
+                val kotlinxApi = kotlinx.getValue("com.example.api.apis.CategoriesApi")
+                val kotlinxModel = kotlinx.getValue("com.example.api.models.Category")
 
                 // still a Spring client — only what binds the payloads changed
                 kotlinxApi shouldContain "@HttpExchange"

@@ -20,6 +20,7 @@ private val MODEL =
                     operations =
                         listOf(
                             Operation(
+                                id = "findOrder",
                                 name = "findOrder",
                                 httpMethod = "GET",
                                 path = "orders/{id}",
@@ -29,6 +30,7 @@ private val MODEL =
                                 deprecatedReason = "Use findOrderV2; this drops the totals block.",
                             ),
                             Operation(
+                                id = "listOrders",
                                 name = "listOrders",
                                 httpMethod = "GET",
                                 path = "orders",
@@ -73,21 +75,21 @@ class DeprecationTest :
 
         feature("the reason the document gives") {
             scenario("it is the message on the class and on the property") {
-                val order = files.getValue("com.example.api.model.Order")
+                val order = files.getValue("com.example.api.models.Order")
 
                 order shouldContain """@Deprecated("Replaced by OrderV2.")"""
                 order shouldContain """@Deprecated("Superseded by traceId.")"""
             }
 
             scenario("it is the message on the generated function") {
-                files.getValue("com.example.api.OrdersApi") shouldContain
+                files.getValue("com.example.api.apis.OrdersApi") shouldContain
                     """@Deprecated("Use findOrderV2; this drops the totals block.")"""
             }
         }
 
         feature("a deprecation with no reason") {
             scenario("it still marks the declaration, with this generator's own words") {
-                files.getValue("com.example.api.OrdersApi") shouldContain
+                files.getValue("com.example.api.apis.OrdersApi") shouldContain
                     """@Deprecated("This operation is deprecated in the OpenAPI document.")"""
             }
         }
