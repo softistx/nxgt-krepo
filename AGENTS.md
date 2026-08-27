@@ -22,6 +22,7 @@ What exists:
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
+| `libs/shared-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
 | `apps/demo-client` | Generates a Ktorfit client from that spec and calls the server |
@@ -217,9 +218,15 @@ KRaft cluster, and `rabbitmq` is on `localhost:5672` with its management UI on `
 the pull costs a gigabyte and the second container either clashes on the port or silently tests a
 different server than the one everything else uses.
 
-Integration tests therefore point at the running service — `MONGO_TEST_URI` and `REDIS_TEST_URI`,
-defaulting to `mongodb://localhost:27017` and `redis://localhost:6379/15` — and skip themselves when
-it is unreachable, so a machine without it reports skipped tests rather than a red build.
+**A spec must not depend on the host having the right daemon up.** `libs/shared-testing` declares
+each backing service and resolves it in one order: the environment variable if it names a server,
+otherwise a container started once for the run, otherwise `available == false` and the spec skips.
+`shared-mongo` works this way — `MONGO_TEST_URI` reuses the workspace's replica set, and its absence
+starts `mongo:8` rather than assuming `localhost:27017`. Move the other libraries over the same way;
+declare the backend in `Backends.kt`, not in the library's own test tree.
+
+Redis still defaults `REDIS_TEST_URI` to `redis://localhost:6379/15` and skips when it is
+unreachable, as do the services below, until each is moved.
 
 The Kafka specs default `KAFKA_TEST_BOOTSTRAP` to `kafka1:9092,kafka2:9094,kafka3:9096`, which
 resolves only once the broker names are in `/etc/hosts` — the brokers advertise container hostnames
@@ -408,6 +415,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/shared-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
+  | `libs/shared-testing/README.md` | Where an integration spec's server comes from, and how a container declared there is cleaned up |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
