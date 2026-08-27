@@ -4,6 +4,7 @@ modules:
   - apps/demo-spring-client
   - libs/openapi-generator
   - libs/shared-amqp
+  - libs/shared-common
   - libs/shared-kafka
   - libs/shared-mongo
   - libs/shared-redis
