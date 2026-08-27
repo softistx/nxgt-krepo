@@ -7,6 +7,7 @@ import io.vertx.pgclient.PgBuilder
 import io.vertx.pgclient.PgConnectOptions
 import io.vertx.sqlclient.Pool
 import io.vertx.sqlclient.PoolOptions
+import io.vertx.sqlclient.Tuple
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
@@ -101,6 +102,32 @@ internal object JpaTestDatabase {
                     ),
                     entities.toList(),
                 ).use { block(it) }
+        }
+
+    /**
+     * The type Postgres reports for a column, or null when there is no such column.
+     *
+     * This is the only honest witness to what a converter writes. A spec that persists a value and
+     * reads it back is asking one mapping to agree with itself, and a mapping that stores the whole
+     * object as bytes agrees with itself perfectly.
+     */
+    suspend fun columnType(
+        schema: String,
+        table: String,
+        column: String,
+    ): String? =
+        withClient { client ->
+            client
+                .preparedQuery(
+                    """
+                    select data_type from information_schema.columns
+                    where table_schema = $1 and table_name = $2 and column_name = $3
+                    """.trimIndent(),
+                ).execute(Tuple.of(schema, table, column))
+                .toCompletionStage()
+                .await()
+                .firstOrNull()
+                ?.getString("data_type")
         }
 
     /** A pool and the Vert.x behind it, both closed however [block] ends. */
