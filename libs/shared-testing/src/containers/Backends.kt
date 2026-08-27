@@ -1,6 +1,7 @@
 package com.strange.testing.containers
 
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.MinIOContainer
 import org.testcontainers.containers.MongoDBContainer
 import org.testcontainers.containers.RabbitMQContainer
 import org.testcontainers.containers.wait.strategy.Wait
@@ -84,4 +85,46 @@ fun rabbitContainer(image: String = RABBITMQ_IMAGE): ContainerService<RabbitMQCo
         reusing = "AMQP_TEST_URI",
         create = { RabbitMQContainer(DockerImageName.parse(image).asCompatibleSubstituteFor("rabbitmq")) },
         endpointOf = { "amqp://${it.adminUsername}:${it.adminPassword}@${it.host}:${it.amqpPort}" },
+    )
+
+/** Already on this machine, and the same server the workspace publishes on 9000. */
+private const val MINIO_IMAGE = "minio/minio:latest"
+
+/**
+ * Where an object store is and what opens it — the three together, because two of them are useless
+ * alone.
+ */
+data class MinioEndpoint(
+    val url: String,
+    val accessKey: String,
+    val secretKey: String,
+)
+
+/**
+ * MinIO, with the key pair it was started with.
+ *
+ * The only backend here that needs more than a URI, and the reason [ContainerService] resolves a
+ * value rather than a string. The override is refused unless **both** keys are present:
+ * `MINIO_TEST_ENDPOINT` on its own would otherwise send a run at somebody's real object store with
+ * no way in, which fails later and less clearly than falling through to a container.
+ *
+ * `MINIO_TEST_ACCESS_KEY` and `MINIO_TEST_SECRET_KEY` still have no defaults, and still must not be
+ * committed — they live in `~/workspace/docker/apps/minio/.env`. What has changed is that not having
+ * them is no longer a reason to skip.
+ */
+fun minioContainer(image: String = MINIO_IMAGE): ContainerService<MinIOContainer, MinioEndpoint> =
+    ContainerService.declare(
+        name = "minio",
+        reusing = "MINIO_TEST_ACCESS_KEY and MINIO_TEST_SECRET_KEY",
+        fromEnvironment = {
+            val access = System.getenv("MINIO_TEST_ACCESS_KEY")
+            val secret = System.getenv("MINIO_TEST_SECRET_KEY")
+            if (access.isNullOrBlank() || secret.isNullOrBlank()) {
+                null
+            } else {
+                MinioEndpoint(System.getenv("MINIO_TEST_ENDPOINT") ?: "http://localhost:9000", access, secret)
+            }
+        },
+        create = { MinIOContainer(DockerImageName.parse(image).asCompatibleSubstituteFor("minio/minio")) },
+        fromContainer = { MinioEndpoint(it.s3URL, it.userName, it.password) },
     )
