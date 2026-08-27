@@ -30,6 +30,10 @@ plugins *hand out*, and an application that installs one and also names the type
 have two imports of one name. Those three are named for what the plugin puts on the application —
 a connection, a connection, a cluster — and the other three take the product.
 
+Each package is then two files with the same two names: `Plugin.kt` for the plugin and its
+configuration, `Calls.kt` for the `Application.x` and `ApplicationCall.x` a route reaches through.
+The package already says which backend it is, so the file names do not repeat it.
+
 ## What a plugin is for
 
 **A connection is a pool, and a pool is the thing you want exactly one of.** One per request spends
