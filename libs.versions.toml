@@ -25,7 +25,7 @@ compose-destinations = "2.3.0"
 ktor = "3.5.2"
 kotlinx-rpc = "0.10.3"
 logback = "1.5.38"
-mongodb = "5.9.0"
+mongodb = "5.10.0"
 coroutines = "1.11.0"
 graalvm-native = "1.1.4"
 swagger-parser = "2.1.47"
@@ -141,6 +141,8 @@ mongodb-driver-bom = { module = "org.mongodb:mongodb-driver-bom", version.ref = 
 mongodb-driver = { module = "org.mongodb:mongodb-driver-kotlin-coroutine" }
 mongodb-driver-extensions = { module = "org.mongodb:mongodb-driver-kotlin-extensions" }
 mongodb-bsonx = { module = "org.mongodb:bson-kotlinx" }
+# GridFS has no Kotlin coroutine driver of its own; libs/shared-mongo wraps the Reactive Streams one
+mongodb-driver-reactivestreams = { module = "org.mongodb:mongodb-driver-reactivestreams" }
 rxrelay = { module = "com.jakewharton.rxrelay3:rxrelay", version = "3.0.1" }
 kasechange = { module = "net.pearx.kasechange:kasechange", version = "1.4.1" }
 mail = { module = "org.simplejavamail:simple-java-mail", version = "9.1.0" }
