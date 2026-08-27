@@ -5,6 +5,7 @@ modules:
   - libs/openapi-generator
   - libs/shared-amqp
   - libs/shared-common
+  - libs/shared-i18n
   - libs/shared-kafka
   - libs/shared-mongo
   - libs/shared-redis
