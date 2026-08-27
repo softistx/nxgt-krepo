@@ -35,6 +35,37 @@ Teardown has a belt and braces. A shutdown hook stops every started container wh
 and Testcontainers' Ryuk sidecar removes what the run created even when the JVM is killed and no
 hook gets to run. `docker ps -a` after a run should show nothing new; if it does, that is a bug here.
 
+The hook is a **virtual thread**, and an `unstarted` one. `Runtime.addShutdownHook` takes a `Thread`,
+which is the only reason there is a thread in this module at all — nothing here suspends. Given one
+is forced, it is virtual. And it must be built with `Thread.ofVirtual().unstarted { … }`, never
+`Thread.startVirtualThread`: that starts on the spot, so the hook is registered already-terminated
+and never runs, or is refused as still-alive and takes the whole registry's initialisation down with
+it. The JVM swallows both. This module shipped with exactly that bug and nothing noticed, because
+Ryuk was doing all the cleaning; three specs in `ContainerServiceTest` now pin it.
+
+## The backends
+
+| | image | override | resolved value |
+| --- | --- | --- | --- |
+| `mongoContainer()` | `mongo:8` | `MONGO_TEST_URI` | the replica-set URI |
+| `redisContainer()` | `redis:8-alpine` | `REDIS_TEST_URI` | `redis://host:port/15` |
+| `rabbitContainer()` | `rabbitmq:4-management` | `AMQP_TEST_URI` | `amqp://user:pass@host:port` |
+| `minioContainer()` | `minio/minio:latest` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `MinioEndpoint(url, accessKey, secretKey)` |
+
+**A container ends the credentials argument.** `AMQP_TEST_URI` and the MinIO key pair have no
+defaults and never will — a credential with a default is a credential in source control — so before
+this, 78 specs across those two libraries skipped on any machine where nobody had exported them, and
+proved nothing there. A container has credentials of its own to hand out. The variables stay, as
+overrides, with no defaults; what went is the reason to skip.
+
+MinIO is why the resolved value is generic rather than a string: a URL without a key pair opens
+nothing, so all three resolve together or not at all. `MINIO_TEST_ENDPOINT` on its own is
+deliberately *not* enough to take the override — pointing a run at somebody's real object store with
+no way in fails later, and less clearly, than starting a container.
+
+Redis has no published Testcontainers module, so it is a `GenericContainer` waiting on its port. It
+does not need Redis Stack, which is what the workspace runs: the specs use only core commands.
+
 ## Declaring a backend
 
 A backend's particulars — which image, what a replica set needs, how its connection string is

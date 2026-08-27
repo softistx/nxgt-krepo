@@ -221,12 +221,33 @@ different server than the one everything else uses.
 **A spec must not depend on the host having the right daemon up.** `libs/shared-testing` declares
 each backing service and resolves it in one order: the environment variable if it names a server,
 otherwise a container started once for the run, otherwise `available == false` and the spec skips.
-`shared-mongo` works this way — `MONGO_TEST_URI` reuses the workspace's replica set, and its absence
-starts `mongo:8` rather than assuming `localhost:27017`. Move the other libraries over the same way;
-declare the backend in `Backends.kt`, not in the library's own test tree.
+Mongo, Redis, AMQP and MinIO all work this way. Declare a new backend in `Backends.kt`, never in a
+library's own test tree.
 
-Redis still defaults `REDIS_TEST_URI` to `redis://localhost:6379/15` and skips when it is
-unreachable, as do the services below, until each is moved.
+| library | override | without it |
+| --- | --- | --- |
+| `shared-mongo` | `MONGO_TEST_URI` | `mongo:8`, a single-node replica set |
+| `shared-redis` | `REDIS_TEST_URI` | `redis:8-alpine`, on db 15 |
+| `shared-amqp` | `AMQP_TEST_URI` | `rabbitmq:4-management` |
+| `shared-storage` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `minio/minio:latest` |
+
+**The credentials rule is unchanged; what it costs is not.** `AMQP_TEST_URI` and the MinIO key pair
+still have no defaults and must never gain any — a credential with a default is a credential in
+source control, and they live in `~/workspace/docker/apps/*/.env`, exported for a run and never
+committed. But their absence is no longer a reason to skip: a container hands out credentials of its
+own, so the 78 specs in those two libraries now run on a machine where nobody exported anything.
+They used to report skipped there and prove nothing.
+
+`MINIO_TEST_ENDPOINT` on its own does not take the override — an endpoint with no way in fails later
+and less clearly than a container would.
+
+The reuse path is still the fast local loop, and still the seam CI uses to point at a service it
+provisioned. A reused server is shared, so everything below about leaving it as you found it applies
+to it exactly as before.
+
+**Kafka is the one backend still tied to the host**, and knowingly: its specs create topics at
+replication factor 3 because the workspace cluster runs `min.insync.replicas = 2`, which a
+single-broker container cannot satisfy.
 
 The Kafka specs default `KAFKA_TEST_BOOTSTRAP` to `kafka1:9092,kafka2:9094,kafka3:9096`, which
 resolves only once the broker names are in `/etc/hosts` — the brokers advertise container hostnames
@@ -241,33 +262,30 @@ and publish no host ports, so an address the host can reach is not enough on its
 Without them the broker-backed specs skip and the rest of the module still runs, since its loop and
 publisher specs use Kafka's own `MockConsumer` and `MockProducer`.
 
-The AMQP specs follow the storage rule rather than the defaulting one, because an AMQP URI carries
-its credentials: `AMQP_TEST_URI` has **no default** and the specs skip without it. The `%2F` is the
-default virtual host and not decoration — a plain trailing `/` is the *empty* vhost, which the
-broker refuses with a message about permissions that says nothing about the cause:
+To take the override and run against the workspace's own broker or object store:
 
 ```bash
 set -a; . ~/workspace/docker/apps/rabbitmq/.env; set +a
 AMQP_TEST_URI="amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@localhost:5672/%2F" ./kotlin test -m shared-amqp
-```
 
-The storage specs are the exception to the defaulting: `MINIO_TEST_ENDPOINT` defaults to
-`http://localhost:9000`, but `MINIO_TEST_ACCESS_KEY` and `MINIO_TEST_SECRET_KEY` have **no
-defaults** and the specs skip when they are unset. A credential with a default is a credential in
-source control. They live in `~/workspace/docker/apps/minio/.env`; export them for the run and never
-commit them:
-
-```bash
 set -a; . ~/workspace/docker/apps/minio/.env; set +a
 MINIO_TEST_ACCESS_KEY=$MINIO_ROOT_USER MINIO_TEST_SECRET_KEY=$MINIO_ROOT_PASSWORD ./kotlin test -m shared-storage
 ```
 
-They also have to leave the server as they found it, because it is not theirs: the Mongo specs use a
+The `%2F` there is the default virtual host and not decoration — a plain trailing `/` is the *empty*
+vhost, which the broker refuses with a message about permissions that says nothing about the cause.
+The container's URI carries no vhost path at all and sidesteps it.
+
+A run that reuses a server has to leave it as it found it, because it is not theirs: the Mongo specs use a
 database per spec and drop it, the Redis specs use database 15 with a key namespace per spec and
 delete it, the storage specs create a bucket per scenario and empty and remove it, and the Kafka
 specs create only the topics and groups they delete, and the AMQP specs name every exchange and
 queue uniquely per run and delete them. Nothing here calls `FLUSHDB`, and nothing touches a bucket,
 a topic or a queue it did not create.
+
+Keep all of that even where a container made it unnecessary. Against a container, a spec that fails
+to clean up after itself is a spec whose next run behaves differently — the isolation is what makes
+that visible, and `FLUSHDB` is what would hide it.
 
 ## Module layout
 
@@ -347,6 +365,16 @@ the same each time, and the mistakes are the same each time too.
 - **Never hold a lock across suspending work.** A mutex held while a loader runs turns *n*
   concurrent loads of *n* different keys into one queue. `CoroutineSafeMap.getOrPut` takes a value
   rather than a loader for exactly this reason; `KeyedMutex` is the type for when the work suspends.
+- **When a foreign API forces a real thread, make it virtual.** Coroutines first, as everywhere
+  else here — but `Runtime.addShutdownHook` takes a `Thread` and there is nothing to negotiate.
+  Then it is `Thread.ofVirtual()`, never `Thread(…)`: a few hundred bytes against a megabyte of
+  committed stack, and blocking parks a continuation instead of an OS thread. On the JDK 25 this
+  repo runs, JEP 491 removed the `synchronized` pinning that used to be the argument against them.
+  Mind which half of the API you take — `Thread.startVirtualThread` starts on the spot, so a hook
+  built with it is registered already-dead (never runs) or refused as still-alive (and then the
+  whole holder fails to initialise), and **both outcomes are swallowed without a word**. The form
+  that works is `Thread.ofVirtual().unstarted { … }`. `ContainerService` carries the scar and the
+  spec that would have caught it.
 - **A loop that never suspends starves its own dispatcher.** `KafkaSubscriber`'s poll loop owns its
   dispatcher for the whole poll timeout and has no suspension point between turns, so anything that
   tried to `withContext(thatDispatcher)` waited forever — a real deadlock, found by a spec that hung
