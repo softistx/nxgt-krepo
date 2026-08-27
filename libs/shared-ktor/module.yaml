@@ -1,0 +1,23 @@
+product: jvm/lib
+
+dependencies:
+  # ApplicationCall and the plugin API are all over this module's public surface
+  - $ktor.server.core: exported
+
+  # One entry per integration. A backend's own library goes in `compile-only` unless the plugin's
+  # public API exposes it: an app installing the Redis plugin already depends on shared-redis, and
+  # an app installing only the i18n plugin must not inherit Lettuce for it. Verified with
+  # `./kotlin show dependencies -m shared-ktor` — a compile-only entry is in the COMPILE scope and
+  # absent from RUNTIME.
+  - //libs/shared-i18n: exported
+
+test-dependencies:
+  - $ktor.server.testHost
+  - $ktor.server.netty
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  ktor: enabled

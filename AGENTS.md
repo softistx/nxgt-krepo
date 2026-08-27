@@ -18,7 +18,7 @@ What exists:
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
-| `libs/shared-ktor-i18n` | The Ktor plugin over it: one negotiated locale per request, on the call |
+| `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: today `com.strange.ktor.i18n`, one negotiated locale per request |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
@@ -193,10 +193,19 @@ is kotlinx-and-nothing-else — putting message formatting in it would make `sha
 formatting library it will never call. The same test applies to the next candidate: if it brings
 a dependency, it brings that dependency to everything.
 
-Framework integrations follow the `shared-ktor-*` naming, one module per integration —
-`libs/shared-ktor-i18n` today. One flat `shared-ktor` would hand an app that wants a single
-plugin every driver behind all of them, and would gate its tests on every one of those servers
-being up.
+Framework integrations go in `libs/shared-ktor`, **one package per integration** —
+`com.strange.ktor.i18n` today, with Redis, Mongo, Kafka and AMQP to follow. An application wires
+them together in one `install` block and should read them from one dependency.
+
+One module holding all of them stays honest through two rules. A backend's own library is declared
+`compile-only` unless the plugin's public API exposes it, so an app installing only the i18n plugin
+does not inherit Lettuce — verified with `./kotlin show dependencies -m shared-ktor`, where a
+compile-only entry sits in the COMPILE scope and is absent from RUNTIME. And integration specs gate
+on server availability as everywhere else here, so the module tests green with nothing running.
+
+The plugins are not in the libraries they wrap because `shared-i18n` and `shared-redis` have callers
+with no server in them — a worker, a CLI, a consumer. The library knows the backend, `shared-ktor`
+knows the framework, and neither has to know both.
 
 ### Local services
 
@@ -394,7 +403,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-common/README.md` | What belongs in the shared module, and which of the three concurrency types a given caller wants |
   | `libs/shared-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
   | `libs/shared-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
-  | `libs/shared-ktor-i18n/README.md` | The Ktor plugin — where the locale is read from, and why the query-parameter override is off by default |
+  | `libs/shared-ktor/README.md` | The Ktor integrations — how one module holds them without becoming a fat dependency, and where each plugin reads its input from |
   | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
