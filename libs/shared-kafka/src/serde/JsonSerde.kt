@@ -1,8 +1,9 @@
 package com.strange.kafka.serde
 
+import com.strange.common.serialization.decodeValue
+import com.strange.common.serialization.typeName
 import com.strange.kafka.KafkaValueException
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.apache.kafka.common.serialization.Deserializer
@@ -37,13 +38,8 @@ class JsonDeserializer<T>(
         data: ByteArray?,
     ): T? =
         data?.let {
-            try {
-                json.decodeFromString(serializer, it.decodeToString())
-            } catch (e: SerializationException) {
-                throw KafkaValueException(
-                    "a record on '$topic' is not a ${serializer.descriptor.serialName}",
-                    cause = e,
-                )
+            json.decodeValue(serializer, it.decodeToString()) { failure ->
+                KafkaValueException("a record on '$topic' is not a ${serializer.typeName}", cause = failure)
             }
         }
 }
