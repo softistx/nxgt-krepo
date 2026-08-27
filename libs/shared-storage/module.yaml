@@ -6,6 +6,9 @@ dependencies:
   - $libs.kotlinx.coroutines.core: exported
 
 test-dependencies:
+  # the object store the integration specs talk to, started for the run when no credentials name
+  # one — test-only, so nothing here reaches a consumer of this library
+  - //libs/shared-testing
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
