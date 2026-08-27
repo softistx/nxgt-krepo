@@ -16,17 +16,16 @@ import java.util.TreeSet
  * and moves it up only when the gaps close. It is deliberately a plain object with no Kafka calls
  * in it: the rule is subtle enough to be worth testing on its own.
  *
- * Synchronized because of who calls it: handlers running on whatever dispatcher the caller is
- * using, and the poll loop on the consumer's own thread. The critical sections are a few list
- * operations, so a lock is cheaper than routing every completion through the consumer thread —
- * which is also what would let a blocking poll stall every handler behind it.
+ * Unsynchronized on purpose: the poll loop is its only caller. A handler that finishes posts a
+ * message and the loop applies it on its next turn, so completions, commits and revocations reach
+ * this in one order rather than racing — see [KafkaSubscriber]. A lock here would make each
+ * operation safe and still leave the interesting pair — complete, then commit — unordered.
  */
 internal class OffsetTracker {
     private val completed = mutableMapOf<TopicPartition, TreeSet<Long>>()
     private val committable = mutableMapOf<TopicPartition, Long>()
 
     /** Records that [offset] on [partition] has been handled. */
-    @Synchronized
     fun completed(
         partition: TopicPartition,
         offset: Long,
@@ -44,15 +43,12 @@ internal class OffsetTracker {
      * What to commit now: for each partition, the offset the group should resume from — one past
      * the last contiguously completed record, which is what Kafka means by a committed offset.
      */
-    @Synchronized
     fun committable(): Map<TopicPartition, OffsetAndMetadata> = committable.mapValues { (_, next) -> OffsetAndMetadata(next) }
 
     /** Whether anything has completed that has not been committed yet. */
-    @Synchronized
     fun hasPending(): Boolean = committable.isNotEmpty()
 
     /** Forgets what has been committed, so the next commit does not repeat it. */
-    @Synchronized
     fun committed(offsets: Map<TopicPartition, OffsetAndMetadata>) {
         offsets.forEach { (partition, offset) ->
             if (committable[partition] == offset.offset()) committable.remove(partition)
@@ -66,7 +62,6 @@ internal class OffsetTracker {
      * a partition this consumer no longer owns, which the coordinator rejects and which would be
      * wrong even if it did not.
      */
-    @Synchronized
     fun forget(partitions: Collection<TopicPartition>) {
         partitions.forEach {
             completed.remove(it)
