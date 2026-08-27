@@ -5,10 +5,9 @@ import com.strange.kafka.clientProperties
 import com.strange.kafka.record.RecordHeaders
 import com.strange.kafka.serde.KafkaSerde
 import com.strange.kafka.serde.jsonSerde
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -90,12 +89,30 @@ class KafkaPublisher<K, V> internal constructor(
     /**
      * Sends every record and waits for all of them.
      *
-     * Concurrent on purpose: the sends go into the same accumulator and leave as batches, so this
-     * costs one round trip per batch rather than one per record. Order is preserved per partition
-     * by the producer itself, which is where the guarantee belongs.
+     * The records are handed over **in order** and the acknowledgements awaited together. Both
+     * halves matter: the order they enter the producer's accumulator is the order they are written
+     * to a partition, so enqueuing them from concurrent threads would quietly shuffle records that
+     * share a key — and awaiting them one at a time would turn one batched round trip into one per
+     * record.
+     *
+     * Cancelling the caller stops the waiting, not the sending: a record already handed to the
+     * producer is on its way, and Kafka has no way to recall it.
      */
     suspend fun sendAll(records: Collection<ProducerRecord<K, V>>): List<SentRecord> =
-        coroutineScope { records.map { async { send(it) } }.awaitAll() }
+        withContext(Dispatchers.IO) {
+            records
+                .map { record ->
+                    CompletableDeferred<SentRecord>().also { pending ->
+                        producer.send(record) { metadata, failure ->
+                            if (failure != null) {
+                                pending.completeExceptionally(failure)
+                            } else {
+                                pending.complete(SentRecord.from(metadata))
+                            }
+                        }
+                    }
+                }.awaitAll()
+        }
 
     /** Waits for everything already handed over to be acknowledged. */
     suspend fun flush() = withContext(Dispatchers.IO) { producer.flush() }
@@ -125,7 +142,7 @@ fun <K, V> Kafka.publisher(
 ): KafkaPublisher<K, V> =
     KafkaPublisher(
         KafkaProducer(
-            config.clientProperties(*options.asProperties()),
+            config.clientProperties(*options.asProperties()).apply { putAll(options.properties) },
             keySerde.serializer,
             valueSerde.serializer,
         ),
@@ -133,10 +150,9 @@ fun <K, V> Kafka.publisher(
 
 internal fun PublisherOptions.asProperties(): Array<Pair<String, Any>> =
     buildList {
-        add(ProducerConfig.ACKS_CONFIG to acks)
+        add(ProducerConfig.ACKS_CONFIG to acks.value)
         add(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG to idempotent)
         add(ProducerConfig.LINGER_MS_CONFIG to linger.inWholeMilliseconds.toInt())
         add(ProducerConfig.MAX_BLOCK_MS_CONFIG to maxBlock.inWholeMilliseconds.toInt())
-        compression?.let { add(ProducerConfig.COMPRESSION_TYPE_CONFIG to it) }
-        properties.forEach { (key, value) -> add(key to value) }
+        add(ProducerConfig.COMPRESSION_TYPE_CONFIG to compression.value)
     }.toTypedArray()
