@@ -230,6 +230,7 @@ library's own test tree.
 | `shared-redis` | `REDIS_TEST_URI` | `redis:8-alpine`, on db 15 |
 | `shared-amqp` | `AMQP_TEST_URI` | `rabbitmq:4-management` |
 | `shared-storage` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `minio/minio:latest` |
+| `shared-kafka` | `KAFKA_TEST_BOOTSTRAP` | `confluentinc/cp-kafka:latest`, one broker |
 
 **The credentials rule is unchanged; what it costs is not.** `AMQP_TEST_URI` and the MinIO key pair
 still have no defaults and must never gain any — a credential with a default is a credential in
@@ -245,22 +246,32 @@ The reuse path is still the fast local loop, and still the seam CI uses to point
 provisioned. A reused server is shared, so everything below about leaving it as you found it applies
 to it exactly as before.
 
-**Kafka is the one backend still tied to the host**, and knowingly: its specs create topics at
-replication factor 3 because the workspace cluster runs `min.insync.replicas = 2`, which a
-single-broker container cannot satisfy.
+**Kafka's container is one broker, and that costs something worth knowing.** The workspace cluster
+is three brokers with `min.insync.replicas = 2`, so a topic there has three replicas and
+`acks = all` really waits for a quorum; a container gives one replica, so it waits for one broker.
+The ack path is exercised either way, the quorum only on the real cluster. Nothing asks for a hard
+three any more — `KafkaTestCluster.replicationFactor` asks the cluster what it has, capped at three,
+because a topic asking for more replicas than there are brokers is not a weaker test but a refused
+`createTopics`.
 
-The Kafka specs default `KAFKA_TEST_BOOTSTRAP` to `kafka1:9092,kafka2:9094,kafka3:9096`, which
-resolves only once the broker names are in `/etc/hosts` — the brokers advertise container hostnames
-and publish no host ports, so an address the host can reach is not enough on its own:
+To exercise the quorum, point at the workspace cluster. Its brokers advertise container hostnames
+and publish no host ports, so the names have to resolve first — an address the host can reach is not
+enough on its own:
 
 ```
+# /etc/hosts
 172.22.0.115 kafka1
 172.22.0.116 kafka2
 172.22.0.117 kafka3
 ```
 
-Without them the broker-backed specs skip and the rest of the module still runs, since its loop and
-publisher specs use Kafka's own `MockConsumer` and `MockProducer`.
+```bash
+KAFKA_TEST_BOOTSTRAP="kafka1:9092,kafka2:9094,kafka3:9096" ./kotlin test -m shared-kafka
+```
+
+**An override that does not answer is not quietly replaced by a container.** Naming a cluster and
+getting a container instead would be worse than skipping: the run would look green and would have
+tested something else. This holds for all five backends.
 
 To take the override and run against the workspace's own broker or object store:
 

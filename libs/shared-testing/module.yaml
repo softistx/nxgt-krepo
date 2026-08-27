@@ -9,6 +9,7 @@ dependencies:
   - $libs.testcontainers.mongodb: exported
   - $libs.testcontainers.rabbitmq: exported
   - $libs.testcontainers.minio: exported
+  - $libs.testcontainers.kafka: exported
 
 test-dependencies:
   - $libs.kotest.runner.junit5
