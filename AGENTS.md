@@ -16,7 +16,9 @@ What exists:
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
 | `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, and the one lenient `Json` the storage and messaging libraries read through |
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
+| `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
+| `libs/shared-ktor-i18n` | The Ktor plugin over it: one negotiated locale per request, on the call |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
@@ -184,6 +186,17 @@ wait, and `Mailbox` when a caller is not a coroutine at all — a Java listener 
 which cannot take a mutex and must not be made to block. `libs/shared-common/README.md` has the
 reasoning; the short version is that reaching for `runBlocking` to get out of the third case is how
 a client deadlocks against its own I/O thread.
+
+**Shared does not mean everything shared goes there.** `libs/shared-i18n` is used by more than
+one module and is still its own library, because ICU4J is a 15 MB jar and `shared-common`'s rule
+is kotlinx-and-nothing-else — putting message formatting in it would make `shared-kafka` carry a
+formatting library it will never call. The same test applies to the next candidate: if it brings
+a dependency, it brings that dependency to everything.
+
+Framework integrations follow the `shared-ktor-*` naming, one module per integration —
+`libs/shared-ktor-i18n` today. One flat `shared-ktor` would hand an app that wants a single
+plugin every driver behind all of them, and would gate its tests on every one of those servers
+being up.
 
 ### Local services
 
@@ -380,6 +393,8 @@ the same each time, and the mistakes are the same each time too.
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
   | `libs/shared-common/README.md` | What belongs in the shared module, and which of the three concurrency types a given caller wants |
   | `libs/shared-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
+  | `libs/shared-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
+  | `libs/shared-ktor-i18n/README.md` | The Ktor plugin — where the locale is read from, and why the query-parameter override is off by default |
   | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |

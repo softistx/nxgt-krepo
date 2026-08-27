@@ -27,7 +27,9 @@ Alongside it are the shared service libraries, which have nothing to do with the
 | --- | --- |
 | `libs/shared-common` | The coroutine primitives and the one lenient `Json` the libraries below share: a mutex-guarded map, a lock per key, and the mailbox that carries a Java callback's work into a coroutine |
 | `libs/shared-amqp` | An AMQP connection over the RabbitMQ client: topology declared in one block, publishes that wait for the broker's confirm, deliveries as a `Flow`, and retries that are delay queues rather than a loop |
+| `libs/shared-i18n` | Catalogs read strictly as UTF-8 and compiled at startup, a message resolved key by key down the locale chain, and `Accept-Language` negotiated against what is actually shipped |
 | `libs/shared-kafka` | A cluster and the clients over it: sends that suspend until the broker acknowledges them, records as a `Flow` with the offsets looked after, and topics and group lag from an admin client |
+| `libs/shared-ktor-i18n` | The Ktor server plugin over it: `install(I18n)`, then `call.translate("key")` in a handler with the locale already decided |
 | `libs/shared-mongo` | Session-aware collection extensions, keyset pagination, a CRUD repository and the write flow over it, and a coroutine GridFS bucket |
 | `libs/shared-redis` | A namespaced connection over Lettuce owning one `Json`, and the four kotlinx-serialized things built on one: a typed cache, a lock, topics, and streams with consumer groups |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets and objects as coroutines, and presigned URLs and upload forms for browsers |
@@ -50,6 +52,8 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/openapi-generator/README.md`](libs/openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
 | [`libs/shared-common/README.md`](libs/shared-common/README.md) | The shared module — what belongs in it, and which concurrency type a given caller wants |
 | [`libs/shared-amqp/README.md`](libs/shared-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
+| [`libs/shared-i18n/README.md`](libs/shared-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
+| [`libs/shared-ktor-i18n/README.md`](libs/shared-ktor-i18n/README.md) | The Ktor plugin over it — installing it, and the two things it can read a locale from |
 | [`libs/shared-kafka/README.md`](libs/shared-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/shared-mongo/README.md`](libs/shared-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
 | [`libs/shared-redis/README.md`](libs/shared-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
