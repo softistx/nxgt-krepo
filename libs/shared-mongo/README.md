@@ -11,6 +11,18 @@ framework, so the same code serves a Ktor route, a kRPC service or a CLI.
 ## Getting a client
 
 ```kotlin
+val client = mongoClient(uri)                         // settings, codec registry and all
+val client = mongoClient(uri) { applyToSslSettings { … } }   // with a deployment's own opinions
+val database = client.getDatabase("app")
+```
+
+That factory is the reason the plugin in `shared-ktor` and the module in `shared-koin` are two lines
+each: the knowledge that a client needs `mongoCodecRegistry()` is a fact about the driver, not about
+a framework, so it lives here where a worker or a CLI can call it too.
+
+The long form, for a client this factory does not cover — a reactive one for GridFS, say:
+
+```kotlin
 val settings = MongoClientSettings.builder()
     .applyConnectionString(ConnectionString(uri))
     .codecRegistry(mongoCodecRegistry())
