@@ -36,7 +36,7 @@ class EnumConverterTest :
 
         feature("the converter registration") {
             scenario("every generated enum is registered, as its wire value") {
-                val source = SpringEmitter().render(WITH_ENUMS).getValue("com.example.api.model.ApiEnumConverters")
+                val source = SpringEmitter().render(WITH_ENUMS).getValue("com.example.api.utils.ApiEnumConverters")
 
                 source shouldContain "public fun registerApiEnumConverters(registry: ConverterRegistry)"
                 source shouldContain "registry.addConverter(Status::class.java, String::class.java) { it.toString() }"
@@ -45,7 +45,7 @@ class EnumConverterTest :
             scenario("a document with no enums gets no file to wire up") {
                 SpringEmitter()
                     .render(ApiModel(groups = emptyList(), models = listOf(ObjectType("Order", emptyList()))))
-                    .shouldNotContainKey("com.example.api.model.ApiEnumConverters")
+                    .shouldNotContainKey("com.example.api.utils.ApiEnumConverters")
             }
         }
     })

@@ -33,7 +33,7 @@ plugins:
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `specFile` | `openapi.yaml` | Path to the document, relative to the module root. May point outside it. |
-| `packageName` | `generated.api` | Package for the interfaces; models go in `<packageName>.model`. Set it — the default only exists so `enabled: true` alone works. |
+| `packageName` | `generated.api` | Root of the generated output; nothing is written here directly — see [where the output goes](#where-the-output-goes). Set it — the default only exists so `enabled: true` alone works. |
 | `client` | `Ktorfit` | `Ktorfit`, `Spring`, or `None`. Decides what is generated, and therefore what the module needs on its classpath. |
 | `groupBy` | `Tag` | `Tag`, `Path` or `None`. `Tag` turns `categories-controller` into `CategoriesApi`. Ignored when `client: None`. |
 | `models` | `Auto` | `Auto`, `Kotlinx` or `Jackson`. `Auto` follows the client. |
@@ -89,6 +89,21 @@ settings:
 Call `createCategoriesApi()`, never `create<CategoriesApi>()` — see the `ktorfit` skill for why the
 generic form silently misbehaves here. `apps/demo-client` is the worked example.
 
+Two generated Ktor plugins go on the `HttpClient` the `Ktorfit` instance is built with. Neither is
+installed for you, because the `HttpClient` is yours:
+
+```kotlin
+HttpClient(CIO) {
+    install(ContentNegotiation) { json() }
+    install(ApiErrors)                        // if the document declares any typed failure
+    install(ApiAuth) { bearer = { token() } } // if it declares any security scheme
+}
+```
+
+Without `ApiErrors`, Ktor leaves `expectSuccess` off and a `404` carrying an error body is handed to
+the deserializer as the success type — what surfaces is a complaint about a body of the wrong shape,
+with no status and no parsed body. Without `ApiAuth`, nothing attaches a credential.
+
 **`client: Spring`** — no processing step; `$libs.spring.web` is enough to compile, and the
 interfaces are handed to `HttpServiceProxyFactory` at runtime. Because the functions are `suspend`,
 the proxy needs a reactive adapter (`WebClientAdapter`, from spring-webflux) rather than
@@ -115,10 +130,46 @@ or header parameter goes out as the Kotlin name — `IN_PROGRESS` where the docu
 `in-progress`. That request succeeds and matches nothing, which is why it is called out here rather
 than left to be discovered.
 
+A Spring client's equivalent is three lines rather than two, because Spring splits the job: the
+proxy factory knows the method, the `WebClient` sees the request and the response, and the operation
+has to travel between them.
+
+```kotlin
+val credentials = ApiAuthConfig().apply { bearer = { token() } }
+val webClient = WebClient.builder()
+    .clientConnector(JdkClientHttpConnector())
+    .baseUrl(url)
+    .filter(apiAuthFilter(credentials))   // if the document declares any security scheme
+    .filter(apiErrorFilter())             // if it declares any typed failure
+    .build()
+
+HttpServiceProxyFactory.builderFor(WebClientAdapter.create(webClient))
+    .conversionService(conversions)
+    .httpRequestValuesProcessor(apiOperationProcessor())   // always, if either filter is installed
+    .build()
+```
+
+`apiOperationProcessor()` is what makes the other two work: it reads `@ApiOperation` off the
+interface method and puts the operation in a request attribute. Leave it out and both filters run
+with no idea which operation they are looking at — the error filter falls back to the untyped
+`ApiException` for everything, and the auth filter attaches nothing. Neither says so at build time,
+which is why it is called out here.
+
+`apiErrorFilter()`'s default mapper is `JsonMapper.builder().findAndAddModules().build()`. A bare
+`JsonMapper` has no jackson-module-kotlin and binds a generated data class to an object whose every
+property is null — a parsed error body that silently says nothing. Pass the `WebClient`'s own mapper
+if it is configured differently.
+
 **`client: None`** — models only. They default to kotlinx.serialization, so the module needs
 `settings.kotlin.serialization: json`; set `models: Jackson` instead if that is what binds them.
 Use it where the API surface is hand-written or lives elsewhere but the payload types should still
 follow the document.
+
+**Any style, if the document declares an unfamiliar `http` security scheme** — `digest` or
+`negotiate` — and an operation requires it: the emit fails naming the operation. The credential for
+one of those is the answer to a server challenge, not a value the client can be handed. `oauth2` and
+`openIdConnect` are fine: this generator does not run the flow, but the token a flow produces goes
+in the same bearer header, and the slot is there for you to put it in.
 
 **Any style, if the document uses `x-kotlin-type`** — the named type and its serializer belong to
 the consuming module: kotlinx needs it `@Serializable`, Jackson needs it bindable. Nothing is
@@ -135,6 +186,19 @@ either style emits that is not already on the classpath the style implies; Jacks
 build/tasks/_<module>_generate@openapi/    what this plugin emits
 build/generated/<module>/main/src/ksp/     what ktorfit-ksp then generates from it
 ```
+
+Under the first, three packages below `packageName` — and nothing directly in it:
+
+```
+<packageName>.apis      CategoriesApi, TagsApi, …            one per tag
+<packageName>.models    Category, Tag, ErrorResponse, …      one per schema
+<packageName>.utils     ApiOperation, ApiExceptions,         what the client needs underneath
+                        ApiErrors, ApiAuth,
+                        ApiProxySupport, ApiEnumConverters
+```
+
+So a document with a `tags` endpoint group *and* a `Tag` schema generates both without a collision,
+and the two imports say which one you meant. The names are fixed and not configurable.
 
 Two directories, because two stages ran. If the second is empty for a Ktorfit client, KSP never saw
 the interfaces.
