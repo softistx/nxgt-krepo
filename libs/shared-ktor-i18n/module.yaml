@@ -1,0 +1,17 @@
+product: jvm/lib
+
+dependencies:
+  # ApplicationCall and the plugin API are all over this module's public surface
+  - $ktor.server.core: exported
+  - //libs/shared-i18n: exported
+
+test-dependencies:
+  - $ktor.server.testHost
+  - $ktor.server.netty
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  ktor: enabled
