@@ -1,14 +1,14 @@
 package com.strange.redis.codec
 
+import com.strange.common.serialization.lenientJson
 import kotlinx.serialization.json.Json
 
 /**
- * The `Json` every typed layer serializes through unless the connection was given another.
+ * What a stored value is serialized through unless the caller says otherwise.
  *
- * Lenient about unknown keys because of what a Redis value is: a copy, not the record. One written
- * by the previous deploy, carrying a field this version has since dropped, should still read — the
- * alternative is a rolling deploy in which half the fleet cannot decode the other half's cache
- * entries. A caller who wants that skew to be loud instead passes a strict `Json` in `RedisConfig`,
- * and gets a `RedisValueException` naming the key it could not read.
+ * The shared [lenientJson]: unknown keys are ignored, because a cached value was written by
+ * whoever deployed last and is read by whoever deployed first. Configured once on `RedisConfig`,
+ * so a service decides this for its Redis values in one place rather than per cache, topic and
+ * stream.
  */
-val redisJson: Json = Json { ignoreUnknownKeys = true }
+val redisJson: Json = lenientJson
