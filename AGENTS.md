@@ -16,6 +16,7 @@ What exists:
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection, a typed cache, a lock, topics and streams |
+| `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
 | `apps/demo-client` | Generates a Ktorfit client from that spec and calls the server |
@@ -140,8 +141,8 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 
 The databases this workspace runs against are **already containerised and usually already up** —
 `~/workspace/docker/apps/` holds one compose file per service: `database/mongo` is an `rs0` replica
-set on `localhost:27017`, transactions included, and `database/redis` is Redis Stack on
-`localhost:6379`. Check `docker ps` before pulling an image or starting a Testcontainers container:
+set on `localhost:27017`, transactions included, `database/redis` is Redis Stack on
+`localhost:6379`, and `minio` is an S3-compatible store on `localhost:9000`. Check `docker ps` before pulling an image or starting a Testcontainers container:
 the pull costs a gigabyte and the second container either clashes on the port or silently tests a
 different server than the one everything else uses.
 
@@ -149,9 +150,21 @@ Integration tests therefore point at the running service — `MONGO_TEST_URI` an
 defaulting to `mongodb://localhost:27017` and `redis://localhost:6379/15` — and skip themselves when
 it is unreachable, so a machine without it reports skipped tests rather than a red build.
 
+The storage specs are the exception to the defaulting: `MINIO_TEST_ENDPOINT` defaults to
+`http://localhost:9000`, but `MINIO_TEST_ACCESS_KEY` and `MINIO_TEST_SECRET_KEY` have **no
+defaults** and the specs skip when they are unset. A credential with a default is a credential in
+source control. They live in `~/workspace/docker/apps/minio/.env`; export them for the run and never
+commit them:
+
+```bash
+set -a; . ~/workspace/docker/apps/minio/.env; set +a
+MINIO_TEST_ACCESS_KEY=$MINIO_ROOT_USER MINIO_TEST_SECRET_KEY=$MINIO_ROOT_PASSWORD ./kotlin test -m shared-storage
+```
+
 They also have to leave the server as they found it, because it is not theirs: the Mongo specs use a
-database per spec and drop it, and the Redis specs use database 15 with a key namespace per spec and
-delete it. Nothing here calls `FLUSHDB`.
+database per spec and drop it, the Redis specs use database 15 with a key namespace per spec and
+delete it, and the storage specs create a bucket per scenario and empty and remove it. Nothing here
+calls `FLUSHDB`, and nothing touches a bucket it did not create.
 
 ## Module layout
 
@@ -233,6 +246,7 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
+  | `libs/shared-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
