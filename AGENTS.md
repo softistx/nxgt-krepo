@@ -17,9 +17,10 @@ What exists:
 | `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, `CloseGuard`, and the one lenient `Json` the storage and messaging libraries read through |
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
+| `libs/shared-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL and SQL through one suspending builder |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
-| `libs/shared-koin` | The same six backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
+| `libs/shared-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
@@ -197,7 +198,7 @@ a dependency, it brings that dependency to everything.
 
 Framework integrations go in `libs/shared-ktor`, **one package per integration** — i18n, Redis,
 Mongo, AMQP, Kafka and object storage. An application wires them together in one `install` block and
-should read them from one dependency. `libs/shared-koin` is the same six as Koin modules, for the
+should read them from one dependency. `libs/shared-koin` is the same seven as Koin modules, for the
 callers that have a container and no web framework; it knows the container, `shared-ktor` knows the
 framework, the libraries know the backends, and none of them knows two.
 
@@ -512,6 +513,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/shared-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
   | `libs/shared-koin/README.md` | The Koin modules — which side creates the connection, which adopts it, and why two of them have no `onClose` |
+  | `libs/shared-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins |
   | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
