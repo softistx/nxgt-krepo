@@ -41,6 +41,16 @@ class ContainerService<C : GenericContainer<*>, E : Any> internal constructor(
     private var origin = Origin.NONE
 
     /**
+     * Why there is no endpoint, when the reason was an exception rather than an absence.
+     *
+     * A container that fails to start is caught below and becomes a skip, which is the right
+     * outcome — a machine without Docker should not fail a build. It is the wrong *silence*: the
+     * skip reads identically whether Docker is missing or the image took too long, and twice now
+     * that has cost an afternoon. [describe] says which.
+     */
+    private var failure: Throwable? = null
+
+    /**
      * Where the service is, or `null` when there is no way to reach one.
      *
      * Resolving happens on first read and never again — `lazy` is synchronized, so concurrent specs
@@ -54,9 +64,18 @@ class ContainerService<C : GenericContainer<*>, E : Any> internal constructor(
     /** Where this one ended up, for a log line or a failure that needs to say why it skipped. */
     fun describe(): String =
         when (origin.also { endpoint }) {
-            Origin.REUSED -> "$name: reusing the server named by $reusing"
-            Origin.CONTAINER -> "$name: a container started for this run"
-            Origin.NONE -> "$name: unavailable — $reusing is unset and Docker is not reachable"
+            Origin.REUSED -> {
+                "$name: reusing the server named by $reusing"
+            }
+
+            Origin.CONTAINER -> {
+                "$name: a container started for this run"
+            }
+
+            Origin.NONE -> {
+                failure?.let { "$name: a container was started and did not come up — $it" }
+                    ?: "$name: unavailable — $reusing is unset and Docker is not reachable"
+            }
         }
 
     /**
@@ -85,7 +104,9 @@ class ContainerService<C : GenericContainer<*>, E : Any> internal constructor(
                 origin = Origin.CONTAINER
                 Registry.add(this@ContainerService)
             }
-        }.map(fromContainer).getOrNull()
+        }.onFailure { failure = it }
+            .map(fromContainer)
+            .getOrNull()
     }
 
     /** Where the endpoint came from. Not the same question as whether a container is still running. */

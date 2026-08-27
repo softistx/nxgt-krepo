@@ -25,6 +25,11 @@ class KafkaAdminTest :
                     // first call can answer false about a name nothing else has ever seen. What it
                     // promises on return is that the topic is there.
                     admin.ensureTopic(topic, partitions = 2)
+                    // And the same wait the delete half of this scenario already does. `ensureTopic`
+                    // returns when the controller has accepted the create; the broker this client
+                    // asks next can still be a moment behind, so asserting `exists` immediately is a
+                    // race that only loses under the load of a full-suite run.
+                    KafkaTestCluster.awaitTopic(admin.admin, topic)
                     admin.exists(topic) shouldBe true
 
                     admin.ensureTopic(topic, partitions = 2) shouldBe false
