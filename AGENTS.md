@@ -14,11 +14,12 @@ What exists:
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
-| `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, and the one lenient `Json` the storage and messaging libraries read through |
+| `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, `CloseGuard`, and the one lenient `Json` the storage and messaging libraries read through |
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
+| `libs/shared-koin` | The same six backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
@@ -196,13 +197,15 @@ a dependency, it brings that dependency to everything.
 
 Framework integrations go in `libs/shared-ktor`, **one package per integration** — i18n, Redis,
 Mongo, AMQP, Kafka and object storage. An application wires them together in one `install` block and
-should read them from one dependency.
+should read them from one dependency. `libs/shared-koin` is the same six as Koin modules, for the
+callers that have a container and no web framework; it knows the container, `shared-ktor` knows the
+framework, the libraries know the backends, and none of them knows two.
 
 **Every backend is declared `compile-only`, including the ones this module's API returns.**
 `call.redis` hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath, which
-sounds wrong and is not: an application that installs `RedisPlugin` already depends on
+sounds wrong and is not: an application that installs `RedisConnection` already depends on
 `shared-redis`, because `RedisConfig` is the only way to configure the plugin at all — and one that
-installs only `I18nPlugin` never loads a class from any of the others, so nothing is missing when
+installs only `I18n` never loads a class from any of the others, so nothing is missing when
 nothing is linked. It is self-enforcing rather than a convention to remember. Verified with
 `./kotlin show dependencies -m shared-ktor`: a compile-only entry sits in the COMPILE scope and is
 absent from RUNTIME.
@@ -215,6 +218,30 @@ observable from a mock.
 The plugins are not in the libraries they wrap because `shared-i18n` and `shared-redis` have callers
 with no server in them — a worker, a CLI, a consumer. The library knows the backend, `shared-ktor`
 knows the framework, and neither has to know both.
+
+**A framework integration must assume the resource is not its own, and must not be the only way to
+reach it.** Three rules, and the next integration is built to them rather than retrofitted:
+
+- **Take an instance as well as a config.** Every plugin's configuration has an `instance`; set it
+  and the plugin adopts what an application or a container already built, instead of opening a
+  second one.
+- **Whoever created it closes it.** `Resources.kt` says this once, as `own` (we opened it, we close
+  it on `ApplicationStopped`) and `publish` (someone else's, we leave it alone). A plugin that
+  adopts a connection and also closes it is the second close.
+- **Reaching a resource only through `call.x` is a service locator.** A class a container builds
+  has no `ApplicationCall`, so each plugin can register what it installed —
+  `install(RedisConnection) { config = …; injectable = true }` — and the same connection is then
+  both `call.redis` and a constructor parameter. `injectable` is off by default because
+  `ktor-server-di` is compile-only, and each `provideX` lives in its own file so nothing loads a
+  class from Ktor's DI until it is switched on.
+
+**And close idempotently, through `CloseGuard`.** A resource that is handed around is closed more
+than once, and the rule above says who *should* close it, not what happens when two of them do.
+Ktor's DI closes every `AutoCloseable` it hands out at application stop — one a provider merely
+passed through included, and a per-key `cleanup` runs beside that hook rather than instead of it, so
+a library cannot opt out. The drivers do not agree here either: Lettuce and the MinIO client tolerate
+a second close, the RabbitMQ client throws. Any new `AutoCloseable` in these libraries closes through
+the guard, so that all of it stays a question of tidiness rather than of correctness.
 
 ### Local services
 
@@ -355,6 +382,23 @@ The catalog's `[bundles]` groupings map to the intended consumer surfaces of thi
 - **`shared`** / `shared-test` — code common to both: kotlinx-serialization, kotlinx-rpc client, bson-kotlinx.
 - **`kotlinx`**, **`faker`** — coroutines/datetime, and kotlin-faker for test data.
 
+**A module that turns on `settings.ktor` pins the version to the catalog's.** `ktor: enabled` gives
+`$ktor.server.core` and the rest from the toolchain's *own* default version, which is 3.5.2 today
+and matches `ktor = "3.5.2"` in the catalog by coincidence rather than by construction — a toolchain
+upgrade would move one and not the other, and an artifact this repo names itself (`ktor-server-di`,
+on `version.ref = "ktor"`) would then be a different Ktor from `ktor-server-core`. So:
+
+```yaml
+settings:
+  ktor:
+    enabled: true
+    version: 3.5.2   # matches `ktor` in libs.versions.toml
+```
+
+`./kotlin show settings -m <module>` says which one is in force: `# module.yaml` when it is pinned,
+`# default` when the toolchain is choosing. Three modules enable it — `shared-ktor`, `demo-api`,
+`demo-client` — and all three carry the pin.
+
 The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.10 with CLI 0.12.0), so that entry does not control what this repo compiles with.
 
 ## Coroutine-first Kotlin
@@ -458,6 +502,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
   | `libs/shared-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/shared-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
+  | `libs/shared-koin/README.md` | The Koin modules — which side creates the connection, which adopts it, and why two of them have no `onClose` |
   | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |

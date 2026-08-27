@@ -38,6 +38,9 @@ internal object RedisTestServer {
             runCatching { Redis.connect(config()).use { server -> runBlocking { server.ping() } } }.isSuccess
     }
 
+    /** A connection the caller closes — for the specs that are about closing. */
+    fun connect(namespace: String): Redis = Redis.connect(config(namespace))
+
     /**
      * Runs [block] against a namespace no other spec is using, and deletes it afterwards.
      *

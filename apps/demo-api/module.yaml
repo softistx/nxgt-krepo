@@ -11,6 +11,11 @@ dependencies:
   - $libs.slf4j.nop
 
 settings:
-  ktor: enabled
+  ktor:
+    enabled: true
+    # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is
+    # the same number today by coincidence. `$ktor.*` and a `$libs.*` alias on `version.ref = "ktor"`
+    # have to be one version, or a toolchain upgrade splits them silently.
+    version: 3.5.2
   kotlin:
     serialization: json

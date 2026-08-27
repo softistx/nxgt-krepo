@@ -1,11 +1,9 @@
 package com.strange.mongo
 
-import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.reactivestreams.client.MongoClients
-import com.strange.mongo.codec.mongoCodecRegistry
 import com.strange.testing.containers.mongoContainer
 import kotlinx.coroutines.runBlocking
 import org.bson.BsonDocument
@@ -36,14 +34,14 @@ internal object MongoTestCluster {
 
     private val databases = AtomicInteger()
 
+    /** Where the cluster is, for a spec that builds its own client rather than borrowing this one. */
+    val uri: String get() = requireNotNull(mongo.endpoint) { mongo.describe() }
+
     /** Short server selection, or an absent server would cost 30s per spec before failing. */
     private fun settings(): MongoClientSettings =
-        MongoClientSettings
-            .builder()
-            .applyConnectionString(ConnectionString(requireNotNull(mongo.endpoint) { mongo.describe() }))
-            .applyToClusterSettings { it.serverSelectionTimeout(2, TimeUnit.SECONDS) }
-            .codecRegistry(mongoCodecRegistry())
-            .build()
+        mongoClientSettings(uri) {
+            applyToClusterSettings { it.serverSelectionTimeout(2, TimeUnit.SECONDS) }
+        }
 
     /**
      * Reachable *and* answering. Starting a container proves the process is up; a `hello` proves the

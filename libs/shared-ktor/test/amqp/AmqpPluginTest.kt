@@ -8,6 +8,7 @@ import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
@@ -26,7 +27,7 @@ class AmqpPluginTest :
             scenario("gets an open connection it can take a channel from") {
                 testApplication {
                     application {
-                        install(AmqpPlugin) { config = AmqpConfig(uri = broker.endpoint!!, connectionName = "spec") }
+                        install(AmqpConnection) { config = AmqpConfig(uri = broker.endpoint!!, connectionName = "spec") }
                         routing {
                             get("/") {
                                 val queue = call.amqp.withChannel { it.queueDeclare().queue }
@@ -42,7 +43,7 @@ class AmqpPluginTest :
                 lateinit var captured: Amqp
                 testApplication {
                     application {
-                        install(AmqpPlugin) { config = AmqpConfig(uri = broker.endpoint!!) }
+                        install(AmqpConnection) { config = AmqpConfig(uri = broker.endpoint!!) }
                         routing {
                             get("/") {
                                 captured = call.amqp
@@ -57,6 +58,32 @@ class AmqpPluginTest :
             }
         }
 
+        feature("a connection handed in rather than opened").config(enabled = broker.available) {
+            scenario("is the one routes get, and is still open after the application stops") {
+                val mine = Amqp.connect(AmqpConfig(uri = broker.endpoint!!, connectionName = "adopted"))
+                try {
+                    lateinit var captured: Amqp
+                    testApplication {
+                        application {
+                            install(AmqpConnection) { instance = mine }
+                            routing {
+                                get("/") {
+                                    captured = call.amqp
+                                    call.respondText("ok")
+                                }
+                            }
+                        }
+                        client.get("/").bodyAsText() shouldBe "ok"
+                    }
+
+                    captured shouldBeSameInstanceAs mine
+                    mine.isOpen shouldBe true
+                } finally {
+                    mine.close()
+                }
+            }
+        }
+
         feature("reaching for it without installing it") {
             scenario("names the plugin") {
                 // Asserted on the accessor rather than through the client: Ktor's test engine turns
@@ -66,7 +93,7 @@ class AmqpPluginTest :
                     application {
                         val failure = shouldThrow<IllegalStateException> { amqp }
 
-                        failure.message shouldContain "AmqpPlugin"
+                        failure.message shouldContain "AmqpConnection"
                     }
 
                     startApplication()
