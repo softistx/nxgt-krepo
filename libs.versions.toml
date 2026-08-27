@@ -38,7 +38,6 @@ lettuce = "7.7.0.RELEASE"
 minio = "9.0.3"
 kafka = "4.3.1"
 amqp-client = "5.25.0"
-icu4j = "78.3"
 confluent = "8.3.1"
 spring = "7.0.9"
 jackson = "3.2.2"
@@ -172,7 +171,6 @@ lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 minio = { module = "io.minio:minio", version.ref = "minio" }
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 amqp-client = { module = "com.rabbitmq:amqp-client", version.ref = "amqp-client" }
-icu4j = { module = "com.ibm.icu:icu4j", version.ref = "icu4j" }
 confluent-kafka-avro-serializer = { module = "io.confluent:kafka-avro-serializer", version.ref = "confluent" }
 
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
