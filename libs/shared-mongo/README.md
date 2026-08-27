@@ -15,7 +15,8 @@ com.strange.mongo            client, database and session helpers — collection
 com.strange.mongo.codec      codecs the driver has no built-in for, and the registry that carries them
 com.strange.mongo.query      what a collection is asked to do — filters, indexes, find/insert/update/delete
 com.strange.mongo.page       Page, PageInfo, PaginationOptions and the cursor-paginated find
-com.strange.mongo.crud       MongoCrudService and the audit stamp it applies
+com.strange.mongo.repository MongoCrudRepository — one collection, as an object
+com.strange.mongo.service    MongoCrudService — the write flow over a repository, and its audit stamp
 com.strange.mongo.gridfs     a coroutine GridFS bucket over the Reactive Streams driver
 ```
 
@@ -81,3 +82,30 @@ What that requires, and what the implementation therefore does:
 `filter` and `sort` are raw Mongo JSON because that is how they arrive from an HTTP client; both
 are parsed, so a malformed one fails as `InvalidPaginationException` rather than reaching the
 server.
+
+## Repository
+
+`MongoCrudRepository<T, ID>` is the query vocabulary as a noun: the thing a service holds, a test
+substitutes, and a subclass extends with the two or three queries that really are specific to a
+collection.
+
+```kotlin
+val notes = MongoCrudRepository(database.collection<Note>("notes"), Note::id)
+
+class NoteRepository(database: MongoDatabase) :
+    MongoCrudRepository<Note, String>(database.collection("notes"), Note::id) {
+    suspend fun findByTag(tag: String) = findAll(Filters.eq("tag", tag))
+    override suspend fun ensureIndexes() { collection.ensureIndex(Indexes.ascending("tag")) }
+}
+```
+
+Two decisions worth stating:
+
+- **`idOf` is a constructor parameter, not an abstract method**, so the plain case needs no subclass
+  at all. Every method is `open` for the case that does.
+- **The entity owns its `_id`.** Writes take the id from the document rather than from a
+  server-generated one, which is what lets a create be "insert, then read back" without a round trip
+  to discover what was inserted.
+
+It knows nothing about *why* a document is being written — no hooks, no audit, no transactions.
+That is `MongoCrudService`, one layer up.
