@@ -23,6 +23,9 @@ import kotlin.reflect.KClass
  * same reason: `create-drop` inside something the spec made cannot take anything else with it.
  */
 internal object MySqlTestDatabase {
+    private const val ATTEMPTS = 5
+    private const val INTERVAL_MILLIS = 2_000L
+
     private val mysql = mysqlContainer()
 
     private val databases = AtomicInteger()
@@ -50,11 +53,29 @@ internal object MySqlTestDatabase {
             if (!mysql.available) {
                 mysql.describe()
             } else {
-                runCatching { runBlocking { withClient(endpoint.uri) { it.ask("select 1") } } }
-                    .exceptionOrNull()
-                    ?.let { "mysql: ${endpoint.uri} answered no query — $it" }
+                answers()?.let { "mysql: ${endpoint.uri} answered no query — $it" }
             }
         reason?.also { println("MySQL specs are skipped — $it") }
+    }
+
+    /**
+     * Why the first `select 1` failed, or null once one succeeds. Tried more than once, deliberately.
+     *
+     * A MySQL that has just logged *ready for connections* twice can still drop the first connection
+     * it is offered, and the exception for that is
+     * `ClosedConnectionException: Failed to read any response from the server` — the same words the
+     * `caching_sha2_password` failure uses, which is what made this look like an authentication
+     * problem for two sessions running. One retry tells them apart: an auth failure fails again.
+     */
+    private fun answers(): Throwable? {
+        var failure: Throwable? = null
+        repeat(ATTEMPTS) { attempt ->
+            failure =
+                runCatching { runBlocking { withClient(endpoint.uri) { it.ask("select 1") } } }
+                    .exceptionOrNull() ?: return null
+            if (attempt < ATTEMPTS - 1) Thread.sleep(INTERVAL_MILLIS)
+        }
+        return failure
     }
 
     /**
