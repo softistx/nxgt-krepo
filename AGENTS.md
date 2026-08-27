@@ -14,6 +14,7 @@ What exists:
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
+| `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
 | `apps/demo-client` | Generates a Ktorfit client from that spec and calls the server |
@@ -224,6 +225,7 @@ The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Ko
   | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
   | `libs/openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
+  | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
