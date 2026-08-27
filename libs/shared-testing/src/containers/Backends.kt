@@ -21,7 +21,7 @@ private const val MONGO_IMAGE = "mongo:8"
  * `MONGO_TEST_URI` reuses a server that is already up — the workspace's own replica set, or one CI
  * provisioned.
  */
-fun mongoContainer(image: String = MONGO_IMAGE): ContainerService<MongoDBContainer> =
+fun mongoContainer(image: String = MONGO_IMAGE): ContainerService<MongoDBContainer, String> =
     ContainerService.declare(
         name = "mongodb",
         reusing = "MONGO_TEST_URI",
