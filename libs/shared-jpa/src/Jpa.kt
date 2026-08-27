@@ -115,7 +115,11 @@ class Jpa internal constructor(
                             // caller's `Json`; before the properties, so `JpaConfig.properties` keeps
                             // its promise of being applied last and can still name another.
                             .applySetting(MappingSettings.JSON_FORMAT_MAPPER, KotlinxJsonFormatMapper(config.json))
-                            .applySettings(configuration.properties)
+                            .apply {
+                                config.naming.strategy?.let {
+                                    applySetting(MappingSettings.IMPLICIT_NAMING_STRATEGY, it)
+                                }
+                            }.applySettings(configuration.properties)
                             .addService(VertxInstance::class.java, VertxInstance { instance })
                             .build()
 
