@@ -1,7 +1,9 @@
 package com.strange.redis
 
+import com.strange.redis.codec.redisJson
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
@@ -20,15 +22,26 @@ internal object RedisTestServer {
 
     private val namespaces = AtomicInteger()
 
-    private fun config(namespace: String = "") = RedisConfig(uri, namespace, timeout = 2.seconds)
+    private fun config(
+        namespace: String = "",
+        json: Json = redisJson,
+    ) = RedisConfig(uri, namespace, timeout = 2.seconds, json = json)
 
     val available: Boolean by lazy {
         runCatching { Redis.connect(config()).use { redis -> runBlocking { redis.ping() } } }.isSuccess
     }
 
-    /** Runs [block] against a namespace no other spec is using, and deletes it afterwards. */
-    suspend fun withRedis(block: suspend (Redis) -> Unit) {
-        Redis.connect(config("shared-redis-test:${namespaces.incrementAndGet()}")).use { redis ->
+    /**
+     * Runs [block] against a namespace no other spec is using, and deletes it afterwards.
+     *
+     * [json] is a parameter because the connection's own `Json` is a thing worth testing: a spec
+     * that wants strict decoding asks for it here rather than building a `Redis` by hand.
+     */
+    suspend fun withRedis(
+        json: Json = redisJson,
+        block: suspend (Redis) -> Unit,
+    ) {
+        Redis.connect(config("shared-redis-test:${namespaces.incrementAndGet()}", json)).use { redis ->
             try {
                 block(redis)
             } finally {

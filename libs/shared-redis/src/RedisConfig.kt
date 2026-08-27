@@ -1,5 +1,7 @@
 package com.strange.redis
 
+import com.strange.redis.codec.redisJson
+import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -13,9 +15,14 @@ import kotlin.time.Duration.Companion.seconds
  *
  * The database index belongs in [uri] (`redis://host:6379/3`), because that is where Lettuce reads
  * it from and duplicating it here would only create a way for the two to disagree.
+ *
+ * [json] is the one every typed layer built on the connection serializes through, so a service
+ * configures its Redis values once rather than once per cache, topic and stream. See [redisJson]
+ * for what the default is lenient about and why.
  */
 data class RedisConfig(
     val uri: String = "redis://localhost:6379",
     val namespace: String = "",
     val timeout: Duration = 10.seconds,
+    val json: Json = redisJson,
 )

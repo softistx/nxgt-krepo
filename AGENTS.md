@@ -15,7 +15,7 @@ What exists:
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
 | `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
-| `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection, a typed cache, a lock, topics and streams |
+| `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
