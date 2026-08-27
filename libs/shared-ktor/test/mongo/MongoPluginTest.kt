@@ -1,12 +1,15 @@
 package com.strange.ktor.mongo
 
+import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.strange.mongo.collection
+import com.strange.mongo.mongoClient
 import com.strange.testing.containers.mongoContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
@@ -38,7 +41,7 @@ internal data class Note(
  * `mongoCodecRegistry()` stores it as something this library cannot read back, and every step up to
  * that one succeeds. Round-tripping it is the only way to see the difference.
  */
-class MongoDBTest :
+class MongoPluginTest :
     FeatureSpec({
 
         val server = mongoContainer()
@@ -111,6 +114,37 @@ class MongoDBTest :
                 }
 
                 shouldThrowAny { captured.listCollectionNames().firstOrNull() }
+            }
+        }
+
+        feature("a client handed in rather than built").config(enabled = server.available) {
+            scenario("is the one routes get, and is still open after the application stops") {
+                val mine = mongoClient(server.endpoint!!)
+                try {
+                    lateinit var captured: MongoClient
+                    testApplication {
+                        application {
+                            install(MongoDB) {
+                                instance = mine
+                                database = "adopted"
+                            }
+                            routing {
+                                get("/") {
+                                    captured = call.mongo
+                                    call.respondText(call.database.name)
+                                }
+                            }
+                        }
+                        client.get("/").bodyAsText() shouldBe "adopted"
+                    }
+
+                    captured shouldBeSameInstanceAs mine
+
+                    // Closed by whoever built it — here, this spec's `finally`.
+                    mine.listDatabaseNames().firstOrNull()
+                } finally {
+                    mine.close()
+                }
             }
         }
 
