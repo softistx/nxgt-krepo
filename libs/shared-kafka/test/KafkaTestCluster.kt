@@ -161,7 +161,7 @@ internal object KafkaTestCluster {
      * with `UnknownTopicOrPartition`, and it is a race rather than a certainty — it showed up once
      * in a full-suite run and not at all when the module ran on its own.
      */
-    private suspend fun awaitTopic(
+    suspend fun awaitTopic(
         admin: Admin,
         topic: String,
         timeout: Duration = 10.seconds,
