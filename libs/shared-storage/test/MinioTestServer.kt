@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * server holds other applications' buckets and none of this may touch them.
  */
 internal object MinioTestServer {
-    private val endpoint = System.getenv("MINIO_TEST_ENDPOINT") ?: "http://localhost:9000"
+    val endpoint: String = System.getenv("MINIO_TEST_ENDPOINT") ?: "http://localhost:9000"
     private val accessKey: String? = System.getenv("MINIO_TEST_ACCESS_KEY")
     private val secretKey: String? = System.getenv("MINIO_TEST_SECRET_KEY")
 
