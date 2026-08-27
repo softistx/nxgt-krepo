@@ -91,7 +91,7 @@ class AmqpPublisherTest :
                     delivered.props.contentType shouldBe "application/json"
                     delivered.props.messageId shouldBe "m-1"
                     delivered.props.headers["tenant"].toString() shouldBe "acme"
-                    /* Persistent by default: the half of durability the publisher owns. */
+                    // Persistent by default: the half of durability the publisher owns.
                     delivered.props.deliveryMode shouldBe 2
                 }
             }
