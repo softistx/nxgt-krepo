@@ -6,6 +6,7 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.reactivestreams.client.MongoClients
 import com.strange.mongo.codec.mongoCodecRegistry
+import com.strange.testing.containers.mongoContainer
 import kotlinx.coroutines.runBlocking
 import org.bson.BsonDocument
 import org.bson.BsonInt32
@@ -14,18 +15,24 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.mongodb.reactivestreams.client.MongoClient as ReactiveMongoClient
 
 /**
- * The MongoDB the integration tests talk to: the replica set this workspace already runs, not one
- * a test starts. `~/workspace/docker/apps/database/mongo` publishes it on the default port, and
- * `MONGO_TEST_URI` points the tests somewhere else when needed.
+ * The MongoDB the integration tests talk to: a replica set started for this run, unless
+ * `MONGO_TEST_URI` names one that is already up.
  *
  * A replica set is not a preference here — `startTransaction` fails outright against a standalone
- * `mongod`, so anything touching [withTransaction] needs one.
+ * `mongod`, so anything touching [withTransaction] needs one. `MongoDBContainer` initiates one; so
+ * does `~/workspace/docker/apps/database/mongo`, which is what the override points at on a machine
+ * where it is already running.
  *
- * [available] is what every such spec is enabled on, so a machine without the server reports those
- * tests as skipped rather than failing a build over something that is not the code.
+ * The default is the container, and that is the change worth naming: a suite that only passes on a
+ * machine with the right daemons already up passes for the wrong reason, and says nothing to anyone
+ * who checks the repo out tomorrow.
+ *
+ * [available] is what every integration spec is enabled on, so a machine with neither Docker nor a
+ * server reports those tests as skipped rather than failing a build over something that is not the
+ * code.
  */
 internal object MongoTestCluster {
-    private val uri = System.getenv("MONGO_TEST_URI") ?: "mongodb://localhost:27017"
+    private val mongo = mongoContainer()
 
     private val databases = AtomicInteger()
 
@@ -33,17 +40,24 @@ internal object MongoTestCluster {
     private fun settings(): MongoClientSettings =
         MongoClientSettings
             .builder()
-            .applyConnectionString(ConnectionString(uri))
+            .applyConnectionString(ConnectionString(requireNotNull(mongo.endpoint) { mongo.describe() }))
             .applyToClusterSettings { it.serverSelectionTimeout(2, TimeUnit.SECONDS) }
             .codecRegistry(mongoCodecRegistry())
             .build()
 
+    /**
+     * Reachable *and* answering. Starting a container proves the process is up; a `hello` proves the
+     * replica set finished initiating, which is the part transactions actually need.
+     */
     val available: Boolean by lazy {
-        runCatching {
-            MongoClient.create(settings()).use { client ->
-                runBlocking { client.getDatabase("admin").runCommand<BsonDocument>(BsonDocument("hello", BsonInt32(1))) }
-            }
-        }.isSuccess
+        mongo.available &&
+            runCatching {
+                MongoClient.create(settings()).use { client ->
+                    runBlocking {
+                        client.getDatabase("admin").runCommand<BsonDocument>(BsonDocument("hello", BsonInt32(1)))
+                    }
+                }
+            }.isSuccess
     }
 
     fun client(): MongoClient = MongoClient.create(settings())
