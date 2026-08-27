@@ -19,7 +19,7 @@ import io.ktor.server.testing.testApplication
  * The plugin against a real server, because what it promises — one connection, closed on stop — is
  * not observable from a mock.
  */
-class RedisPluginTest :
+class RedisConnectionTest :
     FeatureSpec({
 
         val server = redisContainer()
@@ -28,7 +28,7 @@ class RedisPluginTest :
             scenario("gets a working connection, namespaced as configured") {
                 testApplication {
                     application {
-                        install(RedisPlugin) { config = RedisConfig(uri = server.endpoint!!, namespace = "orders") }
+                        install(RedisConnection) { config = RedisConfig(uri = server.endpoint!!, namespace = "orders") }
                         routing {
                             get("/") {
                                 call.redis.commands.set(call.redis.key("greeting"), "hello")
@@ -45,7 +45,7 @@ class RedisPluginTest :
             scenario("it is one connection, not one per request") {
                 testApplication {
                     application {
-                        install(RedisPlugin) { config = RedisConfig(uri = server.endpoint!!) }
+                        install(RedisConnection) { config = RedisConfig(uri = server.endpoint!!) }
                         routing { get("/") { call.respondText("${System.identityHashCode(call.redis)}") } }
                     }
                     val first = client.get("/").bodyAsText()
@@ -58,7 +58,7 @@ class RedisPluginTest :
                 lateinit var captured: com.strange.redis.Redis
                 testApplication {
                     application {
-                        install(RedisPlugin) { config = RedisConfig(uri = server.endpoint!!) }
+                        install(RedisConnection) { config = RedisConfig(uri = server.endpoint!!) }
                         routing {
                             get("/") {
                                 captured = call.redis
@@ -84,7 +84,7 @@ class RedisPluginTest :
                     application {
                         val failure = shouldThrow<IllegalStateException> { redis }
 
-                        failure.message shouldContain "RedisPlugin"
+                        failure.message shouldContain "RedisConnection"
                     }
 
                     startApplication()

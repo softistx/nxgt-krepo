@@ -5,8 +5,8 @@ import com.strange.ktor.required
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 
-/** The application's AMQP connection, as [AmqpPlugin] opened it. */
-val Application.amqp: Amqp get() = required(AmqpKey, "AmqpPlugin")
+/** The application's AMQP connection, as [AmqpConnection] opened it. */
+val Application.amqp: Amqp get() = required(AmqpKey, "AmqpConnection")
 
 /**
  * The same connection, from a route.

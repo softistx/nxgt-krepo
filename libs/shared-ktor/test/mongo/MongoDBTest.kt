@@ -38,7 +38,7 @@ internal data class Note(
  * `mongoCodecRegistry()` stores it as something this library cannot read back, and every step up to
  * that one succeeds. Round-tripping it is the only way to see the difference.
  */
-class MongoPluginTest :
+class MongoDBTest :
     FeatureSpec({
 
         val server = mongoContainer()
@@ -47,7 +47,7 @@ class MongoPluginTest :
             scenario("gets the one the plugin was configured with") {
                 testApplication {
                     application {
-                        install(MongoPlugin) {
+                        install(MongoDB) {
                             uri = server.endpoint!!
                             database = "shared-ktor-spec"
                         }
@@ -60,7 +60,7 @@ class MongoPluginTest :
             scenario("with the codec registry, so an Instant survives the round trip") {
                 testApplication {
                     application {
-                        install(MongoPlugin) {
+                        install(MongoDB) {
                             uri = server.endpoint!!
                             database = "shared-ktor-spec"
                         }
@@ -96,7 +96,7 @@ class MongoPluginTest :
                 lateinit var captured: com.mongodb.kotlin.client.coroutine.MongoDatabase
                 testApplication {
                     application {
-                        install(MongoPlugin) {
+                        install(MongoDB) {
                             uri = server.endpoint!!
                             database = "shared-ktor-spec"
                         }
@@ -123,7 +123,7 @@ class MongoPluginTest :
                     application {
                         val failure = shouldThrow<IllegalStateException> { database }
 
-                        failure.message shouldContain "MongoPlugin"
+                        failure.message shouldContain "MongoDB"
                     }
 
                     startApplication()

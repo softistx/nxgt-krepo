@@ -23,7 +23,7 @@ import java.util.Locale
  * route can reach afterwards — so these go through the HTTP client rather than calling the
  * negotiation directly. `shared-i18n` already has specs for the negotiation itself.
  */
-class I18nPluginTest :
+class I18nTest :
     FeatureSpec({
 
         val messages =
@@ -39,7 +39,7 @@ class I18nPluginTest :
             configure: I18nConfiguration.() -> Unit = {},
         ) {
             application {
-                install(I18nPlugin) {
+                install(I18n) {
                     this.messages = messages
                     configure()
                 }
@@ -118,7 +118,7 @@ class I18nPluginTest :
             scenario("the translator is resolved once and shared, not renegotiated per read") {
                 testApplication {
                     application {
-                        install(I18nPlugin) { this.messages = messages }
+                        install(I18n) { this.messages = messages }
                         routing {
                             get("/") {
                                 call.respondText("${call.translator === call.translator}")
@@ -132,7 +132,7 @@ class I18nPluginTest :
             scenario("arguments reach the message, named and positional alike") {
                 testApplication {
                     application {
-                        install(I18nPlugin) { this.messages = messages }
+                        install(I18n) { this.messages = messages }
                         routing {
                             get("/") { call.respondText(call.translate("greeting", mapOf("name" to "Ada"))) }
                         }
@@ -148,7 +148,7 @@ class I18nPluginTest :
             scenario("no messages is a failure to start, not a server that answers in keys") {
                 shouldThrow<IllegalArgumentException> {
                     testApplication {
-                        application { install(I18nPlugin) {} }
+                        application { install(I18n) {} }
                         client.get("/")
                     }
                 }

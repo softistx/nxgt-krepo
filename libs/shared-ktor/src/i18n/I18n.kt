@@ -13,7 +13,7 @@ import io.ktor.util.AttributeKey
  * Resolves each request's locale once, and hands it to the route.
  *
  * ```kotlin
- * install(I18nPlugin) { messages = Messages.load(locales = listOf(Locale.ENGLISH, Locale.FRENCH)) }
+ * install(I18n) { messages = Messages.load(locales = listOf(Locale.ENGLISH, Locale.FRENCH)) }
  *
  * get("/greeting") {
  *     call.respondText(call.translate("hello.world", mapOf("name" to "Ada")))
@@ -27,9 +27,9 @@ import io.ktor.util.AttributeKey
  * needs a message would parse the same header several times and — worse — could answer two
  * questions in one response in two different languages.
  */
-val I18nPlugin =
+val I18n =
     createApplicationPlugin(name = "I18n", createConfiguration = ::I18nConfiguration) {
-        val messages = requireNotNull(pluginConfig.messages) { "install(I18nPlugin) needs `messages`" }
+        val messages = requireNotNull(pluginConfig.messages) { "install(I18n) needs `messages`" }
         val configuration = pluginConfig.copy()
 
         on(CallSetup) { call ->
@@ -37,7 +37,7 @@ val I18nPlugin =
         }
     }
 
-/** How [I18nPlugin] decides which locale a request is asking for. */
+/** How [I18n] decides which locale a request is asking for. */
 data class I18nConfiguration(
     /** The catalogs. Required — there is no sensible default for somebody else's messages. */
     var messages: Messages? = null,

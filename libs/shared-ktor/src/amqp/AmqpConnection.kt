@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
  * One AMQP connection for the application, closed when it stops.
  *
  * ```kotlin
- * install(AmqpPlugin) { config = AmqpConfig(uri = System.getenv("AMQP_URI"), connectionName = "orders-api") }
+ * install(AmqpConnection) { config = AmqpConfig(uri = System.getenv("AMQP_URI"), connectionName = "orders-api") }
  *
  * post("/orders") { call.amqp.publisher<OrderPlaced>("orders").use { it.publish(order) } }
  * ```
@@ -26,13 +26,13 @@ import kotlinx.coroutines.runBlocking
  * that accepts requests while its broker connection is still being made, and answers the first of
  * them with a failure that looks like the broker's fault.
  */
-val AmqpPlugin =
-    createApplicationPlugin(name = "Amqp", createConfiguration = ::AmqpPluginConfiguration) {
+val AmqpConnection =
+    createApplicationPlugin(name = "Amqp", createConfiguration = ::AmqpConnectionConfiguration) {
         application.own(AmqpKey, runBlocking { Amqp.connect(pluginConfig.config) })
     }
 
-/** What [AmqpPlugin] connects with. */
-class AmqpPluginConfiguration {
+/** What [AmqpConnection] connects with. */
+class AmqpConnectionConfiguration {
     /**
      * The URI, the connection name, heartbeats and recovery.
      *

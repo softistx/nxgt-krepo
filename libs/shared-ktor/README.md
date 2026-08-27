@@ -3,24 +3,32 @@
 Ktor integrations for the libraries here — one package per integration, one module for all of them.
 
 ```
-com.strange.ktor.i18n      I18nPlugin      a negotiated locale per request
-com.strange.ktor.redis     RedisPlugin     one Redis connection
-com.strange.ktor.mongo     MongoPlugin     one client, and the database over it
-com.strange.ktor.amqp      AmqpPlugin      one AMQP connection
-com.strange.ktor.kafka     KafkaPlugin     the cluster configuration
-com.strange.ktor.storage   StoragePlugin   one object-storage client
+com.strange.ktor.i18n      I18n              a negotiated locale per request
+com.strange.ktor.redis     RedisConnection   one Redis connection
+com.strange.ktor.mongo     MongoDB           one client, and the database over it
+com.strange.ktor.amqp      AmqpConnection    one AMQP connection
+com.strange.ktor.kafka     KafkaCluster      the cluster configuration
+com.strange.ktor.storage   Storage           one object-storage client
 ```
 
 ```kotlin
-install(RedisPlugin) { config = RedisConfig(uri = System.getenv("REDIS_URI"), namespace = "orders") }
-install(MongoPlugin) { uri = System.getenv("MONGO_URI"); database = "orders" }
-install(I18nPlugin)  { messages = Messages.load(locales = listOf(ENGLISH, FRENCH)) }
+install(RedisConnection) { config = RedisConfig(uri = System.getenv("REDIS_URI"), namespace = "orders") }
+install(MongoDB) { uri = System.getenv("MONGO_URI"); database = "orders" }
+install(I18n)  { messages = Messages.load(locales = listOf(ENGLISH, FRENCH)) }
 
 get("/cart/{id}") {
     val cart = call.database.collection<Cart>("carts").findById(call.parameters["id"]!!)
     call.respondText(call.translate("cart.total", mapOf("total" to cart.total)))
 }
 ```
+
+## The names
+
+No `Plugin` suffix, the way Ktor's own `install(ContentNegotiation)` carries none. Three of the six
+could not simply take their backend's name: `Redis`, `Amqp` and `Kafka` are the classes these
+plugins *hand out*, and an application that installs one and also names the type it gets back would
+have two imports of one name. Those three are named for what the plugin puts on the application —
+a connection, a connection, a cluster — and the other three take the product.
 
 ## What a plugin is for
 
@@ -35,12 +43,12 @@ file handles. `ApplicationStopped` and not `ApplicationStopping`: stopping fires
 still be in flight, and a request that finds its connection already closed is a 500 caused by the
 shutdown rather than by the caller.
 
-**A missing `install` names itself.** `call.redis` without `install(RedisPlugin)` throws saying
+**A missing `install` names itself.** `call.redis` without `install(RedisConnection)` throws saying
 exactly that, rather than surfacing as a null three layers down.
 
 ## The two that are not like the others
 
-**`KafkaPlugin` opens nothing and closes nothing.** That is not an omission — it is what `Kafka`
+**`KafkaCluster` opens nothing and closes nothing.** That is not an omission — it is what `Kafka`
 itself says: a Kafka client connects when it is created, and a producer, a consumer and an admin
 client have different lifetimes, threads and failure modes. A wrapper that owns them all is a
 wrapper that closes a producer something else was still using. So the plugin holds the
@@ -48,13 +56,13 @@ configuration, `call.kafka` reaches it, and whatever a route opens, that route c
 publisher belongs to the application: open it at startup and close it on `ApplicationStopped`, the
 way the other plugins do.
 
-**`MongoPlugin` exists mostly for the codec registry.** A `MongoClient` built without
+**`MongoDB` exists mostly for the codec registry.** A `MongoClient` built without
 `mongoCodecRegistry()` compiles, connects and reads — and stores an `Instant` as something this
 library cannot read back. Every step succeeds until the data is already written, so the plugin does
 it rather than each service remembering to. A round trip through a real server is the only spec that
 can tell the difference, and there is one.
 
-**`AmqpPlugin` blocks once, at startup.** `Amqp.connect` suspends and plugin installation does not,
+**`AmqpConnection` blocks once, at startup.** `Amqp.connect` suspends and plugin installation does not,
 so this is the module's one `runBlocking` — on the thread starting the application, before anything
 is serving. The alternative is a server accepting requests while its broker connection is still
 being made, and answering the first of them with what looks like the broker's fault.
@@ -64,9 +72,9 @@ being made, and answering the first of them with what looks like the broker's fa
 Every backend is `compile-only`, **including the ones this module's API returns**. `call.redis`
 hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath.
 
-That sounds wrong and is not. An application that installs `RedisPlugin` already depends on
+That sounds wrong and is not. An application that installs `RedisConnection` already depends on
 `shared-redis` — `RedisConfig` is the only way to configure the plugin at all — so the driver is on
-its classpath for its own reasons. And an application that installs only `I18nPlugin` never loads a
+its classpath for its own reasons. And an application that installs only `I18n` never loads a
 class from any of the others, so nothing is missing when nothing is linked. The rule enforces itself
 rather than asking anyone to remember it.
 
@@ -84,7 +92,7 @@ assertion is the one the plugins exist for.
 The odd one in a good way — it resolves something per request rather than owning a connection.
 
 ```kotlin
-install(I18nPlugin) { messages = Messages.load(locales = listOf(Locale.ENGLISH, Locale.FRENCH)) }
+install(I18n) { messages = Messages.load(locales = listOf(Locale.ENGLISH, Locale.FRENCH)) }
 
 get("/greeting") { call.respondText(call.translate("hello.world", mapOf("name" to "Ada"))) }
 ```
@@ -94,7 +102,7 @@ needs a message would parse the same header several times and — worse — coul
 in one response in two different languages.
 
 ```kotlin
-install(I18nPlugin) {
+install(I18n) {
     messages = catalogs
     header = "X-Language"     // default: Accept-Language
     queryParameter = "lang"   // default: null, i.e. off
