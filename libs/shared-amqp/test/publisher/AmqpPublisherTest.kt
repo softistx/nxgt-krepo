@@ -153,6 +153,20 @@ class AmqpPublisherTest :
             }
         }
 
+        feature("a publisher that has been closed").config(enabled = AmqpTestBroker.available) {
+            scenario("publishing on it fails rather than waiting for a confirm nobody will send") {
+                /* The mailbox is closed with the channel, so the settler drains what it has and
+                   fails the rest. A caller awaiting an answer that is not coming is the one
+                   outcome worse than an error. */
+                withTopology { amqp, exchange, _ ->
+                    val orders = amqp.publisher<Order>(exchange)
+                    orders.close()
+
+                    shouldThrow<Throwable> { orders.publish(Order("A1"), routingKey = "order.placed") }
+                }
+            }
+        }
+
         feature("publishing straight to a queue").config(enabled = AmqpTestBroker.available) {
             scenario("the default exchange routes by queue name") {
                 withTopology { amqp, _, queue ->
