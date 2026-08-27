@@ -8,6 +8,7 @@ import io.vertx.mysqlclient.MySQLBuilder
 import io.vertx.mysqlclient.MySQLConnectOptions
 import io.vertx.sqlclient.Pool
 import io.vertx.sqlclient.PoolOptions
+import io.vertx.sqlclient.Tuple
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
@@ -32,23 +33,28 @@ internal object MySqlTestDatabase {
     val available: Boolean get() = probe == null
 
     /**
-     * Why this spec is skipped, or `null` when it is not.
+     * Why this spec is skipped, or `null` when it is not — and printed, because nothing else will.
      *
      * A skip with no reason has cost an afternoon twice here: a container that timed out under load
      * and a machine without Docker read identically. [ContainerService.describe] answers the first
-     * half and this answers the second, because a server can be reachable and still refuse the
-     * credentials, and the probe below swallows that.
+     * half and the probe answers the second, since a server can be reachable and still refuse a
+     * credential.
+     *
+     * **The printing is not laziness about the framework, it is the framework.** kotest's
+     * `enabledOrReasonIf` takes an `Enabled.disabled(reason)` and 6.2.2 renders it as `Reason:` with
+     * nothing after it — confirmed by pointing `MYSQL_TEST_URI` at a dead port and watching a skip
+     * with a reason print an empty one. So the reason is written where it will actually be read.
      */
-    val skip: String? get() = probe
-
     private val probe: String? by lazy {
-        if (!mysql.available) {
-            mysql.describe()
-        } else {
-            runCatching { runBlocking { withClient(endpoint.uri) { it.ask("select 1") } } }
-                .exceptionOrNull()
-                ?.let { "mysql: ${endpoint.uri} answered no query — $it" }
-        }
+        val reason =
+            if (!mysql.available) {
+                mysql.describe()
+            } else {
+                runCatching { runBlocking { withClient(endpoint.uri) { it.ask("select 1") } } }
+                    .exceptionOrNull()
+                    ?.let { "mysql: ${endpoint.uri} answered no query — $it" }
+            }
+        reason?.also { println("MySQL specs are skipped — $it") }
     }
 
     /**
@@ -79,6 +85,32 @@ internal object MySqlTestDatabase {
             }
         }
     }
+
+    /**
+     * The type MySQL reports for a column. The Postgres harness has the same helper for the same
+     * reason: a round trip cannot tell a JSON column from a column holding the bytes of an object.
+     *
+     * Aliased because MySQL names its `information_schema` columns in upper case and the Vert.x row
+     * looks them up as written.
+     */
+    suspend fun columnType(
+        database: String,
+        table: String,
+        column: String,
+    ): String? =
+        withClient(endpoint.uri) { client ->
+            client
+                .preparedQuery(
+                    """
+                    select data_type as data_type from information_schema.columns
+                    where table_schema = ? and table_name = ? and column_name = ?
+                    """.trimIndent(),
+                ).execute(Tuple.of(database, table, column))
+                .toCompletionStage()
+                .await()
+                .firstOrNull()
+                ?.getString("data_type")
+        }
 
     private suspend fun <T> withClient(
         uri: String,
