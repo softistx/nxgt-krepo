@@ -9,6 +9,7 @@ com.strange.jpa.session    session / transaction / stateless, and the confinemen
 com.strange.jpa.query      HQL and SQL through one builder, and the one-shot operations on Jpa
 com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.time.Instant, kotlin.uuid.Uuid
 com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
+com.strange.jpa.naming     what a column is called when the entity does not say
 com.strange.jpa.scan       reading entities and converters off the classpath
 ```
 
@@ -229,6 +230,43 @@ no spec has run against a DB2 server, because `icr.io/db2_community/db2` wants a
 and several gigabytes and this repo does not put a machine under that unasked. Point `DB2_TEST_URI`
 at one and the same specs are what should run — except the JSON ones, which cannot: `DB2Dialect`
 registers no DDL type for `SqlTypes.JSON` at all.
+
+## Column names
+
+`createdBy` is the column `created_by`.
+
+**That is this library's doing, not Hibernate's.** Hibernate keeps the property name and Postgres
+folds the unquoted identifier, so on its own it gives you `createdby` — it is Spring that installs a
+snake-case strategy, and the two are met together often enough that almost everyone believes
+otherwise. A column is read by psql, by a migration and by whoever is looking at the database without
+this application in front of them, so it is written the way SQL is written.
+
+**A name you write is used exactly as you wrote it.**
+
+```kotlin
+@Entity
+class Order(
+    @Id var id: Long = 0,
+    var createdBy: String = "",                             // created_by
+    @Column(name = "lastSeen") var lastSeen: String = "",   // lastSeen, folded by Postgres to lastseen
+)
+```
+
+This is an `ImplicitNamingStrategy`, which runs where Hibernate is deciding a name it was not given —
+not the `PhysicalNamingStrategy` that Spring and Hibernate's own `PhysicalNamingStrategySnakeCaseImpl`
+use, which rewrites every identifier including the ones an entity spells out and leaves quoting as the
+only way out. For an entity that names nothing the two are identical; they differ only where somebody
+said what they wanted. It is also what makes mapping an existing camelCase schema possible without
+quoting every identifier in it.
+
+The splitting rule is Hibernate's own, copied so that switching strategies later renames nothing: an
+underscore goes where a lower-case letter or digit is followed by an upper-case letter followed by a
+lower-case letter or digit. So an acronym stays glued — `orderURL` is `orderurl`. `NamingTest` asserts
+that equivalence against Hibernate's class rather than describing it.
+
+`JpaConfig(naming = Naming.AS_WRITTEN)` turns it off, for a schema that already exists and was not
+built this way. **Changing this setting renames every column that was not named by hand**, so it is a
+decision to make before there is a schema rather than after.
 
 ## Identifiers
 
