@@ -51,6 +51,14 @@ Ryuk was doing all the cleaning; three specs in `ContainerServiceTest` now pin i
 | `redisContainer()` | `redis:8-alpine` | `REDIS_TEST_URI` | `redis://host:port/15` |
 | `rabbitContainer()` | `rabbitmq:4-management` | `AMQP_TEST_URI` | `amqp://user:pass@host:port` |
 | `minioContainer()` | `minio/minio:latest` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `MinioEndpoint(url, accessKey, secretKey)` |
+| `kafkaContainer()` | `confluentinc/cp-kafka:latest` | `KAFKA_TEST_BOOTSTRAP` | the bootstrap servers |
+
+**Kafka's container is one broker**, where the workspace cluster is three with
+`min.insync.replicas = 2`. So `acks = all` waits for a quorum there and for one broker here — the
+ack path is exercised either way, the quorum only on the real cluster.
+`KafkaTestCluster.replicationFactor` asks the cluster what it has rather than assuming, because a
+topic asking for three replicas on a one-broker cluster is a refused `createTopics`, not a weaker
+test. Three brokers in containers would be faithful and cost ~3 GiB and half a minute per run.
 
 **A container ends the credentials argument.** `AMQP_TEST_URI` and the MinIO key pair have no
 defaults and never will — a credential with a default is a credential in source control — so before
