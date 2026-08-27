@@ -8,6 +8,7 @@ import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
@@ -54,6 +55,32 @@ class AmqpConnectionTest :
                 }
 
                 captured.isOpen shouldBe false
+            }
+        }
+
+        feature("a connection handed in rather than opened").config(enabled = broker.available) {
+            scenario("is the one routes get, and is still open after the application stops") {
+                val mine = Amqp.connect(AmqpConfig(uri = broker.endpoint!!, connectionName = "adopted"))
+                try {
+                    lateinit var captured: Amqp
+                    testApplication {
+                        application {
+                            install(AmqpConnection) { instance = mine }
+                            routing {
+                                get("/") {
+                                    captured = call.amqp
+                                    call.respondText("ok")
+                                }
+                            }
+                        }
+                        client.get("/").bodyAsText() shouldBe "ok"
+                    }
+
+                    captured shouldBeSameInstanceAs mine
+                    mine.isOpen shouldBe true
+                } finally {
+                    mine.close()
+                }
             }
         }
 
