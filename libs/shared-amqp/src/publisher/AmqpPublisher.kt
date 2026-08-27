@@ -3,21 +3,24 @@ package com.strange.amqp.publisher
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.strange.amqp.Amqp
+import com.strange.amqp.AmqpClosedException
 import com.strange.amqp.AmqpNackException
 import com.strange.amqp.AmqpUnroutableException
 import com.strange.amqp.codec.AmqpCodec
 import com.strange.amqp.codec.jsonCodec
 import com.strange.amqp.message.MessageHeaders
+import com.strange.common.coroutines.Mailbox
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentSkipListMap
 import kotlin.time.Duration
 import kotlin.time.Instant
 
@@ -40,6 +43,12 @@ import kotlin.time.Instant
  * publisher are fine, since the one thing that has to be atomic — taking the next sequence number
  * and publishing under it — is held under a lock.
  *
+ * **Confirms arrive on the client's own thread, which cannot suspend**, so they are posted to a
+ * [Mailbox] and applied by one coroutine that owns everything they touch. That is what lets the
+ * bookkeeping below be a plain map with no synchronisation on it, and it is what makes a return and
+ * the confirm that follows it arrive in that order — the order the broker sent them in — rather
+ * than as two writes racing across two threads.
+ *
  * **An unroutable message is a silent success unless asked otherwise.** With
  * [PublisherOptions.mandatory] the broker returns a message that matched no queue, and this turns
  * that return into an [AmqpUnroutableException] on the publish that caused it. Matching a return to
@@ -53,32 +62,28 @@ class AmqpPublisher<T> internal constructor(
     private val codec: AmqpCodec<T>,
     private val options: PublisherOptions,
 ) : AutoCloseable {
-    /** Publishes in flight, by the sequence number the broker will confirm them on. */
-    private val pending = ConcurrentSkipListMap<Long, Pending>()
-
-    /** Publishes whose return would otherwise be unattributable, by message id. */
-    private val byMessageId = ConcurrentHashMap<String, Long>()
+    /** Everything that has to be applied in order, in one queue. Posted to from any thread. */
+    private val confirms = Mailbox<Confirm>()
 
     /** Held across "take the next sequence number, then publish under it", which must not interleave. */
     private val publishing = Mutex()
+
+    private val settling = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     init {
         if (options.confirms) {
             channel.confirmSelect()
             channel.addConfirmListener(
-                { tag, multiple -> settle(tag, multiple) { it.complete() } },
-                { tag, multiple -> settle(tag, multiple) { it.nacked() } },
+                { tag, multiple -> confirms.post(Confirm.Acked(tag, multiple)) },
+                { tag, multiple -> confirms.post(Confirm.Nacked(tag, multiple)) },
             )
         }
         if (options.mandatory) {
             channel.addReturnListener { returned ->
-                /* The broker sends the return before the confirm, so marking here and failing on
-                   the confirm below is enough — no waiting for a second signal that may not come. */
-                returned.properties.messageId
-                    ?.let { byMessageId[it] }
-                    ?.let { sequence -> pending[sequence]?.returned = returned.replyText }
+                returned.properties.messageId?.let { confirms.post(Confirm.Returned(it, returned.replyText)) }
             }
         }
+        settling.launch { settle() }
     }
 
     /**
@@ -101,6 +106,7 @@ class AmqpPublisher<T> internal constructor(
         timestamp: Instant? = null,
     ): Published =
         enqueue(value, routingKey, headers, messageId, correlationId, replyTo, expiration, priority, timestamp)
+            .deferred
             .await()
 
     /**
@@ -116,9 +122,16 @@ class AmqpPublisher<T> internal constructor(
         headers: MessageHeaders = MessageHeaders.EMPTY,
     ): List<Published> = values.map { value -> enqueue(value, routingKey, headers) }.map { it.deferred }.awaitAll()
 
-    /** Closes the channel. The connection it came from stays open. */
+    /**
+     * Closes the channel, then the mailbox. The connection it came from stays open.
+     *
+     * The mailbox closes *gracefully*, so whatever the broker already said is applied before the
+     * settler stops — and whatever it never got round to saying is failed rather than left as a
+     * coroutine awaiting an answer that is not coming.
+     */
     override fun close() {
         runCatching { channel.close() }
+        confirms.close()
     }
 
     // ─── Publishing ───────────────────────────────────────────────────────────
@@ -154,15 +167,20 @@ class AmqpPublisher<T> internal constructor(
         return withContext(Dispatchers.IO) {
             publishing.withLock {
                 val sequence = if (options.confirms) channel.nextPublishSeqNo else 0L
-                val entry = Pending(sequence, exchange, routingKey, id, confirmed = !options.confirms)
-                if (options.confirms) {
-                    pending[sequence] = entry
-                    id?.let { byMessageId[it] = sequence }
+                val entry = Pending(sequence, exchange, routingKey, id)
+                if (!options.confirms) {
+                    entry.confirmed()
+                } else {
+                    /* Registered before the bytes go out, so the confirm that answers them cannot
+                       reach the settler first: one queue, and this end of it is already in. */
+                    confirms.post(Confirm.Registered(entry))
                 }
                 try {
                     channel.basicPublish(exchange, routingKey, options.mandatory, properties, body)
                 } catch (failure: Throwable) {
-                    forget(entry)
+                    if (options.confirms) {
+                        confirms.post(Confirm.Failed(sequence, failure))
+                    }
                     entry.deferred.completeExceptionally(failure)
                 }
                 entry
@@ -170,59 +188,129 @@ class AmqpPublisher<T> internal constructor(
         }
     }
 
-    /** Completes everything the broker has just spoken for — one tag, or every tag up to it. */
-    private fun settle(
-        tag: Long,
-        multiple: Boolean,
-        outcome: (Pending) -> Unit,
-    ) {
-        val settled = if (multiple) pending.headMap(tag, true).values.toList() else listOfNotNull(pending[tag])
-        settled.forEach { entry ->
-            forget(entry)
-            outcome(entry)
-        }
-    }
+    // ─── Settling, all of it on one coroutine ─────────────────────────────────
 
-    private fun forget(entry: Pending) {
-        pending.remove(entry.sequence)
-        entry.messageId?.let { byMessageId.remove(it) }
-    }
+    /**
+     * Applies what the broker says, in the order it says it.
+     *
+     * Sole owner of both maps below, which is why neither is synchronised and why [Pending.returned]
+     * is an ordinary `var`.
+     */
+    private suspend fun settle() {
+        /* Insertion order is ascending sequence order, so "everything up to this tag" is a walk
+           from the front rather than a sorted structure. */
+        val pending = LinkedHashMap<Long, Pending>()
+        val bySequence = mutableMapOf<String, Long>()
 
-    private inner class Pending(
-        val sequence: Long,
-        val exchange: String,
-        val routingKey: String,
-        val messageId: String?,
-        confirmed: Boolean,
-    ) {
-        val deferred = CompletableDeferred<Published>()
-
-        /** The broker's reason, set by the return listener before the confirm arrives. */
-        @Volatile
-        var returned: String? = null
-
-        init {
-            if (confirmed) complete()
+        fun forget(entry: Pending) {
+            pending.remove(entry.sequence)
+            entry.messageId?.let(bySequence::remove)
         }
 
-        fun complete() {
-            when (val reason = returned) {
-                null -> deferred.complete(Published(exchange, routingKey, messageId, sequence))
-                else -> deferred.completeExceptionally(AmqpUnroutableException(exchange, routingKey, reason))
+        fun take(
+            tag: Long,
+            multiple: Boolean,
+        ): List<Pending> =
+            when {
+                multiple -> pending.keys.takeWhile { it <= tag }.mapNotNull { pending[it] }
+                else -> listOfNotNull(pending[tag])
+            }.onEach(::forget)
+
+        try {
+            confirms.consume { message ->
+                when (message) {
+                    is Confirm.Registered -> {
+                        pending[message.entry.sequence] = message.entry
+                        message.entry.messageId?.let { bySequence[it] = message.entry.sequence }
+                    }
+
+                    /* The broker sends a return before the confirm for that message, so marking it
+                       here and failing it on the confirm needs no second signal. */
+                    is Confirm.Returned -> {
+                        bySequence[message.messageId]?.let { pending[it]?.returned = message.replyText }
+                    }
+
+                    is Confirm.Acked -> {
+                        take(message.tag, message.multiple).forEach { it.confirmed() }
+                    }
+
+                    is Confirm.Nacked -> {
+                        take(message.tag, message.multiple).forEach { it.nacked() }
+                    }
+
+                    is Confirm.Failed -> {
+                        take(message.sequence, false).forEach { it.failed(message.cause) }
+                    }
+                }
             }
+        } finally {
+            pending.values.forEach { it.abandoned() }
         }
-
-        fun nacked() {
-            deferred.completeExceptionally(AmqpNackException(exchange, routingKey))
-        }
-
-        suspend fun await(): Published = deferred.await()
     }
 
     private companion object {
         const val PERSISTENT = 2
         const val TRANSIENT = 1
     }
+}
+
+/** A publish the broker has not spoken about yet. Touched only by the settler once registered. */
+private class Pending(
+    val sequence: Long,
+    val exchange: String,
+    val routingKey: String,
+    val messageId: String?,
+) {
+    val deferred = CompletableDeferred<Published>()
+
+    /** The broker's reason for sending it back, seen before the confirm that follows it. */
+    var returned: String? = null
+
+    fun confirmed() {
+        when (val reason = returned) {
+            null -> deferred.complete(Published(exchange, routingKey, messageId, sequence))
+            else -> deferred.completeExceptionally(AmqpUnroutableException(exchange, routingKey, reason))
+        }
+    }
+
+    fun nacked() {
+        deferred.completeExceptionally(AmqpNackException(exchange, routingKey))
+    }
+
+    fun failed(cause: Throwable) {
+        deferred.completeExceptionally(cause)
+    }
+
+    fun abandoned() {
+        deferred.completeExceptionally(AmqpClosedException(exchange, routingKey))
+    }
+}
+
+/** What the broker's threads, and the publish itself, tell the settler. */
+private sealed interface Confirm {
+    data class Registered(
+        val entry: Pending,
+    ) : Confirm
+
+    data class Acked(
+        val tag: Long,
+        val multiple: Boolean,
+    ) : Confirm
+
+    data class Nacked(
+        val tag: Long,
+        val multiple: Boolean,
+    ) : Confirm
+
+    data class Returned(
+        val messageId: String,
+        val replyText: String,
+    ) : Confirm
+
+    data class Failed(
+        val sequence: Long,
+        val cause: Throwable,
+    ) : Confirm
 }
 
 /**
