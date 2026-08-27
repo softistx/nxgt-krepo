@@ -13,6 +13,9 @@ dependencies:
   - //libs/shared-common
 
 test-dependencies:
+  # the Redis the integration specs talk to, started for the run when the workspace's own is not
+  # there — test-only, so nothing here reaches a consumer of this library
+  - //libs/shared-testing
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core

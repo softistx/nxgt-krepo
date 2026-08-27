@@ -1,6 +1,7 @@
 package com.strange.redis
 
 import com.strange.redis.codec.redisJson
+import com.strange.testing.containers.redisContainer
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -8,27 +9,33 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The Redis this workspace already runs, not one a test starts —
- * `~/workspace/docker/apps/database/redis` publishes it on the default port, and `REDIS_TEST_URI`
- * points the tests somewhere else when needed.
+ * The Redis the integration specs talk to: one started for this run, unless `REDIS_TEST_URI` names
+ * a server that is already up — the workspace's own on `localhost:6379`, or one CI provisioned.
  *
- * Two habits keep a shared instance shared. The tests use **database 15**, so nothing they write
- * lands next to another application's keys in db 0; and each spec gets a [RedisConfig.namespace] of
- * its own, deleted afterwards. Neither ever calls `FLUSHDB` — the whole point of a long-lived
- * server is that it holds someone else's data too.
+ * Two habits survive from when this only ever ran against a shared server, and both still earn
+ * their keep. The tests use **database 15**, so a run pointed at somebody's real Redis writes
+ * nowhere near db 0; and each spec gets a [RedisConfig.namespace] of its own, deleted afterwards.
+ * Neither ever calls `FLUSHDB` — against a shared server that would take out someone else's data,
+ * and against a container it would hide a spec that failed to clean up after itself.
  */
 internal object RedisTestServer {
-    private val uri = System.getenv("REDIS_TEST_URI") ?: "redis://localhost:6379/15"
+    private val redis = redisContainer()
 
     private val namespaces = AtomicInteger()
 
     private fun config(
         namespace: String = "",
         json: Json = redisJson,
-    ) = RedisConfig(uri, namespace, timeout = 2.seconds, json = json)
+    ) = RedisConfig(
+        requireNotNull(redis.endpoint) { redis.describe() },
+        namespace,
+        timeout = 2.seconds,
+        json = json,
+    )
 
     val available: Boolean by lazy {
-        runCatching { Redis.connect(config()).use { redis -> runBlocking { redis.ping() } } }.isSuccess
+        redis.available &&
+            runCatching { Redis.connect(config()).use { server -> runBlocking { server.ping() } } }.isSuccess
     }
 
     /**
