@@ -8,6 +8,27 @@ left as hooks.
 It is a plain `jvm/lib` over `mongodb-driver-kotlin-coroutine`. Nothing here knows about a server
 framework, so the same code serves a Ktor route, a kRPC service or a CLI.
 
+## Getting a client
+
+```kotlin
+val settings = MongoClientSettings.builder()
+    .applyConnectionString(ConnectionString(uri))
+    .codecRegistry(mongoCodecRegistry())
+    .build()
+
+val reactive = MongoClients.create(settings)   // GridFS needs this one; skip it otherwise
+val client = MongoClient(reactive)             // the coroutine API, over the same pool
+val database = client.getDatabase("app")
+```
+
+The registry goes into the settings rather than onto the client, because `withCodecRegistry` answers
+with a `MongoCluster` — everything you need to query, and no `close()`.
+
+`mongoCodecRegistry()` is not optional decoration. It puts bson-kotlinx in front of the driver's
+defaults, so a `@Serializable` data class maps by the annotations it already carries, and it carries
+`InstantCodec`, without which the driver refuses a `kotlin.time.Instant` the moment one is passed as
+a *value* — `Filters.gt("createdAt", now)`, an `Updates.set`, an audit stamp.
+
 ## Shape
 
 ```
