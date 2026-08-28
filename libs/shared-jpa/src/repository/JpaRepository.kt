@@ -12,6 +12,7 @@ import com.strange.jpa.page.PageRequest
 import com.strange.jpa.page.page
 import com.strange.jpa.session.JpaSession
 import kotlinx.coroutines.future.await
+import kotlin.jvm.internal.CallableReference
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -25,9 +26,9 @@ import kotlin.reflect.KProperty1
  * [JpaCrudService].
  *
  * ```kotlin
- * val purchases = jpaRepository(Purchase::id)
+ * val purchases = JpaRepository(Purchase::id)
  *
- * class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::class, Purchase::id) {
+ * class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::id) {
  *     suspend fun findByBuyer(session: JpaSession, name: String) =
  *         findAll(session) { join(Purchase::customer)[Buyer::name] eq name }
  * }
@@ -55,15 +56,19 @@ import kotlin.reflect.KProperty1
  * wrapper's surface the reified vocabulary and nothing else, and it costs this one class an
  * `await()` that its own methods still hide from callers.
  *
- * [entity] is a `KClass` because a class cannot have a `reified` type parameter — inside one, `T` is
- * not reifiable and `select<T>()` does not compile, which is the whole reason this needs to be told
- * what it is generic over. A caller does not have to say it twice: [jpaRepository] infers both types
- * from the property reference. A subclass names its entity once, in its `extends` clause.
+ * **Nothing names the entity class, because [id] already does.** A class cannot have a `reified`
+ * type parameter, so this has to learn at runtime what it is generic over — and a property reference
+ * carries it: `Purchase::id` knows whose it is. That holds for an identifier declared by a
+ * `@MappedSuperclass` too, where the reference names the entity referring to it rather than the
+ * class that declared the property — which is the answer a repository wants, and one a spec pins
+ * because getting it wrong would not fail, it would query the wrong table.
  */
 open class JpaRepository<T : Any, ID : Any>(
-    val entity: KClass<T>,
     val id: KProperty1<T, ID>,
 ) {
+    /** The entity this is over, taken off [id] — see [entityOf]. */
+    internal val entity: KClass<T> = entityOf(id)
+
     /** The entity's name, for the messages a caller has to write. */
     val name: String get() = entity.simpleName ?: entity.toString()
 
@@ -207,10 +212,20 @@ open class JpaRepository<T : Any, ID : Any>(
 }
 
 /**
- * A repository for whatever [id] belongs to: `jpaRepository(Purchase::id)`.
+ * The class a property reference belongs to.
  *
- * Both type arguments come from the property reference, so neither is written and no `::class` is
- * passed. The constructor is still there for a subclass, which has to name its entity in its
- * `extends` clause anyway.
+ * `KProperty1` carries its owner, and reading it needs no `kotlin-reflect`: a reference compiles to
+ * a `CallableReference` whose `owner` is a `ClassReference` from the standard library when the full
+ * reflection artifact is absent. It is the same shape of cast `com.strange.jpa.dsl` uses to take a
+ * builder off an expression — a fact about the runtime, asserted by a spec rather than assumed.
+ *
+ * It answers with the class the reference *names*, not the one that declared the property, which is
+ * what makes `Ticket::id` a repository over `Ticket` when a `@MappedSuperclass` declared the id.
  */
-inline fun <reified T : Any, ID : Any> jpaRepository(id: KProperty1<T, ID>): JpaRepository<T, ID> = JpaRepository(T::class, id)
+@Suppress("UNCHECKED_CAST")
+private fun <T : Any, ID : Any> entityOf(id: KProperty1<T, ID>): KClass<T> =
+    (id as? CallableReference)?.owner as? KClass<T>
+        ?: throw IllegalArgumentException(
+            "cannot tell which entity $id belongs to: a repository is built from a property " +
+                "reference such as Purchase::id, not from an arbitrary function",
+        )

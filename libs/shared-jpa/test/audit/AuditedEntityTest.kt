@@ -3,7 +3,7 @@ package com.strange.jpa.audit
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.entity.Note
-import com.strange.jpa.repository.jpaRepository
+import com.strange.jpa.repository.JpaRepository
 import com.strange.jpa.service.JpaCrudService
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
@@ -24,7 +24,7 @@ internal data class EditNote(
 
 internal class NoteService(
     principal: String? = null,
-) : JpaCrudService<Note, Long, NewNote, EditNote>(jpaRepository(Note::id), principal) {
+) : JpaCrudService<Note, Long, NewNote, EditNote>(JpaRepository(Note::id), principal) {
     override suspend fun buildCreate(input: NewNote) = Note(input.id, input.text)
 
     override suspend fun applyUpdate(
