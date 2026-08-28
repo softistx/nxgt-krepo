@@ -9,6 +9,7 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 ## Skills
 
 - **`kotlin-toolchain`** before writing or debugging a `module.yaml`/`project.yaml`, adding a dependency, or wiring a module; **`ktorfit`** for Ktorfit API interfaces. Both carry a `references/` cache of their official docs — read the relevant page rather than answering from memory, since both move faster than memory does.
+- **`compose-multiplatform`** before touching `libs/shared-material` or `examples/material-demo`, and **`material3-compose`** before theming or extending a Material 3 component. The first records what this host actually verifies — Apple targets are *silently skipped* on Linux, so a green local build proves nothing about them — and the second is generated from the resolved jar, because `$compose.material3` sits on its own alpha version line and the androidx docs describe a different artifact.
 - **`skill-from-docs`** to add a skill for another library or tool, or to refresh a cached one. It owns the token budget rules that every skill here follows.
 - **`large-feature-branch-workflow`** when a feature needs more than one PR.
 

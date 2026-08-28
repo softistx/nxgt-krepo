@@ -126,12 +126,16 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 
 - **`kotlin-toolchain`** — manifest schema, catalog and template rules, commands, plus `references/`: a markdown cache of the full official documentation (50 pages, version recorded in `references/INDEX.md`).
 - **`ktorfit`** — the Ktorfit HTTP client, including how it is wired up here through KSP alone, without its Gradle plugin.
+- **`compose-multiplatform`** — the UI stack behind `libs/shared-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 59 pages of the official documentation.
+- **`material3-compose`** — the Material 3 API surface that actually compiles here. Its `references/` are *not* fetched: `$compose.material3` resolves to its own alpha version line, so the pages are generated from the resolved jar by `scripts/extract_api.py`.
 - **`skill-from-docs`** — builds and refreshes docs-backed skills. Each such skill declares its source in a `docs-source.json`; refresh one with:
   ```bash
   python3 .agents/skills/skill-from-docs/scripts/fetch_docs.py --skill <name>
   ```
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
 - **`large-feature-branch-workflow`** — two-level branching for work too large for a single PR.
+
+A skill's `references/` do not have to come from a docs site. When the published documentation describes a different version than the one that compiles — `material3-compose` is the case here — generating the pages from the artifact is the accurate option, and it follows the same rule: the output is generated, so fix the script rather than the page.
 
 Skills are budgeted: a `description` is in context every session (keep it ≤250 chars), a SKILL.md body loads on activation (≤~120 lines), and `references/` pages load only when opened. Put cost in the deepest tier that can hold it.
 
