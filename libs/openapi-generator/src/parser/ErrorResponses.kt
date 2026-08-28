@@ -15,7 +15,7 @@ internal const val DEFAULT_STATUS: String = "default"
  * declared `304` is a documented outcome like any other.
  *
  * Responses arrive through [resolveResponse] because in a real document they are almost never
- * inline: `apps/demo-api/openapi.yaml` declares 169 of them and every one is a `$ref` into
+ * inline: `examples/demo-api/openapi.yaml` declares 169 of them and every one is a `$ref` into
  * `components/responses`, whose content lives behind the reference.
  */
 internal fun OpenAPI.parseErrorResponses(operation: SwaggerOperation): List<ErrorResponse> =

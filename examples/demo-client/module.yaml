@@ -10,7 +10,7 @@ dependencies:
 
 test-dependencies:
   # the end-to-end test drives the generated client against the real server
-  - //apps/demo-api
+  - //examples/demo-api
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
