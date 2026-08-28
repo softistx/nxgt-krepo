@@ -3,6 +3,7 @@ package com.strange.jpa.dsl
 import com.strange.jpa.query.criteria
 import jakarta.persistence.criteria.Selection
 import org.hibernate.reactive.stage.Stage
+import kotlin.reflect.KClass
 
 /**
  * A query over [T] that returns [R] — a summary, one column, a count — rather than the entity.
@@ -26,10 +27,22 @@ import org.hibernate.reactive.stage.Stage
  * Everything after it is the chain every other query has, and so are the terminals.
  */
 inline fun <reified T : Any, reified R : Any> Stage.QueryProducer.project(
+    noinline block: ProjectScope<T, R>.() -> Selection<R>,
+): ProjectScope<T, R> = project(T::class, R::class, block)
+
+/**
+ * The same, with both types as values rather than as type arguments.
+ *
+ * For a caller generic in its entity — a repository projecting the identifier column, say, where the
+ * identifier's type came from Hibernate's metamodel and not from a type argument.
+ */
+fun <T : Any, R : Any> Stage.QueryProducer.project(
+    type: KClass<T>,
+    result: KClass<R>,
     block: ProjectScope<T, R>.() -> Selection<R>,
 ): ProjectScope<T, R> {
-    val criteria = criteria.createQuery(R::class.javaObjectType)
-    val scope = ProjectScope(this, criteria, criteria.from(T::class.java), R::class.javaObjectType)
+    val criteria = criteria.createQuery(result.javaObjectType)
+    val scope = ProjectScope(this, criteria, criteria.from(type.java), result.javaObjectType)
     criteria.select(scope.block())
     return scope
 }
