@@ -269,6 +269,13 @@ The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both en
 `any(…)` over a list — and `asc`/`desc` take a property the same way. `eq null` is not `is null` — it
 renders `= null`, which is never true in SQL, so ask with `isNull()`.
 
+**Every entry point also takes the entity as a value.** `select`, `project`, `delete`, `find` and
+`get` are `inline reified`, which a class generic in its entity cannot reach — a type parameter is
+not reifiable, so `select<T>()` does not compile inside one. `select(Purchase::class)`,
+`project(Purchase::class, String::class) { … }`, `delete(Purchase::class)` and
+`session.find(Purchase::class, id)` are the same functions with the type as an argument, and the
+reified forms delegate to them so there is one implementation rather than two.
+
 **A restriction can be named and reused.** `JpaSpec<T>` is the type `where` already takes, given a
 name — a lambda with the query in scope, answering with a predicate or with `null` to restrict
 nothing. Nothing had to be added for `where(spec)` to compile: a Kotlin function type is
