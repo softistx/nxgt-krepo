@@ -135,6 +135,36 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
 - **`large-feature-branch-workflow`** — two-level branching for work too large for a single PR.
 
+Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/shared-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
+
+- **`styles`** — the Jetpack Compose Styles API: component themes, `Modifier.styleable`, moving hard-coded parameters into style attributes.
+- **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
+- **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
+
+## Finding and installing a skill
+
+Three sources, in the order worth trying:
+
+1. **Google's Android catalogue**, through the `android` CLI. `android skills list` names what is
+   available and `android skills find <keyword>` searches it. Install into this repo with:
+
+   ```bash
+   android skills add <name> --project=. --agent=common
+   ```
+
+   **`--agent=common` is the part that matters**: it writes to `.agents/skills/<name>`, which is
+   this repo's convention and what `.claude/skills` symlinks to. Omitting it installs into every
+   agent directory the CLI detects, including `~/.claude/skills`, where the skill is invisible to
+   everyone else working here. The skill name is positional — a `--skill=<name>` form appears in
+   Google's current guide but the installed CLI rejects it; `android skills add` with no arguments
+   prints the usage its own version accepts.
+2. **The `find-skills` skill**, for anything outside that catalogue.
+3. **`skill-from-docs`**, when no published skill exists and the knowledge lives in a
+   documentation site — or, as with `material3-compose`, in the artifact itself.
+
+Whichever the source, an installed skill is committed like any other file: skills live in the repo
+so that every agent and every person working here loads the same ones.
+
 A skill's `references/` do not have to come from a docs site. When the published documentation describes a different version than the one that compiles — `material3-compose` is the case here — generating the pages from the artifact is the accurate option, and it follows the same rule: the output is generated, so fix the script rather than the page.
 
 Skills are budgeted: a `description` is in context every session (keep it ≤250 chars), a SKILL.md body loads on activation (≤~120 lines), and `references/` pages load only when opened. Put cost in the deepest tier that can hold it.

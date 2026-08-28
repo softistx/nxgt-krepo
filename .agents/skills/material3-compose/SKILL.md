@@ -34,6 +34,11 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
 - **8 shape slots**, including the expressive `largeIncreased`, `extraLargeIncreased` and
   `extraExtraLarge` that the older M3 documentation does not mention.
 - **30 type styles** and **58 `*Defaults` objects**.
+- **The Jetpack Compose Styles API is not here.** `Modifier.styleable` and the style-attribute
+  machinery the `styles` skill describes appear in no class of `material3`, `ui` or `foundation` at
+  these versions — grep the jars and the count is zero. A design-system layer on Compose
+  Multiplatform therefore carries its tokens on `CompositionLocal`s, which is what `StrangeTheme`
+  does. Re-check after a Compose bump; until then, read `styles` as background, not as a plan.
 - **223 public entry points.** Presence in `components.md` is what settles whether a component
   exists in this version at all — check there before writing one, and before believing a web
   search that says M3 has it.
