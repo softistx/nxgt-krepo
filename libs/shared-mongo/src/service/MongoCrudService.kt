@@ -76,11 +76,13 @@ abstract class MongoCrudService<T : Any, ID : Any, C : Any, U : Any>(
         write(session) { inSession ->
             beforeCreate(input)
             val document = buildCreate(input)
-            repository.insert(document, inSession)
 
-            /* Read back rather than return what was built: a default applied by the collection,
-               or by a hook writing alongside, is part of the document the caller now has. */
-            repository.requireById(repository.idOf(document), inSession).also { afterCreate(it, inSession) }
+            /* Read back rather than return what was built: a default applied by the collection, a
+               value a codec normalised, or an `_id` the server generated is part of the document
+               the caller now has. The id to read back with comes from the driver's own insert
+               result, so this works whether the document carried its key or the server assigned
+               one — and the repository needs no way to read an id off a document. */
+            repository.insertAndRead(document, inSession).also { afterCreate(it, inSession) }
         }
 
     open suspend fun update(
