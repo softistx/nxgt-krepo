@@ -25,7 +25,7 @@ import org.hibernate.reactive.stage.Stage
  * Parameters bind exactly as they do in [query] — `:name`, never interpolation, and here it matters
  * more, since nothing between this string and the server will notice a quote in a value.
  */
-inline fun <reified R> Stage.QueryProducer.nativeQuery(sql: String): JpaQuery<R> = JpaQuery(sql, createNativeQuery(sql, R::class.java))
+inline fun <reified R> Stage.QueryProducer.nativeQuery(sql: String): JpaQuery<R> = JpaQuery({ sql }, createNativeQuery(sql, R::class.java))
 
 /**
  * A SQL `insert`, `update` or `delete`, with the same caveat [mutate] carries: it goes straight to

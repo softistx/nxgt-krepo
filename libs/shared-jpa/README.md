@@ -7,6 +7,7 @@ with no thread parked on a query.
 com.strange.jpa            Jpa, JpaConfig, JpaException — connect, close, and what this module throws
 com.strange.jpa.session    session / transaction / stateless, and the confinement bridge underneath
 com.strange.jpa.query      HQL and SQL through one builder, and the one-shot operations on Jpa
+com.strange.jpa.dsl        the same queries built from the entity's own properties, not a string
 com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.time.Instant, kotlin.uuid.Uuid
 com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
 com.strange.jpa.naming     what a column is called when the entity does not say
@@ -203,6 +204,48 @@ jpa.removeById<Order>(id)    // answers whether there was anything there
 
 Two of these in a row are two transactions. Anything that touches the database twice belongs in a
 `transaction { }`.
+
+## The query DSL
+
+`select<T> { }` builds the same query from the entity's properties instead of a string. It answers
+with the same builder `query<T>(hql)` does, so the terminals above are the terminals here.
+
+```kotlin
+session
+    .select<Purchase> {
+        val buyer = join(Purchase::customer)
+        where { this[Purchase::total] gt 100L }
+        where { buyer[Buyer::name] eq "ada" }
+        orderBy { desc(this[Purchase::total]) }
+    }.limit(20)
+    .list()
+```
+
+**Every call adds; none replaces.** Two `where` blocks are one `and`, two `orderBy` blocks are two
+sort keys in the order written, and a `where` block may answer with `null` to add nothing at all — so
+a query assembled from filters the caller learns one at a time needs no string concatenation.
+
+**Paths are indexed, not written as bare property references.** `this[Purchase::total]` rather than
+`Purchase::total`, and the reason is not taste: `KProperty1<T, V>` is covariant in `V`, so the
+compiler is free to widen `V` to `Any` and `Purchase::total eq "nope"` type-checks against a `Long`
+column. `Path<V>` is invariant, so the same line is a compile error — *actual type is 'String', but
+'Long' was expected*. Kotlin's own standard library solves this with `@OnlyInputTypes`, which is
+internal to it. Indexing reads the same on a join, which is the other half of the reason.
+
+A join is held as a value and read from as often as the query needs it — the `where`, the `orderBy`,
+and the projection when that lands — instead of being re-declared and re-joined each time. `join`
+takes a to-one association, nullable or not, and `joinEach` a to-many, inferring the element type
+from the collection with no reflection at runtime. `JoinType.LEFT` keeps the rows with nothing to
+join to; a `joinEach` returns the owner once per element until `distinct()`.
+
+The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both ends included),
+`like` `notLike` `ilike` `oneOf`, `isNull()` `isNotNull()`, and `and` `or` `!` with `all(…)` and
+`any(…)` over a list. `eq null` is not `is null` — it renders `= null`, which is never true in SQL,
+so ask with `isNull()`.
+
+Underneath it is JPA Criteria: Hibernate renders the SQL, and this is a Kotlin surface over its query
+model rather than a second implementation of HQL that would have to learn every dialect's quoting.
+When a terminal has to name the query in an exception it renders the tree back to HQL, and only then.
 
 ## Which database
 
