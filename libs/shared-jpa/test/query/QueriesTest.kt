@@ -72,7 +72,6 @@ class QueriesTest :
                         listOf("a", "b")
                 }
             }
-
             scenario("projects to a primitive type") {
                 JpaTestDatabase.withJpa(Thing::class) { jpa ->
                     jpa.transaction { it.seed("a", "b") }
