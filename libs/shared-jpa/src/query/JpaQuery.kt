@@ -32,7 +32,10 @@ import org.hibernate.reactive.stage.Stage
 class JpaQuery<R>
     @PublishedApi
     internal constructor(
-        private val hql: String,
+        // Called only when a terminal has to name the query in an exception. A criteria query has no
+        // source text, so naming it means rendering the tree back to HQL — worth doing to say which
+        // query found nothing, and not worth doing for every query that finds something.
+        private val describe: () -> String,
         private val query: Stage.SelectionQuery<R>,
     ) {
         /** Binds one named parameter — `:name` in the HQL, without the colon here. */
@@ -83,9 +86,9 @@ class JpaQuery<R>
             try {
                 block()
             } catch (failure: NoResultException) {
-                throw JpaNoResultException(hql, failure)
+                throw JpaNoResultException(describe(), failure)
             } catch (failure: NonUniqueResultException) {
-                throw JpaNonUniqueResultException(hql, failure)
+                throw JpaNonUniqueResultException(describe(), failure)
             }
     }
 
@@ -95,4 +98,4 @@ class JpaQuery<R>
  * `R` is the shape of a row, which is the entity for `from Order` and something else entirely for a
  * projection — `query<Long>("select count(o) from Order o")`, `query<String>("select o.reference …")`.
  */
-inline fun <reified R> Stage.QueryProducer.query(hql: String): JpaQuery<R> = JpaQuery(hql, createQuery(hql, R::class.java))
+inline fun <reified R> Stage.QueryProducer.query(hql: String): JpaQuery<R> = JpaQuery({ hql }, createQuery(hql, R::class.java))
