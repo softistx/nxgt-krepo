@@ -34,27 +34,36 @@ internal class SnakeCaseNaming : ImplicitNamingStrategyJpaCompliantImpl() {
 }
 
 /**
+ * A lower-case letter or a digit, as `Character.isLowerCase` and `Character.isDigit` decide it.
+ *
+ * `\p{javaLowerCase}` and `\p{javaDigit}` call those two methods, where `[a-z0-9]` would answer for
+ * ASCII alone. Hibernate asks `Character`, so this asks `Character`: with the ASCII classes `ıMaç`
+ * comes out `ımaç` instead of `ı_maç`, and the two strategies would disagree on any name that leaves
+ * the ASCII range.
+ */
+private const val LOWER_OR_DIGIT = "[\\p{javaLowerCase}\\p{javaDigit}]"
+
+/**
+ * The seam between a lower-case run and the next capitalised word.
+ *
+ * **Both halves are zero-width on purpose, and this is the one thing to get right.** Written with
+ * capturing groups instead — `([a-z0-9])([A-Z][a-z0-9])` replaced by `$1_$2` — the match *consumes*
+ * the letter after the hump, so scanning resumes past it and the following hump is missed:
+ * `aBcDeFg` comes out `a_bcde_fg` rather than `a_bc_de_fg`, and `lastSeenAtTime` becomes
+ * `last_seen_attime`. Lookarounds match between characters and consume nothing, so every hump in a
+ * name is found. `NamingTest` pins both of those names against Hibernate.
+ */
+private val CAMEL_HUMP = Regex("(?<=$LOWER_OR_DIGIT)(?=\\p{javaUpperCase}$LOWER_OR_DIGIT)")
+
+/**
  * `createdBy` to `created_by`, by Hibernate's own rule rather than one of ours.
  *
  * An underscore goes in where a lower-case letter or digit is followed by an upper-case letter that
  * is itself followed by a lower-case letter or digit. That last clause is why an acronym stays glued
- * together — `orderURL` is `orderurl`, not `order_u_r_l` and not `order_url` — and it is deliberately
- * copied from `PhysicalNamingStrategySnakeCaseImpl`, so that choosing the other strategy later gives
- * the same names for everything either of them touches. `NamingTest` pins that equivalence against
- * Hibernate's class instead of trusting this comment.
+ * together — `orderURL` is `orderurl`, not `order_u_r_l` and not `order_url` — and why a trailing
+ * capital gets nothing, `trailingX` being `trailingx`. It is deliberately copied from
+ * `PhysicalNamingStrategySnakeCaseImpl`, so that choosing the other strategy later gives the same
+ * names for everything either of them touches. `NamingTest` pins that equivalence against Hibernate's
+ * class instead of trusting this comment.
  */
-internal fun snakeCase(name: String): String =
-    buildString {
-        val text = name.replace('.', '_')
-        text.forEachIndexed { index, char ->
-            val before = text.getOrNull(index - 1)
-            val after = text.getOrNull(index + 1)
-            val boundary =
-                before != null && after != null &&
-                    (before.isLowerCase() || before.isDigit()) &&
-                    char.isUpperCase() &&
-                    (after.isLowerCase() || after.isDigit())
-            if (boundary) append('_')
-            append(char)
-        }
-    }.lowercase()
+internal fun snakeCase(name: String): String = CAMEL_HUMP.replace(name.replace('.', '_'), "_").lowercase()

@@ -67,17 +67,36 @@ class NamingTest :
                 // Asserted against the class rather than described in a comment: if a Hibernate
                 // upgrade changes how it splits a name, this fails rather than the two drifting.
                 val hibernate = PhysicalNamingStrategySnakeCaseImpl()
-                listOf("createdBy", "orderURL", "line1Item", "id", "URL", "aBcD", "already_snake")
-                    .forEach { name ->
-                        snakeCase(name) shouldBe
-                            hibernate.toPhysicalColumnName(Identifier.toIdentifier(name), null).text
-                    }
+                listOf(
+                    "createdBy",
+                    "orderURL",
+                    "line1Item",
+                    "id",
+                    "URL",
+                    "aBcD",
+                    "already_snake",
+                    // Each of these is a name a capturing-group regex gets wrong, because the match
+                    // eats the letter after the hump and the next hump is never looked at.
+                    "aBcDeFg",
+                    "lastSeenAtTime",
+                    "aBaBa",
+                    // And this one separates asking Character from matching [a-z0-9]: 'ı' is
+                    // lower case and not ASCII, so the ASCII class would drop the underscore.
+                    "ıMaç",
+                ).forEach { name ->
+                    snakeCase(name) shouldBe
+                        hibernate.toPhysicalColumnName(Identifier.toIdentifier(name), null).text
+                }
             }
 
             scenario("leaves an acronym glued together, the way Hibernate does") {
                 snakeCase("orderURL") shouldBe "orderurl"
                 snakeCase("createdBy") shouldBe "created_by"
                 snakeCase("line1Item") shouldBe "line1_item"
+                // A trailing capital has nothing after it, so the rule never fires for it.
+                snakeCase("trailingX") shouldBe "trailingx"
+                // Every hump, not every other one.
+                snakeCase("lastSeenAtTime") shouldBe "last_seen_at_time"
             }
         }
     })
