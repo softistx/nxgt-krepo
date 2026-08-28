@@ -64,7 +64,7 @@ class GeneratedIdTest :
                 // `bytea`, everything succeeds, and no other client of that database can read the
                 // table. Refusing at connect is the last moment that is still preventable.
                 val failure =
-                    shouldThrow<IllegalStateException> {
+                    shouldThrow<JpaMappingException> {
                         JpaTestDatabase.withJpa(UuidId::class) { }
                     }
 

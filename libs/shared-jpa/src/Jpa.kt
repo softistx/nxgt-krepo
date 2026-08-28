@@ -79,8 +79,11 @@ class Jpa internal constructor(
          * all ordinary blocking work, so they happen on [Dispatchers.IO] rather than on whatever
          * thread started the application.
          *
-         * Nothing connects yet. The pool opens its first connection when something asks for a
-         * session, so a wrong password surfaces on first use and not here.
+         * Nothing connects yet, **unless [JpaConfig.schemaMode] is not [SchemaMode.NONE]**. On the
+         * default the pool opens its first connection when something asks for a session, so a wrong
+         * password surfaces on first use and not here. Any other mode has schema work to do, which
+         * needs a connection: `VALIDATE` against a schema missing a table fails here rather than on
+         * the first query, which is the point of choosing it. `SchemaModeTest` pins both halves.
          *
          * [converters] are added to this module's own — an entity's `kotlin.time.Instant` and
          * `kotlin.uuid.Uuid` attributes are mapped whether a caller passes anything or not. They
@@ -94,7 +97,7 @@ class Jpa internal constructor(
             vertx: Vertx? = null,
         ): Jpa =
             withContext(Dispatchers.IO) {
-                require(entities.isNotEmpty()) { "Jpa.connect needs at least one entity class" }
+                if (entities.isEmpty()) throw JpaMappingException("Jpa.connect needs at least one entity class")
                 rejectUuidIdentifiers(entities)
                 rejectMismatchedJsonShapes(entities, config.json)
 

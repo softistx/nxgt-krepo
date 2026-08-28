@@ -4,7 +4,7 @@ import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import com.strange.common.page.Page
-import com.strange.common.page.PageInfo
+import com.strange.common.page.pageOf
 import com.strange.mongo.InvalidPaginationException
 import com.strange.mongo.query.findAll
 import kotlinx.coroutines.flow.toList
@@ -40,27 +40,22 @@ suspend fun <T : Any> MongoCollection<T>.findPage(
             ?.let { Filters.and(filter, keysetFilter(decodeCursor(it, keys), keys, options.forward)) }
             ?: filter
 
+    val limit = options.limit
     val documents =
         withDocumentClass<BsonDocument>()
             .findAll(query, session)
             .sort(sortOf(keys, options.forward))
-            .let { if (options.limit == null) it else it.limit(options.limit + 1) }
+            .let { if (limit == null) it else it.limit(limit + 1) }
             .toList()
 
-    val limit = options.limit ?: documents.size
-    val more = documents.size > limit
-    val page = documents.take(limit).let { if (options.forward) it else it.asReversed() }
-
     val codec = codecRegistry.get(documentClass)
-    return Page(
-        data = page.map { codec.decode(BsonDocumentReader(it), DecoderContext.builder().build()) },
-        info =
-            PageInfo(
-                startCursor = page.firstOrNull()?.let { encodeCursor(it, keys) },
-                endCursor = page.lastOrNull()?.let { encodeCursor(it, keys) },
-                hasPreviousPage = if (options.forward) options.cursor != null else more,
-                hasNextPage = if (options.forward) more else options.cursor != null,
-            ),
+    return pageOf(
+        rows = documents,
+        limit = limit,
+        forward = options.forward,
+        resumed = options.cursor != null,
+        cursorOf = { encodeCursor(it, keys) },
+        valueOf = { codec.decode(BsonDocumentReader(it), DecoderContext.builder().build()) },
     )
 }
 

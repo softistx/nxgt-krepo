@@ -61,7 +61,9 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/shared-i18n/README.md`](libs/shared-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
 | [`libs/shared-ktor/README.md`](libs/shared-ktor/README.md) | The Ktor integrations — the seven plugins, what each owns, and how one module holds them without a fat dependency list |
 | [`libs/shared-koin/README.md`](libs/shared-koin/README.md) | The Koin modules — why the container creates the connection here and adopts it there, and what has no `onClose` |
-| [`libs/shared-jpa/README.md`](libs/shared-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, entities, queries, and what is deliberately not here |
+| [`libs/shared-jpa/README.md`](libs/shared-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, and why each part is shaped the way it is |
+| [`docs/jpa-query-dsl.md`](docs/jpa-query-dsl.md) | What a shared-jpa query may say — operators, joins, projections, the function vocabulary, and the two escapes |
+| [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a shared-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
 | [`libs/shared-kafka/README.md`](libs/shared-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/shared-mongo/README.md`](libs/shared-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
 | [`libs/shared-redis/README.md`](libs/shared-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
