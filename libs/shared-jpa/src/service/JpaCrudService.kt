@@ -3,11 +3,11 @@ package com.strange.jpa.service
 import com.strange.common.page.Page
 import com.strange.jpa.JpaOutsideTransactionException
 import com.strange.jpa.audit.AuditedEntity
-import com.strange.jpa.dsl.JpaSpec
-import com.strange.jpa.dsl.SelectScope
-import com.strange.jpa.page.PageRequest
 import com.strange.jpa.repository.JpaRepository
+import com.strange.jpa.repository.JpaSpec
 import com.strange.jpa.session.JpaSession
+import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Root
 
 /**
  * The create/update/delete flow every entity-backed service repeats, with the parts that differ left
@@ -50,10 +50,11 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
 
     open suspend fun findPage(
         session: JpaSession,
-        request: PageRequest,
+        limit: Int,
+        offset: Int = 0,
         spec: JpaSpec<T>? = null,
-        sort: SelectScope<T>.() -> Unit,
-    ): Page<T> = repository.findPage(session, request, spec, sort)
+        shape: (CriteriaQuery<T>, Root<T>) -> Unit = { _, _ -> },
+    ): Page<T> = repository.findPage(session, limit, offset, spec, shape)
 
     /** Throws `JpaNotFoundException`: a service asked for an entity by id has a caller. */
     open suspend fun findById(
@@ -175,7 +176,15 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
         }
     }
 
-    /** The same, for an update. */
+    /**
+     * The same, for an update.
+     *
+     * Worth knowing: assigning [AuditedEntity.lastModifiedBy] *is* a change when the principal
+     * differs from the one on the row, so an update that touches nothing else still fires
+     * `@PreUpdate` and moves `lastModifiedAt`. That is the intended reading — the row records who
+     * touched it last, and somebody did — but it means "a no-op moves nothing" holds only while the
+     * principal is unchanged. Override this to guard it if that is not what a caller wants.
+     */
     protected open fun stampUpdated(entity: T) {
         if (entity is AuditedEntity && principal != null) {
             entity.lastModifiedBy = principal
@@ -222,6 +231,9 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
     /**
      * The ids that were actually deleted, before the commit — see [afterCreate] for what that rules
      * out.
+     *
+     * *Actually* deleted: [deleteAll] resolves the ids that were really there before it deletes
+     * them, so a hook publishing one event per id does not announce a row that never existed.
      */
     protected open suspend fun afterDelete(
         ids: Collection<ID>,

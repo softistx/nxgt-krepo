@@ -119,28 +119,34 @@ and are three different things up close.
 ## One page, whichever store it came from
 
 `Page<T>` is a list and a Relay-shaped `PageInfo` — `startCursor`, `endCursor`, `hasNextPage`,
-`hasPreviousPage`. `shared-mongo`'s `findPage` and `shared-jpa`'s `page` both answer with it,
-and that is the whole reason it is here: a route that pages over either store maps the data and
-leaves the cursors alone, with `Page.map`, and does not care which one it was.
+`hasPreviousPage`. `shared-mongo`'s `findPage` and `shared-jpa`'s both answer with it, and that is
+the whole reason it is here: a route that pages over either store maps the data and leaves the
+cursors alone, with `Page.map`, and does not care which one it was.
 
 `PageWindow` is the *request* side of the same story: `first`, `last`, `cursor`, the `limit` and
-`forward` derived from them, and the two rules — not both ends, and not a page of zero rows. Both
-stores' request types implement it. What they keep is the part that differs: Mongo's
-`PaginationOptions` carries a filter and a sort as raw Mongo JSON because that is how they arrive
-from an HTTP client, and is `@Serializable`; JPA's `PageRequest` carries neither, because both are
-said in Kotlin on the query itself. So the shape and the rules are shared and the type is not.
+`forward` derived from them, and the two rules — not both ends, and not a page of zero rows. A
+store's request type implements it and keeps whatever it needs beyond that: Mongo's
+`PaginationOptions` carries a filter and a sort as raw Mongo JSON, because that is how they arrive
+from an HTTP client, and is `@Serializable`.
 
 `check` takes the exception rather than throwing its own, and that is deliberate: each store has a
 sealed exception family that a caller catches in one clause, and a request refused by a rule living
-here still has to land in that clause. `init { check(::JpaPaginationException) }` is the whole
+here still has to land in that clause. `init { check(::InvalidPaginationException) }` is the whole
 integration.
 
 `pageOf` is the *answer* side: given the rows a query for `limit + 1` returned, it trims the extra
 one, reverses a backward page into reading order, and turns "did the extra row turn up" and "did the
-caller resume" into a `PageInfo`. It takes the cursor and the value as functions of a row because
-neither store has the caller's type in hand yet — Mongo holds raw `BsonDocument`s it decodes twice
-over, JPA holds entities it reads sort keys back off. `libs/shared-common/test/page/PagingTest.kt`
-pins all of it, and needs no database.
+caller resume" into a `PageInfo`. It takes the cursor and the value as functions of a row because a
+store does not have the caller's type in hand yet — Mongo holds raw `BsonDocument`s it decodes twice
+over. `libs/shared-common/test/page/PagingTest.kt` pins all of it, and needs no database.
+
+**`PageWindow` and `pageOf` have one caller, and `Page` has two.** `shared-jpa` used to be the
+second: its keyset paging needed a query object it could rebuild per page and read the sort keys back
+off, which is a layer above a criteria rather than a part of one, and it went with the query DSL.
+What that module pages with now is `limit` and `offset`, which needs neither a window type nor an
+assembler — it answers with a `Page` whose cursors are null, because there are none. The two stay
+because they are the shape any second keyset store would want, and because deleting a correct,
+database-free, fully specified implementation to save two files is not a trade worth making.
 
 ## What belongs here
 

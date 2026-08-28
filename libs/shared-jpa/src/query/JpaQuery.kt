@@ -50,7 +50,7 @@ class JpaQuery<R>
         fun parameters(vararg values: Pair<String, Any?>): JpaQuery<R> =
             apply { values.forEach { (name, value) -> query.setParameter(name, value) } }
 
-        /** The fetch plan to load with — see `com.strange.jpa.dsl.entityGraph`. */
+        /** The fetch plan to load with — see [com.strange.jpa.criteria.entityGraph]. */
         fun plan(graph: EntityGraph<R>): JpaQuery<R> = apply { query.setPlan(graph) }
 
         /** At most this many rows. */

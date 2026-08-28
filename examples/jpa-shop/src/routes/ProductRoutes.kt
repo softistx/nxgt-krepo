@@ -8,8 +8,9 @@ import com.strange.example.shop.model.EditProduct
 import com.strange.example.shop.model.NewProduct
 import com.strange.example.shop.model.ProductPage
 import com.strange.example.shop.model.view
-import com.strange.jpa.dsl.and
-import com.strange.jpa.page.PageRequest
+import com.strange.jpa.criteria.asc
+import com.strange.jpa.criteria.get
+import com.strange.jpa.repository.and
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import com.strange.ktor.jpa.jpa
@@ -28,20 +29,17 @@ import io.ktor.server.routing.route
  *
  * **Read in `session { }`, write in `transaction { }`.** A session flushes only inside a
  * transaction, so a write handed a plain session would report success and store nothing — the
- * service refuses rather than allowing that, and these routes are what refusing protects.
+ * repository and the service refuse rather than allowing that, and these routes are what refusing
+ * protects.
  */
 fun Route.productRoutes() {
     val repository = ProductRepository()
 
     route("/products") {
-        // GET /products?search=&under=&first=20&cursor=…
+        // GET /products?search=&under=&first=20&skip=0
         get {
-            val request =
-                PageRequest.first(
-                    call.request.queryParameters["first"]?.toIntOrNull() ?: 20,
-                    call.request.queryParameters["cursor"],
-                )
-
+            val first = call.request.queryParameters["first"]?.toIntOrNull() ?: 20
+            val skip = call.request.queryParameters["skip"]?.toIntOrNull() ?: 0
             val search = call.request.queryParameters["search"]
             val under = call.request.queryParameters["under"]?.toLongOrNull()
 
@@ -52,21 +50,26 @@ fun Route.productRoutes() {
 
             val page =
                 call.jpa.session { session ->
-                    // The sort has to end with the identifier — keyset pagination resumes from it,
-                    // and shared-jpa refuses a sort that could skip or repeat a row.
-                    repository.findPage(session, request, spec) {
-                        sortBy(Product::name)
-                        sortBy(Product::id)
+                    repository.findPage(session, limit = first, offset = skip, spec = spec) { criteria, product ->
+                        // The sort ends with the identifier so that a page boundary cannot land
+                        // between two products sharing a name.
+                        criteria.orderBy(asc(product[Product::name]), asc(product[Product::id]))
                     }
                 }
 
             call.respond(
                 ProductPage(
                     data = page.data.map { it.view() },
-                    endCursor = page.info.endCursor,
+                    hasPreviousPage = page.info.hasPreviousPage,
                     hasNextPage = page.info.hasNextPage,
                 ),
             )
+        }
+
+        // GET /products/summary — three columns, packaged by Hibernate into the result class
+        get("/summary") {
+            val first = call.request.queryParameters["first"]?.toIntOrNull() ?: 20
+            call.respond(call.jpa.session { session -> repository.summaries(session, first) })
         }
 
         get("/{id}") {

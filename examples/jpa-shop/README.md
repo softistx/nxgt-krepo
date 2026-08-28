@@ -10,7 +10,8 @@ POSTGRES_USER=… POSTGRES_PASSWORD=… \
 ```
 
 ```
-GET    /products?search=anvil&under=1000&first=20&cursor=…
+GET    /products?search=anvil&under=1000&first=20&skip=0
+GET    /products/summary?first=20
 GET    /products/{id}
 POST   /products                  X-Acting-As: ada
 PATCH  /products/{id}             X-Acting-As: ada
@@ -33,6 +34,11 @@ DELETE /products/{id}
 declaration: a property reference already knows whose it is, and a class cannot have a `reified` type
 parameter, so this is how the base class learns what it is generic over.
 
+**A named restriction is a `JpaSpec`, which is a function returning a `Predicate?`.**
+`ProductSpecs.available` is the whole idea — no specification interface to implement — and `and`
+composes however many of them the query string asked for. One answering `null` restricts nothing,
+which is what an unrequested filter should mean.
+
 **The mapping is scanned, not listed.** `packages("com.strange.example.shop.domain")` maps every
 annotated class in the package, so `ShopServer` never mentions `Product` and the next entity is mapped
 by having been written. The cost is the other direction: a class that moves out of the package stops
@@ -41,15 +47,21 @@ being mapped and nothing fails to compile — which is why `ShopTest` asserts th
 
 **The session is an argument, never a field.** A session belongs to the event loop that opened it and
 does not outlive its block, so the repository is a singleton and the unit of work arrives per call.
-That is what lets a route put two repository calls in one transaction.
+That is what lets a route put a search and its count in one session, and two writes in one
+transaction.
 
 **An update assigns fields; Hibernate decides what that is worth writing.** `applyUpdate` leaves
 alone what the request left null, and a field assigned the value it already had produces no SQL and
 moves no audit timestamp — no hook compares anything.
 
 **A write outside a transaction is refused.** `session { }` flushes nothing, so `create` there would
-answer with a product and store no row. The service throws `JpaOutsideTransactionException` instead,
-which is what makes `session`-for-reads and `transaction`-for-writes a rule rather than a habit.
+answer with a product and store no row. The repository throws `JpaOutsideTransactionException`
+instead, naming the operation and the entity, which is what makes `session`-for-reads and
+`transaction`-for-writes a rule rather than a habit.
+
+**`/products/summary` loads no entity at all.** `query<ProductSummary>("select sku, name, …")` hands
+Hibernate a result class and it packages the three columns into it — the way to read part of an
+entity, and the one that has no association to fetch.
 
 ## Tests
 
@@ -58,6 +70,6 @@ resolves its entity from a property reference *from a consuming module*, that th
 `ShopServer` scans really does contain the entity, and that the payloads decode and map as the routes
 assume.
 
-The layer's behaviour is covered where it lives — `libs/shared-jpa` has integration specs against a
+The library's behaviour is covered where it lives — `libs/shared-jpa` has integration specs against a
 real Postgres, each in a schema of its own. Repeating that here would mean a second container or
 writing into the workspace server, and neither belongs in an example.

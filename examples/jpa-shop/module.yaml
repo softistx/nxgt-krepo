@@ -1,7 +1,7 @@
 product: jvm/app
 
 dependencies:
-  # The library this example is about: entities, the DSL, JpaRepository and JpaCrudService.
+  # The library this example is about: entities, sessions, and the Criteria extensions.
   - //libs/shared-jpa
   # `JpaConnection` and `call.jpa` — one session factory for the application, closed with it.
   - //libs/shared-ktor
