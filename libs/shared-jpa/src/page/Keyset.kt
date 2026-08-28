@@ -1,5 +1,6 @@
 package com.strange.jpa.page
 
+import com.strange.jpa.dsl.SortKey
 import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root

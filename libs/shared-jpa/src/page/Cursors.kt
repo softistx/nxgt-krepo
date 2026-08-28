@@ -1,6 +1,7 @@
 package com.strange.jpa.page
 
 import com.strange.jpa.JpaPaginationException
+import com.strange.jpa.dsl.SortKey
 import com.strange.jpa.json.jpaJson
 import jakarta.persistence.criteria.Root
 import kotlinx.serialization.Serializable

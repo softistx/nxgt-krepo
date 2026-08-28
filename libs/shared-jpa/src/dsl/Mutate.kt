@@ -1,7 +1,5 @@
 package com.strange.jpa.dsl
 
-import com.strange.jpa.JpaUnrestrictedMutationException
-import com.strange.jpa.query.JpaMutation
 import org.hibernate.reactive.stage.Stage
 
 /**
@@ -10,40 +8,31 @@ import org.hibernate.reactive.stage.Stage
  * ```kotlin
  * jpa.transaction { session ->
  *     session
- *         .update<Purchase> {
- *             this[Purchase::total] set (this[Purchase::total] + 10L)
- *             where { this[Purchase::reference] like "P-%" }
- *         }.execute()
+ *         .update<Purchase> { set(Purchase::total, this[Purchase::total] + 10L) }
+ *         .where { Purchase::reference like "P-%" }
+ *         .execute()
  * }
  * ```
  *
- * It answers with the same [JpaMutation] `mutate(hql)` does, and carries the same warning: it goes
- * straight to the database, past everything the session knows. No cascade fires, no `@PreUpdate`
- * runs, and an entity already loaded in this session keeps the values it had.
- *
- * A statement with nothing restricting it throws [JpaUnrestrictedMutationException] unless the block
- * said `everyRow()`.
+ * The assignments are the block's job and the restrictions are the chain's — see [MutationScope] for
+ * what a bulk statement does not do, and for why one with nothing restricting it is refused.
  */
-inline fun <reified T : Any> Stage.QueryProducer.update(block: UpdateScope<T>.() -> Unit): JpaMutation = updateOn(this, block)
+inline fun <reified T : Any> Stage.QueryProducer.update(block: UpdateScope<T>.() -> Unit): UpdateScope<T> = updateOn(this, block)
 
 /**
- * A bulk `delete`, the same way.
+ * A bulk `delete`, the same way — and with nothing to put in a block, so it has none.
  *
  * ```kotlin
- * session.delete<Purchase> { where { this[Purchase::total] lt 1L } }.execute()
+ * session.delete<Purchase>().where { Purchase::total lt 1L }.execute()
  * ```
- *
- * `Jpa.removeById` is the other way to delete, and the difference is not style: that one loads the
- * entity so the cascades and the `@PreRemove` fire, and costs a select per row. This is one
- * statement for the whole set and fires nothing.
  */
-inline fun <reified T : Any> Stage.QueryProducer.delete(block: DeleteScope<T>.() -> Unit): JpaMutation = deleteOn(this, block)
+inline fun <reified T : Any> Stage.QueryProducer.delete(): DeleteScope<T> = deleteOn(this)
 
 /*
  * The two below take the session as an argument rather than as a receiver, and that is not a style
- * choice. `Stage.StatelessSession` has members called `update` and `delete` that take an entity, and
- * a member beats an extension of the same name — so inside `JpaStatelessSession`, `raw.update(block)`
- * compiles into `update(Object)` and hands back a `CompletionStage<Void>`. It is the same trap
+ * choice. `Stage.StatelessSession` has members called `update` and `delete` that take entities, and
+ * a member beats an extension of the same name — inside `JpaStatelessSession`, `raw.update(block)`
+ * compiled into `update(Object)` and handed back a `CompletionStage<Void>`. It is the same trap
  * `JpaSession` documents for `flush`, met from the other side. A name with no member to collide with
  * is the only thing that reliably reaches the extension.
  */
@@ -53,23 +42,14 @@ inline fun <reified T : Any> Stage.QueryProducer.delete(block: DeleteScope<T>.()
 internal inline fun <reified T : Any> updateOn(
     producer: Stage.QueryProducer,
     block: UpdateScope<T>.() -> Unit,
-): JpaMutation {
-    val builder = producer.builder
-    val statement = builder.createCriteriaUpdate(T::class.java)
-    val scope = UpdateScope(statement, statement.from(T::class.java)).apply(block)
-    if (scope.isUnrestricted()) throw JpaUnrestrictedMutationException(T::class, "update")
-    return JpaMutation(producer.createMutationQuery(scope.build()))
+): UpdateScope<T> {
+    val statement = producer.builder.createCriteriaUpdate(T::class.java)
+    return UpdateScope(producer, T::class, statement, statement.from(T::class.java)).apply(block)
 }
 
 /** Builds the `delete`, wherever it was called from. */
 @PublishedApi
-internal inline fun <reified T : Any> deleteOn(
-    producer: Stage.QueryProducer,
-    block: DeleteScope<T>.() -> Unit,
-): JpaMutation {
-    val builder = producer.builder
-    val statement = builder.createCriteriaDelete(T::class.java)
-    val scope = DeleteScope(statement, statement.from(T::class.java)).apply(block)
-    if (scope.isUnrestricted()) throw JpaUnrestrictedMutationException(T::class, "delete")
-    return JpaMutation(producer.createMutationQuery(scope.build()))
+internal inline fun <reified T : Any> deleteOn(producer: Stage.QueryProducer): DeleteScope<T> {
+    val statement = producer.builder.createCriteriaDelete(T::class.java)
+    return DeleteScope(producer, T::class, statement, statement.from(T::class.java))
 }
