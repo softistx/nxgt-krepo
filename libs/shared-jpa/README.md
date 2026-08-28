@@ -13,6 +13,9 @@ com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.t
 com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
 com.strange.jpa.naming     what a column is called when the entity does not say
 com.strange.jpa.scan       reading entities and converters off the classpath
+com.strange.jpa.repository JpaRepository — the typed operations every entity gets for free
+com.strange.jpa.service    JpaCrudService — create/update/delete with hooks, over a repository
+com.strange.jpa.audit      AuditedEntity, the who-and-when superclass the service stamps
 ```
 
 ```kotlin
@@ -361,6 +364,13 @@ column, a function, an aggregate. Every mixture of the two is accepted up to fou
 why there are so many `construct` overloads: a property reference is not a `Selection` and Kotlin has
 no implicit conversion, so a position that takes both has to be two declarations.
 
+**Above four columns, write every column as a path** — `this[Purchase::reference]` rather than
+`Purchase::reference`. A fifth column mixing the two forms is an overload-resolution error listing
+all 29 candidates, and this is the sentence that answers it. The cliff is arithmetic rather than an
+omission: a mixture over n columns is 2ⁿ − 1 declarations, so four cost 15 and reaching seven the
+same way would cost 221 more. Four is where the sugar still pays, and the uniform path form covers
+every arity with one rule.
+
 A projection of one column needs none of that, since a path is already a selection:
 `project<Purchase, String> { this[Purchase::reference] }`. `groupBy` takes a property or a block, and
 `having` is the only place a condition on an aggregate can go — `where` runs before the grouping.
@@ -428,6 +438,14 @@ key its cursors do not carry. Without a `page`, `sortBy` is simply an ordering.
 be unique: sort by a repeated column alone and every row sharing a value is a coin toss between being
 served twice and being skipped — a data bug that reads as a UI bug. The identifier is the one column
 this library can prove unique, so it is the one it insists on.
+
+**`shared-mongo` appends `_id` where this refuses**, and the difference is deliberate rather than an
+oversight in one of them. Mongo's sort arrives as raw JSON from an HTTP client, so there is no
+compiler between the caller and a non-unique sort and no line of Kotlin to point at — appending is
+the only way to be safe. Here the sort is `sortBy(Purchase::total)` in the caller's own source, so a
+message naming the line and what to add costs nothing and teaches the rule instead of hiding it. The
+consequence for a service paging the same object out of both stores: the Mongo call takes any sort,
+the JPA call takes any sort ending in the identifier, and neither can silently skip a row.
 
 `PageRequest.first(n, cursor)` pages forward, `PageRequest.last(n, cursor)` backward; the backward
 page runs the sort flipped and reverses the rows, so both directions read the same way round. One row
@@ -603,11 +621,21 @@ is not a `refresh` — a default the database applied is not read back, and `aft
 belongs.
 
 The hooks are `beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete`,
-`afterDelete` and `stamp`. `afterUpdate` takes no "previous" argument, unlike the Mongo service's:
-the managed instance was mutated in place, so the state before the update is no longer anywhere to
-hand over — a hook that needs it copies what it cares about in `beforeUpdate`. `stamp` is where
-*who* is recorded, since only the service knows the principal; *when* belongs to the entity, which
-is the half Hibernate's own lifecycle callbacks do better.
+`afterDelete`, and `stampCreated` / `stampUpdated`. `afterUpdate` takes no "previous" argument,
+unlike the Mongo service's: the managed instance was mutated in place, so the state before the update
+is no longer anywhere to hand over — a hook that needs it copies what it cares about in
+`beforeUpdate`. The two `stamp` hooks are where *who* is recorded, since only the service knows the
+principal; *when* belongs to the entity, which is the half Hibernate's own lifecycle callbacks do
+better.
+
+**Every `after*` hook runs before the commit.** The transaction the caller opened is still open, so a
+hook that publishes to Kafka, AMQP or an HTTP endpoint publishes a fact a later rollback unmakes.
+A cascade or an outbox row is exactly right there — both are writes in the same transaction, and both
+are undone with it. Anything that leaves the database is sent after `transaction { }` returns.
+
+**`create`'s flush names the input that failed; it does not let you continue past it.** A failed
+flush dooms the transaction, so a caller looping over inputs with a `try/catch` inside gets one
+exception it swallowed and a rollback at the end. Import a batch with a transaction per input.
 
 ## Who wrote this row, and when
 
@@ -833,12 +861,15 @@ of one; without it the first constraint is a `NoClassDefFoundError`.
 ## Configuration and lifecycle
 
 `Jpa.connect` suspends: reading annotations off every entity and building the metadata model is
-ordinary blocking work, done on `Dispatchers.IO`. **Nothing connects there** — the pool opens its
-first connection when something asks for a session, so a wrong password is a failed request rather
-than a failed startup. `SchemaMode.VALIDATE` turns it back into a startup failure when the schema is
-managed elsewhere, which it should be: `SchemaMode.NONE` is the default and the only sane answer for
-a deployment, because a schema is migrated by something that keeps a history, not by an ORM
-inferring one from the classes it happens to have been given.
+ordinary blocking work, done on `Dispatchers.IO`. **On the default `SchemaMode.NONE`, nothing
+connects there** — the pool opens its first connection when something asks for a session, so a wrong
+password is a failed request rather than a failed startup. Any other mode has schema work to do and
+therefore connects: `SchemaMode.VALIDATE` turns a schema missing a table back into a startup failure,
+which is the point of choosing it when the schema is managed elsewhere — and it should be.
+`SchemaMode.NONE` is the default and the only sane answer for a deployment, because a schema is
+migrated by something that keeps a history, not by an ORM inferring one from the classes it happens
+to have been given. `test/SchemaModeTest.kt` pins both halves; the two statements used to contradict
+each other here.
 
 `JpaConfig` names the settings a deployment actually changes and takes anything else in
 `properties`, applied last so it overrides them. Four are worth knowing about: `connectTimeout`, so a
@@ -877,9 +908,12 @@ did not create.
 
 ## Not here
 
-No migrations, no repository or CRUD layer, no second-level cache, and one datasource. The first two
-are the natural next features; the schema question in particular deserves its own decision rather
-than a default chosen here.
+No migrations, no second-level cache, and one datasource. The schema question in particular deserves
+its own decision rather than a default chosen here: `SchemaMode` exists for tests and scratch
+databases, not as a migration story.
+
+A repository and a CRUD service *are* here — `JpaRepository` and `JpaCrudService`, above — and this
+list said otherwise for a phase after they shipped.
 
 The query DSL stops where JPA Criteria keeps going — no subqueries, no set operations, no window
 functions, no `insert … select`. Those are written against Hibernate's own builder and run through

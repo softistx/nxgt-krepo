@@ -80,7 +80,12 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
         /* Flush rather than wait for the commit: it assigns a generated identifier, and it puts a
            constraint violation here — where the caller can say which input caused it — instead of
            at the end of the transaction. It is not a refresh: a default the database applied is not
-           read back, and afterCreate is where that belongs. */
+           read back, and afterCreate is where that belongs.
+
+           Naming the input is all it buys. It is not a way to catch one create and continue with the
+           next: a failed flush dooms the transaction, so a caller looping over inputs with a
+           try/catch inside gets one exception it swallowed and a rollback at the end. Import a batch
+           with a transaction per input, not a try/catch per input. */
         session.flush()
 
         return created.also { afterCreate(it, session) }
@@ -179,6 +184,13 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
 
     protected open suspend fun beforeCreate(input: C) = Unit
 
+    /**
+     * **Runs before the commit, like every `after*` hook here.** The transaction the caller opened
+     * is still open, so a hook that publishes to Kafka, AMQP or an HTTP endpoint publishes a fact a
+     * later rollback unmakes. That is the right place for a cascade or an outbox row — both are
+     * writes in the same transaction, and both are undone with it — and the wrong place for anything
+     * that leaves the database. Send those after `transaction { }` returns.
+     */
     protected open suspend fun afterCreate(
         created: T,
         session: JpaSession,
@@ -190,9 +202,11 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
     ) = Unit
 
     /**
-     * The entity as it now stands. There is no "previous" argument, unlike the Mongo service: the
-     * managed instance was mutated in place, so the state before the update is no longer anywhere to
-     * hand over. A hook that needs it should copy what it cares about in [beforeUpdate].
+     * The entity as it now stands, before the commit — see [afterCreate] for what that rules out.
+     *
+     * There is no "previous" argument, unlike the Mongo service: the managed instance was mutated in
+     * place, so the state before the update is no longer anywhere to hand over. A hook that needs it
+     * should copy what it cares about in [beforeUpdate].
      */
     protected open suspend fun afterUpdate(
         updated: T,
@@ -205,6 +219,10 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
         session: JpaSession,
     ) = Unit
 
+    /**
+     * The ids that were actually deleted, before the commit — see [afterCreate] for what that rules
+     * out.
+     */
     protected open suspend fun afterDelete(
         ids: Collection<ID>,
         session: JpaSession,
