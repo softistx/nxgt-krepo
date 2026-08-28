@@ -215,9 +215,9 @@ with the same builder `query<T>(hql)` does, so the terminals above are the termi
 session
     .select<Purchase> {
         val buyer = join(Purchase::customer)
-        where { this[Purchase::total] gt 100L }
+        where { Purchase::total gt 100L }
         where { buyer[Buyer::name] eq "ada" }
-        orderBy { desc(this[Purchase::total]) }
+        orderBy { desc(Purchase::total) }
     }.limit(20)
     .list()
 ```
@@ -226,12 +226,18 @@ session
 sort keys in the order written, and a `where` block may answer with `null` to add nothing at all — so
 a query assembled from filters the caller learns one at a time needs no string concatenation.
 
-**Paths are indexed, not written as bare property references.** `this[Purchase::total]` rather than
-`Purchase::total`, and the reason is not taste: `KProperty1<T, V>` is covariant in `V`, so the
-compiler is free to widen `V` to `Any` and `Purchase::total eq "nope"` type-checks against a `Long`
-column. `Path<V>` is invariant, so the same line is a compile error — *actual type is 'String', but
-'Long' was expected*. Kotlin's own standard library solves this with `@OnlyInputTypes`, which is
-internal to it. Indexing reads the same on a join, which is the other half of the reason.
+**A predicate is written straight off the property, and it is still fully typed.** The receiver of
+`eq`, `gt` and the rest is `KMutableProperty1`, not `KProperty1`, and that is the whole design:
+`KProperty1<T, out V>` is covariant in the value, so the compiler is free to widen `V` to `Any` and
+`Purchase::total eq "nope"` type-checks against a `Long` column. `KMutableProperty1<T, V>` declares
+`V` invariantly — it has a setter to accept one — so the same line is a compile error, *actual type
+is 'String', but 'Long' was expected*. Kotlin's own standard library solves this with
+`@OnlyInputTypes`, which is internal to it.
+
+An entity's attributes are `var`, since Hibernate writes them, so that is the ordinary case rather
+than a restriction. Anything reached through a join or a function goes through the path form and the
+same operators on `Expression` — `buyer[Buyer::name] eq "ada"`, `lower(this[Buyer::name]) eq term` —
+and so does a `val` attribute.
 
 A join is held as a value and read from as often as the query needs it — the `where`, the `orderBy`,
 and the projection when that lands — instead of being re-declared and re-joined each time. `join`
@@ -241,8 +247,8 @@ join to; a `joinEach` returns the owner once per element until `distinct()`.
 
 The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both ends included),
 `like` `notLike` `ilike` `oneOf`, `isNull()` `isNotNull()`, and `and` `or` `!` with `all(…)` and
-`any(…)` over a list. `eq null` is not `is null` — it renders `= null`, which is never true in SQL,
-so ask with `isNull()`.
+`any(…)` over a list — and `asc`/`desc` take a property the same way. `eq null` is not `is null` — it
+renders `= null`, which is never true in SQL, so ask with `isNull()`.
 
 `update<T> { }` and `delete<T> { }` are the write side, answering with the same `JpaMutation`
 `mutate(hql)` does — and carrying the same warning: they go straight to the database, past everything
@@ -251,13 +257,14 @@ the session knows.
 ```kotlin
 session
     .update<Purchase> {
-        this[Purchase::total] set (this[Purchase::total] + 10L)
-        where { this[Purchase::reference] like "P-%" }
+        set(Purchase::total, this[Purchase::total] + 10L)
+        where { Purchase::reference like "P-%" }
     }.execute()
 ```
 
-An assignment can be an expression, which is how a counter is incremented without reading it first:
-one statement, one round trip, and correct when two of them run at once. Neither statement can join
+An assignment is `set(property, value)`, and the value can be an expression — which is how a counter
+is incremented without reading it first: one statement, one round trip, and correct when two of them
+run at once. Neither statement can join
 — that is JPA's rule for a bulk statement, so the scopes simply do not offer it rather than offering
 a method that always fails when Hibernate renders it.
 
@@ -280,7 +287,7 @@ class Summary(val reference: String, val buyer: String)
 
 session.project<Purchase, Summary> {
     val buyer = join(Purchase::customer)
-    where { this[Purchase::total] gt 100L }
+    where { Purchase::total gt 100L }
     construct(::Summary, this[Purchase::reference], buyer[Buyer::name])
 }.list()
 ```
@@ -332,7 +339,7 @@ When a terminal has to name the query in an exception it renders the tree back t
 ```kotlin
 val page =
     session.selectPage<Purchase>(PageRequest.first(20)) {
-        where { this[Purchase::total] gt 100L }
+        where { Purchase::total gt 100L }
         sortBy(Purchase::total, descending = true)
         sortBy(Purchase::id)
     }

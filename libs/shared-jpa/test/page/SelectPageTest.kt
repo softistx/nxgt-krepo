@@ -3,8 +3,6 @@ package com.strange.jpa.page
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaPaginationException
 import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.dsl.asc
-import com.strange.jpa.dsl.gt
 import com.strange.jpa.dsl.select
 import com.strange.jpa.entity.Buyer
 import com.strange.jpa.entity.Purchase
@@ -174,8 +172,7 @@ class SelectPageTest :
                         jpa.session { session ->
                             session.selectPage<Purchase>(PageRequest.first(2)) {
                                 orderBy {
-                                    com.strange.jpa.dsl
-                                        .asc(this[Purchase::id])
+                                    asc(Purchase::id)
                                 }
                                 sortBy(Purchase::id)
                             }
@@ -219,7 +216,7 @@ class SelectPageTest :
                     val page =
                         jpa.session { session ->
                             session.selectPage<Purchase>(PageRequest.first(10)) {
-                                where { this[Purchase::total] gt 100L }
+                                where { Purchase::total gt 100L }
                                 sortBy(Purchase::id)
                             }
                         }
@@ -264,12 +261,10 @@ class SelectPageTest :
                                 session
                                     .select<Purchase> {
                                         orderBy {
-                                            com.strange.jpa.dsl
-                                                .asc(this[Purchase::total])
+                                            asc(Purchase::total)
                                         }
                                         orderBy {
-                                            com.strange.jpa.dsl
-                                                .asc(this[Purchase::id])
+                                            asc(Purchase::id)
                                         }
                                     }.list()
                             }.map { it.reference }

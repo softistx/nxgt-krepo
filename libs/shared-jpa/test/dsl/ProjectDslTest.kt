@@ -40,7 +40,7 @@ class ProjectDslTest :
                         jpa.session { session ->
                             session
                                 .project<Purchase, String> {
-                                    orderBy { asc(this[Purchase::id]) }
+                                    orderBy { asc(Purchase::id) }
                                     this[Purchase::reference]
                                 }.list()
                         }
@@ -56,8 +56,8 @@ class ProjectDslTest :
                             session
                                 .project<Purchase, Summary> {
                                     val buyer = join(Purchase::customer)
-                                    where { this[Purchase::total] gt 60L }
-                                    orderBy { asc(this[Purchase::id]) }
+                                    where { Purchase::total gt 60L }
+                                    orderBy { asc(Purchase::id) }
                                     construct(::Summary, this[Purchase::reference], buyer[Buyer::name])
                                 }.list()
                         }
@@ -72,7 +72,7 @@ class ProjectDslTest :
                     jpa.session { session ->
                         session
                             .project<Purchase, String> {
-                                orderBy { asc(this[Purchase::id]) }
+                                orderBy { asc(Purchase::id) }
                                 this[Purchase::reference]
                             }.limit(1)
                             .offset(1)
@@ -110,8 +110,8 @@ class ProjectDslTest :
                         jpa.session { session ->
                             session
                                 .project<Purchase, Long> {
-                                    where { this[Purchase::total] gt 100L }
-                                    orderBy { asc(this[Purchase::total]) }
+                                    where { Purchase::total gt 100L }
+                                    orderBy { asc(Purchase::total) }
                                     this[Purchase::total]
                                 }.list()
                         }
