@@ -60,6 +60,10 @@ def load_config(skill: str) -> tuple[Path, dict]:
     return skill_dir, json.loads(config_path.read_text(encoding="utf-8"))
 
 
+# The scheme and host of the docs site, set by `main` from the configured base.
+SITE_ORIGIN = ""
+
+
 def common_prefix(urls: list[str]) -> str:
     """The root the sitemap declares for itself, which may not be where it is served."""
     if len(urls) == 1:
@@ -69,22 +73,38 @@ def common_prefix(urls: list[str]) -> str:
     return prefix[: prefix.rindex("/") + 1] if "/" in prefix else prefix
 
 
-def discover(base: str, sitemap: str | None = None) -> tuple[list[str], str]:
+def discover(
+    base: str, sitemap: str | None = None, method: str = "auto"
+) -> tuple[list[str], str]:
     """Return (page URLs, the root they are relative to).
 
     Tries llms.txt, then sitemap.xml, then the nav links on the base page. A
     sitemap whose <loc> host differs from `base` has a misconfigured site_url
     (Ktorfit's points at its GitHub repo), so its paths are re-joined onto base.
+
+    `method` pins one of them instead. Some sites serve a *full-text* llms.txt —
+    the whole documentation inlined rather than a link index — and harvesting
+    URLs out of it yields only the handful that prose happens to link to, each
+    carrying the trailing `)` or `.` of the sentence it sat in. kotlinlang.org
+    is one, which is why its config says `"discovery": "sitemap"`.
     """
-    try:
-        llms = get(urljoin(base, "llms.txt"))
-        urls = sorted({m for m in re.findall(r"https?://\S+", llms) if m.startswith(base)})
-        if urls:
-            return urls, base
-    except Exception:  # noqa: BLE001 - absence is the common case
-        pass
+    if method not in ("auto", "llms", "sitemap", "nav"):
+        raise SystemExit(f"unknown discovery method {method!r}")
+
+    if method in ("auto", "llms"):
+        try:
+            llms = get(urljoin(base, "llms.txt"))
+            urls = sorted({m for m in re.findall(r"https?://\S+", llms) if m.startswith(base)})
+            if urls:
+                return urls, base
+        except Exception:  # noqa: BLE001 - absence is the common case
+            pass
+        if method == "llms":
+            raise SystemExit(f"no pages found in {urljoin(base, 'llms.txt')}")
 
     try:
+        if method == "nav":
+            raise RuntimeError("skipped: discovery pinned to nav")
         xml = get(sitemap or urljoin(base, "sitemap.xml"))
         ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
         locs = sorted(
@@ -134,7 +154,7 @@ def inline(node, in_code: bool = False) -> str:
         return ""
     if set(node.get("class", [])) & SKIP_CLASSES:
         return ""
-    if node.name == "pre":
+    if node.name == "pre" or is_code_div(node):
         # a code block nested inside prose still deserves a real fence
         return "\n\n" + code_block(node) + "\n\n"
     kids = "".join(inline(c, in_code) for c in node.children)
@@ -154,7 +174,11 @@ def inline(node, in_code: bool = False) -> str:
         if href.startswith("#") or not href:
             return label
         if href.startswith("/"):
-            href = BASE + href
+            # Root-relative link: absolutise it against the site's origin, which
+            # `main` records once per run. kotlinlang.org writes its cross-page
+            # links this way; MkDocs sites write them relative, which is why this
+            # branch stayed dead — and undefined — until now.
+            href = SITE_ORIGIN + href
         return f"[{label}]({href})"
     return kids
 
@@ -175,9 +199,20 @@ def guess_lang(text: str) -> str:
     return ""
 
 
+# Writerside (kotlinlang.org) renders code as a plain <div class="code-block">
+# or <div class="code-collapse"> holding newline-preserved text, with the
+# language in data-lang and no <pre> anywhere on the page. Without this, every
+# sample collapses onto one line as ordinary prose.
+CODE_DIV_CLASSES = {"code-block", "code-collapse"}
+
+
+def is_code_div(node: Tag) -> bool:
+    return node.name == "div" and bool(set(node.get("class", [])) & CODE_DIV_CLASSES)
+
+
 def code_block(pre: Tag) -> str:
     code = pre.find("code") or pre
-    lang = ""
+    lang = pre.get("data-lang", "") if isinstance(pre, Tag) else ""
     # mkdocs-material puts the language on the <code>, the <pre>, or a wrapping
     # <div class="language-yaml highlight"> / tabbed container.
     classes: list[str] = []
@@ -218,7 +253,7 @@ def block(node, depth: int = 0) -> str:
     classes = set(node.get("class", []))
     if classes & SKIP_CLASSES:
         return ""
-    if node.name == "pre":
+    if node.name == "pre" or is_code_div(node):
         return code_block(node)
     if node.name == "table":
         return table(node)
@@ -352,7 +387,10 @@ def main() -> int:
         base += "/"
     out = Path(args.out) if args.out else skill_dir / "references"
 
-    urls, root = discover(base, cfg.get("sitemap"))
+    global SITE_ORIGIN
+    SITE_ORIGIN = "{0.scheme}://{0.netloc}".format(urlparse(base))
+
+    urls, root = discover(base, cfg.get("sitemap"), cfg.get("discovery", "auto"))
     if not urls:
         print("no pages discovered", file=sys.stderr)
         return 1
