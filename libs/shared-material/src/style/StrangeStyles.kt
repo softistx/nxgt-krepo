@@ -1,13 +1,8 @@
 package com.strange.material.style
 
 import androidx.compose.foundation.style.Style
-import com.strange.material.button.ButtonColor
-import com.strange.material.button.ButtonVariant
 import com.strange.material.button.buttonStyle
-import com.strange.material.button.iconButtonStyle
-import com.strange.material.display.CardVariant
 import com.strange.material.display.alertStyle
-import com.strange.material.display.badgeStyle
 import com.strange.material.display.cardStyle
 import com.strange.material.display.chipStyle
 import com.strange.material.display.listTileStyle
@@ -17,34 +12,26 @@ import com.strange.material.theme.Tone
 /**
  * Every style this library dresses a component with, in one place.
  *
- * A component already applies its own default, so nothing here is needed to *use* the library. It
- * is the seam for changing one: `style = StrangeTheme.styles.card(CardVariant.Elevated) then {
- * border(2.dp, scheme.primary) }` restates the default and edits it, instead of rebuilding a card's
- * appearance from nothing and drifting from the rest of the screen.
+ * There is less here than there once was, and that is the point: colour, shape, border, padding and
+ * elevation moved into Material 3's own `*Colors` and `*Defaults` when the components were rebuilt
+ * on M3. What is left is what M3 has no parameter for — the press scale, the disabled alpha, the
+ * alert's whole appearance because M3 has no banner.
+ *
+ * A component already applies its own, so nothing here is needed to *use* the library. It is the
+ * seam for adding to one: `style = StrangeTheme.styles.card then { alpha(0.6f) }` restates the
+ * default and edits it. To change a *colour*, pass Material 3's `*Colors` instead — a `background`
+ * in a style block paints over the component M3 already painted.
  */
 object StrangeStyles {
-    fun button(
-        variant: ButtonVariant = ButtonVariant.Filled,
-        color: ButtonColor = ButtonColor.Primary,
-    ): Style = buttonStyle(variant, color)
+    val button: Style get() = buttonStyle
 
-    fun iconButton(
-        variant: ButtonVariant = ButtonVariant.Ghost,
-        color: ButtonColor = ButtonColor.Neutral,
-    ): Style = iconButtonStyle(variant, color)
-
-    fun card(
-        variant: CardVariant = CardVariant.Filled,
-        interactive: Boolean = false,
-    ): Style = cardStyle(variant, interactive)
-
-    fun listTile(interactive: Boolean = false): Style = listTileStyle(interactive)
-
-    fun badge(tone: Tone = Tone.Info): Style = badgeStyle(tone)
-
-    fun alert(tone: Tone = Tone.Info): Style = alertStyle(tone)
+    val card: Style get() = cardStyle
 
     val chip: Style get() = chipStyle
+
+    val listTile: Style get() = listTileStyle
+
+    fun alert(tone: Tone = Tone.Info): Style = alertStyle(tone)
 }
 
 /**

@@ -3,6 +3,7 @@ package com.strange.material.demo
 import com.strange.material.demo.stories.ButtonStories
 import com.strange.material.demo.stories.DisplayStories
 import com.strange.material.demo.stories.FoundationStories
+import com.strange.material.demo.stories.MotionStories
 import com.strange.material.demo.stories.ScreenStories
 
 /**
@@ -15,6 +16,7 @@ import com.strange.material.demo.stories.ScreenStories
 val CatalogGroups: List<StoryGroup> =
     listOf(
         FoundationStories,
+        MotionStories,
         ButtonStories,
         DisplayStories,
         ScreenStories,

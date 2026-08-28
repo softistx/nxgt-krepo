@@ -1,52 +1,28 @@
 package com.strange.material.button
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
-
-/** The gap between an icon and its label inside a button. Not a theme token: it is the button's
- * own internal rhythm, and a caller changing the spacing scale should not move it. */
-private val PartSpacing = 8.dp
+import androidx.compose.material3.Button as MaterialButton
 
 /**
- * A button.
+ * A button. `Button("Save changes", onClick = ::save)` is the whole common case.
  *
- * ```kotlin
- * Button("Enregistrer", onClick = ::save)
- * ```
- *
- * That is the whole of the common case, and it is deliberate: the variant, the colour, the shape,
- * the padding, the minimum target size, the hover response and the press give all have correct
- * defaults. Nothing about a button's *appearance* is a required argument.
- *
- * Everything visual lives in a [Style], so the two axes are named rather than assembled:
- *
- * ```kotlin
- * Button("Supprimer", onClick = ::delete, color = ButtonColor.Danger, variant = ButtonVariant.Outlined)
- * ```
- *
- * and anything the matrix does not cover is a [style] the caller passes, applied last so it wins:
- *
- * ```kotlin
- * Button("Continuer", onClick = ::next, style = Style { minWidth(200.dp) })
- * ```
- *
- * The component holds no presentation state of its own — pressed and hovered come from the
- * [MutableInteractionSource] through `rememberUpdatedStyleState`, and `enabled` is pushed into it
- * so the style's `disabled` block applies. A caller never remembers a boolean for a visual.
+ * It is Material 3's `Button` with this library's vocabulary in front of it — five variants and
+ * seven colours instead of five separate composables and a `ButtonColors` to hand-build. M3 keeps
+ * the ripple, the 48 dp touch target, the semantics and the disabled treatment; [buttonStyle] adds
+ * the press scale M3 has no parameter for.
  */
 @Composable
 fun Button(
@@ -66,16 +42,21 @@ fun Button(
         enabled = enabled,
         style = style,
     ) {
-        Typography(text = text, variant = TypographyVariant.LabelLarge)
+        Typography(
+            text = text,
+            // A link reads as text in a sentence, so it keeps the underline M3's Button has no
+            // parameter for. Everything else is a label.
+            variant =
+                if (variant == ButtonVariant.Link) {
+                    TypographyVariant.Link
+                } else {
+                    TypographyVariant.LabelLarge
+                },
+        )
     }
 }
 
-/**
- * The same button with arbitrary content — an icon beside a label, a badge, a spinner.
- *
- * [Button] is this with a [Typography] inside it. Keeping the slot version public is what stops a
- * caller having to copy the file the first time they need an icon.
- */
+/** The same button with a content slot, for a label that is more than a string. */
 @Composable
 fun ButtonSurface(
     onClick: () -> Unit,
@@ -87,23 +68,25 @@ fun ButtonSurface(
     content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState =
-        rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
-    val base = remember(variant, color) { buttonStyle(variant, color) }
-
-    Row(
-        modifier =
-            modifier
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    enabled = enabled,
-                    role = Role.Button,
-                    onClick = onClick,
-                ).styleable(styleState, base, style),
-        horizontalArrangement =
-            Arrangement.spacedBy(PartSpacing, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
+    MaterialButton(
+        onClick = onClick,
+        modifier = modifier.styleable(styleState, buttonStyle, style),
+        enabled = enabled,
+        shape = CircleShape,
+        colors = buttonColors(variant, color),
+        elevation = null,
+        border = buttonBorder(variant, color, enabled),
+        contentPadding = contentPadding(variant),
+        interactionSource = interactionSource,
         content = content,
     )
 }
+
+/** A link is text in a sentence, so it keeps no padding of its own; the rest use M3's. */
+private fun contentPadding(variant: ButtonVariant): PaddingValues =
+    if (variant == ButtonVariant.Link) {
+        PaddingValues(0.dp)
+    } else {
+        ButtonDefaults.ContentPadding
+    }

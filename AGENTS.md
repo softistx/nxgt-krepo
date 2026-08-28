@@ -18,7 +18,7 @@ What exists:
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
-| `libs/shared-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: a token layer driven by one colour seed, component looks declared as Compose `Style`s with their interaction states animated, and motion as named durations rather than scattered `tween`s |
+| `libs/shared-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StrangeTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
 | `libs/shared-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
@@ -143,9 +143,44 @@ Three come from Google's [`android/skills`](https://github.com/android/skills) c
 - **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
 - **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
 
+## Building a component
+
+**Check Material 3 first, and reuse it.** A component here is a thin layer that gives an M3
+component this repo's vocabulary — it is not a reimplementation. Rebuilding one from `Row`,
+`Column` and `Modifier.background` throws away its ripple, its minimum touch target, its
+semantics, its RTL handling and its expressive shape morphing, and every one of those has to be
+re-earned by hand and will be got wrong.
+
+`material3-compose`'s `references/components.md` is the list to check — it is generated from the
+resolved jar, so it says what actually compiles here rather than what the androidx docs describe.
+Material 3 already has `Button`, `IconButton`, `ButtonGroup`, `Card` / `ElevatedCard` /
+`OutlinedCard`, `FilterChip` / `AssistChip` / `InputChip`, `Badge`, `ListItem`, `Text`, `Icon`,
+`Surface` and the dividers.
+
+The shape of a wrapper:
+
+- **Colour, shape, elevation, padding and border go through M3's own parameters** —
+  `ButtonDefaults.buttonColors(…)`, `CardDefaults.cardColors(…)`, `shape = shapes.large`. Our
+  tokens compute the argument; M3 does the painting. That is what keeps a plain M3 component and
+  one of ours identical inside the same theme.
+- **What M3 does not express stays a `Style`** applied on the outer `Modifier` — a press scale, a
+  hover tint beyond the ripple, an alpha. A `Style` that sets `background` or `shape` on top of an
+  M3 component is painting twice; that is the sign the value belonged in a `*Colors` instead.
+- **Build from primitives only when M3 has nothing.** `Alert`, `EmptyState`, `Skeleton` and
+  `ResponsiveButton` are ours because Material 3 has no equivalent, and each says so in its KDoc.
+
+A claim about **pixels is measured in pixels.** `ImageComposeScene` renders a composable into a
+bitmap with no window, in milliseconds, on a headless host, and `sendPointerEvent` drives hover and
+press. `libs/shared-material/test@jvm/` holds the two specs that exist, and both were written
+because something looked right and was not: a hover state that was invisible on *selected* chips
+because they already wear the focus layer, and a collapsed `ResponsiveButton` that kept the padding
+its label had left behind. Rendering specs are jvm-only — skiko's native library comes from
+`$compose.desktop.currentOs` under `test-dependencies@jvm`.
+
 ## Styling a component
 
-Every component in `libs/shared-material` is dressed with the **Compose Styles API**
+What is left after M3 has taken colour, shape and padding is dressed with the **Compose Styles
+API**
 (`androidx.compose.foundation.style`), not with colour parameters and `Modifier` chains. It ships
 in Compose Multiplatform 1.11.1 — experimental, in `foundation` rather than `material3` — and the
 module opts in once:
@@ -175,6 +210,13 @@ The shape a component takes:
 - **Presentation state belongs to the component.** `rememberUpdatedStyleState(interactionSource) {
   it.isEnabled = enabled }` gives pressed, hovered and focused for nothing; the caller passes
   business state and never remembers a boolean for a visual.
+- **Every curve comes from Material 3's `MotionScheme`.** `StrangeMotion` holds the scheme
+  `StrangeTheme` installed, and offers M3's two axes — `spatial(speed)` for anything that moves,
+  which is a spring and may overshoot, and `effects(speed)` for colour and alpha, which must land
+  exactly. Nothing writes `tween(300)` or names an easing. Giving a fade and a slide one curve is
+  the mistake this replaced: the combined transition finishes in two stages. It is *held* rather
+  than read from the composition because a `Style` block runs at apply time, not in a composable
+  scope.
 - **Every default has a name in `StrangeStyles`**, reached as `StrangeTheme.styles.card(variant)`.
   It is a plain `object` behind an extension property, not a `CompositionLocal` — a `Style` reads
   its tokens when it is applied, not when it is written — and it lives in `src/style/` so `theme`

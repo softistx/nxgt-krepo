@@ -3,10 +3,11 @@ package com.strange.material.display
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.strange.material.motion.shimmer
@@ -27,14 +28,14 @@ import com.strange.material.theme.StrangeTheme
 fun Skeleton(
     modifier: Modifier = Modifier,
     height: Dp = 16.dp,
-    cornerRadius: Dp = StrangeTheme.radii.sm,
+    shape: Shape = MaterialTheme.shapes.extraSmall,
 ) {
     Box(
         modifier =
             modifier
                 .fillMaxWidth()
                 .height(height)
-                .clip(RoundedCornerShape(cornerRadius))
+                .clip(shape)
                 .shimmer(),
     )
 }

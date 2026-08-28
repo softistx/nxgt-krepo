@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +45,7 @@ internal fun TokenBar(
                 Modifier
                     .width(size.coerceAtLeast(1.dp))
                     .height(12.dp)
-                    .clip(RoundedCornerShape(StrangeTheme.radii.sm))
+                    .clip(MaterialTheme.shapes.extraSmall)
                     .background(StrangeTheme.colors.scheme.primary),
         )
         Typography(text = "$size", variant = TypographyVariant.Caption, emphasis = Emphasis.Subtle)
@@ -64,7 +65,7 @@ internal fun Swatch(
             modifier =
                 Modifier
                     .size(28.dp)
-                    .clip(RoundedCornerShape(StrangeTheme.radii.sm))
+                    .clip(MaterialTheme.shapes.extraSmall)
                     .background(color),
         )
         Typography(text = name, variant = TypographyVariant.Caption)

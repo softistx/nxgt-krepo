@@ -65,7 +65,8 @@ ligne de plomberie.
       total~~ — **non écrits, et volontairement** : les deux sont des `when` exhaustifs sur une
       enum, donc déjà garantis à la compilation ; un spec ne pourrait pas échouer. Ce qui reste
       vraiment à vérifier — qu'aucune combinaison ne rende une couleur non spécifiée — demande
-      un rendu, et il n'y a pas encore de harnais de test Compose ici (phase 2)
+      un rendu — il y en a un depuis (voir *Révisions*), mais il sert aux affirmations sur les
+      pixels, pas à retester un `when` exhaustif
 - [x] Les bornes de `StrangeMotion`, et `enabled = false` met les durées à zéro
 
 **Catalogue de démonstration**
@@ -83,6 +84,81 @@ ligne de plomberie.
 - [x] `docs/components.md` — un composant par ligne, ses paramètres, son id de story
 - [x] `examples/material-demo/README.md` — la forme de la démo, comment ajouter une story
 - [x] Lignes ajoutées aux tableaux d'`AGENTS.md` et du `README.md` racine
+
+---
+
+## Révisions
+
+Ce qui a bougé après coup, et pourquoi. Une phase livrée n'est pas figée — mais un changement qui
+touche une case déjà cochée se raconte ici plutôt que de la décocher.
+
+### Le thème repose sur les entrées de Material 3
+
+Après la phase 1, `StrangeTheme` ne prenait qu'une graine et fabriquait tout le reste lui-même. Il
+prend maintenant les quatre entrées de `MaterialTheme` — `ColorScheme`, `Typography`, `Shapes`,
+`MotionScheme` — chacune avec un défaut, comme M3.
+
+- [x] `StrangeTheme(colorScheme, typography, shapes, motionScheme, …)` — un appelant qui calcule
+      déjà l'une des quatre la passe et garde les trois autres
+- [x] `MaterialExpressiveTheme` + `MotionScheme.expressive()` par défaut
+- [x] `expect`/`actual platformColorScheme` — palette du fond d'écran sur Android 12+, graine
+      ailleurs ; `supportsDynamicColor` dit laquelle. **C'est la seule décision spécifique à une
+      plateforme de toute la librairie** ; `StrangeThemeProvider` et tout ce qui est au-dessus est
+      écrit une seule fois
+- [x] `strangeColors(scheme, isDark)` ajoute les rôles sémantiques au schéma *reçu*, quel qu'il
+      soit — ils ne sont plus liés au chemin de la graine
+- [x] `StrangeMotion` reconstruit sur `MotionScheme` : `spatial` (ce qui bouge, peut dépasser) et
+      `effects` (couleur et alpha, doit atterrir juste) × `Fast`/`Default`/`Slow`. Les durées et
+      easings écrits à la main ont disparu ; `enabled = false` rend `snap()`
+- [x] `Transitions` choisit son axe par moitié — un fondu est un `effects`, un glissement un
+      `spatial`. Les leur donner la même courbe faisait finir une transition combinée en deux temps
+- [x] Stories `motion/spatial-and-effects` et `motion/every-speed-at-once`, plus les contrôles
+      Motion et « Wallpaper colours » dans l'en-tête du catalogue
+- [x] Specs : les deux axes restent distincts, les trois vitesses aussi, `enabled = false` rend
+      bien un `snap`, et deux thèmes par défaut sont égaux — donc installer le thème n'est pas une
+      recomposition
+
+### Les composants sont ceux de Material 3, habillés
+
+La règle est arrivée après coup et vaut pour toutes les phases suivantes : **on ne reconstruit pas
+un composant que M3 a déjà.** Sept l'avaient été ; ils enveloppent maintenant celui de M3, qui
+apporte l'ondulation, l'état désactivé, la sémantique de sélection et l'accessibilité — tout ce
+qu'une reconstruction jette pour redessiner un conteneur.
+
+- [x] `Button` / `IconButton` sur `Button`, `FilledIconButton`, `FilledTonalIconButton`,
+      `OutlinedIconButton` ; la matrice 5 × 7 rend un `ButtonColors` de M3 plutôt qu'un `Style`
+- [x] `Card` sur `Card` / `ElevatedCard` / `OutlinedCard`, `Chip` sur `FilterChip`, `ListTile` sur
+      `ListItem`, `StatusBadge` sur `Badge` — celui-ci perd son `style` : un badge est inerte
+- [x] `ButtonGroup` renommé **`ButtonRow`** — M3 a un `ButtonGroup`, et c'est un contrôle segmenté
+      connecté qui prend un `ButtonGroupScope`. Deux choses différentes ne partagent pas un nom
+- [x] Ce que M3 n'exprime pas reste un `Style` : l'échelle au pressage, l'alpha désactivé, et
+      l'apparence entière d'`Alert` — M3 n'a pas de bannière
+- [x] `chipColors(hovered)` ajoute le survol que `SelectableChipColors` n'a pas — le `TODO` est
+      dans la source de M3. Sans lui, sur desktop, le pointeur traverse une puce sans rien changer
+- [x] La règle écrite dans `AGENTS.md` (*Building a component*) et dans `CLAUDE.md`
+
+### Un ressort spatial dépasse sa cible, et ça casse
+
+- [x] `Modifier.animateStagger` anime **deux** valeurs : la montée en `spatial`, le fondu en
+      `effects`. Une seule courbe pour les deux envoyait l'alpha au-delà de 1
+- [x] La story `motion/spatial-and-effects` utilise `offset`, pas `padding` : le carré revenait en
+      négatif et l'application mourait sur *Padding must be non-negative*
+- [x] Spec : tout spec `spatial` est amorti sous 1, tout spec `effects` exactement à 1 — c'est le
+      fait sur lequel repose la règle
+
+### Un harnais qui rend, parce que deux bugs ne se voyaient qu'à l'écran
+
+`ImageComposeScene` rend un composable dans un bitmap, sans fenêtre, en millisecondes et sur un
+hôte sans écran. Les specs qui s'en servent sont dans `test@jvm/` : la bibliothèque native de skiko
+vient de `$compose.desktop.currentOs`, qui n'existe que sur jvm.
+
+- [x] `ChipHoverTest` — le survol se voit sur une puce sélectionnée comme sur une autre. La teinte
+      est de 8 % sur un conteneur transparent et de 16 % sur un conteneur plein : une puce
+      sélectionnée est celle qu'on vient de cliquer, donc elle porte déjà la couche de focus, et
+      8 % de plus n'y déplaçait le pixel que de 0,068 contre 0,145 ailleurs
+- [x] `ResponsiveButtonTest` — replié, le bouton fait 40 × 40, exactement le bouton-icône de M3, et
+      non une pilule dont on a retiré le texte (68 × 40, le rembourrage du label resté sur place)
+- [x] `ResponsiveButton` replié **est** un `IconButton` ; `AnimatedContent` passe de l'une à l'autre
 
 ---
 

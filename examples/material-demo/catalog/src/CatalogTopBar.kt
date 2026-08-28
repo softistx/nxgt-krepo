@@ -20,6 +20,7 @@ import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
 import com.strange.material.theme.StrangeTheme
+import com.strange.material.theme.supportsDynamicColor
 
 /**
  * The header: the two dials that prove the theme is live. Changing either repaints every story
@@ -55,12 +56,42 @@ fun CatalogTopBar(
             horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            CatalogMotion.entries.forEach { option ->
+                Chip(
+                    text = option.label,
+                    selected = state.motion == option,
+                    onClick = { state.motion = option },
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Typography(
                 text = "Dark",
                 variant = TypographyVariant.LabelMedium,
                 emphasis = Emphasis.Medium,
             )
             Switch(checked = state.isDark, onCheckedChange = { state.isDark = it })
+        }
+        // Shown only where it does something: a switch that cannot change anything is worse than
+        // no switch, and `supportsDynamicColor` is exactly the question a settings screen asks.
+        if (supportsDynamicColor) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Typography(
+                    text = "Wallpaper colours",
+                    variant = TypographyVariant.LabelMedium,
+                    emphasis = Emphasis.Medium,
+                )
+                Switch(
+                    checked = state.dynamicColor,
+                    onCheckedChange = { state.dynamicColor = it },
+                )
+            }
         }
     }
 }
