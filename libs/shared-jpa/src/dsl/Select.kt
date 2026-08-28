@@ -2,6 +2,7 @@ package com.strange.jpa.dsl
 
 import com.strange.jpa.query.criteria
 import org.hibernate.reactive.stage.Stage
+import kotlin.reflect.KClass
 
 /**
  * A query built against the entity's own properties rather than in an HQL string.
@@ -31,7 +32,20 @@ import org.hibernate.reactive.stage.Stage
  * dialect's idea of quoting. There is nothing to bind: values reached the query as values, not as
  * `:parameters`.
  */
-inline fun <reified T : Any> Stage.QueryProducer.select(block: SelectScope<T>.() -> Unit = {}): SelectScope<T> {
-    val criteria = criteria.createQuery(T::class.java)
-    return SelectScope(this, criteria, criteria.from(T::class.java)).apply(block)
+inline fun <reified T : Any> Stage.QueryProducer.select(noinline block: SelectScope<T>.() -> Unit = {}): SelectScope<T> =
+    select(T::class, block)
+
+/**
+ * The same, with the entity as a value rather than as a type argument.
+ *
+ * For a caller that has a `KClass` and not a `reified T` — a repository generic in its entity, or
+ * anything else standing between the entity and the query. The reified form delegates here, so
+ * there is one implementation and not two.
+ */
+fun <T : Any> Stage.QueryProducer.select(
+    type: KClass<T>,
+    block: SelectScope<T>.() -> Unit = {},
+): SelectScope<T> {
+    val criteria = criteria.createQuery(type.java)
+    return SelectScope(this, criteria, criteria.from(type.java)).apply(block)
 }

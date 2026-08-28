@@ -99,3 +99,19 @@ class JpaUnrestrictedMutationException(
 class JpaPaginationException(
     message: String,
 ) : JpaException(message)
+
+/**
+ * A write asked for outside a transaction, where it would have been discarded without a word.
+ *
+ * A session flushes at the end of a unit of work if and only if there is a transaction, so a
+ * `persist` or a change to a loaded entity inside a plain `session { }` reaches no table: no error,
+ * no warning, no row. `JpaCrudService` refuses rather than participates — the alternative is a
+ * create that returns an entity, reports success, and wrote nothing.
+ */
+class JpaOutsideTransactionException(
+    val operation: String,
+    val type: KClass<*>,
+) : JpaException(
+        "$operation on ${type.simpleName} needs a transaction: a session without one flushes nothing, " +
+            "so this would have been discarded. Use transaction { } rather than session { }",
+    )
