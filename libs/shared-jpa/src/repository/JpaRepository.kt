@@ -250,7 +250,25 @@ open class JpaRepository<T : Any, ID : Any>(
         return findByIds(session, values).onEach { delete(session, it) }.size
     }
 
-    private fun query(
+    /**
+     * The query the methods above are built from, for what they do not spell.
+     *
+     * **This is where a fetch goes.** `findAll` answers with entities, so a caller that will read an
+     * association has to say so — associations are `LAZY` and Hibernate Reactive has no transparent
+     * lazy loading, so an unfetched one throws rather than costing a second select. A [JpaSpec] is a
+     * `Joins` receiver and cannot fetch, deliberately: the same spec has to fit a projection, which
+     * has nothing to hang a fetch on.
+     *
+     * ```kotlin
+     * purchases.query(session) { Purchase::total gt 100L }
+     *     .apply { fetch(Purchase::customer) }
+     *     .list()
+     * ```
+     *
+     * `open` like everything else here, so a subclass can give its entity a `withCustomer()` of its
+     * own rather than repeating the block at every call site.
+     */
+    open fun query(
         session: JpaSession,
         spec: JpaSpec<T>? = null,
     ): SelectScope<T> = session.raw.select(entity).let { if (spec == null) it else it.where(spec) }

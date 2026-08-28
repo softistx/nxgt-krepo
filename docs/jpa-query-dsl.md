@@ -58,7 +58,59 @@ session
 `join` takes a to-one association, nullable or not, and `joinEach` a to-many, inferring the element
 type from the collection with no reflection at runtime. `JoinType.LEFT` keeps the rows with nothing
 to join to, and asking for a join that was already taken as a different type is refused rather than
-silently ignored. A `joinEach` returns the owner once per element until `distinct()`.
+silently ignored.
+
+**`distinct()` is about the SQL, not about the rows you get back.** A `joinEach` does duplicate the
+owner once per element in the result set — but an entity query de-duplicates by identity before it
+answers, on Hibernate 7, so `select<Purchase>` over a to-many join gives each purchase once with or
+without it. A *projection* over the same join sees every row: three purchases holding three, one and
+no lines are three entities and five projected rows. `FetchJoinTest` measures both. So reach for
+`distinct()` on a projection, and know that it changes the query the database runs rather than the
+list Kotlin receives.
+
+## Fetch joins, and the N+1
+
+```kotlin
+session
+    .select<Purchase> {
+        fetch(Purchase::customer)        // to-one
+        fetchEach(Purchase::lines)       // to-many, whole
+    }.list()
+```
+
+`fetch` and `fetchEach` load the association in the same statement as the owner. **In Hibernate
+Reactive this is not an optimisation, it is the only way**: there is no transparent lazy loading —
+no thread to block on the second select — so reading a `LAZY` association that was not fetched
+throws, inside the session as readily as after it. Leaving associations `EAGER` to dodge that is the
+N+1 by another name: three rows pointing at three different owners cost **three secondary fetches**
+with JPA's `@ManyToOne` default and **none** with a fetch join, which is what `FetchJoinTest` counts
+off Hibernate's own `entityFetchCount`.
+
+The rules, each pinned by a spec:
+
+- **They default to `JoinType.LEFT`**, where `join`/`joinEach` default to `INNER`. A join is a
+  filter; a fetch is about loading, and an inner fetch would quietly drop every owner with no
+  children. Pass `JoinType.INNER` to mean it.
+- **What comes back is a `JoinScope`**, because Hibernate's fetch node is a join too — so a fetched
+  association filters, orders and indexes like any other, and the query does not join twice to do
+  both. Filtering *through* a fetched collection is the one trap: the surviving rows become the whole
+  collection as far as the persistence context knows, so it reads back incomplete and says nothing.
+  Take a separate `joinEach` when both are wanted.
+- **`distinct()` is not needed after a `fetchEach`**, per the paragraph above.
+- **`limit`, `offset` and `page` are refused after a `fetchEach`.** The database applies them to the
+  joined rows, not to the owners: measured, `limit(2)` over three purchases holding three, one and no
+  lines answers with *one* purchase holding *two* of its three lines — fewer owners than asked for,
+  one of them silently incomplete and cached as whole. Page the owners first and fetch their
+  collections in a second query off the ids, or project the columns the page actually shows. A
+  to-one `fetch` does not multiply rows and is left alone.
+- **A `fetch` after a plain `join` on the same attribute is refused.** Hibernate has `isFetched` and
+  `clearFetched` and no way to set it, so a join already taken cannot become a fetch, and asking for
+  both emits two joins to the same table. Fetch first; the `join` after it gives back the same one.
+- **Only `select` has them.** A projection has no owner in its select list to hang a fetch on, so
+  Hibernate refuses one at execution — and a method that is always a runtime failure is better not
+  offered.
+- **One level.** There is no fetch from a fetch; two levels is a criteria query run through the same
+  terminals, which is the same boundary subqueries and window functions sit behind.
 
 The block `select<T> { }` still takes is the same query and the same `where` — it is somewhere to put
 a `val` for a join, and nothing more. Either form, or a mixture, builds the same SQL; a spec compares

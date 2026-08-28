@@ -1,6 +1,7 @@
 package com.strange.jpa.entity
 
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
@@ -11,6 +12,11 @@ import jakarta.persistence.Transient
  * Three entities with real associations between them, for the specs that need a join to be a join
  * rather than a second column. [Thing] is deliberately flat and stays that way; a query DSL cannot
  * be exercised against it.
+ *
+ * **Every association is `LAZY`, including the to-ones.** JPA's default for `@ManyToOne` is EAGER,
+ * which is a select per distinct owner behind any query returning more than one row — measured at
+ * four for three rows in `FetchJoinTest`. These fixtures are what the specs read the rule off, so
+ * they carry the mapping the module recommends rather than the one JPA defaults to.
  *
  * `Purchase` rather than `Order` because `order` is reserved in SQL and every one of these tables is
  * created for real by a spec.
@@ -30,7 +36,7 @@ class Purchase(
     @Id var id: Long = 0,
     var reference: String = "",
     var total: Long = 0,
-    @ManyToOne var customer: Buyer? = null,
+    @ManyToOne(fetch = FetchType.LAZY) var customer: Buyer? = null,
     @OneToMany(mappedBy = "purchase") var lines: MutableList<PurchaseLine> = mutableListOf(),
 ) {
     /** Comparable, sortable by the DSL's types, and not a column — which `PagingTest` needs. */
@@ -43,5 +49,5 @@ class Purchase(
 class PurchaseLine(
     @Id var id: Long = 0,
     var sku: String = "",
-    @ManyToOne var purchase: Purchase? = null,
+    @ManyToOne(fetch = FetchType.LAZY) var purchase: Purchase? = null,
 )
