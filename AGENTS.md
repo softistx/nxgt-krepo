@@ -14,7 +14,7 @@ What exists:
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
-| `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, `CloseGuard`, and the one lenient `Json` the storage and messaging libraries read through |
+| `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, `CloseGuard`, the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and a typed `KProperty` query DSL over Criteria through one suspending builder |

@@ -1,7 +1,7 @@
 package com.strange.jpa.page
 
 import com.strange.common.page.Page
-import com.strange.common.page.PageInfo
+import com.strange.common.page.pageOf
 import com.strange.jpa.JpaPaginationException
 import com.strange.jpa.dsl.SelectScope
 import com.strange.jpa.query.JpaQuery
@@ -72,19 +72,13 @@ suspend fun <T : Any> SelectScope<T>.page(request: PageRequest): Page<T> {
     val limit = request.limit
     if (limit != null) query.limit(limit + 1)
 
-    val rows = query.list()
-    val more = limit != null && rows.size > limit
-    val page = (if (limit == null) rows else rows.take(limit)).let { if (request.forward) it else it.asReversed() }
-
-    return Page(
-        data = page,
-        info =
-            PageInfo(
-                startCursor = page.firstOrNull()?.let { encodeCursor(it, keys) },
-                endCursor = page.lastOrNull()?.let { encodeCursor(it, keys) },
-                hasPreviousPage = if (request.forward) request.cursor != null else more,
-                hasNextPage = if (request.forward) more else request.cursor != null,
-            ),
+    return pageOf(
+        rows = query.list(),
+        limit = limit,
+        forward = request.forward,
+        resumed = request.cursor != null,
+        cursorOf = { encodeCursor(it, keys) },
+        valueOf = { it },
     )
 }
 

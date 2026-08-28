@@ -1,5 +1,6 @@
 package com.strange.mongo.page
 
+import com.strange.common.page.PageWindow
 import com.strange.mongo.InvalidPaginationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -15,28 +16,22 @@ import kotlinx.serialization.json.JsonObject
  *
  * [first] pages forward from [cursor], [last] pages backward from it, and neither means the whole
  * result set. Asking for both is a contradiction and is rejected.
+ *
+ * Those three fields, [PageWindow.limit], [PageWindow.forward] and the rules are `shared-common`'s,
+ * because `shared-jpa` asks for a page with the same three. What stays here is [sort], [filter],
+ * the serialization, and the exception — a caller catching [com.strange.mongo.MongoDataException]
+ * should not have to also catch `shared-common`'s.
  */
 @Serializable
 data class PaginationOptions(
-    val first: Int? = null,
-    val last: Int? = null,
-    val cursor: String? = null,
+    override val first: Int? = null,
+    override val last: Int? = null,
+    override val cursor: String? = null,
     val sort: JsonObject? = null,
     val filter: JsonObject? = null,
-) {
-    /** How many documents this page holds at most, or null when the caller wants all of them. */
-    val limit: Int? = first ?: last
-
-    /** Forward is the default; only an explicit [last] pages backward. */
-    val forward: Boolean = last == null
-
+) : PageWindow {
     init {
-        if (first != null && last != null) {
-            throw InvalidPaginationException("first and last cannot both be set: pick a direction")
-        }
-        if (limit != null && limit < 1) {
-            throw InvalidPaginationException("a page size must be at least 1, got $limit")
-        }
+        check(::InvalidPaginationException)
     }
 
     companion object {
