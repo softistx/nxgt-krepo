@@ -27,7 +27,7 @@ ligne de plomberie.
 - [x] `StrangeColors` — `success` / `info` / `warning` dérivés par material-kolor, le reste délégué à M3
 - [x] `StrangeTheme` enveloppant `MaterialTheme`, tokens sur `CompositionLocal` statiques
 - [x] `StyleScope.colors` / `.scheme` / `.spacing` / `.radii` / `.motion` — les tokens dans un `Style`
-- [ ] Un `StrangeStyles` accessible en `StrangeTheme.styles`, agrégeant les styles de composants
+- [x] Un `StrangeStyles` accessible en `StrangeTheme.styles`, agrégeant les styles de composants
 
 **Motion**
 - [x] `StrangeMotion` — durées nommées par rôle, easings M3, interrupteur `enabled`
@@ -44,7 +44,8 @@ ligne de plomberie.
 - [x] `buttonStyle()` — un `Style` portant ses états `hovered` / `pressed` / `disabled` animés
 - [x] `Button(text, onClick)` et `ButtonSurface { }` avec `style: Style = Style`
 - [x] `IconButton`, `ButtonGroup`
-- [ ] `ResponsiveButton`
+- [x] `StrangeIcons` — dix vecteurs tenus ici, faute de pack d'icônes atteignable
+- [x] `ResponsiveButton`
 
 **Affichage**
 - [x] `Card`
@@ -57,9 +58,14 @@ ligne de plomberie.
 
 **Tests**
 - [x] Dérivation des rayons et monotonie de l'échelle d'espacement
-- [ ] La matrice `variant × color` est totale — aucune combinaison sans couleur
+- [x] Le jeu d'icônes : chaque tracé SVG écrit à la main est réellement analysable
+- [x] `Emphasis` : trois niveaux distincts, décroissants, aucun invisible
 - [x] `strangeColors` : même graine, même palette ; clair et sombre diffèrent
-- [ ] `TypographyVariant` → `TextStyle` est total
+- [ ] ~~La matrice `variant × color` est totale~~ et ~~`TypographyVariant` → `TextStyle` est
+      total~~ — **non écrits, et volontairement** : les deux sont des `when` exhaustifs sur une
+      enum, donc déjà garantis à la compilation ; un spec ne pourrait pas échouer. Ce qui reste
+      vraiment à vérifier — qu'aucune combinaison ne rende une couleur non spécifiée — demande
+      un rendu, et il n'y a pas encore de harnais de test Compose ici (phase 2)
 - [x] Les bornes de `StrangeMotion`, et `enabled = false` met les durées à zéro
 
 **Catalogue de démonstration**
@@ -72,9 +78,10 @@ ligne de plomberie.
 
 **Documentation**
 - [x] `docs/roadmap.md` (ce fichier)
-- [ ] `README.md` — la forme de la librairie, comment `StrangeTheme` s'insère, comment ajouter un composant
-- [ ] `docs/tokens.md` — le vocabulaire des tokens
-- [ ] `docs/components.md` — un composant par ligne, ses paramètres, son id de story
+- [x] `README.md` — la forme de la librairie, comment `StrangeTheme` s'insère, comment ajouter un composant
+- [x] `docs/tokens.md` — le vocabulaire des tokens
+- [x] `docs/components.md` — un composant par ligne, ses paramètres, son id de story
+- [ ] `examples/material-demo/README.md` — la forme de la démo, comment ajouter une story
 - [ ] Lignes ajoutées aux tableaux d'`AGENTS.md` et du `README.md` racine
 
 ---

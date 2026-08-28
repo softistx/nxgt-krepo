@@ -2,11 +2,13 @@ package com.strange.material.motion
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -56,6 +58,19 @@ object Transitions {
         get() =
             fadeOut(StrangeTheme.motion.quickSpec()) +
                 scaleOut(StrangeTheme.motion.quickSpec(), targetScale = 0.92f)
+
+    // A label appearing beside something already on screen — a button's text next to its icon.
+    val widen: EnterTransition
+        @Composable @ReadOnlyComposable
+        get() =
+            fadeIn(StrangeTheme.motion.quickSpec()) +
+                expandHorizontally(StrangeTheme.motion.standardSpec())
+
+    val narrow: ExitTransition
+        @Composable @ReadOnlyComposable
+        get() =
+            fadeOut(StrangeTheme.motion.quickSpec()) +
+                shrinkHorizontally(StrangeTheme.motion.standardSpec())
 
     /** Content that takes or gives back vertical room: an accordion, a helper message. */
     val expand: EnterTransition
