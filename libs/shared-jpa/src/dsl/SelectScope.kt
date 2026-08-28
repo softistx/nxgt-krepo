@@ -2,28 +2,22 @@ package com.strange.jpa.dsl
 
 import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Root
+import org.hibernate.reactive.stage.Stage
 
 /**
- * The `select { }` block, which returns the entity itself.
+ * A query returning the entity itself.
  *
- * ```kotlin
- * session.select<Purchase> {
- *     val customer = join(Purchase::customer)
- *     where { this[Purchase::total] gt 100L }
- *     where { customer[Buyer::name] eq "ada" }
- *     orderBy { desc(this[Purchase::total]) }
- * }.limit(20).list()
- * ```
- *
- * Everything it can do is on [QueryScope]; this only fixes the row to the entity. Paging and the
- * terminals are elsewhere again: `select` answers with a [com.strange.jpa.query.JpaQuery], so
- * `limit`, `offset`, `readOnly`, `list`, `single` and `count` are the same ones an HQL query has,
- * and there is one set of them rather than two.
+ * Everything it can do is on [QueryScope]; this only fixes the row to the entity. `select` answers
+ * with one of these, so the restrictions, the ordering, the paging and the terminals are all reached
+ * by chaining onto it — and, for a join that wants a name, by the block it was started with.
  */
 @JpaDsl
 class SelectScope<T : Any>
     @PublishedApi
     internal constructor(
+        producer: Stage.QueryProducer,
         query: CriteriaQuery<T>,
         from: Root<T>,
-    ) : QueryScope<T, T>(query, from)
+    ) : QueryScope<T, T, SelectScope<T>>(producer, query, from) {
+        override val taken: MutableMap<String, JoinScope<T, *>> = mutableMapOf()
+    }

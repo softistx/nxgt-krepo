@@ -208,23 +208,24 @@ Two of these in a row are two transactions. Anything that touches the database t
 
 ## The query DSL
 
-`select<T> { }` builds the same query from the entity's properties instead of a string. It answers
-with the same builder `query<T>(hql)` does, so the terminals above are the terminals here.
+`select<T>()` builds the same query from the entity's properties instead of a string, and answers
+with the query itself: everything that shapes it chains, and the terminals are the ones an HQL query
+has.
 
 ```kotlin
 session
-    .select<Purchase> {
-        val buyer = join(Purchase::customer)
-        where { Purchase::total gt 100L }
-        where { buyer[Buyer::name] eq "ada" }
-        orderBy { desc(Purchase::total) }
-    }.limit(20)
+    .select<Purchase>()
+    .where { Purchase::total gt 100L }
+    .where { join(Purchase::customer)[Buyer::name] eq "ada" }
+    .orderBy { desc(Purchase::total) }
+    .limit(20)
     .list()
 ```
 
-**Every call adds; none replaces.** Two `where` blocks are one `and`, two `orderBy` blocks are two
-sort keys in the order written, and a `where` block may answer with `null` to add nothing at all — so
-a query assembled from filters the caller learns one at a time needs no string concatenation.
+**Every call adds; none replaces.** Two `where` calls are one `and`, two `orderBy` calls are two sort
+keys in the order written, and a `where` may answer with `null` to add nothing at all — so a query
+assembled from filters the caller learns one at a time needs no string concatenation. Nothing runs
+until a terminal: `list()`, `first()`, `single()`, `singleOrNull()`, `count()`, or `page(request)`.
 
 **A predicate is written straight off the property, and it is still fully typed.** The receiver of
 `eq`, `gt` and the rest is `KMutableProperty1`, not `KProperty1`, and that is the whole design:
@@ -236,60 +237,80 @@ is 'String', but 'Long' was expected*. Kotlin's own standard library solves this
 
 An entity's attributes are `var`, since Hibernate writes them, so that is the ordinary case rather
 than a restriction. Anything reached through a join or a function goes through the path form and the
-same operators on `Expression` — `buyer[Buyer::name] eq "ada"`, `lower(this[Buyer::name]) eq term` —
-and so does a `val` attribute.
+same operators on `Expression` — `join(Purchase::customer)[Buyer::name] eq "ada"`,
+`lower(this[Buyer::name]) eq term` — and so does a `val` attribute.
 
-A join is held as a value and read from as often as the query needs it — the `where`, the `orderBy`,
-and the projection when that lands — instead of being re-declared and re-joined each time. `join`
-takes a to-one association, nullable or not, and `joinEach` a to-many, inferring the element type
-from the collection with no reflection at runtime. `JoinType.LEFT` keeps the rows with nothing to
-join to; a `joinEach` returns the owner once per element until `distinct()`.
+**A join is remembered, so asking for it twice gives the same join rather than a second one.** That
+is what lets `join` be chained like everything else: it can be taken where it is used instead of
+being declared ahead of every clause that reads it. Holding it in a `val` still reads better when
+several clauses use it, and now means the same thing:
+
+```kotlin
+session
+    .select<Purchase>()
+    .where { join(Purchase::customer)[Buyer::name] eq "ada" }    // taken here…
+    .orderBy { asc(join(Purchase::customer)[Buyer::id]) }        // …and the same one here
+    .list()
+```
+
+`join` takes a to-one association, nullable or not, and `joinEach` a to-many, inferring the element
+type from the collection with no reflection at runtime. `JoinType.LEFT` keeps the rows with nothing
+to join to, and asking for a join that was already taken as a different type is refused rather than
+silently ignored. A `joinEach` returns the owner once per element until `distinct()`.
+
+The block `select<T> { }` still takes is the same query and the same `where` — it is somewhere to put
+a `val` for a join, and nothing more. Either form, or a mixture, builds the same SQL; a spec compares
+all three.
 
 The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both ends included),
 `like` `notLike` `ilike` `oneOf`, `isNull()` `isNotNull()`, and `and` `or` `!` with `all(…)` and
 `any(…)` over a list — and `asc`/`desc` take a property the same way. `eq null` is not `is null` — it
 renders `= null`, which is never true in SQL, so ask with `isNull()`.
 
-`update<T> { }` and `delete<T> { }` are the write side, answering with the same `JpaMutation`
-`mutate(hql)` does — and carrying the same warning: they go straight to the database, past everything
-the session knows.
+`update<T> { }` and `delete<T>()` are the write side. They restrict through the same `where` and end
+at `execute()`, which answers with the number of rows touched — and they carry the same warning
+`mutate(hql)` does: they go straight to the database, past everything the session knows.
 
 ```kotlin
 session
-    .update<Purchase> {
-        set(Purchase::total, this[Purchase::total] + 10L)
-        where { Purchase::reference like "P-%" }
-    }.execute()
+    .update<Purchase> { set(Purchase::total, this[Purchase::total] + 10L) }
+    .where { Purchase::reference like "P-%" }
+    .execute()
+
+session.delete<Purchase>().where { Purchase::total lt 1L }.execute()
 ```
 
-An assignment is `set(property, value)`, and the value can be an expression — which is how a counter
-is incremented without reading it first: one statement, one round trip, and correct when two of them
-run at once. Neither statement can join
-— that is JPA's rule for a bulk statement, so the scopes simply do not offer it rather than offering
-a method that always fails when Hibernate renders it.
+The assignments are the update's block because they are what an update *is*; a delete has nothing to
+assign, so it has no block. An assignment is `set(property, value)`, and the value can be an
+expression — which is how a counter is incremented without reading it first: one statement, one round
+trip, and correct when two of them run at once. Neither statement can join — that is JPA's rule for a
+bulk statement, so the scopes simply do not offer it rather than offering a method that always fails
+when Hibernate renders it.
 
 **A bulk statement with nothing restricting it is refused.** `JpaUnrestrictedMutationException`,
-unless the block says `everyRow()`. HQL allows `delete from Purchase` and so does this — but only out
-loud, because a DSL statement is assembled from parts and a `where` block adds nothing when its block
-answers null. A statement whose every filter turned out not to apply would otherwise be a statement
-against the whole table.
+unless it says `everyRow()`. HQL allows `delete from Purchase` and so does this — but only out loud,
+because a DSL statement is assembled from parts and a `where` adds nothing when its block answers
+null. A statement whose every filter turned out not to apply would otherwise be a statement against
+the whole table.
 
-On a stateless session, `update(entity)` and `update { }` are both there and both resolve — the first
-is the stateless vocabulary, the second is this DSL. That works on the wrapper; on `Stage.Session`
-itself a member always beats an extension, which is why the module builds these through a name of its
-own rather than through `raw.update`.
+On a stateless session, `update(entity)` and `update<T> { }` are both there and both resolve — the
+first is the stateless vocabulary, the second is this DSL. That works on the wrapper; on
+`Stage.Session` itself a member always beats an extension, which is why the module builds these
+through a name of its own rather than through `raw.update`.
 
 `project<T, R> { }` returns something other than the entity — a summary, one column, a count. The
-block's last expression is what a row is:
+block's last expression is what a row is, which is why this is the one entry point whose block is
+required; everything after it is the chain and the terminals every other query has:
 
 ```kotlin
 class Summary(val reference: String, val buyer: String)
 
-session.project<Purchase, Summary> {
-    val buyer = join(Purchase::customer)
-    where { Purchase::total gt 100L }
-    construct(::Summary, Purchase::reference, buyer[Buyer::name])
-}.list()
+session
+    .project<Purchase, Summary> {
+        construct(::Summary, Purchase::reference, join(Purchase::customer)[Buyer::name])
+    }.where { Purchase::total gt 100L }
+    .orderBy { desc(Purchase::total) }
+    .list()
 ```
 
 **The constructor reference types the arguments.** Criteria takes a `Class` and a list of selections
@@ -313,8 +334,8 @@ forty.
 
 The function vocabulary is ordinary functions, not scope methods, so they nest the way they read:
 `lower` `upper` `trim` `length` `substring` `concat` `abs` `sqrt` `mod` `coalesce` `nullIf`, and the
-aggregates `count` `countDistinct` `sum` `avg` `min` `max` `least` `greatest`. `JpaQuery.count()` is
-a different thing worth not confusing with the aggregate: that one rewrites the whole query into a
+aggregates `count` `countDistinct` `sum` `avg` `min` `max` `least` `greatest`. The `count()` terminal
+is a different thing worth not confusing with the aggregate: that one rewrites the whole query into a
 count of its rows, which is what a pager needs.
 
 Two escapes, for what is not named:
@@ -337,19 +358,21 @@ When a terminal has to name the query in an exception it renders the tree back t
 
 ## Pagination
 
-`selectPage<T>(request) { }` returns a `Page<T>` — the rows plus a Relay-shaped `PageInfo` of
-`startCursor`, `endCursor`, `hasNextPage`, `hasPreviousPage`. Both are `shared-common`'s, so
-`shared-mongo`'s `findPage` answers with the same two types.
+`page(request)` is a terminal like `list()`, and answers with a `Page<T>` — the rows plus a
+Relay-shaped `PageInfo` of `startCursor`, `endCursor`, `hasNextPage`, `hasPreviousPage`. Both types
+are `shared-common`'s, so `shared-mongo`'s `findPage` answers with the same two.
 
 ```kotlin
-val page =
-    session.selectPage<Purchase>(PageRequest.first(20)) {
-        where { Purchase::total gt 100L }
-        sortBy(Purchase::total, descending = true)
-        sortBy(Purchase::id)
-    }
+fun query() =
+    session
+        .select<Purchase>()
+        .where { Purchase::total gt 100L }
+        .sortBy(Purchase::total, descending = true)
+        .sortBy(Purchase::id)
 
-val next = session.selectPage<Purchase>(PageRequest.first(20, page.info.endCursor)) { … }
+val page = query().page(PageRequest.first(20))
+
+val next = query().page(PageRequest.first(20, page.info.endCursor))   // the same query, built again
 ```
 
 It pages by **keyset**, not by `offset`. `offset(n)` makes the database walk and discard n rows, so a
@@ -360,8 +383,8 @@ two pages and checks exactly that.
 
 **`sortBy`, not `orderBy`.** A cursor is the sort key of the row it points at, so the page has to
 read those values back off the row that came out; `orderBy` takes an expression and there is no way
-back from one to a value. A paged block that uses `orderBy` is refused rather than quietly paged
-along a key its cursors do not carry.
+back from one to a value. A query that used `orderBy` is refused rather than quietly paged along a
+key its cursors do not carry. Without a `page`, `sortBy` is simply an ordering.
 
 **The last sort key has to be the entity's identifier**, and a sort that does not end in it is a
 `JpaPaginationException` naming what to add. Keyset pagination resumes from a key, so the key has to

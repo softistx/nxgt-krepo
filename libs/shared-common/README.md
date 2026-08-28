@@ -118,13 +118,13 @@ and are three different things up close.
 ## One page, whichever store it came from
 
 `Page<T>` is a list and a Relay-shaped `PageInfo` — `startCursor`, `endCursor`, `hasNextPage`,
-`hasPreviousPage`. `shared-mongo`'s `findPage` and `shared-jpa`'s `selectPage` both answer with it,
+`hasPreviousPage`. `shared-mongo`'s `findPage` and `shared-jpa`'s `page` both answer with it,
 and that is the whole reason it is here: a route that pages over either store maps the data and
 leaves the cursors alone, with `Page.map`, and does not care which one it was.
 
 What is *not* here is the request. Mongo's `PaginationOptions` carries a filter and a sort as raw
 Mongo JSON because that is how they arrive from an HTTP client; JPA's `PageRequest` carries neither,
-because both are said in Kotlin in the query block. They look alike from a distance and are two
+because both are said in Kotlin on the query itself. They look alike from a distance and are two
 different things up close — the same reason there is no shared codec interface below.
 
 ## What belongs here

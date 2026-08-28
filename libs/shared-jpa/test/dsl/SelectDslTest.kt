@@ -128,6 +128,43 @@ class SelectDslTest :
                 }
             }
 
+            scenario("asked for twice is one join, not two") {
+                seeded { jpa ->
+                    // No `val`, and the join named in two separate chained lambdas: if each call
+                    // took its own join, the second would be a second row source and the two
+                    // conditions could never both hold.
+                    val found =
+                        jpa.session { session ->
+                            session
+                                .select<Purchase>()
+                                .where { join(Purchase::customer)[Buyer::name] eq "ada" }
+                                .where { join(Purchase::customer)[Buyer::tier] eq "gold" }
+                                .orderBy { asc(join(Purchase::customer)[Buyer::id]) }
+                                .orderBy { asc(Purchase::reference) }
+                                .list()
+                        }
+
+                    found.map { it.reference } shouldContainExactly listOf("P-1", "P-2")
+                }
+            }
+
+            scenario("asked for twice as two different kinds is refused, rather than quietly inner") {
+                seeded { jpa ->
+                    val refused =
+                        shouldThrow<IllegalStateException> {
+                            jpa.session { session ->
+                                session
+                                    .select<Purchase>()
+                                    .where { join(Purchase::customer)[Buyer::name] eq "ada" }
+                                    .where { join(Purchase::customer, JoinType.LEFT)[Buyer::tier].isNull() }
+                                    .list()
+                            }
+                        }
+
+                    refused.message shouldContain "already joined as INNER and this asks for LEFT"
+                }
+            }
+
             scenario("inner drops the rows with nothing to join to, left keeps them") {
                 seeded { jpa ->
                     val (inner, left) =
@@ -173,6 +210,44 @@ class SelectDslTest :
                 }
             }
         }
+
+        feature("the chain and the block")
+            .config(enabled = JpaTestDatabase.available) {
+                scenario("say the same query, and may be mixed") {
+                    seeded { jpa ->
+                        val chained =
+                            jpa.session { session ->
+                                session
+                                    .select<Purchase>()
+                                    .where { Purchase::total gt 100L }
+                                    .orderBy { asc(Purchase::reference) }
+                                    .limit(2)
+                                    .list()
+                            }
+                        val blocked =
+                            jpa.session { session ->
+                                session
+                                    .select<Purchase> {
+                                        where { Purchase::total gt 100L }
+                                        orderBy { asc(Purchase::reference) }
+                                        limit(2)
+                                    }.list()
+                            }
+                        val mixed =
+                            jpa.session { session ->
+                                session
+                                    .select<Purchase> { where { Purchase::total gt 100L } }
+                                    .orderBy { asc(Purchase::reference) }
+                                    .limit(2)
+                                    .list()
+                            }
+
+                        chained.map { it.reference } shouldContainExactly listOf("P-1", "P-3")
+                        blocked.map { it.reference } shouldContainExactly chained.map { it.reference }
+                        mixed.map { it.reference } shouldContainExactly chained.map { it.reference }
+                    }
+                }
+            }
 
         feature("the operators").config(enabled = JpaTestDatabase.available) {
             suspend fun references(block: SelectScope<Purchase>.() -> Unit): List<String> =
