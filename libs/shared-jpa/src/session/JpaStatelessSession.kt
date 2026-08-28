@@ -2,10 +2,13 @@ package com.strange.jpa.session
 
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.dsl.DeleteScope
+import com.strange.jpa.dsl.GraphScope
+import com.strange.jpa.dsl.JpaEntityGraph
 import com.strange.jpa.dsl.ProjectScope
 import com.strange.jpa.dsl.SelectScope
 import com.strange.jpa.dsl.UpdateScope
 import com.strange.jpa.dsl.deleteOn
+import com.strange.jpa.dsl.entityGraph
 import com.strange.jpa.dsl.project
 import com.strange.jpa.dsl.select
 import com.strange.jpa.dsl.updateOn
@@ -39,6 +42,26 @@ class JpaStatelessSession internal constructor(
 
     /** By id, or [JpaNotFoundException]. */
     suspend inline fun <reified T : Any> get(id: Any): T = find<T>(id) ?: throw JpaNotFoundException(T::class, id)
+
+    /**
+     * By id, loading what [graph] plans.
+     *
+     * Worth more here than on a stateful session, not less: a stateless one has no persistence
+     * context, so nothing can be initialised after the fact at all.
+     */
+    suspend fun <T : Any> find(
+        id: Any,
+        graph: JpaEntityGraph<T>,
+    ): T? = raw.get(graph.raw, id).await()
+
+    /** The same, or [JpaNotFoundException]. */
+    suspend fun <T : Any> get(
+        id: Any,
+        graph: JpaEntityGraph<T>,
+    ): T = find(id, graph) ?: throw JpaNotFoundException(graph.type, id)
+
+    /** A fetch plan for [T], built from its properties — see [JpaEntityGraph]. */
+    inline fun <reified T : Any> entityGraph(noinline block: GraphScope<T>.() -> Unit): JpaEntityGraph<T> = raw.entityGraph(block)
 
     /** Inserts them, one statement each, now. */
     suspend fun insert(vararg entities: Any) {

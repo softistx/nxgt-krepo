@@ -483,8 +483,11 @@ the same each time, and the mistakes are the same each time too.
   `entityFetchCount`, which is the counter to reach for — `prepareStatementCount` reads zero,
   because there is no JDBC under the Vert.x pool. So: annotate every association `LAZY`, name what
   the query needs with `fetch` / `fetchEach`, and where the caller only reads a few columns, project
-  instead and load no entity at all. `docs/jpa-query-dsl.md` has the rules, including why `limit`,
-  `offset` and `page` are refused after a `fetchEach`.
+  instead and load no entity at all. Where there is no query to join on — `find`, and the repository's
+  by-identifier reads — the answer is an entity graph: `session.entityGraph<Purchase> { … }` is a
+  fetch plan that is also a value, so a `find` and a `select` cannot disagree about what they load.
+  `docs/jpa-query-dsl.md` has the rules for both, including why `limit`, `offset` and `page` are
+  refused whenever a query loads a collection.
 - **Keep the fast tests fast and the slow ones optional.** Timing claims — a full buffer pausing, a
   strategy committing when it says it does, partitions running concurrently — belong on Kafka's own
   `MockConsumer`/`MockProducer` and run in about two seconds. A real server is for behaviour that

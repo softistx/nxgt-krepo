@@ -281,15 +281,31 @@ The third answer is often the best one: **a projection reads the columns it name
 entity at all**, so there is nothing to fetch and nothing to lazily initialise. A list page showing
 a reference, a total and a buyer's name wants `project`, not `select` with two fetches.
 
-`JpaRepository` answers with entities, so the same question reaches it. Its `query(session, spec)` is
-the seam — a `JpaSpec` is a `Joins` receiver and deliberately cannot fetch, because the same spec has
-to fit a projection, which has no owner to hang a fetch on. A subclass that always needs the buyer
-gives its entity a method that says so once.
+**A load by identifier has no query to hang a join on**, which is where a fetch plan comes in:
+
+```kotlin
+val withBuyer = session.entityGraph<Purchase> { add(Purchase::customer) }
+
+session.find(1L, withBuyer)
+session.select<Purchase>().graph(withBuyer).list()
+```
+
+An `EntityGraph` is the same idea as a fetch join said as a value rather than inline, and it reaches
+two places a join cannot: `find` — including `JpaRepository.findById` and `requireById` — and more
+than one level of nesting. Being a value is the third thing: one plan applied to a `find` and to a
+`select` cannot disagree about what "a purchase with its buyer" means, and a plan built once at
+startup serves every request.
+
+`JpaRepository` answers with entities, so the same question reaches it in both directions. By
+identifier, it takes a plan. For the multi-row reads, `query(session, spec)` is the seam — a
+`JpaSpec` is a `Joins` receiver and deliberately cannot fetch, because the same spec has to fit a
+projection, which has no owner to hang a fetch on. A subclass that always needs the buyer gives its
+entity a method that says so once.
 
 The refusals are in [`docs/jpa-query-dsl.md`](../../docs/jpa-query-dsl.md) with the rest of the
-vocabulary; the one worth knowing here is that `limit`, `offset` and `page` are refused after a
-`fetchEach`, because the database applies them to the joined rows and hands back a page whose last
-owner holds part of its collection.
+vocabulary; the one worth knowing here is that `limit`, `offset` and `page` are refused when a query
+loads a collection — by `fetchEach` or by a plan that `addEach`-es one — because the database applies
+them to the joined rows and hands back a page whose last owner holds part of its collection.
 
 ## Pagination
 
