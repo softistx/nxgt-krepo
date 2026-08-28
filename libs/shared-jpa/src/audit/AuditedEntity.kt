@@ -18,7 +18,14 @@ import kotlin.time.Instant
  * run inside the flush, which means *when* is stamped exactly when a row is actually written — an
  * update that the dirty check decides is a no-op fires neither callback and moves no timestamp. A
  * service comparing fields could not tell the difference, which is why this half is not the
- * service's job. The other half is: only a service knows the principal, so `JpaCrudService` fills in
+ * service's job.
+ *
+ * **With one caveat, and it is the service's doing rather than Hibernate's.** `JpaCrudService`
+ * stamps [lastModifiedBy] before the flush, so an update that changes nothing else but arrives from
+ * a *different* principal than the one on the row is not a no-op: that assignment is itself a
+ * change, `@PreUpdate` fires, and [lastModifiedAt] moves. That is the intended reading — the row
+ * records who touched it last, and somebody did — but it means "a no-op moves nothing" holds only
+ * while the principal is unchanged. `AuditedEntityTest` pins both halves. The other half is: only a service knows the principal, so `JpaCrudService` fills in
  * [createdBy] and [lastModifiedBy].
  *
  * The four names are `shared-mongo`'s `AuditMetadata`, so a caller reading an audit trail asks the

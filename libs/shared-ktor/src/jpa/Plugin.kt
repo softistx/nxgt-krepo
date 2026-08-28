@@ -4,6 +4,7 @@ import com.strange.jpa.Jpa
 import com.strange.jpa.JpaConfig
 import com.strange.ktor.resource
 import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.util.AttributeKey
 import jakarta.persistence.AttributeConverter
 import kotlinx.coroutines.runBlocking
