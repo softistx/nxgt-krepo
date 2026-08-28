@@ -2,6 +2,7 @@ package com.strange.jpa.query
 
 import com.strange.jpa.JpaNoResultException
 import com.strange.jpa.JpaNonUniqueResultException
+import jakarta.persistence.EntityGraph
 import jakarta.persistence.NoResultException
 import jakarta.persistence.NonUniqueResultException
 import kotlinx.coroutines.future.await
@@ -48,6 +49,9 @@ class JpaQuery<R>
         /** The same, for all of them at once: `parameters("customer" to id, "since" to at)`. */
         fun parameters(vararg values: Pair<String, Any?>): JpaQuery<R> =
             apply { values.forEach { (name, value) -> query.setParameter(name, value) } }
+
+        /** The fetch plan to load with — see `com.strange.jpa.dsl.entityGraph`. */
+        fun plan(graph: EntityGraph<R>): JpaQuery<R> = apply { query.setPlan(graph) }
 
         /** At most this many rows. */
         fun limit(count: Int): JpaQuery<R> = apply { query.setMaxResults(count) }
