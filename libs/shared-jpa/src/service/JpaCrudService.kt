@@ -124,10 +124,15 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
         ids: Collection<ID>,
     ): Int {
         transactional(session, "deleteAll")
-        beforeDelete(ids, session)
-        val deleted = repository.deleteByIds(session, ids)
+        // The ids that are really there, not the ones that were asked for. A hook publishes an event
+        // or evicts a cache entry per id, and doing that for a row that never existed is a lie told
+        // inside the transaction that correctly reports how many went. `existingIds` is one query
+        // returning one column, so knowing costs a great deal less than getting it wrong.
+        val present = repository.existingIds(session, ids)
+        beforeDelete(present, session)
+        val deleted = repository.deleteByIds(session, present)
         session.flush()
-        afterDelete(ids, session)
+        afterDelete(present, session)
         return deleted
     }
 

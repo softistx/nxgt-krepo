@@ -4,7 +4,8 @@ import com.strange.common.page.Page
 import com.strange.common.page.PageInfo
 import com.strange.jpa.JpaPaginationException
 import com.strange.jpa.dsl.SelectScope
-import kotlinx.coroutines.future.await
+import com.strange.jpa.query.JpaQuery
+import com.strange.jpa.query.hql
 
 /**
  * One page of a query, cut by keyset rather than by `offset`.
@@ -64,11 +65,14 @@ suspend fun <T : Any> SelectScope<T>.page(request: PageRequest): Page<T> {
     val criteria = build(resume)
     criteria.orderBy(ordersOf(builder, from, keys, request.forward))
 
-    val query = producer.createQuery(criteria)
+    // Through JpaQuery rather than the raw Stage query, so a paged query that fails names itself in
+    // HQL like every other one, and `readOnly` is applied rather than quietly lost.
+    val query = JpaQuery<T>({ criteria.hql() }, producer.createQuery(criteria))
+    if (resultsReadOnly) query.readOnly()
     val limit = request.limit
-    if (limit != null) query.setMaxResults(limit + 1)
+    if (limit != null) query.limit(limit + 1)
 
-    val rows = query.resultList.await()
+    val rows = query.list()
     val more = limit != null && rows.size > limit
     val page = (if (limit == null) rows else rows.take(limit)).let { if (request.forward) it else it.asReversed() }
 
@@ -105,5 +109,35 @@ private fun <T : Any> SelectScope<T>.checkSort() {
             "the sort on $entity ends with '${keys.last().name}', which is not unique: " +
                 "add sortBy($entity::$identifier) last, or rows will be skipped and repeated",
         )
+    }
+
+    // A page takes its size from the request, so these would be silently overruled by it. Refused
+    // rather than ignored, the way `orderBy` above is: a call that means nothing should say so.
+    if (rowLimit != null || rowOffset != null) {
+        throw JpaPaginationException(
+            "a paged query sizes itself from PageRequest, not limit/offset: " +
+                "pass the size to first(n) or last(n) and drop the builder call",
+        )
+    }
+
+    // Both of these are about failing on the page nobody follows rather than the page after it.
+    // A cursor is written by `toString()` and read back through a table, so a key the table cannot
+    // parse — or an attribute the mapping does not have — issues page one and a cursor that looks
+    // fine, and breaks only when somebody uses it.
+    keys.forEach { key ->
+        val attribute =
+            runCatching { from.model.getSingularAttribute(key.name) }
+                .getOrElse {
+                    throw JpaPaginationException(
+                        "$entity has no mapped attribute '${key.name}' to page by: " +
+                            "a sort key has to be a persistent column, not a computed or @Transient one",
+                    )
+                }
+        if (!carriesCursorValue(attribute.javaType)) {
+            throw JpaPaginationException(
+                "a ${attribute.javaType.name} cannot be a cursor key, so '${key.name}' " +
+                    "cannot be sorted on in a paged query",
+            )
+        }
     }
 }

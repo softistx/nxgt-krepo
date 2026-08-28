@@ -182,6 +182,51 @@ class PagingTest :
                 }
             }
 
+            scenario("a limit, which the request would silently overrule") {
+                seeded { jpa ->
+                    shouldThrow<JpaPaginationException> {
+                        jpa.session { session ->
+                            session
+                                .select<Purchase>()
+                                .limit(5)
+                                .sortBy(Purchase::id)
+                                .page(PageRequest.first(2))
+                        }
+                    }.message.shouldNotBeNull() shouldContain "sizes itself from PageRequest"
+                }
+            }
+
+            scenario("an offset, for the same reason") {
+                seeded { jpa ->
+                    shouldThrow<JpaPaginationException> {
+                        jpa.session { session ->
+                            session
+                                .select<Purchase>()
+                                .offset(2)
+                                .sortBy(Purchase::id)
+                                .page(PageRequest.first(2))
+                        }
+                    }.message.shouldNotBeNull() shouldContain "sizes itself from PageRequest"
+                }
+            }
+
+            scenario("a sort key that is not a column, on the first page rather than the second") {
+                seeded { jpa ->
+                    // `label` is @Transient. Without the check this pages happily and hands back a
+                    // cursor, and only the request that follows it fails — out of Hibernate, deep in
+                    // a CompletionStage, naming neither the key nor the entity.
+                    shouldThrow<JpaPaginationException> {
+                        jpa.session { session ->
+                            session
+                                .select<Purchase>()
+                                .sortBy(Purchase::label)
+                                .sortBy(Purchase::id)
+                                .page(PageRequest.first(2))
+                        }
+                    }.message.shouldNotBeNull() shouldContain "no mapped attribute 'label'"
+                }
+            }
+
             scenario("a paged query with no sort at all") {
                 seeded { jpa ->
                     shouldThrow<JpaPaginationException> {
@@ -297,6 +342,26 @@ class PagingTest :
                             }.map { it.reference }
 
                     paged shouldContainExactly plain
+                }
+            }
+
+            scenario("readOnly reaches the query, rather than being dropped on the way") {
+                seeded { jpa ->
+                    jpa.transaction { session ->
+                        val page =
+                            session
+                                .select<Purchase>()
+                                .readOnly()
+                                .sortBy(Purchase::id)
+                                .page(PageRequest.first(2))
+
+                        page.data.first().reference = "MUTATED"
+                    }
+
+                    // A read-only result keeps no snapshot, so there is nothing to dirty-check and
+                    // the change is never written. Before this went through JpaQuery, `readOnly()`
+                    // on a paged query was silently a no-op and this row came back as MUTATED.
+                    jpa.session { session -> session.get<Purchase>(1L).reference } shouldBe "P-1"
                 }
             }
         }
