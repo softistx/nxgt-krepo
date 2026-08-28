@@ -67,11 +67,15 @@ internal open class PurchaseService(
         ran += "afterUpdate"
     }
 
+    /** What the delete hooks were actually handed, which is the half a name alone cannot pin. */
+    val deleteHookIds = mutableListOf<Collection<Long>>()
+
     override suspend fun beforeDelete(
         ids: Collection<Long>,
         session: JpaSession,
     ) {
         ran += "beforeDelete"
+        deleteHookIds += ids.toList()
     }
 
     override suspend fun afterDelete(
@@ -79,5 +83,6 @@ internal open class PurchaseService(
         session: JpaSession,
     ) {
         ran += "afterDelete"
+        deleteHookIds += ids.toList()
     }
 }

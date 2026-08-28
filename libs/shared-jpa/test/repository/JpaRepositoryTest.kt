@@ -1,12 +1,15 @@
 package com.strange.jpa.repository
 
 import com.strange.jpa.Jpa
+import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaNotFoundException
+import com.strange.jpa.JpaOutsideTransactionException
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.dsl.eq
 import com.strange.jpa.dsl.get
 import com.strange.jpa.dsl.gt
 import com.strange.jpa.entity.Buyer
+import com.strange.jpa.entity.Keyed
 import com.strange.jpa.entity.Purchase
 import com.strange.jpa.entity.PurchaseLine
 import com.strange.jpa.entity.Ticket
@@ -171,6 +174,55 @@ class JpaRepositoryTest :
             }
         }
 
+        // The guard used to live only in JpaCrudService, one layer up, while this class is public,
+        // open, and what a custom subclass writes against.
+        feature("a write with no transaction").config(enabled = JpaTestDatabase.available) {
+            scenario("is refused rather than discarded, by every write on the repository") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        val refused =
+                            listOf<suspend () -> Any?>(
+                                { purchases.insert(session, Purchase(9, "P-9", 1, null)) },
+                                { purchases.insertAll(session, listOf(Purchase(10, "P-10", 1, null))) },
+                                { purchases.update(session, Purchase(1, "P-1", 999, null)) },
+                                { purchases.delete(session, purchases.requireById(session, 1L)) },
+                                { purchases.deleteById(session, 1L) },
+                                { purchases.deleteByIds(session, listOf(1L, 2L)) },
+                            )
+                        refused.forEach { write ->
+                            shouldThrow<JpaOutsideTransactionException> { write() }
+                                .message shouldContain "needs a transaction"
+                        }
+                    }
+
+                    // And nothing was written: the point of refusing is that the alternative is a
+                    // call that reports success and left no row.
+                    jpa.session { purchases.count(it) } shouldBe 3L
+                }
+            }
+
+            scenario("names the operation and the entity, so the message says which call it was") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        shouldThrow<JpaOutsideTransactionException> { purchases.deleteById(session, 1L) }
+                            .let {
+                                it.operation shouldBe "deleteById"
+                                it.type shouldBe Purchase::class
+                            }
+                    }
+                }
+            }
+
+            scenario("does not touch the reads, which are an ordinary thing to want outside one") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        purchases.count(session) shouldBe 3L
+                        purchases.findById(session, 1L).shouldNotBeNull()
+                    }
+                }
+            }
+        }
+
         feature("the entity it is over").config(enabled = JpaTestDatabase.available) {
             scenario("comes off the property reference, with nothing naming the class") {
                 purchases.entity shouldBe Purchase::class
@@ -193,9 +245,19 @@ class JpaRepositoryTest :
                 }
             }
 
+            scenario("is refused when the reference names a class that is not an entity") {
+                // The mirror of the scenario above, and the case it used to get wrong: `Keyed::id`
+                // type-checks as JpaRepository<Keyed, Long> and used to build happily, failing only
+                // on the first query with a Hibernate UnknownEntityTypeException out of a
+                // CompletionStage full of Vert.x frames.
+                shouldThrow<JpaMappingException> { JpaRepository(Keyed::id) }
+                    .message
+                    .shouldNotBeNull() shouldContain "Keyed is not an @Entity"
+            }
+
             scenario("is refused when the reference is not a property of anything") {
                 val notAProperty: (Purchase) -> Long = { it.id }
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<JpaMappingException> {
                     JpaRepository(
                         object : kotlin.reflect.KProperty1<Purchase, Long> by Purchase::id {
                             override fun get(receiver: Purchase): Long = notAProperty(receiver)
