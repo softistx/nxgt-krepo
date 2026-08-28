@@ -54,7 +54,7 @@ fun <T : Any, V : Any> From<*, T>.join(
 /**
  * Joins a to-many association, once per element.
  *
- * The element type comes out of `KProperty1<T, out Collection<E>>` with no reflection at runtime —
+ * The element type comes out of `KProperty1<T, Collection<E>>` with no reflection at runtime —
  * the compiler already knows what a `List<Book>` holds.
  */
 fun <T : Any, E : Any> From<*, T>.joinEach(

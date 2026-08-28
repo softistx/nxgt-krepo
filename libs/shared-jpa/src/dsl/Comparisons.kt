@@ -26,28 +26,28 @@ infix fun <V> Expression<V>.ne(value: V): Predicate = builder.notEqual(this, val
 infix fun <V> Expression<V>.ne(other: Expression<out V>): Predicate = builder.notEqual(this, other)
 
 /** `>`. */
-infix fun <V : Comparable<in V>> Expression<V>.gt(value: V): Predicate = builder.greaterThan(this, value)
+infix fun <V : Comparable<V>> Expression<V>.gt(value: V): Predicate = builder.greaterThan(this, value)
 
 /** `>`, against another expression. */
-infix fun <V : Comparable<in V>> Expression<V>.gt(other: Expression<out V>): Predicate = builder.greaterThan(this, other)
+infix fun <V : Comparable<V>> Expression<V>.gt(other: Expression<out V>): Predicate = builder.greaterThan(this, other)
 
 /** `>=`. */
-infix fun <V : Comparable<in V>> Expression<V>.ge(value: V): Predicate = builder.greaterThanOrEqualTo(this, value)
+infix fun <V : Comparable<V>> Expression<V>.ge(value: V): Predicate = builder.greaterThanOrEqualTo(this, value)
 
 /** `>=`, against another expression. */
-infix fun <V : Comparable<in V>> Expression<V>.ge(other: Expression<out V>): Predicate = builder.greaterThanOrEqualTo(this, other)
+infix fun <V : Comparable<V>> Expression<V>.ge(other: Expression<out V>): Predicate = builder.greaterThanOrEqualTo(this, other)
 
 /** `<`. */
-infix fun <V : Comparable<in V>> Expression<V>.lt(value: V): Predicate = builder.lessThan(this, value)
+infix fun <V : Comparable<V>> Expression<V>.lt(value: V): Predicate = builder.lessThan(this, value)
 
 /** `<`, against another expression. */
-infix fun <V : Comparable<in V>> Expression<V>.lt(other: Expression<out V>): Predicate = builder.lessThan(this, other)
+infix fun <V : Comparable<V>> Expression<V>.lt(other: Expression<out V>): Predicate = builder.lessThan(this, other)
 
 /** `<=`. */
-infix fun <V : Comparable<in V>> Expression<V>.le(value: V): Predicate = builder.lessThanOrEqualTo(this, value)
+infix fun <V : Comparable<V>> Expression<V>.le(value: V): Predicate = builder.lessThanOrEqualTo(this, value)
 
 /** `<=`, against another expression. */
-infix fun <V : Comparable<in V>> Expression<V>.le(other: Expression<out V>): Predicate = builder.lessThanOrEqualTo(this, other)
+infix fun <V : Comparable<V>> Expression<V>.le(other: Expression<out V>): Predicate = builder.lessThanOrEqualTo(this, other)
 
 /**
  * `between`, both ends included — which is what a Kotlin [ClosedRange] means too.
@@ -56,5 +56,5 @@ infix fun <V : Comparable<in V>> Expression<V>.le(other: Expression<out V>): Pre
  * where { this[Order::total] within 100L..500L }
  * ```
  */
-infix fun <V : Comparable<in V>> Expression<V>.within(range: ClosedRange<V>): Predicate =
+infix fun <V : Comparable<V>> Expression<V>.within(range: ClosedRange<V>): Predicate =
     builder.between(this, range.start, range.endInclusive)
