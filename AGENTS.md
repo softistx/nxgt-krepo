@@ -610,4 +610,18 @@ the same each time, and the mistakes are the same each time too.
   classes it expects to find, which is why those fixtures sit in `test/entity/scan/` instead of
   beside the rest.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.
-- Work on `develop`; `main` is the PR target.
+- **`develop` is the integration branch and every PR targets it.** Branch off `develop`, open the
+  pull request against `develop`, and merge it there. Nothing is merged directly into `main`, however
+  small and however green — a PR opened against `main` has the wrong base and wants recreating, not
+  merging.
+- **`main` is aligned from `develop`, only when that is asked for.** Aligning is not part of finishing
+  a feature: it happens when someone asks for it, and it means fast-forwarding `main` onto `develop`,
+  never merging a feature branch into `main` or cherry-picking across. If `main` cannot fast-forward,
+  it has been written to directly and that is the thing to fix first — merge `main` into `develop`,
+  then fast-forward `main` onto the result, which leaves both at one commit with no history rewritten.
+
+  The failure this prevents is quiet: merging features into `main` while `develop` sits behind works
+  perfectly until `develop` carries real work of its own, and then the two have genuinely diverged
+  with no single branch holding everything. It has already happened once here — three PRs landed on
+  `main` while `develop` was nine commits behind, and it was harmless only because `develop`'s three
+  extra commits were merges carrying no file changes at all.
