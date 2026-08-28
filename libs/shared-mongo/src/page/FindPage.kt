@@ -3,6 +3,8 @@ package com.strange.mongo.page
 import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoCollection
+import com.strange.common.page.Page
+import com.strange.common.page.PageInfo
 import com.strange.mongo.InvalidPaginationException
 import com.strange.mongo.query.findAll
 import kotlinx.coroutines.flow.toList

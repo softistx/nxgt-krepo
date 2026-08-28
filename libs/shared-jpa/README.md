@@ -7,6 +7,8 @@ with no thread parked on a query.
 com.strange.jpa            Jpa, JpaConfig, JpaException — connect, close, and what this module throws
 com.strange.jpa.session    session / transaction / stateless, and the confinement bridge underneath
 com.strange.jpa.query      HQL and SQL through one builder, and the one-shot operations on Jpa
+com.strange.jpa.dsl        the same queries built from the entity's own properties, not a string
+com.strange.jpa.page       cursor pagination — a page, a request, and the keyset under them
 com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.time.Instant, kotlin.uuid.Uuid
 com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
 com.strange.jpa.naming     what a column is called when the entity does not say
@@ -181,7 +183,7 @@ Terminals suspend, so a result is a value:
 .count()           // how many it would return, ignoring limit and offset
 ```
 
-`mutation(hql)` and `nativeMutation(sql)` are the write side and answer with the number of rows they
+`mutate(hql)` and `nativeMutate(sql)` are the write side and answer with the number of rows they
 touched. Both go straight to the database, past everything the session knows — no cascades, no
 `@PreRemove`, and entities already loaded keep the values they had.
 
@@ -203,6 +205,171 @@ jpa.removeById<Order>(id)    // answers whether there was anything there
 
 Two of these in a row are two transactions. Anything that touches the database twice belongs in a
 `transaction { }`.
+
+## The query DSL
+
+`select<T> { }` builds the same query from the entity's properties instead of a string. It answers
+with the same builder `query<T>(hql)` does, so the terminals above are the terminals here.
+
+```kotlin
+session
+    .select<Purchase> {
+        val buyer = join(Purchase::customer)
+        where { this[Purchase::total] gt 100L }
+        where { buyer[Buyer::name] eq "ada" }
+        orderBy { desc(this[Purchase::total]) }
+    }.limit(20)
+    .list()
+```
+
+**Every call adds; none replaces.** Two `where` blocks are one `and`, two `orderBy` blocks are two
+sort keys in the order written, and a `where` block may answer with `null` to add nothing at all — so
+a query assembled from filters the caller learns one at a time needs no string concatenation.
+
+**Paths are indexed, not written as bare property references.** `this[Purchase::total]` rather than
+`Purchase::total`, and the reason is not taste: `KProperty1<T, V>` is covariant in `V`, so the
+compiler is free to widen `V` to `Any` and `Purchase::total eq "nope"` type-checks against a `Long`
+column. `Path<V>` is invariant, so the same line is a compile error — *actual type is 'String', but
+'Long' was expected*. Kotlin's own standard library solves this with `@OnlyInputTypes`, which is
+internal to it. Indexing reads the same on a join, which is the other half of the reason.
+
+A join is held as a value and read from as often as the query needs it — the `where`, the `orderBy`,
+and the projection when that lands — instead of being re-declared and re-joined each time. `join`
+takes a to-one association, nullable or not, and `joinEach` a to-many, inferring the element type
+from the collection with no reflection at runtime. `JoinType.LEFT` keeps the rows with nothing to
+join to; a `joinEach` returns the owner once per element until `distinct()`.
+
+The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both ends included),
+`like` `notLike` `ilike` `oneOf`, `isNull()` `isNotNull()`, and `and` `or` `!` with `all(…)` and
+`any(…)` over a list. `eq null` is not `is null` — it renders `= null`, which is never true in SQL,
+so ask with `isNull()`.
+
+`update<T> { }` and `delete<T> { }` are the write side, answering with the same `JpaMutation`
+`mutate(hql)` does — and carrying the same warning: they go straight to the database, past everything
+the session knows.
+
+```kotlin
+session
+    .update<Purchase> {
+        this[Purchase::total] set (this[Purchase::total] + 10L)
+        where { this[Purchase::reference] like "P-%" }
+    }.execute()
+```
+
+An assignment can be an expression, which is how a counter is incremented without reading it first:
+one statement, one round trip, and correct when two of them run at once. Neither statement can join
+— that is JPA's rule for a bulk statement, so the scopes simply do not offer it rather than offering
+a method that always fails when Hibernate renders it.
+
+**A bulk statement with nothing restricting it is refused.** `JpaUnrestrictedMutationException`,
+unless the block says `everyRow()`. HQL allows `delete from Purchase` and so does this — but only out
+loud, because a DSL statement is assembled from parts and a `where` block adds nothing when its block
+answers null. A statement whose every filter turned out not to apply would otherwise be a statement
+against the whole table.
+
+On a stateless session, `update(entity)` and `update { }` are both there and both resolve — the first
+is the stateless vocabulary, the second is this DSL. That works on the wrapper; on `Stage.Session`
+itself a member always beats an extension, which is why the module builds these through a name of its
+own rather than through `raw.update`.
+
+`project<T, R> { }` returns something other than the entity — a summary, one column, a count. The
+block's last expression is what a row is:
+
+```kotlin
+class Summary(val reference: String, val buyer: String)
+
+session.project<Purchase, Summary> {
+    val buyer = join(Purchase::customer)
+    where { this[Purchase::total] gt 100L }
+    construct(::Summary, this[Purchase::reference], buyer[Buyer::name])
+}.list()
+```
+
+**The constructor reference types the arguments.** Criteria takes a `Class` and a list of selections
+and checks the match when the query is built, which is late; naming the constructor makes the
+compiler check it, so a `Long` column where a `String` is wanted — or two arguments of the right
+types in the wrong order — is a compile error naming the constructor that did not fit. The reference
+is not called at runtime; Hibernate still constructs the row reflectively.
+
+A projection of one column needs none of that, since a path is already a selection:
+`project<Purchase, String> { this[Purchase::reference] }`. `groupBy` and `having` are here too, and
+`having` is the only place a condition on an aggregate can go — `where` runs before the grouping.
+
+Projections read only the columns they name and put nothing in the persistence context, which is the
+reason to reach for one: a list page showing three fields of a wide entity does not need the other
+forty.
+
+The function vocabulary is ordinary functions, not scope methods, so they nest the way they read:
+`lower` `upper` `trim` `length` `substring` `concat` `abs` `sqrt` `mod` `coalesce` `nullIf`, and the
+aggregates `count` `countDistinct` `sum` `avg` `min` `max` `least` `greatest`. `JpaQuery.count()` is
+a different thing worth not confusing with the aggregate: that one rewrites the whole query into a
+count of its rows, which is what a pager needs.
+
+Two escapes, for what is not named:
+
+```kotlin
+where { function<Double>("similarity", this[Buyer::name], literal(term)) gt 0.3 }
+where { sql<Boolean>("? ~ ?", this[Buyer::name], literal("^A")) eq true }
+```
+
+`function` calls a database function by name. `sql` is Hibernate's own `sql()`, registered for every
+dialect it supports — a SQL fragment dropped into the query with **`?` as a bind parameter, not a
+hole to interpolate into**. A value carrying an apostrophe is a value, which is what makes this an
+escape hatch rather than a hazard; the fragment itself should still never be built by concatenating
+anything a caller supplied. A fragment whose placeholders and arguments disagree is refused here,
+with the fragment in the message, rather than by Hibernate's binder later without it.
+
+Underneath it is JPA Criteria: Hibernate renders the SQL, and this is a Kotlin surface over its query
+model rather than a second implementation of HQL that would have to learn every dialect's quoting.
+When a terminal has to name the query in an exception it renders the tree back to HQL, and only then.
+
+## Pagination
+
+`selectPage<T>(request) { }` returns a `Page<T>` — the rows plus a Relay-shaped `PageInfo` of
+`startCursor`, `endCursor`, `hasNextPage`, `hasPreviousPage`. Both are `shared-common`'s, so
+`shared-mongo`'s `findPage` answers with the same two types.
+
+```kotlin
+val page =
+    session.selectPage<Purchase>(PageRequest.first(20)) {
+        where { this[Purchase::total] gt 100L }
+        sortBy(Purchase::total, descending = true)
+        sortBy(Purchase::id)
+    }
+
+val next = session.selectPage<Purchase>(PageRequest.first(20, page.info.endCursor)) { … }
+```
+
+It pages by **keyset**, not by `offset`. `offset(n)` makes the database walk and discard n rows, so a
+page costs more the deeper it is and page 500 is a scan; resuming from the previous page's sort key
+costs the same at any depth, and — the part that shows up in production rather than in a benchmark —
+does not skip or repeat a row when one is inserted between two requests. A spec inserts one between
+two pages and checks exactly that.
+
+**`sortBy`, not `orderBy`.** A cursor is the sort key of the row it points at, so the page has to
+read those values back off the row that came out; `orderBy` takes an expression and there is no way
+back from one to a value. A paged block that uses `orderBy` is refused rather than quietly paged
+along a key its cursors do not carry.
+
+**The last sort key has to be the entity's identifier**, and a sort that does not end in it is a
+`JpaPaginationException` naming what to add. Keyset pagination resumes from a key, so the key has to
+be unique: sort by a repeated column alone and every row sharing a value is a coin toss between being
+served twice and being skipped — a data bug that reads as a UI bug. The identifier is the one column
+this library can prove unique, so it is the one it insists on.
+
+`PageRequest.first(n, cursor)` pages forward, `PageRequest.last(n, cursor)` backward; the backward
+page runs the sort flipped and reverses the rows, so both directions read the same way round. One row
+is fetched beyond the page size, and whether it turned up is the whole answer to *is there another
+page* — one row rather than a second query.
+
+A cursor carries the sort it was issued under and is refused by a differently sorted query, because
+the alternative is a page cut along the wrong key that comes back plausible and wrong. Encoding is
+not encryption: a client can read a cursor, and forging one buys a page starting somewhere else.
+
+Hibernate Reactive has none of this — core's `getKeyedResultList` never reached the reactive
+`SelectionQuery` — so the predicate, the cursors and the flip are this module's. There is no row-value
+comparison in the criteria builder either, so the keyset predicate expands to the lexicographic
+`or`-chain a composite index satisfies with a seek.
 
 ## Which database
 
