@@ -18,6 +18,7 @@ import com.strange.jpa.session.JpaSession
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -102,6 +103,26 @@ class JpaRepositoryTest :
                         purchases.existingIds(session, listOf(1L, 99L, 3L)) shouldContainExactlyInAnyOrder listOf(1L, 3L)
                         purchases.existingIds(session, emptyList()) shouldContainExactly emptyList()
                     }
+                }
+            }
+
+            // A repository answers with entities, so the question of what a query loads reaches it
+            // too — and a JpaSpec cannot fetch, because the same spec has to fit a projection.
+            scenario("hands back the query itself, which is where a fetch goes") {
+                seeded { jpa ->
+                    shouldThrowAny {
+                        jpa.session { session -> purchases.findAll(session).map { it.customer?.name } }
+                    }
+
+                    jpa
+                        .session { session ->
+                            purchases
+                                .query(session) { Purchase::total gt 0L }
+                                .apply {
+                                    fetch(Purchase::customer)
+                                    orderBy { asc(Purchase::id) }
+                                }.list()
+                        }.map { it.customer?.name } shouldContainExactly listOf("ada", "ada", null)
                 }
             }
 

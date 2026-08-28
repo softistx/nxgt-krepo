@@ -189,14 +189,18 @@ class SelectDslTest :
                 }
             }
 
-            scenario("over a to-many returns the owner once per element, until distinct") {
+            // The old rule is that a collection join needs `distinct` or the owner comes back once
+            // per element. On Hibernate 7 an entity query de-duplicates by identity before it
+            // answers, so it does not — and this used to claim otherwise with data that never had a
+            // repeat in it. `FetchJoinTest` measures the projection side, where it still does.
+            scenario("over a to-many gives the owner once, with distinct or without it") {
                 seeded { jpa ->
-                    val (duplicated, collapsed) =
+                    val (plain, collapsed) =
                         jpa.session { session ->
                             session
                                 .select<Purchase> {
                                     val lines = joinEach(Purchase::lines)
-                                    where { lines[PurchaseLine::sku] eq "apples" }
+                                    where { lines[PurchaseLine::sku] like "%p%" }
                                     orderBy { asc(Purchase::id) }
                                 }.list() to
                                 session
@@ -208,7 +212,9 @@ class SelectDslTest :
                                     }.list()
                         }
 
-                    duplicated.map { it.reference } shouldContainExactly listOf("P-1", "P-3")
+                    // P-1 has both apples and pears, so the SQL returns it twice and the list holds
+                    // it once — which is the whole point of the scenario.
+                    plain.map { it.reference } shouldContainExactly listOf("P-1", "P-3")
                     collapsed.map { it.reference } shouldContainExactly listOf("P-1", "P-3")
                 }
             }

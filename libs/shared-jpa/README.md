@@ -250,6 +250,47 @@ The vocabulary — the operators, the joins, the projections, the function list,
 is [`docs/jpa-query-dsl.md`](../../docs/jpa-query-dsl.md). It gains an entry every phase, which is
 the signal it does not belong here. What stays below is where the DSL deliberately stops.
 
+## A query says what it loads
+
+**Every association in an entity here is `LAZY`, and a query names what it needs with `fetch` or
+`fetchEach`.** That is not a tuning preference; it is what Hibernate Reactive makes of the two
+alternatives.
+
+There is no transparent lazy loading in a reactive session — loading an association on access would
+mean blocking a thread on a second select, and there is no thread to block. So an unfetched `LAZY`
+association does not cost a query, it *throws*, inside the session as readily as after it. The
+obvious way out is to leave associations at JPA's `@ManyToOne` default, which is `EAGER`, and that
+is the N+1 with better manners: it works, it is silent, and it issues a select per distinct owner
+behind every query returning more than one row. `FetchJoinTest` counts three rows pointing at three
+different owners as **three** secondary fetches eager and **none** fetched, off Hibernate's own
+`entityFetchCount` — `prepareStatementCount` reads zero here, since there is no JDBC under the
+Vert.x pool.
+
+So the shape of a read in this library is: mark it lazy, say what you want, and get one statement.
+
+```kotlin
+session
+    .select<Purchase> {
+        fetch(Purchase::customer)
+        fetchEach(Purchase::lines)
+        where { Purchase::total gt 100L }
+    }.list()
+```
+
+The third answer is often the best one: **a projection reads the columns it names and loads no
+entity at all**, so there is nothing to fetch and nothing to lazily initialise. A list page showing
+a reference, a total and a buyer's name wants `project`, not `select` with two fetches.
+
+`JpaRepository` answers with entities, so the same question reaches it. Its `query(session, spec)` is
+the seam — a `JpaSpec` is a `Joins` receiver and deliberately cannot fetch, because the same spec has
+to fit a projection, which has no owner to hang a fetch on. A subclass that always needs the buyer
+gives its entity a method that says so once.
+
+The refusals are in [`docs/jpa-query-dsl.md`](../../docs/jpa-query-dsl.md) with the rest of the
+vocabulary; the one worth knowing here is that `limit`, `offset` and `page` are refused after a
+`fetchEach`, because the database applies them to the joined rows and hands back a page whose last
+owner holds part of its collection.
+
 ## Pagination
 
 `page(request)` is a terminal like `list()`, and answers with a `Page<T>` — the rows plus a

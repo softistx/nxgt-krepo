@@ -474,6 +474,17 @@ the same each time, and the mistakes are the same each time too.
   the protocols' own default is *everything*: one consumer holding a queue's worth of messages in
   memory while its peers hold none. In Kafka the loop also keeps polling while paused, since not
   polling is what gets a consumer evicted mid-batch.
+- **Say what a query loads. Entity associations are `LAZY`, and what a caller needs is fetched.**
+  Hibernate Reactive has no transparent lazy loading — there is no thread to block on the second
+  select — so an unfetched `LAZY` association throws when it is read, inside the session as readily
+  as after it, and the tempting fix of leaving associations `EAGER` is the N+1 wearing a different
+  hat: three rows pointing at three different owners cost three secondary fetches with JPA's
+  `@ManyToOne` default and none with `fetch(…)`. `FetchJoinTest` counts both off Hibernate's own
+  `entityFetchCount`, which is the counter to reach for — `prepareStatementCount` reads zero,
+  because there is no JDBC under the Vert.x pool. So: annotate every association `LAZY`, name what
+  the query needs with `fetch` / `fetchEach`, and where the caller only reads a few columns, project
+  instead and load no entity at all. `docs/jpa-query-dsl.md` has the rules, including why `limit`,
+  `offset` and `page` are refused after a `fetchEach`.
 - **Keep the fast tests fast and the slow ones optional.** Timing claims — a full buffer pausing, a
   strategy committing when it says it does, partitions running concurrently — belong on Kafka's own
   `MockConsumer`/`MockProducer` and run in about two seconds. A real server is for behaviour that
