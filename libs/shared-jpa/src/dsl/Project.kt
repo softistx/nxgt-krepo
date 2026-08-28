@@ -1,5 +1,6 @@
 package com.strange.jpa.dsl
 
+import com.strange.jpa.query.criteria
 import jakarta.persistence.criteria.Selection
 import org.hibernate.reactive.stage.Stage
 
@@ -27,7 +28,7 @@ import org.hibernate.reactive.stage.Stage
 inline fun <reified T : Any, reified R : Any> Stage.QueryProducer.project(
     block: ProjectScope<T, R>.() -> Selection<R>,
 ): ProjectScope<T, R> {
-    val criteria = builder.createQuery(R::class.javaObjectType)
+    val criteria = criteria.createQuery(R::class.javaObjectType)
     val scope = ProjectScope(this, criteria, criteria.from(T::class.java), R::class.javaObjectType)
     criteria.select(scope.block())
     return scope

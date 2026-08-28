@@ -38,7 +38,7 @@ sealed interface Paths<T : Any> {
     val builder: HibernateCriteriaBuilder get() = from.builder
 
     /** The path to an attribute — the DSL's primitive, and the only typed way in. */
-    operator fun <V> get(property: KProperty1<T, V>): Path<V> = from.get(property.name)
+    operator fun <V> get(property: KProperty1<T, V>): Path<V> = from[property]
 
     /**
      * Ascending by an attribute, so an ordering reads like a restriction does.

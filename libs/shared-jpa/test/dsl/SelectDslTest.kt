@@ -5,6 +5,7 @@ import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.entity.Buyer
 import com.strange.jpa.entity.Purchase
 import com.strange.jpa.entity.PurchaseLine
+import com.strange.jpa.query.criteria
 import com.strange.jpa.query.query
 import com.strange.jpa.session.JpaSession
 import com.strange.jpa.session.session
@@ -325,7 +326,7 @@ class SelectDslTest :
             scenario("is the session factory's own, which is what makes the operators extensions") {
                 seeded { jpa ->
                     jpa.session { session ->
-                        val criteria = session.raw.builder.createQuery(Purchase::class.java)
+                        val criteria = session.raw.criteria.createQuery(Purchase::class.java)
                         val path = criteria.from(Purchase::class.java).get<Long>("total")
 
                         path.builder shouldBe jpa.factory.criteriaBuilder
