@@ -271,6 +271,33 @@ is the stateless vocabulary, the second is this DSL. That works on the wrapper; 
 itself a member always beats an extension, which is why the module builds these through a name of its
 own rather than through `raw.update`.
 
+`project<T, R> { }` returns something other than the entity — a summary, one column, a count. The
+block's last expression is what a row is:
+
+```kotlin
+class Summary(val reference: String, val buyer: String)
+
+session.project<Purchase, Summary> {
+    val buyer = join(Purchase::customer)
+    where { this[Purchase::total] gt 100L }
+    construct(::Summary, this[Purchase::reference], buyer[Buyer::name])
+}.list()
+```
+
+**The constructor reference types the arguments.** Criteria takes a `Class` and a list of selections
+and checks the match when the query is built, which is late; naming the constructor makes the
+compiler check it, so a `Long` column where a `String` is wanted — or two arguments of the right
+types in the wrong order — is a compile error naming the constructor that did not fit. The reference
+is not called at runtime; Hibernate still constructs the row reflectively.
+
+A projection of one column needs none of that, since a path is already a selection:
+`project<Purchase, String> { this[Purchase::reference] }`. `groupBy` and `having` are here too, and
+`having` is the only place a condition on an aggregate can go — `where` runs before the grouping.
+
+Projections read only the columns they name and put nothing in the persistence context, which is the
+reason to reach for one: a list page showing three fields of a wide entity does not need the other
+forty.
+
 Underneath it is JPA Criteria: Hibernate renders the SQL, and this is a Kotlin surface over its query
 model rather than a second implementation of HQL that would have to learn every dialect's quoting.
 When a terminal has to name the query in an exception it renders the tree back to HQL, and only then.
