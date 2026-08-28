@@ -36,13 +36,16 @@ inline fun <reified T : Any> Stage.QueryProducer.select(noinline block: SelectSc
     select(T::class, block)
 
 /**
- * The same, with the entity as a value rather than as a type argument.
+ * The same, with the entity as a value — how [select] is actually implemented, and how a caller
+ * generic in its entity reaches it.
  *
- * For a caller that has a `KClass` and not a `reified T` — a repository generic in its entity, or
- * anything else standing between the entity and the query. The reified form delegates here, so
- * there is one implementation and not two.
+ * Not public: `select<Purchase>()` is the one spelling, and a type argument is what the compiler can
+ * check. This exists because a `reified` type parameter has to become a `Class` before Hibernate
+ * sees it, and because `JpaRepository` is generic in its entity and so cannot reify it — inside a
+ * class, `T` is not reifiable and `select<T>()` does not compile.
  */
-fun <T : Any> Stage.QueryProducer.select(
+@PublishedApi
+internal fun <T : Any> Stage.QueryProducer.select(
     type: KClass<T>,
     block: SelectScope<T>.() -> Unit = {},
 ): SelectScope<T> {
