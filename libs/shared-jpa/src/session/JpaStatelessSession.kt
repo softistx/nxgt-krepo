@@ -2,9 +2,11 @@ package com.strange.jpa.session
 
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.dsl.DeleteScope
+import com.strange.jpa.dsl.ProjectScope
 import com.strange.jpa.dsl.SelectScope
 import com.strange.jpa.dsl.UpdateScope
 import com.strange.jpa.dsl.deleteOn
+import com.strange.jpa.dsl.project
 import com.strange.jpa.dsl.select
 import com.strange.jpa.dsl.updateOn
 import com.strange.jpa.query.JpaMutation
@@ -13,6 +15,7 @@ import com.strange.jpa.query.mutate
 import com.strange.jpa.query.nativeMutate
 import com.strange.jpa.query.nativeQuery
 import com.strange.jpa.query.query
+import jakarta.persistence.criteria.Selection
 import kotlinx.coroutines.future.await
 import org.hibernate.reactive.stage.Stage
 
@@ -63,6 +66,9 @@ class JpaStatelessSession internal constructor(
 
     /** A query built from the entity's own properties instead of an HQL string. */
     inline fun <reified R : Any> select(block: SelectScope<R>.() -> Unit): JpaQuery<R> = raw.select(block)
+
+    /** A query over [R]'s entity returning something else — a summary, one column, a count. */
+    inline fun <reified E : Any, reified R : Any> project(block: ProjectScope<E, R>.() -> Selection<R>): JpaQuery<R> = raw.project(block)
 
     /** SQL, for what HQL cannot say. */
     inline fun <reified R : Any> nativeQuery(sql: String): JpaQuery<R> = raw.nativeQuery(sql)
