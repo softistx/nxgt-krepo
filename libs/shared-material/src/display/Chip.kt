@@ -4,12 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.hovered
-import androidx.compose.foundation.style.pressed
 import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.selected
 import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -18,10 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.motion
-import com.strange.material.theme.radii
-import com.strange.material.theme.scheme
-import com.strange.material.theme.spacing
 
 /**
  * A small, self-contained token: a tag, a filter, a selected value.
@@ -67,7 +59,7 @@ fun Chip(
                     } else {
                         Modifier
                     },
-                ).styleable(styleState, ChipStyle, style),
+                ).styleable(styleState, chipStyle, style),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -76,24 +68,3 @@ fun Chip(
         trailing?.invoke()
     }
 }
-
-/** One style covering both states, so the unselected-to-selected move animates for free. */
-private val ChipStyle: Style =
-    Style {
-        background(scheme.surfaceContainerHigh)
-        contentColor(scheme.onSurfaceVariant)
-        border(1.dp, scheme.outlineVariant)
-        shape(RoundedCornerShape(radii.full))
-        contentPaddingHorizontal(spacing.sm)
-        contentPaddingVertical(spacing.xs)
-
-        selected {
-            animate {
-                background(scheme.secondaryContainer)
-                contentColor(scheme.onSecondaryContainer)
-                borderColor(scheme.secondary)
-            }
-        }
-        hovered { animate { background(scheme.surfaceContainerHighest) } }
-        pressed { animate(motion.spec(motion.instant)) { scale(0.97f) } }
-    }

@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.hovered
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
@@ -19,9 +17,6 @@ import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
 import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.radii
-import com.strange.material.theme.scheme
-import com.strange.material.theme.spacing
 
 /**
  * A row in a list: something on the left, two lines of text, something on the right.
@@ -85,18 +80,3 @@ fun ListTile(
         trailing?.invoke()
     }
 }
-
-private fun listTileStyle(interactive: Boolean): Style =
-    Style {
-        shape(RoundedCornerShape(radii.md))
-        contentPaddingHorizontal(spacing.md)
-        contentPaddingVertical(spacing.sm)
-        // 56dp keeps a two-line tile comfortable and a one-line tile a legal touch target.
-        minHeight(
-            androidx.compose.ui.unit
-                .Dp(56f),
-        )
-        if (interactive) {
-            hovered { animate { background(scheme.surfaceContainerHigh) } }
-        }
-    }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.style.MutableStyleState
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.styleable
@@ -14,16 +13,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.strange.material.motion.Transitions
 import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
 import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.Tone
-import com.strange.material.theme.colors
-import com.strange.material.theme.radii
-import com.strange.material.theme.spacing
 
 /**
  * A message about what just happened, or about what is about to.
@@ -75,19 +70,3 @@ fun Alert(
         }
     }
 }
-
-/**
- * The container tone plus a rule down the leading edge.
- *
- * The rule matters more than it looks: a tinted container alone is easy to miss against a tinted
- * page, and it is the one part of the treatment that survives a colour-blind reader.
- */
-private fun alertStyle(tone: Tone): Style =
-    Style {
-        val role = colors.tone(tone)
-        background(role.container)
-        contentColor(role.onContainer)
-        shape(RoundedCornerShape(radii.md))
-        border(1.dp, role.main)
-        contentPadding(spacing.md)
-    }

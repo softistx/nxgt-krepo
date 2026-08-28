@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import com.strange.material.icon.Icon
 import com.strange.material.icon.IconSize
 
@@ -41,7 +40,7 @@ fun IconButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
-    val base = remember(variant, color) { buttonStyle(variant, color) }
+    val base = remember(variant, color) { iconButtonStyle(variant, color) }
 
     Box(
         modifier =
@@ -52,20 +51,9 @@ fun IconButton(
                     enabled = enabled,
                     role = Role.Button,
                     onClick = onClick,
-                ).styleable(styleState, base, SquareTarget, style),
+                ).styleable(styleState, base, style),
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon = icon, description = description, size = size)
     }
 }
-
-/**
- * Applied after the variant style, so it wins: an icon button is square and its padding is even.
- * The horizontal padding a text button carries would make this an oval.
- */
-private val SquareTarget: Style =
-    Style {
-        minWidth(40.dp)
-        minHeight(40.dp)
-        contentPadding(8.dp)
-    }

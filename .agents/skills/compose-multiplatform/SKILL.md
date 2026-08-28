@@ -31,6 +31,17 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
   **Keys that do not exist**, despite being obvious guesses — name a real coordinate in
   `libs.versions.toml` instead: `materialIconsExtended`, `materialIconsCore`,
   `components.uiToolingPreview`, `material3.adaptive`, `material3AdaptiveNavigationSuite`.
+- **No icon pack is reachable through the toolchain.** Beyond the missing keys above,
+  `$compose.material` does **not** carry `material-icons-core` in 1.11 — `androidx.compose.material.icons`
+  is simply unresolved — and the AndroidX icon artifacts in `libs.versions.toml` are Android-only,
+  so they cannot serve a `kmp/lib`. `libs/shared-material` defines its own vectors in
+  `icon/StrangeIcons.kt` from Material path data via `addPathNodes`; a caller that needs a full pack
+  passes its own `ImageVector` in.
+- **`Style.then` is a top-level infix extension**, not a member: `import
+  androidx.compose.foundation.style.then` or the only candidate in scope is `Comparator.then`, and
+  the error is a return-type mismatch against `Comparator` rather than a missing import.
+- **`AnimatedContent`'s `transitionSpec` is not a composable scope here.** A transition that reads
+  theme tokens — everything in `Transitions` — has to be resolved outside and captured.
 - **A missing key reports itself as "Compose is disabled".** The error says to set
   `compose.enabled`, which is misleading when Compose is already on: it means the key is not in
   the catalog. Check the list above before chasing the setting.
