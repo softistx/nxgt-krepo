@@ -1,7 +1,6 @@
 package com.strange.jpa.dsl
 
 import jakarta.persistence.criteria.From
-import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.criteria.Path
 import kotlin.reflect.KProperty1
 
@@ -30,33 +29,4 @@ sealed interface Paths<T : Any> {
 
     /** The path to an attribute — the DSL's primitive, and the only typed way in. */
     operator fun <V> get(property: KProperty1<T, V>): Path<V> = from.get(property.name)
-
-    /**
-     * Joins a to-one association, and answers with something to index.
-     *
-     * The property may be nullable — a to-one association usually is in Kotlin, and an inner join
-     * over one is exactly how a query says *only the ones that have a customer*. The join is on the
-     * entity either way, so the nullability is dropped from what comes back.
-     *
-     * Held as a value rather than scoped to a lambda, so one join serves the `where`, the `orderBy`
-     * and — from the next slice — the projection, instead of being re-declared and re-joined for
-     * each. A second `join` of the same attribute is a second join in the SQL.
-     */
-    fun <V : Any> join(
-        property: KProperty1<T, V?>,
-        type: JoinType = JoinType.INNER,
-    ): JoinScope<T, V> = JoinScope(from.join(property.name, type))
-
-    /**
-     * Joins a to-many association, once per element.
-     *
-     * The element type comes out of `KProperty1<T, out Collection<E>>` and needs no reflection at
-     * runtime — the compiler already knows what a `List<Line>` holds. A row per element is what a
-     * join means, so a query that selects the owning entity through one wants [SelectScope.distinct]
-     * unless it wants duplicates.
-     */
-    fun <E : Any> joinEach(
-        property: KProperty1<T, out Collection<E>>,
-        type: JoinType = JoinType.INNER,
-    ): JoinScope<T, E> = JoinScope(from.join(property.name, type))
 }

@@ -1,8 +1,12 @@
 package com.strange.jpa.session
 
 import com.strange.jpa.JpaNotFoundException
+import com.strange.jpa.dsl.DeleteScope
 import com.strange.jpa.dsl.SelectScope
+import com.strange.jpa.dsl.UpdateScope
+import com.strange.jpa.dsl.deleteOn
 import com.strange.jpa.dsl.select
+import com.strange.jpa.dsl.updateOn
 import com.strange.jpa.query.JpaMutation
 import com.strange.jpa.query.JpaQuery
 import com.strange.jpa.query.mutate
@@ -62,6 +66,12 @@ class JpaStatelessSession internal constructor(
 
     /** SQL, for what HQL cannot say. */
     inline fun <reified R : Any> nativeQuery(sql: String): JpaQuery<R> = raw.nativeQuery(sql)
+
+    /** A bulk `update` built from the entity's own properties. */
+    inline fun <reified R : Any> update(block: UpdateScope<R>.() -> Unit): JpaMutation = updateOn(raw, block)
+
+    /** A bulk `delete`, the same way. */
+    inline fun <reified R : Any> delete(block: DeleteScope<R>.() -> Unit): JpaMutation = deleteOn(raw, block)
 
     /** A bulk HQL `update` or `delete`. */
     fun mutate(hql: String): JpaMutation = raw.mutate(hql)
