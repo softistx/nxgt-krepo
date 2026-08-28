@@ -1,63 +1,107 @@
 package com.strange.material.motion
 
-import androidx.compose.animation.core.TweenSpec
+import androidx.compose.animation.core.SnapSpec
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.material3.MotionScheme
 import io.kotest.core.spec.style.FeatureSpec
-import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.kotest.matchers.types.shouldNotBeInstanceOf
 
 /**
- * The one behaviour here that a component silently depends on is [StrangeMotion.enabled]: every
- * animation in the library reads its spec from this object, so a false flag has to reach all of
- * them. A component that built its own `tween` would escape it, and this spec is what makes that
- * regression visible rather than merely wrong.
+ * The curves themselves belong to Material 3 and are not this library's to assert. What is ours is
+ * the wiring: that the two axes stay distinct, that the three speeds stay distinct, that turning
+ * motion off really stops the clock, and that two default themes compare equal.
  */
 class StrangeMotionTest :
     FeatureSpec({
-
-        feature("the duration ladder") {
-            scenario("increases from instant to slow") {
+        feature("the two axes Material 3 separates") {
+            scenario("do not collapse into one — a fade and a slide are not the same curve") {
                 val motion = StrangeMotion()
 
-                motion.quick shouldBeGreaterThan motion.instant
-                motion.standard shouldBeGreaterThan motion.quick
-                motion.slow shouldBeGreaterThan motion.standard
+                motion.spatial<Float>() shouldNotBe motion.effects<Float>()
             }
 
-            scenario("keeps every duration inside what reads as responsive") {
+            scenario("each answer differently at each of the three speeds") {
                 val motion = StrangeMotion()
 
-                motion.instant shouldBeGreaterThan 0
-                (motion.slow <= 500) shouldBe true
+                setOf(
+                    motion.spatial<Float>(MotionSpeed.Fast),
+                    motion.spatial<Float>(MotionSpeed.Default),
+                    motion.spatial<Float>(MotionSpeed.Slow),
+                ).size shouldBe 3
+                setOf(
+                    motion.effects<Float>(MotionSpeed.Fast),
+                    motion.effects<Float>(MotionSpeed.Default),
+                    motion.effects<Float>(MotionSpeed.Slow),
+                ).size shouldBe 3
+            }
+        }
+
+        feature("the shape of the two axes") {
+            scenario("spatial overshoots — so it may only drive a value that tolerates leaving its range") {
+                val motion = StrangeMotion()
+
+                MotionSpeed.entries.forEach { speed ->
+                    motion
+                        .spatial<Float>(speed)
+                        .shouldBeInstanceOf<SpringSpec<Float>>()
+                        .dampingRatio shouldBeLessThan 1f
+                }
+            }
+
+            scenario("effects does not — so colour and alpha land exactly where they were sent") {
+                val motion = StrangeMotion()
+
+                MotionSpeed.entries.forEach { speed ->
+                    motion
+                        .effects<Float>(speed)
+                        .shouldBeInstanceOf<SpringSpec<Float>>()
+                        .dampingRatio shouldBeGreaterThanOrEqualTo 1f
+                }
             }
         }
 
         feature("turning motion off") {
-            scenario("collapses every spec to zero rather than merely shortening it") {
+            scenario("collapses every spec to a snap rather than merely shortening it") {
                 val still = StrangeMotion(enabled = false)
 
-                listOf(
-                    still.spec<Float>(still.standard),
-                    still.quickSpec<Float>(),
-                    still.standardSpec<Float>(),
-                    still.slowSpec<Float>(),
-                ).forEach { spec ->
-                    (spec as TweenSpec<Float>).durationMillis shouldBe 0
+                MotionSpeed.entries.forEach { speed ->
+                    still.spatial<Float>(speed).shouldBeInstanceOf<SnapSpec<Float>>()
+                    still.effects<Float>(speed).shouldBeInstanceOf<SnapSpec<Float>>()
                 }
             }
 
-            scenario("leaves the named durations themselves untouched") {
-                // The flag changes what a spec does, not what the tokens say — so turning motion
-                // back on restores the same timings rather than a default set.
-                StrangeMotion(enabled = false).standard shouldBe StrangeMotion().standard
+            scenario("leaves the scheme itself untouched, so turning it back on restores the curves") {
+                val still = StrangeMotion(enabled = false)
+
+                still.scheme shouldBe StrangeMotion().scheme
+                still.copy(enabled = true).spatial<Float>() shouldBe StrangeMotion().spatial<Float>()
             }
         }
 
-        feature("specs built from the tokens") {
-            scenario("carry the duration they were asked for when motion is on") {
+        feature("motion that is on") {
+            scenario("never answers with a snap") {
                 val motion = StrangeMotion()
 
-                (motion.spec<Float>(motion.slow) as TweenSpec<Float>).durationMillis shouldBe
-                    motion.slow
+                motion.spatial<Float>().shouldNotBeInstanceOf<SnapSpec<Float>>()
+                motion.effects<Float>().shouldNotBeInstanceOf<SnapSpec<Float>>()
+            }
+        }
+
+        feature("the scheme it is given") {
+            scenario("actually drives the curves — standard and expressive are not the same") {
+                val expressive = StrangeMotion(MotionScheme.expressive())
+                val standard = StrangeMotion(MotionScheme.standard())
+
+                expressive.spatial<Float>() shouldNotBe standard.spatial<Float>()
+            }
+
+            scenario("makes two default themes compare equal, so installing one is not a recomposition") {
+                StrangeMotion() shouldBe StrangeMotion()
             }
         }
     })

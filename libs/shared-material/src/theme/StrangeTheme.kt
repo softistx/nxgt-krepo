@@ -1,43 +1,45 @@
 package com.strange.material.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
 import com.strange.material.motion.StrangeMotion
 
 /**
- * The theme every component here reads from.
+ * The theme. It **wraps** Material 3 rather than replacing it, so a plain M3 component — or any
+ * third-party M3 library — keeps working inside it. That is what makes this adoptable in an
+ * application that already exists.
  *
- * It *wraps* [MaterialTheme] rather than replacing it. That is the decision the whole library
- * rests on: an application already using Material 3, or any third-party M3 component, keeps
- * working unchanged inside a `StrangeTheme` — the colour scheme, type scale and shapes are
- * installed where M3 looks for them, and the extra tokens ride alongside on their own locals.
- * A design system that refused to do this would force an all-or-nothing adoption.
+ * Its signature is Material 3's own: a [ColorScheme], a [Typography], [Shapes] and a
+ * [MotionScheme], each with a default. A caller that already computes one of the four — from a
+ * wallpaper, from a brand kit, from a designer's export — passes it and keeps everything else.
+ * `StrangeThemeProvider` is the shorthand for the common case, and the only thing that knows the
+ * scheme comes from the wallpaper on Android and from a seed everywhere else.
  *
- * The usual call names nothing at all:
- *
- * ```kotlin
- * StrangeTheme { App() }
- * ```
- *
- * and a product that has a brand colour names one thing:
- *
- * ```kotlin
- * StrangeTheme(seed = Color(0xFF7C3AED)) { App() }
- * ```
+ * It installs `MaterialExpressiveTheme`: rounder shapes, springier motion, and a `MotionScheme`
+ * that overshoots where the standard one settles. `motionScheme = MotionScheme.standard()` turns
+ * that off for the whole tree, and every animation here follows — nothing holds its own curve.
  */
 @Composable
 fun StrangeTheme(
-    seed: Color = DefaultSeed,
-    isDark: Boolean = false,
-    colors: StrangeColors = remember(seed, isDark) { strangeColors(seed, isDark) },
+    isDark: Boolean = isSystemInDarkTheme(),
+    colorScheme: ColorScheme = remember(isDark) { strangeColorScheme(DefaultSeed, isDark) },
+    colors: StrangeColors = remember(colorScheme, isDark) { strangeColors(colorScheme, isDark) },
     spacing: StrangeSpacing = StrangeSpacing(),
     radii: StrangeRadii = StrangeRadii(),
     elevation: StrangeElevation = StrangeElevation(),
-    motion: StrangeMotion = StrangeMotion(),
+    motionScheme: MotionScheme = MotionScheme.expressive(),
+    motion: StrangeMotion = remember(motionScheme) { StrangeMotion(motionScheme) },
+    typography: Typography = MaterialTheme.typography,
+    shapes: Shapes = remember(radii) { radii.toShapes() },
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
@@ -46,19 +48,21 @@ fun StrangeTheme(
         LocalStrangeRadii provides radii,
         LocalStrangeElevation provides elevation,
         LocalStrangeMotion provides motion,
+        LocalStrangeShapes provides shapes,
     ) {
-        MaterialTheme(
-            colorScheme = colors.scheme,
-            shapes = remember(radii) { radii.toShapes() },
+        MaterialExpressiveTheme(
+            colorScheme = colorScheme,
+            motionScheme = motionScheme,
+            shapes = shapes,
+            typography = typography,
             content = content,
         )
     }
 }
 
 /**
- * The tokens, reached the way Material 3's own are — `StrangeTheme.spacing.md`.
- *
- * Same shape as `MaterialTheme.colorScheme`, so a caller who knows one knows the other.
+ * The tokens, reached the way `MaterialTheme.colorScheme` is. Everything M3 already names is read
+ * through `MaterialTheme` itself — there is no `StrangeTheme.typography` shadowing it.
  */
 object StrangeTheme {
     val colors: StrangeColors

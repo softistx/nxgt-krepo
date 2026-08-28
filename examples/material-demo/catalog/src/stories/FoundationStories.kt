@@ -20,6 +20,7 @@ import com.strange.material.icon.IconSize
 import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
+import com.strange.material.theme.StrangeRadii
 import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.Tone
 
@@ -61,20 +62,22 @@ val FoundationStories =
             }
         }
 
-        story("Radii") { _ ->
-            val radii = StrangeTheme.radii
+        story("Radii") { knobs ->
+            val base = knobs.number("base", 12f, 0f..28f).dp
+            val radii = StrangeRadii(base)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
                 verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
             ) {
                 listOf(
-                    "none" to radii.none,
-                    "sm" to radii.sm,
-                    "md" to radii.md,
-                    "lg" to radii.lg,
-                    "xl" to radii.xl,
-                    "xxl" to radii.xxl,
-                    "full" to radii.full,
+                    "extraSmall" to radii.extraSmall,
+                    "small" to radii.small,
+                    "medium" to radii.medium,
+                    "large" to radii.large,
+                    "largeIncreased" to radii.largeIncreased,
+                    "extraLarge" to radii.extraLarge,
+                    "extraLargeIncreased" to radii.extraLargeIncreased,
+                    "extraExtraLarge" to radii.extraExtraLarge,
                 ).forEach { (name, radius) ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -88,6 +91,11 @@ val FoundationStories =
                                     .background(StrangeTheme.colors.scheme.primaryContainer),
                         )
                         Typography(text = name, variant = TypographyVariant.Caption)
+                        Typography(
+                            text = "$radius",
+                            variant = TypographyVariant.Caption,
+                            emphasis = Emphasis.Subtle,
+                        )
                     }
                 }
             }

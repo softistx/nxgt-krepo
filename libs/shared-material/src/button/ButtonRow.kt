@@ -9,21 +9,16 @@ import androidx.compose.ui.Modifier
 import com.strange.material.theme.StrangeTheme
 
 /**
- * Buttons that belong together, spaced consistently.
+ * A row of actions — the bottom of a dialog, the end of a form.
  *
- * ```kotlin
- * ButtonGroup {
- *     Button("Annuler", onClick = ::dismiss, variant = ButtonVariant.Ghost)
- *     Button("Enregistrer", onClick = ::save)
- * }
- * ```
- *
- * Trivial, and worth having: without it every dialog footer in a product picks its own gap and its
- * own alignment, and they never quite match. [align] defaults to trailing because that is where a
- * form's actions belong.
+ * This is **not** Material 3's `ButtonGroup`, and it is named apart from it deliberately: M3's is a
+ * connected, segmented control whose buttons share edges and morph on press, and it takes a
+ * `ButtonGroupScope` rather than a `RowScope`. That component is the right one for a segmented
+ * switcher, and phase 3 will reach for it by its own name. This one is a layout: separate buttons,
+ * spaced by a token, aligned to one end.
  */
 @Composable
-fun ButtonGroup(
+fun ButtonRow(
     modifier: Modifier = Modifier,
     align: Alignment.Horizontal = Alignment.End,
     content: @Composable RowScope.() -> Unit,
