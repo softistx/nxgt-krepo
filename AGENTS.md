@@ -21,7 +21,7 @@ What exists:
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
 | `libs/shared-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
-| `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: query extensions, keyset pagination, a CRUD repository and service, GridFS |
+| `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
 | `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `libs/shared-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
@@ -29,7 +29,7 @@ What exists:
 | `examples/demo-api` | Ktor server implementing a slice of `examples/demo-api/openapi.yaml` |
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
-| `examples/jpa-shop` | A Ktor catalogue over Postgres showing `shared-jpa`'s repository, service and audit layer |
+| `examples/jpa-shop` | A Ktor catalogue over Postgres showing `shared-jpa`'s CRUD extensions and audit layer |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
@@ -190,6 +190,18 @@ wait, and `Mailbox` when a caller is not a coroutine at all — a Java listener 
 which cannot take a mutex and must not be made to block. `libs/shared-common/README.md` has the
 reasoning; the short version is that reaching for `runBlocking` to get out of the third case is how
 a client deadlocks against its own I/O thread.
+
+**A data-access library offers extensions, not a base class to inherit from.** Neither
+`shared-mongo` nor `shared-jpa` has a repository or a CRUD service class; the create/read/update/
+delete vocabulary is extensions on `MongoCollection<T>` and on the JPA session. Two reasons, and the
+first is the one that decides it: an extension takes `T` from its receiver or reifies it at the call
+site, while a class cannot have a `reified` type parameter and so has to be handed a `KClass` or a
+property reference to read an owner off — `session.findAll<Purchase>()` against
+`JpaRepository(Purchase::id).findAll(session)`. And a repository over a collection turned out to be
+one-line delegation twenty times over, with the overridable hooks its service used being the least
+reusable part of either module. What a base class earned and an extension still has to provide is
+kept explicitly: `insertAndRead`, the transaction guard on every JPA write verb, and the audit
+stamps. When a new store is added, follow the same shape.
 
 **Shared does not mean everything shared goes there.** `libs/shared-i18n` is used by more than
 one module and is still its own library, because ICU4J is a 15 MB jar and `shared-common`'s rule
@@ -485,7 +497,7 @@ the same each time, and the mistakes are the same each time too.
   the query needs with `fetch` / `fetchEach`, and where the caller only reads a few columns, project
   instead and load no entity at all — Hibernate packages any result class with a matching
   constructor, so `query<Summary>("select a, b from …")` needs no constructor expression. Where there
-  is no query to join on — `find`, a stateless `get`, and the repository's by-identifier reads —
+  is no query to join on — `find` and a stateless `get` —
   the answer is an entity graph:
   `session.entityGraph<Purchase>().add(…)` is a fetch plan that is also a value, so a `find` and a
   query cannot disagree about what they load. `docs/jpa-criteria.md` has the rules for both,

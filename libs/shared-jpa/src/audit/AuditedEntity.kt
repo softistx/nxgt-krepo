@@ -61,3 +61,40 @@ abstract class AuditedEntity {
         lastModifiedAt = Clock.System.now()
     }
 }
+
+/**
+ * Records who is creating this, and answers with it so the call chains.
+ *
+ * ```kotlin
+ * session.insert(Purchase(reference = input.reference).stampedBy(principal))
+ * ```
+ *
+ * Both halves start out the same, which is what makes a row that was never updated say so. *When*
+ * is not set here — `@PrePersist` does that inside the flush, the one place that can tell a real
+ * write from an update the dirty check turned into a no-op.
+ *
+ * **A null principal stamps nothing**, leaving the empty string that says "unset" as plainly as the
+ * epoch does for a timestamp. Writing an empty name over a real one would be worse than saying
+ * nothing.
+ */
+fun <T : AuditedEntity> T.stampedBy(principal: String?): T =
+    apply {
+        if (principal != null) {
+            createdBy = principal
+            lastModifiedBy = principal
+        }
+    }
+
+/**
+ * The same, for an update: only [AuditedEntity.lastModifiedBy] moves.
+ *
+ * Worth knowing: assigning it *is* a change when the principal differs from the one on the row, so
+ * an update that touches nothing else still fires `@PreUpdate` and moves
+ * [AuditedEntity.lastModifiedAt]. That is the intended reading — the row records who touched it
+ * last, and somebody did — but it means "a no-op moves nothing" holds only while the principal is
+ * unchanged. Call it after applying the update, on the managed instance.
+ */
+fun <T : AuditedEntity> T.touchedBy(principal: String?): T =
+    apply {
+        if (principal != null) lastModifiedBy = principal
+    }

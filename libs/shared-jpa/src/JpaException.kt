@@ -76,8 +76,10 @@ class JpaDocumentException(
  * A session flushes at the end of a unit of work if and only if there is a transaction, so a
  * `persist` or a change to a loaded entity inside a plain `session { }` reaches no table: no error,
  * no warning, no row — and a `deleteById` would answer `true` for a row it did not delete.
- * `JpaRepository` and `JpaCrudService` refuse rather than participate; the alternative is a create
- * that returns an entity, reports success, and wrote nothing.
+ * Every write verb on the session — `insert`, `update`, `delete` and the rest — refuses rather than
+ * participates; the alternative is a create that returns an entity, reports success, and wrote
+ * nothing. JPA's own `persist`, `merge` and `remove` stay unguarded: they promise only that the
+ * instance is managed, which is true whether or not there is a transaction to flush it.
  */
 class JpaOutsideTransactionException(
     val operation: String,

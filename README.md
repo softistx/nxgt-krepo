@@ -22,7 +22,7 @@ Two generated clients drive one hand-written server over real HTTP, so a disagre
 two serialization libraries about what the document means fails a test rather than shipping.
 
 `examples/jpa-shop` is separate from that chain: a Ktor catalogue over Postgres showing
-`shared-jpa`'s repository, service and audit layer end to end.
+`shared-jpa`'s CRUD extensions, transaction guard and audit layer end to end.
 
 Alongside them are the shared service libraries, which have nothing to do with the generator:
 
@@ -35,7 +35,7 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/shared-kafka` | A cluster and the clients over it: sends that suspend until the broker acknowledges them, records as a `Flow` with the offsets looked after, and topics and group lag from an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here: `install(RedisConnection)`, then `call.redis` in a handler — one connection per application, opened with it and closed with it — and the same for Mongo, AMQP, Kafka, Postgres, object storage and i18n |
 | `libs/shared-koin` | The same seven backends as Koin modules, for a worker or a CLI with no web framework: `redisModule(config)`, and the container closes what it built |
-| `libs/shared-mongo` | Session-aware collection extensions, keyset pagination, a CRUD repository and the write flow over it, and a coroutine GridFS bucket |
+| `libs/shared-mongo` | Session-aware collection extensions covering CRUD, keyset pagination, an opt-in audit trail, and a coroutine GridFS bucket |
 | `libs/shared-redis` | A namespaced connection over Lettuce owning one `Json`, and the four kotlinx-serialized things built on one: a typed cache, a lock, topics, and streams with consumer groups |
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets and objects as coroutines, and presigned URLs and upload forms for browsers |
 | `libs/shared-testing` | What the integration specs run against: a backing service reused from the environment when one is named, and started as a container for the run when it is not |
