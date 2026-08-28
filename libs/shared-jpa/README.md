@@ -503,8 +503,10 @@ specifications compose here as in a bare `select`.
 entity nor the identifier type is written twice and no `::class` is passed. The constructor taking a
 `KClass` is what a subclass calls, since it names its entity in its `extends` clause anyway — and it
 is why the class needs telling at all: a class cannot have a `reified` type parameter, so `select<T>()`
-does not compile inside one. The value-typed `select`, `project` and `find` that make that work are
-internal to the module; `select<Purchase>()` stays the one public spelling.
+does not compile inside one. The repository reaches the value-typed forms underneath through
+`session.raw`, the way any caller reaches what the wrapper does not spell — so `JpaSession` keeps the
+reified vocabulary and nothing else, and no public declaration in `dsl/` or `session/` takes a
+`KClass`.
 
 **The session is the first argument, not a field**, and that is the shape the confinement rule
 forces. A Mongo collection is a long-lived object a repository can hold; a session belongs to the
