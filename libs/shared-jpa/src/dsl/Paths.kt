@@ -2,6 +2,7 @@ package com.strange.jpa.dsl
 
 import jakarta.persistence.criteria.From
 import jakarta.persistence.criteria.Path
+import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import kotlin.reflect.KProperty1
 
 /**
@@ -26,6 +27,14 @@ import kotlin.reflect.KProperty1
 sealed interface Paths<T : Any> {
     /** The root or join the paths are taken from. */
     val from: From<*, T>
+
+    /**
+     * Hibernate's builder, for everything this package has not given a name.
+     *
+     * Taken off the root rather than carried alongside it, so every scope has one without being
+     * handed one — including a join, which is only ever built from something that already had it.
+     */
+    val builder: HibernateCriteriaBuilder get() = from.builder
 
     /** The path to an attribute — the DSL's primitive, and the only typed way in. */
     operator fun <V> get(property: KProperty1<T, V>): Path<V> = from.get(property.name)

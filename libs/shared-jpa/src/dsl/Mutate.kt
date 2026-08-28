@@ -56,7 +56,7 @@ internal inline fun <reified T : Any> updateOn(
 ): JpaMutation {
     val builder = producer.builder
     val statement = builder.createCriteriaUpdate(T::class.java)
-    val scope = UpdateScope(builder, statement, statement.from(T::class.java)).apply(block)
+    val scope = UpdateScope(statement, statement.from(T::class.java)).apply(block)
     if (scope.isUnrestricted()) throw JpaUnrestrictedMutationException(T::class, "update")
     return JpaMutation(producer.createMutationQuery(scope.build()))
 }
@@ -69,7 +69,7 @@ internal inline fun <reified T : Any> deleteOn(
 ): JpaMutation {
     val builder = producer.builder
     val statement = builder.createCriteriaDelete(T::class.java)
-    val scope = DeleteScope(builder, statement, statement.from(T::class.java)).apply(block)
+    val scope = DeleteScope(statement, statement.from(T::class.java)).apply(block)
     if (scope.isUnrestricted()) throw JpaUnrestrictedMutationException(T::class, "delete")
     return JpaMutation(producer.createMutationQuery(scope.build()))
 }
