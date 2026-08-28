@@ -47,9 +47,12 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
     internal val ordering = mutableListOf<Order>()
     internal val keys = mutableListOf<SortKey<T>>()
 
-    private var limit: Int? = null
-    private var offset: Int? = null
-    private var readOnly = false
+    // Internal rather than private, and named apart from the builders that set them, because
+    // `page` has to read them: two of the three are meaningless on a keyset page and it refuses
+    // them, the third it applies. A private field there would have been silently dropped.
+    internal var rowLimit: Int? = null
+    internal var rowOffset: Int? = null
+    internal var resultsReadOnly = false
 
     @Suppress("UNCHECKED_CAST")
     private val self: SELF get() = this as SELF
@@ -84,10 +87,10 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
     fun distinct(distinct: Boolean = true): SELF = self.also { query.distinct(distinct) }
 
     /** At most this many rows. */
-    fun limit(count: Int): SELF = self.also { limit = count }
+    fun limit(count: Int): SELF = self.also { rowLimit = count }
 
     /** Skips this many rows first. Meaningless without an ordering, since nothing else fixes it. */
-    fun offset(count: Int): SELF = self.also { offset = count }
+    fun offset(count: Int): SELF = self.also { rowOffset = count }
 
     /**
      * Marks the results read-only, which is worth doing whenever they are.
@@ -95,7 +98,7 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
      * A stateful session keeps a snapshot of every entity it loads so it can work out at flush time
      * what changed. Read-only results skip the snapshot: half the memory, and no dirty check.
      */
-    fun readOnly(readOnly: Boolean = true): SELF = self.also { this.readOnly = readOnly }
+    fun readOnly(readOnly: Boolean = true): SELF = self.also { resultsReadOnly = readOnly }
 
     /** Every matching row. */
     suspend fun list(): List<R> = built().list()
@@ -116,9 +119,9 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
         val criteria = build()
         return JpaQuery({ criteria.hql() }, producer.createQuery(criteria))
             .apply {
-                limit?.let { limit(it) }
-                offset?.let { offset(it) }
-                if (readOnly) readOnly()
+                rowLimit?.let { limit(it) }
+                rowOffset?.let { offset(it) }
+                if (resultsReadOnly) readOnly()
             }
     }
 

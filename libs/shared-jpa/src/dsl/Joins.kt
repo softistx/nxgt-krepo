@@ -26,8 +26,14 @@ import kotlin.reflect.KProperty1
  */
 @JpaDsl
 sealed interface Joins<T : Any> : Filters<T> {
-    /** The joins taken so far, by attribute name. Implementations own the map; nothing else reads it. */
-    val taken: MutableMap<String, JoinScope<T, *>>
+    /**
+     * Where this scope remembers the joins it has taken — see [JoinRegistry].
+     *
+     * A sealed interface has nowhere to put shared state that is not public: Kotlin allows neither
+     * `internal` nor `protected` on an interface member. So the state lives one level down, in a
+     * class that *can* keep it `internal`, and what is public here is a type with nothing on it.
+     */
+    val joins: JoinRegistry<T>
 
     /**
      * Joins a to-one association, and answers with something to index.
@@ -59,14 +65,17 @@ sealed interface Joins<T : Any> : Filters<T> {
         name: String,
         type: JoinType,
     ): JoinScope<T, V> {
-        val existing = taken[name]
+        val existing = joins.taken[name]
         if (existing != null) {
+            // An IllegalStateException rather than a JpaException, deliberately: the family is
+            // scoped to what this library knows and Hibernate does not about the *data*, and asking
+            // for one association two ways in one query is a programming error like any other.
             check(existing.type == type) {
                 "'$name' is already joined as ${existing.type} and this asks for $type: " +
                     "a join is taken once, and asking again gives back the one already taken"
             }
             return existing as JoinScope<T, V>
         }
-        return JoinScope<T, V>(from.join(name, type), type).also { taken[name] = it }
+        return JoinScope<T, V>(from.join(name, type), type).also { joins.taken[name] = it }
     }
 }

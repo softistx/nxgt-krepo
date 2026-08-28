@@ -25,10 +25,13 @@ dependencies:
   - $libs.vertx.mysql.client: runtime-only
   - $libs.vertx.db2.client: runtime-only
 
-  # Bean Validation. Exported because the constraints go on the consumer's own entities — an
-  # application writes `@NotNull` and `@Size`, not this library — and because Hibernate finds the
-  # implementation on the classpath rather than being handed it.
-  - $libs.hibernate.validator: exported
+  # Bean Validation. The API is exported because the constraints go on the consumer's own entities —
+  # an application writes `@NotNull` and `@Size`, which are `jakarta.validation` types, not this
+  # library. The implementation is `runtime-only` for the same reason `expressly` below is: Hibernate
+  # finds it on the classpath rather than being handed it, and nothing in this repo — src, test,
+  # examples, shared-ktor or shared-koin — imports `org.hibernate.validator`. Exporting it put a
+  # Bean Validation implementation on every downstream consumer's compile classpath.
+  - $libs.hibernate.validator: runtime-only
   - $libs.jakarta.validation: exported
   # The expression language its default message interpolator resolves `{min}` through. Nobody writes
   # EL, so it is needed to run and not to compile.

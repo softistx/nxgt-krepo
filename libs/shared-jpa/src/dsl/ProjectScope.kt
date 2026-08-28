@@ -37,7 +37,7 @@ class ProjectScope<T : Any, R : Any>
         /** The class rows are built into — what `construct` hands to Hibernate. */
         val resultType: Class<R>,
     ) : QueryScope<T, R, ProjectScope<T, R>>(producer, query, from) {
-        override val taken: MutableMap<String, JoinScope<T, *>> = mutableMapOf()
+        override val joins: JoinRegistry<T> = JoinRegistry()
 
         private val groups = mutableListOf<Expression<*>>()
         private val havings = mutableListOf<Predicate>()

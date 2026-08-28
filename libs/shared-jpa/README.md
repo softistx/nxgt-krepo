@@ -13,6 +13,9 @@ com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.t
 com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
 com.strange.jpa.naming     what a column is called when the entity does not say
 com.strange.jpa.scan       reading entities and converters off the classpath
+com.strange.jpa.repository JpaRepository — the typed operations every entity gets for free
+com.strange.jpa.service    JpaCrudService — create/update/delete with hooks, over a repository
+com.strange.jpa.audit      AuditedEntity, the who-and-when superclass the service stamps
 ```
 
 ```kotlin
@@ -36,6 +39,11 @@ jpa.transaction { session ->
 
 Nothing above awaits anything. `find`, `get`, `persist`, `merge`, `remove`, `refresh` and `flush`
 all suspend and answer with values.
+
+**This file answers *why the library is shaped this way*.** The two vocabularies — what a query may
+say and what an entity may say — gain an entry every phase, so they live in
+[`docs/jpa-query-dsl.md`](../../docs/jpa-query-dsl.md) and
+[`docs/jpa-mapping.md`](../../docs/jpa-mapping.md).
 
 ## The rule this library is built around
 
@@ -222,7 +230,7 @@ jpa.removeById<Order>(id)    // answers whether there was anything there
 Two of these in a row are two transactions. Anything that touches the database twice belongs in a
 `transaction { }`.
 
-## The query DSL
+## The query DSL — see `docs/jpa-query-dsl.md`
 
 `select<T>()` builds the same query from the entity's properties instead of a string, and answers
 with the query itself: everything that shapes it chains, and the terminals are the ones an HQL query
@@ -238,160 +246,9 @@ session
     .list()
 ```
 
-**Every call adds; none replaces.** Two `where` calls are one `and`, two `orderBy` calls are two sort
-keys in the order written, and a `where` may answer with `null` to add nothing at all — so a query
-assembled from filters the caller learns one at a time needs no string concatenation. Nothing runs
-until a terminal: `list()`, `first()`, `single()`, `singleOrNull()`, `count()`, or `page(request)`.
-
-**A predicate is written straight off the property, and it is still fully typed.** The receiver of
-`eq`, `gt` and the rest is `KMutableProperty1`, not `KProperty1`, and that is the whole design:
-`KProperty1<T, out V>` is covariant in the value, so the compiler is free to widen `V` to `Any` and
-`Purchase::total eq "nope"` type-checks against a `Long` column. `KMutableProperty1<T, V>` declares
-`V` invariantly — it has a setter to accept one — so the same line is a compile error, *actual type
-is 'String', but 'Long' was expected*. Kotlin's own standard library solves this with
-`@OnlyInputTypes`, which is internal to it.
-
-An entity's attributes are `var`, since Hibernate writes them, so that is the ordinary case rather
-than a restriction. Anything reached through a join or a function goes through the path form and the
-same operators on `Expression` — `join(Purchase::customer)[Buyer::name] eq "ada"`,
-`lower(this[Buyer::name]) eq term` — and so does a `val` attribute.
-
-**A join is remembered, so asking for it twice gives the same join rather than a second one.** That
-is what lets `join` be chained like everything else: it can be taken where it is used instead of
-being declared ahead of every clause that reads it. Holding it in a `val` still reads better when
-several clauses use it, and now means the same thing:
-
-```kotlin
-session
-    .select<Purchase>()
-    .where { join(Purchase::customer)[Buyer::name] eq "ada" }    // taken here…
-    .orderBy { asc(join(Purchase::customer)[Buyer::id]) }        // …and the same one here
-    .list()
-```
-
-`join` takes a to-one association, nullable or not, and `joinEach` a to-many, inferring the element
-type from the collection with no reflection at runtime. `JoinType.LEFT` keeps the rows with nothing
-to join to, and asking for a join that was already taken as a different type is refused rather than
-silently ignored. A `joinEach` returns the owner once per element until `distinct()`.
-
-The block `select<T> { }` still takes is the same query and the same `where` — it is somewhere to put
-a `val` for a join, and nothing more. Either form, or a mixture, builds the same SQL; a spec compares
-all three.
-
-The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both ends included),
-`like` `notLike` `ilike` `oneOf`, `isNull()` `isNotNull()`, and `and` `or` `!` with `all(…)` and
-`any(…)` over a list — and `asc`/`desc` take a property the same way. `eq null` is not `is null` — it
-renders `= null`, which is never true in SQL, so ask with `isNull()`.
-
-**A restriction can be named and reused.** `JpaSpec<T>` is the type `where` already takes, given a
-name — a lambda with the query in scope, answering with a predicate or with `null` to restrict
-nothing. Nothing had to be added for `where(spec)` to compile: a Kotlin function type is
-contravariant in its receiver, so a spec written against `Joins<T>` fits a selection and a projection
-alike.
-
-```kotlin
-val large: JpaSpec<Purchase> = { Purchase::total gt 100L }
-val adas: JpaSpec<Purchase> = { join(Purchase::customer)[Buyer::name] eq "ada" }
-
-session.select<Purchase>().where(large).list()
-session.select<Purchase>().where(large or adas).count()
-```
-
-It is the same idea as Spring Data's `Specification<T>`, which is
-`(Root<T>, CriteriaQuery<?>, CriteriaBuilder) -> Predicate` — those three arguments are the receiver
-here, already carrying the typed vocabulary. `and` and `or` compose two of them, and `or` is the one
-that earns its keep: two `where` calls are already `and`ed, and no chain can say `or`. A spec that
-answers `null` restricts nothing, so `or` with one of those is still every row rather than the half
-the other side would have kept.
-
-`update<T> { }` and `delete<T>()` are the write side. They restrict through the same `where` and end
-at `execute()`, which answers with the number of rows touched — and they carry the same warning
-`mutate(hql)` does: they go straight to the database, past everything the session knows.
-
-```kotlin
-session
-    .update<Purchase> { set(Purchase::total, this[Purchase::total] + 10L) }
-    .where { Purchase::reference like "P-%" }
-    .execute()
-
-session.delete<Purchase>().where { Purchase::total lt 1L }.execute()
-```
-
-The assignments are the update's block because they are what an update *is*; a delete has nothing to
-assign, so it has no block. An assignment is `set(property, value)`, and the value can be an
-expression — which is how a counter is incremented without reading it first: one statement, one round
-trip, and correct when two of them run at once. Neither statement can join — that is JPA's rule for a
-bulk statement, so the scopes simply do not offer it rather than offering a method that always fails
-when Hibernate renders it.
-
-**A bulk statement with nothing restricting it is refused.** `JpaUnrestrictedMutationException`,
-unless it says `everyRow()`. HQL allows `delete from Purchase` and so does this — but only out loud,
-because a DSL statement is assembled from parts and a `where` adds nothing when its block answers
-null. A statement whose every filter turned out not to apply would otherwise be a statement against
-the whole table.
-
-On a stateless session, `update(entity)` and `update<T> { }` are both there and both resolve — the
-first is the stateless vocabulary, the second is this DSL. That works on the wrapper; on
-`Stage.Session` itself a member always beats an extension, which is why the module builds these
-through a name of its own rather than through `raw.update`.
-
-`project<T, R> { }` returns something other than the entity — a summary, one column, a count. The
-block's last expression is what a row is, which is why this is the one entry point whose block is
-required; everything after it is the chain and the terminals every other query has:
-
-```kotlin
-class Summary(val reference: String, val buyer: String)
-
-session
-    .project<Purchase, Summary> {
-        construct(::Summary, Purchase::reference, join(Purchase::customer)[Buyer::name])
-    }.where { Purchase::total gt 100L }
-    .orderBy { desc(Purchase::total) }
-    .list()
-```
-
-**The constructor reference types the arguments.** Criteria takes a `Class` and a list of selections
-and checks the match when the query is built, which is late; naming the constructor makes the
-compiler check it, so a `Long` column where a `String` is wanted — or two arguments of the right
-types in the wrong order — is a compile error naming the constructor that did not fit. The reference
-is not called at runtime; Hibernate still constructs the row reflectively.
-
-**Each column is named by a property, or by a path where a property cannot reach** — a joined
-column, a function, an aggregate. Every mixture of the two is accepted up to four columns, which is
-why there are so many `construct` overloads: a property reference is not a `Selection` and Kotlin has
-no implicit conversion, so a position that takes both has to be two declarations.
-
-A projection of one column needs none of that, since a path is already a selection:
-`project<Purchase, String> { this[Purchase::reference] }`. `groupBy` takes a property or a block, and
-`having` is the only place a condition on an aggregate can go — `where` runs before the grouping.
-
-Projections read only the columns they name and put nothing in the persistence context, which is the
-reason to reach for one: a list page showing three fields of a wide entity does not need the other
-forty.
-
-The function vocabulary is ordinary functions, not scope methods, so they nest the way they read:
-`lower` `upper` `trim` `length` `substring` `concat` `abs` `sqrt` `mod` `coalesce` `nullIf`, and the
-aggregates `count` `countDistinct` `sum` `avg` `min` `max` `least` `greatest`. The `count()` terminal
-is a different thing worth not confusing with the aggregate: that one rewrites the whole query into a
-count of its rows, which is what a pager needs.
-
-Two escapes, for what is not named:
-
-```kotlin
-where { function<Double>("similarity", this[Buyer::name], literal(term)) gt 0.3 }
-where { sql<Boolean>("? ~ ?", this[Buyer::name], literal("^A")) eq true }
-```
-
-`function` calls a database function by name. `sql` is Hibernate's own `sql()`, registered for every
-dialect it supports — a SQL fragment dropped into the query with **`?` as a bind parameter, not a
-hole to interpolate into**. A value carrying an apostrophe is a value, which is what makes this an
-escape hatch rather than a hazard; the fragment itself should still never be built by concatenating
-anything a caller supplied. A fragment whose placeholders and arguments disagree is refused here,
-with the fragment in the message, rather than by Hibernate's binder later without it.
-
-Underneath it is JPA Criteria: Hibernate renders the SQL, and this is a Kotlin surface over its query
-model rather than a second implementation of HQL that would have to learn every dialect's quoting.
-When a terminal has to name the query in an exception it renders the tree back to HQL, and only then.
+The vocabulary — the operators, the joins, the projections, the function list, the two escapes —
+is [`docs/jpa-query-dsl.md`](../../docs/jpa-query-dsl.md). It gains an entry every phase, which is
+the signal it does not belong here. What stays below is where the DSL deliberately stops.
 
 ## Pagination
 
@@ -428,6 +285,14 @@ key its cursors do not carry. Without a `page`, `sortBy` is simply an ordering.
 be unique: sort by a repeated column alone and every row sharing a value is a coin toss between being
 served twice and being skipped — a data bug that reads as a UI bug. The identifier is the one column
 this library can prove unique, so it is the one it insists on.
+
+**`shared-mongo` appends `_id` where this refuses**, and the difference is deliberate rather than an
+oversight in one of them. Mongo's sort arrives as raw JSON from an HTTP client, so there is no
+compiler between the caller and a non-unique sort and no line of Kotlin to point at — appending is
+the only way to be safe. Here the sort is `sortBy(Purchase::total)` in the caller's own source, so a
+message naming the line and what to add costs nothing and teaches the rule instead of hiding it. The
+consequence for a service paging the same object out of both stores: the Mongo call takes any sort,
+the JPA call takes any sort ending in the identifier, and neither can silently skip a row.
 
 `PageRequest.first(n, cursor)` pages forward, `PageRequest.last(n, cursor)` backward; the backward
 page runs the sort flipped and reverses the rows, so both directions read the same way round. One row
@@ -603,11 +468,21 @@ is not a `refresh` — a default the database applied is not read back, and `aft
 belongs.
 
 The hooks are `beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete`,
-`afterDelete` and `stamp`. `afterUpdate` takes no "previous" argument, unlike the Mongo service's:
-the managed instance was mutated in place, so the state before the update is no longer anywhere to
-hand over — a hook that needs it copies what it cares about in `beforeUpdate`. `stamp` is where
-*who* is recorded, since only the service knows the principal; *when* belongs to the entity, which
-is the half Hibernate's own lifecycle callbacks do better.
+`afterDelete`, and `stampCreated` / `stampUpdated`. `afterUpdate` takes no "previous" argument,
+unlike the Mongo service's: the managed instance was mutated in place, so the state before the update
+is no longer anywhere to hand over — a hook that needs it copies what it cares about in
+`beforeUpdate`. The two `stamp` hooks are where *who* is recorded, since only the service knows the
+principal; *when* belongs to the entity, which is the half Hibernate's own lifecycle callbacks do
+better.
+
+**Every `after*` hook runs before the commit.** The transaction the caller opened is still open, so a
+hook that publishes to Kafka, AMQP or an HTTP endpoint publishes a fact a later rollback unmakes.
+A cascade or an outbox row is exactly right there — both are writes in the same transaction, and both
+are undone with it. Anything that leaves the database is sent after `transaction { }` returns.
+
+**`create`'s flush names the input that failed; it does not let you continue past it.** A failed
+flush dooms the transaction, so a caller looping over inputs with a `try/catch` inside gets one
+exception it swallowed and a rollback at the end. Import a batch with a transaction per input.
 
 ## Who wrote this row, and when
 
@@ -632,213 +507,26 @@ The timestamps default to the epoch rather than to `now`, because a plausible-lo
 than an obviously unset one: a row written through a stateless session runs no callbacks, and an
 epoch stamp says so.
 
-## Which database
+## What an entity may say — see `docs/jpa-mapping.md`
 
-Postgres, MySQL and DB2. Hibernate Reactive names none of them: it picks a driver at runtime from
-the URI scheme, so the only thing that changes is `postgresql://`, `mysql://` or `db2://` — the
-entity, the session, the transaction and the HQL are the same, which is what `MySqlTest` exists to
-show rather than assert in prose.
-
-All three drivers are declared `runtime-only`. They reach an application's runtime classpath and are
-kept off its compile classpath, which is right twice over: nothing in this library references a
-driver class, and a `PgBuilder` in application code is a second connection pool nobody is managing.
-Two unused drivers cost about a megabyte and load no class. `DriversTest` asserts all three are
-actually there, since a dependency scope is a claim about a classpath that nothing else would notice
-being wrong.
-
-**MySQL 8.4 needs one thing said out loud.** Every account it creates uses `caching_sha2_password`,
-whose first authentication requires either TLS the client trusts or the server's RSA public key.
-A reactive client given neither drops the connection, and the error —
-`ClosedConnectionException: Failed to read any response from the server` — reads like a network
-fault. It is an authentication one. `mysqlContainer()` in `shared-testing` moves its `root` account
-onto `mysql_native_password` for exactly this reason, and says so at the point it does it.
-
-DB2 is shipped and unproven here: the driver is on the classpath and `DriversTest` covers that, but
-no spec has run against a DB2 server, because `icr.io/db2_community/db2` wants a privileged container
-and several gigabytes and this repo does not put a machine under that unasked. Point `DB2_TEST_URI`
-at one and the same specs are what should run — except the JSON ones, which cannot: `DB2Dialect`
-registers no DDL type for `SqlTypes.JSON` at all.
-
-## Column names
-
-`createdBy` is the column `created_by`.
-
-**That is this library's doing, not Hibernate's.** Hibernate keeps the property name and Postgres
-folds the unquoted identifier, so on its own it gives you `createdby` — it is Spring that installs a
-snake-case strategy, and the two are met together often enough that almost everyone believes
-otherwise. A column is read by psql, by a migration and by whoever is looking at the database without
-this application in front of them, so it is written the way SQL is written.
-
-**A name you write is used exactly as you wrote it.**
-
-```kotlin
-@Entity
-class Order(
-    @Id var id: Long = 0,
-    var createdBy: String = "",                             // created_by
-    @Column(name = "lastSeen") var lastSeen: String = "",   // lastSeen, folded by Postgres to lastseen
-)
-```
-
-This is an `ImplicitNamingStrategy`, which runs where Hibernate is deciding a name it was not given —
-not the `PhysicalNamingStrategy` that Spring and Hibernate's own `PhysicalNamingStrategySnakeCaseImpl`
-use, which rewrites every identifier including the ones an entity spells out and leaves quoting as the
-only way out. For an entity that names nothing the two are identical; they differ only where somebody
-said what they wanted. It is also what makes mapping an existing camelCase schema possible without
-quoting every identifier in it.
-
-The splitting rule is Hibernate's own, copied so that switching strategies later renames nothing: an
-underscore goes where a lower-case letter or digit is followed by an upper-case letter followed by a
-lower-case letter or digit. So an acronym stays glued — `orderURL` is `orderurl`. `NamingTest` asserts
-that equivalence against Hibernate's class rather than describing it.
-
-`JpaConfig(naming = Naming.AS_WRITTEN)` turns it off, for a schema that already exists and was not
-built this way. **Changing this setting renames every column that was not named by hand**, so it is a
-decision to make before there is a schema rather than after.
-
-## Identifiers
-
-`@GeneratedValue` works as it does anywhere: `AUTO` and `SEQUENCE` both use a sequence on Postgres,
-`IDENTITY` works, and `UUID` works **on a `java.util.UUID`**. `GeneratedIdTest` runs all four against
-a real server, because Hibernate Reactive is where a generator that needs a round trip has to be a
-`ReactiveIdentifierGenerator`, and a strategy that does not work is a bootstrap error rather than
-something a mock would show.
-
-**A `kotlin.uuid.Uuid` cannot be the identifier, and `Jpa.connect` refuses one.** Hibernate rejects
-an `AttributeConverter` on an `@Id` outright, and the JDBC-bound `UserType` that would otherwise map
-it is what Hibernate Reactive's own documentation says not to reach for. Without a converter nothing
-fails: the type is serialized, the primary key comes out `bytea`, inserts and reads both work, and
-the table is unreadable to every other client of the database. So the check is at `connect`, which is
-the last moment it is still preventable. Use `java.util.UUID` for the key; `kotlin.uuid.Uuid` is fine
-on every other attribute.
-
-## Instant and Uuid
-
-`kotlin.time.Instant` and `kotlin.uuid.Uuid` are not JPA basic types, and an unmapped type is not
-refused — it is serialized. Everything succeeds, and the column holds bytes no other client of that
-database can read, compare or index. Two `autoApply` converters are registered with every factory,
-so an entity writes the Kotlin types with nothing on the property and gets `timestamp with time zone`
-and `uuid`. Each is pinned by a scenario that asks `information_schema` what the column actually is;
-a round trip cannot show this, because a mapping that writes a blob reads that blob back and agrees
-with itself.
-
-An attribute that wants something else opts out with `@Convert(disableConversion = true)`. An
-application's own converters are named in `Jpa.connect(config, entities, converters)`, because
-`addAnnotatedClass` finds no `@Converter` — or found for it by `Jpa.scan`, which is the one job the
-scan does that naming the classes cannot.
-
-## JSON columns
-
-A structured value in one column, two ways. **Reach for the first one.**
-
-```kotlin
-@Embeddable
-class Coordinates(var latitude: Double = 0.0, var longitude: Double = 0.0)
-
-@Entity
-class Place(
-    @Id var id: Long = 0,
-    @Embedded @JdbcTypeCode(SqlTypes.JSON) var at: Coordinates = Coordinates(),
-)
-
-jpa.session { it.query<Long>("select p.id from Place p where p.at.latitude > :south").parameter("south", 50.0).single() }
-```
-
-An `@Embeddable` needs no `@Serializable` and nothing from this module: Hibernate builds the document
-from its own mapping model. That is worth having for what it buys — **HQL paths into it**, checked
-against the mapping at startup, and every field keeping its own mapping, so the `Instant` and `Uuid`
-converters apply *inside* the document. A shape you know is a shape the database should know.
-
-The second way is for a shape you deliberately do not map — an open-ended payload, a versioned
-document, a sealed hierarchy:
-
-```kotlin
-@Serializable
-data class Address(val street: String, val city: String, val country: String = "DE")
-
-@Entity
-class Customer(
-    @Id var id: Long = 0,
-    @JdbcTypeCode(SqlTypes.JSON) var address: Address = Address("", ""),
-    @JdbcTypeCode(SqlTypes.JSON) var tags: Map<String, String> = emptyMap(),
-    @JdbcTypeCode(SqlTypes.JSON_ARRAY) var labels: List<String> = emptyList(),
-)
-```
-
-**This is the part that does not work without this library.** Hibernate resolves the JSON mapper by
-looking for Jackson, then Jackson 3, then JSON-B, and none of the three is a dependency here — so
-without a mapper of ours the annotation above compiles, exports a `jsonb` column, and throws on the
-first write telling a Kotlin codebase to install Jackson. `Jpa.connect` registers a `FormatMapper`
-over kotlinx.serialization instead, so `@Serializable` is what makes a JSON column work. Generic
-attributes resolve from the reflective type, so `Map<String, String>` keeps its type arguments.
-
-**Two codes, and the wrong one used to be a runtime accident.** `SqlTypes.JSON` is for a document that
-is an object, `SqlTypes.JSON_ARRAY` for one that is a list. Both make a `jsonb` column; given the
-wrong one the reactive binder wraps the document in the wrong Vert.x type and every write fails with
-`DecodeException: Failed to decode` and nothing else. `Jpa.connect` refuses the mismatch at startup
-instead, naming the attribute and the code to use.
-
-**What the stored document looks like, and why.** `jpaJson` is `lenientJson` with
-`encodeDefaults = true`. kotlinx otherwise omits a property that equals its default, and a `jsonb`
-column is read by SQL as well as by the class that wrote it — `address->>'country'` would be null for
-exactly the rows whose country happened to be the default, and a functional index over it would miss
-them. Nulls stay explicit for the same reason: `jsonb_exists(address, 'note')` and `is null` are
-different questions, and only a document that writes the key can answer both. Unknown keys are
-ignored on the way in, so a document written by an older version of a class still reads. Override the
-whole thing with `JpaConfig(json = …)`.
-
-**Editing a document is not free.** Hibernate's dirty check for a JSON attribute is
-`fromString(toString(value))` — a real round trip through the mapper on every check — so an in-place
-mutation *is* noticed, at the cost of serializing the document to find out. Keep such a column small,
-and prefer a mapped column for anything you filter or sort on.
-
-**Not on DB2.** `DB2Dialect` registers no DDL type for `SqlTypes.JSON`, so schema export fails with
-*No type mapping for org.hibernate.type.SqlTypes code: 3001 (JSON)*. Postgres gives `jsonb`, MySQL
-`json`, and both are pinned by a scenario asking `information_schema` what the column really is.
-
-Hibernate 7.4 also has HQL `json_value`, `json_query` and `json_exists`, disabled by default behind
-`hibernate.query.hql.json_functions_enabled` while they incubate. This library does not enable them
-and no spec here has run one — set it through `JpaConfig.properties` if you want them, or query a
-document through `nativeQuery` and the database's own operators.
-
-## Validation
-
-Hibernate Validator is on the classpath and exported, so constraints on an entity are checked before
-it is written — no configuration, no explicit `Validator`, nothing to call:
-
-```kotlin
-@Entity
-class Order(
-    @Id @GeneratedValue var id: Long = 0,
-    @field:NotNull @field:Size(min = 2, max = 64) var reference: String? = null,
-)
-```
-
-Note `@field:`. A Kotlin constructor property is a parameter, a property and a field at once, and a
-constraint annotation that lands on the parameter is one Hibernate never sees.
-
-Whether this works at all was worth asking rather than assuming: Hibernate ORM applies constraints
-through event listeners, and Hibernate Reactive replaces the listeners it fires. It keeps them —
-`ValidationTest` persists a violating entity and gets a `ConstraintViolationException` with nothing
-written, and the alternative would have been a library that silently stores whatever it is handed.
-
-**The constraints reach the schema too.** `@Size(max = 64)` exports as `varchar(64)` rather than the
-default 255, which the same spec asserts against `information_schema` — so a constraint is one
-statement of a rule rather than two that can drift apart.
-
-`expressly` comes along as a runtime-only dependency. Hibernate Validator interpolates a message like
-*"must be between {min} and {max}"* through Jakarta Expression Language and ships no implementation
-of one; without it the first constraint is a `NoClassDefFoundError`.
+Which database, what a column ends up called, how an identifier is generated, `kotlin.time.Instant`
+and `kotlin.uuid.Uuid`, JSON columns, and Bean Validation all live in
+[`docs/jpa-mapping.md`](../../docs/jpa-mapping.md). That half gains an entry every phase — a
+`SqlTypes` code, a strategy, a converter — and this file answers *why the library is shaped this way*
+instead, which is roughly constant.
 
 ## Configuration and lifecycle
 
 `Jpa.connect` suspends: reading annotations off every entity and building the metadata model is
-ordinary blocking work, done on `Dispatchers.IO`. **Nothing connects there** — the pool opens its
-first connection when something asks for a session, so a wrong password is a failed request rather
-than a failed startup. `SchemaMode.VALIDATE` turns it back into a startup failure when the schema is
-managed elsewhere, which it should be: `SchemaMode.NONE` is the default and the only sane answer for
-a deployment, because a schema is migrated by something that keeps a history, not by an ORM
-inferring one from the classes it happens to have been given.
+ordinary blocking work, done on `Dispatchers.IO`. **On the default `SchemaMode.NONE`, nothing
+connects there** — the pool opens its first connection when something asks for a session, so a wrong
+password is a failed request rather than a failed startup. Any other mode has schema work to do and
+therefore connects: `SchemaMode.VALIDATE` turns a schema missing a table back into a startup failure,
+which is the point of choosing it when the schema is managed elsewhere — and it should be.
+`SchemaMode.NONE` is the default and the only sane answer for a deployment, because a schema is
+migrated by something that keeps a history, not by an ORM inferring one from the classes it happens
+to have been given. `test/SchemaModeTest.kt` pins both halves; the two statements used to contradict
+each other here.
 
 `JpaConfig` names the settings a deployment actually changes and takes anything else in
 `properties`, applied last so it overrides them. Four are worth knowing about: `connectTimeout`, so a
@@ -877,9 +565,12 @@ did not create.
 
 ## Not here
 
-No migrations, no repository or CRUD layer, no second-level cache, and one datasource. The first two
-are the natural next features; the schema question in particular deserves its own decision rather
-than a default chosen here.
+No migrations, no second-level cache, and one datasource. The schema question in particular deserves
+its own decision rather than a default chosen here: `SchemaMode` exists for tests and scratch
+databases, not as a migration story.
+
+A repository and a CRUD service *are* here — `JpaRepository` and `JpaCrudService`, above — and this
+list said otherwise for a phase after they shipped.
 
 The query DSL stops where JPA Criteria keeps going — no subqueries, no set operations, no window
 functions, no `insert … select`. Those are written against Hibernate's own builder and run through

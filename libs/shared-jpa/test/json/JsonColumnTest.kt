@@ -1,5 +1,7 @@
 package com.strange.jpa.json
 
+import com.strange.jpa.JpaDocumentException
+import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaSerializerException
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.entity.Address
@@ -10,13 +12,16 @@ import com.strange.jpa.entity.Crate
 import com.strange.jpa.entity.Customer
 import com.strange.jpa.entity.Label
 import com.strange.jpa.entity.Plain
+import com.strange.jpa.query.nativeMutate
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 /**
  * A `@Serializable` Kotlin type in one column, through the mapper this module registers.
@@ -161,7 +166,7 @@ class JsonColumnTest :
             }
 
             scenario("under the object code is refused at startup, not at the first write") {
-                val failure = shouldThrow<IllegalStateException> { JpaTestDatabase.withJpa(Basket::class) { } }
+                val failure = shouldThrow<JpaMappingException> { JpaTestDatabase.withJpa(Basket::class) { } }
 
                 // Without this check the schema exports happily and every write fails with Vert.x's
                 // `DecodeException: Failed to decode` — the binder wrapping an array in a JsonObject
@@ -171,7 +176,7 @@ class JsonColumnTest :
             }
 
             scenario("and the mirror of that mistake is refused too") {
-                val failure = shouldThrow<IllegalStateException> { JpaTestDatabase.withJpa(Bundle::class) { } }
+                val failure = shouldThrow<JpaMappingException> { JpaTestDatabase.withJpa(Bundle::class) { } }
 
                 failure.message!! shouldContain "Bundle.address"
                 failure.message!! shouldContain "SqlTypes.JSON"
@@ -206,6 +211,60 @@ class JsonColumnTest :
                 failure.message!! shouldContain "@Serializable"
             }
         }
+
+        // The branch that fires on data an older version of the class wrote — the one member of
+        // the sealed family a spec had never reached.
+        feature("a stored document that does not decode") {
+            scenario("is a JpaDocumentException naming the type, asked of the mapper directly") {
+                val failure =
+                    shouldThrow<JpaDocumentException> {
+                        KotlinxJsonFormatMapper(jpaJson).decode("""{"street": 5}""", Address::class.java)
+                    }
+
+                failure.type shouldBe Address::class.java
+                failure.message!! shouldContain "Address"
+            }
+
+            scenario("never puts the document in the message, because a stored value is somebody's") {
+                val failure =
+                    shouldThrow<JpaDocumentException> {
+                        KotlinxJsonFormatMapper(jpaJson)
+                            .decode("""{"street": "Geheimstr 1", "city": 7}""", Address::class.java)
+                    }
+
+                failure.message!! shouldNotContain "Geheimstr"
+                // Not the cause's message either — kotlinx quotes the input in some of its own.
+                failure.toString() shouldNotContain "Geheimstr"
+            }
+        }
+
+        feature("a stored document that does not decode, out of the database")
+            .config(enabled = JpaTestDatabase.available) {
+                // It arrives wrapped: Hibernate catches what a FormatMapper throws and rethrows its
+                // own. Pinned as it is rather than as it would be nicer — a caller that wants to
+                // tell this apart from a real database failure walks the causes.
+                scenario("reaches the caller with a JpaDocumentException in the cause chain") {
+                    JpaTestDatabase.withJpa(Customer::class) { jpa ->
+                        jpa.transaction { it.persist(Customer(1, Address("Hauptstr 1", "Berlin"))) }
+
+                        // What a class that dropped or retyped a property leaves behind. Native SQL
+                        // is not rewritten by `hibernate.default_schema`, so the table is qualified.
+                        val table = "${jpa.config.schema}.customers"
+                        jpa.transaction {
+                            it
+                                .nativeMutate("""update $table set address = '{"street": 5}'::jsonb where id = 1""")
+                                .execute()
+                        }
+
+                        val failure = shouldThrowAny { jpa.session { it.get<Customer>(1L) } }
+
+                        generateSequence(failure) { it.cause }
+                            .filterIsInstance<JpaDocumentException>()
+                            .first()
+                            .type shouldBe Address::class.java
+                    }
+                }
+            }
 
         feature("the message when a type is not @Serializable") {
             scenario("is asked of the mapper directly, since it needs no database to be wrong") {
