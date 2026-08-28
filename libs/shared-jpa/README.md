@@ -529,6 +529,47 @@ property reference does not carry one without `kotlin-reflect`, so it comes from
 metamodel. There is no `ensureIndexes` here the way there is in Mongo: the schema is the migration
 tool's business, not the repository's.
 
+## The flow every service repeats
+
+`JpaCrudService<T, ID, C, U>` is the create/update/delete flow with the parts that differ left as
+hooks. A subclass writes the two methods that are genuinely about its entity:
+
+```kotlin
+class PurchaseService(repository: JpaRepository<Purchase, Long>, principal: String? = null) :
+    JpaCrudService<Purchase, Long, NewPurchase, EditPurchase>(repository, principal) {
+
+    override suspend fun buildCreate(input: NewPurchase) = Purchase(input.id, input.reference)
+
+    override suspend fun applyUpdate(existing: Purchase, input: EditPurchase) {
+        input.reference?.let { existing.reference = it }
+    }
+}
+```
+
+**An update mutates the managed entity; it does not build a statement.** That is the whole
+difference from `MongoCrudService`, whose hook returns update operators and whose empty list means
+"write nothing". Here the persistence context already knows what changed, so a hook assigning the
+value a column already has writes nothing — Hibernate's dirty check decides, and it is better at it
+than a hook comparing fields. There is no "changes are empty" branch on this side because there is
+nothing for it to do.
+
+**A write outside a transaction is refused.** `session { }` flushes nothing, so `create` there would
+build an entity, return it, report success and write no row. `JpaOutsideTransactionException` names
+the operation, the entity and the fix. Reads are untouched — they need no transaction.
+
+**`create` and `update` flush.** Not for the write, which the commit would do anyway, but for
+*when*: a generated identifier is assigned, and a constraint violation surfaces at the call that
+caused it rather than at the end of the transaction where nothing knows which input was to blame. It
+is not a `refresh` — a default the database applied is not read back, and `afterCreate` is where that
+belongs.
+
+The hooks are `beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete`,
+`afterDelete` and `stamp`. `afterUpdate` takes no "previous" argument, unlike the Mongo service's:
+the managed instance was mutated in place, so the state before the update is no longer anywhere to
+hand over — a hook that needs it copies what it cares about in `beforeUpdate`. `stamp` is where
+*who* is recorded, since only the service knows the principal; *when* belongs to the entity, which
+is the half Hibernate's own lifecycle callbacks do better.
+
 ## Which database
 
 Postgres, MySQL and DB2. Hibernate Reactive names none of them: it picks a driver at runtime from
