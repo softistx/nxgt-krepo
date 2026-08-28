@@ -43,6 +43,11 @@ dependencies:
   # Classpath scanning for `Jpa.scan`. Not exported: an application names packages as strings and
   # never touches a ClassGraph type, so this is an implementation detail of one function.
   - $libs.classgraph
+  # `@Language`, which marks the HQL and SQL parameters so the IDE injects those languages into a
+  # caller's string. Compile-only: the annotation is CLASS-retained and read by tooling, never
+  # loaded at runtime. It already arrives through kotlin-stdlib, and is named here for the reason
+  # the comment above hibernate-core gives — an inherited edge is one the IDE does not follow.
+  - $libs.jetbrains.annotations: compile-only
 
   # CloseGuard, and Page/PageInfo — which are shared-mongo's answer too, and are part of this
   # module's own API through `selectPage`, so a consumer has to see them.

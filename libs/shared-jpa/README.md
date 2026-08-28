@@ -189,6 +189,20 @@ Terminals suspend, so a result is a value:
 touched. Both go straight to the database, past everything the session knows — no cascades, no
 `@PreRemove`, and entities already loaded keep the values they had.
 
+**The strings are injected, so the IDE treats them as HQL and SQL.** Every query parameter here
+carries `@Language("HQL")` or `@Language("SQL")`, which buys syntax highlighting, structure and
+keyword completion inside the string — in this module and in anything that depends on it, with no
+IDE setup and nothing under `.idea`. IntelliJ ships Hibernate injections already, but they are
+matched against Java PSI on `QueryProducer.createQuery`, so they fire on neither Kotlin nor a
+wrapper; the annotation is what reaches the Kotlin injector.
+
+What it does **not** buy is entity and attribute completion — `from Product p where p.` will not
+offer `sku`. That needs a persistence model, which IntelliJ reads from a JPA facet, and this project
+has none to read: the bootstrap is programmatic, so there is no `persistence.xml`, and the IDE module
+graph comes from Amper rather than from `.iml` files a facet could hang on. For native SQL a data
+source in the Database tool window fills the gap properly, since it completes against the real
+schema. For entity queries, the typed DSL below is the thing that actually knows the mapping.
+
 **Bind parameters; do not interpolate.** In Kotlin the injection is the spelling that reads
 naturally, which is exactly why `parameter(name, value)` is the only way values reach a query here.
 

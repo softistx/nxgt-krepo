@@ -54,6 +54,10 @@ jakarta-validation = "3.1.1"
 expressly = "6.0.0"
 # Classpath scanning, for `Jpa.scan`. The version kotest already resolves, so a test run carries one.
 classgraph = "4.8.184"
+# `@Language`, so the IDE injects HQL and SQL into the query strings. Pinned to the version already
+# resolved through kotlin-stdlib and kotlinx-coroutines — naming a newer one would upgrade the
+# annotations artifact for everything downstream of shared-jpa, for an annotation nobody runs.
+jetbrains-annotations = "23.0.0"
 spring = "7.0.9"
 jackson = "3.2.2"
 
@@ -223,6 +227,7 @@ jakarta-validation = { module = "jakarta.validation:jakarta.validation-api", ver
 # without it every validator built is a `NoClassDefFoundError` at the first constraint.
 expressly = { module = "org.glassfish.expressly:expressly", version.ref = "expressly" }
 classgraph = { module = "io.github.classgraph:classgraph", version.ref = "classgraph" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
 
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 amqp-client = { module = "com.rabbitmq:amqp-client", version.ref = "amqp-client" }

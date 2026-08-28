@@ -6,6 +6,7 @@ import jakarta.persistence.NoResultException
 import jakarta.persistence.NonUniqueResultException
 import kotlinx.coroutines.future.await
 import org.hibernate.reactive.stage.Stage
+import org.intellij.lang.annotations.Language
 
 /**
  * An HQL selection, built up in Kotlin and awaited rather than chained.
@@ -98,4 +99,6 @@ class JpaQuery<R>
  * `R` is the shape of a row, which is the entity for `from Order` and something else entirely for a
  * projection — `query<Long>("select count(o) from Order o")`, `query<String>("select o.reference …")`.
  */
-inline fun <reified R> Stage.QueryProducer.query(hql: String): JpaQuery<R> = JpaQuery({ hql }, createQuery(hql, R::class.java))
+inline fun <reified R> Stage.QueryProducer.query(
+    @Language("HQL") hql: String,
+): JpaQuery<R> = JpaQuery({ hql }, createQuery(hql, R::class.java))
