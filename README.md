@@ -8,20 +8,23 @@ Its first subject is an **OpenAPI-to-Kotlin client generator**, built as four mo
 chain:
 
 ```
-apps/demo-api/openapi.yaml     one document
+examples/demo-api/openapi.yaml     one document
         │
 libs/openapi-generator         reads it, emits models and a typed client (KotlinPoet)
         │
 plugins/openapi                wraps the generator as a toolchain build task
         │
-apps/demo-client               a Ktorfit client, kotlinx.serialization  ─┐
-apps/demo-spring-client        a Spring @HttpExchange client, Jackson 3 ─┴─ both call apps/demo-api
+examples/demo-client               a Ktorfit client, kotlinx.serialization  ─┐
+examples/demo-spring-client        a Spring @HttpExchange client, Jackson 3 ─┴─ both call examples/demo-api
 ```
 
 Two generated clients drive one hand-written server over real HTTP, so a disagreement between the
 two serialization libraries about what the document means fails a test rather than shipping.
 
-Alongside it are the shared service libraries, which have nothing to do with the generator:
+`examples/jpa-shop` is separate from that chain: a Ktor catalogue over Postgres showing
+`shared-jpa`'s repository, service and audit layer end to end.
+
+Alongside them are the shared service libraries, which have nothing to do with the generator:
 
 | | |
 | --- | --- |

@@ -26,9 +26,10 @@ What exists:
 | `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `libs/shared-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
-| `apps/demo-api` | Ktor server implementing a slice of `apps/demo-api/openapi.yaml` |
-| `apps/demo-client` | Generates a Ktorfit client from that spec and calls the server |
-| `apps/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
+| `examples/demo-api` | Ktor server implementing a slice of `examples/demo-api/openapi.yaml` |
+| `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
+| `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
+| `examples/jpa-shop` | A Ktor catalogue over Postgres showing `shared-jpa`'s repository, service and audit layer |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
@@ -78,7 +79,7 @@ For Ktorfit the generated interfaces are then picked up by `ktorfit-ksp`, which 
 processing step; the interfaces go to `HttpServiceProxyFactory` at runtime.
 
 Both demo apps drive their generated client against the real `demo-api` server over HTTP:
-`apps/demo-client` through Ktorfit and kotlinx.serialization, `apps/demo-spring-client` through a
+`examples/demo-client` through Ktorfit and kotlinx.serialization, `examples/demo-spring-client` through a
 `HttpServiceProxyFactory` proxy and Jackson 3 — which also pins down that a Jackson client and a
 kotlinx server read the same document the same way. `HttpServiceProxyFactory` builds an AOP proxy
 and formats argument values, so a Spring client module needs `spring-aop` and `spring-context`
@@ -558,7 +559,7 @@ the same each time, and the mistakes are the same each time too.
   telling you the feature names are missing, not that grouping does not apply. Nest a `feature`
   inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
   to the other spec styles. One spec class per file, named after the file.
-- **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `apps/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
+- **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
 - **Organise by package, not as a flat pile of files — `test/` exactly as much as `src/`.** A module
   with more than one concern gets a directory per concern, and the directory matches the package —
   `src/parser/` is `com.strange.openapi.parser`. The root package holds only what every package

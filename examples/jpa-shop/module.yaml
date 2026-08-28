@@ -1,0 +1,37 @@
+product: jvm/app
+
+dependencies:
+  # The library this example is about: entities, the DSL, JpaRepository and JpaCrudService.
+  - //libs/shared-jpa
+  # `JpaConnection` and `call.jpa` — one session factory for the application, closed with it.
+  - //libs/shared-ktor
+  - $ktor.server.core
+  - $ktor.server.netty
+  - $ktor.server.contentNegotiation
+  - $ktor.server.statusPages
+  - $ktor.serialization.kotlinx.json
+  # Ktor logs through SLF4J; a no-op provider keeps the output readable
+  - $libs.slf4j.nop
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  ktor:
+    enabled: true
+    version: 3.5.2
+  kotlin:
+    serialization: json
+    # Hibernate instantiates entities reflectively and subclasses them for lazy proxies. Any module
+    # holding entities needs both, this one included — shared-jpa's README has the reasoning.
+    noArg:
+      enabled: true
+      presets: [ jpa ]
+    allOpen:
+      enabled: true
+      annotations:
+        - jakarta.persistence.Entity
+        - jakarta.persistence.MappedSuperclass
+        - jakarta.persistence.Embeddable

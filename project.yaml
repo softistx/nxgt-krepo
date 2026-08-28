@@ -1,7 +1,8 @@
 modules:
-  - apps/demo-api
-  - apps/demo-client
-  - apps/demo-spring-client
+  - examples/demo-api
+  - examples/demo-client
+  - examples/demo-spring-client
+  - examples/jpa-shop
   - libs/openapi-generator
   - libs/shared-amqp
   - libs/shared-common

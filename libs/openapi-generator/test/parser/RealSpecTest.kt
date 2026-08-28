@@ -20,11 +20,11 @@ class RealSpecTest :
         val repoRoot =
             generateSequence(Path.of(System.getProperty("user.dir")).toAbsolutePath()) { it.parent }
                 .firstOrNull { it.resolve("project.yaml").exists() }
-        val spec = repoRoot?.resolve("apps/demo-api/openapi.yaml")
+        val spec = repoRoot?.resolve("examples/demo-api/openapi.yaml")
 
         fun specPath(): Path {
             val path = checkNotNull(spec) { "no project.yaml above user.dir=${System.getProperty("user.dir")}" }
-            check(path.exists()) { "the repo root at $repoRoot has no apps/demo-api/openapi.yaml" }
+            check(path.exists()) { "the repo root at $repoRoot has no examples/demo-api/openapi.yaml" }
             return path
         }
 
@@ -32,7 +32,7 @@ class RealSpecTest :
             scenario("parses the demo spec end to end") {
                 val path =
                     checkNotNull(spec) { "no project.yaml above user.dir=${System.getProperty("user.dir")}" }
-                check(path.exists()) { "the repo root at $repoRoot has no apps/demo-api/openapi.yaml" }
+                check(path.exists()) { "the repo root at $repoRoot has no examples/demo-api/openapi.yaml" }
                 val model = OpenApiParser().parse(path)
 
                 model.groups.map { it.name } shouldContainAll
