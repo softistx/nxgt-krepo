@@ -570,6 +570,29 @@ hand over — a hook that needs it copies what it cares about in `beforeUpdate`.
 *who* is recorded, since only the service knows the principal; *when* belongs to the entity, which
 is the half Hibernate's own lifecycle callbacks do better.
 
+## Who wrote this row, and when
+
+```kotlin
+@Entity
+class Note(@Id var id: Long = 0, var text: String = "") : AuditedEntity()
+```
+
+`AuditedEntity` is a `@MappedSuperclass` carrying `createdAt`, `lastModifiedAt`, `createdBy` and
+`lastModifiedBy` — the four names `shared-mongo`'s `AuditMetadata` uses, so an audit trail answers
+the same question whichever store it came from. Mongo nests them under a `metadata` sub-document
+because a document has somewhere to nest; a table does not, so here they are four columns.
+
+**The timestamps are Hibernate's and the principal is the service's**, and the split is not
+arbitrary. `@PrePersist` and `@PreUpdate` run inside the flush, so *when* is stamped exactly when a
+row is really written: an update the dirty check turns into a no-op fires neither callback and moves
+no timestamp — which a service comparing fields could not have told apart. A spec pins that. Only a
+service knows the principal, so `JpaCrudService.stampCreated` and `stampUpdated` fill in the other
+two, and both are `open` for a subclass that records something else.
+
+The timestamps default to the epoch rather than to `now`, because a plausible-looking value is worse
+than an obviously unset one: a row written through a stateless session runs no callbacks, and an
+epoch stamp says so.
+
 ## Which database
 
 Postgres, MySQL and DB2. Hibernate Reactive names none of them: it picks a driver at runtime from

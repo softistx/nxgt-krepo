@@ -2,6 +2,7 @@ package com.strange.jpa.service
 
 import com.strange.common.page.Page
 import com.strange.jpa.JpaOutsideTransactionException
+import com.strange.jpa.audit.AuditedEntity
 import com.strange.jpa.dsl.JpaSpec
 import com.strange.jpa.dsl.SelectScope
 import com.strange.jpa.page.PageRequest
@@ -73,7 +74,8 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
     ): T {
         transactional(session, "create")
         beforeCreate(input)
-        val created = repository.insert(session, buildCreate(input))
+        val created = buildCreate(input).also(::stampCreated)
+        repository.insert(session, created)
 
         /* Flush rather than wait for the commit: it assigns a generated identifier, and it puts a
            constraint violation here — where the caller can say which input caused it — instead of
@@ -97,7 +99,7 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
            what is already there — the dirty check decides, which is why there is no "changes are
            empty" branch here the way there is in the Mongo service. */
         applyUpdate(existing, input)
-        stamp(existing)
+        stampUpdated(existing)
         session.flush()
 
         return existing.also { afterUpdate(it, session) }
@@ -150,12 +152,25 @@ abstract class JpaCrudService<T : Any, ID : Any, C : Any, U : Any>(
     )
 
     /**
-     * Records who is acting, for an entity that carries it. Nothing by default.
+     * Records who created it, for an [AuditedEntity] and a known [principal].
      *
      * Only the service knows the principal, so *who* is stamped here; *when* belongs to the entity,
-     * which is the half Hibernate's own lifecycle callbacks do better.
+     * where `@PrePersist` and `@PreUpdate` stamp it inside the flush — the one place that can tell a
+     * real write from an update the dirty check turned into a no-op.
      */
-    protected open fun stamp(entity: T) = Unit
+    protected open fun stampCreated(entity: T) {
+        if (entity is AuditedEntity && principal != null) {
+            entity.createdBy = principal
+            entity.lastModifiedBy = principal
+        }
+    }
+
+    /** The same, for an update. */
+    protected open fun stampUpdated(entity: T) {
+        if (entity is AuditedEntity && principal != null) {
+            entity.lastModifiedBy = principal
+        }
+    }
 
     protected open suspend fun beforeCreate(input: C) = Unit
 
