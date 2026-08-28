@@ -102,8 +102,10 @@ the three annotations are listed. **Any module that holds entities needs this bl
 one; `shared-ktor` and `shared-koin` carry it for the single fixture entity in each of their test
 trees.
 
-There is no static metamodel and no Criteria DSL, because there is no `kapt` in this toolchain and
-`hibernate-jpamodelgen` cannot process Kotlin sources without one. HQL is the query language here.
+**There is no static metamodel**, and there cannot be: `hibernate-jpamodelgen` is a javac annotation
+processor, this toolchain runs Java annotation processing for Java and Android modules only, it has
+no kapt, and jpamodelgen has no KSP build. So there is no `Order_` to write queries against —
+`KProperty1` stands in for it, which is what the query DSL below is built on.
 
 ## Naming the entities, or scanning for them
 
@@ -267,6 +269,27 @@ The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both en
 `any(…)` over a list — and `asc`/`desc` take a property the same way. `eq null` is not `is null` — it
 renders `= null`, which is never true in SQL, so ask with `isNull()`.
 
+**A restriction can be named and reused.** `JpaSpec<T>` is the type `where` already takes, given a
+name — a lambda with the query in scope, answering with a predicate or with `null` to restrict
+nothing. Nothing had to be added for `where(spec)` to compile: a Kotlin function type is
+contravariant in its receiver, so a spec written against `Joins<T>` fits a selection and a projection
+alike.
+
+```kotlin
+val large: JpaSpec<Purchase> = { Purchase::total gt 100L }
+val adas: JpaSpec<Purchase> = { join(Purchase::customer)[Buyer::name] eq "ada" }
+
+session.select<Purchase>().where(large).list()
+session.select<Purchase>().where(large or adas).count()
+```
+
+It is the same idea as Spring Data's `Specification<T>`, which is
+`(Root<T>, CriteriaQuery<?>, CriteriaBuilder) -> Predicate` — those three arguments are the receiver
+here, already carrying the typed vocabulary. `and` and `or` compose two of them, and `or` is the one
+that earns its keep: two `where` calls are already `and`ed, and no chain can say `or`. A spec that
+answers `null` restricts nothing, so `or` with one of those is still every row rather than the half
+the other side would have kept.
+
 `update<T> { }` and `delete<T>()` are the write side. They restrict through the same `where` and end
 at `execute()`, which answers with the number of rows touched — and they carry the same warning
 `mutate(hql)` does: they go straight to the database, past everything the session knows.
@@ -405,6 +428,52 @@ Hibernate Reactive has none of this — core's `getKeyedResultList` never reache
 `SelectionQuery` — so the predicate, the cursors and the flip are this module's. There is no row-value
 comparison in the criteria builder either, so the keyset predicate expands to the lexicographic
 `or`-chain a composite index satisfies with a seek.
+
+## Criteria, where the DSL does not go
+
+The DSL is a Kotlin surface over JPA Criteria, and the Criteria underneath is not hidden. Subqueries,
+set operations, window functions and `insert … select` have no spelling in the DSL; they are written
+against Hibernate's own builder, and run through the same suspending terminals:
+
+```kotlin
+val criteria = session.criteria.createQuery(PurchaseLine::class.java)
+val purchase = criteria.from(Purchase::class.java)
+val line = purchase.joinEach(Purchase::lines)
+
+criteria.where(purchase[Purchase::reference] oneOf listOf("P-1", "P-9"))
+criteria.select(line)
+
+session.query(criteria).list()
+```
+
+`session.criteria` is Hibernate's `HibernateCriteriaBuilder` — the one with `sql()`, `ilike` and the
+window functions, which the JPA interface `Stage.QueryProducer.getCriteriaBuilder()` declares away.
+It is not spelled `criteriaBuilder` because that name is already a member, and a member always beats
+an extension.
+
+`query(criteria)`, `mutate(update)`, `mutate(delete)` and `mutate(insert)` are the bridge back:
+`list`, `first`, `single`, `count` and `execute` rather than a `CompletionStage` to remember to
+await. The insert is Hibernate's `JpaCriteriaInsert`, off `createCriteriaInsertSelect` or
+`createCriteriaInsertValues`, and is the one statement the DSL has no form of at all.
+
+**`purchase[Purchase::reference]` rather than `purchase.get<String>("reference")`.** `get`, `join`
+and `joinEach` take a `KProperty1` on any `Path` or `From`, not only inside a query scope — so a
+hand-written criteria names its attributes the way the DSL does, and every operator in the DSL
+(`eq`, `gt`, `oneOf`, `like`, `and`, `or`) is an extension on `Expression`, which a path already is.
+Indexing chains across a to-one association the way Criteria does, joining implicitly:
+`purchase[Purchase::customer][Buyer::name]`.
+
+Unlike `join` inside a query scope, the one on a `From` is not remembered — two calls are two joins,
+as they are in Criteria itself. Hold it in a `val`, which is the shape a hand-built criteria has
+anyway.
+
+**This is why the DSL exists at all.** `Book_.title` — the static metamodel Hibernate's own examples
+use — is generated by `hibernate-jpamodelgen`, a *javac* annotation processor. This toolchain runs
+Java annotation processing for Java and Android modules only, has no kapt, and jpamodelgen has no KSP
+build, so `Purchase_` cannot exist here. Without the adapters above, a criteria written by hand names
+its attributes with strings that are unchecked until the query runs — worse than the HQL beside it,
+which is at least validated against the mapping when the factory boots. `KProperty1` is the metamodel
+this repo can have.
 
 ## Which database
 
@@ -651,6 +720,11 @@ did not create.
 
 ## Not here
 
-No migrations, no repository or CRUD layer, no `KProperty` query DSL, no second-level cache, and one
-datasource. The first two are the natural next features; the schema question in particular deserves
-its own decision rather than a default chosen here.
+No migrations, no repository or CRUD layer, no second-level cache, and one datasource. The first two
+are the natural next features; the schema question in particular deserves its own decision rather
+than a default chosen here.
+
+The query DSL stops where JPA Criteria keeps going — no subqueries, no set operations, no window
+functions, no `insert … select`. Those are written against Hibernate's own builder and run through
+the same terminals, which is a deliberate boundary rather than a gap to fill: see *Criteria, where
+the DSL does not go*.

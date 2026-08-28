@@ -1,7 +1,6 @@
 package com.strange.jpa.dsl
 
-import jakarta.persistence.criteria.CriteriaQuery
-import org.hibernate.query.sqm.tree.SqmVisitableNode
+import com.strange.jpa.query.criteria
 import org.hibernate.reactive.stage.Stage
 
 /**
@@ -33,14 +32,6 @@ import org.hibernate.reactive.stage.Stage
  * `:parameters`.
  */
 inline fun <reified T : Any> Stage.QueryProducer.select(block: SelectScope<T>.() -> Unit = {}): SelectScope<T> {
-    val criteria = builder.createQuery(T::class.java)
+    val criteria = criteria.createQuery(T::class.java)
     return SelectScope(this, criteria, criteria.from(T::class.java)).apply(block)
 }
-
-/**
- * The query rendered back to HQL, for an exception that has to say which query it was.
- *
- * A criteria query has no source text, so this walks the tree Hibernate built and prints it. It runs
- * only when a terminal is about to throw.
- */
-internal fun CriteriaQuery<*>.hql(): String = runCatching { (this as SqmVisitableNode).toHqlString() }.getOrElse { "a criteria query" }

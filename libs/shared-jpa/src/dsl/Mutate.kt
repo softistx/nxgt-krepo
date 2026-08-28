@@ -1,5 +1,6 @@
 package com.strange.jpa.dsl
 
+import com.strange.jpa.query.criteria
 import org.hibernate.reactive.stage.Stage
 
 /**
@@ -43,13 +44,13 @@ internal inline fun <reified T : Any> updateOn(
     producer: Stage.QueryProducer,
     block: UpdateScope<T>.() -> Unit,
 ): UpdateScope<T> {
-    val statement = producer.builder.createCriteriaUpdate(T::class.java)
+    val statement = producer.criteria.createCriteriaUpdate(T::class.java)
     return UpdateScope(producer, T::class, statement, statement.from(T::class.java)).apply(block)
 }
 
 /** Builds the `delete`, wherever it was called from. */
 @PublishedApi
 internal inline fun <reified T : Any> deleteOn(producer: Stage.QueryProducer): DeleteScope<T> {
-    val statement = producer.builder.createCriteriaDelete(T::class.java)
+    val statement = producer.criteria.createCriteriaDelete(T::class.java)
     return DeleteScope(producer, T::class, statement, statement.from(T::class.java))
 }
