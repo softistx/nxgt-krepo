@@ -17,6 +17,10 @@ dependencies:
   - $libs.mongodb.driver.reactivestreams: exported
   - $libs.kotlinx.coroutines.reactive
 
+  # Page and PageInfo, which are not Mongo's — shared-jpa returns the same two. Exported because
+  # `findPage` answers with a `Page`, so a consumer cannot call it without seeing the type.
+  - //libs/shared-common: exported
+
 test-dependencies:
   # the replica set the integration specs talk to, started for the run when the workspace's own is
   # not there — test-only, so nothing here reaches a consumer of this library
