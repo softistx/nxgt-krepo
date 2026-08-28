@@ -25,7 +25,7 @@ import io.kotest.matchers.string.shouldContain
 class JpaRepositoryTest :
     FeatureSpec({
 
-        val purchases = JpaRepository(Purchase::class, Purchase::id)
+        val purchases = jpaRepository(Purchase::id)
 
         suspend fun JpaSession.seed() {
             val ada = Buyer(1, "ada", "gold")

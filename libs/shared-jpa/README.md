@@ -269,13 +269,6 @@ The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both en
 `any(…)` over a list — and `asc`/`desc` take a property the same way. `eq null` is not `is null` — it
 renders `= null`, which is never true in SQL, so ask with `isNull()`.
 
-**Every entry point also takes the entity as a value.** `select`, `project`, `delete`, `find` and
-`get` are `inline reified`, which a class generic in its entity cannot reach — a type parameter is
-not reifiable, so `select<T>()` does not compile inside one. `select(Purchase::class)`,
-`project(Purchase::class, String::class) { … }`, `delete(Purchase::class)` and
-`session.find(Purchase::class, id)` are the same functions with the type as an argument, and the
-reified forms delegate to them so there is one implementation rather than two.
-
 **A restriction can be named and reused.** `JpaSpec<T>` is the type `where` already takes, given a
 name — a lambda with the query in scope, answering with a predicate or with `null` to restrict
 nothing. Nothing had to be added for `where(spec)` to compile: a Kotlin function type is
@@ -488,7 +481,7 @@ this repo can have.
 and a subclass extends with the two or three queries that are specific to an entity.
 
 ```kotlin
-val purchases = JpaRepository(Purchase::class, Purchase::id)
+val purchases = jpaRepository(Purchase::id)
 
 jpa.transaction { session ->
     purchases.insert(session, Purchase(4, "P-4", 10))
@@ -505,6 +498,13 @@ Reads: `findAll`, `findOne`, `findById`, `requireById`, `findByIds`, `findPage`,
 `existsById`, `existingIds`. Writes: `insert`, `insertAll`, `update`, `delete`, `deleteById`,
 `deleteByIds`. Everywhere a restriction is taken it is a `JpaSpec<T>`, so the same named
 specifications compose here as in a bare `select`.
+
+`jpaRepository(Purchase::id)` infers both type arguments from the property reference, so neither the
+entity nor the identifier type is written twice and no `::class` is passed. The constructor taking a
+`KClass` is what a subclass calls, since it names its entity in its `extends` clause anyway — and it
+is why the class needs telling at all: a class cannot have a `reified` type parameter, so `select<T>()`
+does not compile inside one. The value-typed `select`, `project` and `find` that make that work are
+internal to the module; `select<Purchase>()` stays the one public spelling.
 
 **The session is the first argument, not a field**, and that is the shape the confinement rule
 forces. A Mongo collection is a long-lived object a repository can hold; a session belongs to the
