@@ -68,6 +68,7 @@ suspend fun <T : Any> SelectScope<T>.page(request: PageRequest): Page<T> {
     // Through JpaQuery rather than the raw Stage query, so a paged query that fails names itself in
     // HQL like every other one, and `readOnly` is applied rather than quietly lost.
     val query = JpaQuery<T>({ criteria.hql() }, producer.createQuery(criteria))
+    fetchPlan?.let { query.plan(it) }
     if (resultsReadOnly) query.readOnly()
     val limit = request.limit
     if (limit != null) query.limit(limit + 1)
@@ -110,7 +111,8 @@ private fun <T : Any> SelectScope<T>.checkSort() {
     // part of its collection. `QueryScope.limit` carries the measurement.
     if (joins.collectionFetched) {
         throw JpaPaginationException(
-            "a paged query cannot fetchEach: the page would be cut across the joined rows, so its " +
+            "a paged query cannot load a collection — fetchEach, or a graph that addEach-es one: " +
+                "the page would be cut across the joined rows, so its " +
                 "last row would hold part of its collection and say nothing. Page the owners here " +
                 "and fetch their collections in a second query off the ids, or project the columns " +
                 "the page shows",

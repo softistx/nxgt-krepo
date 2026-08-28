@@ -2,10 +2,13 @@ package com.strange.jpa.session
 
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.dsl.DeleteScope
+import com.strange.jpa.dsl.GraphScope
+import com.strange.jpa.dsl.JpaEntityGraph
 import com.strange.jpa.dsl.ProjectScope
 import com.strange.jpa.dsl.SelectScope
 import com.strange.jpa.dsl.UpdateScope
 import com.strange.jpa.dsl.deleteOn
+import com.strange.jpa.dsl.entityGraph
 import com.strange.jpa.dsl.project
 import com.strange.jpa.dsl.select
 import com.strange.jpa.dsl.updateOn
@@ -65,6 +68,33 @@ class JpaSession internal constructor(
         id: Any,
         lock: LockModeType,
     ): T? = raw.find(T::class.java, id, lock).await()
+
+    /**
+     * By id, loading what [graph] plans — the one thing a fetch join cannot do.
+     *
+     * A load by identifier has no query to hang a join on, so without this the only way to read an
+     * association off a row whose id you already had was to write a `select` instead. The entity
+     * comes from the plan, so there is nothing to reify here.
+     */
+    suspend fun <T : Any> find(
+        id: Any,
+        graph: JpaEntityGraph<T>,
+    ): T? = raw.find(graph.raw, id).await()
+
+    /** The same, or [JpaNotFoundException]. */
+    suspend fun <T : Any> get(
+        id: Any,
+        graph: JpaEntityGraph<T>,
+    ): T = find(id, graph) ?: throw JpaNotFoundException(graph.type, id)
+
+    /**
+     * A fetch plan for [T], built from its properties — see [JpaEntityGraph].
+     *
+     * ```kotlin
+     * val withBuyer = session.entityGraph<Purchase> { add(Purchase::customer) }
+     * ```
+     */
+    inline fun <reified T : Any> entityGraph(noinline block: GraphScope<T>.() -> Unit): JpaEntityGraph<T> = raw.entityGraph(block)
 
     // ─── Writing ──────────────────────────────────────────────────────────────
 
