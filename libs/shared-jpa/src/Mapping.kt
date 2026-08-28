@@ -31,7 +31,7 @@ internal fun rejectUuidIdentifiers(entities: List<KClass<*>>) {
             .flatMap { it.declaredFields.asSequence() }
             .filter { it.isAnnotationPresent(Id::class.java) && it.type == Uuid::class.java }
             .forEach { field ->
-                error(
+                throw JpaMappingException(
                     "${entity.simpleName}.${field.name} is a kotlin.uuid.Uuid identifier, which cannot be mapped: " +
                         "Hibernate does not allow an AttributeConverter on an @Id, so the column would silently " +
                         "become bytea. Use java.util.UUID for the identifier — kotlin.uuid.Uuid is fine everywhere else.",
@@ -73,7 +73,7 @@ internal fun rejectMismatchedJsonShapes(
 
                 val (given, wanted) =
                     if (isList) "SqlTypes.JSON" to "SqlTypes.JSON_ARRAY" else "SqlTypes.JSON_ARRAY" to "SqlTypes.JSON"
-                error(
+                throw JpaMappingException(
                     "${entity.simpleName}.${field.name} is annotated @JdbcTypeCode($given) and serializes to " +
                         "${if (isList) "an array" else "an object"}: use $wanted. The column would be created and " +
                         "every write to it would fail with a Vert.x \"Failed to decode\".",

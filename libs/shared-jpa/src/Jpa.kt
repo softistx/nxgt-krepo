@@ -94,7 +94,7 @@ class Jpa internal constructor(
             vertx: Vertx? = null,
         ): Jpa =
             withContext(Dispatchers.IO) {
-                require(entities.isNotEmpty()) { "Jpa.connect needs at least one entity class" }
+                if (entities.isEmpty()) throw JpaMappingException("Jpa.connect needs at least one entity class")
                 rejectUuidIdentifiers(entities)
                 rejectMismatchedJsonShapes(entities, config.json)
 

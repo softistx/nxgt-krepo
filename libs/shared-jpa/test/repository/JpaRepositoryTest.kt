@@ -1,12 +1,14 @@
 package com.strange.jpa.repository
 
 import com.strange.jpa.Jpa
+import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.dsl.eq
 import com.strange.jpa.dsl.get
 import com.strange.jpa.dsl.gt
 import com.strange.jpa.entity.Buyer
+import com.strange.jpa.entity.Keyed
 import com.strange.jpa.entity.Purchase
 import com.strange.jpa.entity.PurchaseLine
 import com.strange.jpa.entity.Ticket
@@ -193,9 +195,19 @@ class JpaRepositoryTest :
                 }
             }
 
+            scenario("is refused when the reference names a class that is not an entity") {
+                // The mirror of the scenario above, and the case it used to get wrong: `Keyed::id`
+                // type-checks as JpaRepository<Keyed, Long> and used to build happily, failing only
+                // on the first query with a Hibernate UnknownEntityTypeException out of a
+                // CompletionStage full of Vert.x frames.
+                shouldThrow<JpaMappingException> { JpaRepository(Keyed::id) }
+                    .message
+                    .shouldNotBeNull() shouldContain "Keyed is not an @Entity"
+            }
+
             scenario("is refused when the reference is not a property of anything") {
                 val notAProperty: (Purchase) -> Long = { it.id }
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<JpaMappingException> {
                     JpaRepository(
                         object : kotlin.reflect.KProperty1<Purchase, Long> by Purchase::id {
                             override fun get(receiver: Purchase): Long = notAProperty(receiver)

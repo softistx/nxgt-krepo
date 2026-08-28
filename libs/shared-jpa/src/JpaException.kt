@@ -108,6 +108,7 @@ class JpaPaginationException(
  * no warning, no row. `JpaCrudService` refuses rather than participates — the alternative is a
  * create that returns an entity, reports success, and wrote nothing.
  */
+
 class JpaOutsideTransactionException(
     val operation: String,
     val type: KClass<*>,
@@ -115,3 +116,17 @@ class JpaOutsideTransactionException(
         "$operation on ${type.simpleName} needs a transaction: a session without one flushes nothing, " +
             "so this would have been discarded. Use transaction { } rather than session { }",
     )
+
+/**
+ * A mapping or a bootstrap this library refuses before anything connects.
+ *
+ * These are the checks that exist because Hibernate would otherwise accept the configuration and
+ * fail later, somewhere unhelpful: a `kotlin.uuid.Uuid` identifier that would silently become a
+ * `bytea` column, a `@JdbcTypeCode` that disagrees with what the type serializes to, a scan that
+ * matched no entity. They are the module's best diagnostics, and until now a caller wiring this up
+ * in a Ktor `install` or a Koin `single { }` could not catch them as ours — they arrived as bare
+ * `IllegalStateException`, indistinguishable from any other.
+ */
+class JpaMappingException(
+    message: String,
+) : JpaException(message)
