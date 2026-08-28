@@ -8,7 +8,7 @@ import com.strange.mongo.DocumentNotFoundException
 import com.strange.mongo.MongoTestCluster
 import com.strange.mongo.Note
 import com.strange.mongo.collection
-import com.strange.mongo.repository.MongoCrudRepository
+import com.strange.mongo.repository.mongoRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -32,7 +32,7 @@ private class FailingTaskService(
 private class NoteService(
     database: MongoDatabase,
 ) : MongoCrudService<Note, String, Note, String>(
-        MongoCrudRepository(database.collection<Note>("notes"), Note::id),
+        mongoRepository<Note, String>(database, "notes"),
         principal = "tester",
     ) {
     override suspend fun buildCreate(input: Note): Note = input

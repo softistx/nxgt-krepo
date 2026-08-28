@@ -7,7 +7,7 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.strange.mongo.audit.AuditMetadata
 import com.strange.mongo.audit.Audited
 import com.strange.mongo.collection
-import com.strange.mongo.repository.MongoCrudRepository
+import com.strange.mongo.repository.mongoRepository
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
@@ -39,7 +39,7 @@ internal open class TaskService(
     principal: String? = null,
     transactions: MongoCluster? = null,
 ) : MongoCrudService<Task, String, NewTask, EditTask>(
-        MongoCrudRepository(database.collection<Task>("tasks"), Task::id),
+        mongoRepository<Task, String>(database, "tasks"),
         principal,
         transactions,
     ) {
