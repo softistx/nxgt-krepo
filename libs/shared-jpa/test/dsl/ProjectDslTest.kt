@@ -95,8 +95,8 @@ class ProjectDslTest :
                                 .project<Purchase, Tally> {
                                     val buyer = join(Purchase::customer)
                                     groupBy { buyer[Buyer::name] }
-                                    having { builder.count(this[Purchase::id]) gt 1L }
-                                    construct(::Tally, buyer[Buyer::name], builder.count(this[Purchase::id]))
+                                    having { count(this[Purchase::id]) gt 1L }
+                                    construct(::Tally, buyer[Buyer::name], count(this[Purchase::id]))
                                 }.list()
                         }
 
