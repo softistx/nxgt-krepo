@@ -65,7 +65,8 @@ ligne de plomberie.
       total~~ — **non écrits, et volontairement** : les deux sont des `when` exhaustifs sur une
       enum, donc déjà garantis à la compilation ; un spec ne pourrait pas échouer. Ce qui reste
       vraiment à vérifier — qu'aucune combinaison ne rende une couleur non spécifiée — demande
-      un rendu, et il n'y a pas encore de harnais de test Compose ici (phase 2)
+      un rendu — il y en a un depuis (voir *Révisions*), mais il sert aux affirmations sur les
+      pixels, pas à retester un `when` exhaustif
 - [x] Les bornes de `StrangeMotion`, et `enabled = false` met les durées à zéro
 
 **Catalogue de démonstration**
@@ -144,6 +145,20 @@ qu'une reconstruction jette pour redessiner un conteneur.
       négatif et l'application mourait sur *Padding must be non-negative*
 - [x] Spec : tout spec `spatial` est amorti sous 1, tout spec `effects` exactement à 1 — c'est le
       fait sur lequel repose la règle
+
+### Un harnais qui rend, parce que deux bugs ne se voyaient qu'à l'écran
+
+`ImageComposeScene` rend un composable dans un bitmap, sans fenêtre, en millisecondes et sur un
+hôte sans écran. Les specs qui s'en servent sont dans `test@jvm/` : la bibliothèque native de skiko
+vient de `$compose.desktop.currentOs`, qui n'existe que sur jvm.
+
+- [x] `ChipHoverTest` — le survol se voit sur une puce sélectionnée comme sur une autre. La teinte
+      est de 8 % sur un conteneur transparent et de 16 % sur un conteneur plein : une puce
+      sélectionnée est celle qu'on vient de cliquer, donc elle porte déjà la couche de focus, et
+      8 % de plus n'y déplaçait le pixel que de 0,068 contre 0,145 ailleurs
+- [x] `ResponsiveButtonTest` — replié, le bouton fait 40 × 40, exactement le bouton-icône de M3, et
+      non une pilule dont on a retiré le texte (68 × 40, le rembourrage du label resté sur place)
+- [x] `ResponsiveButton` replié **est** un `IconButton` ; `AnimatedContent` passe de l'une à l'autre
 
 ---
 

@@ -108,8 +108,12 @@ Card(style = StrangeTheme.styles.card then { alpha(0.6f) })
 4. **Document it in `docs/components.md`** and tick its box in `docs/roadmap.md`, in that same
    change.
 5. **Spec whatever does not need a renderer**: token derivation, colour derivation, enum totality,
-   path data. Anything that needs a composition has no harness here yet — say so rather than writing
-   a test that cannot fail.
+   path data. A claim about *pixels* — a hover that has to be visible, a collapsed button that has
+   to be round — is measured in pixels instead: `ImageComposeScene` renders a composable to a
+   bitmap with no window, in milliseconds, on a headless host. Those specs live in `test@jvm/`
+   (`ChipHoverTest`, `ResponsiveButtonTest`) because skiko's native library comes from
+   `$compose.desktop.currentOs`, which is jvm-only. Both were written because something looked
+   right and was not.
 
 ## Platforms
 
