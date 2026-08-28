@@ -482,6 +482,53 @@ its attributes with strings that are unchecked until the query runs — worse th
 which is at least validated against the mapping when the factory boots. `KProperty1` is the metamodel
 this repo can have.
 
+## One entity, as an object
+
+`JpaRepository<T, ID>` is the noun that speaks the DSL — what a service holds, a test substitutes,
+and a subclass extends with the two or three queries that are specific to an entity.
+
+```kotlin
+val purchases = JpaRepository(Purchase::class, Purchase::id)
+
+jpa.transaction { session ->
+    purchases.insert(session, Purchase(4, "P-4", 10))
+    purchases.findAll(session) { Purchase::total gt 100L }
+}
+
+class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::class, Purchase::id) {
+    suspend fun findByBuyer(session: JpaSession, name: String) =
+        findAll(session) { join(Purchase::customer)[Buyer::name] eq name }
+}
+```
+
+Reads: `findAll`, `findOne`, `findById`, `requireById`, `findByIds`, `findPage`, `count`, `exists`,
+`existsById`, `existingIds`. Writes: `insert`, `insertAll`, `update`, `delete`, `deleteById`,
+`deleteByIds`. Everywhere a restriction is taken it is a `JpaSpec<T>`, so the same named
+specifications compose here as in a bare `select`.
+
+**The session is the first argument, not a field**, and that is the shape the confinement rule
+forces. A Mongo collection is a long-lived object a repository can hold; a session belongs to the
+event loop that opened it and does not outlive its block. So the repository is a singleton the
+container builds once and the unit of work arrives per call — which is also what lets two
+repositories share one transaction, the ordinary case that a repository holding its own session
+could not serve.
+
+**`deleteById` loads the row and removes it** rather than issuing a bulk `delete` on the identifier.
+A bulk statement goes straight to the database: no cascade fires, no `@PreRemove` runs, and a copy
+already loaded in this session keeps existing. One extra select buys all three back, and the bulk
+form is still a `delete(Purchase::class).where { … }` away for a caller who has measured. This is
+where the JPA repository and `shared-mongo`'s deliberately differ — Mongo has neither cascades nor a
+persistence context to keep honest.
+
+**Stateful sessions only.** A stateless session has no persistence context, so `update` would have
+nothing to merge into and `delete` nothing to cascade from. Bulk loading through one is a job for the
+DSL directly.
+
+`existingIds` reads one column rather than the entities, which needs the identifier's `Class` — a
+property reference does not carry one without `kotlin-reflect`, so it comes from Hibernate's
+metamodel. There is no `ensureIndexes` here the way there is in Mongo: the schema is the migration
+tool's business, not the repository's.
+
 ## Which database
 
 Postgres, MySQL and DB2. Hibernate Reactive names none of them: it picks a driver at runtime from
