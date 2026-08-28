@@ -44,8 +44,9 @@ dependencies:
   # never touches a ClassGraph type, so this is an implementation detail of one function.
   - $libs.classgraph
 
-  # CloseGuard: the factory is closed by whoever built it, and by a DI container too
-  - //libs/shared-common
+  # CloseGuard, and Page/PageInfo — which are shared-mongo's answer too, and are part of this
+  # module's own API through `selectPage`, so a consumer has to see them.
+  - //libs/shared-common: exported
 
 test-dependencies:
   # the Postgres the integration specs talk to, started for the run when the workspace's own is not

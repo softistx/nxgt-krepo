@@ -43,7 +43,7 @@ suspend inline fun <reified T : Any> Jpa.get(id: Any): T = session { it.get<T>(i
  *
  * It loads the entity first, which a `delete from` in HQL would not: that is what makes the cascades
  * and the `@PreRemove` callbacks fire, and what makes the answer trustworthy. When neither matters
- * and the volume does, `mutation("delete from …")` is one statement instead of two.
+ * and the volume does, `mutate("delete from …")` is one statement instead of two.
  */
 suspend inline fun <reified T : Any> Jpa.removeById(id: Any): Boolean =
     transaction { session ->

@@ -1,12 +1,25 @@
 package com.strange.jpa.session
 
+import com.strange.common.page.Page
 import com.strange.jpa.JpaNotFoundException
+import com.strange.jpa.dsl.DeleteScope
+import com.strange.jpa.dsl.ProjectScope
+import com.strange.jpa.dsl.SelectScope
+import com.strange.jpa.dsl.UpdateScope
+import com.strange.jpa.dsl.deleteOn
+import com.strange.jpa.dsl.project
+import com.strange.jpa.dsl.select
+import com.strange.jpa.dsl.updateOn
+import com.strange.jpa.page.PageRequest
+import com.strange.jpa.page.PageScope
+import com.strange.jpa.page.selectPage
 import com.strange.jpa.query.JpaMutation
 import com.strange.jpa.query.JpaQuery
-import com.strange.jpa.query.mutation
-import com.strange.jpa.query.nativeMutation
+import com.strange.jpa.query.mutate
+import com.strange.jpa.query.nativeMutate
 import com.strange.jpa.query.nativeQuery
 import com.strange.jpa.query.query
+import jakarta.persistence.criteria.Selection
 import kotlinx.coroutines.future.await
 import org.hibernate.reactive.stage.Stage
 
@@ -55,12 +68,30 @@ class JpaStatelessSession internal constructor(
     /** An HQL query returning [R]. */
     inline fun <reified R : Any> query(hql: String): JpaQuery<R> = raw.query(hql)
 
+    /** A query built from the entity's own properties instead of an HQL string. */
+    inline fun <reified R : Any> select(block: SelectScope<R>.() -> Unit): JpaQuery<R> = raw.select(block)
+
+    /** A query over [R]'s entity returning something else — a summary, one column, a count. */
+    inline fun <reified E : Any, reified R : Any> project(block: ProjectScope<E, R>.() -> Selection<R>): JpaQuery<R> = raw.project(block)
+
+    /** One page of a query, cut by keyset rather than by `offset`. */
+    suspend inline fun <reified R : Any> selectPage(
+        request: PageRequest,
+        block: PageScope<R>.() -> Unit,
+    ): Page<R> = raw.selectPage(request, block)
+
     /** SQL, for what HQL cannot say. */
     inline fun <reified R : Any> nativeQuery(sql: String): JpaQuery<R> = raw.nativeQuery(sql)
 
+    /** A bulk `update` built from the entity's own properties. */
+    inline fun <reified R : Any> update(block: UpdateScope<R>.() -> Unit): JpaMutation = updateOn(raw, block)
+
+    /** A bulk `delete`, the same way. */
+    inline fun <reified R : Any> delete(block: DeleteScope<R>.() -> Unit): JpaMutation = deleteOn(raw, block)
+
     /** A bulk HQL `update` or `delete`. */
-    fun mutation(hql: String): JpaMutation = raw.mutation(hql)
+    fun mutate(hql: String): JpaMutation = raw.mutate(hql)
 
     /** The same in SQL. */
-    fun nativeMutation(sql: String): JpaMutation = raw.nativeMutation(sql)
+    fun nativeMutate(sql: String): JpaMutation = raw.nativeMutate(sql)
 }

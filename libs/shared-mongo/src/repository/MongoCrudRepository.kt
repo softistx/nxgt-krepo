@@ -2,7 +2,7 @@ package com.strange.mongo.repository
 
 import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoCollection
-import com.strange.mongo.page.Page
+import com.strange.common.page.Page
 import com.strange.mongo.page.PaginationOptions
 import com.strange.mongo.page.findPage
 import com.strange.mongo.query.count
