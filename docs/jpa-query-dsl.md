@@ -109,8 +109,49 @@ The rules, each pinned by a spec:
 - **Only `select` has them.** A projection has no owner in its select list to hang a fetch on, so
   Hibernate refuses one at execution — and a method that is always a runtime failure is better not
   offered.
-- **One level.** There is no fetch from a fetch; two levels is a criteria query run through the same
-  terminals, which is the same boundary subqueries and window functions sit behind.
+- **One level.** There is no fetch from a fetch. Two levels is what an entity graph is for, below.
+
+## Entity graphs, when a fetch join cannot reach
+
+```kotlin
+val withBuyer = session.entityGraph<Purchase> { add(Purchase::customer) }
+
+session.find(1L, withBuyer)                          // no query to hang a join on
+session.select<Purchase>().graph(withBuyer).list()
+purchases.requireById(session, 1L, withBuyer)
+```
+
+A graph is a fetch *plan*: what to load, said once and applied where it is needed. On a query it does
+what `fetch` does, so it is not a second spelling of the same thing — it earns its place in three
+places a fetch join does not reach.
+
+- **Loading by identifier.** `find`, `get`, `JpaRepository.findById`/`requireById` have no query to
+  join on. Before this, reading an association off a row whose id you already had meant writing a
+  `select` instead — and in a reactive session the association you did not load does not cost a
+  second select, it throws. Both session types take one, and the stateless one needs it most: with
+  no persistence context there is no initialising anything after the fact.
+- **Depth.** `subgraph` and `subgraphEach` nest as far as the mapping does, where `fetch` stops at
+  one level on purpose.
+- **Being a value.** A plan is named, held in a `val`, passed to a repository, and applied to a
+  `find` and a `select` that then cannot disagree about what "a purchase with its buyer" is. It
+  outlives the session that built it — it is keyed to the factory's mapping — so one built at
+  startup serves every request.
+
+The rules, each pinned by `EntityGraphTest`:
+
+- **`add` for a to-one or a basic attribute, `addEach` for a collection.** JPA has one call for both;
+  these are two because the plan has to know whether it holds a collection, and `KProperty1` is
+  covariant in its value so `add(Purchase::lines)` would type-check and slip past. Each is checked
+  against the mapping and refuses the other's argument by name — which also means a misspelled
+  attribute fails while the plan is being built, naming the entity, rather than inside Hibernate.
+- **A plan holding a collection makes `limit`, `offset` and `page` refuse**, for the same measured
+  reason a `fetchEach` does. A plan of to-ones multiplies no rows and pages normally.
+- **It is a fetch graph, not a load graph.** An association the mapping declares `EAGER` and the plan
+  does not name becomes lazy for that query, and reading it then throws. That is one more reason for
+  the rule in the module README: mark every association `LAZY` and say what each query needs, and
+  there is nothing eager left to lose.
+- **`graph()` is on `select` only.** Hibernate's `setPlan` takes a graph of the query's own result
+  type, and a projection's rows are not the entity — the type says so before the runtime has to.
 
 The block `select<T> { }` still takes is the same query and the same `where` — it is somewhere to put
 a `val` for a join, and nothing more. Either form, or a mixture, builds the same SQL; a spec compares
