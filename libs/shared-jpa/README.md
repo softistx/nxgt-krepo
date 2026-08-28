@@ -269,6 +269,13 @@ The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both en
 `any(…)` over a list — and `asc`/`desc` take a property the same way. `eq null` is not `is null` — it
 renders `= null`, which is never true in SQL, so ask with `isNull()`.
 
+**Every entry point also takes the entity as a value.** `select`, `project`, `delete`, `find` and
+`get` are `inline reified`, which a class generic in its entity cannot reach — a type parameter is
+not reifiable, so `select<T>()` does not compile inside one. `select(Purchase::class)`,
+`project(Purchase::class, String::class) { … }`, `delete(Purchase::class)` and
+`session.find(Purchase::class, id)` are the same functions with the type as an argument, and the
+reified forms delegate to them so there is one implementation rather than two.
+
 **A restriction can be named and reused.** `JpaSpec<T>` is the type `where` already takes, given a
 name — a lambda with the query in scope, answering with a predicate or with `null` to restrict
 nothing. Nothing had to be added for `where(spec)` to compile: a Kotlin function type is
@@ -474,6 +481,134 @@ build, so `Purchase_` cannot exist here. Without the adapters above, a criteria 
 its attributes with strings that are unchecked until the query runs — worse than the HQL beside it,
 which is at least validated against the mapping when the factory boots. `KProperty1` is the metamodel
 this repo can have.
+
+## One entity, as an object
+
+`JpaRepository<T, ID>` is the noun that speaks the DSL — what a service holds, a test substitutes,
+and a subclass extends with the two or three queries that are specific to an entity.
+
+```kotlin
+val purchases = JpaRepository(Purchase::class, Purchase::id)
+
+jpa.transaction { session ->
+    purchases.insert(session, Purchase(4, "P-4", 10))
+    purchases.findAll(session) { Purchase::total gt 100L }
+}
+
+class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::class, Purchase::id) {
+    suspend fun findByBuyer(session: JpaSession, name: String) =
+        findAll(session) { join(Purchase::customer)[Buyer::name] eq name }
+}
+```
+
+Reads: `findAll`, `findOne`, `findById`, `requireById`, `findByIds`, `findPage`, `count`, `exists`,
+`existsById`, `existingIds`. Writes: `insert`, `insertAll`, `update`, `delete`, `deleteById`,
+`deleteByIds`. Everywhere a restriction is taken it is a `JpaSpec<T>`, so the same named
+specifications compose here as in a bare `select`.
+
+**The session is the first argument, not a field**, and that is the shape the confinement rule
+forces. A Mongo collection is a long-lived object a repository can hold; a session belongs to the
+event loop that opened it and does not outlive its block. So the repository is a singleton the
+container builds once and the unit of work arrives per call — which is also what lets two
+repositories share one transaction, the ordinary case that a repository holding its own session
+could not serve.
+
+**`deleteById` loads the row and removes it** rather than issuing a bulk `delete` on the identifier.
+A bulk statement goes straight to the database: no cascade fires, no `@PreRemove` runs, and a copy
+already loaded in this session keeps existing. One extra select buys all three back, and the bulk
+form is still a `delete(Purchase::class).where { … }` away for a caller who has measured. This is
+where the JPA repository and `shared-mongo`'s deliberately differ — Mongo has neither cascades nor a
+persistence context to keep honest.
+
+**Stateful sessions only.** A stateless session has no persistence context, so `update` would have
+nothing to merge into and `delete` nothing to cascade from. Bulk loading through one is a job for the
+DSL directly.
+
+**Wiring one up takes no wiring.** A repository holds an entity class and a property reference and
+nothing else — no factory, no session, no lifecycle — so it is an ordinary class to a container, and
+the only injectable piece is the `Jpa` that `jpaModule` and `JpaConnection` already provide:
+
+```kotlin
+// Koin
+single { PurchaseRepository() }
+factory { (principal: String?) -> PurchaseService(get(), principal) }
+
+// Ktor DI
+dependencies { provide<PurchaseRepository> { PurchaseRepository() } }
+```
+
+The service is a `factory` rather than a `single` because its principal is per-request while the
+repository is not. `shared-mongo` registers neither of its two either, for the same reason: what a
+container has to build is the connection, and that is already provided.
+
+`existingIds` reads one column rather than the entities, which needs the identifier's `Class` — a
+property reference does not carry one without `kotlin-reflect`, so it comes from Hibernate's
+metamodel. There is no `ensureIndexes` here the way there is in Mongo: the schema is the migration
+tool's business, not the repository's.
+
+## The flow every service repeats
+
+`JpaCrudService<T, ID, C, U>` is the create/update/delete flow with the parts that differ left as
+hooks. A subclass writes the two methods that are genuinely about its entity:
+
+```kotlin
+class PurchaseService(repository: JpaRepository<Purchase, Long>, principal: String? = null) :
+    JpaCrudService<Purchase, Long, NewPurchase, EditPurchase>(repository, principal) {
+
+    override suspend fun buildCreate(input: NewPurchase) = Purchase(input.id, input.reference)
+
+    override suspend fun applyUpdate(existing: Purchase, input: EditPurchase) {
+        input.reference?.let { existing.reference = it }
+    }
+}
+```
+
+**An update mutates the managed entity; it does not build a statement.** That is the whole
+difference from `MongoCrudService`, whose hook returns update operators and whose empty list means
+"write nothing". Here the persistence context already knows what changed, so a hook assigning the
+value a column already has writes nothing — Hibernate's dirty check decides, and it is better at it
+than a hook comparing fields. There is no "changes are empty" branch on this side because there is
+nothing for it to do.
+
+**A write outside a transaction is refused.** `session { }` flushes nothing, so `create` there would
+build an entity, return it, report success and write no row. `JpaOutsideTransactionException` names
+the operation, the entity and the fix. Reads are untouched — they need no transaction.
+
+**`create` and `update` flush.** Not for the write, which the commit would do anyway, but for
+*when*: a generated identifier is assigned, and a constraint violation surfaces at the call that
+caused it rather than at the end of the transaction where nothing knows which input was to blame. It
+is not a `refresh` — a default the database applied is not read back, and `afterCreate` is where that
+belongs.
+
+The hooks are `beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete`,
+`afterDelete` and `stamp`. `afterUpdate` takes no "previous" argument, unlike the Mongo service's:
+the managed instance was mutated in place, so the state before the update is no longer anywhere to
+hand over — a hook that needs it copies what it cares about in `beforeUpdate`. `stamp` is where
+*who* is recorded, since only the service knows the principal; *when* belongs to the entity, which
+is the half Hibernate's own lifecycle callbacks do better.
+
+## Who wrote this row, and when
+
+```kotlin
+@Entity
+class Note(@Id var id: Long = 0, var text: String = "") : AuditedEntity()
+```
+
+`AuditedEntity` is a `@MappedSuperclass` carrying `createdAt`, `lastModifiedAt`, `createdBy` and
+`lastModifiedBy` — the four names `shared-mongo`'s `AuditMetadata` uses, so an audit trail answers
+the same question whichever store it came from. Mongo nests them under a `metadata` sub-document
+because a document has somewhere to nest; a table does not, so here they are four columns.
+
+**The timestamps are Hibernate's and the principal is the service's**, and the split is not
+arbitrary. `@PrePersist` and `@PreUpdate` run inside the flush, so *when* is stamped exactly when a
+row is really written: an update the dirty check turns into a no-op fires neither callback and moves
+no timestamp — which a service comparing fields could not have told apart. A spec pins that. Only a
+service knows the principal, so `JpaCrudService.stampCreated` and `stampUpdated` fill in the other
+two, and both are `open` for a subclass that records something else.
+
+The timestamps default to the epoch rather than to `now`, because a plausible-looking value is worse
+than an obviously unset one: a row written through a stateless session runs no callbacks, and an
+epoch stamp says so.
 
 ## Which database
 
