@@ -22,7 +22,8 @@ Two generated clients drive one hand-written server over real HTTP, so a disagre
 two serialization libraries about what the document means fails a test rather than shipping.
 
 `examples/jpa-shop` is separate from that chain: a Ktor catalogue over Postgres showing
-`shared-jpa`'s CRUD extensions, transaction guard and audit layer end to end.
+`shared-jpa`'s CRUD extensions, transaction guard and audit layer end to end. So is
+`examples/material-demo`, the catalogue for the UI library — `./kotlin run -m desktop`.
 
 Alongside them are the shared service libraries, which have nothing to do with the generator:
 
@@ -32,6 +33,7 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/shared-amqp` | An AMQP connection over the RabbitMQ client: topology declared in one block, publishes that wait for the broker's confirm, deliveries as a `Flow`, and retries that are delay queues rather than a loop |
 | `libs/shared-i18n` | Catalogs read strictly as UTF-8 and compiled at startup, a message resolved key by key down the locale chain, and `Accept-Language` negotiated against what is actually shipped |
 | `libs/shared-jpa` | Postgres over Hibernate Reactive: ordinary annotated Kotlin entities, every session pinned to the event loop that opened it so a handler can suspend mid-transaction, and HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
+| `libs/shared-material` | The one client-side library: Compose Multiplatform components over Material 3 — a whole palette derived from one colour seed, a component's look declared as a `Style` whose pressed and hovered states animate themselves, and motion as named durations instead of scattered `tween`s |
 | `libs/shared-kafka` | A cluster and the clients over it: sends that suspend until the broker acknowledges them, records as a `Flow` with the offsets looked after, and topics and group lag from an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here: `install(RedisConnection)`, then `call.redis` in a handler — one connection per application, opened with it and closed with it — and the same for Mongo, AMQP, Kafka, Postgres, object storage and i18n |
 | `libs/shared-koin` | The same seven backends as Koin modules, for a worker or a CLI with no web framework: `redisModule(config)`, and the container closes what it built |
@@ -64,6 +66,10 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/shared-jpa/README.md`](libs/shared-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, and why each part is shaped the way it is |
 | [`docs/jpa-criteria.md`](docs/jpa-criteria.md) | What a shared-jpa query may say — operators, joins, fetch joins, entity graphs, projections, and the two escapes |
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a shared-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
+| [`libs/shared-material/README.md`](libs/shared-material/README.md) | The UI library — its shape, how `StrangeTheme` slots into an existing Material 3 application, and how a component is added |
+| [`libs/shared-material/docs/tokens.md`](libs/shared-material/docs/tokens.md) | What a token may say — colour roles, spacing, radii, elevation, durations and easings |
+| [`libs/shared-material/docs/components.md`](libs/shared-material/docs/components.md) | Every component, its parameters, and its story in the catalogue |
+| [`examples/material-demo/README.md`](examples/material-demo/README.md) | The catalogue — why it is three modules, how to run it, how a story is registered |
 | [`libs/shared-kafka/README.md`](libs/shared-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/shared-mongo/README.md`](libs/shared-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
 | [`libs/shared-redis/README.md`](libs/shared-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |

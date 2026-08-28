@@ -18,6 +18,7 @@ What exists:
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
+| `libs/shared-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: a token layer driven by one colour seed, component looks declared as Compose `Style`s with their interaction states animated, and motion as named durations rather than scattered `tween`s |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
 | `libs/shared-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
@@ -30,6 +31,7 @@ What exists:
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
 | `examples/jpa-shop` | A Ktor catalogue over Postgres showing `shared-jpa`'s CRUD extensions and audit layer |
+| `examples/material-demo` | The `shared-material` catalogue — one Compose Multiplatform app in three modules: `catalog` holds every story, `desktop` and `android` are launchers |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
@@ -126,12 +128,97 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 
 - **`kotlin-toolchain`** — manifest schema, catalog and template rules, commands, plus `references/`: a markdown cache of the full official documentation (50 pages, version recorded in `references/INDEX.md`).
 - **`ktorfit`** — the Ktorfit HTTP client, including how it is wired up here through KSP alone, without its Gradle plugin.
+- **`compose-multiplatform`** — the UI stack behind `libs/shared-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 59 pages of the official documentation.
+- **`material3-compose`** — the Material 3 API surface that actually compiles here. Its `references/` are *not* fetched: `$compose.material3` resolves to its own alpha version line, so the pages are generated from the resolved jar by `scripts/extract_api.py`.
 - **`skill-from-docs`** — builds and refreshes docs-backed skills. Each such skill declares its source in a `docs-source.json`; refresh one with:
   ```bash
   python3 .agents/skills/skill-from-docs/scripts/fetch_docs.py --skill <name>
   ```
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
 - **`large-feature-branch-workflow`** — two-level branching for work too large for a single PR.
+
+Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/shared-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
+
+- **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/shared-material`**, not background reading; see *Styling a component* below.
+- **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
+- **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
+
+## Styling a component
+
+Every component in `libs/shared-material` is dressed with the **Compose Styles API**
+(`androidx.compose.foundation.style`), not with colour parameters and `Modifier` chains. It ships
+in Compose Multiplatform 1.11.1 — experimental, in `foundation` rather than `material3` — and the
+module opts in once:
+
+```yaml
+settings:
+  kotlin:
+    optIns: [ androidx.compose.foundation.style.ExperimentalFoundationStyleApi ]
+```
+
+The shape a component takes:
+
+- **Its look is a `Style`, in its own file** — `button/ButtonStyles.kt` holds `buttonStyle(variant,
+  color)` and `button/Button.kt` holds no colours at all. A style reaches theme tokens through the
+  `StyleScope` extensions in `theme/StyleTokens.kt` (`colors`, `scheme`, `spacing`, `radii`,
+  `motion`), which read the `CompositionLocal`s at resolve time rather than closing over whatever
+  was in scope when the style was built.
+- **Interaction states are declared, not wired.** `pressed { }`, `hovered { }`, `focused { }`,
+  `disabled { }` sit inside the style, and `animate { }` inside those makes the transitions free.
+  This replaces `animateColorAsState`/`animateFloatAsState` at the call site — a `Modifier.pressScale`
+  helper was written here and deleted the same day the API landed, because the style block does it
+  better and in one place.
+- **The signature carries no styling parameters.** No `backgroundColor`, no `shape`, no
+  `contentPadding`. Instead one `style: Style = Style` parameter, defaulting to exactly `Style`
+  (the companion, which is the empty style) and applied *last* so a caller's override wins:
+  `Modifier.styleable(styleState, base, style)`.
+- **Presentation state belongs to the component.** `rememberUpdatedStyleState(interactionSource) {
+  it.isEnabled = enabled }` gives pressed, hovered and focused for nothing; the caller passes
+  business state and never remembers a boolean for a visual.
+- **Every default has a name in `StrangeStyles`**, reached as `StrangeTheme.styles.card(variant)`.
+  It is a plain `object` behind an extension property, not a `CompositionLocal` — a `Style` reads
+  its tokens when it is applied, not when it is written — and it lives in `src/style/` so `theme`
+  keeps knowing nothing about the components. Restating a default before editing it is what stops a
+  one-off drifting away from the rest of the screen.
+
+The `styles` skill has the full vocabulary, the state-animation guide and the migration workflow.
+Three things it does not say, all established here:
+
+- The API is in `foundation`, so grepping `material3` for it finds nothing.
+- `styleable` is a **function**, so it compiles into `StyleModifierKt` and grepping class names for
+  it also finds nothing. Either empty grep reads as proof of absence and is not.
+- **`then` needs its own import.** `styleA then styleB` is a top-level infix extension in
+  `androidx.compose.foundation.style`, not a member — without `import
+  androidx.compose.foundation.style.then` the only candidate in scope is `Comparator.then`, and the
+  compiler reports a return-type mismatch against `Comparator` rather than a missing import. The
+  variadic `Style(a, b, c)` factory and `Modifier.styleable(state, vararg styles)` compose without
+  it.
+
+## Finding and installing a skill
+
+Three sources, in the order worth trying:
+
+1. **Google's Android catalogue**, through the `android` CLI. `android skills list` names what is
+   available and `android skills find <keyword>` searches it. Install into this repo with:
+
+   ```bash
+   android skills add <name> --project=. --agent=common
+   ```
+
+   **`--agent=common` is the part that matters**: it writes to `.agents/skills/<name>`, which is
+   this repo's convention and what `.claude/skills` symlinks to. Omitting it installs into every
+   agent directory the CLI detects, including `~/.claude/skills`, where the skill is invisible to
+   everyone else working here. The skill name is positional — a `--skill=<name>` form appears in
+   Google's current guide but the installed CLI rejects it; `android skills add` with no arguments
+   prints the usage its own version accepts.
+2. **The `find-skills` skill**, for anything outside that catalogue.
+3. **`skill-from-docs`**, when no published skill exists and the knowledge lives in a
+   documentation site — or, as with `material3-compose`, in the artifact itself.
+
+Whichever the source, an installed skill is committed like any other file: skills live in the repo
+so that every agent and every person working here loads the same ones.
+
+A skill's `references/` do not have to come from a docs site. When the published documentation describes a different version than the one that compiles — `material3-compose` is the case here — generating the pages from the artifact is the accurate option, and it follows the same rule: the output is generated, so fix the script rather than the page.
 
 Skills are budgeted: a `description` is in context every session (keep it ≤250 chars), a SKILL.md body loads on activation (≤~120 lines), and `references/` pages load only when opened. Put cost in the deepest tier that can hold it.
 
@@ -552,6 +639,11 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/shared-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
+  | `libs/shared-material/README.md` | How is the UI library shaped, how does `StrangeTheme` slot into an application that already uses Material 3, and how do I add a component? |
+  | `libs/shared-material/docs/tokens.md` | What a token may say — the colour roles, spacing, radii, elevation, durations and easings. **This is where a new token is documented** |
+  | `libs/shared-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
+  | `libs/shared-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
+  | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
   | `libs/shared-testing/README.md` | Where an integration spec's server comes from, and how a container declared there is cleaned up |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
