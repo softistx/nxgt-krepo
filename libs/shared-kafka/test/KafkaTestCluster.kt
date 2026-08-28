@@ -94,7 +94,11 @@ internal object KafkaTestCluster {
     fun topicName(): String = "shared-kafka-test-${counter.incrementAndGet()}-${System.nanoTime()}"
 
     /**
-     * A topic of its own, deleted when [block] returns.
+     * A topic of its own, deleted — and *gone* — when [block] returns.
+     *
+     * The second half matters as much as the first. Deletion is asynchronous, so returning as soon
+     * as the controller accepts it leaves the next spec sharing a cluster with a topic this one
+     * believes it removed; [awaitGone] is what makes the promise in this sentence true.
      *
      * [replicationFactor] replicas rather than a hard three: against the workspace's cluster that is
      * three and `acks = all` waits for a quorum, and against a one-broker container it is one and
@@ -118,6 +122,11 @@ internal object KafkaTestCluster {
                 withContext(Dispatchers.IO) {
                     runCatching { admin.deleteTopics(listOf(name)).all().get() }
                 }
+                // `deleteTopics` returns when the controller accepted it, not when every broker has
+                // caught up, so without this the topic can still be listed after `withTopic` says it
+                // is gone. Swallowed like the delete above: a cleanup that cannot finish must not
+                // replace the failure the block was reporting.
+                runCatching { awaitGone(admin, name) }
             }
         }
     }
