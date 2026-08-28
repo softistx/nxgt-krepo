@@ -1,20 +1,21 @@
 package com.strange.jpa.repository
 
 import com.strange.common.page.Page
+import com.strange.common.page.PageInfo
 import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.JpaOutsideTransactionException
-import com.strange.jpa.dsl.JpaEntityGraph
-import com.strange.jpa.dsl.JpaSpec
-import com.strange.jpa.dsl.SelectScope
-import com.strange.jpa.dsl.eq
-import com.strange.jpa.dsl.oneOf
-import com.strange.jpa.dsl.project
-import com.strange.jpa.dsl.select
-import com.strange.jpa.page.PageRequest
-import com.strange.jpa.page.page
+import com.strange.jpa.criteria.eq
+import com.strange.jpa.criteria.get
+import com.strange.jpa.criteria.oneOf
+import com.strange.jpa.query.JpaQuery
+import com.strange.jpa.query.criteria
+import com.strange.jpa.query.query
 import com.strange.jpa.session.JpaSession
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityGraph
+import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Root
 import kotlinx.coroutines.future.await
 import kotlin.jvm.internal.CallableReference
 import kotlin.reflect.KClass
@@ -23,20 +24,25 @@ import kotlin.reflect.KProperty1
 /**
  * One entity, as an object.
  *
- * The DSL in `com.strange.jpa.dsl` is the vocabulary; this is a noun that speaks it — the thing a
- * service holds, a test substitutes, and a subclass extends with the two or three queries that are
- * actually specific to an entity. Everything is `open` for exactly that reason, and nothing here has
- * an opinion about *why* a row is being written, which is what keeps it separate from
- * [JpaCrudService].
+ * `com.strange.jpa.criteria` is the vocabulary; this is a noun that speaks it — the thing a service
+ * holds, a test substitutes, and a subclass extends with the two or three queries that are actually
+ * specific to an entity. Everything is `open` for exactly that reason, and nothing here has an
+ * opinion about *why* a row is being written, which is what keeps it separate from
+ * [com.strange.jpa.service.JpaCrudService].
  *
  * ```kotlin
  * val purchases = JpaRepository(Purchase::id)
  *
  * class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::id) {
  *     suspend fun findByBuyer(session: JpaSession, name: String) =
- *         findAll(session) { join(Purchase::customer)[Buyer::name] eq name }
+ *         findAll(session) { it[Purchase::customer][Buyer::name] eq name }
  * }
  * ```
+ *
+ * **This is boilerplate removal, not a layer.** Everything below is a few lines of Criteria that
+ * would otherwise be written once per entity; nothing is hidden, and [query] hands back the same
+ * `CriteriaQuery` and `Root` a caller would have built by hand. Reach past it whenever the question
+ * is more interesting than the shortcut.
  *
  * **The session is the first argument, not a field.** A Mongo collection is a long-lived object a
  * repository can hold; a Hibernate Reactive session is not — it belongs to the event loop that
@@ -47,18 +53,11 @@ import kotlin.reflect.KProperty1
  *
  * **Stateful sessions only.** A [com.strange.jpa.session.JpaStatelessSession] has no persistence
  * context, so `update` would have nothing to merge into and `delete` nothing to cascade from. Bulk
- * loading through a stateless session is a job for the DSL directly.
+ * loading through a stateless session is a job for a criteria directly.
  *
  * [id] is a property reference rather than a getter function because both halves are needed: the
  * value, for a caller holding an instance, and the *name*, for the queries below that restrict on
  * the identifier column. `Purchase::id` gives both with no `kotlin-reflect` on the classpath.
- *
- * **The queries go through `session.raw`.** `find<Order>(id)` and `select<Purchase>()` are the
- * library's vocabulary and they are `reified`, which is exactly what this class cannot be: inside
- * one, `T` is not reifiable. So the value-typed forms underneath them are reached the way any
- * advanced caller reaches what the wrapper does not spell — through [JpaSession.raw]. That keeps the
- * wrapper's surface the reified vocabulary and nothing else, and it costs this one class an
- * `await()` that its own methods still hide from callers.
  *
  * **Nothing names the entity class, because [id] already does.** A class cannot have a `reified`
  * type parameter, so this has to learn at runtime what it is generic over — and a property reference
@@ -70,8 +69,8 @@ import kotlin.reflect.KProperty1
 open class JpaRepository<T : Any, ID : Any>(
     val id: KProperty1<T, ID>,
 ) {
-    /** The entity this is over, taken off [id] — see [entityOf]. */
-    internal val entity: KClass<T> = entityOf(id)
+    /** The entity this is over, taken off [id] — see `entityOf`. */
+    val entity: KClass<T> = entityOf(id)
 
     /** The entity's name, for the messages a caller has to write. */
     val name: String get() = entity.simpleName ?: entity.toString()
@@ -86,24 +85,56 @@ open class JpaRepository<T : Any, ID : Any>(
         spec: JpaSpec<T>? = null,
     ): List<T> = query(session, spec).list()
 
-    /**
-     * One page, cut by keyset. [sort] must end with the identifier, which the DSL enforces.
-     *
-     * ```kotlin
-     * purchases.findPage(session, PageRequest.first(20)) { sortBy(Purchase::id) }
-     * ```
-     */
-    open suspend fun findPage(
-        session: JpaSession,
-        request: PageRequest,
-        spec: JpaSpec<T>? = null,
-        sort: SelectScope<T>.() -> Unit,
-    ): Page<T> = query(session, spec).apply(sort).page(request)
-
     open suspend fun findOne(
         session: JpaSession,
         spec: JpaSpec<T>,
     ): T? = query(session, spec).first()
+
+    /**
+     * One page, cut by `limit` and `offset`.
+     *
+     * ```kotlin
+     * products.findPage(session, limit = 20, offset = 40, spec = available) { criteria, product ->
+     *     criteria.orderBy(asc(product[Product::name]), asc(product[Product::id]))
+     * }
+     * ```
+     *
+     * It asks for one row beyond the page and whether that row turned up is the whole answer to *is
+     * there another page* — one row rather than a second `count` query. The cursors in [PageInfo]
+     * stay null: they belong to keyset pagination, which this is not.
+     *
+     * **`offset` makes the database walk and discard**, so a page costs more the deeper it is, and a
+     * row inserted between two requests shifts the window — page 3 can repeat or skip a row. That is
+     * fine for a few hundred rows behind a UI and wrong for an export or an infinite scroll over a
+     * table that is being written to. For those, order by the identifier and resume from the last one
+     * seen: `where(product[Product::id] gt lastSeen)` with a `limit`, which costs the same at any
+     * depth. This method is the convenience, not the recommendation.
+     *
+     * **An ordering is not optional**, and nothing can enforce it here: without one the database may
+     * answer in any order it likes, and two pages of an unordered query are not two pages of
+     * anything. Say it in [shape].
+     */
+    open suspend fun findPage(
+        session: JpaSession,
+        limit: Int,
+        offset: Int = 0,
+        spec: JpaSpec<T>? = null,
+        shape: (CriteriaQuery<T>, Root<T>) -> Unit = { _, _ -> },
+    ): Page<T> {
+        require(limit >= 1) { "a page size must be at least 1, got $limit" }
+        require(offset >= 0) { "an offset cannot be negative, got $offset" }
+
+        val rows =
+            query(session, spec, shape)
+                .offset(offset)
+                .limit(limit + 1)
+                .list()
+
+        return Page(
+            data = rows.take(limit),
+            info = PageInfo(hasPreviousPage = offset > 0, hasNextPage = rows.size > limit),
+        )
+    }
 
     /**
      * By identifier, loading what [graph] plans when there is one.
@@ -115,25 +146,25 @@ open class JpaRepository<T : Any, ID : Any>(
     open suspend fun findById(
         session: JpaSession,
         value: ID,
-        graph: JpaEntityGraph<T>? = null,
+        graph: EntityGraph<T>? = null,
     ): T? =
         if (graph == null) {
             session.raw.find(entity.java, value).await()
         } else {
-            session.raw.find(graph.raw, value).await()
+            session.raw.find(graph, value).await()
         }
 
     /** [findById], throwing [JpaNotFoundException] instead of answering null. */
     open suspend fun requireById(
         session: JpaSession,
         value: ID,
-        graph: JpaEntityGraph<T>? = null,
+        graph: EntityGraph<T>? = null,
     ): T = findById(session, value, graph) ?: throw JpaNotFoundException(entity, value)
 
     open suspend fun findByIds(
         session: JpaSession,
         values: Collection<ID>,
-    ): List<T> = if (values.isEmpty()) emptyList() else query(session) { this[id] oneOf values }.list()
+    ): List<T> = if (values.isEmpty()) emptyList() else query(session, spec = { it[id] oneOf values }).list()
 
     open suspend fun count(
         session: JpaSession,
@@ -144,8 +175,8 @@ open class JpaRepository<T : Any, ID : Any>(
      * Whether anything matches — one row asked for, not a count of all of them.
      *
      * `count(*) > 0` makes the database aggregate the entire match set to answer a boolean; a limit
-     * of one lets it stop at the first row it finds. [existingIds] directly below already took the
-     * same care, for the same reason.
+     * of one lets it stop at the first row it finds. [existingIds] directly below takes the same
+     * care, for the same reason.
      */
     open suspend fun exists(
         session: JpaSession,
@@ -156,14 +187,14 @@ open class JpaRepository<T : Any, ID : Any>(
     open suspend fun existsById(
         session: JpaSession,
         value: ID,
-    ): Boolean = exists(session) { this[id] eq value }
+    ): Boolean = exists(session) { it[id] eq value }
 
     /**
      * The subset of [values] that exists — one query returning one column, not one row per id and
      * not the entities themselves.
      *
      * The identifier's class comes from Hibernate's metamodel, because a property reference does not
-     * carry one without `kotlin-reflect` and this needs a `Class` to project into.
+     * carry one without `kotlin-reflect` and a criteria needs a `Class` to project into.
      */
     @Suppress("UNCHECKED_CAST")
     open suspend fun existingIds(
@@ -171,28 +202,31 @@ open class JpaRepository<T : Any, ID : Any>(
         values: Collection<ID>,
     ): List<ID> {
         if (values.isEmpty()) return emptyList()
+
         val idType =
             session.raw.factory.metamodel
                 .entity(entity.java)
-                .idType.javaType.kotlin as KClass<ID>
-        return session.raw
-            .project(entity, idType) { this[id] }
-            .where { this[id] oneOf values }
-            .list()
+                .idType.javaType as Class<ID>
+
+        val criteria = session.criteria.createQuery(idType)
+        val root = criteria.from(entity.java)
+        criteria.select(root[id])
+        criteria.where(root[id] oneOf values)
+
+        return session.raw.query(criteria).list()
     }
 
     // ─── Writes ───────────────────────────────────────────────────────────────
 
     /**
-     * Every write here refuses a session with no transaction, with
-     * [JpaOutsideTransactionException].
+     * Every write here refuses a session with no transaction, with [JpaOutsideTransactionException].
      *
      * A session flushes at the end of a unit of work if and only if there is a transaction, so a
      * `persist` inside a plain `session { }` reaches no table — no error, no warning, no row — and
-     * `deleteById` would answer `true` for a row it did not delete. The guard used to live only in
-     * [JpaCrudService], one layer above, while this class is public, `open`, and what the specs and
-     * a custom subclass use directly. The reads are unguarded, because a read outside a transaction
-     * is an ordinary thing to want.
+     * `deleteById` would answer `true` for a row it did not delete. The guard is here rather than
+     * only in the service above, because this class is public, `open`, and what a custom subclass
+     * uses directly. The reads are unguarded: a read outside a transaction is an ordinary thing to
+     * want, and is what `session { }` is for.
      */
     private fun transactional(
         session: JpaSession,
@@ -246,7 +280,7 @@ open class JpaRepository<T : Any, ID : Any>(
      * It loads the row and removes it, rather than issuing a bulk `delete` on the identifier. A bulk
      * statement goes straight to the database: no cascade fires, no `@PreRemove` runs, and a copy
      * already loaded in this session keeps existing. One extra select buys all three back. The bulk
-     * form is still a `delete<T>().where { … }` away for a caller who has measured and wants it.
+     * form is still a `createDelete<T>()` away for a caller who has measured and wants it.
      */
     open suspend fun deleteById(
         session: JpaSession,
@@ -266,19 +300,23 @@ open class JpaRepository<T : Any, ID : Any>(
     }
 
     /**
-     * The query the methods above are built from, for what they do not spell.
+     * The query the reads above are built from, for what they do not spell.
      *
-     * **This is where a fetch goes.** `findAll` answers with entities, so a caller that will read an
-     * association has to say so — associations are `LAZY` and Hibernate Reactive has no transparent
-     * lazy loading, so an unfetched one throws rather than costing a second select. A [JpaSpec] is a
-     * `Joins` receiver and cannot fetch, deliberately: the same spec has to fit a projection, which
-     * has nothing to hang a fetch on.
+     * **This is where a fetch and an ordering go.** [shape] is handed the criteria and its root, so
+     * anything Criteria can say is available — a fetch join, an order, a second restriction, a
+     * `distinct`. `findAll` answers with entities, so a caller that will read an association has to
+     * ask for it: associations are `LAZY` and Hibernate Reactive has no transparent lazy loading, so
+     * an unfetched one throws rather than costing a second select.
      *
      * ```kotlin
-     * purchases.query(session) { Purchase::total gt 100L }
-     *     .apply { fetch(Purchase::customer) }
-     *     .list()
+     * purchases.query(session, { it[Purchase::total] gt 100L }) { _, purchase ->
+     *     purchase.fetch(Purchase::customer)
+     * }.list()
      * ```
+     *
+     * A [JpaSpec] deliberately gets the root and nothing else, so a spec cannot fetch. That keeps one
+     * named restriction usable from a `findAll`, a `count` and a projection alike — a projection has
+     * no owner in its select list to hang a fetch on, and Hibernate refuses one there.
      *
      * `open` like everything else here, so a subclass can give its entity a `withCustomer()` of its
      * own rather than repeating the block at every call site.
@@ -286,7 +324,16 @@ open class JpaRepository<T : Any, ID : Any>(
     open fun query(
         session: JpaSession,
         spec: JpaSpec<T>? = null,
-    ): SelectScope<T> = session.raw.select(entity).let { if (spec == null) it else it.where(spec) }
+        shape: (CriteriaQuery<T>, Root<T>) -> Unit = { _, _ -> },
+    ): JpaQuery<T> {
+        val criteria = session.criteria.createQuery(entity.java)
+        val root = criteria.from(entity.java)
+
+        spec?.invoke(root)?.let(criteria::where)
+        shape(criteria, root)
+
+        return session.raw.query(criteria)
+    }
 }
 
 /**
@@ -294,7 +341,7 @@ open class JpaRepository<T : Any, ID : Any>(
  *
  * `KProperty1` carries its owner, and reading it needs no `kotlin-reflect`: a reference compiles to
  * a `CallableReference` whose `owner` is a `ClassReference` from the standard library when the full
- * reflection artifact is absent. It is the same shape of cast `com.strange.jpa.dsl` uses to take a
+ * reflection artifact is absent. It is the same shape of cast `Expression.builder` uses to take a
  * builder off an expression — a fact about the runtime, asserted by a spec rather than assumed.
  *
  * It answers with the class the reference *names*, not the one that declared the property, which is

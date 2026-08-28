@@ -2,14 +2,18 @@ package com.strange.jpa.query
 
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.dsl.get
-import com.strange.jpa.dsl.joinEach
-import com.strange.jpa.dsl.oneOf
-import com.strange.jpa.dsl.select
+import com.strange.jpa.criteria.get
+import com.strange.jpa.criteria.gt
+import com.strange.jpa.criteria.joinEach
+import com.strange.jpa.criteria.oneOf
 import com.strange.jpa.entity.Buyer
 import com.strange.jpa.entity.Purchase
 import com.strange.jpa.entity.PurchaseLine
 import com.strange.jpa.session.JpaSession
+import com.strange.jpa.session.createDelete
+import com.strange.jpa.session.createInsertSelect
+import com.strange.jpa.session.createQuery
+import com.strange.jpa.session.createUpdate
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
@@ -17,8 +21,8 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 
 /**
- * The way out of the DSL: a criteria written against Hibernate's own API, run through this module's
- * terminals — and named by properties rather than by strings on the way.
+ * A criteria written against Hibernate's own API, run through this module's terminals — and named by
+ * properties rather than by strings on the way.
  */
 class CriteriaTest :
     FeatureSpec({
@@ -50,7 +54,7 @@ class CriteriaTest :
                         jpa.session { session ->
                             // The shape Hibernate's own documentation uses, in Kotlin: a query whose
                             // root is one entity and whose result is a join off it.
-                            val criteria = session.criteria.createQuery(PurchaseLine::class.java)
+                            val criteria = session.createQuery<PurchaseLine>()
                             val purchase = criteria.from(Purchase::class.java)
                             val line = purchase.joinEach(Purchase::lines)
 
@@ -64,11 +68,11 @@ class CriteriaTest :
                 }
             }
 
-            scenario("names its attributes by property, across a to-one association") {
+            scenario("takes its result type from the variable, not from a class literal") {
                 seeded { jpa ->
                     val references =
                         jpa.session { session ->
-                            val criteria = session.criteria.createQuery(String::class.java)
+                            val criteria = session.createQuery<String>()
                             val purchase = criteria.from(Purchase::class.java)
 
                             // Chained, so Criteria joins implicitly — and `Purchase_.customer` and
@@ -83,23 +87,22 @@ class CriteriaTest :
                 }
             }
 
-            scenario("returns what the DSL returns, being the same query underneath") {
+            scenario("answers what the same query in HQL answers") {
                 seeded { jpa ->
-                    val (byHand, byDsl) =
+                    val (byCriteria, byHql) =
                         jpa.session { session ->
-                            val criteria = session.criteria.createQuery(Purchase::class.java)
+                            val criteria = session.createQuery<Purchase>()
                             val purchase = criteria.from(Purchase::class.java)
-                            criteria.where(session.criteria.greaterThan(purchase[Purchase::total], 100L))
+                            criteria.where(purchase[Purchase::total] gt 100L)
 
                             session.query(criteria).list().map { it.reference } to
                                 session
-                                    .select<Purchase>()
-                                    .where { Purchase::total gt 100L }
+                                    .query<Purchase>("from Purchase where total > 100")
                                     .list()
                                     .map { it.reference }
                         }
 
-                    byHand shouldContainExactly byDsl
+                    byCriteria shouldContainExactly byHql
                 }
             }
         }
@@ -109,7 +112,7 @@ class CriteriaTest :
                 seeded { jpa ->
                     val touched =
                         jpa.transaction { session ->
-                            val statement = session.criteria.createCriteriaUpdate(Purchase::class.java)
+                            val statement = session.createUpdate<Purchase>()
                             val purchase = statement.from(Purchase::class.java)
                             statement.set(purchase[Purchase::total], 1L)
                             statement.where(session.criteria.lessThan(purchase[Purchase::total], 100L))
@@ -118,7 +121,9 @@ class CriteriaTest :
                         }
 
                     touched shouldBe 1
-                    jpa.session { it.select<Purchase>().where { Purchase::total eq 1L }.count() } shouldBe 1L
+                    jpa.session {
+                        it.query<Long>("select count(p) from Purchase p where p.total = 1").single()
+                    } shouldBe 1L
                 }
             }
 
@@ -126,7 +131,7 @@ class CriteriaTest :
                 seeded { jpa ->
                     val removed =
                         jpa.transaction { session ->
-                            val statement = session.criteria.createCriteriaDelete(PurchaseLine::class.java)
+                            val statement = session.createDelete<PurchaseLine>()
                             val line = statement.from(PurchaseLine::class.java)
                             statement.where(line[PurchaseLine::sku] oneOf listOf("plums"))
 
@@ -134,15 +139,15 @@ class CriteriaTest :
                         }
 
                     removed shouldBe 1
-                    jpa.session { it.select<PurchaseLine>().count() } shouldBe 2L
+                    jpa.session { it.query<Long>("select count(l) from PurchaseLine l").single() } shouldBe 2L
                 }
             }
 
-            scenario("inserts from a select, which the DSL has no spelling for at all") {
+            scenario("inserts from a select, which HQL has no spelling for here") {
                 seeded { jpa ->
                     val inserted =
                         jpa.transaction { session ->
-                            val statement = session.criteria.createCriteriaInsertSelect(Buyer::class.java)
+                            val statement = session.createInsertSelect<Buyer>()
                             statement.setInsertionTargetPaths(
                                 statement.target[Buyer::id],
                                 statement.target[Buyer::name],
@@ -160,7 +165,7 @@ class CriteriaTest :
                         }
 
                     inserted shouldBe 2
-                    jpa.session { it.select<Buyer>().count() } shouldBe 4L
+                    jpa.session { it.query<Long>("select count(b) from Buyer b").single() } shouldBe 4L
                 }
             }
         }

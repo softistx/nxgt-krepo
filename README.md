@@ -31,7 +31,7 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/shared-common` | The coroutine primitives and the one lenient `Json` the libraries below share: a mutex-guarded map, a lock per key, and the mailbox that carries a Java callback's work into a coroutine |
 | `libs/shared-amqp` | An AMQP connection over the RabbitMQ client: topology declared in one block, publishes that wait for the broker's confirm, deliveries as a `Flow`, and retries that are delay queues rather than a loop |
 | `libs/shared-i18n` | Catalogs read strictly as UTF-8 and compiled at startup, a message resolved key by key down the locale chain, and `Accept-Language` negotiated against what is actually shipped |
-| `libs/shared-jpa` | Postgres over Hibernate Reactive: ordinary annotated Kotlin entities, every session pinned to the event loop that opened it so a handler can suspend mid-transaction, and HQL, SQL and a typed `KProperty` query DSL over Criteria through one suspending builder |
+| `libs/shared-jpa` | Postgres over Hibernate Reactive: ordinary annotated Kotlin entities, every session pinned to the event loop that opened it so a handler can suspend mid-transaction, and HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
 | `libs/shared-kafka` | A cluster and the clients over it: sends that suspend until the broker acknowledges them, records as a `Flow` with the offsets looked after, and topics and group lag from an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here: `install(RedisConnection)`, then `call.redis` in a handler — one connection per application, opened with it and closed with it — and the same for Mongo, AMQP, Kafka, Postgres, object storage and i18n |
 | `libs/shared-koin` | The same seven backends as Koin modules, for a worker or a CLI with no web framework: `redisModule(config)`, and the container closes what it built |
@@ -62,7 +62,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/shared-ktor/README.md`](libs/shared-ktor/README.md) | The Ktor integrations — the seven plugins, what each owns, and how one module holds them without a fat dependency list |
 | [`libs/shared-koin/README.md`](libs/shared-koin/README.md) | The Koin modules — why the container creates the connection here and adopts it there, and what has no `onClose` |
 | [`libs/shared-jpa/README.md`](libs/shared-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, and why each part is shaped the way it is |
-| [`docs/jpa-query-dsl.md`](docs/jpa-query-dsl.md) | What a shared-jpa query may say — operators, joins, projections, the function vocabulary, and the two escapes |
+| [`docs/jpa-criteria.md`](docs/jpa-criteria.md) | What a shared-jpa query may say — operators, joins, fetch joins, entity graphs, projections, and the two escapes |
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a shared-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
 | [`libs/shared-kafka/README.md`](libs/shared-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/shared-mongo/README.md`](libs/shared-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |

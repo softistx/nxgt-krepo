@@ -42,10 +42,30 @@ fun Product.view(): ProductView =
         lastModifiedAt = lastModifiedAt.toString(),
     )
 
-/** One page of them, with the cursors a client sends back to ask for the next. */
+/** One page of them, with what a client needs to ask for the next. */
 @Serializable
 data class ProductPage(
     val data: List<ProductView>,
-    val endCursor: String?,
+    val hasPreviousPage: Boolean,
     val hasNextPage: Boolean,
+)
+
+/**
+ * A projection: three columns, packaged by Hibernate into this class on the way back.
+ *
+ * Hibernate 6 and later take an arbitrary result class with a matching constructor and build the
+ * rows into it — `query<ProductSummary>("select sku, name, priceInCents from Product")` and nothing
+ * else. No `select new com.…ProductSummary(…)` in the HQL, no constructor expression, no `Tuple` to
+ * unpack: the selection list and the constructor's parameters are matched by position and type.
+ *
+ * A Kotlin `data class` is what a Java record is here, and it is the shape to reach for — small,
+ * final, and named after the question rather than after the table. This is the way to read *part* of
+ * an entity; loading the whole one and mapping it afterwards reads the columns the query did not
+ * need.
+ */
+@Serializable
+data class ProductSummary(
+    val sku: String,
+    val name: String,
+    val priceInCents: Long,
 )

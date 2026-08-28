@@ -27,10 +27,12 @@ import org.intellij.lang.annotations.Language
  * `Mutate.kt` documents, and the reason `updateOn`/`deleteOn` are spelled the way they are. Inherited
  * members keep `session.mutate(hql)` compiling exactly as before, in this repo and downstream.
  *
- * **The four `reified` members are not here, and cannot be.** `query`, `select`, `project` and
- * `nativeQuery` each need the type argument as a `Class` before Hibernate sees it, so they are
- * `inline` — and an interface member is open, which `inline` forbids. Those four stay declared on
- * both classes; they are the residue this interface cannot absorb rather than an oversight.
+ * **The `reified` members are not here, and cannot be.** `query` and `nativeQuery` each need the
+ * type argument as a `Class` before Hibernate sees it, so they are `inline` — and an interface
+ * member is open, which `inline` forbids. Those two stay declared on both classes; they are the
+ * residue this interface cannot absorb rather than an oversight. `SessionCriteria.kt` takes the
+ * other way out for the statement builders: an `inline` *extension* on this interface, written once
+ * and inherited by neither class because it does not have to be.
  */
 interface JpaQueries {
     /** The Hibernate Reactive session underneath — a `Stage.Session` or a `Stage.StatelessSession`. */
@@ -39,9 +41,11 @@ interface JpaQueries {
     /**
      * Hibernate's criteria builder, for a query written against the Criteria API directly.
      *
-     * The way out of the DSL, for the queries it has no spelling for — subqueries, set operations,
-     * window functions, `insert … select`. What comes back runs through [query] or [mutate], so a
-     * criteria built by hand still ends in a suspending terminal rather than a `CompletionStage`.
+     * `com.strange.jpa.criteria` names the pieces — `createQuery`, `[]`, `join`, `fetch`, `eq` and
+     * the rest — but the statement is Criteria's own, so anything the API can express is reachable
+     * from here: subqueries, set operations, window functions, `insert … select`. What comes back
+     * runs through [query] or [mutate], so a criteria built by hand still ends in a suspending
+     * terminal rather than a `CompletionStage`.
      */
     val criteria: HibernateCriteriaBuilder get() = raw.criteria
 

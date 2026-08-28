@@ -5,15 +5,16 @@ import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.JpaOutsideTransactionException
 import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.dsl.eq
-import com.strange.jpa.dsl.get
-import com.strange.jpa.dsl.gt
+import com.strange.jpa.criteria.asc
+import com.strange.jpa.criteria.eq
+import com.strange.jpa.criteria.fetch
+import com.strange.jpa.criteria.get
+import com.strange.jpa.criteria.gt
 import com.strange.jpa.entity.Buyer
 import com.strange.jpa.entity.Keyed
 import com.strange.jpa.entity.Purchase
 import com.strange.jpa.entity.PurchaseLine
 import com.strange.jpa.entity.Ticket
-import com.strange.jpa.page.PageRequest
 import com.strange.jpa.session.JpaSession
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
@@ -25,8 +26,10 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Root
 
-/** One entity as an object: that it says what the DSL says, and takes its unit of work per call. */
+/** One entity as an object: the criteria it writes for you, and a unit of work taken per call. */
 class JpaRepositoryTest :
     FeatureSpec({
 
@@ -54,7 +57,7 @@ class JpaRepositoryTest :
                     jpa.session { session ->
                         purchases.findAll(session).map { it.reference } shouldContainExactlyInAnyOrder
                             listOf("P-1", "P-2", "P-3")
-                        purchases.findAll(session) { Purchase::total gt 100L }.map { it.reference } shouldContainExactlyInAnyOrder
+                        purchases.findAll(session) { it[Purchase::total] gt 100L }.map { it.reference } shouldContainExactlyInAnyOrder
                             listOf("P-1", "P-3")
                     }
                 }
@@ -88,9 +91,9 @@ class JpaRepositoryTest :
                 seeded { jpa ->
                     jpa.session { session ->
                         purchases.count(session) shouldBe 3L
-                        purchases.count(session) { Purchase::total gt 100L } shouldBe 2L
-                        purchases.exists(session) { Purchase::reference eq "P-2" } shouldBe true
-                        purchases.exists(session) { Purchase::reference eq "P-9" } shouldBe false
+                        purchases.count(session) { it[Purchase::total] gt 100L } shouldBe 2L
+                        purchases.exists(session) { it[Purchase::reference] eq "P-2" } shouldBe true
+                        purchases.exists(session) { it[Purchase::reference] eq "P-9" } shouldBe false
                         purchases.existsById(session, 1L) shouldBe true
                         purchases.existsById(session, 99L) shouldBe false
                     }
@@ -117,26 +120,42 @@ class JpaRepositoryTest :
                     jpa
                         .session { session ->
                             purchases
-                                .query(session) { Purchase::total gt 0L }
-                                .apply {
-                                    fetch(Purchase::customer)
-                                    orderBy { asc(Purchase::id) }
+                                .query(session, { it[Purchase::total] gt 0L }) { criteria, purchase ->
+                                    purchase.fetch(Purchase::customer)
+                                    criteria.orderBy(asc(purchase[Purchase::id]))
                                 }.list()
                         }.map { it.customer?.name } shouldContainExactly listOf("ada", "ada", null)
                 }
             }
 
-            scenario("finds one by specification, and pages by keyset") {
+            scenario("finds one by specification, and pages by limit and offset") {
                 seeded { jpa ->
                     jpa.session { session ->
-                        purchases.findOne(session) { Purchase::reference eq "P-2" }?.total shouldBe 50L
+                        purchases.findOne(session) { it[Purchase::reference] eq "P-2" }?.total shouldBe 50L
 
-                        val page = purchases.findPage(session, PageRequest.first(2)) { sortBy(Purchase::id) }
+                        // One row beyond the page is asked for and discarded; whether it turned up
+                        // is the whole of `hasNextPage`, with no second count query.
+                        val ordered: (CriteriaQuery<Purchase>, Root<Purchase>) -> Unit =
+                            { criteria, purchase -> criteria.orderBy(asc(purchase[Purchase::id])) }
+
+                        val page = purchases.findPage(session, limit = 2, shape = ordered)
                         page.data.map { it.reference } shouldContainExactly listOf("P-1", "P-2")
                         page.info.hasNextPage shouldBe true
+                        page.info.hasPreviousPage shouldBe false
 
-                        val next = purchases.findPage(session, PageRequest.first(2, page.info.endCursor)) { sortBy(Purchase::id) }
+                        val next = purchases.findPage(session, limit = 2, offset = 2, shape = ordered)
                         next.data.map { it.reference } shouldContainExactly listOf("P-3")
+                        next.info.hasNextPage shouldBe false
+                        next.info.hasPreviousPage shouldBe true
+                    }
+                }
+            }
+
+            scenario("refuses a page size below one, and a negative offset") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        shouldThrow<IllegalArgumentException> { purchases.findPage(session, limit = 0) }
+                        shouldThrow<IllegalArgumentException> { purchases.findPage(session, limit = 1, offset = -1) }
                     }
                 }
             }
@@ -294,7 +313,7 @@ class JpaRepositoryTest :
                     suspend fun findByBuyer(
                         session: JpaSession,
                         buyer: String,
-                    ): List<Purchase> = findAll(session) { join(Purchase::customer)[Buyer::name] eq buyer }
+                    ): List<Purchase> = findAll(session) { it[Purchase::customer][Buyer::name] eq buyer }
                 }
 
                 seeded { jpa ->
