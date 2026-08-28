@@ -22,5 +22,5 @@ class JoinScope<P : Any, T : Any> internal constructor(
     override val from: Join<P, T>,
     internal val type: JoinType,
 ) : Joins<T> {
-    override val taken: MutableMap<String, JoinScope<T, *>> = mutableMapOf()
+    override val joins: JoinRegistry<T> = JoinRegistry()
 }
