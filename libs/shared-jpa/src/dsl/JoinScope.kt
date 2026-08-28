@@ -18,4 +18,4 @@ import jakarta.persistence.criteria.Join
 class JoinScope<P, T : Any> internal constructor(
     /** The join underneath, for the Criteria this does not wrap. */
     override val from: Join<P, T>,
-) : Paths<T>
+) : Joins<T>

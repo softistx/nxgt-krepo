@@ -243,6 +243,34 @@ The vocabulary: `eq` `ne` `gt` `ge` `lt` `le` `within` (a `ClosedRange`, both en
 `any(…)` over a list. `eq null` is not `is null` — it renders `= null`, which is never true in SQL,
 so ask with `isNull()`.
 
+`update<T> { }` and `delete<T> { }` are the write side, answering with the same `JpaMutation`
+`mutate(hql)` does — and carrying the same warning: they go straight to the database, past everything
+the session knows.
+
+```kotlin
+session
+    .update<Purchase> {
+        this[Purchase::total] set (this[Purchase::total] + 10L)
+        where { this[Purchase::reference] like "P-%" }
+    }.execute()
+```
+
+An assignment can be an expression, which is how a counter is incremented without reading it first:
+one statement, one round trip, and correct when two of them run at once. Neither statement can join
+— that is JPA's rule for a bulk statement, so the scopes simply do not offer it rather than offering
+a method that always fails when Hibernate renders it.
+
+**A bulk statement with nothing restricting it is refused.** `JpaUnrestrictedMutationException`,
+unless the block says `everyRow()`. HQL allows `delete from Purchase` and so does this — but only out
+loud, because a DSL statement is assembled from parts and a `where` block adds nothing when its block
+answers null. A statement whose every filter turned out not to apply would otherwise be a statement
+against the whole table.
+
+On a stateless session, `update(entity)` and `update { }` are both there and both resolve — the first
+is the stateless vocabulary, the second is this DSL. That works on the wrapper; on `Stage.Session`
+itself a member always beats an extension, which is why the module builds these through a name of its
+own rather than through `raw.update`.
+
 Underneath it is JPA Criteria: Hibernate renders the SQL, and this is a Kotlin surface over its query
 model rather than a second implementation of HQL that would have to learn every dialect's quoting.
 When a terminal has to name the query in an exception it renders the tree back to HQL, and only then.
