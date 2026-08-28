@@ -1,10 +1,13 @@
 package com.strange.mongo.query
 
 import com.mongodb.client.model.Updates
+import com.strange.mongo.Draft
 import com.strange.mongo.MongoTestCluster
 import com.strange.mongo.Note
+import com.strange.mongo.withDrafts
 import com.strange.mongo.withNotes
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.count
 import org.bson.BsonDocument
@@ -30,6 +33,25 @@ class WriteTest :
                 withNotes { notes ->
                     notes.insertAll(emptyList()) shouldBe null
                     notes.findAll().count() shouldBe 0
+                }
+            }
+
+            scenario("insertAndRead answers with the document as the collection now holds it") {
+                withNotes { notes ->
+                    notes.insertAndRead(Note("n1", "one")).text shouldBe "one"
+                    notes.findAll().count() shouldBe 1
+                }
+            }
+
+            // The case that reading an id off the document in hand could never reach: the document
+            // has no id to read until the server has answered.
+            scenario("insertAndRead reads back an _id the server generated, which no document carried") {
+                withDrafts { drafts ->
+                    val stored = drafts.insertAndRead(Draft(text = "unsent"))
+
+                    val id = stored.id.shouldNotBeNull()
+                    stored.text shouldBe "unsent"
+                    drafts.findById(id)?.text shouldBe "unsent"
                 }
             }
         }

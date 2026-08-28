@@ -71,44 +71,16 @@ class JpaDocumentException(
 ) : JpaException("the stored JSON is not a $type", cause)
 
 /**
- * A bulk `update` or `delete` built through the DSL with nothing restricting it.
- *
- * HQL allows `delete from Purchase` and so does this — but only when it is said out loud, with
- * `everyRow()`. The DSL is assembled from parts, and `where { }` adds nothing when its block answers
- * null; a statement whose every filter turned out not to apply is then a statement against the whole
- * table, which is never what the code that built it meant. Saying so costs one call and the mistake
- * costs a restore.
- */
-class JpaUnrestrictedMutationException(
-    val type: KClass<*>,
-    val statement: String,
-) : JpaException(
-        "$statement over every ${type.simpleName} row: nothing restricts it. " +
-            "Add a where, or say everyRow() if that is the intent",
-    )
-
-/**
- * A page this library will not cut: a sort with no unique last key, a cursor from another query, or
- * a key whose type it cannot put in one.
- *
- * Keyset pagination resumes from the previous page's sort key, so the key has to be unique — sort by
- * a repeated column alone and every row sharing a value is a coin toss between being served twice
- * and being skipped. That is a data bug that reads as a UI bug, so it is refused when the page is
- * built rather than discovered in production.
- */
-class JpaPaginationException(
-    message: String,
-) : JpaException(message)
-
-/**
  * A write asked for outside a transaction, where it would have been discarded without a word.
  *
  * A session flushes at the end of a unit of work if and only if there is a transaction, so a
  * `persist` or a change to a loaded entity inside a plain `session { }` reaches no table: no error,
- * no warning, no row. `JpaCrudService` refuses rather than participates — the alternative is a
- * create that returns an entity, reports success, and wrote nothing.
+ * no warning, no row — and a `deleteById` would answer `true` for a row it did not delete.
+ * Every write verb on the session — `insert`, `update`, `delete` and the rest — refuses rather than
+ * participates; the alternative is a create that returns an entity, reports success, and wrote
+ * nothing. JPA's own `persist`, `merge` and `remove` stay unguarded: they promise only that the
+ * instance is managed, which is true whether or not there is a transaction to flush it.
  */
-
 class JpaOutsideTransactionException(
     val operation: String,
     val type: KClass<*>,
