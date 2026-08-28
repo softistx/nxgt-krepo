@@ -6,11 +6,11 @@ import jakarta.persistence.criteria.Selection
  * A row built by calling a constructor, with the arguments typed by the constructor itself.
  *
  * ```kotlin
- * class Summary(val reference: String, val name: String)
+ * class Summary(val reference: String, val buyer: String)
  *
  * session.project<Purchase, Summary> {
  *     val buyer = join(Purchase::customer)
- *     construct(::Summary, this[Purchase::reference], buyer[Buyer::name])
+ *     construct(::Summary, Purchase::reference, buyer[Buyer::name])
  * }.list()
  * ```
  *
@@ -22,6 +22,10 @@ import jakarta.persistence.criteria.Selection
  *
  * Hibernate still calls the constructor reflectively, so it has to be public and its parameters have
  * to be in this order — which is exactly what the reference asserts.
+ *
+ * These are the ones taking selections throughout — a join's column, a function's result, an
+ * aggregate. `ConstructProperties.kt` has the ones that take the entity's own properties instead,
+ * and every mixture of the two.
  */
 fun <T : Any, R : Any, A> ProjectScope<T, R>.construct(
     ctor: (A) -> R,

@@ -4,6 +4,7 @@ import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Expression
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
+import kotlin.reflect.KProperty1
 
 /**
  * The `project { }` block, which returns something other than the entity.
@@ -39,6 +40,11 @@ class ProjectScope<T : Any, R : Any>
         /** Adds a grouping key, after any already added. */
         fun groupBy(block: ProjectScope<T, R>.() -> Expression<*>) {
             groups += block()
+        }
+
+        /** The same, named by a property — the common case, and one that needs no block. */
+        fun groupBy(property: KProperty1<T, *>) {
+            groups += this[property]
         }
 
         /**
