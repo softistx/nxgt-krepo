@@ -34,11 +34,22 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
 - **8 shape slots**, including the expressive `largeIncreased`, `extraLargeIncreased` and
   `extraExtraLarge` that the older M3 documentation does not mention.
 - **30 type styles** and **58 `*Defaults` objects**.
-- **The Jetpack Compose Styles API is not here.** `Modifier.styleable` and the style-attribute
-  machinery the `styles` skill describes appear in no class of `material3`, `ui` or `foundation` at
-  these versions — grep the jars and the count is zero. A design-system layer on Compose
-  Multiplatform therefore carries its tokens on `CompositionLocal`s, which is what `StrangeTheme`
-  does. Re-check after a Compose bump; until then, read `styles` as background, not as a plan.
+- **The Compose Styles API is here, experimental, in `foundation` rather than `material3`.**
+  `androidx.compose.foundation.style` ships in Compose Multiplatform: 36 classes at foundation
+  1.11.1, 84 at 1.12.0. `Modifier.styleable(StyleState, Style)` exists today, along with `Style`,
+  `StyleScope`, `StyleState`, `CombinedStyle`, `StyleAnimations` and the interaction keys, all
+  gated by `@ExperimentalFoundationStyleApi`.
+
+  Two traps. It lives in **`foundation`**, so grepping `material3` for it finds nothing. And
+  `styleable` is a *function*, so it compiles to `StyleModifierKt` — searching the jar's class
+  names for "styleable" also finds nothing, and concluding the API is absent from that is wrong.
+  Check with `javap -cp <foundation jar> androidx.compose.foundation.style.StyleModifierKt`, or
+  list the `androidx/compose/foundation/style/` entries.
+
+  The `styles` skill asks for androidx foundation 1.12.0-alpha01 or higher; that is androidx's
+  numbering, and Compose Multiplatform's own 1.11.1 foundation already carries the API, so do not
+  read that requirement as ruling CMP out.
+
 - **223 public entry points.** Presence in `components.md` is what settles whether a component
   exists in this version at all — check there before writing one, and before believing a web
   search that says M3 has it.
