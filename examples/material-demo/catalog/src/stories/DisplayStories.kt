@@ -1,0 +1,118 @@
+package com.strange.material.demo.stories
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.strange.material.button.Button
+import com.strange.material.button.ButtonVariant
+import com.strange.material.demo.knobs.enumChoice
+import com.strange.material.demo.storyGroup
+import com.strange.material.display.Alert
+import com.strange.material.display.Card
+import com.strange.material.display.CardVariant
+import com.strange.material.display.Chip
+import com.strange.material.display.EmptyState
+import com.strange.material.display.ListTile
+import com.strange.material.display.Skeleton
+import com.strange.material.display.StatusBadge
+import com.strange.material.icon.Icon
+import com.strange.material.icon.IconSize
+import com.strange.material.icon.StrangeIcons
+import com.strange.material.text.Typography
+import com.strange.material.text.TypographyVariant
+import com.strange.material.theme.StrangeTheme
+import com.strange.material.theme.Tone
+
+val DisplayStories =
+    storyGroup("Display") {
+        story("Card") { knobs ->
+            Card(
+                variant = knobs.enumChoice("Variant", CardVariant.Filled),
+                onClick = if (knobs.flag("Clickable", true)) ({ }) else null,
+                enabled = knobs.flag("Enabled", true),
+            ) {
+                Typography(text = "Quarterly report", variant = TypographyVariant.TitleMedium)
+                Typography(text = "Updated eight minutes ago by Amara.")
+            }
+        }
+
+        story("Chip") { knobs ->
+            var selected by remember { mutableStateOf(setOf("Paid")) }
+            val withIcon = knobs.flag("Leading icon", false)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                listOf("Paid", "Pending", "Refunded", "Disputed").forEach { label ->
+                    Chip(
+                        text = label,
+                        selected = label in selected,
+                        onClick = {
+                            selected = if (label in selected) selected - label else selected + label
+                        },
+                        leading =
+                            if (withIcon) {
+                                { Icon(icon = StrangeIcons.Person, description = null) }
+                            } else {
+                                null
+                            },
+                    )
+                }
+            }
+        }
+
+        story("Status badge") { _ ->
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                Tone.entries.forEach { StatusBadge(text = it.name.lowercase(), tone = it) }
+            }
+        }
+
+        story("List tile") { knobs ->
+            val supporting = knobs.flag("Supporting text", true)
+            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
+                listOf("Amara Diallo", "Jonas Weber", "Priya Raman").forEach { name ->
+                    ListTile(
+                        title = name,
+                        supporting = if (supporting) "Last seen this morning" else null,
+                        onClick = {},
+                        leading = { Icon(icon = StrangeIcons.Person, description = null) },
+                        trailing = { StatusBadge(text = "active", tone = Tone.Success) },
+                    )
+                }
+            }
+        }
+
+        story("Alert") { knobs ->
+            Alert(
+                text = knobs.text("Text", "Two invoices could not be reconciled."),
+                tone = knobs.enumChoice("Tone", Tone.Warning),
+                title = if (knobs.flag("Title", true)) "Reconciliation paused" else null,
+                visible = knobs.flag("Visible", true),
+                action = { Button(text = "Review", onClick = {}, variant = ButtonVariant.Link) },
+            )
+        }
+
+        story("Empty state") { knobs ->
+            EmptyState(
+                title = knobs.text("Title", "No invoices yet"),
+                description = "Invoices appear here as soon as an order is settled.",
+                illustration = { Icon(icon = StrangeIcons.Inbox, description = null, size = IconSize.XLarge) },
+                action = if (knobs.flag("Action", true)) ({ Button("New invoice", {}) }) else null,
+            )
+        }
+
+        story("Skeleton") { knobs ->
+            val rows = knobs.number("Rows", 3f, 1f..6f, steps = 4).toInt()
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+            ) {
+                Skeleton(height = 24.dp, modifier = Modifier.fillMaxWidth(0.4f))
+                repeat(rows) { Skeleton() }
+            }
+        }
+    }

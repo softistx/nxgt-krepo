@@ -1,0 +1,15 @@
+# An activity and a manifest. Same rule as the desktop launcher: nothing else belongs here.
+product: android/app
+
+dependencies:
+  - //examples/material-demo/catalog
+  # ComponentActivity and setContent — the only Android-specific thing the demo needs.
+  - $libs.androidx.activity.compose
+
+settings:
+  compose:
+    enabled: true
+    version: 1.11.1
+  android:
+    namespace: com.strange.material.demo.android
+    applicationId: com.strange.material.demo

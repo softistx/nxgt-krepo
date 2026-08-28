@@ -69,20 +69,20 @@ ligne de plomberie.
 - [x] Les bornes de `StrangeMotion`, et `enabled = false` met les durées à zéro
 
 **Catalogue de démonstration**
-- [ ] `examples/material-demo/catalog` — registre de `Story`, contrôles typés, disposition 3 volets
-- [ ] `examples/material-demo/desktop` — fenêtre, hot reload
-- [ ] `examples/material-demo/android` — activité, manifeste
-- [ ] Bascule clair/sombre et sélecteur de graine pilotant `StrangeTheme` en direct
-- [ ] Une story par composant livré
-- [ ] La story « écran complet »
+- [x] `examples/material-demo/catalog` — registre de `Story`, contrôles typés, disposition 3 volets
+- [x] `examples/material-demo/desktop` — fenêtre, hot reload
+- [x] `examples/material-demo/android` — activité, manifeste
+- [x] Bascule clair/sombre et sélecteur de graine pilotant `StrangeTheme` en direct
+- [x] Une story par composant livré
+- [x] La story « écran complet »
 
 **Documentation**
 - [x] `docs/roadmap.md` (ce fichier)
 - [x] `README.md` — la forme de la librairie, comment `StrangeTheme` s'insère, comment ajouter un composant
 - [x] `docs/tokens.md` — le vocabulaire des tokens
 - [x] `docs/components.md` — un composant par ligne, ses paramètres, son id de story
-- [ ] `examples/material-demo/README.md` — la forme de la démo, comment ajouter une story
-- [ ] Lignes ajoutées aux tableaux d'`AGENTS.md` et du `README.md` racine
+- [x] `examples/material-demo/README.md` — la forme de la démo, comment ajouter une story
+- [x] Lignes ajoutées aux tableaux d'`AGENTS.md` et du `README.md` racine
 
 ---
 
