@@ -1,7 +1,7 @@
 package com.strange.jpa.service
 
 import com.strange.jpa.entity.Purchase
-import com.strange.jpa.repository.JpaRepository
+import com.strange.jpa.repository.jpaRepository
 import com.strange.jpa.session.JpaSession
 
 internal data class NewPurchase(
@@ -22,7 +22,7 @@ internal data class EditPurchase(
 internal open class PurchaseService(
     principal: String? = null,
 ) : JpaCrudService<Purchase, Long, NewPurchase, EditPurchase>(
-        JpaRepository(Purchase::class, Purchase::id),
+        jpaRepository(Purchase::id),
         principal,
     ) {
     val ran = mutableListOf<String>()

@@ -21,7 +21,7 @@ import kotlin.reflect.KProperty1
  * [JpaCrudService].
  *
  * ```kotlin
- * val purchases = JpaRepository(Purchase::class, Purchase::id)
+ * val purchases = jpaRepository(Purchase::id)
  *
  * class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::class, Purchase::id) {
  *     suspend fun findByBuyer(session: JpaSession, name: String) =
@@ -43,6 +43,11 @@ import kotlin.reflect.KProperty1
  * [id] is a property reference rather than a getter function because both halves are needed: the
  * value, for a caller holding an instance, and the *name*, for the queries below that restrict on
  * the identifier column. `Purchase::id` gives both with no `kotlin-reflect` on the classpath.
+ *
+ * [entity] is a `KClass` because a class cannot have a `reified` type parameter — inside one, `T` is
+ * not reifiable and `select<T>()` does not compile, which is the whole reason this needs to be told
+ * what it is generic over. A caller does not have to say it twice: [jpaRepository] infers both types
+ * from the property reference. A subclass names its entity once, in its `extends` clause.
  */
 open class JpaRepository<T : Any, ID : Any>(
     val entity: KClass<T>,
@@ -186,3 +191,12 @@ open class JpaRepository<T : Any, ID : Any>(
         spec: JpaSpec<T>? = null,
     ): SelectScope<T> = session.select(entity).let { if (spec == null) it else it.where(spec) }
 }
+
+/**
+ * A repository for whatever [id] belongs to: `jpaRepository(Purchase::id)`.
+ *
+ * Both type arguments come from the property reference, so neither is written and no `::class` is
+ * passed. The constructor is still there for a subclass, which has to name its entity in its
+ * `extends` clause anyway.
+ */
+inline fun <reified T : Any, ID : Any> jpaRepository(id: KProperty1<T, ID>): JpaRepository<T, ID> = JpaRepository(T::class, id)
