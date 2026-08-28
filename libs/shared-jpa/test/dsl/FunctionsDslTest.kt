@@ -62,7 +62,7 @@ class FunctionsDslTest :
                     jpa.session { session ->
                         session
                             .project<Buyer, String> {
-                                orderBy { asc(this[Buyer::id]) }
+                                orderBy { asc(Buyer::id) }
                                 concat(upper(this[Buyer::name]), "!")
                             }.list()
                     } shouldContainExactly listOf("ADA!", "BO!")
@@ -70,7 +70,7 @@ class FunctionsDslTest :
                     jpa.session { session ->
                         session
                             .project<Buyer, String> {
-                                orderBy { asc(this[Buyer::id]) }
+                                orderBy { asc(Buyer::id) }
                                 coalesce(this[Buyer::tier], "none")
                             }.list()
                     } shouldContainExactly listOf("gold", "none")
@@ -114,7 +114,7 @@ class FunctionsDslTest :
                     jpa.session { session ->
                         session
                             .project<Buyer, String> {
-                                orderBy { asc(this[Buyer::id]) }
+                                orderBy { asc(Buyer::id) }
                                 function<String>("upper", this[Buyer::name])
                             }.list()
                     } shouldContainExactly listOf("ADA", "BO")
@@ -129,7 +129,7 @@ class FunctionsDslTest :
                         jpa.session { session ->
                             session
                                 .project<Buyer, String> {
-                                    orderBy { asc(this[Buyer::id]) }
+                                    orderBy { asc(Buyer::id) }
                                     sql<String>("? || ?", this[Buyer::name], literal("'s cart"))
                                 }.list()
                         }
