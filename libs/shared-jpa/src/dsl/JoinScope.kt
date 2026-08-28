@@ -1,21 +1,26 @@
 package com.strange.jpa.dsl
 
 import jakarta.persistence.criteria.Join
+import jakarta.persistence.criteria.JoinType
 
 /**
- * A join, kept as a value so it can be indexed wherever the query needs it.
+ * A join, indexed wherever the query needs it.
  *
  * ```kotlin
- * val customer = join(Order::customer)
- * val lines = joinEach(Order::lines, JoinType.LEFT)
- * where { (customer[Customer::name] eq "ada") and (lines[Line::sku] eq "abc") }
+ * where { join(Purchase::customer)[Buyer::name] eq "ada" }
+ *
+ * val lines = joinEach(Purchase::lines, JoinType.LEFT)   // the same join, named
+ * where { lines[PurchaseLine::sku] eq "abc" }
  * ```
  *
- * It is a [Paths] like the query scope itself, so joining from a join reads the same way as joining
- * from the root: `customer.join(Customer::address)`.
+ * It is a [Joins] like the query scope itself, so joining from a join reads the same way as joining
+ * from the root, and is remembered the same way: `join(Purchase::customer).join(Buyer::address)`.
  */
 @JpaDsl
-class JoinScope<P, T : Any> internal constructor(
+class JoinScope<P : Any, T : Any> internal constructor(
     /** The join underneath, for the Criteria this does not wrap. */
     override val from: Join<P, T>,
-) : Joins<T>
+    internal val type: JoinType,
+) : Joins<T> {
+    override val taken: MutableMap<String, JoinScope<T, *>> = mutableMapOf()
+}

@@ -3,6 +3,7 @@ package com.strange.jpa.page
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaPaginationException
 import com.strange.jpa.JpaTestDatabase
+import com.strange.jpa.dsl.asc
 import com.strange.jpa.dsl.select
 import com.strange.jpa.entity.Buyer
 import com.strange.jpa.entity.Purchase
@@ -18,7 +19,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 
 /** Keyset pagination: that it walks every row once, and refuses the sorts that would not. */
-class SelectPageTest :
+class PagingTest :
     FeatureSpec({
 
         // Six purchases, three of them sharing a total — the case an offset pager gets wrong.
@@ -39,10 +40,11 @@ class SelectPageTest :
 
         suspend fun Jpa.page(request: PageRequest) =
             session { session ->
-                session.selectPage<Purchase>(request) {
-                    sortBy(Purchase::total)
-                    sortBy(Purchase::id)
-                }
+                session
+                    .select<Purchase>()
+                    .sortBy(Purchase::total)
+                    .sortBy(Purchase::id)
+                    .page(request)
             }
 
         feature("a forward walk").config(enabled = JpaTestDatabase.available) {
@@ -73,6 +75,27 @@ class SelectPageTest :
                     last.data.map { it.reference } shouldContainExactly listOf("P-5", "P-6")
                     last.info.hasNextPage shouldBe false
                     last.info.hasPreviousPage shouldBe true
+                }
+            }
+
+            scenario("one query answers for every page, rather than being spent on the first") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        // The same scope object, paged twice. If the keyset predicate were added to
+                        // the query rather than handed to the build, the second page would ask for
+                        // the rows after P-2 *and* after P-4 at once — two pages in and every page
+                        // after it empty.
+                        val query = session.select<Purchase>().sortBy(Purchase::total).sortBy(Purchase::id)
+
+                        val first = query.page(PageRequest.first(2))
+                        first.data.map { it.reference } shouldContainExactly listOf("P-1", "P-2")
+
+                        val second = query.page(PageRequest.first(2, first.info.endCursor))
+                        second.data.map { it.reference } shouldContainExactly listOf("P-3", "P-4")
+
+                        query.page(PageRequest.first(2)).data.map { it.reference } shouldContainExactly
+                            listOf("P-1", "P-2")
+                    }
                 }
             }
 
@@ -130,10 +153,11 @@ class SelectPageTest :
                     do {
                         val page =
                             jpa.session { session ->
-                                session.selectPage<Purchase>(PageRequest.first(2, cursor)) {
-                                    sortBy(Purchase::total, descending = true)
-                                    sortBy(Purchase::id)
-                                }
+                                session
+                                    .select<Purchase>()
+                                    .sortBy(Purchase::total, descending = true)
+                                    .sortBy(Purchase::id)
+                                    .page(PageRequest.first(2, cursor))
                             }
                         seen += page.data.map { it.reference }
                         cursor = page.info.endCursor
@@ -150,7 +174,7 @@ class SelectPageTest :
                     val refused =
                         shouldThrow<JpaPaginationException> {
                             jpa.session { session ->
-                                session.selectPage<Purchase>(PageRequest.first(2)) { sortBy(Purchase::total) }
+                                session.select<Purchase>().sortBy(Purchase::total).page(PageRequest.first(2))
                             }
                         }
 
@@ -161,7 +185,7 @@ class SelectPageTest :
             scenario("a paged query with no sort at all") {
                 seeded { jpa ->
                     shouldThrow<JpaPaginationException> {
-                        jpa.session { session -> session.selectPage<Purchase>(PageRequest.first(2)) { } }
+                        jpa.session { session -> session.select<Purchase>().page(PageRequest.first(2)) }
                     }.message.shouldNotBeNull() shouldContain "needs a sort"
                 }
             }
@@ -170,12 +194,11 @@ class SelectPageTest :
                 seeded { jpa ->
                     shouldThrow<JpaPaginationException> {
                         jpa.session { session ->
-                            session.selectPage<Purchase>(PageRequest.first(2)) {
-                                orderBy {
-                                    asc(Purchase::id)
-                                }
-                                sortBy(Purchase::id)
-                            }
+                            session
+                                .select<Purchase>()
+                                .orderBy { asc(Purchase::id) }
+                                .sortBy(Purchase::id)
+                                .page(PageRequest.first(2))
                         }
                     }.message.shouldNotBeNull() shouldContain "sortBy, not orderBy"
                 }
@@ -187,10 +210,11 @@ class SelectPageTest :
 
                     shouldThrow<JpaPaginationException> {
                         jpa.session { session ->
-                            session.selectPage<Purchase>(PageRequest.first(2, cursor)) {
-                                sortBy(Purchase::reference)
-                                sortBy(Purchase::id)
-                            }
+                            session
+                                .select<Purchase>()
+                                .sortBy(Purchase::reference)
+                                .sortBy(Purchase::id)
+                                .page(PageRequest.first(2, cursor))
                         }
                     }.message.shouldNotBeNull() shouldContain "different sort order"
                 }
@@ -215,10 +239,11 @@ class SelectPageTest :
                 seeded { jpa ->
                     val page =
                         jpa.session { session ->
-                            session.selectPage<Purchase>(PageRequest.first(10)) {
-                                where { Purchase::total gt 100L }
-                                sortBy(Purchase::id)
-                            }
+                            session
+                                .select<Purchase>()
+                                .where { Purchase::total gt 100L }
+                                .sortBy(Purchase::id)
+                                .page(PageRequest.first(10))
                         }
 
                     page.data.map { it.reference } shouldContainExactly listOf("P-4", "P-5", "P-6")
@@ -234,19 +259,21 @@ class SelectPageTest :
 
                     val first =
                         jpa.session { session ->
-                            session.selectPage<Thing>(PageRequest.first(2)) {
-                                sortBy(Thing::name)
-                                sortBy(Thing::id)
-                            }
+                            session
+                                .select<Thing>()
+                                .sortBy(Thing::name)
+                                .sortBy(Thing::id)
+                                .page(PageRequest.first(2))
                         }
                     first.data.map { it.name } shouldContainExactly listOf("alpha", "charlie")
 
                     val second =
                         jpa.session { session ->
-                            session.selectPage<Thing>(PageRequest.first(2, first.info.endCursor)) {
-                                sortBy(Thing::name)
-                                sortBy(Thing::id)
-                            }
+                            session
+                                .select<Thing>()
+                                .sortBy(Thing::name)
+                                .sortBy(Thing::id)
+                                .page(PageRequest.first(2, first.info.endCursor))
                         }
                     second.data.map { it.name } shouldContainExactly listOf("delta")
                 }
