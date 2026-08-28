@@ -1,0 +1,26 @@
+# Everything the demo is: the story registry, the catalogue UI and the stories themselves. The two
+# launcher modules beside it hold a window and an activity and nothing else, because a module has
+# exactly one product type and `android/app` and `jvm/app` cannot be the same one.
+product:
+  type: kmp/lib
+  platforms: [ jvm, android ]
+
+dependencies:
+  # The library under demonstration.
+  - //libs/shared-material: exported
+  # The catalogue is itself a Compose UI, and it reaches for Material 3 directly wherever
+  # shared-material has not reached yet — text fields and sliders arrive in phase 2, and the
+  # control panel needs them now.
+  - $compose.material3: exported
+  - $compose.foundation: exported
+  - $compose.ui: exported
+  - $compose.animation
+
+settings:
+  kotlin:
+    optIns: [ androidx.compose.foundation.style.ExperimentalFoundationStyleApi ]
+  compose:
+    enabled: true
+    version: 1.11.1
+  android:
+    namespace: com.strange.material.demo

@@ -18,6 +18,7 @@ What exists:
 | `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/shared-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
+| `libs/shared-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: a token layer driven by one colour seed, component looks declared as Compose `Style`s with their interaction states animated, and motion as named durations rather than scattered `tween`s |
 | `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
 | `libs/shared-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
@@ -30,6 +31,7 @@ What exists:
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
 | `examples/jpa-shop` | A Ktor catalogue over Postgres showing `shared-jpa`'s CRUD extensions and audit layer |
+| `examples/material-demo` | The `shared-material` catalogue — one Compose Multiplatform app in three modules: `catalog` holds every story, `desktop` and `android` are launchers |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
@@ -173,12 +175,24 @@ The shape a component takes:
 - **Presentation state belongs to the component.** `rememberUpdatedStyleState(interactionSource) {
   it.isEnabled = enabled }` gives pressed, hovered and focused for nothing; the caller passes
   business state and never remembers a boolean for a visual.
+- **Every default has a name in `StrangeStyles`**, reached as `StrangeTheme.styles.card(variant)`.
+  It is a plain `object` behind an extension property, not a `CompositionLocal` — a `Style` reads
+  its tokens when it is applied, not when it is written — and it lives in `src/style/` so `theme`
+  keeps knowing nothing about the components. Restating a default before editing it is what stops a
+  one-off drifting away from the rest of the screen.
 
 The `styles` skill has the full vocabulary, the state-animation guide and the migration workflow.
-Two things it does not say, both established here: the API is in `foundation`, so grepping
-`material3` for it finds nothing; and `styleable` is a function, so it compiles into
-`StyleModifierKt` and grepping class names for it also finds nothing. Either empty grep reads as
-proof of absence and is not.
+Three things it does not say, all established here:
+
+- The API is in `foundation`, so grepping `material3` for it finds nothing.
+- `styleable` is a **function**, so it compiles into `StyleModifierKt` and grepping class names for
+  it also finds nothing. Either empty grep reads as proof of absence and is not.
+- **`then` needs its own import.** `styleA then styleB` is a top-level infix extension in
+  `androidx.compose.foundation.style`, not a member — without `import
+  androidx.compose.foundation.style.then` the only candidate in scope is `Comparator.then`, and the
+  compiler reports a return-type mismatch against `Comparator` rather than a missing import. The
+  variadic `Style(a, b, c)` factory and `Modifier.styleable(state, vararg styles)` compose without
+  it.
 
 ## Finding and installing a skill
 
@@ -625,6 +639,11 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/shared-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
+  | `libs/shared-material/README.md` | How is the UI library shaped, how does `StrangeTheme` slot into an application that already uses Material 3, and how do I add a component? |
+  | `libs/shared-material/docs/tokens.md` | What a token may say — the colour roles, spacing, radii, elevation, durations and easings. **This is where a new token is documented** |
+  | `libs/shared-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
+  | `libs/shared-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
+  | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
   | `libs/shared-testing/README.md` | Where an integration spec's server comes from, and how a container declared there is cleaned up |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
