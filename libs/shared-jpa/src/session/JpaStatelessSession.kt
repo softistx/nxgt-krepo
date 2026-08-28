@@ -24,7 +24,6 @@ import kotlinx.coroutines.future.await
 import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.hibernate.query.criteria.JpaCriteriaInsert
 import org.hibernate.reactive.stage.Stage
-import kotlin.reflect.KClass
 
 /**
  * The same convention over a stateless session: everything suspends, nothing returns a stage.
@@ -49,23 +48,6 @@ class JpaStatelessSession internal constructor(
     suspend inline fun <reified T : Any> get(id: Any): T = find<T>(id) ?: throw JpaNotFoundException(T::class, id)
 
     /** Inserts them, one statement each, now. */
-
-    /**
-     * The same, with the entity as a value rather than as a type argument.
-     *
-     * For a caller that has a `KClass` and no way to reify it — anything generic in its entity, of
-     * which [com.strange.jpa.repository.JpaRepository] is the one in this module.
-     */
-    suspend fun <T : Any> find(
-        type: KClass<T>,
-        id: Any,
-    ): T? = raw.get(type.java, id).await()
-
-    /** [find] by value, or [JpaNotFoundException]. */
-    suspend fun <T : Any> get(
-        type: KClass<T>,
-        id: Any,
-    ): T = find(type, id) ?: throw JpaNotFoundException(type, id)
 
     suspend fun insert(vararg entities: Any) {
         raw.insert(*entities).await()
@@ -125,22 +107,6 @@ class JpaStatelessSession internal constructor(
 
     /** A criteria `insert` — `insert … select`, or `insert … values`. */
     fun mutate(criteria: JpaCriteriaInsert<*>): JpaMutation = raw.mutate(criteria)
-
-    /** [select] with the entity as a value rather than as a type argument. */
-    fun <T : Any> select(
-        type: KClass<T>,
-        block: SelectScope<T>.() -> Unit = {},
-    ): SelectScope<T> = raw.select(type, block)
-
-    /** [project] with both types as values. */
-    fun <T : Any, R : Any> project(
-        type: KClass<T>,
-        result: KClass<R>,
-        block: ProjectScope<T, R>.() -> Selection<R>,
-    ): ProjectScope<T, R> = raw.project(type, result, block)
-
-    /** [delete] with the entity as a value rather than as a type argument. */
-    fun <T : Any> delete(type: KClass<T>): DeleteScope<T> = deleteOn(raw, type)
 
     /** A bulk HQL `update` or `delete`. */
     fun mutate(hql: String): JpaMutation = raw.mutate(hql)
