@@ -128,22 +128,33 @@ substitutes, and a subclass extends with the two or three queries that really ar
 collection.
 
 ```kotlin
-val notes = MongoCrudRepository(database.collection<Note>("notes"), Note::id)
-
 class NoteRepository(database: MongoDatabase) :
-    MongoCrudRepository<Note, String>(database.collection("notes"), Note::id) {
+    MongoCrudRepository<Note, String>(database, "notes", Note::class) {
     suspend fun findByTag(tag: String) = findAll(Filters.eq("tag", tag))
-    override suspend fun ensureIndexes() { collection.ensureIndex(Indexes.ascending("tag")) }
+    override suspend fun ensureIndexes() { collection.ensureUniqueIndex(Indexes.ascending("tag")) }
 }
+
+val notes = mongoRepository<Note, String>(database, "notes")   // no subclass wanted
 ```
 
-Two decisions worth stating:
+Three decisions worth stating:
 
-- **`idOf` is a constructor parameter, not an abstract method**, so the plain case needs no subclass
-  at all. Every method is `open` for the case that does.
-- **The entity owns its `_id`.** Writes take the id from the document rather than from a
-  server-generated one, which is what lets a create be "insert, then read back" without a round trip
-  to discover what was inserted.
+- **It takes the database, not a collection**, and that is what makes it injectable. A
+  `MongoCollection<T>` is derived from a database by a name and a type, so a repository asking for
+  one pushes both out to whoever wires it up: `single { NoteRepository(get()) }` would have to become
+  `single { NoteRepository(get<MongoDatabase>().collection<Note>("notes")) }` in every application
+  that used it. Naming the collection is the repository's own business and belongs in its
+  declaration, once. A `MongoCluster` — which is what a `MongoClient` is — works too, with the
+  database named beside it, for a container that registers only the client.
+- **The document class is a `KClass` and there is no way around it.** `getCollection<T>(name)` is
+  `reified` and a class cannot be, so a subclass names it once in its own declaration.
+  `mongoRepository<T, ID>(database, name)` is the `reified` form for the plain case that wants no
+  subclass at all. Every method is `open` for the case that does.
+- **Nothing here reads an id off a document.** `insertAndRead` — what a service's `create` is built
+  on — takes the id to read back with from the driver's own `InsertOneResult`, so a document whose
+  `_id` the server assigned comes back exactly like one that carried its own. That case used to be
+  impossible: the repository was given an `idOf` function and could only look at the document in
+  hand. A spec inserts a document with no `_id` at all and reads back the `ObjectId` Mongo made.
 
 It knows nothing about *why* a document is being written — no hooks, no audit, no transactions.
 That is `MongoCrudService`, one layer up.
