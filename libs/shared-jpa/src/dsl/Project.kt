@@ -34,8 +34,7 @@ inline fun <reified T : Any, reified R : Any> Stage.QueryProducer.project(
  * The same, with both types as values — how [project] is implemented, and how a caller generic in
  * its entity reaches it. Internal for the reason [com.strange.jpa.dsl.select]'s twin is.
  */
-@PublishedApi
-internal fun <T : Any, R : Any> Stage.QueryProducer.project(
+fun <T : Any, R : Any> Stage.QueryProducer.project(
     type: KClass<T>,
     result: KClass<R>,
     block: ProjectScope<T, R>.() -> Selection<R>,

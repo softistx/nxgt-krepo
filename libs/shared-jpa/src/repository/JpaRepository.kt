@@ -124,15 +124,23 @@ open class JpaRepository<T : Any, ID : Any>(
         spec: JpaSpec<T>? = null,
     ): Long = query(session, spec).count()
 
+    /**
+     * Whether anything matches — one row asked for, not a count of all of them.
+     *
+     * `count(*) > 0` makes the database aggregate the entire match set to answer a boolean; a limit
+     * of one lets it stop at the first row it finds. [existingIds] directly below already took the
+     * same care, for the same reason.
+     */
     open suspend fun exists(
         session: JpaSession,
         spec: JpaSpec<T>,
-    ): Boolean = count(session, spec) > 0
+    ): Boolean = query(session, spec).limit(1).first() != null
 
+    /** Whether the row is there, asked the same cheap way [exists] asks. */
     open suspend fun existsById(
         session: JpaSession,
         value: ID,
-    ): Boolean = count(session) { this[id] eq value } > 0
+    ): Boolean = exists(session) { this[id] eq value }
 
     /**
      * The subset of [values] that exists — one query returning one column, not one row per id and
