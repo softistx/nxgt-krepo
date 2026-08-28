@@ -3,6 +3,9 @@ modules:
   - examples/demo-client
   - examples/demo-spring-client
   - examples/jpa-shop
+  - examples/material-demo/android
+  - examples/material-demo/catalog
+  - examples/material-demo/desktop
   - libs/openapi-generator
   - libs/shared-amqp
   - libs/shared-common
@@ -11,6 +14,7 @@ modules:
   - libs/shared-kafka
   - libs/shared-koin
   - libs/shared-ktor
+  - libs/shared-material
   - libs/shared-mongo
   - libs/shared-redis
   - libs/shared-storage

@@ -1,0 +1,14 @@
+# A window and a main function. No stories, no logic — if this module grows, something is in the
+# wrong place.
+product: jvm/app
+
+dependencies:
+  - //examples/material-demo/catalog
+  # The desktop windowing entry points — Window, application {} — live here rather than in the
+  # common Compose artifacts, so only this module names them.
+  - $compose.desktop.currentOs
+
+settings:
+  compose:
+    enabled: true
+    version: 1.11.1

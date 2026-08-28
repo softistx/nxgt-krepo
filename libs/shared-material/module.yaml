@@ -1,0 +1,48 @@
+product:
+  type: kmp/lib
+  # iosX64 is deliberately absent: the Compose artifacts publish for
+  # [android, iosArm64, iosSimulatorArm64, js, jvm, macosArm64, wasmJs] and nothing else, so
+  # naming it fails dependency resolution. The two Apple targets that are named compile only on
+  # an Apple host — on Linux `./kotlin build` skips them silently and still exits 0.
+  platforms: [ jvm, android, iosArm64, iosSimulatorArm64 ]
+
+dependencies:
+  # Material 3 is the foundation this library sits on rather than replaces: StrangeTheme installs
+  # a MaterialTheme underneath so ordinary M3 components keep working inside it. ColorScheme,
+  # Shapes, Typography and every *Colors type are in this module's public API, hence exported.
+  - $compose.material3: exported
+  # Modifier, Dp, Color, TextStyle and the layout primitives are in every signature here.
+  - $compose.foundation: exported
+  - $compose.ui: exported
+  # The motion package returns EnterTransition/ExitTransition and Easing to callers.
+  - $compose.animation: exported
+  # A whole palette derived from one seed colour: `rememberStrangeColors(seed)` answers with a
+  # ColorScheme, so a consumer that names a seed never hand-writes 48 roles.
+  - $libs.material.kolor: exported
+
+test-dependencies:
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+# kotest-runner-junit5 is JVM-only, so it cannot sit in the common list — and both qualifiers are
+# needed, not one: the Android unit-test run is a second JVM run with its own classpath, and
+# without it that run discovers zero tests and fails with exit code 2.
+test-dependencies@jvm:
+  - $libs.kotest.runner.junit5
+
+test-dependencies@android:
+  - $libs.kotest.runner.junit5
+
+settings:
+  kotlin:
+    # The Compose Styles API — Style, StyleScope, Modifier.styleable — is how every component here
+    # is dressed, so the opt-in is module-wide rather than a per-file annotation. It ships in
+    # foundation, experimental, from Compose Multiplatform 1.11.1.
+    optIns: [ androidx.compose.foundation.style.ExperimentalFoundationStyleApi ]
+  compose:
+    enabled: true
+    # Pinned to the toolchain 0.12.0 default, the way `ktor` is pinned in the modules that enable
+    # it: a toolchain upgrade should move this line visibly rather than silently.
+    version: 1.11.1
+  android:
+    namespace: com.strange.material
