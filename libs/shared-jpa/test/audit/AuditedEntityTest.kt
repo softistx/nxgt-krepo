@@ -49,7 +49,7 @@ class AuditedEntityTest :
                     val before = Clock.System.now()
                     jpa.transaction { session -> session.persist(Note(1, "first")) }
 
-                    val note = jpa.session { session -> session.get(Note::class, 1L) }
+                    val note = jpa.session { session -> session.get<Note>(1L) }
 
                     note.createdAt shouldBeGreaterThan before
                     note.lastModifiedAt shouldBe note.createdAt
@@ -59,10 +59,10 @@ class AuditedEntityTest :
             scenario("moves on an update, and creation stays where it was") {
                 withJpa { jpa ->
                     jpa.transaction { session -> session.persist(Note(1, "first")) }
-                    val created = jpa.session { session -> session.get(Note::class, 1L) }
+                    val created = jpa.session { session -> session.get<Note>(1L) }
 
-                    jpa.transaction { session -> session.get(Note::class, 1L).text = "second" }
-                    val updated = jpa.session { session -> session.get(Note::class, 1L) }
+                    jpa.transaction { session -> session.get<Note>(1L).text = "second" }
+                    val updated = jpa.session { session -> session.get<Note>(1L) }
 
                     updated.createdAt shouldBe created.createdAt
                     updated.lastModifiedAt shouldBeGreaterThan created.lastModifiedAt
