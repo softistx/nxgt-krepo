@@ -5,6 +5,8 @@ import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.entity.Buyer
 import com.strange.jpa.entity.Purchase
 import com.strange.jpa.entity.PurchaseLine
+import com.strange.jpa.page.PageRequest
+import com.strange.jpa.page.page
 import com.strange.jpa.query.criteria
 import com.strange.jpa.query.query
 import com.strange.jpa.session.JpaSession
@@ -314,6 +316,56 @@ class SelectDslTest :
                     where { all(listOf(Purchase::total gt 100L, Purchase::total lt 500L)) }
                 } shouldContainExactly listOf("P-1", "P-3")
                 references { where { all(emptyList()) } }.size shouldBe 4
+            }
+        }
+
+        // Read-only results skip the snapshot a stateful session keeps to work out what changed, so
+        // "no dirty check" is observable: a mutation is not written. Nothing called this before.
+        feature("readOnly").config(enabled = JpaTestDatabase.available) {
+            scenario("stops the dirty check, so a mutation on a loaded row is not written") {
+                seeded { jpa ->
+                    jpa.transaction { session ->
+                        session
+                            .select<Purchase> { where { Purchase::id eq 1L } }
+                            .readOnly()
+                            .list()
+                            .single()
+                            .total = 999L
+                    }
+
+                    jpa.session { it.get<Purchase>(1L) }.total shouldBe 150L
+                }
+            }
+
+            scenario("and without it the same mutation is written, which is what makes that a claim") {
+                seeded { jpa ->
+                    jpa.transaction { session ->
+                        session
+                            .select<Purchase> { where { Purchase::id eq 1L } }
+                            .list()
+                            .single()
+                            .total = 999L
+                    }
+
+                    jpa.session { it.get<Purchase>(1L) }.total shouldBe 999L
+                }
+            }
+
+            scenario("is applied by a paged query too, which used to drop it on the floor") {
+                seeded { jpa ->
+                    jpa.transaction { session ->
+                        session
+                            .select<Purchase> { where { Purchase::id eq 1L } }
+                            .readOnly()
+                            .sortBy(Purchase::id)
+                            .page(PageRequest.first(10))
+                            .data
+                            .single()
+                            .total = 999L
+                    }
+
+                    jpa.session { it.get<Purchase>(1L) }.total shouldBe 150L
+                }
             }
         }
 
