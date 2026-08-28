@@ -2,7 +2,6 @@ package com.strange.mongo
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
-import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -42,15 +41,6 @@ internal suspend fun withNotes(block: suspend (MongoCollection<Note>) -> Unit) =
 internal suspend fun withNotesAndClient(block: suspend (MongoCollection<Note>, MongoClient) -> Unit) =
     MongoTestCluster.withDatabase { client, database -> block(database.collection<Note>("notes"), client) }
 
-/**
- * The database a `notes` collection lives in, for the specs that build a repository.
- *
- * A repository resolves its own collection, so what it needs handed to it is the database — which
- * is the whole point of the change that made it take one.
- */
-internal suspend fun withNotesDatabase(block: suspend (MongoDatabase) -> Unit) =
-    MongoTestCluster.withDatabase { _, database -> block(database) }
-
-/** [withNotesDatabase] for the specs that also need the client it came from — sessions. */
-internal suspend fun withNotesDatabaseAndClient(block: suspend (MongoDatabase, MongoClient) -> Unit) =
-    MongoTestCluster.withDatabase { client, database -> block(database, client) }
+/** A `drafts` collection, for the specs about an `_id` the server assigns. */
+internal suspend fun withDrafts(block: suspend (MongoCollection<Draft>) -> Unit) =
+    MongoTestCluster.withDatabase { _, database -> block(database.collection<Draft>("drafts")) }

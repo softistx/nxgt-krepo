@@ -1,9 +1,11 @@
 # shared-mongo
 
-Reusable MongoDB pieces for a Kotlin coroutine service: session-aware collection extensions, a
-cursor-paginated `find`, the codecs the driver does not ship, and `MongoCrudService` — the
-create/read/update/delete shape every collection-backed service repeats, with the parts that differ
-left as hooks.
+Reusable MongoDB pieces for a Kotlin coroutine service: session-aware collection extensions covering
+the create/read/update/delete shape every collection-backed service repeats, a cursor-paginated
+`find`, the codecs the driver does not ship, and an audit trail a document can opt into.
+
+They are extensions on `MongoCollection<T>` rather than a repository class to inherit from — see
+[Writing a collection-backed service](#writing-a-collection-backed-service) for why.
 
 It is a plain `jvm/lib` over `mongodb-driver-kotlin-coroutine`. Nothing here knows about a server
 framework, so the same code serves a Ktor route, a kRPC service or a CLI.
@@ -49,8 +51,6 @@ com.strange.mongo.codec      codecs the driver has no built-in for, and the regi
 com.strange.mongo.query      what a collection is asked to do — filters, indexes, find/insert/update/delete
 com.strange.mongo.page       PaginationOptions and the cursor-paginated find
                              (Page and PageInfo are shared-common's — shared-jpa answers with the same two)
-com.strange.mongo.repository MongoCrudRepository — one collection, as an object
-com.strange.mongo.service    MongoCrudService — the write flow over a repository
 com.strange.mongo.audit      AuditMetadata and Audited — who wrote a document, and when
 com.strange.mongo.gridfs     a coroutine GridFS bucket over the Reactive Streams driver
 ```
@@ -121,73 +121,58 @@ What that requires, and what the implementation therefore does:
 are parsed, so a malformed one fails as `InvalidPaginationException` rather than reaching the
 server.
 
-## Repository
+## Writing a collection-backed service
 
-`MongoCrudRepository<T, ID>` is the query vocabulary as a noun: the thing a service holds, a test
-substitutes, and a subclass extends with the two or three queries that really are specific to a
-collection.
-
-```kotlin
-class NoteRepository(database: MongoDatabase) :
-    MongoCrudRepository<Note, String>(database, "notes", Note::class) {
-    suspend fun findByTag(tag: String) = findAll(Filters.eq("tag", tag))
-    override suspend fun ensureIndexes() { collection.ensureUniqueIndex(Indexes.ascending("tag")) }
-}
-
-val notes = mongoRepository<Note, String>(database, "notes")   // no subclass wanted
-```
-
-Three decisions worth stating:
-
-- **It takes the database, not a collection**, and that is what makes it injectable. A
-  `MongoCollection<T>` is derived from a database by a name and a type, so a repository asking for
-  one pushes both out to whoever wires it up: `single { NoteRepository(get()) }` would have to become
-  `single { NoteRepository(get<MongoDatabase>().collection<Note>("notes")) }` in every application
-  that used it. Naming the collection is the repository's own business and belongs in its
-  declaration, once. A `MongoCluster` — which is what a `MongoClient` is — works too, with the
-  database named beside it, for a container that registers only the client.
-- **The document class is a `KClass` and there is no way around it.** `getCollection<T>(name)` is
-  `reified` and a class cannot be, so a subclass names it once in its own declaration.
-  `mongoRepository<T, ID>(database, name)` is the `reified` form for the plain case that wants no
-  subclass at all. Every method is `open` for the case that does.
-- **Nothing here reads an id off a document.** `insertAndRead` — what a service's `create` is built
-  on — takes the id to read back with from the driver's own `InsertOneResult`, so a document whose
-  `_id` the server assigned comes back exactly like one that carried its own. That case used to be
-  impossible: the repository was given an `idOf` function and could only look at the document in
-  hand. A spec inserts a document with no `_id` at all and reads back the `ObjectId` Mongo made.
-
-It knows nothing about *why* a document is being written — no hooks, no audit, no transactions.
-That is `MongoCrudService`, one layer up.
-
-## Service
-
-`MongoCrudService<T, ID, C, U>` is the write flow every collection-backed service repeats — read it,
-check it exists, write it, read it back, stamp who did it — with the two parts that are genuinely
-about this collection left abstract:
+There is no repository class and no CRUD service base class here, deliberately. Everything one of
+those would have offered is an extension on `MongoCollection<T>` already, so a service holds the
+collection and calls them:
 
 ```kotlin
-class NoteService(repository: NoteRepository, principal: String?) :
-    MongoCrudService<Note, String, NewNote, EditNote>(repository, principal) {
-    override suspend fun buildCreate(input: NewNote) = Note(ObjectId().toHexString(), input.text)
-    override suspend fun buildUpdate(existing: Note, input: EditNote) = listOf(Updates.set("text", input.text))
+class NoteService(
+    private val notes: MongoCollection<Note>,
+    private val principal: String? = null,
+) {
+    suspend fun create(input: NewNote): Note =
+        notes.insertAndRead(Note(ObjectId().toHexString(), input.text))
+
+    suspend fun update(id: String, input: EditNote): Note {
+        val existing = notes.requireById(id)
+        val changes = listOf(Updates.set("text", input.text)) + (existing as? Audited)?.updatedBy(principal).orEmpty()
+        return notes.findByIdAndUpdate(id, Updates.combine(changes)) ?: throw DocumentNotFoundException("notes", id)
+    }
 }
 ```
 
-`beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete` and `afterDelete` are
-the seams for everything else; each of the delete and after hooks receives the session it is running
-in, so a cascade lands in the same transaction as the delete that triggered it.
+Why this rather than a base class:
 
-**Transactions are opt-in.** Pass a `MongoCluster` and every write that is not already in a session
-opens one; leave it out and writes run as they come. That is a real choice, not a default: a
-single-document update is atomic in Mongo on its own, so the transaction only begins to matter once
-a hook writes something else. `MongoCrudServiceTest` has the pair — the same failing hook, rolled
-back with a cluster and standing without one.
+- **A repository over a collection was one-line delegation, twenty times over.** `findById`,
+  `findAll`, `count`, `exists`, `deleteById` and the rest each forwarded to the extension of the same
+  name. The one method that was not delegation, `insertAndRead`, is now an extension too.
+- **An extension gets `T` from its receiver; a class cannot.** `MongoCollection<T>.insertAndRead`
+  needs no `KClass`, no factory function and no constructor overloads, because `getCollection<T>` was
+  the only thing that ever wanted a type token and it is the caller's call, made once, where the
+  collection is resolved. Injecting `MongoCollection<Note>` is as ordinary as injecting a repository
+  was, with nothing in between.
+- **The hooks were the least reusable part.** `beforeCreate`/`afterCreate` and their four siblings
+  existed so a subclass could get a word in edgewise; a service that simply writes its own `create`
+  says the same thing in less, in the order it means, with no `super` call to remember.
 
-**Auditing is opt-in by the entity.** An update is stamped only when the document implements
-`Audited` and a principal is known, so a collection that never asked for a `metadata` object does
-not quietly grow one. Creation-time metadata belongs in `buildCreate`, where the entity is being
-built anyway — `AuditMetadata.by(principal)`. An update that changes nothing writes nothing and is
-not stamped either: the audit trail is for changes, not for requests.
+What that leaves the library to provide is the two things a hand-written service should not have to
+get right on its own:
+
+- **`insertAndRead`** — insert, then read the document back as the collection now holds it, taking
+  the id to read with from the driver's own `InsertOneResult`. A document whose `_id` the server
+  assigned comes back exactly like one that carried its own.
+- **`Audited.updatedBy(principal)`** — the operators that stamp an update, to combine with the ones
+  the update is made of. Auditing stays opt-in by the entity: only a document implementing `Audited`
+  gets a `metadata` object, which is why the `as?` above is the caller's to write. A null principal
+  stamps nothing rather than writing an empty name over whoever really did touch it last. Creation
+  metadata belongs where the document is built — `AuditMetadata.by(principal)`.
+
+**Transactions stay explicit.** `withTransaction { }` on a `MongoCluster`, with the session passed to
+each call that should join it. A single-document update is atomic in Mongo on its own, so a
+transaction only begins to matter once a service writes twice — and at that point it should be
+visible in the service, not configured into a base class.
 
 ## GridFS
 

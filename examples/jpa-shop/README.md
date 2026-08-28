@@ -23,16 +23,19 @@ DELETE /products/{id}
 | | |
 | --- | --- |
 | `domain/Product.kt` | An ordinary annotated Kotlin class extending `AuditedEntity`, so the four audit columns come with it |
-| `domain/ProductRepository.kt` | `JpaRepository<Product, Long>(Product::id)` — nothing names the class — plus named `JpaSpec`s and the two finders that are actually about products |
-| `domain/ProductService.kt` | `buildCreate` and `applyUpdate`, the only two methods the flow cannot write for you |
+| `domain/ProductSpecs.kt` | Named `JpaSpec`s — `(Root<Product>) -> Predicate?` and nothing more — that compose with `and` |
+| `domain/ProductService.kt` | One class over the session: no repository, no base class, the reads and writes as extensions |
 | `routes/ProductRoutes.kt` | Read in `session { }`, write in `transaction { }`, and specifications composed from a query string |
 | `ShopServer.kt` | `install(JpaConnection)` with `packages(…)` — one factory for the application, closed with it, mapping found by scanning |
 
 ## The five things worth reading it for
 
-**Nothing names the entity class.** `JpaRepository<Product, Long>(Product::id)` is the whole
-declaration: a property reference already knows whose it is, and a class cannot have a `reified` type
-parameter, so this is how the base class learns what it is generic over.
+**There is no repository and no CRUD base class.** `ProductService` holds its principal, takes the
+session per call, and reaches for `session.findPage<Product>(…)`, `session.insert(…)` and
+`session.delete(…)` — extensions with `T` reified, so nothing names `Product::class` and there is no
+object to construct. What the library still supplies is the part worth not writing by hand: every
+write verb refuses a session with no transaction, and `stampedBy`/`touchedBy` fill in the two audit
+columns only a caller knows.
 
 **A named restriction is a `JpaSpec`, which is a function returning a `Predicate?`.**
 `ProductSpecs.available` is the whole idea — no specification interface to implement — and `and`
