@@ -87,7 +87,7 @@ settings:
 ```
 
 Call `createCategoriesApi()`, never `create<CategoriesApi>()` — see the `ktorfit` skill for why the
-generic form silently misbehaves here. `apps/demo-client` is the worked example.
+generic form silently misbehaves here. `examples/demo-client` is the worked example.
 
 Two generated Ktor plugins go on the `HttpClient` the `Ktorfit` instance is built with. Neither is
 installed for you, because the `HttpClient` is yours:
@@ -109,7 +109,7 @@ interfaces are handed to `HttpServiceProxyFactory` at runtime. Because the funct
 the proxy needs a reactive adapter (`WebClientAdapter`, from spring-webflux) rather than
 `RestClientAdapter`. Models are Jackson 3 by default, so add `$libs.jackson.module.kotlin` to read
 their primary constructors — note Jackson 3 lives under the `tools.jackson` group id, while its
-annotations deliberately stayed at `com.fasterxml.jackson.core`. `apps/demo-spring-client` is the
+annotations deliberately stayed at `com.fasterxml.jackson.core`. `examples/demo-spring-client` is the
 worked example.
 
 Two runtime dependencies do not arrive transitively behind `spring-web`, and both fail as a

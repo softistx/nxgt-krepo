@@ -269,7 +269,7 @@ try {
 package beside a base `ApiException(status, rawBody)`. Per schema, not per status code: the schema
 is the document's own vocabulary, while `NotFoundException` would be this generator's invention and
 two documents rarely mean the same thing by the same code. A document that uses one `ErrorResponse`
-everywhere — as `apps/demo-api/openapi.yaml` does, for all 172 of its declared failures — gets
+everywhere — as `examples/demo-api/openapi.yaml` does, for all 172 of its declared failures — gets
 exactly one.
 
 Thrown, not returned. A sealed result type would let the compiler force the caller to handle the

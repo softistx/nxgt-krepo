@@ -184,7 +184,7 @@ can throw is API surface.
 Specs are kotest `FeatureSpec`s grouped by scenario, per the repo convention in
 [AGENTS.md](../../AGENTS.md).
 
-`RealSpecTest` runs the parser over `apps/demo-api/openapi.yaml` — 52 declared operations across 10
+`RealSpecTest` runs the parser over `examples/demo-api/openapi.yaml` — 52 declared operations across 10
 tags, one of them `x-internal`, with 172 declared failures and a root `security` that 37 operations
 inherit — so a parser change that breaks on a real document fails here rather
 than in a consuming module. It finds
