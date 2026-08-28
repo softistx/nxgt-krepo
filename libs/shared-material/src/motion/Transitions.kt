@@ -17,71 +17,74 @@ import androidx.compose.runtime.ReadOnlyComposable
 import com.strange.material.theme.StrangeTheme
 
 /**
- * The named entrances and exits, built from the theme's motion tokens.
+ * The enter and exit pairs the components are built from.
  *
- * A component asks for a *kind* of appearance rather than assembling one, which is what keeps two
- * surfaces written months apart from arriving differently. Every one of these reads its duration
- * and easing from [StrangeTheme.motion], so turning motion off turns all of them off at once.
+ * Each half picks its own axis: a fade is an *effects* change and must land on its target alpha,
+ * while a slide or a scale is *spatial* and may overshoot. Giving both halves one curve — which is
+ * what this file did before it was built on `MotionScheme` — makes a combined transition look
+ * subtly wrong, the fade finishing while the slide is still settling.
+ *
+ * Exits are one speed faster than their entrances throughout: something leaving should get out of
+ * the way, not be watched.
  */
 object Transitions {
-    /** A surface simply appearing in place — a message, a badge, an empty state. */
     val fade: EnterTransition
         @Composable @ReadOnlyComposable
-        get() = fadeIn(StrangeTheme.motion.standardSpec())
+        get() = fadeIn(StrangeTheme.motion.effects())
 
     val fadeAway: ExitTransition
         @Composable @ReadOnlyComposable
-        get() = fadeOut(StrangeTheme.motion.quickSpec())
+        get() = fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast))
 
-    /** Something arriving from below: a sheet, a toast, a row entering a list. */
+    /** Content arriving from below — a card, an alert, a newly opened story. */
     val riseIn: EnterTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeIn(StrangeTheme.motion.standardSpec()) +
-                slideInVertically(StrangeTheme.motion.standardSpec()) { it / 6 }
+            fadeIn(StrangeTheme.motion.effects()) +
+                slideInVertically(StrangeTheme.motion.spatial()) { it / 6 }
 
     val sinkOut: ExitTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeOut(StrangeTheme.motion.quickSpec()) +
-                slideOutVertically(StrangeTheme.motion.quickSpec()) { it / 6 }
+            fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
+                slideOutVertically(StrangeTheme.motion.spatial(MotionSpeed.Fast)) { it / 6 }
 
-    /** Something anchored to a trigger: a menu, a popover, a tooltip. */
+    /** Something that belongs to the point it appeared from — a menu, a popover, a badge. */
     val popIn: EnterTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeIn(StrangeTheme.motion.quickSpec()) +
-                scaleIn(StrangeTheme.motion.quickSpec(), initialScale = 0.92f)
+            fadeIn(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
+                scaleIn(StrangeTheme.motion.spatial(MotionSpeed.Fast), initialScale = 0.92f)
 
     val popOut: ExitTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeOut(StrangeTheme.motion.quickSpec()) +
-                scaleOut(StrangeTheme.motion.quickSpec(), targetScale = 0.92f)
+            fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
+                scaleOut(StrangeTheme.motion.spatial(MotionSpeed.Fast), targetScale = 0.92f)
 
     // A label appearing beside something already on screen — a button's text next to its icon.
     val widen: EnterTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeIn(StrangeTheme.motion.quickSpec()) +
-                expandHorizontally(StrangeTheme.motion.standardSpec())
+            fadeIn(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
+                expandHorizontally(StrangeTheme.motion.spatial())
 
     val narrow: ExitTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeOut(StrangeTheme.motion.quickSpec()) +
-                shrinkHorizontally(StrangeTheme.motion.standardSpec())
+            fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
+                shrinkHorizontally(StrangeTheme.motion.spatial(MotionSpeed.Fast))
 
     /** Content that takes or gives back vertical room: an accordion, a helper message. */
     val expand: EnterTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeIn(StrangeTheme.motion.quickSpec()) +
-                expandVertically(StrangeTheme.motion.standardSpec())
+            fadeIn(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
+                expandVertically(StrangeTheme.motion.spatial())
 
     val collapse: ExitTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeOut(StrangeTheme.motion.quickSpec()) +
-                shrinkVertically(StrangeTheme.motion.standardSpec())
+            fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
+                shrinkVertically(StrangeTheme.motion.spatial(MotionSpeed.Fast))
 }

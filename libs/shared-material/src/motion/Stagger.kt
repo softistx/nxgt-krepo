@@ -39,10 +39,19 @@ fun Modifier.animateStagger(
             }
         }
 
-        val progress by animateFloatAsState(
+        // Two axes, and deliberately not one. A spatial spec is a spring damped below 1, so it
+        // overshoots its target: it is the right curve for the rise, which reads as momentum, and
+        // the wrong one for the fade, where past-1 alpha is at best clamped and at worst a flicker.
+        // Effects is critically damped and lands exactly on its target — see StrangeMotionTest.
+        val fade by animateFloatAsState(
             targetValue = if (shown) 1f else 0f,
-            animationSpec = motion.standardSpec(),
-            label = "stagger",
+            animationSpec = motion.effects(),
+            label = "staggerFade",
         )
-        alpha(progress).graphicsLayer { translationY = (1f - progress) * rise.toPx() }
+        val lift by animateFloatAsState(
+            targetValue = if (shown) 0f else 1f,
+            animationSpec = motion.spatial(),
+            label = "staggerLift",
+        )
+        alpha(fade).graphicsLayer { translationY = lift * rise.toPx() }
     }

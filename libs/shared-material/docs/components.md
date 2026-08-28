@@ -4,8 +4,16 @@ Every component the library ships, what it takes, and where to see it. **This is
 component is documented in**, in the change that adds it.
 
 Open the catalogue with `./kotlin run -m desktop`; the story id is the line under each story's
-title. Every component also takes `modifier: Modifier` and `style: Style = Style` — they are left
-out of the tables below because they are on everything.
+title. Every component takes `modifier: Modifier`, and every *interactive* one takes
+`style: Style = Style` — both are left out of the tables below because they are on everything that
+has them.
+
+**Most of these are Material 3's components, dressed.** `Button` is M3's `Button`, `Chip` is its
+`FilterChip`, `Card`, `ListTile` and `StatusBadge` are its `Card`, `ListItem` and `Badge`. What is
+added is the default that was missing: the colour matrix resolved into M3's own `*Colors`, the
+padding and rhythm inside a card, a hover state M3's chip does not have, and a press that gives
+under the finger. Only `Alert`, `EmptyState`, `Skeleton` and `ResponsiveButton` are built from
+primitives, because M3 has nothing to start from. AGENTS.md's *Building a component* is the rule.
 
 ## Foundation
 
@@ -16,6 +24,17 @@ out of the tables below because they are on everything.
 | `foundation/radii` | Every radius derived from one `base` |
 | `foundation/icons` | The library's icon set |
 | `foundation/semantic-colours` | `success` / `info` / `warning` / `error`, main and container |
+
+## Motion
+
+| Story | Shows |
+| --- | --- |
+| `motion/spatial-and-effects` | The two axes side by side — the square overshoots, the swatch does not |
+| `motion/every-speed-at-once` | `Fast` / `Default` / `Slow` on the same move |
+
+The header's **Motion** control switches the whole tree between `MotionScheme.expressive()`,
+`MotionScheme.standard()` and off. Off stops this library's motion; Material 3's own components
+keep their built-in animations, because a `MotionScheme` has no null.
 
 ## Text
 
@@ -56,14 +75,21 @@ on a pack directly and pass the `ImageVector` in — every component here takes 
 | `ButtonSurface` | as `Button`, plus a `RowScope` `content` slot instead of `text` | `buttons/button` |
 | `IconButton` | `icon`, `description`, `onClick`, `variant = Ghost`, `color = Neutral`, `size`, `enabled` | `buttons/icon-button` |
 | `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp` | `buttons/responsive-button` |
-| `ButtonGroup` | `align = End`, `content: RowScope` | `buttons/button-group` |
+| `ButtonRow` | `align = End`, `content: RowScope` | `buttons/button-row` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonColor` — `Primary`, `Secondary`, `Success`, `Info`, `Warning`, `Danger`, `Neutral`.
 
-The 5 × 7 matrix is resolved in **one** function, `buttonStyle(variant, color)`. Adding a colour
-touches one enum entry and one `when` branch; see `buttons/variant-and-colour-matrix` for the whole
-grid at once.
+The 5 × 7 matrix is resolved in **one** function, `buttonColors(variant, color)`, which returns
+Material 3's own `ButtonColors` — so M3 paints the container, the ripple and the disabled treatment,
+and this library only decides *which* colours. Adding a colour touches one enum entry and one `when`
+branch; see `buttons/variant-and-colour-matrix` for the whole grid at once. `buttonBorder` answers
+the same way for the outline, and `buttonStyle` is what is left over: the press scale, which M3 has
+no parameter for.
+
+`ButtonRow` is a layout — it lines buttons up and spaces them. It is deliberately not named
+`ButtonGroup`: Material 3 has a `ButtonGroup`, and that one is a connected segmented control taking
+a `ButtonGroupScope`. Two different things should not share a name.
 
 `ResponsiveButton` measures the width it is *offered*, not the window, so it folds inside a narrow
 pane on a wide screen too. Its label becomes the icon's `contentDescription` when it collapses, so
@@ -75,19 +101,23 @@ the button never goes silent.
 | --- | --- | --- |
 | `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `content: ColumnScope` | `display/card` |
 | `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `display/chip` |
-| `StatusBadge` | `text`, `tone = Info` | `display/status-badge` |
+| `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `display/status-badge` |
 | `ListTile` | `title`, `supporting?`, `onClick?`, `enabled`, `leading?`, `trailing?` | `display/list-tile` |
 | `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `action?` | `display/alert` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `display/empty-state` |
-| `Skeleton` | `height = 16.dp`, `cornerRadius = radii.sm` | `display/skeleton` |
+| `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `display/skeleton` |
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
 A `Card` is interactive **iff** `onClick` is not null: it grows a hover and a press state only when
 it does something. `ListTile` follows the same rule.
 
-`Chip`'s selection is a *style state*, not a branch in the composable, which is why the move between
-selected and unselected animates without the caller doing anything.
+`Chip` is M3's `FilterChip`, so selection, the tick mark, the border and the shape morph are all
+M3's and animate on their own. The hover is not: `SelectableChipColors` has thirteen colours and no
+hover among them — M3's own source carries the `TODO(…): Support other states: hover, focus, drag` —
+so `chipColors(hovered)` adds the state layer M3 would have, composited over whichever container the
+chip is already wearing and faded on the effects axis. A chip with no `onClick` does not light up,
+because it does nothing.
 
 `Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
 `AnimatedVisibility` for the caller to write. `EmptyState` fades in for the same reason, and
@@ -99,6 +129,13 @@ selected and unselected animates without the caller doing anything.
 | --- | --- | --- |
 | `Modifier.shimmer()` | The sweeping highlight `Skeleton` is built from | `display/skeleton` |
 | `Modifier.animateStagger(index)` | Rises and fades a list item in, offset by its position | `screens/orders-screen` |
+
+`animateStagger` runs **two** animations, not one: the rise is spatial and the fade is effects. A
+spatial spring overshoots by design, and an alpha past 1 is at best clamped — the two axes are not
+interchangeable. `motion/spatial-and-effects` shows the difference.
+
+`Skeleton`'s sweep names its own cadence rather than taking one from the theme: it is a loop, not a
+state change, and `MotionScheme` has no spec for something that never settles.
 
 ## The whole screen
 

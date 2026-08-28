@@ -8,64 +8,101 @@ first `android` target. `examples/material-demo` is its catalogue and its test b
 
 ```
 libs/shared-material/
-  src/theme/    tokens and StrangeTheme
-  src/motion/   durations, easings, transitions, shimmer, stagger
+  src/theme/          tokens, StrangeTheme, and the platform scheme's expect
+  src@android/theme/  the wallpaper palette          ┐ the only platform-specific
+  src@jvm/theme/      the seed                       │ decision in the library
+  src@ios/theme/      the seed                       ┘
+  src/motion/   the M3 MotionScheme, transitions, shimmer, stagger
   src/style/    StrangeStyles — every component default in one place
   src/text/     Typography and the variant scale
   src/icon/     Icon and the library's own icon set
-  src/button/   Button, IconButton, ResponsiveButton, ButtonGroup
+  src/button/   Button, IconButton, ResponsiveButton, ButtonRow
   src/display/  Card, Chip, StatusBadge, ListTile, Alert, EmptyState, Skeleton
 ```
 
 ## The shape of it
 
-**`StrangeTheme` wraps `MaterialTheme`, it does not replace it.** It installs the M3 `ColorScheme`
-and `Shapes` *and* provides the extra tokens on their own composition locals. The consequence is the
-point: a plain M3 `Button`, or any third-party M3 component, keeps working inside it. That is what
-makes the library adoptable in an application that already exists.
+**`StrangeTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes` and a
+`MotionScheme`, each with a default — the same four `MaterialTheme` takes. It wraps M3 rather than
+replacing it, so a plain M3 component, or any third-party M3 library, keeps working inside it. That
+is what makes this adoptable in an application that already exists, and a caller that already
+computes one of the four passes it and keeps the other three.
+
+It installs `MaterialExpressiveTheme` and `MotionScheme.expressive()`: rounder shapes, springier
+motion. `motionScheme = MotionScheme.standard()` turns that off for the whole tree, and every
+animation follows — nothing here holds its own curve.
 
 ```kotlin
-StrangeTheme(seed = Color(0xFF5B5BD6), isDark = isSystemInDarkTheme()) {
+// An application: one line, and the platform decides where the scheme comes from.
+StrangeThemeProvider(seed = Color(0xFF5B5BD6)) {
     Button("Save changes", onClick = ::save)
 }
+
+// Anything more specific goes straight to StrangeTheme.
+StrangeTheme(colorScheme = brandScheme, motionScheme = MotionScheme.standard()) { … }
 ```
 
-The whole palette is derived from one seed by [material-kolor], including the `success` / `info` /
-`warning` roles Material 3 does not define. `error` is *not* re-derived — it is delegated to the M3
-scheme, so there is exactly one red.
+**Only one decision is platform-specific**, and it is behind `expect`/`actual`:
+`platformColorScheme(seed, isDark, dynamicColor)` reads the user's wallpaper palette on Android 12+
+and falls back to the seed everywhere else. `supportsDynamicColor` says which, so a settings screen
+can decide whether to offer the choice at all. Everything above that — the provider, the tokens,
+every component — is written once in the common source set.
 
-**A component's look is a `Style`, in its own file.** This is the repo's default pattern, not an
-option; AGENTS.md's *Styling a component* has the rules and `docs/tokens.md` the vocabulary. The
-short version:
+The rest of the palette derives from one seed by [material-kolor], including the `success` / `info`
+/ `warning` roles Material 3 does not define; those are added to *whatever* scheme arrives, seed or
+wallpaper. `error` is not re-derived — it is delegated to the M3 scheme, so there is exactly one
+red.
+
+**A component here is usually Material 3's, dressed.** `Button` is M3's `Button`, `Chip` its
+`FilterChip`, `Card`, `ListTile` and `StatusBadge` its `Card`, `ListItem` and `Badge`. Nothing that
+M3 already ships is rebuilt from primitives — M3 gets the ripple, the disabled treatment, the
+selected semantics and the accessibility right, and rebuilding a component throws all of that away
+to reproduce a container. What this library adds is the default that was missing: the colour matrix
+resolved once, the padding and rhythm inside a card, the hover state M3's chip does not have.
+`Alert`, `EmptyState`, `Skeleton` and `ResponsiveButton` are built from primitives because M3 has
+nothing to start from. AGENTS.md's *Building a component* is the rule.
+
+**Colour, shape, border and padding go through M3's own `*Colors` and `*Defaults`.** A `Style` is
+for what M3 has no parameter for:
 
 ```kotlin
-val chipStyle: Style = Style {
-    background(scheme.surfaceContainerHigh)          // reads the theme through StyleScope
-    shape(RoundedCornerShape(radii.full))
-    selected { animate { background(scheme.secondaryContainer) } }
-    pressed  { animate(motion.spec(motion.instant)) { scale(0.97f) } }
+// The 5 × 7 matrix, resolved once, in the shape M3 accepts.
+fun buttonColors(variant: ButtonVariant, color: ButtonColor): ButtonColors = …
+
+// What is left: the press giving under the finger.
+val buttonStyle: Style = Style {
+    pressed  { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
+    disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
 }
 ```
+
+A `background()` in a style block paints behind a surface M3 has already painted — it either does
+nothing or hides the state M3 was showing. That is the sign the value belonged in a `*Colors`.
 
 Because interaction states are declared rather than remembered, a caller never holds a `pressed` or
 `hovered` flag, and never writes an `animate*AsState` to move between two looks.
 
-**Every component takes `style: Style = Style`** — the identity style, never a named default. The
-component applies its own base first, so `style` is an override layered on top:
+**Every interactive component takes `style: Style = Style`** — the identity style, never a named
+default. The component applies its own base first, so `style` is an override layered on top:
 
 ```kotlin
-Card(style = StrangeTheme.styles.card(CardVariant.Elevated) then { border(2.dp, MaterialTheme.colorScheme.primary) })
+Card(style = StrangeTheme.styles.card then { alpha(0.6f) })
 ```
 
 ## Adding a component
 
-1. **The style first**, in `src/<area>/<Name>Styles.kt`. Read tokens through `StyleScope`
-   (`scheme`, `spacing`, `radii`, `motion`), never through constants. Put the interaction states in
-   `pressed` / `hovered` / `disabled` blocks with `animate { }` *inside* them.
+0. **Check Material 3 first.** If M3 has the component, wrap it — `material3-compose`'s
+   `references/components.md` is the list. Rebuilding one is a decision to justify in the KDoc, not
+   a default.
+1. **The colours and the style**, in `src/<area>/<Name>Styles.kt`. Whatever M3 can express goes in a
+   function returning its `*Colors` / `*Elevation` / `BorderStroke`; whatever it cannot goes in a
+   `Style`, reading tokens through `StyleScope` (`scheme`, `shapes`, `spacing`, `radii`, `motion`)
+   and putting interaction states in `pressed` / `hovered` / `disabled` blocks with `animate { }`
+   *inside* them. Mind the axis: `spatial` overshoots, `effects` does not.
 2. **The composable**, in `src/<area>/<Name>.kt`. Its signature carries `modifier`, then the
    semantic parameters, then `style: Style = Style` — no `Color`, `Shape` or `Dp` parameters that
-   the style already owns. Slots (`leading`, `trailing`, `content`) are `@Composable`, never
-   `iconName: String`.
+   the style or M3's defaults already own. Slots (`leading`, `trailing`, `content`) are
+   `@Composable`, never `iconName: String`.
 3. **Register its story in the same change**, in `examples/material-demo/catalog/src/stories/`. The
    catalogue is never caught up with afterwards.
 4. **Document it in `docs/components.md`** and tick its box in `docs/roadmap.md`, in that same
