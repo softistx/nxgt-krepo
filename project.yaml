@@ -11,6 +11,7 @@ modules:
   - libs/shared-kafka
   - libs/shared-koin
   - libs/shared-ktor
+  - libs/shared-material
   - libs/shared-mongo
   - libs/shared-redis
   - libs/shared-storage

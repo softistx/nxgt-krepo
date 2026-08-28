@@ -1,2 +1,6 @@
 [*.{kt,kts}]
 ktlint_standard_no-wildcard-imports = disabled
+# @Composable functions are PascalCase by Compose convention — they read as declarations of UI,
+# not as calls. Without this, ktlint's function-naming rule reports every composable in
+# libs/shared-material and examples/material-demo, and it is a rule it cannot auto-correct.
+ktlint_function_naming_ignore_when_annotated_with = Composable
