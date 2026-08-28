@@ -62,7 +62,7 @@ components:
     )
 
 /**
- * `apps/demo-api/openapi.yaml` declares `security: - Bearer: []` at its root and overrides it with
+ * `examples/demo-api/openapi.yaml` declares `security: - Bearer: []` at its root and overrides it with
  * `security: []` on its sign-in operations, and until this the parser read none of it — a generated
  * client that could not authenticate against the API its own document describes.
  *

@@ -27,7 +27,7 @@ internal fun OpenAPI.parseSecuritySchemes(): List<SecurityScheme> =
  *
  * OpenAPI's rule is override, not merge: an operation that declares `security` replaces the root's
  * list outright, and `security: []` replaces it with nothing. Both of those arrive here as an empty
- * list, so no consumer has to know which of the two the document wrote — `apps/demo-api/openapi.yaml`
+ * list, so no consumer has to know which of the two the document wrote — `examples/demo-api/openapi.yaml`
  * uses `security: []` on its sign-in and sign-up operations, and what a caller needs to know is only
  * that they take no credential.
  *

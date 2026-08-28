@@ -53,7 +53,7 @@ components:
 
 /**
  * A document says as much about how an operation fails as about how it succeeds — 169 of the
- * responses in `apps/demo-api/openapi.yaml` are non-2xx — and until this the parser read none of
+ * responses in `examples/demo-api/openapi.yaml` are non-2xx — and until this the parser read none of
  * it. The return type is one thing a caller cannot get wrong; the failure is the half a caller has
  * to guess at.
  */

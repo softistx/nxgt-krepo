@@ -93,7 +93,7 @@ internal fun apiErrorDispatch(
  * The statuses this operation declares, grouped by the schema they carry, in status order.
  *
  * Grouped rather than listed one status at a time because a real document reuses one error schema
- * across every failure — all 169 of the ones in `apps/demo-api/openapi.yaml` are the same shape —
+ * across every failure — all 169 of the ones in `examples/demo-api/openapi.yaml` are the same shape —
  * and a branch per status would be a hundred lines saying the same thing.
  */
 private fun Operation.byStatus(): Map<String, List<Int>> =
