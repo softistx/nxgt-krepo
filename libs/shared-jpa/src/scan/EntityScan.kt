@@ -1,5 +1,6 @@
 package com.strange.jpa.scan
 
+import com.strange.jpa.JpaMappingException
 import io.github.classgraph.ClassGraph
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter
@@ -29,7 +30,7 @@ import kotlin.reflect.KClass
  * and much more if [packages] is broad enough to include a dependency. Scan what you own.
  */
 fun scanEntities(packages: List<String>): List<KClass<*>> {
-    require(packages.isNotEmpty()) { "scanning needs at least one package name" }
+    if (packages.isEmpty()) throw JpaMappingException("scanning needs at least one package name")
 
     val found =
         scan(packages) { result ->
@@ -39,9 +40,11 @@ fun scanEntities(packages: List<String>): List<KClass<*>> {
                 .map { it.kotlin }
         }
 
-    check(found.any { it.java.isAnnotationPresent(Entity::class.java) }) {
-        "no @Entity class in ${packages.joinToString()} — a scan that finds nothing is a mapping " +
-            "that fails on the first query rather than at startup, so it fails here instead"
+    if (found.none { it.java.isAnnotationPresent(Entity::class.java) }) {
+        throw JpaMappingException(
+            "no @Entity class in ${packages.joinToString()} — a scan that finds nothing is a mapping " +
+                "that fails on the first query rather than at startup, so it fails here instead",
+        )
     }
     return found
 }
@@ -58,7 +61,7 @@ fun scanEntities(vararg packages: String): List<KClass<*>> = scanEntities(packag
  */
 @Suppress("UNCHECKED_CAST")
 fun scanConverters(packages: List<String>): List<KClass<out AttributeConverter<*, *>>> {
-    require(packages.isNotEmpty()) { "scanning needs at least one package name" }
+    if (packages.isEmpty()) throw JpaMappingException("scanning needs at least one package name")
 
     return scan(packages) { result ->
         result

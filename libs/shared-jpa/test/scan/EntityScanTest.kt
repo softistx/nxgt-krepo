@@ -2,6 +2,7 @@ package com.strange.jpa.scan
 
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaConfig
+import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.SchemaMode
 import com.strange.jpa.convert.InstantConverter
@@ -36,13 +37,13 @@ class EntityScanTest :
             scenario("refuses a package with no entity in it, rather than mapping nothing") {
                 // The failure this exists to prevent: a scan that finds nothing starts perfectly and
                 // fails on the first query, a long way from the package name that was wrong.
-                val failure = shouldThrow<IllegalStateException> { scanEntities("com.strange.jpa.session") }
+                val failure = shouldThrow<JpaMappingException> { scanEntities("com.strange.jpa.session") }
 
                 failure.message shouldContain "com.strange.jpa.session"
             }
 
             scenario("refuses to scan nothing at all") {
-                shouldThrow<IllegalArgumentException> { scanEntities(emptyList()) }
+                shouldThrow<JpaMappingException> { scanEntities(emptyList()) }
             }
 
             scenario("is content to find no converter, which is an addition rather than the mapping") {

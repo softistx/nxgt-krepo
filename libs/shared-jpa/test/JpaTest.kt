@@ -15,7 +15,7 @@ class JpaTest :
         feature("building a factory") {
             scenario("without an entity is refused, rather than producing one that maps nothing") {
                 val failure =
-                    shouldThrow<IllegalArgumentException> {
+                    shouldThrow<JpaMappingException> {
                         Jpa.connect(JpaConfig(uri = "postgresql://localhost:5432/nothing"))
                     }
 

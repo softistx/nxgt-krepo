@@ -1,5 +1,6 @@
 package com.strange.jpa.json
 
+import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaSerializerException
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.entity.Address
@@ -161,7 +162,7 @@ class JsonColumnTest :
             }
 
             scenario("under the object code is refused at startup, not at the first write") {
-                val failure = shouldThrow<IllegalStateException> { JpaTestDatabase.withJpa(Basket::class) { } }
+                val failure = shouldThrow<JpaMappingException> { JpaTestDatabase.withJpa(Basket::class) { } }
 
                 // Without this check the schema exports happily and every write fails with Vert.x's
                 // `DecodeException: Failed to decode` — the binder wrapping an array in a JsonObject
@@ -171,7 +172,7 @@ class JsonColumnTest :
             }
 
             scenario("and the mirror of that mistake is refused too") {
-                val failure = shouldThrow<IllegalStateException> { JpaTestDatabase.withJpa(Bundle::class) { } }
+                val failure = shouldThrow<JpaMappingException> { JpaTestDatabase.withJpa(Bundle::class) { } }
 
                 failure.message!! shouldContain "Bundle.address"
                 failure.message!! shouldContain "SqlTypes.JSON"
