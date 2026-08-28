@@ -38,7 +38,7 @@ internal open class PurchaseService(
     }
 
     /** Whoever is acting goes into the reference, which is the one string this fixture entity has. */
-    override fun stamp(entity: Purchase) {
+    override fun stampUpdated(entity: Purchase) {
         principal?.let { entity.reference = "${entity.reference}/$it" }
     }
 
