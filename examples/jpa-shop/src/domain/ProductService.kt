@@ -2,71 +2,44 @@ package com.strange.example.shop.domain
 
 import com.strange.example.shop.model.EditProduct
 import com.strange.example.shop.model.NewProduct
-import com.strange.jpa.JpaNotFoundException
+import com.strange.jpa.service.JpaCrudService
 import com.strange.jpa.session.JpaSession
 
 /**
- * The create/update/delete flow, written out rather than inherited.
+ * The create/update/delete flow, with only the two parts that are about products written out.
  *
- * [create] maps a request into an entity. [update] applies a request *onto* the managed one — it
- * assigns fields rather than building a statement, and Hibernate's dirty check decides what that is
- * worth writing. A field the request left null is not touched, and a field assigned the value it
- * already had produces no SQL and moves no audit timestamp.
- *
- * **Every method here needs a `transaction { }`, not a `session { }`.** A session flushes at the end
- * of a unit of work if and only if there is a transaction, so the same code under a plain session
- * would build an entity, return it, report success and write no row. Nothing in the library checks
- * that for you; the routes are where it is arranged, and it is worth knowing which of the two a
- * handler opened.
+ * [buildCreate] maps a request into an entity. [applyUpdate] applies a request *onto* the managed
+ * one — it assigns fields rather than building a statement, and Hibernate's dirty check decides what
+ * that is worth writing. A field the request left null is not touched, and a field assigned the value
+ * it already had produces no SQL and moves no audit timestamp.
  *
  * The principal is per-request, which is why this is built per call rather than held as a singleton.
- * It is also the only thing that fills the audit columns' *who* half: `AuditedEntity` stamps the
- * timestamps from inside the flush and leaves the names to whoever knows them.
  */
 class ProductService(
-    private val repository: ProductRepository = ProductRepository(),
-    private val principal: String? = null,
-) {
-    suspend fun create(
-        session: JpaSession,
-        input: NewProduct,
-    ): Product {
-        val product =
-            Product(
-                sku = input.sku,
-                name = input.name,
-                priceInCents = input.priceInCents,
-            )
+    repository: ProductRepository = ProductRepository(),
+    principal: String? = null,
+) : JpaCrudService<Product, Long, NewProduct, EditProduct>(repository, principal) {
+    override suspend fun buildCreate(input: NewProduct): Product =
+        Product(
+            sku = input.sku,
+            name = input.name,
+            priceInCents = input.priceInCents,
+        )
 
-        principal?.let {
-            product.createdBy = it
-            product.lastModifiedBy = it
-        }
-
-        session.persist(product)
-        return product
-    }
-
-    suspend fun update(
-        session: JpaSession,
-        id: Long,
+    override suspend fun applyUpdate(
+        existing: Product,
         input: EditProduct,
-    ): Product {
-        val existing = repository.findById(session, id) ?: throw JpaNotFoundException(Product::class, id)
-
+    ) {
         input.name?.let { existing.name = it }
         input.priceInCents?.let { existing.priceInCents = it }
         input.discontinued?.let { existing.discontinued = it }
-        principal?.let { existing.lastModifiedBy = it }
-
-        return existing
     }
 
-    suspend fun delete(
+    /** A hook, here only to show where one goes: the same transaction as the write that triggered it. */
+    override suspend fun afterCreate(
+        created: Product,
         session: JpaSession,
-        id: Long,
     ) {
-        val existing = repository.findById(session, id) ?: throw JpaNotFoundException(Product::class, id)
-        session.remove(existing)
+        // e.g. session.persist(StockLevel(created.id, 0)) — it commits or rolls back with the create
     }
 }

@@ -22,7 +22,7 @@ Two generated clients drive one hand-written server over real HTTP, so a disagre
 two serialization libraries about what the document means fails a test rather than shipping.
 
 `examples/jpa-shop` is separate from that chain: a Ktor catalogue over Postgres showing
-`shared-jpa`'s sessions, Criteria extensions and audit superclass end to end.
+`shared-jpa`'s repository, service and audit layer end to end.
 
 Alongside them are the shared service libraries, which have nothing to do with the generator:
 

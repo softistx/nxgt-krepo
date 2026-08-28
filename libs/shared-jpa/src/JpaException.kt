@@ -71,6 +71,23 @@ class JpaDocumentException(
 ) : JpaException("the stored JSON is not a $type", cause)
 
 /**
+ * A write asked for outside a transaction, where it would have been discarded without a word.
+ *
+ * A session flushes at the end of a unit of work if and only if there is a transaction, so a
+ * `persist` or a change to a loaded entity inside a plain `session { }` reaches no table: no error,
+ * no warning, no row — and a `deleteById` would answer `true` for a row it did not delete.
+ * `JpaRepository` and `JpaCrudService` refuse rather than participate; the alternative is a create
+ * that returns an entity, reports success, and wrote nothing.
+ */
+class JpaOutsideTransactionException(
+    val operation: String,
+    val type: KClass<*>,
+) : JpaException(
+        "$operation on ${type.simpleName} needs a transaction: a session without one flushes nothing, " +
+            "so this would have been discarded. Use transaction { } rather than session { }",
+    )
+
+/**
  * A mapping or a bootstrap this library refuses before anything connects.
  *
  * These are the checks that exist because Hibernate would otherwise accept the configuration and
