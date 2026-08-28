@@ -1,22 +1,10 @@
 package com.strange.jpa.session
 
 import com.strange.jpa.JpaNotFoundException
-import com.strange.jpa.dsl.DeleteScope
-import com.strange.jpa.dsl.GraphScope
-import com.strange.jpa.dsl.JpaEntityGraph
-import com.strange.jpa.dsl.ProjectScope
-import com.strange.jpa.dsl.SelectScope
-import com.strange.jpa.dsl.UpdateScope
-import com.strange.jpa.dsl.deleteOn
-import com.strange.jpa.dsl.entityGraph
-import com.strange.jpa.dsl.project
-import com.strange.jpa.dsl.select
-import com.strange.jpa.dsl.updateOn
 import com.strange.jpa.query.JpaQuery
-import com.strange.jpa.query.criteria
 import com.strange.jpa.query.nativeQuery
 import com.strange.jpa.query.query
-import jakarta.persistence.criteria.Selection
+import jakarta.persistence.EntityGraph
 import kotlinx.coroutines.future.await
 import org.hibernate.reactive.stage.Stage
 import org.intellij.lang.annotations.Language
@@ -51,17 +39,14 @@ class JpaStatelessSession internal constructor(
      */
     suspend fun <T : Any> find(
         id: Any,
-        graph: JpaEntityGraph<T>,
-    ): T? = raw.get(graph.raw, id).await()
+        graph: EntityGraph<T>,
+    ): T? = raw.get(graph, id).await()
 
     /** The same, or [JpaNotFoundException]. */
-    suspend fun <T : Any> get(
+    suspend inline fun <reified T : Any> get(
         id: Any,
-        graph: JpaEntityGraph<T>,
-    ): T = find(id, graph) ?: throw JpaNotFoundException(graph.type, id)
-
-    /** A fetch plan for [T], built from its properties — see [JpaEntityGraph]. */
-    inline fun <reified T : Any> entityGraph(noinline block: GraphScope<T>.() -> Unit): JpaEntityGraph<T> = raw.entityGraph(block)
+        graph: EntityGraph<T>,
+    ): T = find(id, graph) ?: throw JpaNotFoundException(T::class, id)
 
     /** Inserts them, one statement each, now. */
     suspend fun insert(vararg entities: Any) {
@@ -88,21 +73,8 @@ class JpaStatelessSession internal constructor(
         @Language("HQL") hql: String,
     ): JpaQuery<R> = raw.query(hql)
 
-    /** A query built from the entity's own properties instead of an HQL string. */
-    inline fun <reified R : Any> select(noinline block: SelectScope<R>.() -> Unit = {}): SelectScope<R> = raw.select(block)
-
-    /** A query over [R]'s entity returning something else — a summary, one column, a count. */
-    inline fun <reified E : Any, reified R : Any> project(noinline block: ProjectScope<E, R>.() -> Selection<R>): ProjectScope<E, R> =
-        raw.project(block)
-
     /** SQL, for what HQL cannot say. */
     inline fun <reified R : Any> nativeQuery(
         @Language("SQL") sql: String,
     ): JpaQuery<R> = raw.nativeQuery(sql)
-
-    /** A bulk `update` built from the entity's own properties. */
-    inline fun <reified R : Any> update(noinline block: UpdateScope<R>.() -> Unit): UpdateScope<R> = updateOn(raw, R::class, block)
-
-    /** A bulk `delete`, the same way. */
-    inline fun <reified R : Any> delete(): DeleteScope<R> = deleteOn(raw, R::class)
 }

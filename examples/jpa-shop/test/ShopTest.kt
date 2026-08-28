@@ -1,7 +1,6 @@
 package com.strange.example.shop
 
 import com.strange.example.shop.domain.Product
-import com.strange.example.shop.domain.ProductRepository
 import com.strange.example.shop.model.EditProduct
 import com.strange.example.shop.model.NewProduct
 import com.strange.example.shop.model.view
@@ -28,16 +27,6 @@ class ShopTest :
                 // The failure mode of a scan is finding nothing and starting perfectly, so the
                 // package name is worth an assertion rather than a comment.
                 scanEntities("com.strange.example.shop.domain") shouldContain Product::class
-            }
-        }
-
-        feature("the repository") {
-            scenario("knows which entity it is over, with nothing having named the class") {
-                // `Product::id` is the only thing ProductRepository was given, and the resolution
-                // has to work from another module — which is the half shared-jpa's own specs cannot
-                // check from the inside.
-                ProductRepository().name shouldBe "Product"
-                ProductRepository().id.name shouldBe "id"
             }
         }
 
