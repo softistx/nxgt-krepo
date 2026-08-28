@@ -524,6 +524,23 @@ persistence context to keep honest.
 nothing to merge into and `delete` nothing to cascade from. Bulk loading through one is a job for the
 DSL directly.
 
+**Wiring one up takes no wiring.** A repository holds an entity class and a property reference and
+nothing else — no factory, no session, no lifecycle — so it is an ordinary class to a container, and
+the only injectable piece is the `Jpa` that `jpaModule` and `JpaConnection` already provide:
+
+```kotlin
+// Koin
+single { PurchaseRepository() }
+factory { (principal: String?) -> PurchaseService(get(), principal) }
+
+// Ktor DI
+dependencies { provide<PurchaseRepository> { PurchaseRepository() } }
+```
+
+The service is a `factory` rather than a `single` because its principal is per-request while the
+repository is not. `shared-mongo` registers neither of its two either, for the same reason: what a
+container has to build is the connection, and that is already provided.
+
 `existingIds` reads one column rather than the entities, which needs the identifier's `Class` — a
 property reference does not carry one without `kotlin-reflect`, so it comes from Hibernate's
 metamodel. There is no `ensureIndexes` here the way there is in Mongo: the schema is the migration
