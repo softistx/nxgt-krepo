@@ -16,7 +16,7 @@ import kotlin.reflect.KClass
  * ```kotlin
  * install(JpaConnection) {
  *     config = JpaConfig(uri = System.getenv("POSTGRES_URI"), username = …, password = …)
- *     entities(Order::class, Customer::class)
+ *     packages("com.acme.orders.domain") // or entities(Order::class, Customer::class)
  * }
  *
  * get("/orders/{id}") {
