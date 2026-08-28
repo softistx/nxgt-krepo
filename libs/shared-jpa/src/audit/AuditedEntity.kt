@@ -20,13 +20,15 @@ import kotlin.time.Instant
  * service comparing fields could not tell the difference, which is why this half is not the
  * service's job.
  *
- * **With one caveat, and it is the service's doing rather than Hibernate's.** `JpaCrudService`
- * stamps [lastModifiedBy] before the flush, so an update that changes nothing else but arrives from
- * a *different* principal than the one on the row is not a no-op: that assignment is itself a
- * change, `@PreUpdate` fires, and [lastModifiedAt] moves. That is the intended reading — the row
- * records who touched it last, and somebody did — but it means "a no-op moves nothing" holds only
- * while the principal is unchanged. `AuditedEntityTest` pins both halves. The other half is: only a service knows the principal, so `JpaCrudService` fills in
- * [createdBy] and [lastModifiedBy].
+ * **[createdBy] and [lastModifiedBy] are yours to set.** Only the caller knows the principal, and
+ * this module has no place to put one — there is no ambient user on a Vert.x context and nothing
+ * here reads a security context. Assign them before the flush that writes the row; an unset one is
+ * the empty string, which says so as plainly as the epoch does for a timestamp.
+ *
+ * Setting [lastModifiedBy] on an update that changes nothing else is itself a change, so `@PreUpdate`
+ * fires and [lastModifiedAt] moves. That is the intended reading — the row records who touched it
+ * last, and somebody did — but it means "a no-op moves nothing" holds only while the principal is
+ * unchanged. `AuditedEntityTest` pins both halves.
  *
  * The four names are `shared-mongo`'s `AuditMetadata`, so a caller reading an audit trail asks the
  * same question of either store. Mongo nests them under a `metadata` sub-document because a document

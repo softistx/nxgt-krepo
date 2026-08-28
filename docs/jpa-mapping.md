@@ -6,7 +6,7 @@ the two Kotlin types this module converts, JSON columns, and Bean Validation. Th
 it lives here rather than in the module README, which answers *why the library is shaped this way*
 and stays roughly the size it is.
 
-`docs/jpa-query-dsl.md` is the other half — what a *query* may say. `libs/shared-jpa/README.md` has
+`docs/jpa-criteria.md` is the other half — what a *query* may say. `libs/shared-jpa/README.md` has
 the reasoning behind both.
 
 ## Associations are lazy

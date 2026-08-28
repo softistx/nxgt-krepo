@@ -1,24 +1,11 @@
 package com.strange.jpa.session
 
 import com.strange.jpa.JpaNotFoundException
-import com.strange.jpa.dsl.DeleteScope
-import com.strange.jpa.dsl.GraphScope
-import com.strange.jpa.dsl.JpaEntityGraph
-import com.strange.jpa.dsl.ProjectScope
-import com.strange.jpa.dsl.SelectScope
-import com.strange.jpa.dsl.UpdateScope
-import com.strange.jpa.dsl.deleteOn
-import com.strange.jpa.dsl.entityGraph
-import com.strange.jpa.dsl.project
-import com.strange.jpa.dsl.select
-import com.strange.jpa.dsl.updateOn
 import com.strange.jpa.query.JpaQuery
-import com.strange.jpa.query.criteria
-import com.strange.jpa.query.mutate
 import com.strange.jpa.query.nativeQuery
 import com.strange.jpa.query.query
+import jakarta.persistence.EntityGraph
 import jakarta.persistence.LockModeType
-import jakarta.persistence.criteria.Selection
 import kotlinx.coroutines.future.await
 import org.hibernate.reactive.stage.Stage
 import org.intellij.lang.annotations.Language
@@ -63,38 +50,32 @@ class JpaSession internal constructor(
     /** By id, or [JpaNotFoundException]. For a caller with nothing sensible to do about a missing row. */
     suspend inline fun <reified T : Any> get(id: Any): T = find<T>(id) ?: throw JpaNotFoundException(T::class, id)
 
+    /**
+     * By id, loading what [graph] plans in the same statement.
+     *
+     * The graph is a value built with [com.strange.jpa.criteria.entityGraph] — the same plan can be
+     * handed to a `find` here, to a stateless session's `get`, and to any query's `plan`.
+     *
+     * There is no lazy loading to fall back on: Hibernate Reactive refuses an uninitialised
+     * association with `HR000037` rather than fetching it behind the caller, inside the session as
+     * well as after it. What is not planned for here is not readable later.
+     */
+    suspend fun <T : Any> find(
+        id: Any,
+        graph: EntityGraph<T>,
+    ): T? = raw.find(graph, id).await()
+
+    /** The same, or [JpaNotFoundException]. */
+    suspend inline fun <reified T : Any> get(
+        id: Any,
+        graph: EntityGraph<T>,
+    ): T = find(id, graph) ?: throw JpaNotFoundException(T::class, id)
+
     /** By id, with a lock taken as it is read. */
     suspend inline fun <reified T : Any> find(
         id: Any,
         lock: LockModeType,
     ): T? = raw.find(T::class.java, id, lock).await()
-
-    /**
-     * By id, loading what [graph] plans — the one thing a fetch join cannot do.
-     *
-     * A load by identifier has no query to hang a join on, so without this the only way to read an
-     * association off a row whose id you already had was to write a `select` instead. The entity
-     * comes from the plan, so there is nothing to reify here.
-     */
-    suspend fun <T : Any> find(
-        id: Any,
-        graph: JpaEntityGraph<T>,
-    ): T? = raw.find(graph.raw, id).await()
-
-    /** The same, or [JpaNotFoundException]. */
-    suspend fun <T : Any> get(
-        id: Any,
-        graph: JpaEntityGraph<T>,
-    ): T = find(id, graph) ?: throw JpaNotFoundException(graph.type, id)
-
-    /**
-     * A fetch plan for [T], built from its properties — see [JpaEntityGraph].
-     *
-     * ```kotlin
-     * val withBuyer = session.entityGraph<Purchase> { add(Purchase::customer) }
-     * ```
-     */
-    inline fun <reified T : Any> entityGraph(noinline block: GraphScope<T>.() -> Unit): JpaEntityGraph<T> = raw.entityGraph(block)
 
     // ─── Writing ──────────────────────────────────────────────────────────────
 
@@ -143,21 +124,8 @@ class JpaSession internal constructor(
         @Language("HQL") hql: String,
     ): JpaQuery<R> = raw.query(hql)
 
-    /** A query built from the entity's own properties instead of an HQL string. */
-    inline fun <reified R : Any> select(noinline block: SelectScope<R>.() -> Unit = {}): SelectScope<R> = raw.select(block)
-
-    /** A query over [R]'s entity returning something else — a summary, one column, a count. */
-    inline fun <reified E : Any, reified R : Any> project(noinline block: ProjectScope<E, R>.() -> Selection<R>): ProjectScope<E, R> =
-        raw.project(block)
-
     /** SQL, for what HQL cannot say. Remember it is not schema-qualified for you. */
     inline fun <reified R : Any> nativeQuery(
         @Language("SQL") sql: String,
     ): JpaQuery<R> = raw.nativeQuery(sql)
-
-    /** A bulk `update` built from the entity's own properties. */
-    inline fun <reified R : Any> update(noinline block: UpdateScope<R>.() -> Unit): UpdateScope<R> = updateOn(raw, R::class, block)
-
-    /** A bulk `delete`, the same way. */
-    inline fun <reified R : Any> delete(): DeleteScope<R> = deleteOn(raw, R::class)
 }

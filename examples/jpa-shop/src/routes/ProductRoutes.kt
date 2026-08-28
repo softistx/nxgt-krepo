@@ -3,13 +3,11 @@ package com.strange.example.shop.routes
 import com.strange.example.shop.domain.Product
 import com.strange.example.shop.domain.ProductRepository
 import com.strange.example.shop.domain.ProductService
-import com.strange.example.shop.domain.ProductSpecs
 import com.strange.example.shop.model.EditProduct
 import com.strange.example.shop.model.NewProduct
 import com.strange.example.shop.model.ProductPage
 import com.strange.example.shop.model.view
-import com.strange.jpa.dsl.and
-import com.strange.jpa.page.PageRequest
+import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import com.strange.ktor.jpa.jpa
@@ -27,52 +25,51 @@ import io.ktor.server.routing.route
  * The layer above the service: HTTP in, HTTP out, and nothing about persistence.
  *
  * **Read in `session { }`, write in `transaction { }`.** A session flushes only inside a
- * transaction, so a write handed a plain session would report success and store nothing — the
- * service refuses rather than allowing that, and these routes are what refusing protects.
+ * transaction, so a write handed a plain session would report success and store nothing. Nothing
+ * checks it for you: which of the two a handler opens is the handler's decision, and these four
+ * lines are where it is made.
  */
 fun Route.productRoutes() {
     val repository = ProductRepository()
 
     route("/products") {
-        // GET /products?search=&under=&first=20&cursor=…
+        // GET /products?search=&under=&first=20&skip=0
         get {
-            val request =
-                PageRequest.first(
-                    call.request.queryParameters["first"]?.toIntOrNull() ?: 20,
-                    call.request.queryParameters["cursor"],
-                )
-
+            val first = call.request.queryParameters["first"]?.toIntOrNull() ?: 20
+            val skip = call.request.queryParameters["skip"]?.toIntOrNull() ?: 0
             val search = call.request.queryParameters["search"]
             val under = call.request.queryParameters["under"]?.toLongOrNull()
 
-            // The specifications compose: whichever the query string asked for, `and`ed together.
-            var spec = ProductSpecs.available
-            search?.let { spec = spec and ProductSpecs.named(it) }
-            under?.let { spec = spec and ProductSpecs.upTo(it) }
-
-            val page =
+            val (products, total) =
                 call.jpa.session { session ->
-                    // The sort has to end with the identifier — keyset pagination resumes from it,
-                    // and shared-jpa refuses a sort that could skip or repeat a row.
-                    repository.findPage(session, request, spec) {
-                        sortBy(Product::name)
-                        sortBy(Product::id)
-                    }
+                    // One session, two questions built from the same named filters — the sort ends
+                    // with the identifier so that a page boundary cannot land between equal names.
+                    repository.search(session, search, under, first, skip) to
+                        repository.countMatching(session, search, under)
                 }
 
             call.respond(
                 ProductPage(
-                    data = page.data.map { it.view() },
-                    endCursor = page.info.endCursor,
-                    hasNextPage = page.info.hasNextPage,
+                    data = products.map { it.view() },
+                    total = total,
+                    hasNextPage = skip + products.size < total,
                 ),
             )
         }
 
+        // GET /products/summary — three columns, packaged by Hibernate into the result class
+        get("/summary") {
+            val first = call.request.queryParameters["first"]?.toIntOrNull() ?: 20
+            call.respond(call.jpa.session { session -> repository.summaries(session, first) })
+        }
+
         get("/{id}") {
             val id = call.parameters["id"]!!.toLong()
-            // requireById throws JpaNotFoundException, which the failure handler turns into a 404
-            val product = call.jpa.session { session -> repository.requireById(session, id) }
+            // JpaNotFoundException is what the failure handler turns into a 404
+            val product =
+                call.jpa.session { session ->
+                    repository.findById(session, id) ?: throw JpaNotFoundException(Product::class, id)
+                }
             call.respond(product.view())
         }
 
