@@ -3,45 +3,33 @@ package com.strange.jpa.dsl
 import jakarta.persistence.criteria.CriteriaDelete
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
+import org.hibernate.reactive.stage.Stage
+import kotlin.reflect.KClass
 
 /**
- * The `delete { }` block: which rows go.
+ * A bulk `delete`: which rows go.
  *
  * ```kotlin
- * session.delete<Purchase> {
- *     where { Purchase::total lt 1L }
- * }.execute()
+ * session.delete<Purchase>().where { Purchase::total lt 1L }.execute()
  * ```
  *
- * Like [UpdateScope] it cannot join, and like it, a statement with nothing restricting it has to say
- * [everyRow] out loud.
+ * `Jpa.removeById` is the other way to delete, and the difference is not style: that one loads the
+ * entity so the cascades and the `@PreRemove` fire, and costs a select per row. This is one
+ * statement for the whole set and fires nothing.
  */
 @JpaDsl
 class DeleteScope<T : Any>
     @PublishedApi
     internal constructor(
-        @PublishedApi internal val statement: CriteriaDelete<T>,
-        override val from: Root<T>,
-    ) : Filters<T> {
-        private val restrictions = mutableListOf<Predicate>()
-        private var unrestricted = false
+        producer: Stage.QueryProducer,
+        entity: KClass<T>,
+        private val statement: CriteriaDelete<T>,
+        from: Root<T>,
+    ) : MutationScope<T, DeleteScope<T>>(producer, entity, from) {
+        override val verb: String get() = "delete"
 
-        /** Restricts the statement. Called more than once, the restrictions are `and`ed together. */
-        fun where(block: DeleteScope<T>.() -> Predicate?) {
-            block()?.let { restrictions += it }
-        }
-
-        /** Says that every row is meant, which is the only way to build a statement without a [where]. */
-        fun everyRow() {
-            unrestricted = true
-        }
-
-        @PublishedApi
-        internal fun build(): CriteriaDelete<T> {
+        override fun query(restrictions: List<Predicate>): Stage.MutationQuery {
             if (restrictions.isNotEmpty()) statement.where(*restrictions.toTypedArray())
-            return statement
+            return producer.createMutationQuery(statement)
         }
-
-        @PublishedApi
-        internal fun isUnrestricted(): Boolean = restrictions.isEmpty() && !unrestricted
     }

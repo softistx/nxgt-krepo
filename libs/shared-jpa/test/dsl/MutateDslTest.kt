@@ -108,6 +108,22 @@ class MutateDslTest :
                 }
             }
 
+            scenario("takes its restrictions from the chain as readily as from the block") {
+                seeded { jpa ->
+                    val touched =
+                        jpa.transaction { session ->
+                            session
+                                .update<Thing> { set(Thing::name, "chained") }
+                                .where { Thing::id ge 2L }
+                                .where { Thing::id le 3L }
+                                .execute()
+                        }
+
+                    touched shouldBe 2
+                    jpa.names() shouldContainExactly listOf("one", "chained", "chained", "four")
+                }
+            }
+
             scenario("refuses a where block that turned out to add nothing") {
                 seeded { jpa ->
                     val filter: Long? = null
@@ -132,7 +148,7 @@ class MutateDslTest :
                 seeded { jpa ->
                     val gone =
                         jpa.transaction { session ->
-                            session.delete<Thing> { where { Thing::name oneOf listOf("two", "four") } }.execute()
+                            session.delete<Thing>().where { Thing::name oneOf listOf("two", "four") }.execute()
                         }
 
                     gone shouldBe 2
@@ -143,12 +159,12 @@ class MutateDslTest :
             scenario("refuses to empty the table unless that is said out loud") {
                 seeded { jpa ->
                     shouldThrow<JpaUnrestrictedMutationException> {
-                        jpa.transaction { session -> session.delete<Thing> { }.execute() }
+                        jpa.transaction { session -> session.delete<Thing>().execute() }
                     }
 
                     jpa.names().size shouldBe 4
 
-                    jpa.transaction { session -> session.delete<Thing> { everyRow() }.execute() } shouldBe 4
+                    jpa.transaction { session -> session.delete<Thing>().everyRow().execute() } shouldBe 4
                     jpa.names().shouldContainExactly(emptyList())
                 }
             }
