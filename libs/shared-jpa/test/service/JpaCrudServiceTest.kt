@@ -12,6 +12,7 @@ import com.strange.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 
@@ -114,6 +115,25 @@ class JpaCrudServiceTest :
 
                     jpa.transaction { session -> service.deleteAll(session, listOf(1L, 2L, 99L)) } shouldBe 2
                     jpa.session { session -> service.findAll(session) } shouldContainExactly emptyList()
+                }
+            }
+
+            scenario("and tells its hooks about those, not about the ones that were asked for") {
+                withJpa { jpa ->
+                    val service = PurchaseService()
+                    jpa.transaction { session ->
+                        service.create(session, NewPurchase(1, "P-1"))
+                        service.create(session, NewPurchase(2, "P-2"))
+                    }
+                    service.deleteHookIds.clear()
+
+                    jpa.transaction { session -> service.deleteAll(session, listOf(1L, 99L, 2L)) }
+
+                    // Both hooks, and neither of them told about 99. A hook publishes an event or
+                    // evicts a cache entry per id, and doing that for a row that never existed is a
+                    // lie told inside the transaction that correctly reported two.
+                    service.deleteHookIds shouldHaveSize 2
+                    service.deleteHookIds.forEach { it.sorted() shouldContainExactly listOf(1L, 2L) }
                 }
             }
         }
