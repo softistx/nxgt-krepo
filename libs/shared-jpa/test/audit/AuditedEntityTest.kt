@@ -82,6 +82,23 @@ class AuditedEntityTest :
                     jpa.session { session -> service.findById(session, 1L) }.lastModifiedAt shouldBe created.lastModifiedAt
                 }
             }
+
+            scenario("but does move when a different principal touched it, which is the service's doing") {
+                withJpa { jpa ->
+                    jpa.transaction { session -> NoteService(principal = "ada").create(session, NewNote(1, "first")) }
+                    val created = jpa.session { session -> NoteService().findById(session, 1L) }
+
+                    // Nothing about the note changes — but `stampUpdated` assigns lastModifiedBy,
+                    // and from a different principal that assignment is itself a change. So the
+                    // dirty check finds one, @PreUpdate runs, and the timestamp moves. The scenario
+                    // above passes only because its service has no principal to stamp.
+                    jpa.transaction { session -> NoteService(principal = "bo").update(session, 1L, EditNote(text = "first")) }
+
+                    val updated = jpa.session { session -> NoteService().findById(session, 1L) }
+                    updated.lastModifiedBy shouldBe "bo"
+                    updated.lastModifiedAt shouldBeGreaterThan created.lastModifiedAt
+                }
+            }
         }
 
         feature("who").config(enabled = JpaTestDatabase.available) {

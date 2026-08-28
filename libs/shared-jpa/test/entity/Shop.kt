@@ -5,6 +5,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import jakarta.persistence.Transient
 
 /*
  * Three entities with real associations between them, for the specs that need a join to be a join
@@ -31,7 +32,11 @@ class Purchase(
     var total: Long = 0,
     @ManyToOne var customer: Buyer? = null,
     @OneToMany(mappedBy = "purchase") var lines: MutableList<PurchaseLine> = mutableListOf(),
-)
+) {
+    /** Comparable, sortable by the DSL's types, and not a column — which `PagingTest` needs. */
+    @Transient
+    val label: String = ""
+}
 
 @Entity
 @Table(name = "purchase_lines")
