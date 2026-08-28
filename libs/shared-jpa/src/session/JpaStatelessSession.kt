@@ -24,6 +24,7 @@ import kotlinx.coroutines.future.await
 import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.hibernate.query.criteria.JpaCriteriaInsert
 import org.hibernate.reactive.stage.Stage
+import kotlin.reflect.KClass
 
 /**
  * The same convention over a stateless session: everything suspends, nothing returns a stage.
@@ -48,6 +49,24 @@ class JpaStatelessSession internal constructor(
     suspend inline fun <reified T : Any> get(id: Any): T = find<T>(id) ?: throw JpaNotFoundException(T::class, id)
 
     /** Inserts them, one statement each, now. */
+
+    /**
+     * The same, with the entity as a value rather than as a type argument.
+     *
+     * For a caller that has a `KClass` and no way to reify it — anything generic in its entity, of
+     * which [com.strange.jpa.repository.JpaRepository] is the one in this module.
+     */
+    suspend fun <T : Any> find(
+        type: KClass<T>,
+        id: Any,
+    ): T? = raw.get(type.java, id).await()
+
+    /** [find] by value, or [JpaNotFoundException]. */
+    suspend fun <T : Any> get(
+        type: KClass<T>,
+        id: Any,
+    ): T = find(type, id) ?: throw JpaNotFoundException(type, id)
+
     suspend fun insert(vararg entities: Any) {
         raw.insert(*entities).await()
     }
@@ -71,20 +90,20 @@ class JpaStatelessSession internal constructor(
     inline fun <reified R : Any> query(hql: String): JpaQuery<R> = raw.query(hql)
 
     /** A query built from the entity's own properties instead of an HQL string. */
-    inline fun <reified R : Any> select(block: SelectScope<R>.() -> Unit = {}): SelectScope<R> = raw.select(block)
+    inline fun <reified R : Any> select(noinline block: SelectScope<R>.() -> Unit = {}): SelectScope<R> = raw.select(block)
 
     /** A query over [R]'s entity returning something else — a summary, one column, a count. */
-    inline fun <reified E : Any, reified R : Any> project(block: ProjectScope<E, R>.() -> Selection<R>): ProjectScope<E, R> =
+    inline fun <reified E : Any, reified R : Any> project(noinline block: ProjectScope<E, R>.() -> Selection<R>): ProjectScope<E, R> =
         raw.project(block)
 
     /** SQL, for what HQL cannot say. */
     inline fun <reified R : Any> nativeQuery(sql: String): JpaQuery<R> = raw.nativeQuery(sql)
 
     /** A bulk `update` built from the entity's own properties. */
-    inline fun <reified R : Any> update(block: UpdateScope<R>.() -> Unit): UpdateScope<R> = updateOn(raw, block)
+    inline fun <reified R : Any> update(noinline block: UpdateScope<R>.() -> Unit): UpdateScope<R> = updateOn(raw, R::class, block)
 
     /** A bulk `delete`, the same way. */
-    inline fun <reified R : Any> delete(): DeleteScope<R> = deleteOn(raw)
+    inline fun <reified R : Any> delete(): DeleteScope<R> = deleteOn(raw, R::class)
 
     /**
      * Hibernate's criteria builder, for a query written against the Criteria API directly.
@@ -106,6 +125,22 @@ class JpaStatelessSession internal constructor(
 
     /** A criteria `insert` — `insert … select`, or `insert … values`. */
     fun mutate(criteria: JpaCriteriaInsert<*>): JpaMutation = raw.mutate(criteria)
+
+    /** [select] with the entity as a value rather than as a type argument. */
+    fun <T : Any> select(
+        type: KClass<T>,
+        block: SelectScope<T>.() -> Unit = {},
+    ): SelectScope<T> = raw.select(type, block)
+
+    /** [project] with both types as values. */
+    fun <T : Any, R : Any> project(
+        type: KClass<T>,
+        result: KClass<R>,
+        block: ProjectScope<T, R>.() -> Selection<R>,
+    ): ProjectScope<T, R> = raw.project(type, result, block)
+
+    /** [delete] with the entity as a value rather than as a type argument. */
+    fun <T : Any> delete(type: KClass<T>): DeleteScope<T> = deleteOn(raw, type)
 
     /** A bulk HQL `update` or `delete`. */
     fun mutate(hql: String): JpaMutation = raw.mutate(hql)
