@@ -271,6 +271,18 @@ class SelectDslTest :
                     listOf("P-2", "P-3", "P-4")
             }
 
+            // Regression: the property form used to carry only the value overloads for gt/ge/lt/le,
+            // so `this[Purchase::total] gt this[Purchase::id]` compiled and this did not.
+            scenario("compare a property against another column, not only against a value") {
+                references { where { Purchase::total gt this[Purchase::id] } }.size shouldBe 4
+                references { where { Purchase::id ge this[Purchase::total] } }
+                    .shouldContainExactly(emptyList())
+                references { where { Purchase::total lt (this[Purchase::id] * 25L) } }
+                    .shouldContainExactly(emptyList())
+                references { where { Purchase::total le (this[Purchase::id] * 25L) } } shouldContainExactly
+                    listOf("P-2")
+            }
+
             scenario("match text, with and without case") {
                 references { where { Purchase::reference like "P-_" } }.size shouldBe 4
                 references { where { Purchase::reference ilike "p-1" } } shouldContainExactly listOf("P-1")
