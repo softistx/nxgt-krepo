@@ -35,7 +35,7 @@ fun <N : Number> min(value: Expression<N>): Expression<N> = value.builder.min(va
 fun <N : Number> max(value: Expression<N>): Expression<N> = value.builder.max(value)
 
 /** The smallest of anything ordered — a date, a string. */
-fun <V : Comparable<in V>> least(value: Expression<V>): Expression<V> = value.builder.least(value)
+fun <V : Comparable<V>> least(value: Expression<V>): Expression<V> = value.builder.least(value)
 
 /** The largest of anything ordered. */
-fun <V : Comparable<in V>> greatest(value: Expression<V>): Expression<V> = value.builder.greatest(value)
+fun <V : Comparable<V>> greatest(value: Expression<V>): Expression<V> = value.builder.greatest(value)

@@ -39,20 +39,19 @@ sealed interface Filters<T : Any> : Paths<T> {
     infix fun <V> KMutableProperty1<T, V>.ne(other: Expression<out V>): Predicate = builder.notEqual(this@Filters[this], other)
 
     /** `>`. */
-    infix fun <V : Comparable<in V>> KMutableProperty1<T, V>.gt(value: V): Predicate = builder.greaterThan(this@Filters[this], value)
+    infix fun <V : Comparable<V>> KMutableProperty1<T, V>.gt(value: V): Predicate = builder.greaterThan(this@Filters[this], value)
 
     /** `>=`. */
-    infix fun <V : Comparable<in V>> KMutableProperty1<T, V>.ge(value: V): Predicate =
-        builder.greaterThanOrEqualTo(this@Filters[this], value)
+    infix fun <V : Comparable<V>> KMutableProperty1<T, V>.ge(value: V): Predicate = builder.greaterThanOrEqualTo(this@Filters[this], value)
 
     /** `<`. */
-    infix fun <V : Comparable<in V>> KMutableProperty1<T, V>.lt(value: V): Predicate = builder.lessThan(this@Filters[this], value)
+    infix fun <V : Comparable<V>> KMutableProperty1<T, V>.lt(value: V): Predicate = builder.lessThan(this@Filters[this], value)
 
     /** `<=`. */
-    infix fun <V : Comparable<in V>> KMutableProperty1<T, V>.le(value: V): Predicate = builder.lessThanOrEqualTo(this@Filters[this], value)
+    infix fun <V : Comparable<V>> KMutableProperty1<T, V>.le(value: V): Predicate = builder.lessThanOrEqualTo(this@Filters[this], value)
 
     /** `between`, both ends included — which is what a Kotlin [ClosedRange] means too. */
-    infix fun <V : Comparable<in V>> KMutableProperty1<T, V>.within(range: ClosedRange<V>): Predicate =
+    infix fun <V : Comparable<V>> KMutableProperty1<T, V>.within(range: ClosedRange<V>): Predicate =
         builder.between(this@Filters[this], range.start, range.endInclusive)
 
     /** `in (…)`. An empty collection matches nothing, which is what an empty filter list means. */
