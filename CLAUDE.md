@@ -14,6 +14,12 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 
 ## Working here
 
+- **Every PR targets `develop`, never `main`.** Branch off `develop`, `gh pr create --base develop`,
+  merge it there. `main` is aligned from `develop` only when the user asks, and aligning means
+  fast-forwarding `main` onto `develop` — not merging a feature branch into it. Check the base before
+  opening a PR. The repo's default branch is now `develop`, so `gh pr create` picks the right base on
+  its own — pass `--base develop` anyway rather than trusting a setting a fork or a stale clone may
+  not share. AGENTS.md's *Conventions* section has the repair if `main` has been written to directly.
 - Prefer `./kotlin show modules` / `show settings -m <module>` / `show dependencies -m <module>` over reading manifests and inferring. They resolve the real model in seconds and surface manifest errors with a line pointer, without a compile.
 - Verify load-bearing toolchain claims against the CLI before writing them into docs or skills. Build a throwaway project in the session scratchpad — never inside `libs/` or `plugins/` — and confirm with `./kotlin show`.
 - The same rule applies to a library's runtime behaviour, and it is cheaper than it sounds: when a design turns on how a client behaves — which thread a callback arrives on, whether two calls may overlap — write the spec that asks it before writing the design. `ConsumerConfinementTest` and `ConfirmThreadsTest` each need no server, run in milliseconds, and each replaced a confident wrong answer. AGENTS.md has the two they corrected.
