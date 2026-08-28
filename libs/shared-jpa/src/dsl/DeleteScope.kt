@@ -9,7 +9,7 @@ import jakarta.persistence.criteria.Root
  *
  * ```kotlin
  * session.delete<Purchase> {
- *     where { this[Purchase::total] lt 1L }
+ *     where { Purchase::total lt 1L }
  * }.execute()
  * ```
  *
@@ -22,7 +22,7 @@ class DeleteScope<T : Any>
     internal constructor(
         @PublishedApi internal val statement: CriteriaDelete<T>,
         override val from: Root<T>,
-    ) : Paths<T> {
+    ) : Filters<T> {
         private val restrictions = mutableListOf<Predicate>()
         private var unrestricted = false
 

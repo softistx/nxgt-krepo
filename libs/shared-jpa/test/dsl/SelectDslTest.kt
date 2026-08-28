@@ -50,8 +50,8 @@ class SelectDslTest :
                         jpa.session { session ->
                             session
                                 .select<Purchase> {
-                                    where { this[Purchase::total] gt 100L }
-                                    orderBy { asc(this[Purchase::reference]) }
+                                    where { Purchase::total gt 100L }
+                                    orderBy { asc(Purchase::reference) }
                                 }.list() to
                                 session
                                     .query<Purchase>("from Purchase where total > 100 order by reference")
@@ -69,8 +69,8 @@ class SelectDslTest :
                         jpa.session { session ->
                             session
                                 .select<Purchase> {
-                                    where { this[Purchase::total] gt 100L }
-                                    where { this[Purchase::total] lt 500L }
+                                    where { Purchase::total gt 100L }
+                                    where { Purchase::total lt 500L }
                                 }.list()
                         }
 
@@ -85,8 +85,8 @@ class SelectDslTest :
                         jpa.session { session ->
                             session
                                 .select<Purchase> {
-                                    where { tier?.let { _ -> this[Purchase::total] gt 1_000L } }
-                                    orderBy { asc(this[Purchase::id]) }
+                                    where { tier?.let { _ -> Purchase::total gt 1_000L } }
+                                    orderBy { asc(Purchase::id) }
                                 }.list()
                         }
 
@@ -100,8 +100,8 @@ class SelectDslTest :
                         jpa.session { session ->
                             session
                                 .select<Purchase> {
-                                    orderBy { desc(this[Purchase::total]) }
-                                    orderBy { asc(this[Purchase::id]) }
+                                    orderBy { desc(Purchase::total) }
+                                    orderBy { asc(Purchase::id) }
                                 }.list()
                         }
 
@@ -120,7 +120,7 @@ class SelectDslTest :
                                     val customer = join(Purchase::customer)
                                     where { customer[Buyer::name] eq "ada" }
                                     orderBy { asc(customer[Buyer::id]) }
-                                    orderBy { asc(this[Purchase::reference]) }
+                                    orderBy { asc(Purchase::reference) }
                                 }.list()
                         }
 
@@ -135,12 +135,12 @@ class SelectDslTest :
                             session
                                 .select<Purchase> {
                                     join(Purchase::customer)
-                                    orderBy { asc(this[Purchase::id]) }
+                                    orderBy { asc(Purchase::id) }
                                 }.list() to
                                 session
                                     .select<Purchase> {
                                         join(Purchase::customer, JoinType.LEFT)
-                                        orderBy { asc(this[Purchase::id]) }
+                                        orderBy { asc(Purchase::id) }
                                     }.list()
                         }
 
@@ -157,14 +157,14 @@ class SelectDslTest :
                                 .select<Purchase> {
                                     val lines = joinEach(Purchase::lines)
                                     where { lines[PurchaseLine::sku] eq "apples" }
-                                    orderBy { asc(this[Purchase::id]) }
+                                    orderBy { asc(Purchase::id) }
                                 }.list() to
                                 session
                                     .select<Purchase> {
                                         val lines = joinEach(Purchase::lines)
                                         where { lines[PurchaseLine::sku] like "%p%" }
                                         distinct()
-                                        orderBy { asc(this[Purchase::id]) }
+                                        orderBy { asc(Purchase::id) }
                                     }.list()
                         }
 
@@ -182,48 +182,48 @@ class SelectDslTest :
                             session
                                 .select<Purchase> {
                                     block()
-                                    orderBy { asc(this[Purchase::id]) }
+                                    orderBy { asc(Purchase::id) }
                                 }.list()
                         }.map { it.reference }
                 }
 
             scenario("compare, both ways round") {
-                references { where { this[Purchase::total] ge 400L } } shouldContainExactly listOf("P-3", "P-4")
-                references { where { this[Purchase::total] le 50L } } shouldContainExactly listOf("P-2")
-                references { where { this[Purchase::total] within 50L..150L } } shouldContainExactly listOf("P-1", "P-2")
-                references { where { this[Purchase::reference] ne "P-1" } } shouldContainExactly
+                references { where { Purchase::total ge 400L } } shouldContainExactly listOf("P-3", "P-4")
+                references { where { Purchase::total le 50L } } shouldContainExactly listOf("P-2")
+                references { where { Purchase::total within 50L..150L } } shouldContainExactly listOf("P-1", "P-2")
+                references { where { Purchase::reference ne "P-1" } } shouldContainExactly
                     listOf("P-2", "P-3", "P-4")
             }
 
             scenario("match text, with and without case") {
-                references { where { this[Purchase::reference] like "P-_" } }.size shouldBe 4
-                references { where { this[Purchase::reference] ilike "p-1" } } shouldContainExactly listOf("P-1")
-                references { where { this[Purchase::reference] notLike "P-1" } } shouldContainExactly
+                references { where { Purchase::reference like "P-_" } }.size shouldBe 4
+                references { where { Purchase::reference ilike "p-1" } } shouldContainExactly listOf("P-1")
+                references { where { Purchase::reference notLike "P-1" } } shouldContainExactly
                     listOf("P-2", "P-3", "P-4")
             }
 
             scenario("null is asked for with isNull, never with eq") {
-                references { where { this[Purchase::customer].isNull() } } shouldContainExactly listOf("P-4")
-                references { where { this[Purchase::customer].isNotNull() } } shouldContainExactly
+                references { where { Purchase::customer.isNull() } } shouldContainExactly listOf("P-4")
+                references { where { Purchase::customer.isNotNull() } } shouldContainExactly
                     listOf("P-1", "P-2", "P-3")
-                references { where { this[Purchase::customer] eq null } }.shouldContainExactly(emptyList())
+                references { where { Purchase::customer eq null } }.shouldContainExactly(emptyList())
             }
 
             scenario("in a list, including an empty one") {
-                references { where { this[Purchase::reference] oneOf listOf("P-1", "P-3") } } shouldContainExactly
+                references { where { Purchase::reference oneOf listOf("P-1", "P-3") } } shouldContainExactly
                     listOf("P-1", "P-3")
-                references { where { this[Purchase::reference] oneOf emptyList() } }.shouldContainExactly(emptyList())
+                references { where { Purchase::reference oneOf emptyList() } }.shouldContainExactly(emptyList())
             }
 
             scenario("and, or and not, with the parentheses Kotlin needs") {
                 references {
-                    where { (this[Purchase::total] gt 300L) or (this[Purchase::reference] eq "P-2") }
+                    where { (Purchase::total gt 300L) or (Purchase::reference eq "P-2") }
                 } shouldContainExactly listOf("P-2", "P-3", "P-4")
                 references {
-                    where { !(this[Purchase::total] gt 100L) }
+                    where { !(Purchase::total gt 100L) }
                 } shouldContainExactly listOf("P-2")
                 references {
-                    where { all(listOf(this[Purchase::total] gt 100L, this[Purchase::total] lt 500L)) }
+                    where { all(listOf(Purchase::total gt 100L, Purchase::total lt 500L)) }
                 } shouldContainExactly listOf("P-1", "P-3")
                 references { where { all(emptyList()) } }.size shouldBe 4
             }
@@ -236,7 +236,7 @@ class SelectDslTest :
                         shouldThrow<JpaNoResultException> {
                             jpa.session { session ->
                                 session
-                                    .select<Purchase> { where { this[Purchase::reference] eq "nothing" } }
+                                    .select<Purchase> { where { Purchase::reference eq "nothing" } }
                                     .single()
                             }
                         }

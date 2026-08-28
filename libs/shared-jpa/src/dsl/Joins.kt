@@ -6,13 +6,13 @@ import kotlin.reflect.KProperty1
 /**
  * Paths that can be joined from — a selection, or a join already taken.
  *
- * Separate from [Paths] because a bulk `update` or `delete` cannot join: JPA's `CriteriaUpdate`
+ * Separate from [Filters] because a bulk `update` or `delete` cannot join: JPA's `CriteriaUpdate`
  * hands out a `Root` like any other, and Hibernate refuses the join when it renders the statement.
  * A method that is always a runtime failure is better not offered, so the update and delete scopes
- * are [Paths] and stop there.
+ * are [Filters] and stop there.
  */
 @JpaDsl
-sealed interface Joins<T : Any> : Paths<T> {
+sealed interface Joins<T : Any> : Filters<T> {
     /**
      * Joins a to-one association, and answers with something to index.
      *
