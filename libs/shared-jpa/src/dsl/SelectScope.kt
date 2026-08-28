@@ -35,7 +35,7 @@ class SelectScope<T : Any>
         val builder: HibernateCriteriaBuilder,
         @PublishedApi internal val query: CriteriaQuery<T>,
         override val from: Root<T>,
-    ) : Paths<T> {
+    ) : Joins<T> {
         private val restrictions = mutableListOf<Predicate>()
         private val ordering = mutableListOf<Order>()
 
