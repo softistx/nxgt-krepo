@@ -6,6 +6,7 @@ import com.strange.material.display.alertStyle
 import com.strange.material.display.cardStyle
 import com.strange.material.display.chipStyle
 import com.strange.material.display.listTileStyle
+import com.strange.material.form.fieldStyle
 import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.Tone
 
@@ -28,6 +29,8 @@ object StrangeStyles {
     val card: Style get() = cardStyle
 
     val chip: Style get() = chipStyle
+
+    val field: Style get() = fieldStyle
 
     val listTile: Style get() = listTileStyle
 

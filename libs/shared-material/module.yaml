@@ -47,6 +47,9 @@ settings:
       # MaterialExpressiveTheme and MotionScheme. Both are in the M3 that resolves here — 1.11.0
       # -alpha07 on jvm/ios, androidx 1.5.0-alpha17 on android — and both are gated behind this.
       - androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+      # ExposedDropdownMenuBox and its anchor, which SelectField is built on. Still experimental in
+      # M3 1.11 after years of it, and there is no non-experimental way to anchor a menu to a field.
+      - androidx.compose.material3.ExperimentalMaterial3Api
   compose:
     enabled: true
     # Pinned to the toolchain 0.12.0 default, the way `ktor` is pinned in the modules that enable

@@ -60,8 +60,8 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds ten hand-built vectors: `Add`, `Check`, `Close`, `ChevronRight`, `Delete`,
-`Edit`, `Inbox`, `Person`, `Search`, `Warning`. They are defined in code because **no icon pack is
+`StrangeIcons` holds thirteen hand-built vectors: `Add`, `Check`, `Close`, `ChevronRight`,
+`ChevronDown`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`, `Search`, `Warning`. They are defined in code because **no icon pack is
 reachable from here**: the Kotlin Toolchain's `$compose` catalog has no key for the Material icons,
 `$compose.material` does not carry `material-icons-core` in Compose Multiplatform 1.11, and the
 AndroidX icon artifacts are Android-only. An application that wants a thousand glyphs should depend
@@ -134,6 +134,72 @@ floor.
 `AnimatedVisibility` for the caller to write. `EmptyState` fades in for the same reason, and
 `Skeleton` shimmers on its own.
 
+## Forms
+
+The part of the library that removes the most work, because a form is where plumbing usually lives.
+A control takes its `FieldState` and nothing else is wired: the value, the change handler, the
+error, and *when the error is allowed to appear* all come from it.
+
+```kotlin
+val form = rememberForm()
+val email = form.field("email", "", Rules.required(), Rules.email())
+val terms = form.field("terms", false, Rules.checked())
+
+TextField(email, label = "Email")
+Checkbox(terms, label = "I accept the terms")
+Button("Create account", onClick = { form.submit { register(form.values()) } })
+```
+
+| Type | What it holds | Where it lives |
+| --- | --- | --- |
+| `FieldState<T>` | one input: value, validity, `touched`, `dirty`, `showError` | `rememberField(initial, vararg rules)` |
+| `FormState` | the fields that submit together: `isValid`, `dirty`, `validate()`, `submit { }`, `reset()`, `values()` | `rememberForm()` + `form.field(name, initial, vararg rules)` |
+| `Validation<T>` | a rule, as `(T) -> String?` — `null` passes, anything else is the message | `Rules.*`, combined with `and` |
+
+**An error is held until it is earned.** A required field is invalid the moment an empty form is
+drawn, and showing that immediately greets someone with six complaints about work they have not
+started. So a field speaks once it has been *left after being typed in*, or once `form.validate()`
+demands it. `showError` is the only thing a control asks about.
+
+`Rules` — `required`, `minLength`, `maxLength`, `email`, `pattern`, `digits`, `matching`, `checked`,
+`chosen`, `anyOf`, `inRange`. A format rule passes a blank value, so an optional field with a format
+is one rule rather than a special case; `and` reports the first complaint, which is why
+`required() and email()` is the right order and the reverse is not.
+
+**No validation library is required.** A rule is a function, so Konform or anything else is an
+adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.message }`.
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `TextField` | `field`, `label?`, `placeholder?`, `helper?`, `secret`, `keyboardType`, `leading?`, `trailing?` | `forms/text-field` |
+| `TextareaField` | `field`, `label?`, `minLines = 3`, `maxLines = 8`, `maxLength?` | `forms/textarea` |
+| `SelectField` | `field`, `options`, `label?`, `placeholder`, `optionLabel` | `forms/select` |
+| `Checkbox` | `field`, `label`, `helper?` | `forms/checkbox-and-switch` |
+| `Switch` | `field`, `label`, `description?` | `forms/checkbox-and-switch` |
+| `RadioGroup` | `field`, `options`, `label?`, `required`, `optionLabel` | `forms/choice-groups` |
+| `CheckboxGroup` | `field: FieldState<Set<T>>`, `options`, `label?` | `forms/choice-groups` |
+| `SliderField` | `field`, `label?`, `range`, `steps`, `format` | `forms/slider` |
+| `OtpField` | `field`, `length = 6`, `label?`, `helper?` | `forms/one-time-code` |
+| `InputGroup` | `content: RowScope` | `forms/input-group` |
+| `ExtendedLabel` | `text`, `required`, `optional`, `trailing?` | used by the above |
+| `HelperText` | `helper?`, `error?` | used by the above |
+| `FieldScaffold` | `label?`, `required`, `helper?`, `error?`, `content` | used by the above |
+
+`TextField`, `TextareaField` and `SelectField` are Material 3's `OutlinedTextField` — M3 already
+carries the floating label, the supporting text and the error colours, so wrapping it in a second
+label would give the reader two. The controls M3 leaves bare — checkbox, switch, radio, slider,
+OTP — get their chrome from `FieldScaffold` instead, written once.
+
+A `Checkbox`, a `Switch` and a `RadioGroup` row are **one** toggle target each, label included:
+Material 3 ships the box alone and every caller writes the same `Row`, most of them hanging the
+click on the box and handing a screen reader an unlabelled control beside some text.
+
+`OtpField` is one field wearing several boxes, not one field per digit. Paste works, backspace
+works, autofill lands in one place, and a screen reader gets a single input.
+
+`CheckboxGroup` holds the set of what is ticked rather than a list of booleans parallel to the
+options, so the field holds the answer and reordering the options cannot silently change it.
+
 ## Motion helpers
 
 | Helper | What it does | Story |
@@ -150,7 +216,12 @@ state change, and `MotionScheme` has no spec for something that never settles.
 
 ## The whole screen
 
-`screens/orders-screen` is the acceptance criterion, not a demonstration. It is a header, an alert,
+`screens/sign-up-form` is the forms phase's acceptance criterion: eight controls, cross-field
+validation, errors that wait their turn, a submit button that knows whether it may be pressed, and a
+success banner — with one `remember` in the whole file, for business state a real screen would own
+too. No `onValueChange`, no error booleans, no `touched` flags.
+
+`screens/orders-screen` is the first phase's, and is not a demonstration either. It is a header, an alert,
 a filter row, and a list that switches between loading, empty and loaded — written with no
 `animate*AsState`, no transition, no interaction source, and no remembered hover, press or
 visibility. Its one `remember` is the selected filter, which is business state a real application
