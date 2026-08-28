@@ -1,5 +1,6 @@
 package com.strange.jpa.session
 
+import com.strange.common.page.Page
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.dsl.DeleteScope
 import com.strange.jpa.dsl.ProjectScope
@@ -9,6 +10,9 @@ import com.strange.jpa.dsl.deleteOn
 import com.strange.jpa.dsl.project
 import com.strange.jpa.dsl.select
 import com.strange.jpa.dsl.updateOn
+import com.strange.jpa.page.PageRequest
+import com.strange.jpa.page.PageScope
+import com.strange.jpa.page.selectPage
 import com.strange.jpa.query.JpaMutation
 import com.strange.jpa.query.JpaQuery
 import com.strange.jpa.query.mutate
@@ -116,6 +120,12 @@ class JpaSession internal constructor(
 
     /** A query over [R]'s entity returning something else — a summary, one column, a count. */
     inline fun <reified E : Any, reified R : Any> project(block: ProjectScope<E, R>.() -> Selection<R>): JpaQuery<R> = raw.project(block)
+
+    /** One page of a query, cut by keyset rather than by `offset`. */
+    suspend inline fun <reified R : Any> selectPage(
+        request: PageRequest,
+        block: PageScope<R>.() -> Unit,
+    ): Page<R> = raw.selectPage(request, block)
 
     /** SQL, for what HQL cannot say. Remember it is not schema-qualified for you. */
     inline fun <reified R : Any> nativeQuery(sql: String): JpaQuery<R> = raw.nativeQuery(sql)

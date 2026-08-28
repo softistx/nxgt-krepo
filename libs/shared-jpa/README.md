@@ -8,6 +8,7 @@ com.strange.jpa            Jpa, JpaConfig, JpaException — connect, close, and 
 com.strange.jpa.session    session / transaction / stateless, and the confinement bridge underneath
 com.strange.jpa.query      HQL and SQL through one builder, and the one-shot operations on Jpa
 com.strange.jpa.dsl        the same queries built from the entity's own properties, not a string
+com.strange.jpa.page       cursor pagination — a page, a request, and the keyset under them
 com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.time.Instant, kotlin.uuid.Uuid
 com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
 com.strange.jpa.naming     what a column is called when the entity does not say
@@ -321,6 +322,54 @@ with the fragment in the message, rather than by Hibernate's binder later withou
 Underneath it is JPA Criteria: Hibernate renders the SQL, and this is a Kotlin surface over its query
 model rather than a second implementation of HQL that would have to learn every dialect's quoting.
 When a terminal has to name the query in an exception it renders the tree back to HQL, and only then.
+
+## Pagination
+
+`selectPage<T>(request) { }` returns a `Page<T>` — the rows plus a Relay-shaped `PageInfo` of
+`startCursor`, `endCursor`, `hasNextPage`, `hasPreviousPage`. Both are `shared-common`'s, so
+`shared-mongo`'s `findPage` answers with the same two types.
+
+```kotlin
+val page =
+    session.selectPage<Purchase>(PageRequest.first(20)) {
+        where { this[Purchase::total] gt 100L }
+        sortBy(Purchase::total, descending = true)
+        sortBy(Purchase::id)
+    }
+
+val next = session.selectPage<Purchase>(PageRequest.first(20, page.info.endCursor)) { … }
+```
+
+It pages by **keyset**, not by `offset`. `offset(n)` makes the database walk and discard n rows, so a
+page costs more the deeper it is and page 500 is a scan; resuming from the previous page's sort key
+costs the same at any depth, and — the part that shows up in production rather than in a benchmark —
+does not skip or repeat a row when one is inserted between two requests. A spec inserts one between
+two pages and checks exactly that.
+
+**`sortBy`, not `orderBy`.** A cursor is the sort key of the row it points at, so the page has to
+read those values back off the row that came out; `orderBy` takes an expression and there is no way
+back from one to a value. A paged block that uses `orderBy` is refused rather than quietly paged
+along a key its cursors do not carry.
+
+**The last sort key has to be the entity's identifier**, and a sort that does not end in it is a
+`JpaPaginationException` naming what to add. Keyset pagination resumes from a key, so the key has to
+be unique: sort by a repeated column alone and every row sharing a value is a coin toss between being
+served twice and being skipped — a data bug that reads as a UI bug. The identifier is the one column
+this library can prove unique, so it is the one it insists on.
+
+`PageRequest.first(n, cursor)` pages forward, `PageRequest.last(n, cursor)` backward; the backward
+page runs the sort flipped and reverses the rows, so both directions read the same way round. One row
+is fetched beyond the page size, and whether it turned up is the whole answer to *is there another
+page* — one row rather than a second query.
+
+A cursor carries the sort it was issued under and is refused by a differently sorted query, because
+the alternative is a page cut along the wrong key that comes back plausible and wrong. Encoding is
+not encryption: a client can read a cursor, and forging one buys a page starting somewhere else.
+
+Hibernate Reactive has none of this — core's `getKeyedResultList` never reached the reactive
+`SelectionQuery` — so the predicate, the cursors and the flip are this module's. There is no row-value
+comparison in the criteria builder either, so the keyset predicate expands to the lexicographic
+`or`-chain a composite index satisfies with a seek.
 
 ## Which database
 
