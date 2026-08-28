@@ -104,7 +104,10 @@ What that requires, and what the implementation therefore does:
 
 - **The sort key has to be unique**, so `_id` is appended to whatever `sort` asks for. Order by
   `name` alone and every document sharing a name is a coin toss between being served twice and
-  being skipped — which is exactly the case `FindPageTest` walks end to end.
+  being skipped — which is exactly the case `FindPageTest` walks end to end. `shared-jpa` *refuses*
+  a sort that does not end in the identifier rather than appending one, and that is deliberate: its
+  sort is Kotlin in the caller's own source, so it can name the line and what to add, while this
+  one arrives as JSON from an HTTP client with nothing to point at.
 - **The cursor carries every sort key**, base64url over extended JSON, so a date comes back as a
   date rather than as a string that compares against nothing. It also carries which keys it was
   issued for: a cursor from a differently sorted query is refused instead of paging along the wrong

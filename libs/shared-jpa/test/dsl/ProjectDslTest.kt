@@ -95,6 +95,33 @@ class ProjectDslTest :
                 }
             }
 
+            // The mixtures stop at four columns; above it every column is a path. Pinned because
+            // the escape is the whole answer to the overload-resolution error a fifth column gives.
+            scenario("above four columns, names every column by path") {
+                seeded { jpa ->
+                    val rows =
+                        jpa.session { session ->
+                            session
+                                .project<Purchase, Wide> {
+                                    val buyer = join(Purchase::customer)
+                                    orderBy { asc(Purchase::id) }
+                                    construct(
+                                        ::Wide,
+                                        this[Purchase::id],
+                                        this[Purchase::reference],
+                                        this[Purchase::total],
+                                        buyer[Buyer::name],
+                                        upper(this[Purchase::reference]),
+                                    )
+                                }.list()
+                        }
+
+                    rows.map { it.id } shouldContainExactly listOf(1L, 2L, 3L)
+                    rows.map { it.buyer } shouldContainExactly listOf("ada", "ada", "bo")
+                    rows.map { it.shouted } shouldContainExactly listOf("P-1", "P-2", "P-3")
+                }
+            }
+
             scenario("carries the paging and the terminals every other query has") {
                 seeded { jpa ->
                     jpa.session { session ->
@@ -158,6 +185,15 @@ class Summary(
 
 /** A row of four columns: two of the entity's own, one joined, one computed. */
 class Line(
+    val reference: String,
+    val total: Long,
+    val buyer: String,
+    val shouted: String,
+)
+
+/** A row of five columns — above where the property/path mixtures stop. */
+class Wide(
+    val id: Long,
     val reference: String,
     val total: Long,
     val buyer: String,
