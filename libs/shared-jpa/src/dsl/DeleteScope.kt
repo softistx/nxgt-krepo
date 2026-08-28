@@ -3,7 +3,6 @@ package com.strange.jpa.dsl
 import jakarta.persistence.criteria.CriteriaDelete
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
-import org.hibernate.query.criteria.HibernateCriteriaBuilder
 
 /**
  * The `delete { }` block: which rows go.
@@ -21,8 +20,6 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder
 class DeleteScope<T : Any>
     @PublishedApi
     internal constructor(
-        /** Hibernate's builder, for everything this package has not given a name. */
-        val builder: HibernateCriteriaBuilder,
         @PublishedApi internal val statement: CriteriaDelete<T>,
         override val from: Root<T>,
     ) : Paths<T> {

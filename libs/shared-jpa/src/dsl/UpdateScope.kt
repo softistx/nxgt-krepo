@@ -5,7 +5,6 @@ import jakarta.persistence.criteria.Expression
 import jakarta.persistence.criteria.Path
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
-import org.hibernate.query.criteria.HibernateCriteriaBuilder
 
 /**
  * The `update { }` block: what is assigned, and to which rows.
@@ -31,8 +30,6 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder
 class UpdateScope<T : Any>
     @PublishedApi
     internal constructor(
-        /** Hibernate's builder, for everything this package has not given a name. */
-        val builder: HibernateCriteriaBuilder,
         @PublishedApi internal val statement: CriteriaUpdate<T>,
         override val from: Root<T>,
     ) : Paths<T> {

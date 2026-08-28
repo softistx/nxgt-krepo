@@ -298,6 +298,26 @@ Projections read only the columns they name and put nothing in the persistence c
 reason to reach for one: a list page showing three fields of a wide entity does not need the other
 forty.
 
+The function vocabulary is ordinary functions, not scope methods, so they nest the way they read:
+`lower` `upper` `trim` `length` `substring` `concat` `abs` `sqrt` `mod` `coalesce` `nullIf`, and the
+aggregates `count` `countDistinct` `sum` `avg` `min` `max` `least` `greatest`. `JpaQuery.count()` is
+a different thing worth not confusing with the aggregate: that one rewrites the whole query into a
+count of its rows, which is what a pager needs.
+
+Two escapes, for what is not named:
+
+```kotlin
+where { function<Double>("similarity", this[Buyer::name], literal(term)) gt 0.3 }
+where { sql<Boolean>("? ~ ?", this[Buyer::name], literal("^A")) eq true }
+```
+
+`function` calls a database function by name. `sql` is Hibernate's own `sql()`, registered for every
+dialect it supports — a SQL fragment dropped into the query with **`?` as a bind parameter, not a
+hole to interpolate into**. A value carrying an apostrophe is a value, which is what makes this an
+escape hatch rather than a hazard; the fragment itself should still never be built by concatenating
+anything a caller supplied. A fragment whose placeholders and arguments disagree is refused here,
+with the fragment in the message, rather than by Hibernate's binder later without it.
+
 Underneath it is JPA Criteria: Hibernate renders the SQL, and this is a Kotlin surface over its query
 model rather than a second implementation of HQL that would have to learn every dialect's quoting.
 When a terminal has to name the query in an exception it renders the tree back to HQL, and only then.

@@ -29,7 +29,7 @@ import org.hibernate.reactive.stage.Stage
  */
 inline fun <reified T : Any, reified R : Any> Stage.QueryProducer.project(block: ProjectScope<T, R>.() -> Selection<R>): JpaQuery<R> {
     val criteria = builder.createQuery(R::class.javaObjectType)
-    val scope = ProjectScope(builder, criteria, criteria.from(T::class.java), R::class.javaObjectType)
+    val scope = ProjectScope(criteria, criteria.from(T::class.java), R::class.javaObjectType)
     criteria.select(scope.block())
     val built = scope.build()
     return JpaQuery({ built.hql() }, createQuery(built))
