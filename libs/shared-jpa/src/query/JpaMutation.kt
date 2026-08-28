@@ -2,6 +2,7 @@ package com.strange.jpa.query
 
 import kotlinx.coroutines.future.await
 import org.hibernate.reactive.stage.Stage
+import org.intellij.lang.annotations.Language
 
 /**
  * A bulk `update` or `delete`, written in HQL and awaited.
@@ -41,4 +42,6 @@ class JpaMutation
     }
 
 /** A bulk `update` or `delete` in HQL. Use [query] for anything that returns rows. */
-fun Stage.QueryProducer.mutate(hql: String): JpaMutation = JpaMutation(createMutationQuery(hql))
+fun Stage.QueryProducer.mutate(
+    @Language("HQL") hql: String,
+): JpaMutation = JpaMutation(createMutationQuery(hql))

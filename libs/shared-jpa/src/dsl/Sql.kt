@@ -1,6 +1,7 @@
 package com.strange.jpa.dsl
 
 import jakarta.persistence.criteria.Expression
+import org.intellij.lang.annotations.Language
 
 /**
  * A value as an expression, for the places one is wanted and a literal is what there is.
@@ -48,7 +49,9 @@ inline fun <reified V : Any> Paths<*>.function(
  * mapping, so column names in the fragment are the database's names and not the entity's.
  */
 inline fun <reified V : Any> Paths<*>.sql(
-    fragment: String,
+    // A fragment, not a statement: `prefix` gives it somewhere to sit so the IDE parses `? % ?`
+    // as an expression instead of reporting an incomplete `select`.
+    @Language("SQL", prefix = "select ", suffix = "") fragment: String,
     vararg arguments: Expression<*>,
 ): Expression<V> = function("sql", literal(fragment.checkedAgainst(arguments.size)), *arguments)
 
