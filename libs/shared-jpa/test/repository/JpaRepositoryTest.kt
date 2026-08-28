@@ -9,6 +9,7 @@ import com.strange.jpa.dsl.gt
 import com.strange.jpa.entity.Buyer
 import com.strange.jpa.entity.Purchase
 import com.strange.jpa.entity.PurchaseLine
+import com.strange.jpa.entity.Ticket
 import com.strange.jpa.page.PageRequest
 import com.strange.jpa.session.JpaSession
 import com.strange.jpa.session.session
@@ -25,7 +26,7 @@ import io.kotest.matchers.string.shouldContain
 class JpaRepositoryTest :
     FeatureSpec({
 
-        val purchases = jpaRepository(Purchase::id)
+        val purchases = JpaRepository(Purchase::id)
 
         suspend fun JpaSession.seed() {
             val ada = Buyer(1, "ada", "gold")
@@ -170,9 +171,43 @@ class JpaRepositoryTest :
             }
         }
 
+        feature("the entity it is over").config(enabled = JpaTestDatabase.available) {
+            scenario("comes off the property reference, with nothing naming the class") {
+                purchases.entity shouldBe Purchase::class
+                purchases.name shouldBe "Purchase"
+            }
+
+            scenario("is the entity referred to, not the class that declared the identifier") {
+                // `Keyed` is a @MappedSuperclass and declares `id`; `Ticket` refers to it. Resolving
+                // to `Keyed` would not fail — it would query the wrong thing, or nothing mapped.
+                val tickets = JpaRepository(Ticket::id)
+                tickets.entity shouldBe Ticket::class
+
+                JpaTestDatabase.withJpa(Ticket::class) { jpa ->
+                    jpa.transaction { session -> tickets.insert(session, Ticket(1, "a leak")) }
+
+                    jpa.session { session ->
+                        tickets.requireById(session, 1L).subject shouldBe "a leak"
+                        tickets.findAll(session).size shouldBe 1
+                    }
+                }
+            }
+
+            scenario("is refused when the reference is not a property of anything") {
+                val notAProperty: (Purchase) -> Long = { it.id }
+                shouldThrow<IllegalArgumentException> {
+                    JpaRepository(
+                        object : kotlin.reflect.KProperty1<Purchase, Long> by Purchase::id {
+                            override fun get(receiver: Purchase): Long = notAProperty(receiver)
+                        },
+                    )
+                }.message.shouldNotBeNull() shouldContain "property reference"
+            }
+        }
+
         feature("a subclass").config(enabled = JpaTestDatabase.available) {
             scenario("adds the queries that are specific to its entity") {
-                class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::class, Purchase::id) {
+                class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::id) {
                     suspend fun findByBuyer(
                         session: JpaSession,
                         buyer: String,

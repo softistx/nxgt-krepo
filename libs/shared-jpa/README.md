@@ -481,14 +481,14 @@ this repo can have.
 and a subclass extends with the two or three queries that are specific to an entity.
 
 ```kotlin
-val purchases = jpaRepository(Purchase::id)
+val purchases = JpaRepository(Purchase::id)
 
 jpa.transaction { session ->
     purchases.insert(session, Purchase(4, "P-4", 10))
     purchases.findAll(session) { Purchase::total gt 100L }
 }
 
-class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::class, Purchase::id) {
+class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::id) {
     suspend fun findByBuyer(session: JpaSession, name: String) =
         findAll(session) { join(Purchase::customer)[Buyer::name] eq name }
 }
@@ -499,14 +499,20 @@ Reads: `findAll`, `findOne`, `findById`, `requireById`, `findByIds`, `findPage`,
 `deleteByIds`. Everywhere a restriction is taken it is a `JpaSpec<T>`, so the same named
 specifications compose here as in a bare `select`.
 
-`jpaRepository(Purchase::id)` infers both type arguments from the property reference, so neither the
-entity nor the identifier type is written twice and no `::class` is passed. The constructor taking a
-`KClass` is what a subclass calls, since it names its entity in its `extends` clause anyway — and it
-is why the class needs telling at all: a class cannot have a `reified` type parameter, so `select<T>()`
-does not compile inside one. The repository reaches the value-typed forms underneath through
-`session.raw`, the way any caller reaches what the wrapper does not spell — so `JpaSession` keeps the
-reified vocabulary and nothing else, and no public declaration in `dsl/` or `session/` takes a
-`KClass`.
+**Nothing names the entity class, because the property reference already does.** A class cannot have
+a `reified` type parameter — inside one, `T` is not reifiable and `select<T>()` does not compile — so
+a repository has to learn at runtime what it is generic over, and `Purchase::id` carries it. Reading
+that needs no `kotlin-reflect`: a property reference compiles to a `CallableReference` whose owner is
+a `ClassReference` from the standard library.
+
+It resolves to the entity the reference *names*, not the class that declared the property, which is
+the answer a repository wants when an identifier comes from a `@MappedSuperclass`. A spec pins it
+with exactly that shape, because getting it wrong would not fail — it would query the wrong table.
+
+Underneath, the repository reaches the value-typed `select`, `project` and `find` through
+`session.raw`, the way any caller reaches what the wrapper does not spell. So no public declaration
+in `dsl/`, `session/`, `repository/` or `service/` takes a `KClass`: a type argument is how an entity
+is named here, everywhere.
 
 **The session is the first argument, not a field**, and that is the shape the confinement rule
 forces. A Mongo collection is a long-lived object a repository can hold; a session belongs to the
