@@ -27,6 +27,13 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   a module README. AGENTS.md has the table.
 - Keep files short and single-purpose and follow SOLID — AGENTS.md spells out what each principle means in this repo. If a change makes a file mix two concerns, split the file in the same change rather than leaving it for later.
 - Coroutines first; when a Java API leaves no choice but an actual thread — `Runtime.addShutdownHook` takes one — write `Thread.ofVirtual().unstarted { }`, never `Thread(…)` and never `startVirtualThread` for a hook. The latter starts immediately, so the hook is registered dead or refused, and the JVM swallows either outcome silently. AGENTS.md has the reasoning and `ContainerService` the spec.
+- A `shared-jpa` query says what it loads. Associations are annotated `LAZY` — Hibernate Reactive
+  has no transparent lazy loading, so an unfetched one throws rather than costing a second select —
+  and the query names what the caller needs with `fetch` / `fetchEach`, or projects the columns and
+  loads no entity. `EAGER` is not the shortcut it looks like: it is the N+1, measured at three
+  secondary fetches for three rows in `FetchJoinTest`. AGENTS.md's Performance section has the rule
+  and `docs/jpa-query-dsl.md` the vocabulary, including why `limit`/`offset`/`page` are refused
+  after a `fetchEach`.
 - Look in `libs/shared-common` before writing a helper, and move one there when a second module wants it — it holds what is reusable across libraries and apps, and depends on nothing but kotlinx. AGENTS.md explains which of its three concurrency types fits a given caller; the short version is that a Java callback cannot take a `Mutex`, so it gets a `Mailbox`.
 - A Ktor integration assumes the resource is not its own: it takes an `instance` as well as a config, closes only what it opened, and can register what it installed with the DI container (`injectable = true`) so a class built by that container is not forced through `call.x`. Anything `AutoCloseable` closes through `CloseGuard` — Ktor's DI closes what it hands out and cannot be told not to, so a second close has to be harmless. AGENTS.md's *Shared code* section has all three rules.
 - New code goes under `com.strange.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.

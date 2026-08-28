@@ -105,6 +105,18 @@ private fun <T : Any> SelectScope<T>.checkSort() {
         )
     }
 
+    // A page is a limit by another name, and a fetched collection makes a limit silently wrong —
+    // the database applies it to the joined rows, so the last owner of the page comes back holding
+    // part of its collection. `QueryScope.limit` carries the measurement.
+    if (joins.collectionFetched) {
+        throw JpaPaginationException(
+            "a paged query cannot fetchEach: the page would be cut across the joined rows, so its " +
+                "last row would hold part of its collection and say nothing. Page the owners here " +
+                "and fetch their collections in a second query off the ids, or project the columns " +
+                "the page shows",
+        )
+    }
+
     // A page takes its size from the request, so these would be silently overruled by it. Refused
     // rather than ignored, the way `orderBy` above is: a call that means nothing should say so.
     if (rowLimit != null || rowOffset != null) {

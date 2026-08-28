@@ -9,6 +9,18 @@ and stays roughly the size it is.
 `docs/jpa-query-dsl.md` is the other half — what a *query* may say. `libs/shared-jpa/README.md` has
 the reasoning behind both.
 
+## Associations are lazy
+
+Annotate every one of them — `@ManyToOne(fetch = FetchType.LAZY)`, `@OneToOne(fetch = LAZY)` — and
+leave `@OneToMany`/`@ManyToMany` at their lazy default. JPA's default for the to-ones is `EAGER`,
+which is a select per distinct owner behind any query returning more than one row.
+
+What makes this a rule rather than advice is that the reactive session has no transparent lazy
+loading, so the two options are not "fast" and "slow": an unfetched lazy association throws, and an
+eager one silently multiplies statements. Neither is something to discover in production. The query
+says what it loads — `fetch`, `fetchEach`, or a projection that loads no entity — and
+`libs/shared-jpa/README.md` has the reasoning under *A query says what it loads*.
+
 ## Which database
 
 Postgres, MySQL and DB2. Hibernate Reactive names none of them: it picks a driver at runtime from
