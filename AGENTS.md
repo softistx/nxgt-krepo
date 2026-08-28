@@ -137,9 +137,48 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 
 Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/shared-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
 
-- **`styles`** — the Jetpack Compose Styles API: component themes, `Modifier.styleable`, moving hard-coded parameters into style attributes.
+- **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/shared-material`**, not background reading; see *Styling a component* below.
 - **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
 - **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
+
+## Styling a component
+
+Every component in `libs/shared-material` is dressed with the **Compose Styles API**
+(`androidx.compose.foundation.style`), not with colour parameters and `Modifier` chains. It ships
+in Compose Multiplatform 1.11.1 — experimental, in `foundation` rather than `material3` — and the
+module opts in once:
+
+```yaml
+settings:
+  kotlin:
+    optIns: [ androidx.compose.foundation.style.ExperimentalFoundationStyleApi ]
+```
+
+The shape a component takes:
+
+- **Its look is a `Style`, in its own file** — `button/ButtonStyles.kt` holds `buttonStyle(variant,
+  color)` and `button/Button.kt` holds no colours at all. A style reaches theme tokens through the
+  `StyleScope` extensions in `theme/StyleTokens.kt` (`colors`, `scheme`, `spacing`, `radii`,
+  `motion`), which read the `CompositionLocal`s at resolve time rather than closing over whatever
+  was in scope when the style was built.
+- **Interaction states are declared, not wired.** `pressed { }`, `hovered { }`, `focused { }`,
+  `disabled { }` sit inside the style, and `animate { }` inside those makes the transitions free.
+  This replaces `animateColorAsState`/`animateFloatAsState` at the call site — a `Modifier.pressScale`
+  helper was written here and deleted the same day the API landed, because the style block does it
+  better and in one place.
+- **The signature carries no styling parameters.** No `backgroundColor`, no `shape`, no
+  `contentPadding`. Instead one `style: Style = Style` parameter, defaulting to exactly `Style`
+  (the companion, which is the empty style) and applied *last* so a caller's override wins:
+  `Modifier.styleable(styleState, base, style)`.
+- **Presentation state belongs to the component.** `rememberUpdatedStyleState(interactionSource) {
+  it.isEnabled = enabled }` gives pressed, hovered and focused for nothing; the caller passes
+  business state and never remembers a boolean for a visual.
+
+The `styles` skill has the full vocabulary, the state-animation guide and the migration workflow.
+Two things it does not say, both established here: the API is in `foundation`, so grepping
+`material3` for it finds nothing; and `styleable` is a function, so it compiles into
+`StyleModifierKt` and grepping class names for it also finds nothing. Either empty grep reads as
+proof of absence and is not.
 
 ## Finding and installing a skill
 
