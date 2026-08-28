@@ -44,7 +44,7 @@ sealed interface Joins<T : Any> : Filters<T> {
     /**
      * Joins a to-many association, once per element.
      *
-     * The element type comes out of `KProperty1<T, out Collection<E>>` and needs no reflection at
+     * The element type comes out of `KProperty1<T, Collection<E>>` and needs no reflection at
      * runtime — the compiler already knows what a `List<Line>` holds. A row per element is what a
      * join means, so a query that selects the owning entity through one wants `distinct` unless it
      * wants duplicates.
