@@ -20,8 +20,13 @@ private data class OrderEvent(
 
 /**
  * Publishing before anyone is listening is a message nobody gets — which is pub/sub working as
- * designed, and also the trap in testing it. Every scenario here publishes until the server says a
- * subscriber was there, which is what `publish`'s return value is for.
+ * designed, and also the trap in testing it. A scenario with one subscriber publishes until the
+ * server says somebody heard it, which is what `publish`'s return value is for.
+ *
+ * **That probe does not generalise to two subscribers.** `publish` returning 1 of an expected 2 is
+ * not a failed probe — it already delivered to the one that was ready, so looping leaves the faster
+ * subscriber a message ahead of the slower one. `PUBSUB NUMSUB` asks how many are registered without
+ * sending anything, which is the probe that works for any number of them.
  */
 class RedisTopicTest :
     FeatureSpec({
@@ -44,19 +49,23 @@ class RedisTopicTest :
 
             scenario("every message goes to every subscriber, in order") {
                 RedisTestServer.withRedis { redis ->
-                    val orders = RedisTopic(redis, "orders", ValueCodec.string)
+                    // A channel of its own, so the count below is this scenario's subscribers and
+                    // not a connection another scenario has not finished closing.
+                    val orders = RedisTopic(redis, "orders-fanout", ValueCodec.string)
+
+                    suspend fun subscribers(): Long = redis.commands.pubsubNumsub(orders.channel)[orders.channel] ?: 0L
 
                     coroutineScope {
                         val one = async { orders.subscribe().take(3).toList() }
                         val two = async { orders.subscribe().take(3).toList() }
 
-                        // Wait for both, not just the first — two subscribers, count of two.
-                        while (orders.publish("warmup") < 2L) delay(20)
+                        // Wait for both to be registered, without publishing to do it.
+                        while (subscribers() < 2L) delay(20)
 
-                        listOf("a", "b").forEach { orders.publish(it) }
+                        listOf("a", "b", "c").forEach { orders.publish(it) }
 
-                        one.await() shouldBe listOf("warmup", "a", "b")
-                        two.await() shouldBe listOf("warmup", "a", "b")
+                        one.await() shouldBe listOf("a", "b", "c")
+                        two.await() shouldBe listOf("a", "b", "c")
                     }
                 }
             }
