@@ -4,7 +4,6 @@ import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
-import org.hibernate.query.criteria.HibernateCriteriaBuilder
 
 /**
  * What every selection has: restrictions, an order, and something to take paths from.
@@ -20,8 +19,6 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder
  */
 @JpaDsl
 abstract class QueryScope<T : Any, R : Any> internal constructor(
-    /** Hibernate's builder, for everything this package has not given a name. */
-    val builder: HibernateCriteriaBuilder,
     @PublishedApi internal val query: CriteriaQuery<R>,
     final override val from: Root<T>,
 ) : Joins<T> {

@@ -4,7 +4,6 @@ import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Expression
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
-import org.hibernate.query.criteria.HibernateCriteriaBuilder
 
 /**
  * The `project { }` block, which returns something other than the entity.
@@ -29,12 +28,11 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder
 class ProjectScope<T : Any, R : Any>
     @PublishedApi
     internal constructor(
-        builder: HibernateCriteriaBuilder,
         query: CriteriaQuery<R>,
         from: Root<T>,
         /** The class rows are built into — what `construct` hands to Hibernate. */
         val resultType: Class<R>,
-    ) : QueryScope<T, R>(builder, query, from) {
+    ) : QueryScope<T, R>(query, from) {
         private val groups = mutableListOf<Expression<*>>()
         private val havings = mutableListOf<Predicate>()
 

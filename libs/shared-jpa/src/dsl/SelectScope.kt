@@ -2,7 +2,6 @@ package com.strange.jpa.dsl
 
 import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Root
-import org.hibernate.query.criteria.HibernateCriteriaBuilder
 
 /**
  * The `select { }` block, which returns the entity itself.
@@ -25,7 +24,6 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder
 class SelectScope<T : Any>
     @PublishedApi
     internal constructor(
-        builder: HibernateCriteriaBuilder,
         query: CriteriaQuery<T>,
         from: Root<T>,
-    ) : QueryScope<T, T>(builder, query, from)
+    ) : QueryScope<T, T>(query, from)
