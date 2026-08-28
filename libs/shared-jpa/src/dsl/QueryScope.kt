@@ -23,7 +23,12 @@ abstract class QueryScope<T : Any, R : Any> internal constructor(
     final override val from: Root<T>,
 ) : Joins<T> {
     private val restrictions = mutableListOf<Predicate>()
-    private val ordering = mutableListOf<Order>()
+
+    /**
+     * The sort keys, reachable so `com.strange.jpa.page` can add its own and refuse a paged query
+     * that added any here — a cursor cannot be read back out of an `orderBy` expression.
+     */
+    internal val ordering = mutableListOf<Order>()
 
     /** The root of the query, for the Criteria this does not wrap. */
     val root: Root<T> get() = from
