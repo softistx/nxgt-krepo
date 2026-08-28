@@ -1,13 +1,17 @@
 package com.strange.jpa.repository
 
 import com.strange.common.page.Page
+import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.dsl.JpaSpec
 import com.strange.jpa.dsl.SelectScope
 import com.strange.jpa.dsl.eq
 import com.strange.jpa.dsl.oneOf
+import com.strange.jpa.dsl.project
+import com.strange.jpa.dsl.select
 import com.strange.jpa.page.PageRequest
 import com.strange.jpa.page.page
 import com.strange.jpa.session.JpaSession
+import kotlinx.coroutines.future.await
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -43,6 +47,13 @@ import kotlin.reflect.KProperty1
  * [id] is a property reference rather than a getter function because both halves are needed: the
  * value, for a caller holding an instance, and the *name*, for the queries below that restrict on
  * the identifier column. `Purchase::id` gives both with no `kotlin-reflect` on the classpath.
+ *
+ * **The queries go through `session.raw`.** `find<Order>(id)` and `select<Purchase>()` are the
+ * library's vocabulary and they are `reified`, which is exactly what this class cannot be: inside
+ * one, `T` is not reifiable. So the value-typed forms underneath them are reached the way any
+ * advanced caller reaches what the wrapper does not spell — through [JpaSession.raw]. That keeps the
+ * wrapper's surface the reified vocabulary and nothing else, and it costs this one class an
+ * `await()` that its own methods still hide from callers.
  *
  * [entity] is a `KClass` because a class cannot have a `reified` type parameter — inside one, `T` is
  * not reifiable and `select<T>()` does not compile, which is the whole reason this needs to be told
@@ -88,13 +99,13 @@ open class JpaRepository<T : Any, ID : Any>(
     open suspend fun findById(
         session: JpaSession,
         value: ID,
-    ): T? = session.find(entity, value)
+    ): T? = session.raw.find(entity.java, value).await()
 
-    /** [findById], throwing [com.strange.jpa.JpaNotFoundException] instead of answering null. */
+    /** [findById], throwing [JpaNotFoundException] instead of answering null. */
     open suspend fun requireById(
         session: JpaSession,
         value: ID,
-    ): T = session.get(entity, value)
+    ): T = findById(session, value) ?: throw JpaNotFoundException(entity, value)
 
     open suspend fun findByIds(
         session: JpaSession,
@@ -133,7 +144,10 @@ open class JpaRepository<T : Any, ID : Any>(
             session.raw.factory.metamodel
                 .entity(entity.java)
                 .idType.javaType.kotlin as KClass<ID>
-        return session.project(entity, idType) { this[id] }.where { this[id] oneOf values }.list()
+        return session.raw
+            .project(entity, idType) { this[id] }
+            .where { this[id] oneOf values }
+            .list()
     }
 
     // ─── Writes ───────────────────────────────────────────────────────────────
@@ -189,7 +203,7 @@ open class JpaRepository<T : Any, ID : Any>(
     private fun query(
         session: JpaSession,
         spec: JpaSpec<T>? = null,
-    ): SelectScope<T> = session.select(entity).let { if (spec == null) it else it.where(spec) }
+    ): SelectScope<T> = session.raw.select(entity).let { if (spec == null) it else it.where(spec) }
 }
 
 /**

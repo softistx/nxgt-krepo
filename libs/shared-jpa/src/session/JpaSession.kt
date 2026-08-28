@@ -25,7 +25,6 @@ import kotlinx.coroutines.future.await
 import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.hibernate.query.criteria.JpaCriteriaInsert
 import org.hibernate.reactive.stage.Stage
-import kotlin.reflect.KClass
 
 /**
  * A Hibernate Reactive session with Kotlin's calling convention: every operation suspends, and none
@@ -72,26 +71,6 @@ class JpaSession internal constructor(
         id: Any,
         lock: LockModeType,
     ): T? = raw.find(T::class.java, id, lock).await()
-
-    /**
-     * The same, with the entity as a value rather than as a type argument.
-     *
-     * Internal, because `find<Order>(id)` is the spelling this library offers and one way to say a
-     * thing is enough. It exists for the caller that cannot reify — a class generic in its entity,
-     * of which [com.strange.jpa.repository.JpaRepository] is this module's one — and it stays here
-     * rather than in that class so the promise that nothing hands back a `CompletionStage` is kept
-     * in a single place.
-     */
-    internal suspend fun <T : Any> find(
-        type: KClass<T>,
-        id: Any,
-    ): T? = raw.find(type.java, id).await()
-
-    /** [find] by value, or [JpaNotFoundException]. */
-    internal suspend fun <T : Any> get(
-        type: KClass<T>,
-        id: Any,
-    ): T = find(type, id) ?: throw JpaNotFoundException(type, id)
 
     // ─── Writing ──────────────────────────────────────────────────────────────
 
@@ -174,22 +153,6 @@ class JpaSession internal constructor(
 
     /** A criteria `insert` — `insert … select`, or `insert … values`. */
     fun mutate(criteria: JpaCriteriaInsert<*>): JpaMutation = raw.mutate(criteria)
-
-    /** [select] with the entity as a value rather than as a type argument. */
-    internal fun <T : Any> select(
-        type: KClass<T>,
-        block: SelectScope<T>.() -> Unit = {},
-    ): SelectScope<T> = raw.select(type, block)
-
-    /** [project] with both types as values. */
-    internal fun <T : Any, R : Any> project(
-        type: KClass<T>,
-        result: KClass<R>,
-        block: ProjectScope<T, R>.() -> Selection<R>,
-    ): ProjectScope<T, R> = raw.project(type, result, block)
-
-    /** [delete] with the entity as a value rather than as a type argument. */
-    internal fun <T : Any> delete(type: KClass<T>): DeleteScope<T> = deleteOn(raw, type)
 
     /** A bulk HQL `update` or `delete`. */
     fun mutate(hql: String): JpaMutation = raw.mutate(hql)
