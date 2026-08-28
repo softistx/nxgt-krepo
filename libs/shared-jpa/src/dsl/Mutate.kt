@@ -47,7 +47,8 @@ inline fun <reified T : Any> Stage.QueryProducer.delete(): DeleteScope<T> = dele
  * [com.strange.jpa.dsl.select] has both forms: a caller generic in its entity has a `KClass` and no
  * way to reify it.
  */
-fun <T : Any> updateOn(
+@PublishedApi
+internal fun <T : Any> updateOn(
     producer: Stage.QueryProducer,
     type: KClass<T>,
     block: UpdateScope<T>.() -> Unit,
@@ -57,7 +58,8 @@ fun <T : Any> updateOn(
 }
 
 /** Builds the `delete`, wherever it was called from. */
-fun <T : Any> deleteOn(
+@PublishedApi
+internal fun <T : Any> deleteOn(
     producer: Stage.QueryProducer,
     type: KClass<T>,
 ): DeleteScope<T> {

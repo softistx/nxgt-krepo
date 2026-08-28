@@ -31,12 +31,11 @@ inline fun <reified T : Any, reified R : Any> Stage.QueryProducer.project(
 ): ProjectScope<T, R> = project(T::class, R::class, block)
 
 /**
- * The same, with both types as values rather than as type arguments.
- *
- * For a caller generic in its entity — a repository projecting the identifier column, say, where the
- * identifier's type came from Hibernate's metamodel and not from a type argument.
+ * The same, with both types as values — how [project] is implemented, and how a caller generic in
+ * its entity reaches it. Internal for the reason [com.strange.jpa.dsl.select]'s twin is.
  */
-fun <T : Any, R : Any> Stage.QueryProducer.project(
+@PublishedApi
+internal fun <T : Any, R : Any> Stage.QueryProducer.project(
     type: KClass<T>,
     result: KClass<R>,
     block: ProjectScope<T, R>.() -> Selection<R>,
