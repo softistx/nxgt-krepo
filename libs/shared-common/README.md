@@ -14,6 +14,7 @@ waiting for its second commit.
 com.strange.common.coroutines      CoroutineSafeMap, KeyedMutex, Mailbox
 com.strange.common.lifecycle       CloseGuard
 com.strange.common.serialization   lenientJson, decodeValue, typeName
+com.strange.common.page            Page and PageInfo, the shape both stores answer with
 ```
 
 ## Closing once
@@ -113,6 +114,18 @@ What is *not* here is a shared codec interface. `ValueCodec` in shared-redis is 
 because a Redis value should be readable by `redis-cli`; `KafkaSerde` has to expose Kafka's own
 `Serializer` and `Deserializer`; `AmqpCodec` carries a content type. They look alike from a distance
 and are three different things up close.
+
+## One page, whichever store it came from
+
+`Page<T>` is a list and a Relay-shaped `PageInfo` — `startCursor`, `endCursor`, `hasNextPage`,
+`hasPreviousPage`. `shared-mongo`'s `findPage` and `shared-jpa`'s `selectPage` both answer with it,
+and that is the whole reason it is here: a route that pages over either store maps the data and
+leaves the cursors alone, with `Page.map`, and does not care which one it was.
+
+What is *not* here is the request. Mongo's `PaginationOptions` carries a filter and a sort as raw
+Mongo JSON because that is how they arrive from an HTTP client; JPA's `PageRequest` carries neither,
+because both are said in Kotlin in the query block. They look alike from a distance and are two
+different things up close — the same reason there is no shared codec interface below.
 
 ## What belongs here
 

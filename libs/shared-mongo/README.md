@@ -47,7 +47,8 @@ a *value* — `Filters.gt("createdAt", now)`, an `Updates.set`, an audit stamp.
 com.strange.mongo            client, database and session helpers — collection(), withTransaction()
 com.strange.mongo.codec      codecs the driver has no built-in for, and the registry that carries them
 com.strange.mongo.query      what a collection is asked to do — filters, indexes, find/insert/update/delete
-com.strange.mongo.page       Page, PageInfo, PaginationOptions and the cursor-paginated find
+com.strange.mongo.page       PaginationOptions and the cursor-paginated find
+                             (Page and PageInfo are shared-common's — shared-jpa answers with the same two)
 com.strange.mongo.repository MongoCrudRepository — one collection, as an object
 com.strange.mongo.service    MongoCrudService — the write flow over a repository
 com.strange.mongo.audit      AuditMetadata and Audited — who wrote a document, and when

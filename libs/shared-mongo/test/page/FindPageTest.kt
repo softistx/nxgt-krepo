@@ -1,5 +1,6 @@
 package com.strange.mongo.page
 
+import com.strange.common.page.PageInfo
 import com.strange.mongo.InvalidPaginationException
 import com.strange.mongo.MongoTestCluster
 import com.strange.mongo.Note
