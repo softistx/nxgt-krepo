@@ -1,6 +1,7 @@
 package com.strange.jpa.repository
 
 import com.strange.common.page.Page
+import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.dsl.JpaSpec
 import com.strange.jpa.dsl.SelectScope
@@ -11,6 +12,7 @@ import com.strange.jpa.dsl.select
 import com.strange.jpa.page.PageRequest
 import com.strange.jpa.page.page
 import com.strange.jpa.session.JpaSession
+import jakarta.persistence.Entity
 import kotlinx.coroutines.future.await
 import kotlin.jvm.internal.CallableReference
 import kotlin.reflect.KClass
@@ -223,9 +225,25 @@ open class JpaRepository<T : Any, ID : Any>(
  * what makes `Ticket::id` a repository over `Ticket` when a `@MappedSuperclass` declared the id.
  */
 @Suppress("UNCHECKED_CAST")
-private fun <T : Any, ID : Any> entityOf(id: KProperty1<T, ID>): KClass<T> =
-    (id as? CallableReference)?.owner as? KClass<T>
-        ?: throw IllegalArgumentException(
-            "cannot tell which entity $id belongs to: a repository is built from a property " +
-                "reference such as Purchase::id, not from an arbitrary function",
+private fun <T : Any, ID : Any> entityOf(id: KProperty1<T, ID>): KClass<T> {
+    val owner =
+        (id as? CallableReference)?.owner as? KClass<T>
+            ?: throw JpaMappingException(
+                "cannot tell which entity $id belongs to: a repository is built from a property " +
+                    "reference written out, such as Purchase::id — not from one obtained reflectively " +
+                    "or built by hand, which carries no owner",
+            )
+
+    // The reference names whichever class it was written on, which is what makes `Ticket::id` a
+    // repository over Ticket when a @MappedSuperclass declared the id — and is also how
+    // `JpaRepository(Keyed::id)` type-checks while naming a class no table belongs to. Left
+    // unchecked, that surfaces on the first query as a Hibernate UnknownEntityTypeException from
+    // inside a CompletionStage, which is the shape this module exists to prevent.
+    if (!owner.java.isAnnotationPresent(Entity::class.java)) {
+        throw JpaMappingException(
+            "${owner.simpleName} is not an @Entity, so there is no table to build a repository over: " +
+                "name the entity that declares the mapping, not the class the property was declared on",
         )
+    }
+    return owner
+}

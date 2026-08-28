@@ -81,6 +81,20 @@ data class JpaConfig(
     /** Anything else, applied last, overriding everything above. */
     val properties: Map<String, String> = emptyMap(),
 ) {
+    init {
+        // `PageRequest` one directory away validates in `init` for the same reason: a value that
+        // cannot work should fail where it was written, not where it is used. This one matters more
+        // than most — `poolSize` is the single setting written unconditionally rather than left to
+        // the driver, so a zero from `getenv("POOL_SIZE")?.toInt() ?: 0` starts a service cleanly
+        // and hangs it on the first request, waiting on a pool that will never hand a connection
+        // out. There is no exception anywhere to find afterwards.
+        require(poolSize >= 1) { "poolSize is $poolSize: a pool of none never hands out a connection" }
+        statementCacheSize?.let { require(it >= 0) { "statementCacheSize is $it, which cannot be negative" } }
+        batchSize?.let { require(it >= 1) { "batchSize is $it: a batch of none writes nothing" } }
+        connectTimeout?.let { require(it.isPositive()) { "connectTimeout is $it, which would give up before trying" } }
+        idleTimeout?.let { require(it.isPositive()) { "idleTimeout is $it, which would close every connection at once" } }
+    }
+
     internal fun settings(): Map<String, String> =
         buildMap {
             put("hibernate.connection.url", uri)
