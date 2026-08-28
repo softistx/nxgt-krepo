@@ -70,7 +70,7 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
      * points at, so `page` can only resume along keys named this way. Without a `page` it is simply
      * an ordering.
      */
-    fun <V : Comparable<in V>> sortBy(
+    fun <V : Comparable<V>> sortBy(
         property: KProperty1<T, V>,
         descending: Boolean = false,
     ): SELF = self.also { keys += SortKey(property, ascending = !descending) }
