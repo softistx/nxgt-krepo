@@ -27,16 +27,13 @@ import kotlin.reflect.KProperty1
 @JpaDsl
 sealed interface Joins<T : Any> : Filters<T> {
     /**
-     * The joins taken so far, by attribute name — the DSL's own bookkeeping, which memoizes so that
-     * asking for the same association twice gives back one join rather than two.
+     * Where this scope remembers the joins it has taken — see [JoinRegistry].
      *
-     * Public because a sealed interface has nowhere else to put shared state: Kotlin allows neither
-     * `internal` nor `protected` on an interface member, and the scopes that implement this already
-     * have a superclass each. Nothing outside the DSL should touch it, and emptying it produces a
-     * query with the duplicate join this exists to prevent — but the type system cannot say so here,
-     * so the sentence has to.
+     * A sealed interface has nowhere to put shared state that is not public: Kotlin allows neither
+     * `internal` nor `protected` on an interface member. So the state lives one level down, in a
+     * class that *can* keep it `internal`, and what is public here is a type with nothing on it.
      */
-    val taken: MutableMap<String, JoinScope<T, *>>
+    val joins: JoinRegistry<T>
 
     /**
      * Joins a to-one association, and answers with something to index.
@@ -68,7 +65,7 @@ sealed interface Joins<T : Any> : Filters<T> {
         name: String,
         type: JoinType,
     ): JoinScope<T, V> {
-        val existing = taken[name]
+        val existing = joins.taken[name]
         if (existing != null) {
             // An IllegalStateException rather than a JpaException, deliberately: the family is
             // scoped to what this library knows and Hibernate does not about the *data*, and asking
@@ -79,6 +76,6 @@ sealed interface Joins<T : Any> : Filters<T> {
             }
             return existing as JoinScope<T, V>
         }
-        return JoinScope<T, V>(from.join(name, type), type).also { taken[name] = it }
+        return JoinScope<T, V>(from.join(name, type), type).also { joins.taken[name] = it }
     }
 }

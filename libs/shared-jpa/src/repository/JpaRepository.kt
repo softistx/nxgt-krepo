@@ -3,6 +3,7 @@ package com.strange.jpa.repository
 import com.strange.common.page.Page
 import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaNotFoundException
+import com.strange.jpa.JpaOutsideTransactionException
 import com.strange.jpa.dsl.JpaSpec
 import com.strange.jpa.dsl.SelectScope
 import com.strange.jpa.dsl.eq
@@ -167,16 +168,40 @@ open class JpaRepository<T : Any, ID : Any>(
 
     // ─── Writes ───────────────────────────────────────────────────────────────
 
+    /**
+     * Every write here refuses a session with no transaction, with
+     * [JpaOutsideTransactionException].
+     *
+     * A session flushes at the end of a unit of work if and only if there is a transaction, so a
+     * `persist` inside a plain `session { }` reaches no table — no error, no warning, no row — and
+     * `deleteById` would answer `true` for a row it did not delete. The guard used to live only in
+     * [JpaCrudService], one layer above, while this class is public, `open`, and what the specs and
+     * a custom subclass use directly. The reads are unguarded, because a read outside a transaction
+     * is an ordinary thing to want.
+     */
+    private fun transactional(
+        session: JpaSession,
+        operation: String,
+    ) {
+        if (session.raw.currentTransaction() == null) {
+            throw JpaOutsideTransactionException(operation, entity)
+        }
+    }
+
     /** Makes it managed. It reaches the database when the session flushes, not here. */
     open suspend fun insert(
         session: JpaSession,
         instance: T,
-    ): T = instance.also { session.persist(it) }
+    ): T {
+        transactional(session, "insert")
+        return instance.also { session.persist(it) }
+    }
 
     open suspend fun insertAll(
         session: JpaSession,
         instances: Collection<T>,
     ): List<T> {
+        transactional(session, "insertAll")
         // `toTypedArray` is reified and T is not; `persist` takes `Any`, so the array is built as one.
         val all = instances.toList()
         session.persist(*Array<Any>(all.size) { all[it] })
@@ -187,12 +212,16 @@ open class JpaRepository<T : Any, ID : Any>(
     open suspend fun update(
         session: JpaSession,
         instance: T,
-    ): T = session.merge(instance)
+    ): T {
+        transactional(session, "update")
+        return session.merge(instance)
+    }
 
     open suspend fun delete(
         session: JpaSession,
         instance: T,
     ) {
+        transactional(session, "delete")
         session.remove(instance)
     }
 
@@ -207,13 +236,19 @@ open class JpaRepository<T : Any, ID : Any>(
     open suspend fun deleteById(
         session: JpaSession,
         value: ID,
-    ): Boolean = findById(session, value)?.also { delete(session, it) } != null
+    ): Boolean {
+        transactional(session, "deleteById")
+        return findById(session, value)?.also { delete(session, it) } != null
+    }
 
     /** How many of [values] were actually there. Loads them first, for the reason [deleteById] does. */
     open suspend fun deleteByIds(
         session: JpaSession,
         values: Collection<ID>,
-    ): Int = findByIds(session, values).onEach { delete(session, it) }.size
+    ): Int {
+        transactional(session, "deleteByIds")
+        return findByIds(session, values).onEach { delete(session, it) }.size
+    }
 
     private fun query(
         session: JpaSession,
