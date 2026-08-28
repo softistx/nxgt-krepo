@@ -516,7 +516,9 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/shared-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
   | `libs/shared-koin/README.md` | The Koin modules — which side creates the connection, which adopts it, and why two of them have no `onClose` |
-  | `libs/shared-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins |
+  | `libs/shared-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
+  | `docs/jpa-query-dsl.md` | What a shared-jpa query may say — the operators, joins, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
+  | `docs/jpa-mapping.md` | What a shared-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
@@ -527,7 +529,8 @@ the same each time, and the mistakes are the same each time too.
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
   the signal to keep appending. `libs/openapi-generator/README.md` reached 394 lines before its
   reference half moved out; splitting on *audience* rather than on length is what made the seam
-  obvious.
+  obvious. `libs/shared-jpa/README.md` reached 921 and split the same way, into the query vocabulary
+  and the mapping vocabulary — the two halves that grow — leaving the reasoning behind.
 - **Keep files short and single-purpose.** One file holds one concern; when two things could be
   separated cleanly, separate them. A file growing past roughly 150 lines is a signal to split it,
   not a threshold to argue with — split by responsibility, never by line count.
