@@ -1,6 +1,8 @@
 package com.strange.jpa.session
 
 import com.strange.jpa.JpaNotFoundException
+import com.strange.jpa.dsl.SelectScope
+import com.strange.jpa.dsl.select
 import com.strange.jpa.query.JpaMutation
 import com.strange.jpa.query.JpaQuery
 import com.strange.jpa.query.mutate
@@ -101,6 +103,9 @@ class JpaSession internal constructor(
 
     /** An HQL query returning [R] — an entity, or a projection. */
     inline fun <reified R : Any> query(hql: String): JpaQuery<R> = raw.query(hql)
+
+    /** A query built from the entity's own properties instead of an HQL string. */
+    inline fun <reified R : Any> select(block: SelectScope<R>.() -> Unit): JpaQuery<R> = raw.select(block)
 
     /** SQL, for what HQL cannot say. Remember it is not schema-qualified for you. */
     inline fun <reified R : Any> nativeQuery(sql: String): JpaQuery<R> = raw.nativeQuery(sql)
