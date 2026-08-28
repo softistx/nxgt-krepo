@@ -15,7 +15,10 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   and the dividers — reuse and customise through its `*Defaults`/`*Colors` parameters rather than
   rebuilding from `Row` and `Modifier.background`, which throws away the ripple, the touch target
   and the semantics. `material3-compose`'s `references/components.md` is the list. AGENTS.md's
-  *Building a component* has the rule and the shape of a wrapper.
+  *Building a component* has the rule and the shape of a wrapper — including that a claim about
+  pixels is measured in pixels: `ImageComposeScene` renders a composable headlessly in
+  milliseconds, and `libs/shared-material/test@jvm/` holds the two specs that caught what the eye
+  did not.
 - **`styles`** is the pattern for what Material 3 cannot express, not background reading: a component's look is a `Style` in its own file, its interaction states are `pressed`/`hovered`/`disabled` blocks with `animate` inside them, and its signature carries one `style: Style = Style` instead of colour and shape parameters. AGENTS.md's *Styling a component* has the rules. **`adaptive`** and **`edge-to-edge`** come from the same catalogue and describe *Jetpack* Compose — check any API they name against `material3-compose`'s `references/components.md`, and read the two ways that search goes wrong before concluding something is missing.
 - **`skill-from-docs`** to add a skill for another library or tool, or to refresh a cached one. It owns the token budget rules that every skill here follows. To pull one from Google's catalogue instead, `android skills add <name> --project=. --agent=common` — the `--agent=common` is what puts it in `.agents/skills/` rather than in your home directory. AGENTS.md's *Finding and installing a skill* has the three sources.
 - **`large-feature-branch-workflow`** when a feature needs more than one PR.

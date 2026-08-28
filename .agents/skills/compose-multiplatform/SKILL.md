@@ -77,6 +77,14 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
 
   Both are needed: the Android unit-test run is a second JVM run with its own classpath, and
   omitting `@android` leaves it discovering nothing while `@jvm` passes.
+- **A jvm test can render a composable, with one extra test dependency.**
+  `ImageComposeScene(width, height)` + `scene.setContent { }` + `scene.render(nanos)` gives a
+  bitmap with no window, and `scene.sendPointerEvent(PointerEventType.Enter, offset)` drives hover
+  and press — enough to measure a hover colour or a collapsed button's box on a headless Linux
+  host. It compiles against `$compose.ui` alone but **fails at runtime with
+  `LibraryLoadException: Cannot find libskiko-linux-x64.so.sha256`** until
+  `$compose.desktop.currentOs` is added under `test-dependencies@jvm`. Advance the clock in several
+  `render(t)` calls before sampling: everything worth measuring is animating.
 - **The toolchain provisions its own Android SDK.** It downloads `cmdline-tools` and the
   `compileSdk` platform into `~/.cache/JetBrains/Kotlin/`; `ANDROID_HOME` is not consulted and
   need not be set. The default `compileSdk` is 37 and it is fetched on first build.

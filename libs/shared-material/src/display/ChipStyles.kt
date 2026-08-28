@@ -33,6 +33,7 @@ fun chipColors(hovered: Boolean): SelectableChipColors {
     val scheme = MaterialTheme.colorScheme
     val motion = StrangeTheme.motion
     val tint = scheme.onSurface.copy(alpha = HOVER_STATE_LAYER_ALPHA)
+    val selectedTint = scheme.onSecondaryContainer.copy(alpha = HOVER_ON_FILL_ALPHA)
     val container by animateColorAsState(
         targetValue = if (hovered) tint else Color.Transparent,
         animationSpec = motion.effects(),
@@ -40,7 +41,11 @@ fun chipColors(hovered: Boolean): SelectableChipColors {
     )
     val selectedContainer by animateColorAsState(
         targetValue =
-            if (hovered) tint.compositeOver(scheme.secondaryContainer) else scheme.secondaryContainer,
+            if (hovered) {
+                selectedTint.compositeOver(scheme.secondaryContainer)
+            } else {
+                scheme.secondaryContainer
+            },
         animationSpec = motion.effects(),
         label = "chipSelectedContainer",
     )
@@ -62,5 +67,15 @@ val chipStyle: Style =
         pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
     }
 
-/** Material's state-layer opacity for a hovered surface. */
+/** Material's state-layer opacity for a hovered surface, over a container that is transparent. */
 private const val HOVER_STATE_LAYER_ALPHA = 0.08f
+
+/**
+ * And double that over one that is filled.
+ *
+ * Not a fudge — a measurement. A selected chip is the one that was just clicked, so it already
+ * wears Material's focus layer; 8 % on top of that moved the pixel by 0.068 while the same 8 % over
+ * a transparent container moved it by 0.145. Visible in one place and not the other, which is
+ * precisely how it was reported. `ChipHoverTest` renders both and holds the floor.
+ */
+private const val HOVER_ON_FILL_ALPHA = 0.16f

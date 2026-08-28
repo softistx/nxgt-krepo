@@ -95,6 +95,10 @@ a `ButtonGroupScope`. Two different things should not share a name.
 pane on a wide screen too. Its label becomes the icon's `contentDescription` when it collapses, so
 the button never goes silent.
 
+**Collapsed, it is an `IconButton`** — round, 40 × 40, M3's own metrics — not a pill with the label
+taken out. The two forms are two components and `AnimatedContent` morphs between them.
+`ResponsiveButtonTest` renders it and measures the box: 40 × 40 collapsed, 130 × 40 expanded.
+
 ## Display
 
 | Component | Parameters | Story |
@@ -118,6 +122,13 @@ hover among them — M3's own source carries the `TODO(…): Support other state
 so `chipColors(hovered)` adds the state layer M3 would have, composited over whichever container the
 chip is already wearing and faded on the effects axis. A chip with no `onClick` does not light up,
 because it does nothing.
+
+The tint is **8 % over a transparent container and 16 % over a filled one**, which looks like a
+fudge and is a measurement. A selected chip in a real screen is the one that was just clicked, so it
+already wears Material's focus layer; a second 8 % on top of that shifts the pixel by 0.068 while
+the same 8 % over a transparent container shifts it by 0.145 — visible in one place and not the
+other, which is exactly how it was reported. `ChipHoverTest` renders both cases and holds the
+floor.
 
 `Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
 `AnimatedVisibility` for the caller to write. `EmptyState` fades in for the same reason, and

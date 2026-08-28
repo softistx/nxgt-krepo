@@ -29,6 +29,9 @@ test-dependencies:
 # without it that run discovers zero tests and fails with exit code 2.
 test-dependencies@jvm:
   - $libs.kotest.runner.junit5
+  # Skiko's native library, so a jvm test can render a composable into a bitmap with
+  # ImageComposeScene. Without it the class initialiser fails on a missing libskiko-*.so.
+  - $compose.desktop.currentOs
 
 test-dependencies@android:
   - $libs.kotest.runner.junit5

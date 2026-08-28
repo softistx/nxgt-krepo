@@ -169,6 +169,14 @@ The shape of a wrapper:
 - **Build from primitives only when M3 has nothing.** `Alert`, `EmptyState`, `Skeleton` and
   `ResponsiveButton` are ours because Material 3 has no equivalent, and each says so in its KDoc.
 
+A claim about **pixels is measured in pixels.** `ImageComposeScene` renders a composable into a
+bitmap with no window, in milliseconds, on a headless host, and `sendPointerEvent` drives hover and
+press. `libs/shared-material/test@jvm/` holds the two specs that exist, and both were written
+because something looked right and was not: a hover state that was invisible on *selected* chips
+because they already wear the focus layer, and a collapsed `ResponsiveButton` that kept the padding
+its label had left behind. Rendering specs are jvm-only — skiko's native library comes from
+`$compose.desktop.currentOs` under `test-dependencies@jvm`.
+
 ## Styling a component
 
 What is left after M3 has taken colour, shape and padding is dressed with the **Compose Styles
