@@ -18,6 +18,16 @@ import kotlin.reflect.KProperty1
  *
  * A property only names a column of the entity being selected. Anything else — a joined column, a
  * function, an aggregate — is a selection, which is what the mixture is for.
+ *
+ * **Above four columns, write every column as a path**: `this[Purchase::reference]` rather than
+ * `Purchase::reference`. A fifth column mixing the two forms is an overload-resolution error listing
+ * every candidate here, and this is the sentence that answers it. `ProjectDslTest` pins the escape.
+ *
+ * The cliff is arithmetic rather than an omission, and it is why this file stops where it does: a
+ * mixture of two forms over n columns is 2ⁿ − 1 declarations, so four columns cost 15 and reaching
+ * seven the same way would cost 221 more. Four is where the sugar still pays — it covers the
+ * projections people actually write — and the uniform path form covers everything, at every arity,
+ * with one rule and no overload set to resolve against.
  */
 fun <T : Any, R : Any, A> ProjectScope<T, R>.construct(
     ctor: (A) -> R,
