@@ -46,7 +46,7 @@ fun Product.view(): ProductView =
 @Serializable
 data class ProductPage(
     val data: List<ProductView>,
-    val total: Long,
+    val hasPreviousPage: Boolean,
     val hasNextPage: Boolean,
 )
 

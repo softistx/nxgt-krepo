@@ -12,7 +12,9 @@ com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.t
 com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
 com.strange.jpa.naming     what a column is called when the entity does not say
 com.strange.jpa.scan       reading entities and converters off the classpath
-com.strange.jpa.audit      AuditedEntity, the who-and-when superclass an entity can extend
+com.strange.jpa.repository JpaRepository and JpaSpec — the criteria every entity would repeat
+com.strange.jpa.service    JpaCrudService — create/update/delete with hooks, over a repository
+com.strange.jpa.audit      AuditedEntity, the who-and-when superclass the service stamps
 ```
 
 ```kotlin
@@ -322,8 +324,8 @@ session.query<Purchase>("from Purchase").plan(withBuyer).list()
 ```
 
 An `EntityGraph` is the same idea as a fetch join said as a value rather than inline, and it reaches
-two places a join cannot: `find` — on a stateless session too, which has no second chance at all —
-and more than one level of nesting. Being a value is the third thing: one plan applied to a `find`
+two places a join cannot: `find` — including `JpaRepository.findById` and `requireById`, and a
+stateless session's `get`, which has no second chance at all — and more than one level of nesting. Being a value is the third thing: one plan applied to a `find`
 and to a query cannot disagree about what "a purchase with its buyer" means, and a plan built once at
 startup serves every request. `add`, `subgraphOf` and `subgraphEachOf` are extensions on JPA's own
 `Graph`, so the plan is built by ordinary calls and can be handed around half-built.
@@ -337,6 +339,109 @@ Two refusals are worth knowing here rather than in the vocabulary, because nothi
 - **A fetch has no place in a projection.** `select reference, customer` over a fetched join is a
   `SemanticException`: a fetch says *fill this object in*, and a projection is not returning the
   object to fill. Use a plain `join` there.
+## One entity, as an object
+
+`JpaRepository<T, ID>` is the criteria every entity would otherwise repeat, behind names — what a
+service holds, a test substitutes, and a subclass extends with the two or three queries that are
+actually specific to an entity.
+
+```kotlin
+val purchases = JpaRepository(Purchase::id)
+
+jpa.transaction { session ->
+    purchases.insert(session, Purchase(4, "P-4", 10))
+    purchases.findAll(session) { it[Purchase::total] gt 100L }
+}
+
+class PurchaseRepository : JpaRepository<Purchase, Long>(Purchase::id) {
+    suspend fun findByBuyer(session: JpaSession, name: String) =
+        findAll(session) { it[Purchase::customer][Buyer::name] eq name }
+}
+```
+
+Reads: `findAll`, `findOne`, `findById`, `requireById`, `findByIds`, `findPage`, `count`, `exists`,
+`existsById`, `existingIds`. Writes: `insert`, `insertAll`, `update`, `delete`, `deleteById`,
+`deleteByIds`. Everywhere a restriction is taken it is a `JpaSpec<T>`, which is
+`(Root<T>) -> Predicate?` — a plain function type over Criteria's own root, so a named restriction
+composes with `and`/`or`, folds with `all(…)`, and drops into a hand-written criteria unchanged. A
+spec answering `null` restricts nothing, which is what a filter a request did not ask for should
+mean.
+
+**It is boilerplate removal, not a layer.** `query(session, spec) { criteria, root -> … }` hands back
+the same `CriteriaQuery` and `Root` a caller would have built, so a fetch join, an ordering or a
+second restriction goes there and nothing is hidden. Anything more interesting than the shortcut is
+written against the session beside it.
+
+**Nothing names the entity class, because the property reference already does.** A class cannot have
+a `reified` type parameter — inside one, `T` is not reifiable — so a repository has to learn at
+runtime what it is generic over, and `Purchase::id` carries it. Reading that needs no
+`kotlin-reflect`: a property reference compiles to a `CallableReference` whose owner is a
+`ClassReference` from the standard library. It resolves to the entity the reference *names*, not the
+class that declared the property, which is the answer a repository wants when an identifier comes
+from a `@MappedSuperclass`; a reference naming something that is not an `@Entity` is refused at
+construction rather than on the first query.
+
+**The session is the first argument, not a field**, and that is the shape the confinement rule
+forces. A Mongo collection is a long-lived object a repository can hold; a session belongs to the
+event loop that opened it and does not outlive its block. So the repository is a singleton the
+container builds once and the unit of work arrives per call — which is also what lets two
+repositories share one transaction.
+
+**Every write refuses a session with no transaction.** `session { }` flushes nothing, so a `persist`
+there reaches no table and a `deleteById` would answer `true` for a row it did not delete;
+`JpaOutsideTransactionException` names the operation and the entity instead. The reads are unguarded,
+because reading outside a transaction is an ordinary thing to want.
+
+**`deleteById` loads the row and removes it** rather than issuing a bulk `delete` on the identifier.
+A bulk statement goes straight to the database: no cascade fires, no `@PreRemove` runs, and a copy
+already loaded in this session keeps existing. One extra select buys all three back, and the bulk
+form is still a `createDelete<Purchase>()` away for a caller who has measured.
+
+**`findPage` cuts by `limit` and `offset`**, asks for one row beyond the page to answer *is there
+another*, and leaves the cursors in `PageInfo` null — they belong to keyset pagination, which this is
+not. Offset makes the database walk and discard, so a deep page costs more and a row inserted between
+requests shifts the window. Fine behind a UI over a few hundred rows; for an export or an infinite
+scroll, order by the identifier and resume from the last one seen.
+
+**Stateful sessions only.** A stateless session has no persistence context, so `update` would have
+nothing to merge into and `delete` nothing to cascade from. Bulk loading through one is a job for a
+criteria directly.
+
+## The flow every service repeats
+
+`JpaCrudService<T, ID, C, U>` is create/update/delete with the two parts that differ left as hooks:
+`buildCreate` maps a request into an entity, `applyUpdate` applies one *onto* the managed entity.
+
+```kotlin
+class PurchaseService(principal: String? = null) :
+    JpaCrudService<Purchase, Long, NewPurchase, EditPurchase>(JpaRepository(Purchase::id), principal) {
+    override suspend fun buildCreate(input: NewPurchase) = Purchase(input.id, input.reference)
+    override suspend fun applyUpdate(existing: Purchase, input: EditPurchase) {
+        input.reference?.let { existing.reference = it }
+    }
+}
+```
+
+**An update mutates the managed entity; it does not build a statement.** That is the whole difference
+from `MongoCrudService`, where the hook returns update operators and an empty list means "write
+nothing". Here the persistence context already knows what changed, so a hook that assigns the value a
+column already has writes nothing — Hibernate's dirty check decides, and it is better at it than a
+hook comparing fields.
+
+**`create` and `update` flush.** That assigns a generated identifier and puts a constraint violation
+at the call that caused it rather than at the commit, where nothing can say which input it was. It is
+not a way to catch one create and continue with the next: a failed flush dooms the transaction, so a
+batch import wants a transaction per input, not a `try`/`catch` per input.
+
+**The `after*` hooks run before the commit.** That is the right place for a cascade or an outbox row
+— both are writes in the same transaction, and both are undone with it — and the wrong place for
+anything that leaves the database, because a later rollback cannot unpublish a Kafka message. Send
+those after `transaction { }` returns.
+
+**`deleteAll` tells its hooks which ids were really there**, not which were asked for. `existingIds`
+is one query returning one column, so knowing costs far less than a hook emitting *"Purchase 99
+deleted"* for a row that never existed, in the same transaction that correctly reports `2`.
+
 ## Who wrote this row, and when
 
 ```kotlin
@@ -349,13 +454,14 @@ class Note(@Id var id: Long = 0, var text: String = "") : AuditedEntity()
 the same question whichever store it came from. Mongo nests them under a `metadata` sub-document
 because a document has somewhere to nest; a table does not, so here they are four columns.
 
-**The timestamps are Hibernate's and the principal is yours**, and the split is not arbitrary.
-`@PrePersist` and `@PreUpdate` run inside the flush, so *when* is stamped exactly when a row is
-really written: an update the dirty check turns into a no-op fires neither callback and moves no
-timestamp — which code comparing fields could not have told apart. A spec pins that. Nothing here
-knows who is acting: there is no ambient principal on a Vert.x context and this module reads no
-security context, so `createdBy` and `lastModifiedBy` are assigned by whoever does know, before the
-flush that writes the row.
+**The timestamps are Hibernate's and the principal is the service's**, and the split is not
+arbitrary. `@PrePersist` and `@PreUpdate` run inside the flush, so *when* is stamped exactly when a
+row is really written: an update the dirty check turns into a no-op fires neither callback and moves
+no timestamp — which a service comparing fields could not have told apart. A spec pins that. Only a
+caller knows who is acting — there is no ambient principal on a Vert.x context — so
+`JpaCrudService.stampCreated` and `stampUpdated` fill in the other two, and both are `open` for a
+subclass that records something else. Writing through a session directly leaves them empty, which is
+the honest answer.
 
 One consequence follows and is pinned too: assigning `lastModifiedBy` on a row that changed nothing
 else *is* a change, so `@PreUpdate` fires and `lastModifiedAt` moves. That is the intended reading —
@@ -423,17 +529,18 @@ did not create.
 
 ## Not here
 
-No migrations, no second-level cache, no repository or CRUD layer, and one datasource. The schema
-question in particular deserves its own decision rather than a default chosen here: `SchemaMode`
-exists for tests and scratch databases, not as a migration story.
+No migrations, no second-level cache, and one datasource. The schema question in particular deserves
+its own decision rather than a default chosen here: `SchemaMode` exists for tests and scratch
+databases, not as a migration story.
 
-**No pagination either**, and that is the one that used to be here. Keyset paging needs a query
-object it can rebuild per page and read the sort keys back off, which is a layer above a criteria
-rather than a part of one. `Page` and `PageInfo` still live in `shared-common` for whatever builds
-it; `shared-mongo` has its own.
+**No keyset pagination**, and that is the one that used to be here. Resuming from the previous page's
+sort key needs a query object that can be rebuilt per page and read those keys back off a row, which
+is a layer above a criteria rather than a part of one. `findPage` cuts by `limit` and `offset`
+instead, and says plainly what that costs. For a deep page or a table being written to, order by the
+identifier and resume from the last one seen — three lines against `query(session)`, and the same
+cost at any depth.
 
 There is no query builder of this module's own at all. What a query may say is what JPA Criteria and
 HQL say — subqueries, set operations, window functions, `insert … select` included — and this module
-contributes the names, the terminals and the exceptions. `examples/jpa-shop` shows what a repository
-and a service look like when they are written rather than inherited: about forty lines each, and
-every one of them about products.
+contributes the names, the terminals, the exceptions, and the handful of criteria every entity would
+otherwise repeat.

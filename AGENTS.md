@@ -29,7 +29,7 @@ What exists:
 | `examples/demo-api` | Ktor server implementing a slice of `examples/demo-api/openapi.yaml` |
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
-| `examples/jpa-shop` | A Ktor catalogue over Postgres showing `shared-jpa`'s sessions, Criteria extensions and audit superclass |
+| `examples/jpa-shop` | A Ktor catalogue over Postgres showing `shared-jpa`'s repository, service and audit layer |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
@@ -485,7 +485,8 @@ the same each time, and the mistakes are the same each time too.
   the query needs with `fetch` / `fetchEach`, and where the caller only reads a few columns, project
   instead and load no entity at all — Hibernate packages any result class with a matching
   constructor, so `query<Summary>("select a, b from …")` needs no constructor expression. Where there
-  is no query to join on — `find`, and a stateless `get` — the answer is an entity graph:
+  is no query to join on — `find`, a stateless `get`, and the repository's by-identifier reads —
+  the answer is an entity graph:
   `session.entityGraph<Purchase>().add(…)` is a fetch plan that is also a value, so a `find` and a
   query cannot disagree about what they load. `docs/jpa-criteria.md` has the rules for both,
   including the one nothing enforces: `limit` and `offset` silently truncate whenever a query loads a
