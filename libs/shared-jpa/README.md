@@ -288,7 +288,7 @@ class Summary(val reference: String, val buyer: String)
 session.project<Purchase, Summary> {
     val buyer = join(Purchase::customer)
     where { Purchase::total gt 100L }
-    construct(::Summary, this[Purchase::reference], buyer[Buyer::name])
+    construct(::Summary, Purchase::reference, buyer[Buyer::name])
 }.list()
 ```
 
@@ -298,8 +298,13 @@ compiler check it, so a `Long` column where a `String` is wanted — or two argu
 types in the wrong order — is a compile error naming the constructor that did not fit. The reference
 is not called at runtime; Hibernate still constructs the row reflectively.
 
+**Each column is named by a property, or by a path where a property cannot reach** — a joined
+column, a function, an aggregate. Every mixture of the two is accepted up to four columns, which is
+why there are so many `construct` overloads: a property reference is not a `Selection` and Kotlin has
+no implicit conversion, so a position that takes both has to be two declarations.
+
 A projection of one column needs none of that, since a path is already a selection:
-`project<Purchase, String> { this[Purchase::reference] }`. `groupBy` and `having` are here too, and
+`project<Purchase, String> { this[Purchase::reference] }`. `groupBy` takes a property or a block, and
 `having` is the only place a condition on an aggregate can go — `where` runs before the grouping.
 
 Projections read only the columns they name and put nothing in the persistence context, which is the
