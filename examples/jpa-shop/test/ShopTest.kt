@@ -5,7 +5,9 @@ import com.strange.example.shop.domain.ProductRepository
 import com.strange.example.shop.model.EditProduct
 import com.strange.example.shop.model.NewProduct
 import com.strange.example.shop.model.view
+import com.strange.jpa.scan.scanEntities
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 
@@ -19,6 +21,15 @@ import kotlinx.serialization.json.Json
  */
 class ShopTest :
     FeatureSpec({
+
+        feature("the mapping") {
+            scenario("is found by scanning the domain package, so nothing names the entity class") {
+                // `ShopServer` installs the plugin with `packages(…)` and never mentions `Product`.
+                // The failure mode of a scan is finding nothing and starting perfectly, so the
+                // package name is worth an assertion rather than a comment.
+                scanEntities("com.strange.example.shop.domain") shouldContain Product::class
+            }
+        }
 
         feature("the repository") {
             scenario("knows which entity it is over, with nothing having named the class") {
