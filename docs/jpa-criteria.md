@@ -179,7 +179,7 @@ A graph is a fetch *plan*: what to load, said once and applied where it is neede
 what `fetch` does, so it is not a second spelling of the same thing — it earns its place in three
 places a fetch join does not reach.
 
-- **Loading by identifier.** `find`, `get` and `JpaRepository.findById`/`requireById` have no query
+- **Loading by identifier.** `find` and `get` on either session have no query
   to join on. Both session types take one, and the stateless one needs it most: with no persistence
   context there is nothing to initialise after the fact.
 - **Depth.** `subgraphOf` and `subgraphEachOf` nest as far as the mapping does, where `fetch` stops

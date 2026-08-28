@@ -1,7 +1,5 @@
-package com.strange.jpa.repository
+package com.strange.jpa.criteria
 
-import com.strange.jpa.criteria.and
-import com.strange.jpa.criteria.or
 import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
 
