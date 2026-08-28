@@ -50,7 +50,7 @@ sealed interface Joins<T : Any> : Filters<T> {
      * wants duplicates.
      */
     fun <E : Any> joinEach(
-        property: KProperty1<T, out Collection<E>>,
+        property: KProperty1<T, Collection<E>>,
         type: JoinType = JoinType.INNER,
     ): JoinScope<T, E> = joined(property.name, type)
 

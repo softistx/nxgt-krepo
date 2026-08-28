@@ -1,6 +1,7 @@
 package com.strange.jpa.dsl
 
 import com.strange.jpa.query.JpaQuery
+import com.strange.jpa.query.hql
 import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
