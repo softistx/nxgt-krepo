@@ -22,6 +22,7 @@ develop
 - `feature/<slug>` never receives code directly — only merges from auxiliary branches via PR.
 - Auxiliary branches deliver one self-contained, reviewable slice each. Use `fix/<slug>-<task>` when the slice repairs something introduced earlier in the same feature.
 - PRs target `feature/<slug>` until the feature is complete; then one final PR `feature/<slug>` → `develop`.
+- **`develop` is the terminus.** No branch here ever targets `main`, and finishing a feature does not touch it: `main` is aligned from `develop` separately, when someone asks for it.
 
 ## Sequencing
 
