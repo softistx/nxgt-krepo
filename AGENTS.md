@@ -615,10 +615,14 @@ the same each time, and the mistakes are the same each time too.
   small and however green — a PR opened against `main` has the wrong base and wants recreating, not
   merging.
 - **`main` is aligned from `develop`, only when that is asked for.** Aligning is not part of finishing
-  a feature: it happens when someone asks for it, and it means fast-forwarding `main` onto `develop`,
-  never merging a feature branch into `main` or cherry-picking across. If `main` cannot fast-forward,
-  it has been written to directly and that is the thing to fix first — merge `main` into `develop`,
-  then fast-forward `main` onto the result, which leaves both at one commit with no history rewritten.
+  a feature: it happens when someone asks for it, and it is `git checkout main && git merge develop`
+  — never merging a feature branch into `main`, never cherry-picking across. That fast-forwards while
+  it can and leaves a `Merge branch 'develop'` commit once it cannot, which is the same shape
+  `nxgt-federation` and `sellix-monorepo` carry on their own `main`.
+
+  If `develop` is *behind* `main`, someone has written to `main` directly and that is the thing to fix
+  first: merge `main` into `develop`, then align `main` from the result. No history is rewritten
+  either way.
 
   The failure this prevents is quiet: merging features into `main` while `develop` sits behind works
   perfectly until `develop` carries real work of its own, and then the two have genuinely diverged
