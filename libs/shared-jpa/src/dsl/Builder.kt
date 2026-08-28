@@ -3,7 +3,6 @@ package com.strange.jpa.dsl
 import jakarta.persistence.criteria.Expression
 import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.hibernate.query.sqm.tree.SqmNode
-import org.hibernate.reactive.stage.Stage
 
 /**
  * The builder that made an expression, taken back off the expression itself.
@@ -20,14 +19,3 @@ import org.hibernate.reactive.stage.Stage
  */
 internal val Expression<*>.builder: HibernateCriteriaBuilder
     get() = (this as SqmNode).nodeBuilder()
-
-/**
- * The session's builder, widened back to Hibernate's.
- *
- * `Stage.QueryProducer` declares the JPA interface, which has no `sql()`, no `ilike` and none of the
- * window functions — but it hands back the session factory's own [HibernateCriteriaBuilder], which
- * has all three. Narrowing it here rather than at every call site.
- */
-@PublishedApi
-internal val Stage.QueryProducer.builder: HibernateCriteriaBuilder
-    get() = criteriaBuilder as HibernateCriteriaBuilder
