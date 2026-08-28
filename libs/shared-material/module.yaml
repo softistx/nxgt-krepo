@@ -35,10 +35,15 @@ test-dependencies@android:
 
 settings:
   kotlin:
-    # The Compose Styles API — Style, StyleScope, Modifier.styleable — is how every component here
-    # is dressed, so the opt-in is module-wide rather than a per-file annotation. It ships in
-    # foundation, experimental, from Compose Multiplatform 1.11.1.
-    optIns: [ androidx.compose.foundation.style.ExperimentalFoundationStyleApi ]
+    # Module-wide rather than per-file annotations: both APIs are load-bearing here, not
+    # occasional.
+    optIns:
+      # The Compose Styles API — Style, StyleScope, Modifier.styleable — is how every component
+      # here is dressed. It ships in foundation, experimental, from Compose Multiplatform 1.11.1.
+      - androidx.compose.foundation.style.ExperimentalFoundationStyleApi
+      # MaterialExpressiveTheme and MotionScheme. Both are in the M3 that resolves here — 1.11.0
+      # -alpha07 on jvm/ios, androidx 1.5.0-alpha17 on android — and both are gated behind this.
+      - androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
   compose:
     enabled: true
     # Pinned to the toolchain 0.12.0 default, the way `ktor` is pinned in the modules that enable

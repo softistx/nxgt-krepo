@@ -1,110 +1,114 @@
 package com.strange.material.button
 
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.StyleScope
 import androidx.compose.foundation.style.disabled
-import androidx.compose.foundation.style.hovered
 import androidx.compose.foundation.style.pressed
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.strange.material.motion.MotionSpeed
+import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.Tone
 import com.strange.material.theme.ToneColors
-import com.strange.material.theme.colors
 import com.strange.material.theme.motion
-import com.strange.material.theme.radii
-import com.strange.material.theme.scheme
-import com.strange.material.theme.spacing
 
 /**
- * The `variant × color` matrix, resolved in exactly one place.
+ * The 5 × 7 matrix, resolved once, as Material 3's own [ButtonColors].
  *
- * Five variants times seven colours is thirty-five combinations, and the only thing keeping that
- * coherent is that one function decides all of them. Adding a colour is an enum entry and a branch
- * in [palette]; adding a variant is a branch here. Neither touches `Button.kt` — the open/closed
- * rule, spelled concretely.
- *
- * Expressing this as a [Style] rather than as a `ButtonColors` is what buys the interaction states:
- * pressed, hovered and disabled are part of the look, declared beside it, and `animate` makes the
- * transitions between them free — no `animateColorAsState`, no remembered floats, nothing for a
- * caller to wire up.
+ * M3 paints the button — container, content, ripple, disabled treatment — so the matrix has to
+ * arrive in the shape M3 accepts. Adding a colour touches one enum entry and one `when` branch,
+ * which is the point of resolving it in a single place; painting it ourselves would have thrown
+ * away the ripple and the disabled alpha M3 already gets right.
  */
-fun buttonStyle(
+@Composable
+fun buttonColors(
     variant: ButtonVariant,
     color: ButtonColor,
-): Style =
-    Style {
-        val tone = palette(color)
-        val inline = variant == ButtonVariant.Link
-
-        shape(RoundedCornerShape(radii.full))
-        contentPaddingHorizontal(if (inline) spacing.none else spacing.md)
-        contentPaddingVertical(if (inline) spacing.none else spacing.sm)
-        // 40dp is the smallest a button may be and still be a comfortable target; a Link is text
-        // in a sentence and must not carry a button's height.
-        minHeight(if (inline) 0.dp else 40.dp)
-
-        when (variant) {
-            ButtonVariant.Filled -> {
-                background(tone.main)
-                contentColor(tone.onMain)
-            }
-
-            ButtonVariant.Tonal -> {
-                background(tone.container)
-                contentColor(tone.onContainer)
-            }
-
-            ButtonVariant.Outlined -> {
-                border(1.dp, tone.main)
-                contentColor(tone.main)
-            }
-
-            ButtonVariant.Ghost -> {
-                contentColor(tone.main)
-            }
-
-            ButtonVariant.Link -> {
-                contentColor(tone.main)
-                textDecoration(TextDecoration.Underline)
-            }
+): ButtonColors {
+    val tone = buttonTone(color)
+    val scheme = StrangeTheme.colors.scheme
+    return when (variant) {
+        ButtonVariant.Filled -> {
+            ButtonDefaults.buttonColors(
+                containerColor = tone.main,
+                contentColor = tone.onMain,
+            )
         }
 
-        hovered {
-            animate {
-                if (variant == ButtonVariant.Filled || variant == ButtonVariant.Tonal) {
-                    alpha(0.92f)
-                } else {
-                    background(tone.main.copy(alpha = 0.08f))
-                }
-            }
+        ButtonVariant.Tonal -> {
+            ButtonDefaults.buttonColors(
+                containerColor = tone.container,
+                contentColor = tone.onContainer,
+            )
         }
 
-        pressed {
-            animate(motion.spec(motion.instant)) { scale(0.97f) }
+        ButtonVariant.Outlined, ButtonVariant.Ghost, ButtonVariant.Link -> {
+            ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = tone.main,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor = scheme.onSurface.copy(alpha = DISABLED_ALPHA),
+            )
+        }
+    }
+}
+
+/** Only `Outlined` draws one; the rest would be drawing a transparent line. */
+@Composable
+@ReadOnlyComposable
+fun buttonBorder(
+    variant: ButtonVariant,
+    color: ButtonColor,
+    enabled: Boolean,
+): BorderStroke? =
+    when (variant) {
+        ButtonVariant.Outlined -> {
+            BorderStroke(
+                width = 1.dp,
+                color =
+                    if (enabled) {
+                        buttonTone(color).main
+                    } else {
+                        StrangeTheme.colors.scheme.onSurface
+                            .copy(alpha = DISABLED_ALPHA)
+                    },
+            )
         }
 
-        disabled {
-            animate {
-                alpha(0.38f)
-                if (variant == ButtonVariant.Filled || variant == ButtonVariant.Tonal) {
-                    background(scheme.onSurface.copy(alpha = 0.12f))
-                    contentColor(scheme.onSurface)
-                }
-            }
+        else -> {
+            null
         }
     }
 
-/** What each [ButtonColor] resolves to in the current theme. */
-private fun StyleScope.palette(color: ButtonColor): ToneColors =
-    when (color) {
+/**
+ * What Material 3 has no parameter for: the press giving under the finger.
+ *
+ * Everything M3 *does* express — container, content, border, padding, shape — is absent here on
+ * purpose. A `background()` or `shape()` in this block would paint on top of the button M3 already
+ * painted, which is the sign the value belonged in [buttonColors] instead.
+ */
+val buttonStyle: Style =
+    Style {
+        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
+        disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
+    }
+
+/** Material 3's own disabled opacity, so a disabled wrapper matches a disabled M3 component. */
+const val DISABLED_ALPHA = 0.38f
+
+/** The four colours a variant draws from, for one entry of the seven-colour scale. */
+@Composable
+@ReadOnlyComposable
+fun buttonTone(color: ButtonColor): ToneColors {
+    val colors = StrangeTheme.colors
+    val scheme = colors.scheme
+    return when (color) {
         ButtonColor.Primary -> {
-            ToneColors(
-                scheme.primary,
-                scheme.onPrimary,
-                scheme.primaryContainer,
-                scheme.onPrimaryContainer,
-            )
+            ToneColors(scheme.primary, scheme.onPrimary, scheme.primaryContainer, scheme.onPrimaryContainer)
         }
 
         ButtonColor.Secondary -> {
@@ -113,15 +117,6 @@ private fun StyleScope.palette(color: ButtonColor): ToneColors =
                 scheme.onSecondary,
                 scheme.secondaryContainer,
                 scheme.onSecondaryContainer,
-            )
-        }
-
-        ButtonColor.Neutral -> {
-            ToneColors(
-                scheme.onSurface,
-                scheme.surface,
-                scheme.surfaceContainerHigh,
-                scheme.onSurface,
             )
         }
 
@@ -140,4 +135,14 @@ private fun StyleScope.palette(color: ButtonColor): ToneColors =
         ButtonColor.Danger -> {
             colors.tone(Tone.Error)
         }
+
+        ButtonColor.Neutral -> {
+            ToneColors(
+                scheme.onSurface,
+                scheme.surface,
+                scheme.surfaceContainerHigh,
+                scheme.onSurfaceVariant,
+            )
+        }
     }
+}

@@ -1,5 +1,6 @@
 package com.strange.material.demo
 
+import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -22,12 +23,32 @@ class CatalogState(
     var isDark by mutableStateOf(false)
     var seed by mutableStateOf(DefaultSeed)
 
+    /** Whether to prefer the platform's own palette where there is one. Android 12+ only. */
+    var dynamicColor by mutableStateOf(false)
+
+    /** Which Material 3 motion scheme the whole tree animates with, or none at all. */
+    var motion by mutableStateOf(CatalogMotion.Expressive)
+
     /** True once the reader has opened a story on a layout that shows one pane at a time. */
     var opened by mutableStateOf(false)
 }
 
 @Composable
 fun rememberCatalogState(initialStoryId: String): CatalogState = remember { CatalogState(initialStoryId) }
+
+/**
+ * The three ways the catalogue can animate. `Off` stops *this library's* motion — Material 3's own
+ * components keep their built-in animations, because a `MotionScheme` has no null.
+ */
+enum class CatalogMotion(
+    val label: String,
+    val scheme: MotionScheme,
+    val enabled: Boolean,
+) {
+    Expressive("Expressive", MotionScheme.expressive(), enabled = true),
+    Standard("Standard", MotionScheme.standard(), enabled = true),
+    Off("Off", MotionScheme.standard(), enabled = false),
+}
 
 /**
  * The seeds the picker offers. `StrangeTheme` accepts any [Color]; these are the ones worth one

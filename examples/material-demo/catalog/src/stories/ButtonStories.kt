@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonColor
-import com.strange.material.button.ButtonGroup
+import com.strange.material.button.ButtonRow
 import com.strange.material.button.ButtonVariant
 import com.strange.material.button.IconButton
 import com.strange.material.button.ResponsiveButton
@@ -100,9 +100,9 @@ val ButtonStories =
             }
         }
 
-        story("Button group") { knobs ->
+        story("Button row") { knobs ->
             val destructive = knobs.flag("Destructive confirm", false)
-            ButtonGroup {
+            ButtonRow {
                 Button(text = "Cancel", onClick = {}, variant = ButtonVariant.Ghost)
                 Button(
                     text = if (destructive) "Delete" else "Confirm",

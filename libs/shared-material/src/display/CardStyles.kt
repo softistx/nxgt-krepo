@@ -1,63 +1,71 @@
 package com.strange.material.display
 
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.hovered
 import androidx.compose.foundation.style.pressed
-import androidx.compose.ui.unit.dp
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
+import androidx.compose.runtime.Composable
+import com.strange.material.motion.MotionSpeed
+import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.motion
-import com.strange.material.theme.radii
-import com.strange.material.theme.scheme
-import com.strange.material.theme.spacing
 
-/** How a card separates itself from the page behind it. */
+/** Which of Material 3's three cards this is. */
 enum class CardVariant {
-    /** A tinted surface. The default, and the quietest thing that still reads as a card. */
+    /** A tinted container. The quiet default. */
     Filled,
 
-    /** A border and no fill, for a dense grid where fills would fight. */
+    /** A hairline instead of a fill, for a card inside an already-tinted surface. */
     Outlined,
 
-    /** Lifted off the page. For something that floats above the content around it. */
+    /** Lifted off the page. The one to spend when a card is genuinely above its neighbours. */
     Elevated,
 }
 
+/** The container colours, as Material 3's own [CardColors], so M3 does the painting. */
+@Composable
+fun cardColors(variant: CardVariant): CardColors {
+    val scheme = StrangeTheme.colors.scheme
+    return when (variant) {
+        CardVariant.Filled -> {
+            CardDefaults.cardColors(
+                containerColor = scheme.surfaceContainer,
+                contentColor = scheme.onSurface,
+            )
+        }
+
+        CardVariant.Outlined -> {
+            CardDefaults.outlinedCardColors(
+                containerColor = scheme.surface,
+                contentColor = scheme.onSurface,
+            )
+        }
+
+        CardVariant.Elevated -> {
+            CardDefaults.elevatedCardColors(
+                containerColor = scheme.surfaceContainerLow,
+                contentColor = scheme.onSurface,
+            )
+        }
+    }
+}
+
+/** Depth from the token scale rather than from M3's per-variant defaults, so the two agree. */
+@Composable
+fun cardElevation(variant: CardVariant): CardElevation {
+    val elevation = StrangeTheme.elevation
+    return CardDefaults.cardElevation(
+        defaultElevation = if (variant == CardVariant.Elevated) elevation.raised else elevation.flat,
+        pressedElevation = if (variant == CardVariant.Elevated) elevation.floating else elevation.flat,
+    )
+}
+
 /**
- * A card's look, including what it does under a pointer.
- *
- * [interactive] is the whole reason this takes an argument: a card that can be clicked must say so
- * on hover, and a card that cannot must stay perfectly still. Getting that backwards is the most
- * common way a list of cards feels broken, so it is a parameter rather than a guess.
+ * The give under the finger, which Material 3 has no parameter for. A card is bigger than a button,
+ * so it moves less — 0.99 rather than 0.97, which is the difference between responding and
+ * flinching.
  */
-fun cardStyle(
-    variant: CardVariant = CardVariant.Filled,
-    interactive: Boolean = false,
-): Style =
+val cardStyle: Style =
     Style {
-        shape(RoundedCornerShape(radii.lg))
-        contentPadding(spacing.md)
-
-        when (variant) {
-            CardVariant.Filled -> {
-                background(scheme.surfaceContainer)
-            }
-
-            CardVariant.Outlined -> {
-                background(scheme.surface)
-                border(1.dp, scheme.outlineVariant)
-            }
-
-            CardVariant.Elevated -> {
-                background(scheme.surfaceContainerLow)
-                dropShadow(
-                    androidx.compose.ui.graphics.shadow
-                        .Shadow(radius = 8.dp),
-                )
-            }
-        }
-
-        if (interactive) {
-            hovered { animate { background(scheme.surfaceContainerHigh) } }
-            pressed { animate(motion.spec(motion.instant)) { scale(0.99f) } }
-        }
+        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.99f) } }
     }

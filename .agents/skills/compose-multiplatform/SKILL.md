@@ -37,6 +37,13 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
   so they cannot serve a `kmp/lib`. `libs/shared-material` defines its own vectors in
   `icon/StrangeIcons.kt` from Material path data via `addPathNodes`; a caller that needs a full pack
   passes its own `ImageVector` in.
+- **M3 1.11 has its own `MotionScheme`, and `MaterialTheme` takes it.** There is a
+  `MaterialTheme(colorScheme, motionScheme, shapes, typography, content)` overload,
+  `MaterialTheme.motionScheme` is a real accessor, and `MaterialExpressiveTheme` exists — all three
+  behind `androidx.compose.material3.ExperimentalMaterial3ExpressiveApi`. `MotionScheme` gives
+  `fast/default/slow` x `SpatialSpec/EffectsSpec`; `MotionScheme.standard()` and `.expressive()`
+  return **singletons**, so a default parameter that calls one does not churn on recomposition.
+  Don't hand-write a duration scale beside it.
 - **`Style.then` is a top-level infix extension**, not a member: `import
   androidx.compose.foundation.style.then` or the only candidate in scope is `Comparator.then`, and
   the error is a return-type mismatch against `Comparator` rather than a missing import.
@@ -45,9 +52,13 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
 - **A missing key reports itself as "Compose is disabled".** The error says to set
   `compose.enabled`, which is misleading when Compose is already on: it means the key is not in
   the catalog. Check the list above before chasing the setting.
-- **`$compose.material3` resolves to its own version line** — `1.11.0-alpha07` while `foundation`
-  and `ui` are `1.11.1`. Material 3 is an alpha here; that is what `settings.compose.version`
-  gives, not a mistake to correct. See the `material3-compose` skill for its real API surface.
+- **`$compose.material3` resolves to its own version line, and to a different artifact per
+  platform** — `org.jetbrains.compose…material3-desktop:1.11.0-alpha07` on jvm,
+  `androidx.compose.material3:material3-android:1.5.0-alpha17` on android, while `foundation` and
+  `ui` are `1.11.1`. It being an alpha is what `settings.compose.version` gives, not a mistake to
+  correct. Check an API against *both* artifacts before using it in common code;
+  `dynamicLightColorScheme(Context)` is android-only and belongs behind `expect`/`actual`. The
+  `material3-compose` skill has the real surface.
 - **Kotest runs from the common `test/` tree, but only with the JUnit 5 runner declared per
   platform.** `kotest-framework-engine` alone discovers zero tests and the run fails with exit
   code 2. This works:
@@ -64,31 +75,18 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
     - $libs.kotest.runner.junit5
   ```
 
-  Both qualifiers are needed: the Android unit-test run is a second JVM run with its own
-  classpath, and omitting `@android` leaves it discovering nothing while `@jvm` passes.
+  Both are needed: the Android unit-test run is a second JVM run with its own classpath, and
+  omitting `@android` leaves it discovering nothing while `@jvm` passes.
 - **The toolchain provisions its own Android SDK.** It downloads `cmdline-tools` and the
   `compileSdk` platform into `~/.cache/JetBrains/Kotlin/`; `ANDROID_HOME` is not consulted and
   need not be set. The default `compileSdk` is 37 and it is fetched on first build.
 
 ## The module shape
 
-```yaml
-product:
-  type: kmp/lib
-  platforms: [ jvm, android, iosArm64, iosSimulatorArm64 ]
-
-dependencies:
-  - $compose.material3: exported   # exported: its types are in this module's public API
-  - $compose.foundation: exported
-  - $compose.ui: exported
-
-settings:
-  compose:
-    enabled: true
-    version: 1.11.1     # pin it, like `ktor` is pinned, so a toolchain bump is a visible change
-  android:
-    namespace: com.strange.material
-```
+`libs/shared-material/module.yaml` is the worked example, comment by comment. The three things a
+new Compose module gets wrong: `platforms` must omit `iosX64`; `settings.compose.version` should be
+pinned the way `ktor` is, so a toolchain bump is a visible change; and a `$compose.*` dependency
+whose types appear in the public API needs `: exported`.
 
 An application module cannot be both: `android/app` supports only the `android` platform and
 `jvm/app` only `jvm`, so a demo that runs on both is one `kmp/lib` holding the UI plus two thin

@@ -1,5 +1,6 @@
 package com.strange.material.motion
 
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -39,7 +40,9 @@ fun Modifier.shimmer(): Modifier =
             targetValue = 1f,
             animationSpec =
                 infiniteRepeatable(
-                    animation = tween(durationMillis = 1200, easing = motion.standardEasing),
+                    // A sweep is a loop rather than a state change, so it names its own
+                    // cadence; MotionScheme has no spec for something that never settles.
+                    animation = tween(durationMillis = SWEEP_MILLIS, easing = LinearEasing),
                     repeatMode = RepeatMode.Restart,
                 ),
             label = "shimmerProgress",
@@ -66,3 +69,6 @@ private fun shimmerBrush(
         end = Offset(start + travel / 2, 0f),
     )
 }
+
+/** One pass of the highlight across the placeholder. */
+private const val SWEEP_MILLIS = 1200

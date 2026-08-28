@@ -43,13 +43,31 @@ the first time it runs, tells the right-hand panel to draw a switch. There is no
 declaration to keep in sync with the preview, which is the failure mode this design exists to
 prevent. Four kinds: `flag`, `text`, `number`, `choice` (and `enumChoice` for an enum).
 
+## What an application writes instead
+
+The catalogue calls `StrangeTheme` directly because it drives all four of Material 3's inputs from
+its header. An ordinary application does not:
+
+```kotlin
+StrangeThemeProvider(seed = Color(0xFF5B5BD6)) { App() }
+```
+
+That resolves the colour scheme through `platformColorScheme` — the wallpaper on Android 12+, the
+seed everywhere else — and hands the rest to `StrangeTheme` untouched.
+
 ## What the catalogue is for
 
 Two things beyond looking at components:
 
-- **The theme dials in the header are the proof.** One seed and one dark switch repaint every story,
-  and no component is told about either. If something does not follow, it is holding a colour it
-  should be reading.
+- **The theme dials in the header are the proof.** The seed, the dark switch and the motion scheme
+  repaint and re-time every story, and no component is told about any of them. If something does
+  not follow, it is holding a colour or a curve it should be reading.
+- **The Motion control switches Material 3's own `MotionScheme`** between expressive, standard and
+  off. Off stops this library's motion only — M3's built-in components keep animating, because a
+  `MotionScheme` has no null. `motion/spatial-and-effects` shows the distinction M3 draws: the
+  square overshoots its mark, the colour swatch does not.
+- **Wallpaper colours appear as a switch only on Android 12+**, because `supportsDynamicColor` says
+  so. A switch that cannot change anything is worse than no switch.
 - **`screens/orders-screen` is the acceptance criterion of every phase.** A whole screen written
   with no plumbing — no `animate*AsState`, no transition, no interaction source. If it ever needs
   one, the phase is not done.
