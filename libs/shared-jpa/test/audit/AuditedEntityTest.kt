@@ -3,6 +3,7 @@ package com.strange.jpa.audit
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.entity.Note
+import com.strange.jpa.query.insert
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
@@ -132,6 +133,36 @@ class AuditedEntityTest :
                     note.createdBy shouldBe ""
                     note.lastModifiedBy shouldBe ""
                     note.createdAt shouldBeGreaterThan epoch
+                }
+            }
+        }
+
+        // The stamp as a pair of extensions rather than a service hook: only the caller knows the
+        // principal, and there is no ambient user on a Vert.x context to read one from.
+        feature("stamping").config(enabled = JpaTestDatabase.available) {
+            scenario("stampedBy names the creator on both halves, and touchedBy moves one") {
+                withJpa { jpa ->
+                    jpa.transaction { session -> session.insert(Note(1, "first").stampedBy("ada")) }
+                    jpa.transaction { session ->
+                        session.get<Note>(1L).apply { text = "second" }.touchedBy("bo")
+                    }
+
+                    val note = jpa.session { session -> session.get<Note>(1L) }
+                    note.createdBy shouldBe "ada"
+                    note.lastModifiedBy shouldBe "bo"
+                }
+            }
+
+            // Writing an empty name over a real one would lose what a reader wanted to know, so an
+            // unknown principal stamps nothing at all.
+            scenario("an unknown principal leaves whoever was named there alone") {
+                withJpa { jpa ->
+                    jpa.transaction { session -> session.insert(Note(1, "first").stampedBy("ada")) }
+                    jpa.transaction { session ->
+                        session.get<Note>(1L).apply { text = "second" }.touchedBy(null)
+                    }
+
+                    jpa.session { session -> session.get<Note>(1L) }.lastModifiedBy shouldBe "ada"
                 }
             }
         }

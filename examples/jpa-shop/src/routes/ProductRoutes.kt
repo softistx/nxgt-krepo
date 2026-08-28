@@ -1,16 +1,12 @@
 package com.strange.example.shop.routes
 
-import com.strange.example.shop.domain.Product
-import com.strange.example.shop.domain.ProductRepository
 import com.strange.example.shop.domain.ProductService
 import com.strange.example.shop.domain.ProductSpecs
 import com.strange.example.shop.model.EditProduct
 import com.strange.example.shop.model.NewProduct
 import com.strange.example.shop.model.ProductPage
 import com.strange.example.shop.model.view
-import com.strange.jpa.criteria.asc
-import com.strange.jpa.criteria.get
-import com.strange.jpa.repository.and
+import com.strange.jpa.criteria.and
 import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import com.strange.ktor.jpa.jpa
@@ -28,13 +24,11 @@ import io.ktor.server.routing.route
  * The layer above the service: HTTP in, HTTP out, and nothing about persistence.
  *
  * **Read in `session { }`, write in `transaction { }`.** A session flushes only inside a
- * transaction, so a write handed a plain session would report success and store nothing — the
- * repository and the service refuse rather than allowing that, and these routes are what refusing
+ * transaction, so a write handed a plain session would report success and store nothing — every
+ * write verb on the session refuses rather than allowing that, and these routes are what refusing
  * protects.
  */
 fun Route.productRoutes() {
-    val repository = ProductRepository()
-
     route("/products") {
         // GET /products?search=&under=&first=20&skip=0
         get {
@@ -48,14 +42,9 @@ fun Route.productRoutes() {
             search?.let { spec = spec and ProductSpecs.named(it) }
             under?.let { spec = spec and ProductSpecs.upTo(it) }
 
-            val page =
-                call.jpa.session { session ->
-                    repository.findPage(session, limit = first, offset = skip, spec = spec) { criteria, product ->
-                        // The sort ends with the identifier so that a page boundary cannot land
-                        // between two products sharing a name.
-                        criteria.orderBy(asc(product[Product::name]), asc(product[Product::id]))
-                    }
-                }
+            // The service orders by name and then by the identifier, so that a page boundary cannot
+            // land between two products sharing a name.
+            val page = call.jpa.session { session -> service(null).page(session, first, skip, spec) }
 
             call.respond(
                 ProductPage(
@@ -69,13 +58,13 @@ fun Route.productRoutes() {
         // GET /products/summary — three columns, packaged by Hibernate into the result class
         get("/summary") {
             val first = call.request.queryParameters["first"]?.toIntOrNull() ?: 20
-            call.respond(call.jpa.session { session -> repository.summaries(session, first) })
+            call.respond(call.jpa.session { session -> service(null).summaries(session, first) })
         }
 
         get("/{id}") {
             val id = call.parameters["id"]!!.toLong()
-            // requireById throws JpaNotFoundException, which the failure handler turns into a 404
-            val product = call.jpa.session { session -> repository.requireById(session, id) }
+            // byId throws JpaNotFoundException, which the failure handler turns into a 404
+            val product = call.jpa.session { session -> service(null).byId(session, id) }
             call.respond(product.view())
         }
 
