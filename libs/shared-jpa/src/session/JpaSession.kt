@@ -25,6 +25,7 @@ import kotlinx.coroutines.future.await
 import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import org.hibernate.query.criteria.JpaCriteriaInsert
 import org.hibernate.reactive.stage.Stage
+import org.intellij.lang.annotations.Language
 
 /**
  * A Hibernate Reactive session with Kotlin's calling convention: every operation suspends, and none
@@ -115,7 +116,9 @@ class JpaSession internal constructor(
     // ─── Querying ─────────────────────────────────────────────────────────────
 
     /** An HQL query returning [R] — an entity, or a projection. */
-    inline fun <reified R : Any> query(hql: String): JpaQuery<R> = raw.query(hql)
+    inline fun <reified R : Any> query(
+        @Language("HQL") hql: String,
+    ): JpaQuery<R> = raw.query(hql)
 
     /** A query built from the entity's own properties instead of an HQL string. */
     inline fun <reified R : Any> select(noinline block: SelectScope<R>.() -> Unit = {}): SelectScope<R> = raw.select(block)
@@ -125,7 +128,9 @@ class JpaSession internal constructor(
         raw.project(block)
 
     /** SQL, for what HQL cannot say. Remember it is not schema-qualified for you. */
-    inline fun <reified R : Any> nativeQuery(sql: String): JpaQuery<R> = raw.nativeQuery(sql)
+    inline fun <reified R : Any> nativeQuery(
+        @Language("SQL") sql: String,
+    ): JpaQuery<R> = raw.nativeQuery(sql)
 
     /** A bulk `update` built from the entity's own properties. */
     inline fun <reified R : Any> update(noinline block: UpdateScope<R>.() -> Unit): UpdateScope<R> = updateOn(raw, R::class, block)
@@ -155,8 +160,12 @@ class JpaSession internal constructor(
     fun mutate(criteria: JpaCriteriaInsert<*>): JpaMutation = raw.mutate(criteria)
 
     /** A bulk HQL `update` or `delete`. */
-    fun mutate(hql: String): JpaMutation = raw.mutate(hql)
+    fun mutate(
+        @Language("HQL") hql: String,
+    ): JpaMutation = raw.mutate(hql)
 
     /** The same in SQL. */
-    fun nativeMutate(sql: String): JpaMutation = raw.nativeMutate(sql)
+    fun nativeMutate(
+        @Language("SQL") sql: String,
+    ): JpaMutation = raw.nativeMutate(sql)
 }
