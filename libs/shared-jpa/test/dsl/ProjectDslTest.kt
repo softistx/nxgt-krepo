@@ -58,12 +58,40 @@ class ProjectDslTest :
                                     val buyer = join(Purchase::customer)
                                     where { Purchase::total gt 60L }
                                     orderBy { asc(Purchase::id) }
-                                    construct(::Summary, this[Purchase::reference], buyer[Buyer::name])
+                                    construct(::Summary, Purchase::reference, buyer[Buyer::name])
                                 }.list()
                         }
 
                     summaries.map { it.reference to it.buyer } shouldContainExactly
                         listOf("P-1" to "ada", "P-3" to "bo")
+                }
+            }
+
+            scenario("names its columns by property, and by path only where a property cannot reach") {
+                seeded { jpa ->
+                    val rows =
+                        jpa.session { session ->
+                            session
+                                .project<Purchase, Line> {
+                                    val buyer = join(Purchase::customer)
+                                    orderBy { asc(Purchase::id) }
+                                    // two of the entity's own columns, one from the join, one
+                                    // computed — the property form for what it reaches, a path for
+                                    // the rest, in one call
+                                    construct(
+                                        ::Line,
+                                        Purchase::reference,
+                                        Purchase::total,
+                                        buyer[Buyer::name],
+                                        upper(this[Purchase::reference]),
+                                    )
+                                }.list()
+                        }
+
+                    rows.map { it.reference to it.buyer } shouldContainExactly
+                        listOf("P-1" to "ada", "P-2" to "ada", "P-3" to "bo")
+                    rows.map { it.shouted } shouldContainExactly listOf("P-1", "P-2", "P-3")
+                    rows.map { it.total } shouldContainExactly listOf(150L, 50L, 400L)
                 }
             }
 
@@ -126,6 +154,14 @@ class ProjectDslTest :
 class Summary(
     val reference: String,
     val buyer: String,
+)
+
+/** A row of four columns: two of the entity's own, one joined, one computed. */
+class Line(
+    val reference: String,
+    val total: Long,
+    val buyer: String,
+    val shouted: String,
 )
 
 /** A row of a group and its count. */
