@@ -25,13 +25,19 @@ DELETE /products/{id}
 | `domain/ProductRepository.kt` | `JpaRepository<Product, Long>(Product::id)` — nothing names the class — plus named `JpaSpec`s and the two finders that are actually about products |
 | `domain/ProductService.kt` | `buildCreate` and `applyUpdate`, the only two methods the flow cannot write for you |
 | `routes/ProductRoutes.kt` | Read in `session { }`, write in `transaction { }`, and specifications composed from a query string |
-| `ShopServer.kt` | `install(JpaConnection)` — one factory for the application, closed with it |
+| `ShopServer.kt` | `install(JpaConnection)` with `packages(…)` — one factory for the application, closed with it, mapping found by scanning |
 
-## The four things worth reading it for
+## The five things worth reading it for
 
 **Nothing names the entity class.** `JpaRepository<Product, Long>(Product::id)` is the whole
 declaration: a property reference already knows whose it is, and a class cannot have a `reified` type
 parameter, so this is how the base class learns what it is generic over.
+
+**The mapping is scanned, not listed.** `packages("com.strange.example.shop.domain")` maps every
+annotated class in the package, so `ShopServer` never mentions `Product` and the next entity is mapped
+by having been written. The cost is the other direction: a class that moves out of the package stops
+being mapped and nothing fails to compile — which is why `ShopTest` asserts the package string finds
+`Product` rather than trusting it. A scan that finds no entity at all fails the install.
 
 **The session is an argument, never a field.** A session belongs to the event loop that opened it and
 does not outlive its block, so the repository is a singleton and the unit of work arrives per call.
@@ -48,8 +54,9 @@ which is what makes `session`-for-reads and `transaction`-for-writes a rule rath
 ## Tests
 
 `test/ShopTest.kt` covers what this module owns and can check without a database: that the repository
-resolves its entity from a property reference *from a consuming module*, and that the payloads
-decode and map as the routes assume.
+resolves its entity from a property reference *from a consuming module*, that the package
+`ShopServer` scans really does contain the entity, and that the payloads decode and map as the routes
+assume.
 
 The layer's behaviour is covered where it lives — `libs/shared-jpa` has integration specs against a
 real Postgres, each in a schema of its own. Repeating that here would mean a second container or

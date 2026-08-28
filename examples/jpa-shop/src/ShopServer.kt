@@ -1,6 +1,5 @@
 package com.strange.example.shop
 
-import com.strange.example.shop.domain.Product
 import com.strange.example.shop.routes.productRoutes
 import com.strange.jpa.JpaConfig
 import com.strange.jpa.JpaNotFoundException
@@ -28,6 +27,9 @@ import io.ktor.server.routing.routing
  * a route reads in `session { }` and writes in `transaction { }`; a `ProductService` maps the
  * request and refuses a write with no transaction; a `ProductRepository` speaks the typed DSL; and
  * `Product` extends `AuditedEntity`, so who and when are recorded without a route saying so.
+ *
+ * The mapping is found by scanning a package, so nothing here names an entity class: `Product` is
+ * mapped because it is annotated and lives in `domain`, not because this file mentions it.
  */
 fun main() {
     embeddedServer(Netty, port = 8080, module = Application::shop).start(wait = true)
@@ -47,7 +49,12 @@ fun Application.shop() {
                 // first request.
                 schemaMode = SchemaMode.CREATE_DROP,
             )
-        entities(Product::class)
+        // Read the entities off the classpath rather than listing them. `Product` is the only
+        // `@Entity` in that package today, and the next one is mapped by having been written — which
+        // is the whole point, and also the cost: a class that moves out of the package stops being
+        // mapped without anything failing to compile. A scan that finds no entity at all does fail
+        // the install, so the empty case is not one of the silent ones.
+        packages("com.strange.example.shop.domain")
     }
 
     install(StatusPages) {
