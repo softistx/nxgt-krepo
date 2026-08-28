@@ -3,6 +3,7 @@ package com.strange.jpa.repository
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaNotFoundException
+import com.strange.jpa.JpaOutsideTransactionException
 import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.dsl.eq
 import com.strange.jpa.dsl.get
@@ -168,6 +169,55 @@ class JpaRepositoryTest :
                         // repository loads and removes, so the persistence context agrees with the
                         // database before the transaction ends.
                         purchases.findById(session, 1L) shouldBe null
+                    }
+                }
+            }
+        }
+
+        // The guard used to live only in JpaCrudService, one layer up, while this class is public,
+        // open, and what a custom subclass writes against.
+        feature("a write with no transaction").config(enabled = JpaTestDatabase.available) {
+            scenario("is refused rather than discarded, by every write on the repository") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        val refused =
+                            listOf<suspend () -> Any?>(
+                                { purchases.insert(session, Purchase(9, "P-9", 1, null)) },
+                                { purchases.insertAll(session, listOf(Purchase(10, "P-10", 1, null))) },
+                                { purchases.update(session, Purchase(1, "P-1", 999, null)) },
+                                { purchases.delete(session, purchases.requireById(session, 1L)) },
+                                { purchases.deleteById(session, 1L) },
+                                { purchases.deleteByIds(session, listOf(1L, 2L)) },
+                            )
+                        refused.forEach { write ->
+                            shouldThrow<JpaOutsideTransactionException> { write() }
+                                .message shouldContain "needs a transaction"
+                        }
+                    }
+
+                    // And nothing was written: the point of refusing is that the alternative is a
+                    // call that reports success and left no row.
+                    jpa.session { purchases.count(it) } shouldBe 3L
+                }
+            }
+
+            scenario("names the operation and the entity, so the message says which call it was") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        shouldThrow<JpaOutsideTransactionException> { purchases.deleteById(session, 1L) }
+                            .let {
+                                it.operation shouldBe "deleteById"
+                                it.type shouldBe Purchase::class
+                            }
+                    }
+                }
+            }
+
+            scenario("does not touch the reads, which are an ordinary thing to want outside one") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        purchases.count(session) shouldBe 3L
+                        purchases.findById(session, 1L).shouldNotBeNull()
                     }
                 }
             }
