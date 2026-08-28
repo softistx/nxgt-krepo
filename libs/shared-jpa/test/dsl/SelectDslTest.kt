@@ -5,6 +5,8 @@ import com.strange.jpa.JpaTestDatabase
 import com.strange.jpa.entity.Buyer
 import com.strange.jpa.entity.Purchase
 import com.strange.jpa.entity.PurchaseLine
+import com.strange.jpa.page.PageRequest
+import com.strange.jpa.page.page
 import com.strange.jpa.query.criteria
 import com.strange.jpa.query.query
 import com.strange.jpa.session.JpaSession
@@ -271,6 +273,18 @@ class SelectDslTest :
                     listOf("P-2", "P-3", "P-4")
             }
 
+            // Regression: the property form used to carry only the value overloads for gt/ge/lt/le,
+            // so `this[Purchase::total] gt this[Purchase::id]` compiled and this did not.
+            scenario("compare a property against another column, not only against a value") {
+                references { where { Purchase::total gt this[Purchase::id] } }.size shouldBe 4
+                references { where { Purchase::id ge this[Purchase::total] } }
+                    .shouldContainExactly(emptyList())
+                references { where { Purchase::total lt (this[Purchase::id] * 25L) } }
+                    .shouldContainExactly(emptyList())
+                references { where { Purchase::total le (this[Purchase::id] * 25L) } } shouldContainExactly
+                    listOf("P-2")
+            }
+
             scenario("match text, with and without case") {
                 references { where { Purchase::reference like "P-_" } }.size shouldBe 4
                 references { where { Purchase::reference ilike "p-1" } } shouldContainExactly listOf("P-1")
@@ -302,6 +316,56 @@ class SelectDslTest :
                     where { all(listOf(Purchase::total gt 100L, Purchase::total lt 500L)) }
                 } shouldContainExactly listOf("P-1", "P-3")
                 references { where { all(emptyList()) } }.size shouldBe 4
+            }
+        }
+
+        // Read-only results skip the snapshot a stateful session keeps to work out what changed, so
+        // "no dirty check" is observable: a mutation is not written. Nothing called this before.
+        feature("readOnly").config(enabled = JpaTestDatabase.available) {
+            scenario("stops the dirty check, so a mutation on a loaded row is not written") {
+                seeded { jpa ->
+                    jpa.transaction { session ->
+                        session
+                            .select<Purchase> { where { Purchase::id eq 1L } }
+                            .readOnly()
+                            .list()
+                            .single()
+                            .total = 999L
+                    }
+
+                    jpa.session { it.get<Purchase>(1L) }.total shouldBe 150L
+                }
+            }
+
+            scenario("and without it the same mutation is written, which is what makes that a claim") {
+                seeded { jpa ->
+                    jpa.transaction { session ->
+                        session
+                            .select<Purchase> { where { Purchase::id eq 1L } }
+                            .list()
+                            .single()
+                            .total = 999L
+                    }
+
+                    jpa.session { it.get<Purchase>(1L) }.total shouldBe 999L
+                }
+            }
+
+            scenario("is applied by a paged query too, which used to drop it on the floor") {
+                seeded { jpa ->
+                    jpa.transaction { session ->
+                        session
+                            .select<Purchase> { where { Purchase::id eq 1L } }
+                            .readOnly()
+                            .sortBy(Purchase::id)
+                            .page(PageRequest.first(10))
+                            .data
+                            .single()
+                            .total = 999L
+                    }
+
+                    jpa.session { it.get<Purchase>(1L) }.total shouldBe 150L
+                }
             }
         }
 

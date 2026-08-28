@@ -9,21 +9,14 @@ import com.strange.jpa.dsl.deleteOn
 import com.strange.jpa.dsl.project
 import com.strange.jpa.dsl.select
 import com.strange.jpa.dsl.updateOn
-import com.strange.jpa.query.JpaMutation
 import com.strange.jpa.query.JpaQuery
 import com.strange.jpa.query.criteria
 import com.strange.jpa.query.mutate
-import com.strange.jpa.query.nativeMutate
 import com.strange.jpa.query.nativeQuery
 import com.strange.jpa.query.query
 import jakarta.persistence.LockModeType
-import jakarta.persistence.criteria.CriteriaDelete
-import jakarta.persistence.criteria.CriteriaQuery
-import jakarta.persistence.criteria.CriteriaUpdate
 import jakarta.persistence.criteria.Selection
 import kotlinx.coroutines.future.await
-import org.hibernate.query.criteria.HibernateCriteriaBuilder
-import org.hibernate.query.criteria.JpaCriteriaInsert
 import org.hibernate.reactive.stage.Stage
 import org.intellij.lang.annotations.Language
 
@@ -54,8 +47,8 @@ import org.intellij.lang.annotations.Language
  */
 class JpaSession internal constructor(
     /** The session underneath, for everything not wrapped here. */
-    val raw: Stage.Session,
-) {
+    override val raw: Stage.Session,
+) : JpaQueries {
     /** Whether the session is still usable. False once the block that owns it has ended. */
     val isOpen: Boolean get() = raw.isOpen
 
@@ -137,35 +130,4 @@ class JpaSession internal constructor(
 
     /** A bulk `delete`, the same way. */
     inline fun <reified R : Any> delete(): DeleteScope<R> = deleteOn(raw, R::class)
-
-    /**
-     * Hibernate's criteria builder, for a query written against the Criteria API directly.
-     *
-     * The way out of the DSL, for the queries it has no spelling for — subqueries, set operations,
-     * window functions, `insert … select`. What comes back runs through [query] or [mutate], so a
-     * criteria built by hand still ends in a suspending terminal rather than a `CompletionStage`.
-     */
-    val criteria: HibernateCriteriaBuilder get() = raw.criteria
-
-    /** A criteria query, run through this module's terminals. */
-    fun <R> query(criteria: CriteriaQuery<R>): JpaQuery<R> = raw.query(criteria)
-
-    /** A criteria `update`. */
-    fun mutate(criteria: CriteriaUpdate<*>): JpaMutation = raw.mutate(criteria)
-
-    /** A criteria `delete`. */
-    fun mutate(criteria: CriteriaDelete<*>): JpaMutation = raw.mutate(criteria)
-
-    /** A criteria `insert` — `insert … select`, or `insert … values`. */
-    fun mutate(criteria: JpaCriteriaInsert<*>): JpaMutation = raw.mutate(criteria)
-
-    /** A bulk HQL `update` or `delete`. */
-    fun mutate(
-        @Language("HQL") hql: String,
-    ): JpaMutation = raw.mutate(hql)
-
-    /** The same in SQL. */
-    fun nativeMutate(
-        @Language("SQL") sql: String,
-    ): JpaMutation = raw.nativeMutate(sql)
 }

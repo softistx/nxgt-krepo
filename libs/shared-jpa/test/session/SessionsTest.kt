@@ -1,11 +1,16 @@
 package com.strange.jpa.session
 
 import com.strange.jpa.JpaTestDatabase
+import com.strange.jpa.convert.InstantConverter
+import com.strange.jpa.convert.UuidConverter
+import com.strange.jpa.convert.kotlinConverters
 import com.strange.jpa.entity.Thing
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import jakarta.persistence.LockModeType
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -100,6 +105,45 @@ class SessionsTest :
 
                     jpa.statelessSession { it.get<Thing>(3L) }.name shouldBe "bulk"
                 }
+            }
+
+            scenario("upserts, letting the database decide between an insert and an update") {
+                JpaTestDatabase.withJpa(Thing::class) { jpa ->
+                    // The same call, once where the row is not there and once where it is.
+                    jpa.statelessTransaction { it.upsert(Thing(4, "first")) }
+                    jpa.statelessSession { it.get<Thing>(4L) }.name shouldBe "first"
+
+                    jpa.statelessTransaction { it.upsert(Thing(4, "second")) }
+                    jpa.statelessSession { it.get<Thing>(4L) }.name shouldBe "second"
+                }
+            }
+        }
+
+        feature("a lock").config(enabled = JpaTestDatabase.available) {
+            scenario("is taken on a row this session already holds, and the row stays readable") {
+                JpaTestDatabase.withJpa(Thing::class) { jpa ->
+                    jpa.transaction { it.persist(Thing(5, "locked")) }
+
+                    jpa.transaction { session ->
+                        val thing = session.get<Thing>(5L)
+                        session.lock(thing, LockModeType.PESSIMISTIC_WRITE)
+
+                        // The lock is held until the transaction ends; the point of the call is that
+                        // it reaches Hibernate at all, which a raw `lock` returning a CompletionStage
+                        // would let a caller forget to await.
+                        thing.name = "still writable"
+                    }
+
+                    jpa.session { it.get<Thing>(5L) }.name shouldBe "still writable"
+                }
+            }
+        }
+
+        feature("the converters this module registers") {
+            scenario("are the two Kotlin types JPA has no basic type for, and nothing else") {
+                // Adding one changes the mapping of every application that upgrades, so the list is
+                // pinned rather than left to be discovered by a column type changing under someone.
+                kotlinConverters shouldContainExactly listOf(InstantConverter::class, UuidConverter::class)
             }
         }
     })

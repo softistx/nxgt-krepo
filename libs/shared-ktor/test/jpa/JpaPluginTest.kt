@@ -2,6 +2,7 @@ package com.strange.ktor.jpa
 
 import com.strange.jpa.Jpa
 import com.strange.jpa.JpaConfig
+import com.strange.jpa.JpaMappingException
 import com.strange.jpa.SchemaMode
 import com.strange.jpa.session.transaction
 import com.strange.ktor.jpa.entity.Note
@@ -152,7 +153,7 @@ class JpaPluginTest :
 
             scenario("fails the install when a package holds no entity, rather than starting empty") {
                 val failure =
-                    shouldThrow<IllegalStateException> {
+                    shouldThrow<JpaMappingException> {
                         testApplication {
                             application {
                                 install(JpaConnection) {

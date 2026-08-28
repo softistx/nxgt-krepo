@@ -19,5 +19,5 @@ class SelectScope<T : Any>
         query: CriteriaQuery<T>,
         from: Root<T>,
     ) : QueryScope<T, T, SelectScope<T>>(producer, query, from) {
-        override val taken: MutableMap<String, JoinScope<T, *>> = mutableMapOf()
+        override val joins: JoinRegistry<T> = JoinRegistry()
     }

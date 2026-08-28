@@ -53,12 +53,22 @@ internal class KotlinxJsonFormatMapper(
     override fun <T> fromString(
         charSequence: CharSequence,
         type: Type,
-    ): T {
-        val serializer = serializerFor(type)
-        return json.decodeValue(serializer, charSequence.toString()) {
+    ): T = decode(charSequence, type) as T
+
+    /**
+     * The read, without the SPI's `protected` in front of it.
+     *
+     * Internal for the same reason [serializerFor] is: the spec that pins [JpaDocumentException] —
+     * the branch that fires on a document an older version of the class wrote — needs no database
+     * and should not have to start one to ask this question.
+     */
+    internal fun decode(
+        charSequence: CharSequence,
+        type: Type,
+    ): Any =
+        json.decodeValue(serializerFor(type), charSequence.toString()) {
             JpaDocumentException(type, it)
-        } as T
-    }
+        }
 
     /**
      * `serializerOrNull` rather than `serializer`, so a type with no `@Serializable` fails naming the
