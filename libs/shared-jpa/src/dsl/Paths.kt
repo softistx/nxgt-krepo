@@ -1,6 +1,7 @@
 package com.strange.jpa.dsl
 
 import jakarta.persistence.criteria.From
+import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Path
 import org.hibernate.query.criteria.HibernateCriteriaBuilder
 import kotlin.reflect.KProperty1
@@ -38,4 +39,15 @@ sealed interface Paths<T : Any> {
 
     /** The path to an attribute — the DSL's primitive, and the only typed way in. */
     operator fun <V> get(property: KProperty1<T, V>): Path<V> = from.get(property.name)
+
+    /**
+     * Ascending by an attribute, so an ordering reads like a restriction does.
+     *
+     * `orderBy { asc(Purchase::total) }`. The top-level [asc] takes an expression and is the one for
+     * a join's column or a function's result — `asc(lower(this[Buyer::name]))`.
+     */
+    fun asc(property: KProperty1<T, *>): Order = builder.asc(this[property])
+
+    /** Descending by an attribute. */
+    fun desc(property: KProperty1<T, *>): Order = builder.desc(this[property])
 }

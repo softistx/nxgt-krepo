@@ -29,7 +29,7 @@ class MutateDslTest :
                 block(jpa)
             }
 
-        suspend fun Jpa.names(): List<String> = session { it.select<Thing> { orderBy { asc(this[Thing::id]) } }.list() }.map { it.name }
+        suspend fun Jpa.names(): List<String> = session { it.select<Thing> { orderBy { asc(Thing::id) } }.list() }.map { it.name }
 
         feature("an update").config(enabled = JpaTestDatabase.available) {
             scenario("assigns what it was told, to the rows it was told") {
@@ -38,8 +38,8 @@ class MutateDslTest :
                         jpa.transaction { session ->
                             session
                                 .update<Thing> {
-                                    this[Thing::name] set "changed"
-                                    where { this[Thing::id] le 2L }
+                                    set(Thing::name, "changed")
+                                    where { Thing::id le 2L }
                                 }.execute()
                         }
 
@@ -58,8 +58,8 @@ class MutateDslTest :
                         jpa.transaction { session ->
                             session
                                 .update<Thing> {
-                                    this[Thing::name] set "x"
-                                    where { this[Thing::id] gt 2L }
+                                    set(Thing::name, "x")
+                                    where { Thing::id gt 2L }
                                 }.execute()
                         }
 
@@ -75,13 +75,13 @@ class MutateDslTest :
                     jpa.transaction { session ->
                         session
                             .update<Thing> {
-                                this[Thing::id] set (this[Thing::id] + 10L)
-                                where { this[Thing::id] le 2L }
+                                set(Thing::id, this[Thing::id] + 10L)
+                                where { Thing::id le 2L }
                             }.execute()
                     }
 
                     jpa
-                        .session { it.select<Thing> { orderBy { asc(this[Thing::id]) } }.list() }
+                        .session { it.select<Thing> { orderBy { asc(Thing::id) } }.list() }
                         .map { it.id } shouldContainExactly listOf(11L, 12L)
                 }
             }
@@ -91,7 +91,7 @@ class MutateDslTest :
                     val refused =
                         shouldThrow<JpaUnrestrictedMutationException> {
                             jpa.transaction { session ->
-                                session.update<Thing> { this[Thing::name] set "all" }.execute()
+                                session.update<Thing> { set(Thing::name, "all") }.execute()
                             }
                         }
 
@@ -101,7 +101,7 @@ class MutateDslTest :
                     jpa.transaction { session ->
                         session
                             .update<Thing> {
-                                this[Thing::name] set "all"
+                                set(Thing::name, "all")
                                 everyRow()
                             }.execute()
                     } shouldBe 4
@@ -116,8 +116,8 @@ class MutateDslTest :
                         jpa.transaction { session ->
                             session
                                 .update<Thing> {
-                                    this[Thing::name] set "all"
-                                    where { filter?.let { id -> this[Thing::id] eq id } }
+                                    set(Thing::name, "all")
+                                    where { filter?.let { id -> Thing::id eq id } }
                                 }.execute()
                         }
                     }
@@ -132,7 +132,7 @@ class MutateDslTest :
                 seeded { jpa ->
                     val gone =
                         jpa.transaction { session ->
-                            session.delete<Thing> { where { this[Thing::name] oneOf listOf("two", "four") } }.execute()
+                            session.delete<Thing> { where { Thing::name oneOf listOf("two", "four") } }.execute()
                         }
 
                     gone shouldBe 2
@@ -164,8 +164,8 @@ class MutateDslTest :
                             session.update(Thing(1, "renamed"))
                             session
                                 .update<Thing> {
-                                    this[Thing::name] set "bulk"
-                                    where { this[Thing::id] ge 3L }
+                                    set(Thing::name, "bulk")
+                                    where { Thing::id ge 3L }
                                 }.execute()
                         }
 
