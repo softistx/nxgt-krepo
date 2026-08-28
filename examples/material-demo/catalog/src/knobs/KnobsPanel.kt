@@ -1,13 +1,17 @@
 package com.strange.material.demo.knobs
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.strange.material.demo.PaneScrollbar
 import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
@@ -23,22 +27,29 @@ fun KnobsPanel(
     modifier: Modifier = Modifier,
 ) {
     val controls = knobs.controls
-    Column(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(StrangeTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.lg),
-    ) {
-        Typography(text = "Controls", variant = TypographyVariant.Overline, emphasis = Emphasis.Medium)
-        if (controls.isEmpty()) {
-            Typography(
-                text = "This story takes no knobs.",
-                variant = TypographyVariant.BodySmall,
-                emphasis = Emphasis.Subtle,
-            )
+    val scrollState = rememberScrollState()
+    Box(modifier = modifier) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)
+                    .padding(StrangeTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.lg),
+        ) {
+            Typography(text = "Controls", variant = TypographyVariant.Overline, emphasis = Emphasis.Medium)
+            if (controls.isEmpty()) {
+                Typography(
+                    text = "This story takes no knobs.",
+                    variant = TypographyVariant.BodySmall,
+                    emphasis = Emphasis.Subtle,
+                )
+            }
+            controls.forEach { KnobControl(knobs = knobs, knob = it) }
         }
-        controls.forEach { KnobControl(knobs = knobs, knob = it) }
+        PaneScrollbar(
+            state = scrollState,
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+        )
     }
 }
