@@ -1,15 +1,17 @@
 package com.strange.example.shop
 
 import com.strange.example.shop.domain.Product
-import com.strange.example.shop.domain.ProductRepository
 import com.strange.example.shop.model.EditProduct
 import com.strange.example.shop.model.NewProduct
 import com.strange.example.shop.model.view
+import com.strange.jpa.audit.stampedBy
+import com.strange.jpa.audit.touchedBy
 import com.strange.jpa.scan.scanEntities
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
+import kotlin.time.Instant
 
 /**
  * What this example can assert without a database.
@@ -31,13 +33,21 @@ class ShopTest :
             }
         }
 
-        feature("the repository") {
-            scenario("knows which entity it is over, with nothing having named the class") {
-                // `Product::id` is the only thing ProductRepository was given, and the resolution
-                // has to work from another module — which is the half shared-jpa's own specs cannot
-                // check from the inside.
-                ProductRepository().name shouldBe "Product"
-                ProductRepository().id.name shouldBe "id"
+        feature("the audit stamp") {
+            // The half shared-jpa's own specs cannot check from the inside: that the stamp applies
+            // to an entity declared in another module, and that it chains.
+            scenario("names the principal on a create, and leaves the timestamps to Hibernate") {
+                val product = Product(sku = "A-1", name = "Anvil").stampedBy("ada")
+
+                product.createdBy shouldBe "ada"
+                product.lastModifiedBy shouldBe "ada"
+                product.createdAt shouldBe Instant.fromEpochSeconds(0)
+            }
+
+            scenario("an unknown principal writes no name, rather than an empty one") {
+                val product = Product(sku = "A-1", name = "Anvil").stampedBy("ada").touchedBy(null)
+
+                product.lastModifiedBy shouldBe "ada"
             }
         }
 

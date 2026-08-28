@@ -20,13 +20,15 @@ import kotlin.time.Instant
  * service comparing fields could not tell the difference, which is why this half is not the
  * service's job.
  *
- * **With one caveat, and it is the service's doing rather than Hibernate's.** `JpaCrudService`
- * stamps [lastModifiedBy] before the flush, so an update that changes nothing else but arrives from
- * a *different* principal than the one on the row is not a no-op: that assignment is itself a
- * change, `@PreUpdate` fires, and [lastModifiedAt] moves. That is the intended reading — the row
- * records who touched it last, and somebody did — but it means "a no-op moves nothing" holds only
- * while the principal is unchanged. `AuditedEntityTest` pins both halves. The other half is: only a service knows the principal, so `JpaCrudService` fills in
- * [createdBy] and [lastModifiedBy].
+ * **[createdBy] and [lastModifiedBy] are yours to set.** Only the caller knows the principal, and
+ * this module has no place to put one — there is no ambient user on a Vert.x context and nothing
+ * here reads a security context. Assign them before the flush that writes the row; an unset one is
+ * the empty string, which says so as plainly as the epoch does for a timestamp.
+ *
+ * Setting [lastModifiedBy] on an update that changes nothing else is itself a change, so `@PreUpdate`
+ * fires and [lastModifiedAt] moves. That is the intended reading — the row records who touched it
+ * last, and somebody did — but it means "a no-op moves nothing" holds only while the principal is
+ * unchanged. `AuditedEntityTest` pins both halves.
  *
  * The four names are `shared-mongo`'s `AuditMetadata`, so a caller reading an audit trail asks the
  * same question of either store. Mongo nests them under a `metadata` sub-document because a document
@@ -59,3 +61,40 @@ abstract class AuditedEntity {
         lastModifiedAt = Clock.System.now()
     }
 }
+
+/**
+ * Records who is creating this, and answers with it so the call chains.
+ *
+ * ```kotlin
+ * session.insert(Purchase(reference = input.reference).stampedBy(principal))
+ * ```
+ *
+ * Both halves start out the same, which is what makes a row that was never updated say so. *When*
+ * is not set here — `@PrePersist` does that inside the flush, the one place that can tell a real
+ * write from an update the dirty check turned into a no-op.
+ *
+ * **A null principal stamps nothing**, leaving the empty string that says "unset" as plainly as the
+ * epoch does for a timestamp. Writing an empty name over a real one would be worse than saying
+ * nothing.
+ */
+fun <T : AuditedEntity> T.stampedBy(principal: String?): T =
+    apply {
+        if (principal != null) {
+            createdBy = principal
+            lastModifiedBy = principal
+        }
+    }
+
+/**
+ * The same, for an update: only [AuditedEntity.lastModifiedBy] moves.
+ *
+ * Worth knowing: assigning it *is* a change when the principal differs from the one on the row, so
+ * an update that touches nothing else still fires `@PreUpdate` and moves
+ * [AuditedEntity.lastModifiedAt]. That is the intended reading — the row records who touched it
+ * last, and somebody did — but it means "a no-op moves nothing" holds only while the principal is
+ * unchanged. Call it after applying the update, on the managed instance.
+ */
+fun <T : AuditedEntity> T.touchedBy(principal: String?): T =
+    apply {
+        if (principal != null) lastModifiedBy = principal
+    }
