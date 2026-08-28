@@ -69,3 +69,33 @@ class JpaDocumentException(
     val type: Type,
     cause: Throwable,
 ) : JpaException("the stored JSON is not a $type", cause)
+
+/**
+ * A bulk `update` or `delete` built through the DSL with nothing restricting it.
+ *
+ * HQL allows `delete from Purchase` and so does this — but only when it is said out loud, with
+ * `everyRow()`. The DSL is assembled from parts, and `where { }` adds nothing when its block answers
+ * null; a statement whose every filter turned out not to apply is then a statement against the whole
+ * table, which is never what the code that built it meant. Saying so costs one call and the mistake
+ * costs a restore.
+ */
+class JpaUnrestrictedMutationException(
+    val type: KClass<*>,
+    val statement: String,
+) : JpaException(
+        "$statement over every ${type.simpleName} row: nothing restricts it. " +
+            "Add a where, or say everyRow() if that is the intent",
+    )
+
+/**
+ * A page this library will not cut: a sort with no unique last key, a cursor from another query, or
+ * a key whose type it cannot put in one.
+ *
+ * Keyset pagination resumes from the previous page's sort key, so the key has to be unique — sort by
+ * a repeated column alone and every row sharing a value is a coin toss between being served twice
+ * and being skipped. That is a data bug that reads as a UI bug, so it is refused when the page is
+ * built rather than discovered in production.
+ */
+class JpaPaginationException(
+    message: String,
+) : JpaException(message)

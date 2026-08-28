@@ -91,7 +91,7 @@ class JsonColumnTest :
                     // Written by a newer version of the class, or by another service, or by hand.
                     jpa.transaction {
                         it
-                            .nativeMutation(
+                            .nativeMutate(
                                 """
                                 update "$schema".customers
                                 set address = '{"street":"a","city":"b","country":"FR","note":null,"floor":3}'::jsonb
@@ -137,7 +137,7 @@ class JsonColumnTest :
                     val schema = jpa.config.schema!!
                     jpa.transaction { it.persist(Customer(1)) }
                     jpa.transaction {
-                        it.nativeMutation("""update "$schema".customers set address = null where id = 1""").execute()
+                        it.nativeMutate("""update "$schema".customers set address = null where id = 1""").execute()
                     }
 
                     jpa

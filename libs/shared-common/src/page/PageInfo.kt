@@ -1,4 +1,4 @@
-package com.strange.mongo.page
+package com.strange.common.page
 
 import kotlinx.serialization.Serializable
 
