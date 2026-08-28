@@ -12,4 +12,10 @@ package com.strange.jpa.dsl
  */
 class JoinRegistry<T : Any> {
     internal val taken: MutableMap<String, JoinScope<T, *>> = mutableMapOf()
+
+    /**
+     * Whether a [Fetches.fetchEach] has been taken, which is what makes `limit`, `offset` and `page`
+     * unsafe on this query — see [QueryScope.limit].
+     */
+    internal var collectionFetched: Boolean = false
 }

@@ -1,5 +1,6 @@
 package com.strange.jpa.dsl
 
+import com.strange.jpa.JpaPaginationException
 import com.strange.jpa.query.JpaQuery
 import com.strange.jpa.query.hql
 import jakarta.persistence.criteria.CriteriaQuery
@@ -79,18 +80,41 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
     ): SELF = self.also { keys += SortKey(property, ascending = !descending) }
 
     /**
-     * Collapses duplicate rows.
+     * Puts `distinct` in the SQL.
      *
-     * Worth reaching for after a [joinEach]: a join to a to-many association returns the owning row
-     * once per element, and a query selecting the owner rarely means that.
+     * **It is about the query the database runs, not about the list Kotlin receives.** A [joinEach]
+     * does return the owner once per element — but an entity query de-duplicates by identity before
+     * it answers, on Hibernate 7 and whether the join fetches or not, so `select<Purchase>` over a
+     * to-many join gives each purchase once with this or without it. A [ProjectScope] over the same
+     * join sees every row, and is where this changes what comes back: three purchases holding three,
+     * one and no lines are three entities and five projected rows. `FetchJoinTest` measures both,
+     * because the older rule — *always `distinct` after a collection join* — is still the one most
+     * people carry and it is no longer true here.
      */
     fun distinct(distinct: Boolean = true): SELF = self.also { query.distinct(distinct) }
 
-    /** At most this many rows. */
-    fun limit(count: Int): SELF = self.also { rowLimit = count }
+    /**
+     * At most this many rows.
+     *
+     * **Refused on a query that fetched a collection**, because the database applies it to the
+     * *joined* rows rather than to the owners. Measured against Postgres: three purchases holding
+     * three, one and two lines, `left join fetch` and `limit(2)`, answers with **one** purchase
+     * holding **two** of its three lines — fewer owners than asked for, and one of them silently
+     * incomplete but cached as whole. Nothing warns. Page the owners first and fetch their
+     * collections in a second query, or project the columns the page actually shows.
+     */
+    fun limit(count: Int): SELF =
+        self.also {
+            refuseWithCollectionFetch("limit")
+            rowLimit = count
+        }
 
     /** Skips this many rows first. Meaningless without an ordering, since nothing else fixes it. */
-    fun offset(count: Int): SELF = self.also { rowOffset = count }
+    fun offset(count: Int): SELF =
+        self.also {
+            refuseWithCollectionFetch("offset")
+            rowOffset = count
+        }
 
     /**
      * Marks the results read-only, which is worth doing whenever they are.
@@ -115,7 +139,28 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
     /** How many rows this would return, ignoring [limit] and [offset] — the total a pager needs. */
     suspend fun count(): Long = built().count()
 
+    /**
+     * Refuses [operation] on a query that fetched a collection — see [limit] for the measurement.
+     *
+     * Called from the builders rather than from [built], so the refusal names the call that was
+     * wrong at the moment it is made, whichever order the two were written in.
+     */
+    internal fun refuseWithCollectionFetch(operation: String) {
+        if (joins.collectionFetched) {
+            throw JpaPaginationException(
+                "$operation cannot be combined with fetchEach: the database applies it to the joined " +
+                    "rows, so the last owner comes back holding part of its collection and nothing " +
+                    "says so. Page the owners and fetch their collections separately, or project",
+            )
+        }
+    }
+
     private fun built(): JpaQuery<R> {
+        // Again here, because the builders only catch the order they were written in: `fetchEach`
+        // after `limit` reaches neither of them.
+        if (rowLimit != null) refuseWithCollectionFetch("limit")
+        if (rowOffset != null) refuseWithCollectionFetch("offset")
+
         val criteria = build()
         return JpaQuery({ criteria.hql() }, producer.createQuery(criteria))
             .apply {
