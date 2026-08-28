@@ -4,6 +4,7 @@ import com.strange.common.page.Page
 import com.strange.jpa.JpaMappingException
 import com.strange.jpa.JpaNotFoundException
 import com.strange.jpa.JpaOutsideTransactionException
+import com.strange.jpa.dsl.JpaEntityGraph
 import com.strange.jpa.dsl.JpaSpec
 import com.strange.jpa.dsl.SelectScope
 import com.strange.jpa.dsl.eq
@@ -104,16 +105,30 @@ open class JpaRepository<T : Any, ID : Any>(
         spec: JpaSpec<T>,
     ): T? = query(session, spec).first()
 
+    /**
+     * By identifier, loading what [graph] plans when there is one.
+     *
+     * This is where a fetch plan earns its place over a fetch join: `findById` has no query to hang
+     * a join on, and the association it did not load is not slow to read in a reactive session — it
+     * throws. [query] is the seam for the same question on the multi-row reads.
+     */
     open suspend fun findById(
         session: JpaSession,
         value: ID,
-    ): T? = session.raw.find(entity.java, value).await()
+        graph: JpaEntityGraph<T>? = null,
+    ): T? =
+        if (graph == null) {
+            session.raw.find(entity.java, value).await()
+        } else {
+            session.raw.find(graph.raw, value).await()
+        }
 
     /** [findById], throwing [JpaNotFoundException] instead of answering null. */
     open suspend fun requireById(
         session: JpaSession,
         value: ID,
-    ): T = findById(session, value) ?: throw JpaNotFoundException(entity, value)
+        graph: JpaEntityGraph<T>? = null,
+    ): T = findById(session, value, graph) ?: throw JpaNotFoundException(entity, value)
 
     open suspend fun findByIds(
         session: JpaSession,

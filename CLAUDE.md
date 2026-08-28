@@ -32,8 +32,10 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   and the query names what the caller needs with `fetch` / `fetchEach`, or projects the columns and
   loads no entity. `EAGER` is not the shortcut it looks like: it is the N+1, measured at three
   secondary fetches for three rows in `FetchJoinTest`. AGENTS.md's Performance section has the rule
-  and `docs/jpa-query-dsl.md` the vocabulary, including why `limit`/`offset`/`page` are refused
-  after a `fetchEach`.
+  and `docs/jpa-query-dsl.md` the vocabulary. `fetch`/`fetchEach` are for a query; an
+  `entityGraph { }` is for a `find` or a repository read by identifier, which has no query to join
+  on, and for nesting more than one level. Either way `limit`/`offset`/`page` are refused once a
+  collection is being loaded.
 - Look in `libs/shared-common` before writing a helper, and move one there when a second module wants it — it holds what is reusable across libraries and apps, and depends on nothing but kotlinx. AGENTS.md explains which of its three concurrency types fits a given caller; the short version is that a Java callback cannot take a `Mutex`, so it gets a `Mailbox`.
 - A Ktor integration assumes the resource is not its own: it takes an `instance` as well as a config, closes only what it opened, and can register what it installed with the DI container (`injectable = true`) so a class built by that container is not forced through `call.x`. Anything `AutoCloseable` closes through `CloseGuard` — Ktor's DI closes what it hands out and cannot be told not to, so a second close has to be harmless. AGENTS.md's *Shared code* section has all three rules.
 - New code goes under `com.strange.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.

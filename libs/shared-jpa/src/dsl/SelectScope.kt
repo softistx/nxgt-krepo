@@ -24,4 +24,24 @@ class SelectScope<T : Any>
     ) : QueryScope<T, T, SelectScope<T>>(producer, query, from),
         Fetches<T> {
         override val joins: JoinRegistry<T> = JoinRegistry()
+
+        /**
+         * Loads what [graph] plans, rather than saying it inline with [Fetches.fetch].
+         *
+         * The two do the same thing to one query and are worth having both of: a fetch reads better
+         * where it is used once, and a plan is a value — named, held, and applied to a `find` and a
+         * `select` that then cannot disagree about what a "purchase with its buyer" means.
+         *
+         * A plan that loads a collection makes `limit`, `offset` and `page` refuse here exactly as
+         * `fetchEach` does, and for the same measured reason.
+         *
+         * Only here, and not on a projection: `setPlan` takes an `EntityGraph` of the query's own
+         * result type, and a projection's rows are not the entity — the type says so before the
+         * runtime has to.
+         */
+        fun graph(graph: JpaEntityGraph<T>): SelectScope<T> =
+            also {
+                fetchPlan = graph.raw
+                if (graph.holdsCollection) joins.collectionFetched = true
+            }
     }

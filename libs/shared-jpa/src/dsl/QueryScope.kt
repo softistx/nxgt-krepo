@@ -3,6 +3,7 @@ package com.strange.jpa.dsl
 import com.strange.jpa.JpaPaginationException
 import com.strange.jpa.query.JpaQuery
 import com.strange.jpa.query.hql
+import jakarta.persistence.EntityGraph
 import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Order
 import jakarta.persistence.criteria.Predicate
@@ -54,6 +55,7 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
     internal var rowLimit: Int? = null
     internal var rowOffset: Int? = null
     internal var resultsReadOnly = false
+    internal var fetchPlan: EntityGraph<R>? = null
 
     @Suppress("UNCHECKED_CAST")
     private val self: SELF get() = this as SELF
@@ -148,9 +150,10 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
     internal fun refuseWithCollectionFetch(operation: String) {
         if (joins.collectionFetched) {
             throw JpaPaginationException(
-                "$operation cannot be combined with fetchEach: the database applies it to the joined " +
-                    "rows, so the last owner comes back holding part of its collection and nothing " +
-                    "says so. Page the owners and fetch their collections separately, or project",
+                "$operation cannot be combined with loading a collection — fetchEach, or a graph " +
+                    "that addEach-es one: the database applies it to the joined rows, so the last " +
+                    "owner comes back holding part of its collection and nothing says so. Page the " +
+                    "owners and load their collections separately, or project",
             )
         }
     }
@@ -164,6 +167,7 @@ abstract class QueryScope<T : Any, R : Any, SELF : QueryScope<T, R, SELF>> inter
         val criteria = build()
         return JpaQuery({ criteria.hql() }, producer.createQuery(criteria))
             .apply {
+                fetchPlan?.let { plan(it) }
                 rowLimit?.let { limit(it) }
                 rowOffset?.let { offset(it) }
                 if (resultsReadOnly) readOnly()
