@@ -162,13 +162,52 @@ vient de `$compose.desktop.currentOs`, qui n'existe que sur jvm.
 
 ---
 
+## Phase 2 — Formulaires
+
+Le critère de recette : `screens/sign-up-form` — huit contrôles, une validation croisée, des erreurs
+qui attendent leur tour, un bouton qui sait s'il peut être pressé — s'écrit avec **un seul**
+`remember`, et c'est de l'état métier.
+
+**L'état**
+- [x] `FieldState<T>` — valeur, validité, `touched`, `dirty`, et surtout `showError` : une erreur est
+      *retenue* jusqu'à ce que le champ soit quitté après avoir été saisi, ou que `validate()`
+      l'exige. Un formulaire vide qui accueille le lecteur avec six reproches est ce que ce type
+      empêche
+- [x] `FormState` + `rememberForm` + `form.field(name, initial, vararg rules)` — il ne copie rien,
+      il interroge ses champs ; `isValid`, `dirty`, `errors`, `values()`, `validate()`,
+      `submit { }`, `reset()`
+- [x] `Validation<T>` — une règle est une fonction `(T) -> String?`. **Aucune dépendance de
+      validation** : Konform ou autre se branche en trois lignes, la librairie n'impose rien
+- [x] `Rules` — `required`, `minLength`, `maxLength`, `email`, `pattern`, `digits`, `matching`,
+      `checked`, `chosen`, `anyOf`, `inRange`
+
+**Les contrôles**
+- [x] `TextField` (avec `secret` et son bouton de révélation), `TextareaField` (avec compteur),
+      `SelectField` — tous trois sur l'`OutlinedTextField` de M3, qui porte déjà le label flottant,
+      le texte d'aide et les couleurs d'erreur
+- [x] `Checkbox`, `Switch`, `RadioGroup`, `CheckboxGroup` — la ligne entière est **une** cible, label
+      compris ; M3 ne livre que la case
+- [x] `SliderField` — la valeur reste visible, ce que le `Slider` de M3 ne fait qu'au glissement
+- [x] `OtpField` — **un** champ portant plusieurs cases, et non une case par chiffre : le collage
+      fonctionne, l'effacement aussi, et le lecteur d'écran reçoit une seule saisie
+- [x] `InputGroup`, `ExtendedLabel`, `HelperText`, `FieldScaffold` — l'habillage des contrôles que
+      M3 laisse nus, écrit une fois
+- [x] `ChevronDown`, `Eye`, `EyeOff` ajoutés au jeu d'icônes
+
+**Vérification**
+- [x] `RulesTest`, `FieldStateTest`, `FormStateTest` — l'ordre des règles est le message, une règle
+      de format laisse passer le vide, une erreur attend son tour, `validate()` les fait toutes
+      parler, et déclarer deux fois le même nom rend le même champ
+- [x] `FormRenderTest` — chaque contrôle est réellement rendu (`ImageComposeScene`), pour la classe
+      de panne qui compile puis explose à l'affichage
+- [x] Une story par contrôle, plus `screens/sign-up-form`
+
+---
+
 ## Phases suivantes
 
 Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
 
-- [ ] **2 — Formulaires.** `Field` / `FieldState`, `FormState` + `rememberForm`, validation Konform,
-      `TextField`, `TextareaField`, `SelectField`, `Checkbox` (+ groupe), `RadioGroup`, `Switch`,
-      `Slider`, `OtpField`, `InputGroup`, `HelperText`, `ExtendedLabel`
 - [ ] **3 — Navigation et layouts adaptatifs.** `TopAppBar`, `BottomAppBar`, `NavigationRail`,
       `Sidebar`, `Tabs`, `Breadcrumb`, `Stepper`, `Switcher`, `ListDetailsLayout`, `PaneLayout`,
       `ResponsiveGrid`, `ScrollToTop`, `LoadMoreButton`
