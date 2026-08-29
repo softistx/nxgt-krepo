@@ -1,0 +1,44 @@
+product: jvm/app
+description: "A demo order book on stx-spring: functional WebFlux routes, keyset paging, an audit trail and two migrations"
+
+dependencies:
+  # The library this example is about: the error handler, the web helpers, the Mongo criteria and
+  # filter grammar, the audit trail and the migration runner. It exports stx-i18n and stx-common,
+  # so `Messages`, `Page` and `ApiException` come with it.
+  - //libs/stx-spring
+
+  # Spring Data Reactive Mongo is `compile-only` in stx-spring — a package guarded by
+  # `@ConditionalOnClass` is dark until the application adds the library itself. This is the
+  # application adding it, and it is the whole demonstration of that rule.
+  - $spring.boot.starter.data.mongodb.reactive
+
+  # Object diffing, for the audit trail. Compile-only there for the same reason.
+  - $libs.javers.core
+
+test-dependencies:
+  # The MongoDB `OrdersTest` drives the whole application against: `MONGO_TEST_URI` when the
+  # workspace's replica set is already up, a container started once for the run otherwise, and the
+  # spec reports skipped when neither is there.
+  - //libs/stx-testing
+
+  # `WebTestClient`, which is what makes this an end-to-end test rather than a unit one: it speaks
+  # HTTP to a real port, so the routes, the codecs, the exception advice and the Mongo mapping are
+  # all exercised the way a client exercises them.
+  - $spring.boot.starter.test
+
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  # Applies the Spring Boot BOM (4.1.0), all-open with the `spring` preset — so `@Configuration` and
+  # `@MigrationUnit` classes need not be written `open` — and `-java-parameters`.
+  springBoot: enabled
+  kotlin:
+    serialization: json
+  jvm:
+    # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file named
+    # `main.kt`; this one is `OrdersApplication.kt`, because a Spring Boot application is named after
+    # its `@SpringBootApplication` class and hiding that in `main.kt` to satisfy a build is the tail
+    # wagging the dog.
+    mainClass: com.strange.example.orders.OrdersApplicationKt

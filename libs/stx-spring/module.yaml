@@ -35,8 +35,14 @@ dependencies:
   # kotlinx-coroutines-reactor, for `mono { }` and the Reactor-specific awaits in `client/`.
   # `kotlinx-coroutines-reactive` — which the webflux starter does not bring either — covers
   # `Publisher`, and the two are separate artifacts with overlapping names: `awaitSingleOrNull` on a
-  # `Mono` is the Reactor one, `awaitFirstOrNull` on a `Publisher` is the other.
-  - $libs.kotlinx.coroutines.reactor
+  # `Mono` is the Reactor one, `awaitFirstOrNull` on a `Publisher` is the other. Reactor brings
+  # reactive transitively, so one entry covers both.
+  #
+  # `exported`, and not as a convenience: `body<T>()`, `existsBy<T>()` and `findAsFlow<T>()` are
+  # `inline`, so their bodies — and the `awaitSingle`/`asFlow` calls in them — are compiled into the
+  # *caller*. A consumer without this on its own classpath fails to compile the moment it uses one,
+  # which is what `examples/spring-orders` did before this line said `exported`.
+  - $libs.kotlinx.coroutines.reactor: exported
 
   # One entry per optional integration, and every one of them compile-only — the same rule and the
   # same reason as stx-ktor. A package guarded by `@ConditionalOnClass` is dark until the application
