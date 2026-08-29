@@ -32,11 +32,18 @@ class MigrationStore(
      * Called before a run rather than left to `IndexInitializer`, because that one only sees types
      * the mapping context has already met — and the whole point of this index is to be there the
      * first time a migration is recorded, on a database where nothing has been recorded yet.
+     *
+     * **`named("code")` is load-bearing.** `MigrationEntry.code` also carries `@Indexed`, so
+     * `IndexInitializer` creates the same index whenever `stx.data.mongo.create-indexes` is on —
+     * under the name Spring Data derives from the property, which is `code`. Left unnamed, this one
+     * asks for `code_1`, Mongo answers `IndexOptionsConflict: Index already exists with a different
+     * name`, and the whole migration run aborts into a log line nobody reads. Two features that are
+     * each meant to be safe on every boot are not safe together unless they agree about the name.
      */
     suspend fun prepare() {
         template
             .indexOps(migrations)
-            .createIndex(Index().on("code", Sort.Direction.ASC).unique())
+            .createIndex(Index().on("code", Sort.Direction.ASC).unique().named("code"))
             .awaitFirstOrNull()
     }
 

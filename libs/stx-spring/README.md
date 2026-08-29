@@ -12,10 +12,17 @@ com.strange.spring.security who is calling, and the annotations that say who may
 com.strange.spring.cors     a browser policy read from configuration
 com.strange.spring.json     kotlinx-serialization as WebFlux's codec
 com.strange.spring.data     the Spring Data layer — Mongo's query vocabulary, paging and wiring
+com.strange.spring.integration  one auto-configuration per stx-* library
 ```
 
-More packages arrive in their own changes: the Mongo template and auditing, and one
-auto-configuration per `stx-*` library. What follows is true of all of them.
+`examples/spring-orders` is all of it running: a Spring Boot application with **no configuration
+class at all**, whose whole wiring is `stx.*` lines in `application.yaml`, and whose spec drives it
+over HTTP against a real MongoDB.
+
+An application needs nothing beside `//libs/stx-spring` to use any of this. The one dependency worth
+knowing about is `kotlinx-coroutines-reactor`, which is `exported` deliberately: `body<T>()`,
+`existsBy<T>()` and `findAsFlow<T>()` are `inline`, so the `awaitSingle`/`asFlow` calls in them are
+compiled into the *caller* and have to resolve on the caller's own classpath.
 
 ## Everything is opt-in
 
@@ -333,6 +340,15 @@ and rebuilt them at each startup, which is an outage waiting for a large collect
 rebuilds, every query that used it scans — once per instance on a rolling deploy. Creating an index
 that already exists is a no-op in Mongo, so create-only is idempotent and safe on every boot, and an
 index no longer declared is left alone because deciding it is unused is a migration's job.
+
+Idempotent per feature is not the same as idempotent together, which is the one sharp edge here.
+`MigrationEntry.code` carries `@Indexed(unique = true)` *and* is indexed by `MigrationStore.prepare`
+before every run — two features that each create the same index. Mongo refuses a second `createIndex`
+over the same keys under a different name, and Spring Data names an `@Indexed` index after the
+property while an unnamed `Index()` gets Mongo's `code_1`. So `prepare` names its index `code`, and
+`MigrationIndexTest` pins the agreement in both orders. Left disagreeing, the two switches are safe
+alone and, together, abort the migration run into a warning nobody reads during a deploy — which is
+how `examples/spring-orders` found it, by turning both on.
 
 ## The audit trail
 
