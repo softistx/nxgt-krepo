@@ -21,16 +21,18 @@ import com.strange.material.theme.StrangeTheme
  */
 @Composable
 fun SliderField(
-    field: FieldState<Float>,
+    value: Float,
+    onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
     helper: String? = null,
+    supportingText: String? = null,
     enabled: Boolean = true,
     range: ClosedFloatingPointRange<Float> = 0f..100f,
     steps: Int = 0,
     format: (Float) -> String = { it.toInt().toString() },
 ) {
-    FieldScaffold(modifier = modifier, helper = helper, error = field.visibleError) {
+    FieldScaffold(modifier = modifier, helper = helper, error = supportingText) {
         if (label != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -38,17 +40,16 @@ fun SliderField(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ExtendedLabel(text = label)
-                Typography(text = format(field.value), variant = TypographyVariant.Metric)
+                Typography(text = format(value), variant = TypographyVariant.Metric)
             }
         }
         Slider(
-            value = field.value,
-            onValueChange = field::change,
+            value = value,
+            onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
             valueRange = range,
             steps = steps,
-            onValueChangeFinished = field::touch,
         )
     }
 }

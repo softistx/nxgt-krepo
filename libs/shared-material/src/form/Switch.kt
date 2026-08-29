@@ -25,7 +25,8 @@ import androidx.compose.material3.Switch as MaterialSwitch
  */
 @Composable
 fun Switch(
-    field: FieldState<Boolean>,
+    value: Boolean,
+    onValueChange: (Boolean) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
     description: String? = null,
@@ -36,10 +37,10 @@ fun Switch(
             modifier
                 .fillMaxWidth()
                 .toggleable(
-                    value = field.value,
+                    value = value,
                     enabled = enabled,
                     role = Role.Switch,
-                    onValueChange = field::change,
+                    onValueChange = onValueChange,
                 ),
         horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
@@ -57,6 +58,6 @@ fun Switch(
                 )
             }
         }
-        MaterialSwitch(checked = field.value, onCheckedChange = null, enabled = enabled)
+        MaterialSwitch(checked = value, onCheckedChange = null, enabled = enabled)
     }
 }

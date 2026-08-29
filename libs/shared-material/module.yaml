@@ -19,6 +19,11 @@ dependencies:
   # A whole palette derived from one seed colour: `rememberStrangeColors(seed)` answers with a
   # ColorScheme, so a consumer that names a seed never hand-writes 48 roles.
   - $libs.material.kolor: exported
+  # Konform is the validation engine behind FormState: a form declares `override val validate =
+  # Validation { ... }`, so konform's Validation<T> is in this module's public API and has to be
+  # exported. It publishes iosArm64 and iosSimulatorArm64 — this module's two Apple targets —
+  # along with jvm, so naming it here resolves on every platform the module declares.
+  - $libs.konform: exported
 
 test-dependencies:
   - $libs.kotest.framework.engine

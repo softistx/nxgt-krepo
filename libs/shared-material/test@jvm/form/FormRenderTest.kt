@@ -23,21 +23,21 @@ import io.kotest.matchers.shouldBe
  * negative. The library met that class twice already, and each time only by running the catalogue
  * and clicking to the right story.
  *
- * It also pins the one behaviour that is worth seeing rather than reasoning about: an untouched
- * required field paints no error, and the same field paints one once it has been left.
+ * It also pins the one behaviour that is worth seeing rather than reasoning about: a field given no
+ * complaint paints no error line, and the same field paints one once it is given one.
  */
 class FormRenderTest :
     FeatureSpec({
         feature("every control in the package") {
             scenario("renders without throwing, and paints something") {
-                render { paint(touched = false) } shouldBeGreaterThan 0
+                render { paint(complaining = false) } shouldBeGreaterThan 0
             }
         }
 
-        feature("a required field that has not been visited") {
-            scenario("paints no more than the same field with nothing to say") {
-                val quiet = render { paint(touched = false) }
-                val complaining = render { paint(touched = true) }
+        feature("a field with nothing to say") {
+            scenario("paints less than the same field carrying a complaint") {
+                val quiet = render { paint(complaining = false) }
+                val complaining = render { paint(complaining = true) }
 
                 // The error line is ink that was not there before; nothing else changed.
                 (complaining > quiet) shouldBe true
@@ -78,26 +78,45 @@ private fun render(content: @Composable () -> Unit): Int {
 }
 
 @Composable
-private fun paint(touched: Boolean) {
-    val name = rememberField("", Rules.required())
-    val notes = rememberField("", Rules.maxLength(160))
-    val country = rememberField<String?>(null, Rules.chosen())
-    val terms = rememberField(false, Rules.checked())
-    val digest = rememberField(true)
-    val plan = rememberField<String?>("Monthly")
-    val channels = rememberField(setOf("Email"))
-    val budget = rememberField(40f)
-    val code = rememberField("12")
-    if (touched) name.touch()
+private fun paint(complaining: Boolean) {
+    val complaint = "This field is required".takeIf { complaining }
 
-    TextField(field = name, label = "Full name")
-    TextareaField(field = notes, label = "Notes", maxLength = 160, minLines = 2, maxLines = 3)
-    SelectField(field = country, options = listOf("France", "Peru"), label = "Country")
-    Checkbox(field = terms, label = "I accept the terms")
-    Switch(field = digest, label = "Weekly digest")
-    RadioGroup(field = plan, options = listOf("Monthly", "Yearly"), label = "Billing")
-    CheckboxGroup(field = channels, options = listOf("Email", "SMS"), label = "Tell me by")
-    SliderField(field = budget, label = "Budget")
-    OtpField(field = code, length = 4, label = "Code")
-    InputGroup { TextField(field = notes, label = "Voucher") }
+    TextField(
+        value = "",
+        onValueChange = {},
+        label = "Full name",
+        isError = complaining,
+        supportingText = complaint,
+    )
+    TextareaField(
+        value = "",
+        onValueChange = {},
+        label = "Notes",
+        maxLength = 160,
+        minLines = 2,
+        maxLines = 3,
+    )
+    SelectField(
+        value = null,
+        onValueChange = {},
+        options = listOf("France", "Peru"),
+        label = "Country",
+    )
+    Checkbox(value = false, onValueChange = {}, label = "I accept the terms")
+    Switch(value = true, onValueChange = {}, label = "Weekly digest")
+    RadioGroup(
+        value = "Monthly",
+        onValueChange = {},
+        options = listOf("Monthly", "Yearly"),
+        label = "Billing",
+    )
+    CheckboxGroup(
+        value = setOf("Email"),
+        onValueChange = {},
+        options = listOf("Email", "SMS"),
+        label = "Tell me by",
+    )
+    SliderField(value = 40f, onValueChange = {}, label = "Budget")
+    OtpField(value = "12", onValueChange = {}, length = 4, label = "Code")
+    InputGroup { TextField(value = "", onValueChange = {}, label = "Voucher") }
 }

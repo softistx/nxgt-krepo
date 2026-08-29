@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -22,24 +21,27 @@ import com.strange.material.icon.StrangeIcons
 import com.strange.material.text.Typography
 
 /**
- * A single line of text, bound to its [FieldState].
+ * A single line of text.
  *
- * The caller passes the field and nothing else is wired: the value, the change handler, the error
- * and *when the error is allowed to appear* all come from it. The field is touched when focus
- * leaves, which is the moment a complaint stops being premature — a form that shouts "invalid
- * email" at the third keystroke is a form people abandon.
+ * It holds no state and knows nothing about forms: the value, the complaint and whether there is
+ * one are all passed in, which is what lets the same control sit on a screen with a
+ * `FormState` and on one with a plain `var text by remember`.
  *
  * It is Material 3's `OutlinedTextField`, which already carries the floating label, the supporting
- * text, the error colours and the container. Only two things are added: the binding, and the reveal
- * button [secret] needs.
+ * text, the error colours and the container. Only two things are added: the reveal button [secret]
+ * needs, and the rule that a complaint takes the place of the hint — [supportingText] wins over
+ * [helper], because showing both puts the reader's mistake and a piece of advice in the same slot.
  */
 @Composable
 fun TextField(
-    field: FieldState<String>,
+    value: String,
+    onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String? = null,
     helper: String? = null,
+    isError: Boolean = false,
+    supportingText: String? = null,
     enabled: Boolean = true,
     readOnly: Boolean = false,
     secret: Boolean = false,
@@ -54,12 +56,9 @@ fun TextField(
     val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
 
     OutlinedTextField(
-        value = field.value,
-        onValueChange = field::change,
-        modifier =
-            modifier
-                .styleable(styleState, fieldStyle, style)
-                .onFocusChanged { if (!it.isFocused && field.dirty) field.touch() },
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.styleable(styleState, fieldStyle, style),
         enabled = enabled,
         readOnly = readOnly,
         label = label?.let { { Typography(text = it) } },
@@ -81,8 +80,8 @@ fun TextField(
                     trailing
                 }
             },
-        supportingText = (field.visibleError ?: helper)?.let { { Typography(text = it) } },
-        isError = field.showError,
+        supportingText = (supportingText ?: helper)?.let { { Typography(text = it) } },
+        isError = isError,
         visualTransformation =
             if (secret && !revealed) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
