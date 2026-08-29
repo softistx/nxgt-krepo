@@ -34,6 +34,10 @@ surprise that gets a library removed from a project. Nothing here starts, regist
 anything until an application asks for it by name, and every bean is `@ConditionalOnMissingBean` so
 an application's own always wins.
 
+Every key, its default and what it costs is
+[`docs/spring-configuration.md`](../../docs/spring-configuration.md) — the other half that grows a
+row per capability.
+
 ## Configuration metadata is written by hand
 
 `resources/META-INF/additional-spring-configuration-metadata.json` is what an IDE completes `stx.*`
@@ -264,7 +268,7 @@ It is contributed as a `CodecCustomizer`, not by implementing `WebFluxConfigurer
 whole extension point with a dozen methods, and an application that has its own would find two of
 them competing.
 
-## Mongo queries
+## Mongo queries — see `docs/spring-mongo-queries.md`
 
 `data/mongo/` is the Spring Data Reactive Mongo half: a predicate DSL, a filter grammar for query
 strings, and the converters without which a `kotlin.time.Instant` cannot be a field.
@@ -272,84 +276,37 @@ strings, and the converters without which a `kotlin.time.Instant` cannot be a fi
 ```kotlin
 val cheap = all(Product::stock gt 0, Product::price lte 50).query
 val listed = request.mongoQuery      // ?filter=...&sort=... together
+
+val page = template.findPage<Order>(MongoPage.first(20, query = listed))
 ```
 
-- **Every operator has a `KProperty` form, and that is the point.** A field named by a string is a
-  name nothing checks: rename the property and the query still compiles and silently matches
-  nothing — which reads as "no results", not as "broken query". The string forms remain for fields
-  that have no property to name them.
-- **`all`/`any`/`none` build an explicit `$and`/`$or`/`$nor`.** A chain of `.and("field")` builds one
-  document key per field and quietly loses the second predicate on a field named twice:
-  `where("price").gt(5).and("price").lt(10)` is `{price: {$lt: 10}}`.
-- **A substring search quotes what it was given.** Otherwise a search box is a way to hand the
-  database a regular expression, and `(a+)+$` against a long field is a request that does not come
-  back. It does not take a hostile user — only someone searching for `C++`.
-- **The negated regex operators are real.** `notContaining` is `where(f).not().regex(...)`, because
-  Spring's `Criteria.not()` sets a flag the *next* operator consumes: `(f containing x).not()`
-  negates nothing, and the version this was ported from had `!like` behaving exactly like `like`.
+The vocabulary — every operator in both forms, the filter tokens and how each reads its value, the
+sort grammar, and the three rules a keyset cursor has to obey — is
+[`docs/spring-mongo-queries.md`](../../docs/spring-mongo-queries.md). It gains an entry every phase,
+which is the signal it does not belong here. What stays below is why the package is shaped that way
+at all.
 
-### The filter grammar
+**A field named by a string is a name nothing checks.** Rename the property and the query still
+compiles and silently matches nothing — which reads as "no results", not as "broken query". So every
+operator has a `KProperty` form, and that is the one to reach for; the string forms remain for fields
+that have no property to name them.
 
-```
-?filter=status:eq:PAID;total:gte:100
-?filter=or@email:eq:a@b.c;email:eq:d@e.f
-```
+**A filter fails loudly where a sort shrugs**, and the asymmetry is the most important decision in
+the package. An unreadable `?filter=` clause is a 400; an unreadable `?sort=` clause is dropped.
+Dropping a filter returns *more* rows than the caller asked for, so `status:eq:PIAD` would answer
+with the whole collection rather than an empty page. Sorting can afford to shrug; narrowing cannot.
 
-Clauses are `field:operator:value`, separated by `;`, combined with `and` unless the parameter starts
-with `or@`. The operators are `eq ne lt lte gt gte before after from to like !like ilike !ilike in
-!in exists size near within` — a closed set, because a grammar that passed operators through would
-let a caller write `$where`, which is JavaScript the server runs.
-
-**A clause that does not parse is a 400, not a clause that is skipped.** This is the one place where
-lenience is the wrong instinct, and it is the opposite of what `?sort=` does: dropping a filter
-returns *more* rows than the caller asked for, so `status:eq:PIAD` would answer with the whole
-collection rather than an empty page. Sorting can afford to shrug; narrowing cannot. For the same
-reason a comparison against unparseable text is a failure rather than a zero — the version this came
-from coerced it, so `price:gte:cheap` quietly became `price >= 0`.
-
-### Paging
-
-```kotlin
-val page = template.findPage<Order>(MongoPage.first(20, query = request.mongoQuery))
-```
-
-**Keyset, not `skip`.** An offset page re-reads every row it skips, so page 500 costs five hundred
-pages of work — and a row inserted while a client is paging shifts every later page by one, so the
-client sees a row twice or never. A cursor resumes from a key: constant cost, stable under writes.
-
-The window — `first`/`last`/`cursor` and the rules about them — is `stx-common`'s `PageWindow`,
-the same one `stx-mongo` and `stx-jpa` implement, and the trimming is its `pageOf`. What is specific
-here is the Spring Data `Query` and `Sort`, and that every failure is an `ApiException`: a
-contradictory window, a page size of zero and a cursor from a different query are all a client
-sending something it should not have, so they are 400s and they arrive translated.
-
-Three things the specs pin, each of which is silent when wrong:
-
-- **The ordering always ends in `_id`.** A keyset resumes from the last row's key, so the key has to
-  be unique — order by `name` alone and every document sharing a name is a coin toss between being
-  served twice and being skipped.
-- **Cursors carry the stored field names.** A property with `@Field("t")` is `t` in the document, so
-  a cursor built from the property name reads nothing back and every page after the first comes up
-  empty. That is also why documents are fetched raw and decoded here rather than mapped by the
-  template: a mapped object no longer has the stored values the cursor needs.
-- **A cursor from a differently sorted query is refused.** It would page along the wrong key and
-  answer with rows that look perfectly plausible.
+**Paging is keyset, not `skip`.** An offset page re-reads every row it skips, so page 500 costs five
+hundred pages of work — and a row inserted while a client is paging shifts every later page by one,
+so the client sees a row twice or never. A cursor resumes from a key: constant cost, stable under
+writes. The window is `stx-common`'s `PageWindow`, the same one `stx-mongo` and `stx-jpa` implement.
 
 ### Wiring
 
-```yaml
-stx:
-  data:
-    mongo:
-      enabled: true
-      gridfs-bucket: uploads
-```
+The keys are in [`docs/spring-configuration.md`](../../docs/spring-configuration.md); the ordering is
+the part worth explaining here.
 
-`stx.data.mongo` and not `stx.mongo`: this is the Spring Data layer, and `stx.mongo` belongs to the
-`stx-mongo` library's own integration — two layers over the same driver, and an application may
-reasonably use either.
-
-**The configuration is ordered before Spring Boot's, and that is the whole trick.** Boot's
+**The configuration is registered before Spring Boot's, and that is the whole trick.** Boot's
 `MongoCustomConversions` bean is `@ConditionalOnMissingBean`, so a library contributing one *after*
 it never applies, and one contributing it without ordering replaces Boot's — quietly dropping
 `spring.data.mongodb.representation`. Registering first and carrying that property across is the only
@@ -369,18 +326,6 @@ and rebuilt them at each startup, which is an outage waiting for a large collect
 rebuilds, every query that used it scans — once per instance on a rolling deploy. Creating an index
 that already exists is a no-op in Mongo, so create-only is idempotent and safe on every boot, and an
 index no longer declared is left alone because deciding it is unused is a migration's job.
-
-### `kotlin.time.Instant`
-
-BSON has one date type and the driver has a codec for `java.util.Date` and none for
-`kotlin.time.Instant` — so an entity with one fails at *query* time with `Can't find a codec`, not
-at mapping time. `stxMongoConversions()` is the fix. Note that BSON dates hold milliseconds: a round
-trip loses anything finer, which matters for a cursor built from a timestamp and not at all for a
-`createdAt` somebody displays. Storing a string would keep the nanoseconds and lose range queries and
-index ordering, which is the worse trade.
-
-`stx-mongo` has `mongoCodecRegistry()` for the identical gap — two layers over the same driver, each
-needing to be told about the same type.
 
 ## The audit trail
 
@@ -609,6 +554,8 @@ scope and absent from RUNTIME.
 
 | | |
 | --- | --- |
+| [`../../docs/spring-mongo-queries.md`](../../docs/spring-mongo-queries.md) | What a query may say — the operators, the filter and sort grammars, and the paging rules |
+| [`../../docs/spring-configuration.md`](../../docs/spring-configuration.md) | Every `stx.*` key, its default, and what switching it on costs |
 | [`../stx-ktor/README.md`](../stx-ktor/README.md) | The same seven backends behind Ktor plugins — the module this one is shaped after |
 | [`../stx-i18n/README.md`](../stx-i18n/README.md) | What `Messages` loads, how a key falls back, and what `Accept-Language` negotiation matches |
 | [`../../AGENTS.md`](../../AGENTS.md) | The repo's conventions, including publishing and the catalog |
