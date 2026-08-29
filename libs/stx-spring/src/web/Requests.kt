@@ -42,6 +42,14 @@ val ServerRequest.page: Int get() = ((queryParamOrNull("page")?.toIntOrNull() ?:
 /** The requested page size, defaulting to [DEFAULT_PAGE_SIZE] and never zero or negative. */
 val ServerRequest.size: Int get() = queryParamOrNull("size")?.toIntOrNull()?.takeIf { it > 0 } ?: DEFAULT_PAGE_SIZE
 
+/**
+ * Where a keyset page resumes from — `?cursor=`, absent on the first page.
+ *
+ * Opaque to the client and to this accessor alike: it is read back by whichever store issued it, and
+ * one from a differently sorted query is refused rather than followed.
+ */
+val ServerRequest.cursor: String? get() = queryParamOrNull("cursor")
+
 /** Whether the caller asked for a page at all: `?paged=true`. */
 val ServerRequest.paged: Boolean get() = queryParamOrNull("paged").toBoolean()
 

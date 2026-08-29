@@ -1,6 +1,9 @@
 package com.strange.spring.data.mongo.filter
 
+import com.strange.spring.data.mongo.template.MongoPage
 import com.strange.spring.web.SortOrder
+import com.strange.spring.web.cursor
+import com.strange.spring.web.size
 import com.strange.spring.web.sort
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.query.Query
@@ -31,3 +34,20 @@ val ServerRequest.mongoFilter: Query get() = queryParamOrNull("filter").parseFil
  * or a keyset cursor a route wants is the route's decision, not a helper's.
  */
 val ServerRequest.mongoQuery: Query get() = mongoFilter.with(sort.toSort())
+
+/**
+ * The whole request as a page window — `?filter=`, `?sort=`, `?size=` and `?cursor=` together.
+ *
+ * ```kotlin
+ * val page = template.findPage<Order>(request.mongoPage())
+ * ```
+ *
+ * **This rather than `MongoPage.first(size, query = mongoQuery)`.** That spelling puts the ordering
+ * on the query, where the keyset machinery cannot see it: the rows come back sorted and the cursor is
+ * built from `_id` alone, so the first page is right, the second is empty, and nothing says so.
+ * [MongoPage] now refuses it outright — this is what to write instead.
+ */
+fun ServerRequest.mongoPage(
+    size: Int = this.size,
+    cursor: String? = this.cursor,
+): MongoPage = MongoPage.first(size, cursor = cursor, query = mongoFilter, sort = sort.toSort())
