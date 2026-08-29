@@ -61,9 +61,8 @@ jetbrains-annotations = "23.0.0"
 spring = "7.0.9"
 # Object diffing for the stx-spring Mongo audit trail: it compares the previous stored state with
 # the one just saved and reports the changed properties, which is the whole reason that trail is
-# more than a copy of the document. No module references it yet — the audit slice adds it
-# compile-only, and it is pinned here so that slice adds a dependency line and nothing else.
-javers = "8.1.0"
+# more than a copy of the document. Compile-only in stx-spring — nothing else has it on a classpath.
+javers = "7.11.8"
 jackson = "3.2.2"
 
 [libraries]
