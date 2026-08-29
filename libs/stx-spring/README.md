@@ -11,7 +11,7 @@ com.strange.spring.client   a typed HTTP client from an interface
 com.strange.spring.security who is calling, and the annotations that say who may
 com.strange.spring.cors     a browser policy read from configuration
 com.strange.spring.json     kotlinx-serialization as WebFlux's codec
-com.strange.spring.data     the Spring Data layer — currently Mongo's query vocabulary
+com.strange.spring.data     the Spring Data layer — Mongo's query vocabulary, paging and wiring
 ```
 
 More packages arrive in their own changes: the Mongo template and auditing, and one
@@ -334,6 +334,41 @@ Three things the specs pin, each of which is silent when wrong:
   template: a mapped object no longer has the stored values the cursor needs.
 - **A cursor from a differently sorted query is refused.** It would page along the wrong key and
   answer with rows that look perfectly plausible.
+
+### Wiring
+
+```yaml
+stx:
+  data:
+    mongo:
+      enabled: true
+      gridfs-bucket: uploads
+```
+
+`stx.data.mongo` and not `stx.mongo`: this is the Spring Data layer, and `stx.mongo` belongs to the
+`stx-mongo` library's own integration — two layers over the same driver, and an application may
+reasonably use either.
+
+**The configuration is ordered before Spring Boot's, and that is the whole trick.** Boot's
+`MongoCustomConversions` bean is `@ConditionalOnMissingBean`, so a library contributing one *after*
+it never applies, and one contributing it without ordering replaces Boot's — quietly dropping
+`spring.data.mongodb.representation`. Registering first and carrying that property across is the only
+arrangement where both the `Instant` converters and Boot's own setting survive. A spec asserts both
+in the same context.
+
+The rest is opt-in individually: a GridFS template only when a bucket is named, a transaction manager
+only when asked for (and note that transactions need a replica set — a standalone `mongod` fails the
+first `startTransaction`, not startup), and a `ReactiveAuditorAware` reading the *reactive* security
+context, so `@CreatedBy` stamps the request's user and not whoever last used the worker thread.
+
+`@EnableReactiveMongoAuditing` stays the application's to add. It changes how every entity is
+persisted, which is not something a dependency should do quietly.
+
+**Index creation never drops.** The version this replaces dropped every index on every collection
+and rebuilt them at each startup, which is an outage waiting for a large collection: while an index
+rebuilds, every query that used it scans — once per instance on a rolling deploy. Creating an index
+that already exists is a no-op in Mongo, so create-only is idempotent and safe on every boot, and an
+index no longer declared is left alone because deciding it is unused is a migration's job.
 
 ### `kotlin.time.Instant`
 
