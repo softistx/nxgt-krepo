@@ -23,7 +23,7 @@ two serialization libraries about what the document means fails a test rather th
 
 `examples/jpa-shop` is separate from that chain: a Ktor catalogue over Postgres showing
 `shared-jpa`'s CRUD extensions, transaction guard and audit layer end to end. So is
-`examples/material-demo`, the catalogue for the UI library — `./kotlin run -m desktop`.
+`examples/material-demo`, the catalogue for the UI library — `./kotlin run -m md-desktop`.
 
 Alongside them are the shared service libraries, which have nothing to do with the generator:
 

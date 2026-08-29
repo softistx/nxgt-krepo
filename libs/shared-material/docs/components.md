@@ -3,7 +3,7 @@
 Every component the library ships, what it takes, and where to see it. **This is the file a new
 component is documented in**, in the change that adds it.
 
-Open the catalogue with `./kotlin run -m desktop`; the story id is the line under each story's
+Open the catalogue with `./kotlin run -m md-desktop`; the story id is the line under each story's
 title. Every component takes `modifier: Modifier`, and every *interactive* one takes
 `style: Style = Style` — both are left out of the tables below because they are on everything that
 has them.
