@@ -1,0 +1,85 @@
+package com.strange.spring.client
+
+import com.strange.spring.error.ApiException
+import kotlinx.coroutines.reactor.awaitSingleOrNull
+import kotlinx.coroutines.reactor.mono
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
+import org.springframework.web.reactive.function.client.ClientRequest
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.support.WebClientAdapter
+import org.springframework.web.service.invoker.HttpServiceProxyFactory
+import org.springframework.web.service.invoker.createClient
+
+/**
+ * A typed HTTP client from an interface: declare the calls, get an implementation.
+ *
+ * ```kotlin
+ * interface Catalog {
+ *     @GetExchange("/products/{id}")
+ *     suspend fun product(@PathVariable id: String): Product
+ * }
+ *
+ * val catalog = httpClient<Catalog>("https://catalog.internal")
+ * ```
+ *
+ * **An error response arrives as an [ApiException], not as a `WebClientResponseException`.** A
+ * failure from a service upstream and a failure raised in this one should reach a handler as the
+ * same type, or every caller writes the same translation twice — and the second one is written after
+ * the first outage. The upstream's status is carried across, so a 404 there is a 404 here rather
+ * than a 500, which is nearly always what the caller meant.
+ */
+inline fun <reified T : Any> httpClient(
+    baseUrl: String,
+    noinline headers: (HttpHeaders) -> Unit = {},
+    noinline configure: WebClient.Builder.() -> Unit = {},
+): T = httpServiceFactory(baseUrl, headers, configure).createClient<T>()
+
+/**
+ * The factory behind [httpClient], for declaring several interfaces against one upstream.
+ *
+ * [headers] runs per request rather than once at build time, which is what makes it usable for the
+ * header that actually varies — a token read from the current request, a correlation id. Setting
+ * those through `defaultHeaders` would pin the first caller's values onto every later call.
+ *
+ * [configure] is the escape hatch, and the seam the specs use: a timeout, a connector, or an
+ * exchange function that answers without a socket.
+ */
+fun httpServiceFactory(
+    baseUrl: String,
+    headers: (HttpHeaders) -> Unit = {},
+    configure: WebClient.Builder.() -> Unit = {},
+): HttpServiceProxyFactory {
+    val client =
+        WebClient
+            .builder()
+            .baseUrl(baseUrl)
+            .filter { request, next -> next.exchange(ClientRequest.from(request).headers(headers).build()) }
+            .defaultStatusHandler(HttpStatusCode::isError) { response ->
+                mono { response.toApiException() }
+            }.apply(configure)
+            .build()
+    return HttpServiceProxyFactory.builderFor(WebClientAdapter.create(client)).build()
+}
+
+/**
+ * The upstream's error body, read as this repo's error shape, and everything else as a fallback.
+ *
+ * The body is read as a map rather than as `ErrorResponse` on purpose: an upstream that is not one
+ * of ours answers with its own shape, and a decoder that throws while handling an error replaces a
+ * useful 404 with a serialization failure. A missing `message` becomes the unexpected-failure key,
+ * so what a caller sees is still a key its own catalogs can translate.
+ */
+private suspend fun org.springframework.web.reactive.function.client.ClientResponse.toApiException(): ApiException {
+    val body =
+        runCatching { bodyToMono<Map<String, String>>().awaitSingleOrNull() }
+            .getOrNull()
+            .orEmpty()
+    return ApiException(
+        message = body["message"] ?: ApiException.KEY_UNEXPECTED,
+        status = HttpStatus.valueOf(statusCode().value()),
+        code = body["code"],
+    )
+}
