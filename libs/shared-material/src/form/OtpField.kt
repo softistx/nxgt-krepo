@@ -93,6 +93,3 @@ fun OtpField(
         )
     }
 }
-
-private val CellWidth = 44.dp
-private val CellHeight = 44.dp
