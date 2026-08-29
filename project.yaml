@@ -1,25 +1,8 @@
 modules:
-  - examples/demo-api
-  - examples/demo-client
-  - examples/demo-spring-client
-  - examples/jpa-shop
-  - examples/material-demo/android
-  - examples/material-demo/catalog
-  - examples/material-demo/desktop
-  - libs/openapi-generator
-  - libs/shared-amqp
-  - libs/shared-common
-  - libs/shared-i18n
-  - libs/shared-jpa
-  - libs/shared-kafka
-  - libs/shared-koin
-  - libs/shared-ktor
-  - libs/shared-material
-  - libs/shared-mongo
-  - libs/shared-redis
-  - libs/shared-storage
-  - libs/shared-testing
-  - plugins/openapi
+  - examples/*
+  - examples/*/*
+  - libs/*
+  - plugins/*
 
 plugins:
   - ./plugins/openapi
