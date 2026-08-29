@@ -518,6 +518,10 @@ stx:
   mongo:   { enabled: true, uri: mongodb://localhost:27017, database: orders }
   jpa:     { enabled: true, uri: "postgresql://localhost:5432/orders", packages: [ com.acme.domain ] }
   storage: { enabled: true, endpoint: http://localhost:9000, access-key: ${MINIO_KEY}, secret-key: ${MINIO_SECRET} }
+  redis:   { enabled: true, uri: redis://localhost:6379, namespace: orders }
+  kafka:   { enabled: true, bootstrap: "localhost:9092", client-id: orders }
+  amqp:    { enabled: true, uri: "amqp://user:secret@rabbit:5672/billing" }
+  i18n:    { enabled: true, languages: [ en, fr ], fallback: en }
 ```
 
 ```kotlin
@@ -548,12 +552,38 @@ Every one of them is the same shape, and the shape is the point:
 configure Spring Data's `ReactiveMongoTemplate`; the first hands you `stx-mongo`'s coroutine client.
 They are different APIs onto the same server, and turning both on means two connection pools.
 
-**`stx.jpa` blocks the thread that is starting the application, deliberately.** `Jpa.connect`
-suspends — reading the annotations off every entity and standing up the service registry is ordinary
-blocking work — and a `@Bean` method cannot. That thread is doing nothing else and is not an event
-loop, so this is the one place where blocking is the right answer rather than a shortcut. On the
-default `schema-mode` nothing connects at startup either way: the pool opens its first connection
-when something asks for a session, so a wrong password surfaces on first use.
+**`stx.jpa` and `stx.amqp` block the thread that is starting the application, deliberately.**
+`Jpa.connect` and `Amqp.connect` both suspend — reading the annotations off every entity and
+standing up a service registry is ordinary blocking work — and a `@Bean` method cannot. That thread
+is doing nothing else and is not an event loop, so this is the one place where blocking is the right
+answer rather than a shortcut.
+
+**`stx.amqp` opens a socket there and `stx.jpa` does not**, and that difference is also deliberate.
+On the default `schema-mode` Hibernate's pool opens its first connection when something asks for a
+session, so a wrong password surfaces on first use; any other mode has schema work to do and
+connects at startup, which is the point of choosing one. AMQP connects either way — a service whose
+work arrives over that connection should fail its boot when the broker is not there, rather than
+start and quietly consume nothing.
+
+**`stx.kafka` opens nothing at all, and has no `close()` to call.** `Kafka` is deliberately not a
+`connect()`: a Kafka client connects when it is constructed, so the connections belong to the
+publishers, subscribers and admin clients it hands out — each with its own lifetime, thread and
+failure mode. A handle that owned them all would eventually close a producer another part of the
+application was still using. So this is the one integration where the application still owns real
+resources: `kafka.publisher<OrderEvent>()` is yours to close.
+
+**`stx.i18n` also narrows the locale resolver, and that is the half that matters.** WebFlux's
+default answers with whatever `Accept-Language` asked for, catalog or no catalog, so a browser
+asking for Japanese produces a `Translator` for Japanese that falls back key by key. Told the
+supported set, it answers with the closest language actually loaded. It is also the only one of the
+seven without `@ConditionalOnClass` — `stx-i18n` is an `exported` dependency of this module, because
+the exception handler translates, so the class is always there and the condition could only ever be
+true.
+
+**Not every setting is a property, and that is the design.** A `Json`, a `ConnectionFactory` and a
+`MongoClientSettings.Builder` are not strings, and growing a key for each one turns a config class
+into a worse copy of the thing it configures. Declare your own bean instead —
+`@ConditionalOnMissingBean` is on every one of them.
 
 **No buckets are created by `stx.storage`.** `ensureBucket` is one call and belongs to whoever knows
 which buckets the application needs. Creating them from a property list would make startup write to
