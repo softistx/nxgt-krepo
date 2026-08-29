@@ -437,8 +437,9 @@ neither is guessable:
   live in `resources/META-INF/additional-spring-configuration-metadata.json`, Spring Boot's own
   supported manual file, and `ConfigurationMetadataTest` scans the module for
   `@ConfigurationProperties` classes and fails when a property has no entry or an entry has no
-  property. **A new `stx.*` key is added to that file in the change that reads it.** Do not reach for
-  the processor; it will appear to be configured and produce nothing.
+  property. **A new `stx.*` key is added to that file in the change that reads it** — and to
+  `docs/spring-configuration.md`, which is where a reader looks. Do not reach for the processor; it
+  will appear to be configured and produce nothing.
 
 One more thing that only a test says out loud: `compile-only` keeps a dependency off the *test*
 runtime too, so a `@ConditionalOnClass` guarding it correctly declines to match in a spec. Add the
@@ -749,6 +750,8 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/stx-spring/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, and why the locale comes off the exchange |
+  | `docs/spring-mongo-queries.md` | What a stx-spring Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
+  | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
   | `libs/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
   | `libs/stx-material/README.md` | How is the UI library shaped, how does `StrangeTheme` slot into an application that already uses Material 3, and how do I add a component? |
