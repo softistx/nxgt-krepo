@@ -21,7 +21,7 @@ import com.strange.jpa.session.JpaSession
 /**
  * Everything the shop does with a product, in one class over the session.
  *
- * **There is no repository and no CRUD base class**, because `shared-jpa` has nothing to inherit
+ * **There is no repository and no CRUD base class**, because `stx-jpa` has nothing to inherit
  * from: `findAll`, `findPage`, `findOne`, `insert`, `delete` and the rest are extensions on the
  * session, and a service that writes its own `create` says what it means in less than one that fills
  * in `buildCreate` and remembers which hooks fire when. What the library still provides is the two

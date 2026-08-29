@@ -19,7 +19,7 @@ import com.strange.material.theme.StrangeTheme
 
 /**
  * One row of the control panel. Material 3 supplies the switch, the slider and the text field:
- * shared-material has no form layer until phase 2, and the demo says so rather than pretending
+ * stx-material has no form layer until phase 2, and the demo says so rather than pretending
  * otherwise.
  */
 @Composable

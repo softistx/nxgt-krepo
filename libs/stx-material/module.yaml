@@ -1,0 +1,79 @@
+product:
+  type: kmp/lib
+  # iosX64 is deliberately absent: the Compose artifacts publish for
+  # [android, iosArm64, iosSimulatorArm64, js, jvm, macosArm64, wasmJs] and nothing else, so
+  # naming it fails dependency resolution. The two Apple targets that are named compile only on
+  # an Apple host — on Linux `./kotlin build` skips them silently and still exits 0.
+  platforms: [ jvm, android, iosArm64, iosSimulatorArm64 ]
+description: "A Compose Multiplatform component library: a token layer over Material 3, and motion that is on by default"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Material 3 is the foundation this library sits on rather than replaces: StrangeTheme installs
+  # a MaterialTheme underneath so ordinary M3 components keep working inside it. ColorScheme,
+  # Shapes, Typography and every *Colors type are in this module's public API, hence exported.
+  - $compose.material3: exported
+  # Modifier, Dp, Color, TextStyle and the layout primitives are in every signature here.
+  - $compose.foundation: exported
+  - $compose.ui: exported
+  # The motion package returns EnterTransition/ExitTransition and Easing to callers.
+  - $compose.animation: exported
+  # QueryFilter carries a JsonObject, so kotlinx-serialization's types are in this module's public
+  # API too — core for the annotations a consumer's @Serializable payload needs, json for the tree.
+  - $kotlin.serialization.core: exported
+  - $kotlin.serialization.json: exported
+  # A whole palette derived from one seed colour: `rememberStrangeColors(seed)` answers with a
+  # ColorScheme, so a consumer that names a seed never hand-writes 48 roles.
+  - $libs.material.kolor: exported
+  # Konform is the validation engine behind FormState: a form declares `override val validate =
+  # Validation { ... }`, so konform's Validation<T> is in this module's public API and has to be
+  # exported. It publishes iosArm64 and iosSimulatorArm64 — this module's two Apple targets —
+  # along with jvm, so naming it here resolves on every platform the module declares.
+  - $libs.konform: exported
+  # WindowSizeClass is the receiver of the wCompact/hExpanded extensions in helpers/Responsive.kt
+  # and the value LocalWindowSize carries, so it is public API here. This is the Compose
+  # Multiplatform build, not the androidx one — see the alias's note in libs.versions.toml.
+  - $libs.compose.multiplatform.window.size.class: exported
+
+test-dependencies:
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+# kotest-runner-junit5 is JVM-only, so it cannot sit in the common list — and both qualifiers are
+# needed, not one: the Android unit-test run is a second JVM run with its own classpath, and
+# without it that run discovers zero tests and fails with exit code 2.
+test-dependencies@jvm:
+  - $libs.kotest.runner.junit5
+  # Skiko's native library, so a jvm test can render a composable into a bitmap with
+  # ImageComposeScene. Without it the class initialiser fails on a missing libskiko-*.so.
+  - $compose.desktop.currentOs
+
+test-dependencies@android:
+  - $libs.kotest.runner.junit5
+
+settings:
+  kotlin:
+    # QueryFilter's JsonObject arrives from a serialized payload, and a consumer's model is
+    # @Serializable — the plugin has to be on for either to compile.
+    serialization: enabled
+    # Module-wide rather than per-file annotations: both APIs are load-bearing here, not
+    # occasional.
+    optIns:
+      # The Compose Styles API — Style, StyleScope, Modifier.styleable — is how every component
+      # here is dressed. It ships in foundation, experimental, from Compose Multiplatform 1.11.1.
+      - androidx.compose.foundation.style.ExperimentalFoundationStyleApi
+      # MaterialExpressiveTheme and MotionScheme. Both are in the M3 that resolves here — 1.11.0
+      # -alpha07 on jvm/ios, androidx 1.5.0-alpha17 on android — and both are gated behind this.
+      - androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+      # ExposedDropdownMenuBox and its anchor, which SelectField is built on. Still experimental in
+      # M3 1.11 after years of it, and there is no non-experimental way to anchor a menu to a field.
+      - androidx.compose.material3.ExperimentalMaterial3Api
+  compose:
+    enabled: true
+    # Pinned to the toolchain 0.12.0 default, the way `ktor` is pinned in the modules that enable
+    # it: a toolchain upgrade should move this line visibly rather than silently.
+    version: 1.11.1
+  android:
+    namespace: com.strange.material

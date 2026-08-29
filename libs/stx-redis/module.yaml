@@ -1,0 +1,35 @@
+product: jvm/lib
+description: Redis over Lettuce's coroutine commands — values, keys, scans and locks, without wrapping the protocol again
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # RedisCoroutinesCommands and StatefulRedisConnection are all over this module's public API
+  - $libs.lettuce.core: exported
+  # Lettuce's coroutine API is built on the Reactive Streams one, and declares this optional —
+  # without it the `.coroutines()` extension is not on the classpath at all
+  - $libs.kotlinx.coroutines.reactive
+  - $libs.kotlinx.coroutines.core: exported
+  # values are stored as their kotlinx.serialization form
+  - $libs.kotlinx.serialization: exported
+  # the shared Json every stored value is read through, and the decode over it
+  - //libs/stx-common
+
+test-dependencies:
+  # the Redis the integration specs talk to, started for the run when the workspace's own is not
+  # there — test-only, so nothing here reaches a consumer of this library
+  - //libs/stx-testing
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # Lettuce logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    serialization: json
+    # Every one of Lettuce's coroutine command interfaces carries this requirement. Opting in once
+    # here beats an @OptIn on every file that touches them; a consumer reaching past this module's
+    # own API for RedisCoroutinesCommands opts in the same way.
+    optIns: [ io.lettuce.core.ExperimentalLettuceCoroutinesApi ]

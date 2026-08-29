@@ -1,0 +1,20 @@
+product: jvm/lib
+description: "What more than one stx library needs and nothing else: pages, coroutine primitives, the shared JSON and CloseGuard"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Mutex, Channel and the rest of the coroutine primitives these are built from
+  - $libs.kotlinx.coroutines.core: exported
+  # the shared Json and the decoding helpers over it
+  - $libs.kotlinx.serialization: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  kotlin:
+    serialization: json
