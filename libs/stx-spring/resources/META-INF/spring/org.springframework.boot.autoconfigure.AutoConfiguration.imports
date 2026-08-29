@@ -8,3 +8,7 @@ com.strange.spring.data.mongo.migration.MigrationAutoConfiguration
 com.strange.spring.integration.mongo.MongoIntegrationAutoConfiguration
 com.strange.spring.integration.jpa.JpaIntegrationAutoConfiguration
 com.strange.spring.integration.storage.StorageIntegrationAutoConfiguration
+com.strange.spring.integration.redis.RedisIntegrationAutoConfiguration
+com.strange.spring.integration.kafka.KafkaIntegrationAutoConfiguration
+com.strange.spring.integration.amqp.AmqpIntegrationAutoConfiguration
+com.strange.spring.integration.i18n.I18nIntegrationAutoConfiguration
