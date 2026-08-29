@@ -5,6 +5,10 @@ apply:
   - //publishing.module-template.yaml
 
 dependencies:
+  # CloseGuard, and Page/PageInfo — which are stx-mongo's answer too, and are part of this
+  # module's own API through `selectPage`, so a consumer has to see them.
+  - //libs/stx-common: exported
+
   # Stage.Session and Stage.SessionFactory are all over this module's public API.
   - $libs.hibernate.reactive.core: exported
   # Both of these arrive with it, and both are declared anyway: this module imports
@@ -55,10 +59,6 @@ dependencies:
   # loaded at runtime. It already arrives through kotlin-stdlib, and is named here for the reason
   # the comment above hibernate-core gives — an inherited edge is one the IDE does not follow.
   - $libs.jetbrains.annotations: compile-only
-
-  # CloseGuard, and Page/PageInfo — which are stx-mongo's answer too, and are part of this
-  # module's own API through `selectPage`, so a consumer has to see them.
-  - //libs/stx-common: exported
 
 test-dependencies:
   # the Postgres the integration specs talk to, started for the run when the workspace's own is not

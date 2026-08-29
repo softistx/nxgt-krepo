@@ -5,6 +5,14 @@ apply:
   - //publishing.module-template.yaml
 
 dependencies:
+  # `Messages` is a constructor parameter of the exception handler and `Translator` is what its
+  # extensions return, so a consumer has to see both to build or call either.
+  - //libs/stx-i18n: exported
+
+  # `Page` and `PageInfo` are what `Page<T>.response()` takes and what its envelope carries, so a
+  # route calling it names both.
+  - //libs/stx-common: exported
+
   # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.
   # The starter also brings spring-context and spring-boot-autoconfigure, which every package here
   # needs, so there is nothing finer to depend on.
@@ -15,38 +23,39 @@ dependencies:
   # properties binds through setters it does not have. Not transitive from any starter here.
   - $libs.kotlin.reflect
 
-  # `Messages` is a constructor parameter of the exception handler and `Translator` is what its
-  # extensions return, so a consumer has to see both to build or call either.
-  - //libs/stx-i18n: exported
-
-  # `Page` and `PageInfo` are what `Page<T>.response()` takes and what its envelope carries, so a
-  # route calling it names both.
-  - //libs/stx-common: exported
-
   # kotlinx-coroutines-reactor, for `mono { }` and the Reactor-specific awaits in `client/`.
   # `kotlinx-coroutines-reactive` — which the webflux starter does not bring either — covers
   # `Publisher`, and the two are separate artifacts with overlapping names: `awaitSingleOrNull` on a
   # `Mono` is the Reactor one, `awaitFirstOrNull` on a `Publisher` is the other.
   - $libs.kotlinx.coroutines.reactor
 
-  # Jakarta Validation, for `ValidationExceptionHandler` alone. Compile-only, and the reason that
-  # handler is its own class: an application that validates nothing does not carry the API, and a
-  # `@RestControllerAdvice` naming a missing class cannot be loaded at all. Verified with
-  # `./kotlin show dependencies -m stx-spring`: it is in COMPILE and absent from RUNTIME.
+  # One entry per optional integration, and every one of them compile-only — the same rule and the
+  # same reason as stx-ktor. A package guarded by `@ConditionalOnClass` is dark until the application
+  # adds that library itself, so nothing here hands every consumer every dependency. Verified with
+  # `./kotlin show dependencies -m stx-spring`: these sit in COMPILE and are absent from RUNTIME.
+
+  # Jakarta Validation, for `ValidationExceptionHandler` and `web/Validation.kt`. Also the reason
+  # that handler is its own class: a `@RestControllerAdvice` naming a missing class cannot be loaded.
   - $spring.boot.starter.validation: compile-only
 
-  # Spring Security, for `security/` alone and on the same terms. An application that never
-  # authenticates anyone does not load `currentUser` or the ownership annotations, and so does not
-  # carry the six jars behind them.
+  # Spring Security, for `security/` alone. An application that never authenticates anyone does not
+  # load `currentUser` or the ownership annotations, and so does not carry the jars behind them.
   - $spring.boot.starter.security: compile-only
+
+  # Spring Data Reactive Mongo, for `data/mongo/` alone. The heaviest of the three — the
+  # driver, the mapping context and spring-data-commons — and an application talking to Postgres has
+  # no reason to carry any of it.
+  - $spring.boot.starter.data.mongodb.reactive: compile-only
 
 test-dependencies:
   # The specs run the auto-configuration for real, so the compile-only libraries above are on the
   # runtime classpath here too — otherwise `@ConditionalOnClass` skips what they came to check.
   # This is not a formality: the first run of ErrorAutoConfigurationTest found no
-  # ValidationExceptionHandler, which is exactly what a consumer without validation will see.
+  # ValidationExceptionHandler, and the security specs failed with NoClassDefFoundError — which is
+  # exactly what a consumer without those libraries sees.
   - $spring.boot.starter.validation
   - $spring.boot.starter.security
+  - $spring.boot.starter.data.mongodb.reactive
   # ApplicationContextRunner, for asserting what does and does not appear in a context
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5
