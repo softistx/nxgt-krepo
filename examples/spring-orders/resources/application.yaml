@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: spring-orders
+  data:
+    mongodb:
+      # Spring Boot's own property, not one of ours: `stx.data.mongo` adds to Boot's Mongo
+      # configuration and does not re-express it. The workspace's replica set answers here.
+      uri: ${MONGO_URI:mongodb://localhost:27017/spring_orders}
+
+# Everything below is off by default. Nothing in `stx-spring` starts because the jar is on the
+# classpath — each of these lines is what turns one auto-configuration on, and removing one removes
+# exactly the feature it names. `docs/spring-configuration.md` is the full list.
+stx:
+  # kotlinx-serialization for request and response bodies, in place of Jackson.
+  json:
+    enabled: true
+
+  # `ApiException` -> a translated `ErrorResponse`. Needs a `Messages` bean, which `stx.i18n` below
+  # contributes; without one the context refuses to start and says so, which is the point.
+  errors:
+    enabled: true
+    # A demo, so the developer-facing half of a failure is visible. Leave this off in a deployment:
+    # a debug message is written for a stack trace, not for a reader.
+    include-debug-message: true
+
+  i18n:
+    enabled: true
+    languages: [ en, fr ]
+    fallback: en
+    # A demo should not answer a request with the name of a key nobody translated.
+    fail-on-missing-key: false
+
+  cors:
+    enabled: true
+    origins: [ "http://localhost:5173" ]
+
+  data:
+    mongo:
+      # The `kotlin.time.Instant` converters. Without this, `Order.placedAt` fails at *query* time
+      # with `Can't find a codec` — not at mapping time, which is what makes it worth a line here.
+      enabled: true
+      # `@Indexed` on `Order.reference` and `Order.placedAt` becomes a real index, once, after the
+      # application is ready. Nothing is ever dropped.
+      create-indexes: true
+      audit:
+        # Every save and delete of an `@Auditable` document appends a version to `audits`.
+        enabled: true
+      migration:
+        # `V1Seed` and `V2Tags` run once each, in that order, and are recorded so they do not run again.
+        enabled: true
+        prefix: V
+
+logging:
+  level:
+    com.strange.spring.data.mongo.migration: INFO
