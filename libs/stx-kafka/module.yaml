@@ -1,4 +1,8 @@
 product: jvm/lib
+description: Kafka over the Apache clients, made suspending — typed publishers and a poll loop, serialized with kotlinx.serialization
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # ProducerRecord, ConsumerRecord, TopicPartition and the config keys are all over this module's

@@ -1,4 +1,8 @@
 product: jvm/lib
+description: "The MongoDB coroutine driver made reusable: a codec registry, session-aware CRUD, a cursor-paged find and GridFS"
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # Every org.mongodb artifact below takes its version from this BOM, which is why the

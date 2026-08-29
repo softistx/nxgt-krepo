@@ -275,9 +275,43 @@ The toolchain finds the project by walking up from the working directory, so the
 ./kotlin test                       # run all tests
 ./kotlin check                      # run all checks; ./kotlin show checks lists them
 ./kotlin run -m <module>            # run an application module
-./kotlin publish <repository-id>    # e.g. mavenCentral, or an id from the repositories list
+./kotlin publish -m stx-mongo mavenLocal   # publish one library; see Publishing below for why -m
 ./kotlin clean                      # drop build/ and project caches
 ```
+
+## Publishing
+
+The `libs/*` modules publish as `com.strange:<module-name>:<version>` — `com.strange:stx-mongo:0.1.0`
+today. The configuration lives once in `publishing.module-template.yaml` at the repo root, which each
+library pulls in with `apply: [ //publishing.module-template.yaml ]`; nothing about publishing is
+written per module. `artifactId` is deliberately not set, because it defaults to the module's name —
+so the directory name *is* the artifact name and there is no second place to keep in sync. The
+module's `description:` becomes the POM `<description>`, which is the other reason every library has
+one.
+
+```bash
+./kotlin publish -m stx-mongo --transitive mavenLocal    # one library and what it depends on
+./kotlin publish $(ls libs | sed 's/^/-m /') mavenLocal  # all of them
+```
+
+Three things about it that are not guessable:
+
+- **`kotlin publish <id>` with no `-m` fails**, and not on the modules being published: it walks
+  *every* module in the project and stops at the first one without that repository id —
+  `Module 'demo-api' does not have repository with id 'mavenLocal'`. The examples are not products
+  and must not carry a publishing block, so a selection is always passed.
+- **Publishing is all-or-nothing across a dependency chain.** The toolchain refuses a module
+  configured for publishing that depends on one that is not — `ERROR: Module 'stx-mongo' is
+  configured for publishing but depends on module 'stx-common' which is not` — with a pointer at the
+  offending dependency line. That is why every `libs/*` module publishes, `stx-testing` included.
+- **A `kmp/lib` publishes one artifact per platform** plus a root one: `stx-material`,
+  `stx-material-jvm`, `stx-material-android`, `stx-material-iosarm64`,
+  `stx-material-iossimulatorarm64`. Its `composeResources` are *not* in the publication yet
+  (KTC-5698) — the jar publishes, the resources do not.
+
+`mavenLocal` needs no credentials, no PGP key and no POM metadata. A real repository is one more
+block in the same template, changing nothing in any module. The feature is a preview in the
+toolchain and its docs say it is likely to change.
 
 Running a single test:
 
