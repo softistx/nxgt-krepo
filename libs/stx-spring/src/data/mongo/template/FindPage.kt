@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
  * One page of [T], and the cursors needed to ask for the next or previous one.
  *
  * ```kotlin
- * val page = template.findPage<Order>(MongoPage.first(20, query = request.mongoQuery))
+ * val page = template.findPage<Order>(request.mongoPage())
  * ```
  *
  * **Keyset, not `skip`.** An offset page re-reads every row it skips, so page 500 costs five hundred
