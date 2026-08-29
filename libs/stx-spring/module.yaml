@@ -48,6 +48,11 @@ dependencies:
   - $spring.boot.starter.data.mongodb.reactive: compile-only
 
 test-dependencies:
+  # The MongoDB the findPage specs page through: `MONGO_TEST_URI` when the workspace's replica set
+  # is already up, a container started once for the run otherwise, and the specs report skipped when
+  # neither is there. Declared in stx-testing's `Backends.kt`, never in this tree.
+  - //libs/stx-testing
+
   # The specs run the auto-configuration for real, so the compile-only libraries above are on the
   # runtime classpath here too — otherwise `@ConditionalOnClass` skips what they came to check.
   # This is not a formality: the first run of ErrorAutoConfigurationTest found no
