@@ -5,9 +5,6 @@ apply:
   - //publishing.module-template.yaml
 
 dependencies:
-  # `Module` is this library's entire public API
-  - $libs.koin.core: exported
-
   # One entry per integration, and every one of them compile-only, for the reason
   # libs/stx-ktor/module.yaml spells out: an application that calls `redisModule` already depends
   # on stx-redis, since RedisConfig is the only way to configure it, and one that calls only
@@ -19,6 +16,9 @@ dependencies:
   - //libs/stx-kafka: compile-only
   - //libs/stx-storage: compile-only
   - //libs/stx-jpa: compile-only
+
+  # `Module` is this library's entire public API
+  - $libs.koin.core: exported
 
 test-dependencies:
   # the specs start real containers through Koin, so here the libraries are on the runtime classpath
