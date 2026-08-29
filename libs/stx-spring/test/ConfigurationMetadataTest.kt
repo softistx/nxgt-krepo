@@ -32,14 +32,18 @@ class ConfigurationMetadataTest :
         val groups = metadata.names("groups")
         val properties = metadata.names("properties")
 
+        // Scanned once: the classpath scan is the slow part of this spec and its answer cannot
+        // change between specs.
+        val declaring = propertyClasses()
+
         "there is something to check" {
             // Guards the two specs below: a scan that finds nothing would pass them both vacuously,
             // which is exactly what a renamed package would cause.
-            propertyClasses().isNotEmpty() shouldBe true
+            declaring.isNotEmpty() shouldBe true
         }
 
         "every @ConfigurationProperties class in this module is documented" {
-            propertyClasses().forEach { type ->
+            declaring.forEach { type ->
                 withClue(type.name) {
                     groups shouldContainAll listOf(type.prefix)
                     properties shouldContainAll type.keys()
@@ -48,7 +52,7 @@ class ConfigurationMetadataTest :
         }
 
         "nothing is documented that the code no longer declares" {
-            val declared = propertyClasses().flatMap { it.keys() }.toSet()
+            val declared = declaring.flatMap { it.keys() }.toSet()
             (properties - declared) shouldBe emptySet()
         }
 
