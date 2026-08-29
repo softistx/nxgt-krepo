@@ -506,13 +506,17 @@ test-dependencies:
   - $libs.kotest.runner.junit5
 ```
 
-Register modules in `project.yaml` by path (explicit entries are what the docs recommend; globs such as `libs/*` also work):
+Modules are registered in `project.yaml`, and this repo registers them **by glob**, so a new module under `libs/`, `plugins/`, `examples/<name>/` or `examples/<group>/<name>/` is picked up without editing the file:
 
 ```yaml
 modules:
-  - libs/core
-  - libs/api
+  - examples/*
+  - examples/*/*
+  - libs/*
+  - plugins/*
 ```
+
+Only directories that directly contain a `module.yaml` are matched, so grouping directories such as `examples/material-demo` and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported as an error, so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
 
 Rules that are easy to get wrong:
 
