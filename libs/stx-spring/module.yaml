@@ -1,0 +1,46 @@
+product: jvm/lib
+description: "Spring Boot integration for the stx libraries: WebFlux helpers, Spring Data Mongo, and one auto-configuration per library"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.
+  # The starter also brings spring-context and spring-boot-autoconfigure, which every package here
+  # needs, so there is nothing finer to depend on.
+  - $spring.boot.starter.webflux: exported
+
+  # Spring binds `@ConfigurationProperties` through the primary constructor, and it only takes that
+  # path when `KotlinDetector.isKotlinReflectPresent()` — without this, a Kotlin data class holding
+  # properties binds through setters it does not have. Not transitive from any starter here.
+  - $libs.kotlin.reflect
+
+  # `Messages` is a constructor parameter of the exception handler and `Translator` is what its
+  # extensions return, so a consumer has to see both to build or call either.
+  - //libs/stx-i18n: exported
+
+  # Jakarta Validation, for `ValidationExceptionHandler` alone. Compile-only, and the reason that
+  # handler is its own class: an application that validates nothing does not carry the API, and a
+  # `@RestControllerAdvice` naming a missing class cannot be loaded at all. Verified with
+  # `./kotlin show dependencies -m stx-spring`: it is in COMPILE and absent from RUNTIME.
+  - $spring.boot.starter.validation: compile-only
+
+test-dependencies:
+  # The specs run the auto-configuration for real, so the compile-only libraries above are on the
+  # runtime classpath here too — otherwise `@ConditionalOnClass` skips what they came to check.
+  # This is not a formality: the first run of ErrorAutoConfigurationTest found no
+  # ValidationExceptionHandler, which is exactly what a consumer without validation will see.
+  - $spring.boot.starter.validation
+  # ApplicationContextRunner, for asserting what does and does not appear in a context
+  - $spring.boot.starter.test
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  # Applies the Spring Boot BOM (4.1.0), the all-open and no-arg compiler plugins with the `spring`
+  # and `jpa` presets, and `-java-parameters` — so every Spring dependency below is unversioned and
+  # a @Configuration class does not have to be written `open`.
+  springBoot: enabled
+  kotlin:
+    serialization: json
