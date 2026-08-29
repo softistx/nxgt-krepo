@@ -508,6 +508,57 @@ belongs to whichever request last ran on it. It looks correct in development, wh
 in flight at a time, and starts serving French to English readers under load — a bug with no stack
 trace and no failing test. The exchange follows the request wherever it resumes.
 
+## The stx libraries
+
+`integration/` is one auto-configuration per `stx-*` library, so a Spring application uses them
+without wiring anything.
+
+```yaml
+stx:
+  mongo:   { enabled: true, uri: mongodb://localhost:27017, database: orders }
+  jpa:     { enabled: true, uri: "postgresql://localhost:5432/orders", packages: [ com.acme.domain ] }
+  storage: { enabled: true, endpoint: http://localhost:9000, access-key: ${MINIO_KEY}, secret-key: ${MINIO_SECRET} }
+```
+
+```kotlin
+class OrderRepository(private val orders: MongoDatabase)   // built by the container, nothing to install
+```
+
+Every one of them is the same shape, and the shape is the point:
+
+- **`@ConditionalOnClass`**, so the `compile-only` dependency stays optional at runtime. A package
+  nobody added the library for is dark.
+- **`@ConditionalOnProperty` with no `matchIfMissing`.** Putting `stx-spring` on a classpath opens no
+  connection to anything.
+- **`@ConditionalOnMissingBean` on every bean**, which is how a deployment sets the things this
+  module has no opinion about. TLS, pool sizes and read concerns are not properties here; declaring
+  your own `MongoClient` bean is the answer, and the `MongoDatabase` is still built over it rather
+  than opening a second pool.
+- **Built through that library's own factory** — `mongoClient`, `Jpa.scan`, `ObjectStorage.connect` —
+  never by assembling a client here. The factory knows something the caller does not: a Mongo client
+  built without `stx-mongo`'s codec registry compiles, connects, reads, and then stores an `Instant`
+  as something nothing in that library can read back, with every step succeeding until the data is
+  already written.
+- **Closed with the context**, through the inferred `close()`. All of these close idempotently via
+  `CloseGuard`, so an application that also closes its own is not a problem.
+- **A missing required key is a sentence naming the key.** `stx.mongo.enabled is true but
+  stx.mongo.uri is not set`, not a binder error naming a constructor parameter.
+
+`stx.mongo` is not `stx.data.mongo`, and neither is Spring Boot's `spring.data.mongodb`. The last two
+configure Spring Data's `ReactiveMongoTemplate`; the first hands you `stx-mongo`'s coroutine client.
+They are different APIs onto the same server, and turning both on means two connection pools.
+
+**`stx.jpa` blocks the thread that is starting the application, deliberately.** `Jpa.connect`
+suspends — reading the annotations off every entity and standing up the service registry is ordinary
+blocking work — and a `@Bean` method cannot. That thread is doing nothing else and is not an event
+loop, so this is the one place where blocking is the right answer rather than a shortcut. On the
+default `schema-mode` nothing connects at startup either way: the pool opens its first connection
+when something asks for a session, so a wrong password surfaces on first use.
+
+**No buckets are created by `stx.storage`.** `ensureBucket` is one call and belongs to whoever knows
+which buckets the application needs. Creating them from a property list would make startup write to
+somebody's object store out of a config file nobody reviewed as a schema.
+
 ## Dependencies
 
 One rule, borrowed from `stx-ktor`: **every integration dependency is `compile-only`**. An
