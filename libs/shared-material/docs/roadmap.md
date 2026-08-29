@@ -23,10 +23,10 @@ ligne de plomberie.
 ## Phase 1 — Le socle et le premier lot
 
 **Thème et tokens**
-- [x] `StrangeSpacing`, `StrangeRadii` (dérivés d'un rayon), `StrangeElevation`
+- [x] `StrangeSpacing` — la seule échelle que M3 n'a pas ; formes et élévation restent celles de M3
 - [x] `StrangeColors` — `success` / `info` / `warning` dérivés par material-kolor, le reste délégué à M3
 - [x] `StrangeTheme` enveloppant `MaterialTheme`, tokens sur `CompositionLocal` statiques
-- [x] `StyleScope.colors` / `.scheme` / `.spacing` / `.radii` / `.motion` — les tokens dans un `Style`
+- [x] `StyleScope.colors` / `.scheme` / `.shapes` / `.spacing` / `.motion` — les tokens dans un `Style`
 - [x] Un `StrangeStyles` accessible en `StrangeTheme.styles`, agrégeant les styles de composants
 
 **Motion**
