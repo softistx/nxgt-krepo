@@ -24,6 +24,51 @@
       "name": "stx.data.mongo",
       "type": "com.strange.spring.data.mongo.config.MongoProperties",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties"
+    },
+    {
+      "name": "stx.data.mongo.audit",
+      "type": "com.strange.spring.data.mongo.audit.AuditProperties",
+      "sourceType": "com.strange.spring.data.mongo.audit.AuditProperties"
+    },
+    {
+      "name": "stx.data.mongo.migration",
+      "type": "com.strange.spring.data.mongo.migration.MigrationProperties",
+      "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties"
+    },
+    {
+      "name": "stx.mongo",
+      "type": "com.strange.spring.integration.mongo.MongoIntegrationProperties",
+      "sourceType": "com.strange.spring.integration.mongo.MongoIntegrationProperties"
+    },
+    {
+      "name": "stx.jpa",
+      "type": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties"
+    },
+    {
+      "name": "stx.storage",
+      "type": "com.strange.spring.integration.storage.StorageIntegrationProperties",
+      "sourceType": "com.strange.spring.integration.storage.StorageIntegrationProperties"
+    },
+    {
+      "name": "stx.redis",
+      "type": "com.strange.spring.integration.redis.RedisIntegrationProperties",
+      "sourceType": "com.strange.spring.integration.redis.RedisIntegrationProperties"
+    },
+    {
+      "name": "stx.kafka",
+      "type": "com.strange.spring.integration.kafka.KafkaIntegrationProperties",
+      "sourceType": "com.strange.spring.integration.kafka.KafkaIntegrationProperties"
+    },
+    {
+      "name": "stx.amqp",
+      "type": "com.strange.spring.integration.amqp.AmqpIntegrationProperties",
+      "sourceType": "com.strange.spring.integration.amqp.AmqpIntegrationProperties"
+    },
+    {
+      "name": "stx.i18n",
+      "type": "com.strange.spring.integration.i18n.I18nIntegrationProperties",
+      "sourceType": "com.strange.spring.integration.i18n.I18nIntegrationProperties"
     }
   ],
   "properties": [
@@ -44,7 +89,7 @@
     {
       "name": "stx.security.enabled",
       "type": "java.lang.Boolean",
-      "description": "Register the stx security beans: a BCrypt PasswordEncoder and the meta-annotation template support that @RequireRole needs. Not a filter chain — which paths are open stays the application's decision.",
+      "description": "Register the stx security beans: a BCrypt PasswordEncoder and the meta-annotation template support that @RequireRole needs. Not a filter chain \u2014 which paths are open stays the application's decision.",
       "sourceType": "com.strange.spring.security.SecurityProperties",
       "defaultValue": false
     },
@@ -104,7 +149,7 @@
     {
       "name": "stx.cors.allow-credentials",
       "type": "java.lang.Boolean",
-      "description": "Whether the browser may send cookies and Authorization. Cannot be combined with an origins list of \"*\" — use origin-patterns.",
+      "description": "Whether the browser may send cookies and Authorization. Cannot be combined with an origins list of \"*\" \u2014 use origin-patterns.",
       "sourceType": "com.strange.spring.cors.CorsProperties",
       "defaultValue": true
     },
@@ -160,14 +205,14 @@
     {
       "name": "stx.data.mongo.transactions",
       "type": "java.lang.Boolean",
-      "description": "Register a ReactiveMongoTransactionManager. Needs a replica set — a standalone mongod fails the first startTransaction rather than at startup.",
+      "description": "Register a ReactiveMongoTransactionManager. Needs a replica set \u2014 a standalone mongod fails the first startTransaction rather than at startup.",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
       "defaultValue": false
     },
     {
-      "name": "stx.data.mongo.auditing",
+      "name": "stx.data.mongo.auditor",
       "type": "java.lang.Boolean",
-      "description": "Register a ReactiveAuditorAware answering with the authenticated user's name, so @CreatedBy and @LastModifiedBy fill themselves in. Needs Spring Security, and @EnableReactiveMongoAuditing in the application.",
+      "description": "Register a ReactiveAuditorAware answering with the authenticated user's name, so @CreatedBy and @LastModifiedBy fill themselves in. Distinct from stx.data.mongo.audit, which keeps the document's whole history. Needs Spring Security, and @EnableReactiveMongoAuditing in the application.",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
       "defaultValue": false
     },
@@ -177,6 +222,337 @@
       "description": "Create the indexes the mapped entities declare, once the application is ready. Nothing is ever dropped: rebuilding an index on a live collection means every query using it scans until it is done.",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
       "defaultValue": false
+    },
+    {
+      "name": "stx.data.mongo.audit.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.data.mongo.audit.AuditProperties",
+      "defaultValue": false,
+      "description": "Record every save and delete of an @Auditable document as a version in a collection of its own. Off by default: an audit trail is a second copy of the data and a deployment's decision."
+    },
+    {
+      "name": "stx.data.mongo.audit.collection",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.data.mongo.audit.AuditProperties",
+      "defaultValue": "audits",
+      "description": "The collection audit entries are written to. Changing it after entries exist starts a new, empty history."
+    },
+    {
+      "name": "stx.data.mongo.migration.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties",
+      "defaultValue": false,
+      "description": "Run pending migrations after the application is ready. Off by default: the version this was extracted from defaulted to true, which meant putting the library on a classpath was enough to have it write to the database."
+    },
+    {
+      "name": "stx.data.mongo.migration.prefix",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties",
+      "defaultValue": "V",
+      "description": "What a migration class name starts with, before its order \u2014 V gives V3Currencies. Matched literally, so a prefix containing a . is a . and not a wildcard."
+    },
+    {
+      "name": "stx.data.mongo.migration.collection",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties",
+      "defaultValue": "migrations",
+      "description": "The collection migration records are written to. It is what makes a migration run once, so pointing it at an empty collection runs every migration again."
+    },
+    {
+      "name": "stx.mongo.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.mongo.MongoIntegrationProperties",
+      "defaultValue": false,
+      "description": "Open an stx-mongo coroutine client. Off by default. Distinct from stx.data.mongo and from Spring Boot's spring.data.mongodb, which configure Spring Data's ReactiveMongoTemplate \u2014 a different API onto the same server, and a second pool if both are on."
+    },
+    {
+      "name": "stx.mongo.uri",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.mongo.MongoIntegrationProperties",
+      "defaultValue": null,
+      "description": "The connection string. Required when enabled: a default would be a guess about somebody's cluster."
+    },
+    {
+      "name": "stx.mongo.database",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.mongo.MongoIntegrationProperties",
+      "defaultValue": null,
+      "description": "The database the MongoDatabase bean points at. Required when enabled."
+    },
+    {
+      "name": "stx.jpa.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": false,
+      "description": "Build a Hibernate Reactive session factory at startup. Off by default."
+    },
+    {
+      "name": "stx.jpa.uri",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": "postgresql://localhost:5432/postgres",
+      "description": "postgresql://host:port/database, the way a reactive driver spells it. Not a JDBC URL \u2014 a jdbc: prefix is the first thing to suspect when a connection fails for no visible reason."
+    },
+    {
+      "name": "stx.jpa.username",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "Sent separately, because the URI does not carry it and must not be made to."
+    },
+    {
+      "name": "stx.jpa.password",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "Sent separately, for the same reason."
+    },
+    {
+      "name": "stx.jpa.schema",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "The default schema for unqualified table names. Left to the server's search_path when unset."
+    },
+    {
+      "name": "stx.jpa.packages",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": [],
+      "description": "The packages entities are scanned from. Required when enabled. The scan also finds @Converters, which naming classes one by one does not."
+    },
+    {
+      "name": "stx.jpa.naming",
+      "type": "com.strange.jpa.naming.Naming",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": "snake-case",
+      "description": "What a column is called when the entity does not say. created_by, not createdby."
+    },
+    {
+      "name": "stx.jpa.schema-mode",
+      "type": "com.strange.jpa.SchemaMode",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": "none",
+      "description": "What Hibernate does to the schema at startup. none outside tests: a schema is migrated by something that keeps a history, not by an ORM inferring one from the classes it was handed."
+    },
+    {
+      "name": "stx.jpa.pool-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": 10,
+      "description": "How many connections the pool holds. A reactive pool is not sized like a blocking one \u2014 a connection is held for the length of a statement, not of a request."
+    },
+    {
+      "name": "stx.jpa.connect-timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long to wait for a connection before failing. A java.time.Duration (30s, PT30S): the binder has never heard of kotlin.time.Duration."
+    },
+    {
+      "name": "stx.jpa.idle-timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long an idle connection is kept before the pool closes it."
+    },
+    {
+      "name": "stx.jpa.statement-cache-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "How many prepared statements each connection caches. Off in the driver by default."
+    },
+    {
+      "name": "stx.jpa.batch-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "How many inserts or updates Hibernate sends in one batch. Unset is one statement per row."
+    },
+    {
+      "name": "stx.jpa.show-sql",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": false,
+      "description": "Log every statement. Useful once, expensive always."
+    },
+    {
+      "name": "stx.jpa.properties",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
+      "defaultValue": {},
+      "description": "Anything else Hibernate understands, applied last and overriding everything above."
+    },
+    {
+      "name": "stx.storage.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.storage.StorageIntegrationProperties",
+      "defaultValue": false,
+      "description": "Open an stx-storage connection. Off by default."
+    },
+    {
+      "name": "stx.storage.endpoint",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.storage.StorageIntegrationProperties",
+      "defaultValue": null,
+      "description": "Where the store is. MinIO, S3, or anything speaking S3. Required when enabled."
+    },
+    {
+      "name": "stx.storage.access-key",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.storage.StorageIntegrationProperties",
+      "defaultValue": null,
+      "description": "Required when enabled, and with no default on purpose: a credential with a default is a credential in source control."
+    },
+    {
+      "name": "stx.storage.secret-key",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.storage.StorageIntegrationProperties",
+      "defaultValue": null,
+      "description": "Required when enabled, and with no default, for the same reason."
+    },
+    {
+      "name": "stx.storage.region",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.storage.StorageIntegrationProperties",
+      "defaultValue": null,
+      "description": "Can stay unset against MinIO. Against S3 itself it usually cannot: the SDK will otherwise ask the service where a bucket lives, once per bucket the first time it sees one."
+    },
+    {
+      "name": "stx.redis.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.redis.RedisIntegrationProperties",
+      "defaultValue": false,
+      "description": "Open an stx-redis connection. Off by default. Not spring.data.redis, which configures Spring Data's own template over a different client."
+    },
+    {
+      "name": "stx.redis.uri",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.redis.RedisIntegrationProperties",
+      "defaultValue": "redis://localhost:6379",
+      "description": "Where the server is."
+    },
+    {
+      "name": "stx.redis.namespace",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.redis.RedisIntegrationProperties",
+      "defaultValue": "",
+      "description": "Prefixed to every key this application writes. Worth setting whenever the server is shared: Redis has one flat keyspace per database, so two applications with a session: key and no namespace are one application overwriting the other."
+    },
+    {
+      "name": "stx.redis.timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.spring.integration.redis.RedisIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long a command waits before failing. A java.time.Duration (10s, PT10S): the binder has never heard of kotlin.time.Duration."
+    },
+    {
+      "name": "stx.kafka.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.kafka.KafkaIntegrationProperties",
+      "defaultValue": false,
+      "description": "Register the stx-kafka cluster handle. Off by default. It opens nothing: the connections belong to the publishers and subscribers it hands out."
+    },
+    {
+      "name": "stx.kafka.bootstrap",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.kafka.KafkaIntegrationProperties",
+      "defaultValue": "localhost:9092",
+      "description": "host:port pairs, comma-separated."
+    },
+    {
+      "name": "stx.kafka.client-id",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.kafka.KafkaIntegrationProperties",
+      "defaultValue": null,
+      "description": "What this application calls itself to the broker. Worth setting: it is what the broker's metrics and logs name, and consumer-1 in an incident is not a name."
+    },
+    {
+      "name": "stx.kafka.properties",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "sourceType": "com.strange.spring.integration.kafka.KafkaIntegrationProperties",
+      "defaultValue": {},
+      "description": "Anything else the clients understand, applied last."
+    },
+    {
+      "name": "stx.amqp.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.amqp.AmqpIntegrationProperties",
+      "defaultValue": false,
+      "description": "Open an stx-amqp connection at startup. Off by default. Unlike stx.jpa this really does open a socket at startup, so a broker that is not there fails the boot rather than the first publish."
+    },
+    {
+      "name": "stx.amqp.uri",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.amqp.AmqpIntegrationProperties",
+      "defaultValue": "amqp://localhost:5672",
+      "description": "Host, port, virtual host and credentials. The default vhost is named / while a URI path of / means the empty vhost, so amqp://localhost:5672/ authenticates against a vhost most brokers do not have and fails about permissions rather than about spelling. Write amqp://localhost:5672 or amqp://localhost:5672/%2F."
+    },
+    {
+      "name": "stx.amqp.connection-name",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.amqp.AmqpIntegrationProperties",
+      "defaultValue": null,
+      "description": "What this connection calls itself in the broker's management UI. Worth setting."
+    },
+    {
+      "name": "stx.amqp.heartbeat",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.spring.integration.amqp.AmqpIntegrationProperties",
+      "defaultValue": null,
+      "description": "What makes a dead connection look dead. Without it a broker restart or a dropped NAT mapping leaves a socket that reads as open and delivers nothing."
+    },
+    {
+      "name": "stx.amqp.connection-timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.spring.integration.amqp.AmqpIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long to wait for the connection itself."
+    },
+    {
+      "name": "stx.amqp.recovery",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.amqp.AmqpIntegrationProperties",
+      "defaultValue": true,
+      "description": "Reconnect and re-declare after a broker restart."
+    },
+    {
+      "name": "stx.i18n.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.i18n.I18nIntegrationProperties",
+      "defaultValue": false,
+      "description": "Load the message catalogs and narrow the locale resolver to the languages named below. Off by default."
+    },
+    {
+      "name": "stx.i18n.languages",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.strange.spring.integration.i18n.I18nIntegrationProperties",
+      "defaultValue": [
+        "en"
+      ],
+      "description": "The languages with catalogs \u2014 [en, fr], or [en, fr-CA] for a region. The version this replaces hardcoded en and fr in a @Configuration class."
+    },
+    {
+      "name": "stx.i18n.fallback",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.i18n.I18nIntegrationProperties",
+      "defaultValue": "en",
+      "description": "The language a key falls back to when the request's has no text for it. Per key, not per request."
+    },
+    {
+      "name": "stx.i18n.base-name",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.integration.i18n.I18nIntegrationProperties",
+      "defaultValue": "locales/messages",
+      "description": "Where the .properties catalogs are \u2014 locales/messages_fr.properties for fr."
+    },
+    {
+      "name": "stx.i18n.fail-on-missing-key",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.integration.i18n.I18nIntegrationProperties",
+      "defaultValue": false,
+      "description": "Throw on a key with no text anywhere, instead of returning the key. Off in a deployment and worth turning on in a test suite: a running server should not fail a request over a translation, and a test suite should not pass over one."
     }
   ]
 }

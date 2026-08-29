@@ -121,7 +121,7 @@ class MongoAutoConfigurationTest :
                 context.getBeanNamesForType(ReactiveAuditorAware::class.java).size shouldBe 0
             }
             runner
-                .withPropertyValues("stx.data.mongo.enabled=true", "stx.data.mongo.auditing=true")
+                .withPropertyValues("stx.data.mongo.enabled=true", "stx.data.mongo.auditor=true")
                 .run { context -> context.getBeanNamesForType(ReactiveAuditorAware::class.java).size shouldBe 1 }
         }
 

@@ -13,6 +13,15 @@ dependencies:
   # `CorsPolicy` is what `stx.cors` becomes — the same type stx-ktor installs Ktor's plugin from.
   - //libs/stx-common: exported
 
+  # The libraries `integration/` wires, every one compile-only for the reason spelled out below —
+  # and local modules first, before any alias, as AGENTS.md's *Module layout* requires.
+  - //libs/stx-mongo: compile-only
+  - //libs/stx-jpa: compile-only
+  - //libs/stx-storage: compile-only
+  - //libs/stx-redis: compile-only
+  - //libs/stx-kafka: compile-only
+  - //libs/stx-amqp: compile-only
+
   # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.
   # The starter also brings spring-context and spring-boot-autoconfigure, which every package here
   # needs, so there is nothing finer to depend on.
@@ -47,6 +56,11 @@ dependencies:
   # no reason to carry any of it.
   - $spring.boot.starter.data.mongodb.reactive: compile-only
 
+  # Object diffing, for the Mongo audit trail alone: it compares the previous stored state with the
+  # one just saved and reports the changed properties, which is the whole reason that trail is more
+  # than a copy of the document.
+  - $libs.javers.core: compile-only
+
 test-dependencies:
   # The MongoDB the findPage specs page through: `MONGO_TEST_URI` when the workspace's replica set
   # is already up, a container started once for the run otherwise, and the specs report skipped when
@@ -61,6 +75,15 @@ test-dependencies:
   - $spring.boot.starter.validation
   - $spring.boot.starter.security
   - $spring.boot.starter.data.mongodb.reactive
+  - $libs.javers.core
+
+  # And the stx libraries the integration specs stand up for real, for the same reason.
+  - //libs/stx-mongo
+  - //libs/stx-jpa
+  - //libs/stx-storage
+  - //libs/stx-redis
+  - //libs/stx-kafka
+  - //libs/stx-amqp
   # ApplicationContextRunner, for asserting what does and does not appear in a context
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5

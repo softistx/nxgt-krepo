@@ -382,6 +382,119 @@ index ordering, which is the worse trade.
 `stx-mongo` has `mongoCodecRegistry()` for the identical gap — two layers over the same driver, each
 needing to be told about the same type.
 
+## The audit trail
+
+```yaml
+stx:
+  data:
+    mongo:
+      audit:
+        enabled: true
+        collection: audits
+```
+
+```kotlin
+@Auditable
+@Document("orders")
+data class Order(@Id val id: String, val status: String, val total: Int)
+```
+
+That is the whole setup. Every save and delete of an `@Auditable` document appends an `AuditEntry`
+carrying the document's full state, the properties that changed, who changed them, and a version
+number that only goes up. Nothing is ever updated — a history that can be edited is not one.
+
+The diff comes from [Javers](https://javers.org), which is `compile-only`: an application that does
+not audit anything does not carry it.
+
+**Opt-in per document, not per application.** An audit trail on everything is a second copy of the
+database that nobody budgeted for. This is for the collections where *who changed this, and to what*
+is a question somebody will actually ask.
+
+**Saves that changed nothing record nothing.** Spring Data emits an `AfterSaveEvent` for every save,
+including the ones that wrote the same values back, and a trail full of versions that differ in
+nothing is a trail nobody reads.
+
+**A delete is `TERMINAL` and the last word.** It keeps the last known state — the question asked of a
+deletion is nearly always *what was it when it went* — and saves of the same id afterwards are
+ignored rather than continuing the history. A new document reusing an id is a different thing, and
+stitching the two together would produce a diff between two unrelated objects, presented as a change
+somebody made.
+
+**The write is asynchronous, on a scope the context owns.** Auditing runs after the save has already
+happened, so failing it cannot undo anything, and blocking the request on a second write would cost
+every caller latency for a record nobody is waiting on. The consequence stated plainly: an entry can
+be lost if the process dies between the save and the append. The scope is the `stxAuditScope` bean —
+replaceable, and cancelled when the context closes. It is deliberately **not** `GlobalScope`, which
+would keep writing through shutdown, be stopped only by the process exiting, and give a test nothing
+to wait for.
+
+**The collection name is not a SpEL `@Document`.** A configurable mapped collection is normally
+written `@Document("#{@environment.getProperty(…)}")`, because the annotation is read at mapping time
+and no bean of ours runs early enough to rename it. That expression needs a bean resolver, so it
+resolves only inside an application context: a `ReactiveMongoTemplate` built by hand fails with
+`EL1057E: No bean resolver registered`, which is how this was found. `AuditStore` holds the name and
+passes it to the template's `collectionName` overloads instead.
+
+`stx.data.mongo.audit` is not `stx.data.mongo.auditor`. The latter registers Spring Data's
+`ReactiveAuditorAware` so `@CreatedBy` stamps *who* onto the document itself; this one keeps the
+document's whole history in a collection of its own.
+
+## Migrations
+
+```yaml
+stx:
+  data:
+    mongo:
+      migration:
+        enabled: true
+        prefix: V
+        collection: migrations
+```
+
+```kotlin
+@MigrationUnit("backfills every order's currency")
+class V3Currencies(private val template: ReactiveMongoTemplate) : Migration {
+    override suspend fun migrate() {
+        template.updateMulti(Query(), Update().set("currency", "EUR"), "orders").awaitSingle()
+    }
+}
+```
+
+**The class name is the version.** `V3Currencies` is order 3, code `V3`. The name has to match
+`<prefix><digits><name>`, and `<name>` has to start with a letter or an underscore — otherwise `V102`
+could be read as order 102 or as order 10 followed by `2`, and a regex would pick one silently.
+
+**A `Migration` bean whose name does not match is a loud warning at startup, not a shrug.** A
+migration that quietly does not run is the failure this whole mechanism exists to prevent.
+
+**Two units at the same order abort the whole run.** Their codes would collide, one would be
+recorded as the other and never run, and which one is arbitrary. An arbitrary migration order is
+worse than no migrations.
+
+**A failure stops everything after it, on this startup and every later one.** Migrations are written
+against the state the previous one left, so continuing past a failure applies a change to a database
+that is not in the shape it expects. The record stays `FAILED` until somebody deals with it.
+
+**Migrations should be idempotent.** The unique index on `code` stops two instances from both
+*recording* a migration, but nothing holds a lock while one *runs*, so two instances starting
+together can both execute the same `PENDING` unit. Making that impossible needs a lease with a
+timeout, and a lease that expires while a long migration is still running is a worse failure than
+the one it prevents.
+
+**The runner is a suspending `@EventListener` on `ApplicationReadyEvent`, and Spring does not wait
+for it.** `publishEvent` returns while the listener is still suspended, so the application is
+serving requests while migrations are being applied — a migration is not a startup gate, and an
+exception out of one goes to a reactive error handler nobody reads rather than to whoever published
+the event. That is why the runner catches its own failures. `SuspendingListenerTest` pins both
+halves; the first version of it asserted the result straight after `publishEvent`, passed on a
+`delay(1)` that happened to finish first, and failed on the next run.
+
+Three things here differ from the version this was extracted from, and each was a defect: `enabled`
+defaulted to `true`, so putting the library on a classpath was enough to write to the database;
+discovery filtered on the `@MigrationUnit` annotation, so a unit declared through an `@Bean` method
+was silently ignored; and `interface IMigration` declared a `rollback()` that nothing anywhere
+called, which reads as a promise that a failed migration is undone.
+
 ## The request's locale
 
 ```kotlin
@@ -394,6 +507,87 @@ resume on a different worker after any suspension point, and whatever the holder
 belongs to whichever request last ran on it. It looks correct in development, where one request is
 in flight at a time, and starts serving French to English readers under load — a bug with no stack
 trace and no failing test. The exchange follows the request wherever it resumes.
+
+## The stx libraries
+
+`integration/` is one auto-configuration per `stx-*` library, so a Spring application uses them
+without wiring anything.
+
+```yaml
+stx:
+  mongo:   { enabled: true, uri: mongodb://localhost:27017, database: orders }
+  jpa:     { enabled: true, uri: "postgresql://localhost:5432/orders", packages: [ com.acme.domain ] }
+  storage: { enabled: true, endpoint: http://localhost:9000, access-key: ${MINIO_KEY}, secret-key: ${MINIO_SECRET} }
+  redis:   { enabled: true, uri: redis://localhost:6379, namespace: orders }
+  kafka:   { enabled: true, bootstrap: "localhost:9092", client-id: orders }
+  amqp:    { enabled: true, uri: "amqp://user:secret@rabbit:5672/billing" }
+  i18n:    { enabled: true, languages: [ en, fr ], fallback: en }
+```
+
+```kotlin
+class OrderRepository(private val orders: MongoDatabase)   // built by the container, nothing to install
+```
+
+Every one of them is the same shape, and the shape is the point:
+
+- **`@ConditionalOnClass`**, so the `compile-only` dependency stays optional at runtime. A package
+  nobody added the library for is dark.
+- **`@ConditionalOnProperty` with no `matchIfMissing`.** Putting `stx-spring` on a classpath opens no
+  connection to anything.
+- **`@ConditionalOnMissingBean` on every bean**, which is how a deployment sets the things this
+  module has no opinion about. TLS, pool sizes and read concerns are not properties here; declaring
+  your own `MongoClient` bean is the answer, and the `MongoDatabase` is still built over it rather
+  than opening a second pool.
+- **Built through that library's own factory** — `mongoClient`, `Jpa.scan`, `ObjectStorage.connect` —
+  never by assembling a client here. The factory knows something the caller does not: a Mongo client
+  built without `stx-mongo`'s codec registry compiles, connects, reads, and then stores an `Instant`
+  as something nothing in that library can read back, with every step succeeding until the data is
+  already written.
+- **Closed with the context**, through the inferred `close()`. All of these close idempotently via
+  `CloseGuard`, so an application that also closes its own is not a problem.
+- **A missing required key is a sentence naming the key.** `stx.mongo.enabled is true but
+  stx.mongo.uri is not set`, not a binder error naming a constructor parameter.
+
+`stx.mongo` is not `stx.data.mongo`, and neither is Spring Boot's `spring.data.mongodb`. The last two
+configure Spring Data's `ReactiveMongoTemplate`; the first hands you `stx-mongo`'s coroutine client.
+They are different APIs onto the same server, and turning both on means two connection pools.
+
+**`stx.jpa` and `stx.amqp` block the thread that is starting the application, deliberately.**
+`Jpa.connect` and `Amqp.connect` both suspend — reading the annotations off every entity and
+standing up a service registry is ordinary blocking work — and a `@Bean` method cannot. That thread
+is doing nothing else and is not an event loop, so this is the one place where blocking is the right
+answer rather than a shortcut.
+
+**`stx.amqp` opens a socket there and `stx.jpa` does not**, and that difference is also deliberate.
+On the default `schema-mode` Hibernate's pool opens its first connection when something asks for a
+session, so a wrong password surfaces on first use; any other mode has schema work to do and
+connects at startup, which is the point of choosing one. AMQP connects either way — a service whose
+work arrives over that connection should fail its boot when the broker is not there, rather than
+start and quietly consume nothing.
+
+**`stx.kafka` opens nothing at all, and has no `close()` to call.** `Kafka` is deliberately not a
+`connect()`: a Kafka client connects when it is constructed, so the connections belong to the
+publishers, subscribers and admin clients it hands out — each with its own lifetime, thread and
+failure mode. A handle that owned them all would eventually close a producer another part of the
+application was still using. So this is the one integration where the application still owns real
+resources: `kafka.publisher<OrderEvent>()` is yours to close.
+
+**`stx.i18n` also narrows the locale resolver, and that is the half that matters.** WebFlux's
+default answers with whatever `Accept-Language` asked for, catalog or no catalog, so a browser
+asking for Japanese produces a `Translator` for Japanese that falls back key by key. Told the
+supported set, it answers with the closest language actually loaded. It is also the only one of the
+seven without `@ConditionalOnClass` — `stx-i18n` is an `exported` dependency of this module, because
+the exception handler translates, so the class is always there and the condition could only ever be
+true.
+
+**Not every setting is a property, and that is the design.** A `Json`, a `ConnectionFactory` and a
+`MongoClientSettings.Builder` are not strings, and growing a key for each one turns a config class
+into a worse copy of the thing it configures. Declare your own bean instead —
+`@ConditionalOnMissingBean` is on every one of them.
+
+**No buckets are created by `stx.storage`.** `ensureBucket` is one call and belongs to whoever knows
+which buckets the application needs. Creating them from a property list would make startup write to
+somebody's object store out of a config file nobody reviewed as a schema.
 
 ## Dependencies
 
