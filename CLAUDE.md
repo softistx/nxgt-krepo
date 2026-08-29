@@ -40,8 +40,11 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - Never introduce Gradle files to "fix" a build. If something needs a build feature this repo lacks, it belongs in a toolchain plugin module under `plugins/`, not in a `build.gradle.kts`.
 - Run `ktlint -F --relative "**/*.kt" "!build/**"` before committing Kotlin changes. The exclusion matters — without it ktlint lints generated output and reports thousands of violations in files nobody edits.
 - Document a capability in the same change that adds it, in the file that owns that audience —
-  support for a new OpenAPI keyword, format or extension goes in `docs/openapi-support.md`, not in
-  a module README. AGENTS.md has the table.
+  support for a new OpenAPI keyword, format or extension goes in `docs/openapi-support.md`, a new
+  `stx.*` property in `docs/spring-configuration.md`, a new Mongo operator or filter token in
+  `docs/spring-mongo-queries.md` — not in a module README. A README answers *why the library is
+  shaped this way* and stays roughly the size it is; the reference half is the one that grows.
+  AGENTS.md has the table.
 - Keep files short and single-purpose and follow SOLID — AGENTS.md spells out what each principle means in this repo. If a change makes a file mix two concerns, split the file in the same change rather than leaving it for later.
 - Coroutines first; when a Java API leaves no choice but an actual thread — `Runtime.addShutdownHook` takes one — write `Thread.ofVirtual().unstarted { }`, never `Thread(…)` and never `startVirtualThread` for a hook. The latter starts immediately, so the hook is registered dead or refused, and the JVM swallows either outcome silently. AGENTS.md has the reasoning and `ContainerService` the spec.
 - A `stx-jpa` query says what it loads. Associations are annotated `LAZY` — Hibernate Reactive
