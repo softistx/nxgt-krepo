@@ -1,5 +1,6 @@
 package com.strange.spring.cors
 
+import com.strange.common.http.CorsPolicy
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -12,6 +13,11 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 /**
  * A CORS filter built from `stx.cors`, so the origins live in configuration rather than in a
  * hardcoded list somebody has to find and edit per environment.
+ *
+ * The properties become a [CorsPolicy] first and Spring's `CorsConfiguration` second. That is not
+ * ceremony: `stx-ktor` installs Ktor's plugin from the same policy, so the two frameworks cannot
+ * drift apart on what a given configuration means, and the one combination the CORS specification
+ * forbids is refused in the same place for both.
  */
 @AutoConfiguration
 @EnableConfigurationProperties(CorsProperties::class)
@@ -20,36 +26,34 @@ class CorsAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun corsWebFilter(properties: CorsProperties): CorsWebFilter {
-        properties.validate()
-        val configuration =
-            CorsConfiguration().apply {
-                allowedOrigins = properties.origins.ifEmpty { null }
-                allowedOriginPatterns = properties.originPatterns.ifEmpty { null }
-                allowedMethods = properties.methods
-                allowedHeaders = properties.headers
-                exposedHeaders = properties.exposedHeaders.ifEmpty { null }
-                allowCredentials = properties.allowCredentials
-                maxAge = properties.maxAge
-            }
+        val policy = properties.policy().validate(patternsSetting = "stx.cors.origin-patterns")
         return CorsWebFilter(
-            UrlBasedCorsConfigurationSource().apply { registerCorsConfiguration(properties.path, configuration) },
+            UrlBasedCorsConfigurationSource().apply { registerCorsConfiguration(policy.path, policy.toSpring()) },
         )
     }
 }
 
 /**
- * Refuses the one combination that compiles, starts, and then fails on every preflight.
+ * The policy as Spring expresses it.
  *
- * `allowedOrigins = ["*"]` with `allowCredentials = true` is forbidden by the CORS specification —
- * a browser will not send cookies to a wildcard — and Spring throws when the *request* arrives, not
- * when the bean is built. That turns a configuration mistake into an intermittent browser failure
- * discovered by whoever is testing the front end, with a message about `allowedOrigins` in a log
- * nobody was reading. `originPatterns` is the answer, and this says so.
+ * Written as a receiver parameter rather than inside an `apply`, because the two types have seven
+ * field names in common: inside `apply`, `exposedHeaders` is the *Spring* object's property, and the
+ * assignment reads as a copy while being a self-assignment. That is a compile error for the nullable
+ * ones and silently correct-looking for the rest.
+ *
+ * An empty list becomes null rather than an empty list, because Spring reads the two differently:
+ * null means "unset, fall back", an empty list means "nothing is allowed". A policy that never
+ * mentioned exposed headers must not silently forbid the ones a browser already reads.
  */
-private fun CorsProperties.validate() {
-    require(!(allowCredentials && origins.contains("*"))) {
-        "stx.cors: origins cannot be \"*\" while allow-credentials is true — the CORS specification " +
-            "forbids it and a browser will refuse the response. Use stx.cors.origin-patterns, which " +
-            "echoes the concrete requesting origin back, or set allow-credentials to false."
-    }
+private fun CorsPolicy.toSpring(): CorsConfiguration {
+    val policy = this
+    val spring = CorsConfiguration()
+    spring.allowedOrigins = policy.origins.ifEmpty { null }
+    spring.allowedOriginPatterns = policy.originPatterns.ifEmpty { null }
+    spring.allowedMethods = policy.methods
+    spring.allowedHeaders = policy.headers
+    spring.exposedHeaders = policy.exposedHeaders.ifEmpty { null }
+    spring.allowCredentials = policy.allowCredentials
+    spring.maxAge = policy.maxAgeSeconds
+    return spring
 }
