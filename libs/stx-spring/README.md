@@ -439,6 +439,62 @@ passes it to the template's `collectionName` overloads instead.
 `ReactiveAuditorAware` so `@CreatedBy` stamps *who* onto the document itself; this one keeps the
 document's whole history in a collection of its own.
 
+## Migrations
+
+```yaml
+stx:
+  data:
+    mongo:
+      migration:
+        enabled: true
+        prefix: V
+        collection: migrations
+```
+
+```kotlin
+@MigrationUnit("backfills every order's currency")
+class V3Currencies(private val template: ReactiveMongoTemplate) : Migration {
+    override suspend fun migrate() {
+        template.updateMulti(Query(), Update().set("currency", "EUR"), "orders").awaitSingle()
+    }
+}
+```
+
+**The class name is the version.** `V3Currencies` is order 3, code `V3`. The name has to match
+`<prefix><digits><name>`, and `<name>` has to start with a letter or an underscore — otherwise `V102`
+could be read as order 102 or as order 10 followed by `2`, and a regex would pick one silently.
+
+**A `Migration` bean whose name does not match is a loud warning at startup, not a shrug.** A
+migration that quietly does not run is the failure this whole mechanism exists to prevent.
+
+**Two units at the same order abort the whole run.** Their codes would collide, one would be
+recorded as the other and never run, and which one is arbitrary. An arbitrary migration order is
+worse than no migrations.
+
+**A failure stops everything after it, on this startup and every later one.** Migrations are written
+against the state the previous one left, so continuing past a failure applies a change to a database
+that is not in the shape it expects. The record stays `FAILED` until somebody deals with it.
+
+**Migrations should be idempotent.** The unique index on `code` stops two instances from both
+*recording* a migration, but nothing holds a lock while one *runs*, so two instances starting
+together can both execute the same `PENDING` unit. Making that impossible needs a lease with a
+timeout, and a lease that expires while a long migration is still running is a worse failure than
+the one it prevents.
+
+**The runner is a suspending `@EventListener` on `ApplicationReadyEvent`, and Spring does not wait
+for it.** `publishEvent` returns while the listener is still suspended, so the application is
+serving requests while migrations are being applied — a migration is not a startup gate, and an
+exception out of one goes to a reactive error handler nobody reads rather than to whoever published
+the event. That is why the runner catches its own failures. `SuspendingListenerTest` pins both
+halves; the first version of it asserted the result straight after `publishEvent`, passed on a
+`delay(1)` that happened to finish first, and failed on the next run.
+
+Three things here differ from the version this was extracted from, and each was a defect: `enabled`
+defaulted to `true`, so putting the library on a classpath was enough to write to the database;
+discovery filtered on the `@MigrationUnit` annotation, so a unit declared through an `@Bean` method
+was silently ignored; and `interface IMigration` declared a `rollback()` that nothing anywhere
+called, which reads as a promise that a failed migration is undone.
+
 ## The request's locale
 
 ```kotlin
