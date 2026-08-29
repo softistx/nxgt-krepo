@@ -4,8 +4,8 @@ The catalogue for `libs/shared-material`: every component, with typed controls b
 whole screen at the end.
 
 ```bash
-./kotlin run -m desktop     # a window, sized for the three-pane layout
-./kotlin run -m android     # with a device or emulator connected
+./kotlin run -m md-desktop     # a window, sized for the three-pane layout
+./kotlin run -m md-android     # with a device or emulator connected
 ```
 
 ## One application, three modules
@@ -15,15 +15,15 @@ platforms — so the demo cannot be a single module. It is not three application
 
 | | |
 | --- | --- |
-| `catalog/` | `kmp/lib` on `[jvm, android]`. **Everything**: `MaterialDemo()`, the story registry, the panes, the knobs, the stories. |
-| `desktop/` | `jvm/app`. A `Window` around `MaterialDemo()`. |
-| `android/` | `android/app`. One `ComponentActivity` around `MaterialDemo()`, and a manifest. |
+| `md-catalog/` | `kmp/lib` on `[jvm, android]`. **Everything**: `MaterialDemo()`, the story registry, the panes, the knobs, the stories. |
+| `md-desktop/` | `jvm/app`. A `Window` around `MaterialDemo()`. |
+| `md-android/` | `android/app`. One `ComponentActivity` around `MaterialDemo()`, and a manifest. |
 
 The launchers are about twenty lines each and contain no logic and no stories. If one starts
 growing, something is in the wrong module.
 
 There is no iOS launcher: the library declares the Apple targets, the demo runs where it can be run
-from here. Adding `ios/app` on a macOS host touches nothing in `catalog`.
+from here. Adding `ios/app` on a macOS host touches nothing in `md-catalog`.
 
 ## Adding a story
 
@@ -35,7 +35,7 @@ val DisplayStories = storyGroup("Display") {
 }
 ```
 
-Register the group in `catalog/src/Catalog.kt`. **A component added in any phase registers its story
+Register the group in `md-catalog/src/Catalog.kt`. **A component added in any phase registers its story
 in the same change** — the catalogue is never caught up with afterwards.
 
 A knob declares itself by being read: `knobs.flag("Enabled", true)` returns the current value and,
@@ -96,4 +96,4 @@ from `$compose.desktop.currentOs`, which is why they are jvm-only.
   that one entry; a group written but never registered is invisible in exactly the same way as a
   group that does not exist.
 
-Run them with `./kotlin test -m catalog`.
+Run them with `./kotlin test -m md-catalog`.
