@@ -1,1 +1,4 @@
 com.strange.spring.error.ErrorAutoConfiguration
+com.strange.spring.security.SecurityAutoConfiguration
+com.strange.spring.cors.CorsAutoConfiguration
+com.strange.spring.json.JsonAutoConfiguration

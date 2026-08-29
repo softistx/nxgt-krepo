@@ -35,12 +35,18 @@ dependencies:
   # `./kotlin show dependencies -m stx-spring`: it is in COMPILE and absent from RUNTIME.
   - $spring.boot.starter.validation: compile-only
 
+  # Spring Security, for `security/` alone and on the same terms. An application that never
+  # authenticates anyone does not load `currentUser` or the ownership annotations, and so does not
+  # carry the six jars behind them.
+  - $spring.boot.starter.security: compile-only
+
 test-dependencies:
   # The specs run the auto-configuration for real, so the compile-only libraries above are on the
   # runtime classpath here too — otherwise `@ConditionalOnClass` skips what they came to check.
   # This is not a formality: the first run of ErrorAutoConfigurationTest found no
   # ValidationExceptionHandler, which is exactly what a consumer without validation will see.
   - $spring.boot.starter.validation
+  - $spring.boot.starter.security
   # ApplicationContextRunner, for asserting what does and does not appear in a context
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5
