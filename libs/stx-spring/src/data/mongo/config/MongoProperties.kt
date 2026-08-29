@@ -45,8 +45,12 @@ data class MongoProperties(
      *
      * Needs Spring Security on the classpath and `@EnableReactiveMongoAuditing` in the application —
      * enabling auditing changes how every entity is persisted, which is the application's call.
+     *
+     * Named `auditor` and not `auditing`, because `stx.data.mongo.audit` is a different feature: this
+     * stamps *who* onto a document, that keeps the document's whole history in a collection of its
+     * own. Two switches a syllable apart would be read as one.
      */
-    val auditing: Boolean = false,
+    val auditor: Boolean = false,
     /**
      * Creates the indexes the mapped entities declare, once, after the application is ready.
      *
