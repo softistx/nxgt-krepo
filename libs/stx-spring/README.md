@@ -6,11 +6,13 @@ shape: one package per concern, one module for all of them.
 ```
 com.strange.spring.error    ApiException, ErrorResponse, the advices that connect them
 com.strange.spring.i18n     the request's locale, and the catalogs bound to it
+com.strange.spring.web      what a functional route reads off a request and answers with
+com.strange.spring.client   a typed HTTP client from an interface
 ```
 
-More packages arrive in their own changes: the WebFlux request and response helpers, a typed
-`WebClient` factory, the Spring Data Reactive Mongo layer, and one auto-configuration per `stx-*`
-library. What follows is true of all of them.
+More packages arrive in their own changes: security, the extracted `@Configuration`, the Spring Data
+Reactive Mongo layer, and one auto-configuration per `stx-*` library. What follows is true of all of
+them.
 
 ## Everything is opt-in
 
@@ -91,6 +93,76 @@ An enabled `stx.errors` needs a `Messages` bean — declared by the application,
 `stx.i18n`. There is deliberately no fallback that skips translation: a body reading
 `orders.not-found` in production is worse than a context that refuses to start and names the missing
 bean.
+
+## Routes
+
+Everything in `web/` is an extension, and none of it is a bean — a functional route reads its
+request and returns its response, and there is nothing to inject.
+
+```kotlin
+suspend fun list(request: ServerRequest): ServerResponse {
+    val category = request.requiredParam("category")
+    val page = products.page(category, request.page, request.size, request.sort)
+    return page.response().ok()
+}
+
+suspend fun create(request: ServerRequest): ServerResponse {
+    val body = request.validBody<ProductRequest>(validator, ValidationGroups.Create::class)
+    return products.create(body).created()
+}
+```
+
+- **Nonsense in a paging parameter is not a failure.** `?page=abc` and `?size=-1` are how a
+  hand-written link arrives; answering the first page is more useful than a 400 on a parameter the
+  caller did not mean to send. A parameter the route genuinely needs is `requiredParam`, which *does*
+  fail — as `params.required`, with the parameter's name in the arguments, so the client is told
+  which one.
+- **`sort` does not return Spring Data's `Sort`.** It returns a list of `SortOrder`, because
+  spring-data-commons has no business on the classpath of a consumer that only wanted to read a query
+  parameter. Each store's package translates it into what that store sorts by.
+- **A sort clause has to match end to end.** The property reaches a query as a field name, so the
+  pattern that accepts it is narrow and anchored. `$where:ASC` *contains* a legal clause; a scanning
+  parser sorted by `where`, which is an operator and not a field. `SortOrderTest` pins that.
+- **`Response<D, M>` has no `error` field, deliberately.** An error never comes back through a
+  route's return value here — it is thrown and answered by `ApiExceptionHandler`. A `data`/`error`
+  union means every client unwraps two levels to learn something failed, when the status already said
+  so. Using the envelope at all is a route's choice; nothing here returns it for you.
+- **`Validator.check` throws instead of returning violations**, because a caller who forgets to
+  look at a returned set has written a route that validates nothing and says so nowhere. It lives in
+  its own file for the `compile-only` reason below.
+
+## Calling another service
+
+```kotlin
+interface Catalog {
+    @GetExchange("/products/{id}")
+    suspend fun product(@PathVariable id: String): Product
+}
+
+val catalog = httpClient<Catalog>("https://catalog.internal")
+```
+
+**An error response arrives as an `ApiException`, not a `WebClientResponseException`.** A failure
+from a service upstream and one raised in this one should reach a handler as the same type, or the
+translation gets written twice — and the second time is after the first outage. The upstream's status
+is carried across, so its 404 is a 404 here rather than a 500.
+
+The upstream's body is read as a map rather than as `ErrorResponse`: an upstream that is not one of
+ours answers in its own shape, and a decoder that throws while handling an error would replace a
+useful 502 with a serialization failure. A body with no `message` becomes `errors.unexpected`, which
+the caller's own catalogs can still translate.
+
+The `headers` hook runs **per request**, which is what makes it usable for the header that actually
+varies — a token read off the current request, a correlation id. `defaultHeaders` would pin the first
+caller's value onto every later call.
+
+## What is not here
+
+**Reactor await extensions.** `kotlinx-coroutines-reactor` and `kotlinx-coroutines-reactive` already
+have them, and a second set of shorter names over the same functions is a vocabulary to learn rather
+than a capability to use. The one thing worth knowing is which artifact a given name is in:
+`awaitSingleOrNull` on a `Mono` is the Reactor one, `awaitFirstOrNull` on a `Publisher` is the other,
+and this module depends on both.
 
 ## The request's locale
 
