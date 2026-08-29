@@ -8,7 +8,6 @@ import androidx.compose.material3.CardElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import com.strange.material.motion.MotionSpeed
-import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.motion
 
 /** Which of Material 3's three cards this is. */

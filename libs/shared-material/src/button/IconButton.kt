@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.strange.material.icon.Icon
 import com.strange.material.icon.IconSize
-import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.ToneColors
 import androidx.compose.material3.IconButton as MaterialIconButton
 
