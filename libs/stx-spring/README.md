@@ -11,9 +11,10 @@ com.strange.spring.client   a typed HTTP client from an interface
 com.strange.spring.security who is calling, and the annotations that say who may
 com.strange.spring.cors     a browser policy read from configuration
 com.strange.spring.json     kotlinx-serialization as WebFlux's codec
+com.strange.spring.data     the Spring Data layer — currently Mongo's query vocabulary
 ```
 
-More packages arrive in their own changes: the Spring Data Reactive Mongo layer, and one
+More packages arrive in their own changes: the Mongo template and auditing, and one
 auto-configuration per `stx-*` library. What follows is true of all of them.
 
 ## Everything is opt-in
@@ -256,6 +257,61 @@ default *is* null.
 It is contributed as a `CodecCustomizer`, not by implementing `WebFluxConfigurer` — a configurer is a
 whole extension point with a dozen methods, and an application that has its own would find two of
 them competing.
+
+## Mongo queries
+
+`data/mongo/` is the Spring Data Reactive Mongo half: a predicate DSL, a filter grammar for query
+strings, and the converters without which a `kotlin.time.Instant` cannot be a field.
+
+```kotlin
+val cheap = all(Product::stock gt 0, Product::price lte 50).query
+val listed = request.mongoQuery      // ?filter=...&sort=... together
+```
+
+- **Every operator has a `KProperty` form, and that is the point.** A field named by a string is a
+  name nothing checks: rename the property and the query still compiles and silently matches
+  nothing — which reads as "no results", not as "broken query". The string forms remain for fields
+  that have no property to name them.
+- **`all`/`any`/`none` build an explicit `$and`/`$or`/`$nor`.** A chain of `.and("field")` builds one
+  document key per field and quietly loses the second predicate on a field named twice:
+  `where("price").gt(5).and("price").lt(10)` is `{price: {$lt: 10}}`.
+- **A substring search quotes what it was given.** Otherwise a search box is a way to hand the
+  database a regular expression, and `(a+)+$` against a long field is a request that does not come
+  back. It does not take a hostile user — only someone searching for `C++`.
+- **The negated regex operators are real.** `notContaining` is `where(f).not().regex(...)`, because
+  Spring's `Criteria.not()` sets a flag the *next* operator consumes: `(f containing x).not()`
+  negates nothing, and the version this was ported from had `!like` behaving exactly like `like`.
+
+### The filter grammar
+
+```
+?filter=status:eq:PAID;total:gte:100
+?filter=or@email:eq:a@b.c;email:eq:d@e.f
+```
+
+Clauses are `field:operator:value`, separated by `;`, combined with `and` unless the parameter starts
+with `or@`. The operators are `eq ne lt lte gt gte before after from to like !like ilike !ilike in
+!in exists size near within` — a closed set, because a grammar that passed operators through would
+let a caller write `$where`, which is JavaScript the server runs.
+
+**A clause that does not parse is a 400, not a clause that is skipped.** This is the one place where
+lenience is the wrong instinct, and it is the opposite of what `?sort=` does: dropping a filter
+returns *more* rows than the caller asked for, so `status:eq:PIAD` would answer with the whole
+collection rather than an empty page. Sorting can afford to shrug; narrowing cannot. For the same
+reason a comparison against unparseable text is a failure rather than a zero — the version this came
+from coerced it, so `price:gte:cheap` quietly became `price >= 0`.
+
+### `kotlin.time.Instant`
+
+BSON has one date type and the driver has a codec for `java.util.Date` and none for
+`kotlin.time.Instant` — so an entity with one fails at *query* time with `Can't find a codec`, not
+at mapping time. `stxMongoConversions()` is the fix. Note that BSON dates hold milliseconds: a round
+trip loses anything finer, which matters for a cursor built from a timestamp and not at all for a
+`createdAt` somebody displays. Storing a string would keep the nanoseconds and lose range queries and
+index ordering, which is the worse trade.
+
+`stx-mongo` has `mongoCodecRegistry()` for the identical gap — two layers over the same driver, each
+needing to be told about the same type.
 
 ## The request's locale
 

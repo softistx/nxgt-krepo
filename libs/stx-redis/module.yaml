@@ -5,6 +5,9 @@ apply:
   - //publishing.module-template.yaml
 
 dependencies:
+  # the shared Json every stored value is read through, and the decode over it
+  - //libs/stx-common
+
   # RedisCoroutinesCommands and StatefulRedisConnection are all over this module's public API
   - $libs.lettuce.core: exported
   # Lettuce's coroutine API is built on the Reactive Streams one, and declares this optional —
@@ -13,8 +16,6 @@ dependencies:
   - $libs.kotlinx.coroutines.core: exported
   # values are stored as their kotlinx.serialization form
   - $libs.kotlinx.serialization: exported
-  # the shared Json every stored value is read through, and the decode over it
-  - //libs/stx-common
 
 test-dependencies:
   # the Redis the integration specs talk to, started for the run when the workspace's own is not
