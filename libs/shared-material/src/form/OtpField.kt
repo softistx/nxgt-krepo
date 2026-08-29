@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
@@ -39,6 +40,8 @@ fun OtpField(
     isError: Boolean = false,
     supportingText: String? = null,
     enabled: Boolean = true,
+    cellWidth: Dp = 44.dp,
+    cellHeight: Dp = 44.dp,
 ) {
     val scheme = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.small
@@ -63,11 +66,11 @@ fun OtpField(
                         Box(
                             modifier =
                                 Modifier
-                                    .size(CellWidth, CellHeight)
+                                    .size(cellWidth, cellHeight)
                                     .clip(shape)
-                                    .background(scheme.surfaceContainerHighest)
+                                    .background(scheme.surfaceContainerHighest.copy(.3f))
                                     .border(
-                                        width = if (filled) 2.dp else 1.dp,
+                                        width = if (filled) 1.25.dp else 1.dp,
                                         color =
                                             when {
                                                 isError -> scheme.error
@@ -80,7 +83,8 @@ fun OtpField(
                         ) {
                             Typography(
                                 text = digit?.toString().orEmpty(),
-                                variant = TypographyVariant.Metric,
+                                variant = TypographyVariant.TitleMedium,
+                                color = MaterialTheme.colorScheme.onBackground.copy(.9f),
                             )
                         }
                     }
@@ -91,4 +95,4 @@ fun OtpField(
 }
 
 private val CellWidth = 44.dp
-private val CellHeight = 56.dp
+private val CellHeight = 44.dp
