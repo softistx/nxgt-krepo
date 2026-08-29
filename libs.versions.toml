@@ -73,6 +73,10 @@ androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "a
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 compose-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3" }
 compose-material3-window-size = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "material3" }
+# The Compose Multiplatform build of the same thing. The androidx alias above is Android-only;
+# this one publishes android, desktop(jvm), iosArm64 and iosSimulatorArm64. Its version tracks
+# $compose.material3, which sits on its own alpha line rather than on foundation/ui's 1.11.1.
+compose-multiplatform-window-size-class = { module = "org.jetbrains.compose.material3:material3-window-size-class", version = "1.11.0-alpha07" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version = "1.11.4" }
 compose-viewmodel-lifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version = "2.11.0" }
