@@ -136,7 +136,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
   python3 .agents/skills/skill-from-docs/scripts/fetch_docs.py --skill <name>
   ```
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
-- **`large-feature-branch-workflow`** — two-level branching for work too large for a single PR.
+- **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on `develop` on their own.
 
 Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
 
