@@ -1,11 +1,11 @@
 ---
 name: material3-compose
-description: The Material 3 API surface that actually compiles here — colour roles, type scale, shape slots, Defaults objects and every public component — read off the resolved jar rather than the web. Use when building on or theming M3 in shared-material.
+description: The Material 3 API surface that actually compiles here — colour roles, type scale, shape slots, Defaults objects and every public component — read off the resolved jar rather than the web. Use when building on or theming M3 in stx-material.
 ---
 
 # Material 3 (Compose Multiplatform)
 
-`libs/shared-material` builds *on top of* Material 3: `StrangeTheme` installs a `MaterialTheme`
+`libs/stx-material` builds *on top of* Material 3: `StrangeTheme` installs a `MaterialTheme`
 underneath so ordinary M3 components and third-party M3 libraries keep working inside it.
 
 ## Why this skill has no fetched documentation
@@ -23,7 +23,7 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
 
 `api-source.json` records which version the pages describe. Re-run after a
 `settings.compose.version` bump; the script reads the newest jar in the toolchain's cache, so run
-`./kotlin build -m shared-material` first if the cache is cold.
+`./kotlin build -m stx-material` first if the cache is cold.
 
 ## What the extraction settles
 
@@ -62,7 +62,7 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
 
 Every component takes a colours/elevation/shape parameter whose factory lives on its `*Defaults`
 object (`ButtonDefaults.buttonColors(…)`, `CardDefaults.cardElevation(…)`). That is the supported
-seam, and it is how `shared-material` resolves its `variant × color` matrix: one function returns
+seam, and it is how `stx-material` resolves its `variant × color` matrix: one function returns
 a `ButtonColors` built from `ButtonDefaults`, and the component itself is untouched. Copying a
 component's source to change a colour is the failure mode this avoids.
 

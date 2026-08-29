@@ -1,0 +1,23 @@
+# Publishing, shared by every module under `libs/`.
+#
+# The toolchain's docs recommend a template over repeating this block, and warn why it has to be on
+# *every* published module: a published module's local dependencies must be published too, or its
+# POM names coordinates that do not exist. `stx-ktor` depends on `stx-common`, `stx-mongo` on
+# `stx-common`, and so on — so this is applied to all of them, `stx-testing` included.
+#
+# Publishing is a preview feature of the toolchain and is documented as likely to change.
+
+settings:
+  publishing:
+    enabled: true
+    group: com.strange
+    version: 0.1.0
+    # `artifactId` is deliberately absent: it defaults to the module's name, so the directory name
+    # *is* the artifact name and there is no second place to keep in sync.
+
+repositories:
+  # No credentials, no PGP key and no POM metadata rules — and enough to consume
+  # `com.strange:stx-mongo:0.1.0` from another project on this machine. A real repository is one
+  # more block here, changing nothing in any module.
+  - url: mavenLocal
+    publish: true

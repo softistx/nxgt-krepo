@@ -1,0 +1,51 @@
+product: jvm/lib
+description: Koin modules for the stx libraries — one package per integration, one module for all of them
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # `Module` is this library's entire public API
+  - $libs.koin.core: exported
+
+  # One entry per integration, and every one of them compile-only, for the reason
+  # libs/stx-ktor/module.yaml spells out: an application that calls `redisModule` already depends
+  # on stx-redis, since RedisConfig is the only way to configure it, and one that calls only
+  # `kafkaModule` never loads a class from any of the others.
+  - //libs/stx-i18n: compile-only
+  - //libs/stx-redis: compile-only
+  - //libs/stx-mongo: compile-only
+  - //libs/stx-amqp: compile-only
+  - //libs/stx-kafka: compile-only
+  - //libs/stx-storage: compile-only
+  - //libs/stx-jpa: compile-only
+
+test-dependencies:
+  # the specs start real containers through Koin, so here the libraries are on the runtime classpath
+  - //libs/stx-i18n
+  - //libs/stx-redis
+  - //libs/stx-mongo
+  - //libs/stx-amqp
+  - //libs/stx-kafka
+  - //libs/stx-storage
+  - //libs/stx-jpa
+  - //libs/stx-testing
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    # For the entity the JPA module's spec maps, in this module's test sources. Every module that
+    # *holds* entities needs these two, and an application calling `jpaModule` will need the same
+    # block in its own manifest. Nothing in `src/` carries a JPA annotation.
+    noArg:
+      enabled: true
+      presets: [ jpa ]
+    allOpen:
+      enabled: true
+      annotations:
+        - jakarta.persistence.Entity
+        - jakarta.persistence.MappedSuperclass
+        - jakarta.persistence.Embeddable

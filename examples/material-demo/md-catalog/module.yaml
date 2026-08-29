@@ -7,9 +7,9 @@ product:
 
 dependencies:
   # The library under demonstration.
-  - //libs/shared-material: exported
+  - //libs/stx-material: exported
   # The catalogue is itself a Compose UI, and it reaches for Material 3 directly wherever
-  # shared-material has not reached yet — text fields and sliders arrive in phase 2, and the
+  # stx-material has not reached yet — text fields and sliders arrive in phase 2, and the
   # control panel needs them now.
   - $compose.material3: exported
   - $compose.foundation: exported

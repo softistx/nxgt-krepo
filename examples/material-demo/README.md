@@ -1,6 +1,6 @@
 # material-demo
 
-The catalogue for `libs/shared-material`: every component, with typed controls beside it, and one
+The catalogue for `libs/stx-material`: every component, with typed controls beside it, and one
 whole screen at the end.
 
 ```bash
@@ -75,7 +75,7 @@ Two things beyond looking at components:
 The catalogue's own chrome is deliberately built from the library (`ListTile` for the story list,
 `Chip` for the seed picker and the choice knobs, `StatusBadge`, `Typography`), so anything awkward
 to use shows up here first. `Switch`, `Slider` and `OutlinedTextField` come straight from Material 3
-— shared-material has no form layer until phase 2, and the demo says so rather than faking one.
+— stx-material has no form layer until phase 2, and the demo says so rather than faking one.
 
 ## The panes scroll, and on desktop they say so
 

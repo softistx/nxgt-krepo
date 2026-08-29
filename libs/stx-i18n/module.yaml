@@ -1,0 +1,14 @@
+product: jvm/lib
+description: Message catalogues loaded once at startup, with ICU formatting, per-key fallback and Accept-Language negotiation
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # ICU's MessageFormat: named arguments, plurals and selects, which java.text's cannot do
+  - $libs.icu4j: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core

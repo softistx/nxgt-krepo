@@ -16,7 +16,7 @@ import kotlin.time.Instant
 /**
  * What this example can assert without a database.
  *
- * The layer itself is covered by `shared-jpa`'s own specs, which run against a real Postgres in a
+ * The layer itself is covered by `stx-jpa`'s own specs, which run against a real Postgres in a
  * schema of their own; repeating that here would mean either a second container or writing into the
  * workspace server, and neither belongs in an example. What is worth pinning here is what a
  * *consumer* module sees.
@@ -34,7 +34,7 @@ class ShopTest :
         }
 
         feature("the audit stamp") {
-            // The half shared-jpa's own specs cannot check from the inside: that the stamp applies
+            // The half stx-jpa's own specs cannot check from the inside: that the stamp applies
             // to an entity declared in another module, and that it chains.
             scenario("names the principal on a create, and leaves the timestamps to Hibernate") {
                 val product = Product(sku = "A-1", name = "Anvil").stampedBy("ada")

@@ -56,7 +56,7 @@ expressly = "6.0.0"
 classgraph = "4.8.184"
 # `@Language`, so the IDE injects HQL and SQL into the query strings. Pinned to the version already
 # resolved through kotlin-stdlib and kotlinx-coroutines — naming a newer one would upgrade the
-# annotations artifact for everything downstream of shared-jpa, for an annotation nobody runs.
+# annotations artifact for everything downstream of stx-jpa, for an annotation nobody runs.
 jetbrains-annotations = "23.0.0"
 spring = "7.0.9"
 jackson = "3.2.2"
@@ -176,7 +176,7 @@ mongodb-driver-bom = { module = "org.mongodb:mongodb-driver-bom", version.ref = 
 mongodb-driver = { module = "org.mongodb:mongodb-driver-kotlin-coroutine" }
 mongodb-driver-extensions = { module = "org.mongodb:mongodb-driver-kotlin-extensions" }
 mongodb-bsonx = { module = "org.mongodb:bson-kotlinx" }
-# GridFS has no Kotlin coroutine driver of its own; libs/shared-mongo wraps the Reactive Streams one
+# GridFS has no Kotlin coroutine driver of its own; libs/stx-mongo wraps the Reactive Streams one
 mongodb-driver-reactivestreams = { module = "org.mongodb:mongodb-driver-reactivestreams" }
 rxrelay = { module = "com.jakewharton.rxrelay3:rxrelay", version = "3.0.1" }
 kasechange = { module = "net.pearx.kasechange:kasechange", version = "1.4.1" }
@@ -207,7 +207,7 @@ testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "tes
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 minio = { module = "io.minio:minio", version.ref = "minio" }
 # Hibernate Reactive brings hibernate-core and the Jakarta Persistence API with it, and both are
-# named here anyway: `shared-jpa` imports `org.hibernate.cfg.Configuration` itself, and every entity
+# named here anyway: `stx-jpa` imports `org.hibernate.cfg.Configuration` itself, and every entity
 # anyone writes imports `jakarta.persistence.*`. A module declares what it imports rather than
 # inheriting it from somebody else's graph — which is also what the IDE resolves against, since it
 # does not follow that transitive edge and reports the whole file as unresolved when it is missing.
@@ -219,7 +219,7 @@ jakarta-persistence = { module = "jakarta.persistence:jakarta.persistence-api", 
 # The Vert.x API `Jpa` itself speaks — an application can hand in the loop it already runs.
 vertx-core = { module = "io.vertx:vertx-core", version.ref = "vertx" }
 # The three drivers Hibernate Reactive can speak to. Nothing compiles against them: the one that is
-# used is chosen at runtime from the URI scheme, which is why `shared-jpa` declares all three
+# used is chosen at runtime from the URI scheme, which is why `stx-jpa` declares all three
 # runtime-only. Each carries the SCRAM or authentication support its own protocol needs.
 vertx-pg-client = { module = "io.vertx:vertx-pg-client", version.ref = "vertx" }
 vertx-mysql-client = { module = "io.vertx:vertx-mysql-client", version.ref = "vertx" }

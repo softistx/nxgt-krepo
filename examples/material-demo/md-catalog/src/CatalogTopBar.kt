@@ -36,7 +36,7 @@ fun CatalogTopBar(
         horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
         verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
     ) {
-        Typography(text = "shared-material", variant = TypographyVariant.TitleMedium)
+        Typography(text = "stx-material", variant = TypographyVariant.TitleMedium)
         Row(
             horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
