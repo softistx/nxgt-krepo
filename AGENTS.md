@@ -565,6 +565,11 @@ test-dependencies:
   - $libs.kotest.runner.junit5
 ```
 
+**Local modules come first in every dependency list**, before any `$libs.*` or `$spring.*` alias.
+A module's own composition — what it is built out of — reads before what it borrows from the
+outside, and a `//libs/` entry buried between two catalog aliases is the one a reader misses when
+asking what a module actually depends on.
+
 Modules are registered in `project.yaml`, and this repo registers them **by glob**, so a new module under `libs/`, `plugins/`, `examples/<name>/` or `examples/<group>/<name>/` is picked up without editing the file:
 
 ```yaml
