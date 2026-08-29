@@ -382,6 +382,63 @@ index ordering, which is the worse trade.
 `stx-mongo` has `mongoCodecRegistry()` for the identical gap — two layers over the same driver, each
 needing to be told about the same type.
 
+## The audit trail
+
+```yaml
+stx:
+  data:
+    mongo:
+      audit:
+        enabled: true
+        collection: audits
+```
+
+```kotlin
+@Auditable
+@Document("orders")
+data class Order(@Id val id: String, val status: String, val total: Int)
+```
+
+That is the whole setup. Every save and delete of an `@Auditable` document appends an `AuditEntry`
+carrying the document's full state, the properties that changed, who changed them, and a version
+number that only goes up. Nothing is ever updated — a history that can be edited is not one.
+
+The diff comes from [Javers](https://javers.org), which is `compile-only`: an application that does
+not audit anything does not carry it.
+
+**Opt-in per document, not per application.** An audit trail on everything is a second copy of the
+database that nobody budgeted for. This is for the collections where *who changed this, and to what*
+is a question somebody will actually ask.
+
+**Saves that changed nothing record nothing.** Spring Data emits an `AfterSaveEvent` for every save,
+including the ones that wrote the same values back, and a trail full of versions that differ in
+nothing is a trail nobody reads.
+
+**A delete is `TERMINAL` and the last word.** It keeps the last known state — the question asked of a
+deletion is nearly always *what was it when it went* — and saves of the same id afterwards are
+ignored rather than continuing the history. A new document reusing an id is a different thing, and
+stitching the two together would produce a diff between two unrelated objects, presented as a change
+somebody made.
+
+**The write is asynchronous, on a scope the context owns.** Auditing runs after the save has already
+happened, so failing it cannot undo anything, and blocking the request on a second write would cost
+every caller latency for a record nobody is waiting on. The consequence stated plainly: an entry can
+be lost if the process dies between the save and the append. The scope is the `stxAuditScope` bean —
+replaceable, and cancelled when the context closes. It is deliberately **not** `GlobalScope`, which
+would keep writing through shutdown, be stopped only by the process exiting, and give a test nothing
+to wait for.
+
+**The collection name is not a SpEL `@Document`.** A configurable mapped collection is normally
+written `@Document("#{@environment.getProperty(…)}")`, because the annotation is read at mapping time
+and no bean of ours runs early enough to rename it. That expression needs a bean resolver, so it
+resolves only inside an application context: a `ReactiveMongoTemplate` built by hand fails with
+`EL1057E: No bean resolver registered`, which is how this was found. `AuditStore` holds the name and
+passes it to the template's `collectionName` overloads instead.
+
+`stx.data.mongo.audit` is not `stx.data.mongo.auditor`. The latter registers Spring Data's
+`ReactiveAuditorAware` so `@CreatedBy` stamps *who* onto the document itself; this one keeps the
+document's whole history in a collection of its own.
+
 ## The request's locale
 
 ```kotlin

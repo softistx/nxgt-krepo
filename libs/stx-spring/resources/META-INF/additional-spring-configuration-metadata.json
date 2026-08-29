@@ -24,6 +24,11 @@
       "name": "stx.data.mongo",
       "type": "com.strange.spring.data.mongo.config.MongoProperties",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties"
+    },
+    {
+      "name": "stx.data.mongo.audit",
+      "type": "com.strange.spring.data.mongo.audit.AuditProperties",
+      "sourceType": "com.strange.spring.data.mongo.audit.AuditProperties"
     }
   ],
   "properties": [
@@ -165,9 +170,9 @@
       "defaultValue": false
     },
     {
-      "name": "stx.data.mongo.auditing",
+      "name": "stx.data.mongo.auditor",
       "type": "java.lang.Boolean",
-      "description": "Register a ReactiveAuditorAware answering with the authenticated user's name, so @CreatedBy and @LastModifiedBy fill themselves in. Needs Spring Security, and @EnableReactiveMongoAuditing in the application.",
+      "description": "Register a ReactiveAuditorAware answering with the authenticated user's name, so @CreatedBy and @LastModifiedBy fill themselves in. Distinct from stx.data.mongo.audit, which keeps the document's whole history. Needs Spring Security, and @EnableReactiveMongoAuditing in the application.",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
       "defaultValue": false
     },
@@ -177,6 +182,20 @@
       "description": "Create the indexes the mapped entities declare, once the application is ready. Nothing is ever dropped: rebuilding an index on a live collection means every query using it scans until it is done.",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
       "defaultValue": false
+    },
+    {
+      "name": "stx.data.mongo.audit.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.data.mongo.audit.AuditProperties",
+      "defaultValue": false,
+      "description": "Record every save and delete of an @Auditable document as a version in a collection of its own. Off by default: an audit trail is a second copy of the data and a deployment's decision."
+    },
+    {
+      "name": "stx.data.mongo.audit.collection",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.data.mongo.audit.AuditProperties",
+      "defaultValue": "audits",
+      "description": "The collection audit entries are written to. Changing it after entries exist starts a new, empty history."
     }
   ]
 }
