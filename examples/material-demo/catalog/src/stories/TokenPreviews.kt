@@ -46,7 +46,7 @@ internal fun TokenBar(
                     .width(size.coerceAtLeast(1.dp))
                     .height(12.dp)
                     .clip(MaterialTheme.shapes.extraSmall)
-                    .background(StrangeTheme.colors.scheme.primary),
+                    .background(MaterialTheme.colorScheme.primary),
         )
         Typography(text = "$size", variant = TypographyVariant.Caption, emphasis = Emphasis.Subtle)
     }

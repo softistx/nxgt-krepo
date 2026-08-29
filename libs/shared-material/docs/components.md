@@ -21,7 +21,7 @@ primitives, because M3 has nothing to start from. AGENTS.md's *Building a compon
 | --- | --- |
 | `foundation/typography` | The 20 `TypographyVariant` roles at each `Emphasis` |
 | `foundation/spacing` | The eight-step spacing scale, to scale |
-| `foundation/radii` | Every radius derived from one `base` |
+| `foundation/shapes` | Material 3's eight shape slots, expressive ones included |
 | `foundation/icons` | The library's icon set |
 | `foundation/semantic-colours` | `success` / `info` / `warning` / `error`, main and container |
 

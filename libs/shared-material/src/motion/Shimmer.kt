@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -28,8 +29,8 @@ import com.strange.material.theme.StrangeTheme
 fun Modifier.shimmer(): Modifier =
     composed {
         val motion = StrangeTheme.motion
-        val base = StrangeTheme.colors.scheme.surfaceContainerHighest
-        val highlight = StrangeTheme.colors.scheme.surfaceContainerLow
+        val base = MaterialTheme.colorScheme.surfaceContainerHighest
+        val highlight = MaterialTheme.colorScheme.surfaceContainerLow
 
         if (!motion.enabled) {
             return@composed background(base)

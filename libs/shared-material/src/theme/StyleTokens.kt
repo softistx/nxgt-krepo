@@ -42,11 +42,5 @@ val StyleScope.colors: StrangeColors
 val StyleScope.spacing: StrangeSpacing
     get() = LocalStrangeSpacing.currentValue
 
-val StyleScope.radii: StrangeRadii
-    get() = LocalStrangeRadii.currentValue
-
-val StyleScope.elevation: StrangeElevation
-    get() = LocalStrangeElevation.currentValue
-
 val StyleScope.motion: StrangeMotion
     get() = LocalStrangeMotion.currentValue

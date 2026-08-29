@@ -195,7 +195,7 @@ The shape a component takes:
 
 - **Its look is a `Style`, in its own file** — `button/ButtonStyles.kt` holds `buttonStyle(variant,
   color)` and `button/Button.kt` holds no colours at all. A style reaches theme tokens through the
-  `StyleScope` extensions in `theme/StyleTokens.kt` (`colors`, `scheme`, `spacing`, `radii`,
+  `StyleScope` extensions in `theme/StyleTokens.kt` (`colors`, `scheme`, `shapes`, `spacing`,
   `motion`), which read the `CompositionLocal`s at resolve time rather than closing over whatever
   was in scope when the style was built.
 - **Interaction states are declared, not wired.** `pressed { }`, `hovered { }`, `focused { }`,
@@ -682,7 +682,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/shared-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
   | `libs/shared-material/README.md` | How is the UI library shaped, how does `StrangeTheme` slot into an application that already uses Material 3, and how do I add a component? |
-  | `libs/shared-material/docs/tokens.md` | What a token may say — the colour roles, spacing, radii, elevation, durations and easings. **This is where a new token is documented** |
+  | `libs/shared-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
   | `libs/shared-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
   | `libs/shared-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
   | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |

@@ -27,7 +27,12 @@ test-dependencies@jvm:
 
 settings:
   kotlin:
-    optIns: [ androidx.compose.foundation.style.ExperimentalFoundationStyleApi ]
+    optIns:
+      - androidx.compose.foundation.style.ExperimentalFoundationStyleApi
+      # The Shapes story shows all eight of M3's slots, and three of them — largeIncreased,
+      # extraLargeIncreased, extraExtraLarge — arrived with Material 3 expressive and are gated.
+      # Showing only the five ungated ones would misrepresent the ladder the theme installs.
+      - androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
   compose:
     enabled: true
     version: 1.11.1

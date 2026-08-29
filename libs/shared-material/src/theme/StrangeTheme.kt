@@ -24,6 +24,11 @@ import com.strange.material.motion.StrangeMotion
  * `StrangeThemeProvider` is the shorthand for the common case, and the only thing that knows the
  * scheme comes from the wallpaper on Android and from a seed everywhere else.
  *
+ * **Nothing here re-describes what M3 already names.** Shapes are M3's [Shapes], with all eight
+ * slots; elevation is whatever a component's own `*Defaults` gives it; colour is the [ColorScheme].
+ * The two extras are the two M3 does not have: a spacing scale, and the semantic colour roles
+ * (`success`, `info`, `warning`) that M3 leaves to the product.
+ *
  * It installs `MaterialExpressiveTheme`: rounder shapes, springier motion, and a `MotionScheme`
  * that overshoots where the standard one settles. `motionScheme = MotionScheme.standard()` turns
  * that off for the whole tree, and every animation here follows — nothing holds its own curve.
@@ -34,19 +39,15 @@ fun StrangeTheme(
     colorScheme: ColorScheme = remember(isDark) { strangeColorScheme(DefaultSeed, isDark) },
     colors: StrangeColors = remember(colorScheme, isDark) { strangeColors(colorScheme, isDark) },
     spacing: StrangeSpacing = StrangeSpacing(),
-    radii: StrangeRadii = StrangeRadii(),
-    elevation: StrangeElevation = StrangeElevation(),
     motionScheme: MotionScheme = MotionScheme.expressive(),
     motion: StrangeMotion = remember(motionScheme) { StrangeMotion(motionScheme) },
     typography: Typography = MaterialTheme.typography,
-    shapes: Shapes = remember(radii) { radii.toShapes() },
+    shapes: Shapes = MaterialTheme.shapes,
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
         LocalStrangeColors provides colors,
         LocalStrangeSpacing provides spacing,
-        LocalStrangeRadii provides radii,
-        LocalStrangeElevation provides elevation,
         LocalStrangeMotion provides motion,
         LocalStrangeShapes provides shapes,
     ) {
@@ -61,8 +62,10 @@ fun StrangeTheme(
 }
 
 /**
- * The tokens, reached the way `MaterialTheme.colorScheme` is. Everything M3 already names is read
- * through `MaterialTheme` itself — there is no `StrangeTheme.typography` shadowing it.
+ * The tokens Material 3 does not have, reached the way `MaterialTheme.colorScheme` is.
+ *
+ * There is deliberately no `StrangeTheme.typography`, `.shapes` or `.elevation` shadowing M3 —
+ * a component asks `MaterialTheme` for those, and there is only ever one answer.
  */
 object StrangeTheme {
     val colors: StrangeColors
@@ -72,14 +75,6 @@ object StrangeTheme {
     val spacing: StrangeSpacing
         @Composable @ReadOnlyComposable
         get() = LocalStrangeSpacing.current
-
-    val radii: StrangeRadii
-        @Composable @ReadOnlyComposable
-        get() = LocalStrangeRadii.current
-
-    val elevation: StrangeElevation
-        @Composable @ReadOnlyComposable
-        get() = LocalStrangeElevation.current
 
     val motion: StrangeMotion
         @Composable @ReadOnlyComposable
