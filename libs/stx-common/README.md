@@ -16,6 +16,8 @@ com.strange.common.lifecycle       CloseGuard
 com.strange.common.serialization   lenientJson, decodeValue, typeName
 com.strange.common.page            Page, PageInfo, PageWindow and pageOf — the half of keyset
                                    pagination that is the same in both stores
+com.strange.common.http            CorsPolicy — which browsers may call this service, said once for
+                                   every framework that has to enforce it
 ```
 
 ## Closing once
@@ -147,6 +149,29 @@ What that module pages with now is `limit` and `offset`, which needs neither a w
 assembler — it answers with a `Page` whose cursors are null, because there are none. The two stay
 because they are the shape any second keyset store would want, and because deleting a correct,
 database-free, fully specified implementation to save two files is not a trade worth making.
+
+## One CORS policy, two frameworks
+
+`CorsPolicy` says which browsers may call a service, and nothing about how that is enforced.
+`stx-ktor` installs Ktor's plugin from it and `stx-spring` builds Spring's `CorsConfiguration` from
+it, so an application moving between the two keeps its origins, its methods and its configuration
+keys.
+
+That is the argument for it being here rather than in either integration: CORS is a *browser* policy.
+The rules are the browser's, they are identical whichever server answers, and two configuration
+classes that agree today agree only for as long as somebody keeps them agreeing.
+
+`validate()` is the part that earns it. A wildcard origin with credentials is forbidden by the CORS
+specification, and the frameworks disagree about when they notice — Spring throws when the *request*
+arrives, which turns a configuration mistake into an intermittent browser failure found by whoever is
+testing the front end. Checking here means both refuse it while the application is starting. The
+message names the setting in the caller's own vocabulary, because what to do instead is the useful
+half of the failure and it is spelled `stx.cors.origin-patterns` in one place and `originPatterns` in
+the other.
+
+What a framework *cannot* express is named rather than dropped: `CorsPolicy.ignoredByKtor` lists the
+fields Ktor has no equivalent for. A configuration field that is quietly ignored is worse than one
+that is refused — nothing fails, and the policy in the file is not the policy in force.
 
 ## What belongs here
 
