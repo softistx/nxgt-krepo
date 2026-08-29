@@ -18,6 +18,9 @@ dependencies:
   - //libs/stx-mongo: compile-only
   - //libs/stx-jpa: compile-only
   - //libs/stx-storage: compile-only
+  - //libs/stx-redis: compile-only
+  - //libs/stx-kafka: compile-only
+  - //libs/stx-amqp: compile-only
 
   # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.
   # The starter also brings spring-context and spring-boot-autoconfigure, which every package here
@@ -78,6 +81,9 @@ test-dependencies:
   - //libs/stx-mongo
   - //libs/stx-jpa
   - //libs/stx-storage
+  - //libs/stx-redis
+  - //libs/stx-kafka
+  - //libs/stx-amqp
   # ApplicationContextRunner, for asserting what does and does not appear in a context
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5
