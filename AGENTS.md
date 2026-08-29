@@ -421,6 +421,30 @@ a library cannot opt out. The drivers do not agree here either: Lettuce and the 
 a second close, the RabbitMQ client throws. Any new `AutoCloseable` in these libraries closes through
 the guard, so that all of it stays a question of tidiness rather than of correctness.
 
+`libs/stx-spring` is the same seam for Spring that `stx-ktor` is for Ktor, and it follows the same
+`compile-only` rule for the same reason. Two things about it are specific to this toolchain and
+neither is guessable:
+
+- **Nothing it registers is on until a property asks for it.** Every bean is
+  `@ConditionalOnProperty(prefix = "stx.<name>", name = ["enabled"], havingValue = "true")` with **no
+  `matchIfMissing`**, and every one is `@ConditionalOnMissingBean` so an application's own bean wins.
+  Putting the module on a classpath starts nothing — which is what makes it safe for an application
+  that already has an exception handler of its own.
+- **The IDE metadata is written by hand, and a spec keeps it honest.**
+  `spring-boot-configuration-processor` is a *Java* annotation processor; the toolchain has no kapt,
+  and `settings.java.annotationProcessing` runs javac over Java sources only — so the processor never
+  sees a Kotlin `@ConfigurationProperties` class and generates nothing, silently. The keys therefore
+  live in `resources/META-INF/additional-spring-configuration-metadata.json`, Spring Boot's own
+  supported manual file, and `ConfigurationMetadataTest` scans the module for
+  `@ConfigurationProperties` classes and fails when a property has no entry or an entry has no
+  property. **A new `stx.*` key is added to that file in the change that reads it.** Do not reach for
+  the processor; it will appear to be configured and produce nothing.
+
+One more thing that only a test says out loud: `compile-only` keeps a dependency off the *test*
+runtime too, so a `@ConditionalOnClass` guarding it correctly declines to match in a spec. Add the
+dependency to `test-dependencies` at normal scope — the same shape `stx-ktor` uses — rather than
+weakening the condition.
+
 ### Local services
 
 The databases this workspace runs against are **already containerised and usually already up** —

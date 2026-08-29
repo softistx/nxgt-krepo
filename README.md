@@ -39,6 +39,7 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/stx-koin` | The same seven backends as Koin modules, for a worker or a CLI with no web framework: `redisModule(config)`, and the container closes what it built |
 | `libs/stx-mongo` | Session-aware collection extensions covering CRUD, keyset pagination, an opt-in audit trail, and a coroutine GridFS bucket |
 | `libs/stx-redis` | A namespaced connection over Lettuce owning one `Json`, and the four kotlinx-serialized things built on one: a typed cache, a lock, topics, and streams with consumer groups |
+| `libs/stx-spring` | Spring Boot integration for the libraries here: one auto-configuration per library, every bean off unless a `stx.*` property asks for it, plus the WebFlux helpers — a translated error body and the request's own locale, taken from the exchange rather than a `ThreadLocal` |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets and objects as coroutines, and presigned URLs and upload forms for browsers |
 | `libs/stx-testing` | What the integration specs run against: a backing service reused from the environment when one is named, and started as a container for the run when it is not |
 
@@ -63,6 +64,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-i18n/README.md`](libs/stx-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
 | [`libs/stx-ktor/README.md`](libs/stx-ktor/README.md) | The Ktor integrations — the seven plugins, what each owns, and how one module holds them without a fat dependency list |
 | [`libs/stx-koin/README.md`](libs/stx-koin/README.md) | The Koin modules — why the container creates the connection here and adopts it there, and what has no `onClose` |
+| [`libs/stx-spring/README.md`](libs/stx-spring/README.md) | The Spring integration — the opt-in `stx.*` model, why the IDE metadata is written by hand, and what `compile-only` buys a consumer |
 | [`libs/stx-jpa/README.md`](libs/stx-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, and why each part is shaped the way it is |
 | [`docs/jpa-criteria.md`](docs/jpa-criteria.md) | What a stx-jpa query may say — operators, joins, fetch joins, entity graphs, projections, and the two escapes |
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a stx-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
