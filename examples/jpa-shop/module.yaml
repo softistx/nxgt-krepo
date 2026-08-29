@@ -2,9 +2,9 @@ product: jvm/app
 
 dependencies:
   # The library this example is about: entities, sessions, and the Criteria extensions.
-  - //libs/shared-jpa
+  - //libs/stx-jpa
   # `JpaConnection` and `call.jpa` — one session factory for the application, closed with it.
-  - //libs/shared-ktor
+  - //libs/stx-ktor
   - $ktor.server.core
   - $ktor.server.netty
   - $ktor.server.contentNegotiation
@@ -25,7 +25,7 @@ settings:
   kotlin:
     serialization: json
     # Hibernate instantiates entities reflectively and subclasses them for lazy proxies. Any module
-    # holding entities needs both, this one included — shared-jpa's README has the reasoning.
+    # holding entities needs both, this one included — stx-jpa's README has the reasoning.
     noArg:
       enabled: true
       presets: [ jpa ]

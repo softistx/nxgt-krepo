@@ -13,25 +13,25 @@ What exists:
 | `project.yaml` | Project manifest — lists the modules, and registers local toolchain plugins |
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
-| `libs/openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
-| `libs/shared-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, `CloseGuard`, the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
-| `libs/shared-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
-| `libs/shared-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
-| `libs/shared-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
-| `libs/shared-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StrangeTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
-| `libs/shared-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
-| `libs/shared-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
-| `libs/shared-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
-| `libs/shared-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
-| `libs/shared-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
-| `libs/shared-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
-| `libs/shared-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
+| `libs/stx-openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
+| `libs/stx-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, `CloseGuard`, the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
+| `libs/stx-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
+| `libs/stx-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
+| `libs/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
+| `libs/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StrangeTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
+| `libs/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
+| `libs/stx-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
+| `libs/stx-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
+| `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
+| `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
+| `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
+| `libs/stx-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `examples/demo-api` | Ktor server implementing a slice of `examples/demo-api/openapi.yaml` |
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
-| `examples/jpa-shop` | A Ktor catalogue over Postgres showing `shared-jpa`'s CRUD extensions and audit layer |
-| `examples/material-demo` | The `shared-material` catalogue — one Compose Multiplatform app in three modules: `md-catalog` holds every story, `md-desktop` and `md-android` are launchers |
+| `examples/jpa-shop` | A Ktor catalogue over Postgres showing `stx-jpa`'s CRUD extensions and audit layer |
+| `examples/material-demo` | The `stx-material` catalogue — one Compose Multiplatform app in three modules: `md-catalog` holds every story, `md-desktop` and `md-android` are launchers |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
@@ -43,7 +43,7 @@ Two modules and one reference document — read those before changing either mod
 - [`docs/openapi-support.md`](docs/openapi-support.md) — what the generator understands of a
   document, and what each part becomes in Kotlin. This is the file that grows.
 
-- [`libs/openapi-generator`](libs/openapi-generator/README.md) — the generator. swagger-parser reads
+- [`libs/stx-openapi-generator`](libs/stx-openapi-generator/README.md) — the generator. swagger-parser reads
   the spec into an intermediate representation, and a `SourceEmitter` turns that into KotlinPoet
   files. The root package holds only that IR; `parser` reads, `emit` holds the emitter contract and
   what every emitter shares, `models` emits the schemas, and `ktorfit` and `spring` are the two
@@ -128,7 +128,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 
 - **`kotlin-toolchain`** — manifest schema, catalog and template rules, commands, plus `references/`: a markdown cache of the full official documentation (50 pages, version recorded in `references/INDEX.md`).
 - **`ktorfit`** — the Ktorfit HTTP client, including how it is wired up here through KSP alone, without its Gradle plugin.
-- **`compose-multiplatform`** — the UI stack behind `libs/shared-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 59 pages of the official documentation.
+- **`compose-multiplatform`** — the UI stack behind `libs/stx-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 59 pages of the official documentation.
 - **`material3-compose`** — the Material 3 API surface that actually compiles here. Its `references/` are *not* fetched: `$compose.material3` resolves to its own alpha version line, so the pages are generated from the resolved jar by `scripts/extract_api.py`.
 - **`skill-from-docs`** — builds and refreshes docs-backed skills. Each such skill declares its source in a `docs-source.json`; refresh one with:
   ```bash
@@ -137,9 +137,9 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
 - **`large-feature-branch-workflow`** — two-level branching for work too large for a single PR.
 
-Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/shared-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
+Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
 
-- **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/shared-material`**, not background reading; see *Styling a component* below.
+- **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/stx-material`**, not background reading; see *Styling a component* below.
 - **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
 - **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
 
@@ -171,7 +171,7 @@ The shape of a wrapper:
 
 A claim about **pixels is measured in pixels.** `ImageComposeScene` renders a composable into a
 bitmap with no window, in milliseconds, on a headless host, and `sendPointerEvent` drives hover and
-press. `libs/shared-material/test@jvm/` holds the two specs that exist, and both were written
+press. `libs/stx-material/test@jvm/` holds the two specs that exist, and both were written
 because something looked right and was not: a hover state that was invisible on *selected* chips
 because they already wear the focus layer, and a collapsed `ResponsiveButton` that kept the padding
 its label had left behind. Rendering specs are jvm-only — skiko's native library comes from
@@ -302,7 +302,7 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 
 ### Shared code
 
-`libs/shared-common` holds what **more than one module** needs, expressed without knowing anything
+`libs/stx-common` holds what **more than one module** needs, expressed without knowing anything
 about any of them. It depends on kotlinx-coroutines and kotlinx-serialization and on nothing else,
 ever: the moment something in there knows what a topic or a collection is, every library depending
 on it inherits that, and a shared module that depends on everything is a cycle waiting for its
@@ -316,12 +316,12 @@ The three concurrency types are not interchangeable, and the question that separ
 calling: `CoroutineSafeMap` when every caller is a coroutine and each operation stands alone,
 `KeyedMutex` when the work behind a key suspends and only callers wanting the *same* key should
 wait, and `Mailbox` when a caller is not a coroutine at all — a Java listener or a driver's callback,
-which cannot take a mutex and must not be made to block. `libs/shared-common/README.md` has the
+which cannot take a mutex and must not be made to block. `libs/stx-common/README.md` has the
 reasoning; the short version is that reaching for `runBlocking` to get out of the third case is how
 a client deadlocks against its own I/O thread.
 
 **A data-access library offers extensions, not a base class to inherit from.** Neither
-`shared-mongo` nor `shared-jpa` has a repository or a CRUD service class; the create/read/update/
+`stx-mongo` nor `stx-jpa` has a repository or a CRUD service class; the create/read/update/
 delete vocabulary is extensions on `MongoCollection<T>` and on the JPA session. Two reasons, and the
 first is the one that decides it: an extension takes `T` from its receiver or reifies it at the call
 site, while a class cannot have a `reified` type parameter and so has to be handed a `KClass` or a
@@ -332,34 +332,34 @@ reusable part of either module. What a base class earned and an extension still 
 kept explicitly: `insertAndRead`, the transaction guard on every JPA write verb, and the audit
 stamps. When a new store is added, follow the same shape.
 
-**Shared does not mean everything shared goes there.** `libs/shared-i18n` is used by more than
-one module and is still its own library, because ICU4J is a 15 MB jar and `shared-common`'s rule
-is kotlinx-and-nothing-else — putting message formatting in it would make `shared-kafka` carry a
+**Shared does not mean everything shared goes there.** `libs/stx-i18n` is used by more than
+one module and is still its own library, because ICU4J is a 15 MB jar and `stx-common`'s rule
+is kotlinx-and-nothing-else — putting message formatting in it would make `stx-kafka` carry a
 formatting library it will never call. The same test applies to the next candidate: if it brings
 a dependency, it brings that dependency to everything.
 
-Framework integrations go in `libs/shared-ktor`, **one package per integration** — i18n, Redis,
+Framework integrations go in `libs/stx-ktor`, **one package per integration** — i18n, Redis,
 Mongo, AMQP, Kafka and object storage. An application wires them together in one `install` block and
-should read them from one dependency. `libs/shared-koin` is the same seven as Koin modules, for the
-callers that have a container and no web framework; it knows the container, `shared-ktor` knows the
+should read them from one dependency. `libs/stx-koin` is the same seven as Koin modules, for the
+callers that have a container and no web framework; it knows the container, `stx-ktor` knows the
 framework, the libraries know the backends, and none of them knows two.
 
 **Every backend is declared `compile-only`, including the ones this module's API returns.**
 `call.redis` hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath, which
 sounds wrong and is not: an application that installs `RedisConnection` already depends on
-`shared-redis`, because `RedisConfig` is the only way to configure the plugin at all — and one that
+`stx-redis`, because `RedisConfig` is the only way to configure the plugin at all — and one that
 installs only `I18n` never loads a class from any of the others, so nothing is missing when
 nothing is linked. It is self-enforcing rather than a convention to remember. Verified with
-`./kotlin show dependencies -m shared-ktor`: a compile-only entry sits in the COMPILE scope and is
+`./kotlin show dependencies -m stx-ktor`: a compile-only entry sits in the COMPILE scope and is
 absent from RUNTIME.
 
 The tests are the other half: they need the real libraries at runtime, so `test-dependencies`
-carries each of them again at normal scope, plus `//libs/shared-testing` for the servers to talk to.
+carries each of them again at normal scope, plus `//libs/stx-testing` for the servers to talk to.
 Every plugin is specced against a real backend, because "one connection, closed on stop" is not
 observable from a mock.
 
-The plugins are not in the libraries they wrap because `shared-i18n` and `shared-redis` have callers
-with no server in them — a worker, a CLI, a consumer. The library knows the backend, `shared-ktor`
+The plugins are not in the libraries they wrap because `stx-i18n` and `stx-redis` have callers
+with no server in them — a worker, a CLI, a consumer. The library knows the backend, `stx-ktor`
 knows the framework, and neither has to know both.
 
 **A framework integration must assume the resource is not its own, and must not be the only way to
@@ -396,7 +396,7 @@ KRaft cluster, and `rabbitmq` is on `localhost:5672` with its management UI on `
 the pull costs a gigabyte and the second container either clashes on the port or silently tests a
 different server than the one everything else uses.
 
-**A spec must not depend on the host having the right daemon up.** `libs/shared-testing` declares
+**A spec must not depend on the host having the right daemon up.** `libs/stx-testing` declares
 each backing service and resolves it in one order: the environment variable if it names a server,
 otherwise a container started once for the run, otherwise `available == false` and the spec skips.
 Mongo, Redis, AMQP and MinIO all work this way. Declare a new backend in `Backends.kt`, never in a
@@ -404,14 +404,14 @@ library's own test tree.
 
 | library | override | without it |
 | --- | --- | --- |
-| `shared-mongo` | `MONGO_TEST_URI` | `mongo:8`, a single-node replica set |
-| `shared-redis` | `REDIS_TEST_URI` | `redis:8-alpine`, on db 15 |
-| `shared-amqp` | `AMQP_TEST_URI` | `rabbitmq:4-management` |
-| `shared-storage` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `minio/minio:latest` |
-| `shared-kafka` | `KAFKA_TEST_BOOTSTRAP` | `confluentinc/cp-kafka:latest`, one broker |
-| `shared-jpa` | `POSTGRES_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `postgres:18-alpine` |
-| `shared-jpa` | `MYSQL_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `mysql:8.4` |
-| `shared-jpa` | `DB2_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | nothing — the DB2 specs skip |
+| `stx-mongo` | `MONGO_TEST_URI` | `mongo:8`, a single-node replica set |
+| `stx-redis` | `REDIS_TEST_URI` | `redis:8-alpine`, on db 15 |
+| `stx-amqp` | `AMQP_TEST_URI` | `rabbitmq:4-management` |
+| `stx-storage` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `minio/minio:latest` |
+| `stx-kafka` | `KAFKA_TEST_BOOTSTRAP` | `confluentinc/cp-kafka:latest`, one broker |
+| `stx-jpa` | `POSTGRES_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `postgres:18-alpine` |
+| `stx-jpa` | `MYSQL_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `mysql:8.4` |
+| `stx-jpa` | `DB2_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | nothing — the DB2 specs skip |
 
 **The credentials rule is unchanged; what it costs is not.** `AMQP_TEST_URI` and the MinIO key pair
 still have no defaults and must never gain any — a credential with a default is a credential in
@@ -425,7 +425,7 @@ and less clearly than a container would. `POSTGRES_TEST_URI` is refused on its o
 reason: a Postgres URI does not carry the password, and a driver that connects without one fails at
 authentication in a way that reads like a network problem.
 
-**Each `shared-jpa` spec gets a schema of its own**, created before it and dropped `cascade` after
+**Each `stx-jpa` spec gets a schema of its own**, created before it and dropped `cascade` after
 it — the per-spec Mongo database and Redis namespace, in the shape Postgres has for it. It earns its
 keep against a real server: a spec creating its tables in `public` would be working among whatever
 else lives there, and Hibernate's `create-drop` would take that with it on the way out. The workspace
@@ -455,7 +455,7 @@ enough on its own:
 ```
 
 ```bash
-KAFKA_TEST_BOOTSTRAP="kafka1:9092,kafka2:9094,kafka3:9096" ./kotlin test -m shared-kafka
+KAFKA_TEST_BOOTSTRAP="kafka1:9092,kafka2:9094,kafka3:9096" ./kotlin test -m stx-kafka
 ```
 
 **An override that does not answer is not quietly replaced by a container.** Naming a cluster and
@@ -466,10 +466,10 @@ To take the override and run against the workspace's own broker or object store:
 
 ```bash
 set -a; . ~/workspace/docker/apps/rabbitmq/.env; set +a
-AMQP_TEST_URI="amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@localhost:5672/%2F" ./kotlin test -m shared-amqp
+AMQP_TEST_URI="amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@localhost:5672/%2F" ./kotlin test -m stx-amqp
 
 set -a; . ~/workspace/docker/apps/minio/.env; set +a
-MINIO_TEST_ACCESS_KEY=$MINIO_ROOT_USER MINIO_TEST_SECRET_KEY=$MINIO_ROOT_PASSWORD ./kotlin test -m shared-storage
+MINIO_TEST_ACCESS_KEY=$MINIO_ROOT_USER MINIO_TEST_SECRET_KEY=$MINIO_ROOT_PASSWORD ./kotlin test -m stx-storage
 ```
 
 The `%2F` there is the default virtual host and not decoration — a plain trailing `/` is the *empty*
@@ -555,7 +555,7 @@ settings:
 ```
 
 `./kotlin show settings -m <module>` says which one is in force: `# module.yaml` when it is pinned,
-`# default` when the toolchain is choosing. Three modules enable it — `shared-ktor`, `demo-api`,
+`# default` when the toolchain is choosing. Three modules enable it — `stx-ktor`, `demo-api`,
 `demo-client` — and all three carry the pin.
 
 The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.10 with CLI 0.12.0), so that entry does not control what this repo compiles with.
@@ -672,32 +672,32 @@ the same each time, and the mistakes are the same each time too.
   | --- | --- |
   | `README.md` | What is this repo, and where do I read next? Stays short. |
   | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
-  | `libs/openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
+  | `libs/stx-openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
-  | `libs/shared-common/README.md` | What belongs in the shared module, and which of the three concurrency types a given caller wants |
-  | `libs/shared-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
-  | `libs/shared-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
-  | `libs/shared-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
-  | `libs/shared-koin/README.md` | The Koin modules — which side creates the connection, which adopts it, and why two of them have no `onClose` |
-  | `libs/shared-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
-  | `docs/jpa-criteria.md` | What a shared-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
-  | `docs/jpa-mapping.md` | What a shared-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
-  | `libs/shared-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
-  | `libs/shared-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
-  | `libs/shared-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
-  | `libs/shared-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
-  | `libs/shared-material/README.md` | How is the UI library shaped, how does `StrangeTheme` slot into an application that already uses Material 3, and how do I add a component? |
-  | `libs/shared-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
-  | `libs/shared-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
-  | `libs/shared-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
+  | `libs/stx-common/README.md` | What belongs in the shared module, and which of the three concurrency types a given caller wants |
+  | `libs/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
+  | `libs/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
+  | `libs/stx-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
+  | `libs/stx-koin/README.md` | The Koin modules — which side creates the connection, which adopts it, and why two of them have no `onClose` |
+  | `libs/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
+  | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
+  | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
+  | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
+  | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
+  | `libs/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
+  | `libs/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
+  | `libs/stx-material/README.md` | How is the UI library shaped, how does `StrangeTheme` slot into an application that already uses Material 3, and how do I add a component? |
+  | `libs/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
+  | `libs/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
+  | `libs/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
   | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
-  | `libs/shared-testing/README.md` | Where an integration spec's server comes from, and how a container declared there is cleaned up |
+  | `libs/stx-testing/README.md` | Where an integration spec's server comes from, and how a container declared there is cleaned up |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
-  the signal to keep appending. `libs/openapi-generator/README.md` reached 394 lines before its
+  the signal to keep appending. `libs/stx-openapi-generator/README.md` reached 394 lines before its
   reference half moved out; splitting on *audience* rather than on length is what made the seam
-  obvious. `libs/shared-jpa/README.md` reached 921 and split the same way, into the query vocabulary
+  obvious. `libs/stx-jpa/README.md` reached 921 and split the same way, into the query vocabulary
   and the mapping vocabulary — the two halves that grow — leaving the reasoning behind.
 - **Keep files short and single-purpose.** One file holds one concern; when two things could be
   separated cleanly, separate them. A file growing past roughly 150 lines is a signal to split it,
@@ -730,7 +730,7 @@ the same each time, and the mistakes are the same each time too.
   telling you the feature names are missing, not that grouping does not apply. Nest a `feature`
   inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
   to the other spec styles. One spec class per file, named after the file.
-- **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
+- **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/stx-openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
 - **Organise by package, not as a flat pile of files — `test/` exactly as much as `src/`.** A module
   with more than one concern gets a directory per concern, and the directory matches the package —
   `src/parser/` is `com.strange.openapi.parser`. The root package holds only what every package
@@ -741,11 +741,11 @@ the same each time, and the mistakes are the same each time too.
   needed it first, and three specs later the fixtures are scattered across four packages with no rule
   anyone could state. **Test fixtures live in a package named for what they are, not for the spec that
   happened to need them first** — entities in `test/entity/`, and the same for any other family of
-  fixture a module grows. A spec imports its fixtures; it does not host them. `shared-jpa`,
-  `shared-ktor` and `shared-koin` all keep their JPA entities in `…entity`.
+  fixture a module grows. A spec imports its fixtures; it does not host them. `stx-jpa`,
+  `stx-ktor` and `stx-koin` all keep their JPA entities in `…entity`.
 
   One exception, and it has to be argued in the file: a spec that is *about* a package boundary owns
-  the package it scans. `shared-jpa`'s `EntityScanTest` needs a package holding nothing but the
+  the package it scans. `stx-jpa`'s `EntityScanTest` needs a package holding nothing but the
   classes it expects to find, which is why those fixtures sit in `test/entity/scan/` instead of
   beside the rest.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.

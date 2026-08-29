@@ -16,7 +16,7 @@ fun main() =
     application {
         Window(
             onCloseRequest = ::exitApplication,
-            title = "shared-material",
+            title = "stx-material",
             state = rememberWindowState(size = DpSize(1360.dp, 900.dp)),
         ) {
             MaterialDemo()

@@ -1,6 +1,6 @@
 # jpa-shop
 
-A shop catalogue over Postgres — the smallest thing that shows `shared-jpa`'s repository and service
+A shop catalogue over Postgres — the smallest thing that shows `stx-jpa`'s repository and service
 layer end to end.
 
 ```
@@ -73,6 +73,6 @@ resolves its entity from a property reference *from a consuming module*, that th
 `ShopServer` scans really does contain the entity, and that the payloads decode and map as the routes
 assume.
 
-The library's behaviour is covered where it lives — `libs/shared-jpa` has integration specs against a
+The library's behaviour is covered where it lives — `libs/stx-jpa` has integration specs against a
 real Postgres, each in a schema of its own. Repeating that here would mean a second container or
 writing into the workspace server, and neither belongs in an example.
