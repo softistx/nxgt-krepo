@@ -1,9 +1,14 @@
 package com.strange.material.demo
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.strange.material.display.ListTile
 import com.strange.material.display.StatusBadge
@@ -24,35 +29,43 @@ fun StoryList(
     onSelect: (Story) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier.padding(vertical = StrangeTheme.spacing.sm),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
-    ) {
-        groups.forEach { group ->
-            item(key = "group:${group.name}") {
-                Typography(
-                    text = group.name,
-                    variant = TypographyVariant.Overline,
-                    emphasis = Emphasis.Subtle,
-                    modifier =
-                        Modifier.padding(
-                            start = StrangeTheme.spacing.md,
-                            top = StrangeTheme.spacing.md,
-                            bottom = StrangeTheme.spacing.xs,
-                        ),
-                )
-            }
-            items(group.stories.size, key = { group.stories[it].id }) { index ->
-                val story = group.stories[index]
-                ListTile(
-                    title = story.name,
-                    onClick = { onSelect(story) },
-                    modifier = Modifier.padding(horizontal = StrangeTheme.spacing.sm),
-                    trailing = {
-                        if (story.id == selectedId) StatusBadge(text = "open", tone = Tone.Info)
-                    },
-                )
+    val listState = rememberLazyListState()
+    Box(modifier = modifier) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize().padding(vertical = StrangeTheme.spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+        ) {
+            groups.forEach { group ->
+                item(key = "group:${group.name}") {
+                    Typography(
+                        text = group.name,
+                        variant = TypographyVariant.Overline,
+                        emphasis = Emphasis.Subtle,
+                        modifier =
+                            Modifier.padding(
+                                start = StrangeTheme.spacing.md,
+                                top = StrangeTheme.spacing.md,
+                                bottom = StrangeTheme.spacing.xs,
+                            ),
+                    )
+                }
+                items(group.stories.size, key = { group.stories[it].id }) { index ->
+                    val story = group.stories[index]
+                    ListTile(
+                        title = story.name,
+                        onClick = { onSelect(story) },
+                        modifier = Modifier.padding(horizontal = StrangeTheme.spacing.sm),
+                        trailing = {
+                            if (story.id == selectedId) StatusBadge(text = "open", tone = Tone.Info)
+                        },
+                    )
+                }
             }
         }
+        PaneScrollbar(
+            state = listState,
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+        )
     }
 }

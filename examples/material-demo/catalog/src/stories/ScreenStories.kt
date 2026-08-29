@@ -11,4 +11,8 @@ val ScreenStories =
                 alert = knobs.flag("Reconciliation alert", true),
             )
         }
+
+        story("Sign-up form") { _ ->
+            SignUpScreen()
+        }
     }
