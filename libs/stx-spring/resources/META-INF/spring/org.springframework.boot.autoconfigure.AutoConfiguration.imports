@@ -5,3 +5,6 @@ com.strange.spring.json.JsonAutoConfiguration
 com.strange.spring.data.mongo.config.MongoAutoConfiguration
 com.strange.spring.data.mongo.audit.AuditAutoConfiguration
 com.strange.spring.data.mongo.migration.MigrationAutoConfiguration
+com.strange.spring.integration.mongo.MongoIntegrationAutoConfiguration
+com.strange.spring.integration.jpa.JpaIntegrationAutoConfiguration
+com.strange.spring.integration.storage.StorageIntegrationAutoConfiguration
