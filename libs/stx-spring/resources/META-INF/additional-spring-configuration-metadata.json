@@ -29,6 +29,11 @@
       "name": "stx.data.mongo.audit",
       "type": "com.strange.spring.data.mongo.audit.AuditProperties",
       "sourceType": "com.strange.spring.data.mongo.audit.AuditProperties"
+    },
+    {
+      "name": "stx.data.mongo.migration",
+      "type": "com.strange.spring.data.mongo.migration.MigrationProperties",
+      "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties"
     }
   ],
   "properties": [
@@ -49,7 +54,7 @@
     {
       "name": "stx.security.enabled",
       "type": "java.lang.Boolean",
-      "description": "Register the stx security beans: a BCrypt PasswordEncoder and the meta-annotation template support that @RequireRole needs. Not a filter chain — which paths are open stays the application's decision.",
+      "description": "Register the stx security beans: a BCrypt PasswordEncoder and the meta-annotation template support that @RequireRole needs. Not a filter chain \u2014 which paths are open stays the application's decision.",
       "sourceType": "com.strange.spring.security.SecurityProperties",
       "defaultValue": false
     },
@@ -109,7 +114,7 @@
     {
       "name": "stx.cors.allow-credentials",
       "type": "java.lang.Boolean",
-      "description": "Whether the browser may send cookies and Authorization. Cannot be combined with an origins list of \"*\" — use origin-patterns.",
+      "description": "Whether the browser may send cookies and Authorization. Cannot be combined with an origins list of \"*\" \u2014 use origin-patterns.",
       "sourceType": "com.strange.spring.cors.CorsProperties",
       "defaultValue": true
     },
@@ -165,7 +170,7 @@
     {
       "name": "stx.data.mongo.transactions",
       "type": "java.lang.Boolean",
-      "description": "Register a ReactiveMongoTransactionManager. Needs a replica set — a standalone mongod fails the first startTransaction rather than at startup.",
+      "description": "Register a ReactiveMongoTransactionManager. Needs a replica set \u2014 a standalone mongod fails the first startTransaction rather than at startup.",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
       "defaultValue": false
     },
@@ -196,6 +201,27 @@
       "sourceType": "com.strange.spring.data.mongo.audit.AuditProperties",
       "defaultValue": "audits",
       "description": "The collection audit entries are written to. Changing it after entries exist starts a new, empty history."
+    },
+    {
+      "name": "stx.data.mongo.migration.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties",
+      "defaultValue": false,
+      "description": "Run pending migrations after the application is ready. Off by default: the version this was extracted from defaulted to true, which meant putting the library on a classpath was enough to have it write to the database."
+    },
+    {
+      "name": "stx.data.mongo.migration.prefix",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties",
+      "defaultValue": "V",
+      "description": "What a migration class name starts with, before its order \u2014 V gives V3Currencies. Matched literally, so a prefix containing a . is a . and not a wildcard."
+    },
+    {
+      "name": "stx.data.mongo.migration.collection",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties",
+      "defaultValue": "migrations",
+      "description": "The collection migration records are written to. It is what makes a migration run once, so pointing it at an empty collection runs every migration again."
     }
   ]
 }
