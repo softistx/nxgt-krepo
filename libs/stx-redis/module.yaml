@@ -1,4 +1,8 @@
 product: jvm/lib
+description: Redis over Lettuce's coroutine commands — values, keys, scans and locks, without wrapping the protocol again
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # RedisCoroutinesCommands and StatefulRedisConnection are all over this module's public API

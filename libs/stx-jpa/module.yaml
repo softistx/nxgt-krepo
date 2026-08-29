@@ -1,4 +1,8 @@
 product: jvm/lib
+description: Hibernate Reactive over the Vert.x Postgres client — JPA mapping and a typed Criteria API with no thread parked on a query
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # Stage.Session and Stage.SessionFactory are all over this module's public API.

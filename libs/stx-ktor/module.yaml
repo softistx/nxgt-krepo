@@ -1,4 +1,8 @@
 product: jvm/lib
+description: Ktor integrations for the stx libraries — one package per integration, one module for all of them
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # ApplicationCall and the plugin API are all over this module's public surface

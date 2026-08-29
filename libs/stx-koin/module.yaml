@@ -1,4 +1,8 @@
 product: jvm/lib
+description: Koin modules for the stx libraries — one package per integration, one module for all of them
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # `Module` is this library's entire public API

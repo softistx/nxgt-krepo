@@ -1,4 +1,8 @@
 product: jvm/lib
+description: AMQP over the RabbitMQ client, made suspending — publishing, consuming, and the confirm and ack rules
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # Connection, Channel, AMQP.BasicProperties and Envelope are all over this module's public API

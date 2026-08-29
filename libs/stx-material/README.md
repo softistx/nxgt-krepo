@@ -126,6 +126,19 @@ the dependency graph but silently skipped at compile time. Only a macOS host or 
 them. The `compose-multiplatform` skill records this and the rest of what the toolchain actually
 does here.
 
+## Publishing
+
+`com.strange:stx-material:0.1.0`, like every other `libs/*` module — but a `kmp/lib` publishes one
+artifact per platform beside the root one: `stx-material-jvm`, `stx-material-android`,
+`stx-material-iosarm64`, `stx-material-iossimulatorarm64`. A consumer depends on the root artifact
+and the platform one is selected for it.
+
+**`composeResources` are not part of the publication yet** ([KTC-5698][ktc-5698]). The jar publishes
+and the components work; anything this library ever ships as a Compose resource would not reach a
+consumer. Nothing here does today — worth knowing before the first one is added.
+
+[ktc-5698]: https://youtrack.jetbrains.com/issue/KTC-5698/Support-publication-of-composeResources-as-a-part-of-KMP-library-publication
+
 ## Where to read next
 
 | | |

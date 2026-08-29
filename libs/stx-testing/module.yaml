@@ -1,4 +1,8 @@
 product: jvm/lib
+description: "Test-only support the stx libraries share: the backing services their integration specs talk to, declared rather than assumed"
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # GenericContainer and the wait strategies are all over this module's public API

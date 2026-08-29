@@ -1,4 +1,8 @@
 product: jvm/lib
+description: S3-compatible object storage over the MinIO SDK — buckets, objects and presigned URLs, all suspending
+
+apply:
+  - //publishing.module-template.yaml
 
 dependencies:
   # MinioAsyncClient and the SDK's argument types are part of this module's public API
