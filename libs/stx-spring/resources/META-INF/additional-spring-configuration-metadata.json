@@ -1,0 +1,25 @@
+{
+  "groups": [
+    {
+      "name": "stx.errors",
+      "type": "com.strange.spring.error.ErrorProperties",
+      "sourceType": "com.strange.spring.error.ErrorProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.errors.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Register the stx error handling. Off unless set: putting this library on the classpath must not change how an application already reports failures.",
+      "sourceType": "com.strange.spring.error.ErrorProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.errors.include-debug-message",
+      "type": "java.lang.Boolean",
+      "description": "Serialize ApiException.debugMessage into the response. Leave off outside development: a debug message is routinely a query, a constraint name or an upstream body.",
+      "sourceType": "com.strange.spring.error.ErrorProperties",
+      "defaultValue": false
+    }
+  ]
+}
