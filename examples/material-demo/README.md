@@ -76,3 +76,24 @@ The catalogue's own chrome is deliberately built from the library (`ListTile` fo
 `Chip` for the seed picker and the choice knobs, `StatusBadge`, `Typography`), so anything awkward
 to use shows up here first. `Switch`, `Slider` and `OutlinedTextField` come straight from Material 3
 — shared-material has no form layer until phase 2, and the demo says so rather than faking one.
+
+## The panes scroll, and on desktop they say so
+
+Twenty-eight stories is taller than any window, so all three panes scroll. On desktop each one
+carries a `PaneScrollbar` — a pane whose wheel works but whose edge is bare reads as a pane with
+nothing below the fold, and whatever was added last is simply never found. It is `expect`/`actual`
+rather than a flag: a finger already knows a list moves, so the Android side draws nothing.
+
+## Tests
+
+`test@jvm/` renders the catalogue headlessly with `ImageComposeScene` — skiko's native library comes
+from `$compose.desktop.currentOs`, which is why they are jvm-only.
+
+- `StoryListScrollTest` sends a real wheel event at the left pane and checks the pixels move.
+- `EveryStoryRendersTest` renders **every** story in `CatalogGroups` and asserts each paints
+  something, plus that the group list is the one the docs claim and that no two stories share an id.
+  A story that throws at display time compiles perfectly and only shows itself when someone clicks
+  that one entry; a group written but never registered is invisible in exactly the same way as a
+  group that does not exist.
+
+Run them with `./kotlin test -m catalog`.

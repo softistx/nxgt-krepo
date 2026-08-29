@@ -18,6 +18,7 @@ libs/shared-material/
   src/icon/     Icon and the library's own icon set
   src/button/   Button, IconButton, ResponsiveButton, ButtonRow
   src/display/  Card, Chip, StatusBadge, ListTile, Alert, EmptyState, Skeleton
+  src/form/     the field/form state layer, the rules, and every input
 ```
 
 ## The shape of it

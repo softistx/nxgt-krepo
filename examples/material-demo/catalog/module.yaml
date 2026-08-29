@@ -16,6 +16,15 @@ dependencies:
   - $compose.ui: exported
   - $compose.animation
 
+# The catalogue's own chrome is the library's first consumer, so a defect here is a defect there —
+# and "the story list scrolls" is a claim about pixels. ImageComposeScene renders it headlessly;
+# skiko's native library comes from $compose.desktop.currentOs, which is jvm-only.
+test-dependencies@jvm:
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.kotest.runner.junit5
+  - $compose.desktop.currentOs
+
 settings:
   kotlin:
     optIns: [ androidx.compose.foundation.style.ExperimentalFoundationStyleApi ]
