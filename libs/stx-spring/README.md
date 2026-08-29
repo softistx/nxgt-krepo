@@ -307,6 +307,34 @@ collection rather than an empty page. Sorting can afford to shrug; narrowing can
 reason a comparison against unparseable text is a failure rather than a zero — the version this came
 from coerced it, so `price:gte:cheap` quietly became `price >= 0`.
 
+### Paging
+
+```kotlin
+val page = template.findPage<Order>(MongoPage.first(20, query = request.mongoQuery))
+```
+
+**Keyset, not `skip`.** An offset page re-reads every row it skips, so page 500 costs five hundred
+pages of work — and a row inserted while a client is paging shifts every later page by one, so the
+client sees a row twice or never. A cursor resumes from a key: constant cost, stable under writes.
+
+The window — `first`/`last`/`cursor` and the rules about them — is `stx-common`'s `PageWindow`,
+the same one `stx-mongo` and `stx-jpa` implement, and the trimming is its `pageOf`. What is specific
+here is the Spring Data `Query` and `Sort`, and that every failure is an `ApiException`: a
+contradictory window, a page size of zero and a cursor from a different query are all a client
+sending something it should not have, so they are 400s and they arrive translated.
+
+Three things the specs pin, each of which is silent when wrong:
+
+- **The ordering always ends in `_id`.** A keyset resumes from the last row's key, so the key has to
+  be unique — order by `name` alone and every document sharing a name is a coin toss between being
+  served twice and being skipped.
+- **Cursors carry the stored field names.** A property with `@Field("t")` is `t` in the document, so
+  a cursor built from the property name reads nothing back and every page after the first comes up
+  empty. That is also why documents are fetched raw and decoded here rather than mapped by the
+  template: a mapped object no longer has the stored values the cursor needs.
+- **A cursor from a differently sorted query is refused.** It would page along the wrong key and
+  answer with rows that look perfectly plausible.
+
 ### `kotlin.time.Instant`
 
 BSON has one date type and the driver has a codec for `java.util.Date` and none for
