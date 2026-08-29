@@ -8,11 +8,13 @@ com.strange.spring.error    ApiException, ErrorResponse, the advices that connec
 com.strange.spring.i18n     the request's locale, and the catalogs bound to it
 com.strange.spring.web      what a functional route reads off a request and answers with
 com.strange.spring.client   a typed HTTP client from an interface
+com.strange.spring.security who is calling, and the annotations that say who may
+com.strange.spring.cors     a browser policy read from configuration
+com.strange.spring.json     kotlinx-serialization as WebFlux's codec
 ```
 
-More packages arrive in their own changes: security, the extracted `@Configuration`, the Spring Data
-Reactive Mongo layer, and one auto-configuration per `stx-*` library. What follows is true of all of
-them.
+More packages arrive in their own changes: the Spring Data Reactive Mongo layer, and one
+auto-configuration per `stx-*` library. What follows is true of all of them.
 
 ## Everything is opt-in
 
@@ -163,6 +165,97 @@ have them, and a second set of shorter names over the same functions is a vocabu
 than a capability to use. The one thing worth knowing is which artifact a given name is in:
 `awaitSingleOrNull` on a `Mono` is the Reactor one, `awaitFirstOrNull` on a `Publisher` is the other,
 and this module depends on both.
+
+## Who is calling
+
+```kotlin
+val owner = requireCurrentUser().username
+```
+
+**`ReactiveSecurityContextHolder`, never `SecurityContextHolder`.** The non-reactive holder is a
+`ThreadLocal`, and in WebFlux a request is not a thread — the same trap the locale section below
+describes, in the other half of the stack. `currentUser()` returns null for an anonymous request,
+because an endpoint that anyone may read and that is *richer* when signed in is an ordinary thing to
+write; `requireCurrentUser()` is for the rest and fails as `errors.unauthorized`.
+
+Four annotations say who may call what:
+
+```kotlin
+@RequireRole("ADMIN")
+suspend fun archive(id: String)
+
+@RequireOwnership
+suspend fun order(id: String): Order
+```
+
+- **`@RequireRole` and `@RequireAuthority` are `@PreAuthorize`.** The versions these came from were
+  `@PostAuthorize`, which runs the method *first* and denies afterwards — so a caller without the
+  role still got their write performed and only the response refused. A check on who may call
+  something has to happen before the something.
+- **`@RequireOwnership` and `@FilterByOwnership` are genuinely post-hoc**, because whether the caller
+  owns a thing cannot be known until the thing is loaded. Put `@RequireOwnership` on a read; on a
+  delete, the delete happens and only the answer is refused.
+- `@FilterByOwnership` filters what a query already returned, so the database read every row and a
+  page can come back short. A query that says `createdBy = me` is the better answer wherever one can
+  be written.
+- The expressions read `returnObject.metadata.createdBy`, which is the shape `stx-mongo`'s `Audited`
+  gives a document. Nothing here depends on that module — SpEL resolves the path at runtime.
+
+**Two things have to be switched on for these to work.** `stx.security.enabled` registers the
+`AnnotationTemplateExpressionDefaults` bean, without which `{value}` is never substituted and
+`@RequireRole("ADMIN")` denies every call as the literal expression `hasRole('{value}')`. And
+`@EnableReactiveMethodSecurity` is the application's to add, because turning method security on
+changes how every bean in the context is proxied — not something a dependency should do quietly.
+
+`stx.security` contributes a `PasswordEncoder` and that one bean, and nothing else. The filter chain,
+the permitted paths and the authentication manager are application policy: a library that guessed at
+them would either lock a service out of its own health check or open something that should not be.
+
+## Browsers
+
+```yaml
+stx:
+  cors:
+    enabled: true
+    origins: [ "http://localhost:5173" ]
+```
+
+`origins` is empty by default, because a browser policy that arrives already permitting somebody is
+the wrong shape of default. Everything else defaults permissively — once an origin is trusted,
+restricting which methods it may use adds nothing an attacker at that origin cannot work around.
+
+**One combination fails at startup on purpose.** `origins: ["*"]` with `allow-credentials: true` is
+forbidden by the CORS specification, and Spring throws when the *request* arrives rather than when
+the bean is built — which turns a configuration mistake into an intermittent browser failure found by
+whoever is testing the front end. This refuses it while the context is starting and names
+`origin-patterns`, which is what actually does the job: the concrete requesting origin is echoed back
+rather than a wildcard.
+
+## JSON
+
+```yaml
+stx:
+  json:
+    enabled: true
+```
+
+Off by default, and that is not timidity. Jackson is what WebFlux uses until something replaces it,
+and it serializes anything; kotlinx serializes what carries `@Serializable` and throws on the rest.
+Switching a running application over is a decision with a blast radius.
+
+The `Json` is built **from** `stx-common`'s `lenientJson` rather than beside it, so unknown keys stay
+ignored for the reason that module gives — a reader that throws on a field a newer writer added stops
+during every rolling deploy. Two settings are added on top, and both are about a *response*
+specifically: nulls are not written (a type with a dozen optional fields is otherwise mostly nulls),
+and defaults are (a client that has never seen a field cannot know what the server would have used).
+
+The two interact, which is worth knowing before someone turns on `explicit-nulls` and finds their
+nulls still missing: a property equal to its default is dropped first, and for a `String? = null` the
+default *is* null.
+
+It is contributed as a `CodecCustomizer`, not by implementing `WebFluxConfigurer` — a configurer is a
+whole extension point with a dozen methods, and an application that has its own would find two of
+them competing.
 
 ## The request's locale
 

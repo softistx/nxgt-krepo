@@ -4,6 +4,21 @@
       "name": "stx.errors",
       "type": "com.strange.spring.error.ErrorProperties",
       "sourceType": "com.strange.spring.error.ErrorProperties"
+    },
+    {
+      "name": "stx.security",
+      "type": "com.strange.spring.security.SecurityProperties",
+      "sourceType": "com.strange.spring.security.SecurityProperties"
+    },
+    {
+      "name": "stx.cors",
+      "type": "com.strange.spring.cors.CorsProperties",
+      "sourceType": "com.strange.spring.cors.CorsProperties"
+    },
+    {
+      "name": "stx.json",
+      "type": "com.strange.spring.json.JsonProperties",
+      "sourceType": "com.strange.spring.json.JsonProperties"
     }
   ],
   "properties": [
@@ -20,6 +35,108 @@
       "description": "Serialize ApiException.debugMessage into the response. Leave off outside development: a debug message is routinely a query, a constraint name or an upstream body.",
       "sourceType": "com.strange.spring.error.ErrorProperties",
       "defaultValue": false
+    },
+    {
+      "name": "stx.security.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Register the stx security beans: a BCrypt PasswordEncoder and the meta-annotation template support that @RequireRole needs. Not a filter chain — which paths are open stays the application's decision.",
+      "sourceType": "com.strange.spring.security.SecurityProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.security.bcrypt-strength",
+      "type": "java.lang.Integer",
+      "description": "The BCrypt work factor. Each step doubles the cost to hash and to attack. Raising it does not invalidate existing hashes: the cost is stored in the hash.",
+      "sourceType": "com.strange.spring.security.SecurityProperties",
+      "defaultValue": 10
+    },
+    {
+      "name": "stx.cors.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Register the CORS filter built from these properties.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.cors.origins",
+      "type": "java.util.List<java.lang.String>",
+      "description": "The exact origins allowed. Empty by default: a browser policy that arrives already permitting somebody is the wrong shape of default.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": []
+    },
+    {
+      "name": "stx.cors.origin-patterns",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Origins matched as patterns, so one entry covers every subdomain. The one that works with allow-credentials, because the concrete requesting origin is echoed back rather than a wildcard.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": []
+    },
+    {
+      "name": "stx.cors.methods",
+      "type": "java.util.List<java.lang.String>",
+      "description": "The HTTP methods those origins may use.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": [
+        "*"
+      ]
+    },
+    {
+      "name": "stx.cors.headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "The request headers those origins may send.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": [
+        "*"
+      ]
+    },
+    {
+      "name": "stx.cors.exposed-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "The response headers the browser is allowed to read. Empty means the CORS-safelisted ones.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": []
+    },
+    {
+      "name": "stx.cors.allow-credentials",
+      "type": "java.lang.Boolean",
+      "description": "Whether the browser may send cookies and Authorization. Cannot be combined with an origins list of \"*\" — use origin-patterns.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": true
+    },
+    {
+      "name": "stx.cors.max-age",
+      "type": "java.lang.Long",
+      "description": "How long a browser may cache the preflight answer, in seconds.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": 3600
+    },
+    {
+      "name": "stx.cors.path",
+      "type": "java.lang.String",
+      "description": "The path pattern this CORS configuration applies to.",
+      "sourceType": "com.strange.spring.cors.CorsProperties",
+      "defaultValue": "/**"
+    },
+    {
+      "name": "stx.json.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Make kotlinx-serialization the codec WebFlux reads and writes JSON with, in place of Jackson. Off because kotlinx serializes only what carries @Serializable, and switching a running application over is a decision rather than a detail.",
+      "sourceType": "com.strange.spring.json.JsonProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.json.explicit-nulls",
+      "type": "java.lang.Boolean",
+      "description": "Whether a null property is written out at all. Off, so a response type with a dozen optional fields is not mostly nulls.",
+      "sourceType": "com.strange.spring.json.JsonProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.json.encode-defaults",
+      "type": "java.lang.Boolean",
+      "description": "Whether a property equal to its default is written out. On, the opposite of the kotlinx default: a client that has never seen a field cannot know the default the server would have used.",
+      "sourceType": "com.strange.spring.json.JsonProperties",
+      "defaultValue": true
     }
   ]
 }
