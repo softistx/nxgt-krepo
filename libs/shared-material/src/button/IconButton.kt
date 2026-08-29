@@ -7,6 +7,7 @@ import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -15,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.strange.material.icon.Icon
 import com.strange.material.icon.IconSize
-import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.ToneColors
 import androidx.compose.material3.IconButton as MaterialIconButton
 
@@ -113,7 +113,7 @@ fun IconButton(
 @Composable
 @ReadOnlyComposable
 private fun iconButtonTone(color: ButtonColor): ToneColors {
-    val scheme = StrangeTheme.colors.scheme
+    val scheme = MaterialTheme.colorScheme
     return when (color) {
         ButtonColor.Neutral -> {
             ToneColors(

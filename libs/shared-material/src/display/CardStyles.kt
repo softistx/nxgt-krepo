@@ -5,9 +5,9 @@ import androidx.compose.foundation.style.pressed
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import com.strange.material.motion.MotionSpeed
-import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.motion
 
 /** Which of Material 3's three cards this is. */
@@ -25,7 +25,7 @@ enum class CardVariant {
 /** The container colours, as Material 3's own [CardColors], so M3 does the painting. */
 @Composable
 fun cardColors(variant: CardVariant): CardColors {
-    val scheme = StrangeTheme.colors.scheme
+    val scheme = MaterialTheme.colorScheme
     return when (variant) {
         CardVariant.Filled -> {
             CardDefaults.cardColors(
@@ -50,15 +50,21 @@ fun cardColors(variant: CardVariant): CardColors {
     }
 }
 
-/** Depth from the token scale rather than from M3's per-variant defaults, so the two agree. */
+/**
+ * Depth, straight from Material 3.
+ *
+ * Each variant asks for the `CardElevation` M3 already defines for it, so a card here sits exactly
+ * where a plain M3 card of the same kind sits. There is no elevation scale of our own to keep in
+ * step: M3 names these levels, and naming them a second time only creates somewhere for the two to
+ * disagree.
+ */
 @Composable
-fun cardElevation(variant: CardVariant): CardElevation {
-    val elevation = StrangeTheme.elevation
-    return CardDefaults.cardElevation(
-        defaultElevation = if (variant == CardVariant.Elevated) elevation.raised else elevation.flat,
-        pressedElevation = if (variant == CardVariant.Elevated) elevation.floating else elevation.flat,
-    )
-}
+fun cardElevation(variant: CardVariant): CardElevation =
+    when (variant) {
+        CardVariant.Filled -> CardDefaults.cardElevation()
+        CardVariant.Outlined -> CardDefaults.outlinedCardElevation()
+        CardVariant.Elevated -> CardDefaults.elevatedCardElevation()
+    }
 
 /**
  * The give under the finger, which Material 3 has no parameter for. A card is bigger than a button,

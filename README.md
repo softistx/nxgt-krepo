@@ -67,7 +67,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`docs/jpa-criteria.md`](docs/jpa-criteria.md) | What a shared-jpa query may say — operators, joins, fetch joins, entity graphs, projections, and the two escapes |
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a shared-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
 | [`libs/shared-material/README.md`](libs/shared-material/README.md) | The UI library — its shape, how `StrangeTheme` slots into an existing Material 3 application, and how a component is added |
-| [`libs/shared-material/docs/tokens.md`](libs/shared-material/docs/tokens.md) | What a token may say — colour roles, spacing, radii, elevation, durations and easings |
+| [`libs/shared-material/docs/tokens.md`](libs/shared-material/docs/tokens.md) | What a token may say — colour roles, spacing, durations and easings, and why shapes and elevation stay M3's |
 | [`libs/shared-material/docs/components.md`](libs/shared-material/docs/components.md) | Every component, its parameters, and its story in the catalogue |
 | [`examples/material-demo/README.md`](examples/material-demo/README.md) | The catalogue — why it is three modules, how to run it, how a story is registered |
 | [`libs/shared-kafka/README.md`](libs/shared-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |

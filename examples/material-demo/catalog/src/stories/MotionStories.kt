@@ -78,7 +78,7 @@ private fun MotionRow(
                         .offset(x = offset)
                         .size(36.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .background(StrangeTheme.colors.scheme.primary),
+                        .background(MaterialTheme.colorScheme.primary),
             )
         }
     }
@@ -91,7 +91,7 @@ private fun EffectsRow(
     speed: MotionSpeed,
 ) {
     val target =
-        if (away) StrangeTheme.colors.scheme.tertiary else StrangeTheme.colors.scheme.primary
+        if (away) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
     val color by animateColorAsState(
         targetValue = target,
         animationSpec = StrangeTheme.motion.effects(speed),

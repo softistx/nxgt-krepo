@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,7 +21,6 @@ import com.strange.material.icon.IconSize
 import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeRadii
 import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.Tone
 
@@ -62,23 +62,25 @@ val FoundationStories =
             }
         }
 
-        story("Radii") { knobs ->
-            val base = knobs.number("base", 12f, 0f..28f).dp
-            val radii = StrangeRadii(base)
+        story("Shapes") { _ ->
+            val shapes = MaterialTheme.shapes
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
                 verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
             ) {
+                // All eight of Material 3's slots, including the three that arrived with
+                // expressive — a hand-written Shapes(...) fills only five and quietly leaves
+                // largeIncreased, extraLargeIncreased and extraExtraLarge on their defaults.
                 listOf(
-                    "extraSmall" to radii.extraSmall,
-                    "small" to radii.small,
-                    "medium" to radii.medium,
-                    "large" to radii.large,
-                    "largeIncreased" to radii.largeIncreased,
-                    "extraLarge" to radii.extraLarge,
-                    "extraLargeIncreased" to radii.extraLargeIncreased,
-                    "extraExtraLarge" to radii.extraExtraLarge,
-                ).forEach { (name, radius) ->
+                    "extraSmall" to shapes.extraSmall,
+                    "small" to shapes.small,
+                    "medium" to shapes.medium,
+                    "large" to shapes.large,
+                    "largeIncreased" to shapes.largeIncreased,
+                    "extraLarge" to shapes.extraLarge,
+                    "extraLargeIncreased" to shapes.extraLargeIncreased,
+                    "extraExtraLarge" to shapes.extraExtraLarge,
+                ).forEach { (name, shape) ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
@@ -87,15 +89,10 @@ val FoundationStories =
                             modifier =
                                 Modifier
                                     .size(72.dp)
-                                    .clip(RoundedCornerShape(radius))
-                                    .background(StrangeTheme.colors.scheme.primaryContainer),
+                                    .clip(shape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
                         )
                         Typography(text = name, variant = TypographyVariant.Caption)
-                        Typography(
-                            text = "$radius",
-                            variant = TypographyVariant.Caption,
-                            emphasis = Emphasis.Subtle,
-                        )
                     }
                 }
             }

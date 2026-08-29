@@ -28,7 +28,7 @@ import io.konform.validation.ValidationBuilder
 
 /** Present, and not just whitespace. */
 fun ValidationBuilder<String>.required(message: String = "This field is required"): Constraint<String> =
-    addConstraint(message) { it.isNotBlank() }
+    constrain(message) { it.isNotBlank() }
 
 /**
  * Something that could be an email address.
@@ -42,23 +42,23 @@ fun ValidationBuilder<String>.email(message: String = "Enter a valid email addre
 fun ValidationBuilder<String>.minLength(
     min: Int,
     message: String = "Use at least $min characters",
-): Constraint<String> = addConstraint(message) { it.isBlank() || it.length >= min }
+): Constraint<String> = constrain(message) { it.isBlank() || it.length >= min }
 
 /** At most [max] characters. */
 fun ValidationBuilder<String>.maxLength(
     max: Int,
     message: String = "Use at most $max characters",
-): Constraint<String> = addConstraint(message) { it.length <= max }
+): Constraint<String> = constrain(message) { it.length <= max }
 
 /** Matches [regex]. Blank passes, so an optional field with a format is one rule. */
 fun ValidationBuilder<String>.pattern(
     regex: Regex,
     message: String,
-): Constraint<String> = addConstraint(message) { it.isBlank() || regex.matches(it) }
+): Constraint<String> = constrain(message) { it.isBlank() || regex.matches(it) }
 
 /** Digits only — a PIN, a card number, a quantity typed into a text box. */
 fun ValidationBuilder<String>.digits(message: String = "Digits only"): Constraint<String> =
-    addConstraint(message) { it.isBlank() || it.all(Char::isDigit) }
+    constrain(message) { it.isBlank() || it.all(Char::isDigit) }
 
 /**
  * The same as [other] — a password confirmation.
@@ -70,13 +70,13 @@ fun ValidationBuilder<String>.digits(message: String = "Digits only"): Constrain
 fun ValidationBuilder<String>.matching(
     other: String,
     message: String = "The two do not match",
-): Constraint<String> = addConstraint(message) { it == other }
+): Constraint<String> = constrain(message) { it == other }
 
 /** Ticked. For the terms-and-conditions box, which is the only checkbox that can be wrong. */
-fun ValidationBuilder<Boolean>.checked(message: String = "This has to be ticked"): Constraint<Boolean> = addConstraint(message) { it }
+fun ValidationBuilder<Boolean>.checked(message: String = "This has to be ticked"): Constraint<Boolean> = constrain(message) { it }
 
 /** Chosen. For a select or a radio group whose value starts as `null`. */
-fun <T> ValidationBuilder<T?>.chosen(message: String = "Choose one"): Constraint<T?> = addConstraint(message) { it != null }
+fun <T> ValidationBuilder<T?>.chosen(message: String = "Choose one"): Constraint<T?> = constrain(message) { it != null }
 
 /**
  * Not empty. For a checkbox group or a multi-select.
@@ -86,13 +86,13 @@ fun <T> ValidationBuilder<T?>.chosen(message: String = "Choose one"): Constraint
  * extension written the obvious way would not apply to the property it was written for.
  */
 fun <C : Collection<*>> ValidationBuilder<C>.anyOf(message: String = "Choose at least one"): Constraint<C> =
-    addConstraint(message) { it.isNotEmpty() }
+    constrain(message) { it.isNotEmpty() }
 
 /** Inside [range]. */
 fun ValidationBuilder<Float>.inRange(
     range: ClosedFloatingPointRange<Float>,
     message: String = "Choose between ${range.start} and ${range.endInclusive}",
-): Constraint<Float> = addConstraint(message) { it in range }
+): Constraint<Float> = constrain(message) { it in range }
 
 /** Something before an `@`, something after it, and a dot in the tail. */
 private val EmailPattern = Regex("""[^@\s]+@[^@\s]+\.[^@\s]+""")
