@@ -4,3 +4,4 @@ com.strange.spring.cors.CorsAutoConfiguration
 com.strange.spring.json.JsonAutoConfiguration
 com.strange.spring.data.mongo.config.MongoAutoConfiguration
 com.strange.spring.data.mongo.audit.AuditAutoConfiguration
+com.strange.spring.data.mongo.migration.MigrationAutoConfiguration
