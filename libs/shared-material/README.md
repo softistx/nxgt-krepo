@@ -97,7 +97,7 @@ Card(style = StrangeTheme.styles.card then { alpha(0.6f) })
    a default.
 1. **The colours and the style**, in `src/<area>/<Name>Styles.kt`. Whatever M3 can express goes in a
    function returning its `*Colors` / `*Elevation` / `BorderStroke`; whatever it cannot goes in a
-   `Style`, reading tokens through `StyleScope` (`scheme`, `shapes`, `spacing`, `radii`, `motion`)
+   `Style`, reading tokens through `StyleScope` (`scheme`, `shapes`, `spacing`, `motion`)
    and putting interaction states in `pressed` / `hovered` / `disabled` blocks with `animate { }`
    *inside* them. Mind the axis: `spatial` overshoots, `effects` does not.
 2. **The composable**, in `src/<area>/<Name>.kt`. Its signature carries `modifier`, then the
@@ -131,7 +131,7 @@ does here.
 | | |
 | --- | --- |
 | [`docs/roadmap.md`](docs/roadmap.md) | Where the library is — the phases, ticked as they land |
-| [`docs/tokens.md`](docs/tokens.md) | What a token may say: colours, spacing, radii, elevation, durations, easings |
+| [`docs/tokens.md`](docs/tokens.md) | What a token may say: colours, spacing, durations, easings — shapes and elevation are M3's |
 | [`docs/components.md`](docs/components.md) | Every component, its parameters, and its story in the catalogue |
 | [`../../examples/material-demo/`](../../examples/material-demo) | The catalogue: `./kotlin run -m desktop` |
 

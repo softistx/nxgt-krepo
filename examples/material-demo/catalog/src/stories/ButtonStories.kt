@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.strange.material.button.Button
@@ -90,7 +91,7 @@ val ButtonStories =
 
         story("Responsive button") { knobs ->
             val width = knobs.number("Available width", 420f, 120f..640f)
-            Box(modifier = Modifier.width(width.dp).border(1.dp, StrangeTheme.colors.scheme.outlineVariant)) {
+            Box(modifier = Modifier.width(width.dp).border(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                 ResponsiveButton(
                     text = knobs.text("Label", "New order"),
                     icon = StrangeIcons.Add,

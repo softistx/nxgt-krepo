@@ -6,6 +6,7 @@ import androidx.compose.foundation.style.disabled
 import androidx.compose.foundation.style.pressed
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
@@ -30,7 +31,7 @@ fun buttonColors(
     color: ButtonColor,
 ): ButtonColors {
     val tone = buttonTone(color)
-    val scheme = StrangeTheme.colors.scheme
+    val scheme = MaterialTheme.colorScheme
     return when (variant) {
         ButtonVariant.Filled -> {
             ButtonDefaults.buttonColors(
@@ -73,7 +74,7 @@ fun buttonBorder(
                     if (enabled) {
                         buttonTone(color).main
                     } else {
-                        StrangeTheme.colors.scheme.onSurface
+                        MaterialTheme.colorScheme.onSurface
                             .copy(alpha = DISABLED_ALPHA)
                     },
             )
