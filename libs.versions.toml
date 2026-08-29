@@ -59,6 +59,10 @@ classgraph = "4.8.184"
 # annotations artifact for everything downstream of stx-jpa, for an annotation nobody runs.
 jetbrains-annotations = "23.0.0"
 spring = "7.0.9"
+# Object diffing for the stx-spring Mongo audit trail: it compares the previous stored state with
+# the one just saved and reports the changed properties, which is the whole reason that trail is
+# more than a copy of the document. Not on any other module's classpath — compile-only there.
+javers = "8.1.0"
 jackson = "3.2.2"
 
 [libraries]
@@ -182,6 +186,7 @@ rxrelay = { module = "com.jakewharton.rxrelay3:rxrelay", version = "3.0.1" }
 kasechange = { module = "net.pearx.kasechange:kasechange", version = "1.4.1" }
 mail = { module = "org.simplejavamail:simple-java-mail", version = "9.1.0" }
 spring-security-crypto = { module = "org.springframework.security:spring-security-crypto", version = "7.1.0" }
+javers-core = { module = "org.javers:javers-core", version.ref = "javers" }
 commons-logging = { module = "commons-logging:commons-logging", version = "1.4.0" }
 
 kotlin-faker-bom = { module = "io.github.serpro69:kotlin-faker-bom", version = "2.0.0-rc.13" }
