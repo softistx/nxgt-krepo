@@ -19,6 +19,11 @@
       "name": "stx.json",
       "type": "com.strange.spring.json.JsonProperties",
       "sourceType": "com.strange.spring.json.JsonProperties"
+    },
+    {
+      "name": "stx.data.mongo",
+      "type": "com.strange.spring.data.mongo.config.MongoProperties",
+      "sourceType": "com.strange.spring.data.mongo.config.MongoProperties"
     }
   ],
   "properties": [
@@ -137,6 +142,41 @@
       "description": "Whether a property equal to its default is written out. On, the opposite of the kotlinx default: a client that has never seen a field cannot know the default the server would have used.",
       "sourceType": "com.strange.spring.json.JsonProperties",
       "defaultValue": true
+    },
+    {
+      "name": "stx.data.mongo.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Register the stx Spring Data Mongo beans, starting with the kotlin.time.Instant converters. Separate from stx.mongo, which is the stx-mongo driver library's own integration.",
+      "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.data.mongo.gridfs-bucket",
+      "type": "java.lang.String",
+      "description": "The GridFS bucket a ReactiveGridFsTemplate is opened on. Unset means no template: a bucket that appears because nobody set a property is two collections in a database that never asked for them.",
+      "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
+      "defaultValue": null
+    },
+    {
+      "name": "stx.data.mongo.transactions",
+      "type": "java.lang.Boolean",
+      "description": "Register a ReactiveMongoTransactionManager. Needs a replica set — a standalone mongod fails the first startTransaction rather than at startup.",
+      "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.data.mongo.auditing",
+      "type": "java.lang.Boolean",
+      "description": "Register a ReactiveAuditorAware answering with the authenticated user's name, so @CreatedBy and @LastModifiedBy fill themselves in. Needs Spring Security, and @EnableReactiveMongoAuditing in the application.",
+      "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.data.mongo.create-indexes",
+      "type": "java.lang.Boolean",
+      "description": "Create the indexes the mapped entities declare, once the application is ready. Nothing is ever dropped: rebuilding an index on a live collection means every query using it scans until it is done.",
+      "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
+      "defaultValue": false
     }
   ]
 }
