@@ -3,7 +3,7 @@
 product: jvm/app
 
 dependencies:
-  - //examples/material-demo/catalog
+  - //examples/material-demo/md-catalog
   # The desktop windowing entry points — Window, application {} — live here rather than in the
   # common Compose artifacts, so only this module names them.
   - $compose.desktop.currentOs

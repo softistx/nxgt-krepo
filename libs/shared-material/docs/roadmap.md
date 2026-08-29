@@ -70,9 +70,9 @@ ligne de plomberie.
 - [x] Les bornes de `StrangeMotion`, et `enabled = false` met les durées à zéro
 
 **Catalogue de démonstration**
-- [x] `examples/material-demo/catalog` — registre de `Story`, contrôles typés, disposition 3 volets
-- [x] `examples/material-demo/desktop` — fenêtre, hot reload
-- [x] `examples/material-demo/android` — activité, manifeste
+- [x] `examples/material-demo/md-catalog` — registre de `Story`, contrôles typés, disposition 3 volets
+- [x] `examples/material-demo/md-desktop` — fenêtre, hot reload
+- [x] `examples/material-demo/md-android` — activité, manifeste
 - [x] Bascule clair/sombre et sélecteur de graine pilotant `StrangeTheme` en direct
 - [x] Une story par composant livré
 - [x] La story « écran complet »

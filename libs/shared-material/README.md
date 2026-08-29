@@ -104,7 +104,7 @@ Card(style = StrangeTheme.styles.card then { alpha(0.6f) })
    semantic parameters, then `style: Style = Style` — no `Color`, `Shape` or `Dp` parameters that
    the style or M3's defaults already own. Slots (`leading`, `trailing`, `content`) are
    `@Composable`, never `iconName: String`.
-3. **Register its story in the same change**, in `examples/material-demo/catalog/src/stories/`. The
+3. **Register its story in the same change**, in `examples/material-demo/md-catalog/src/stories/`. The
    catalogue is never caught up with afterwards.
 4. **Document it in `docs/components.md`** and tick its box in `docs/roadmap.md`, in that same
    change.
@@ -133,6 +133,6 @@ does here.
 | [`docs/roadmap.md`](docs/roadmap.md) | Where the library is — the phases, ticked as they land |
 | [`docs/tokens.md`](docs/tokens.md) | What a token may say: colours, spacing, durations, easings — shapes and elevation are M3's |
 | [`docs/components.md`](docs/components.md) | Every component, its parameters, and its story in the catalogue |
-| [`../../examples/material-demo/`](../../examples/material-demo) | The catalogue: `./kotlin run -m desktop` |
+| [`../../examples/material-demo/`](../../examples/material-demo) | The catalogue: `./kotlin run -m md-desktop` |
 
 [material-kolor]: https://github.com/jordond/MaterialKolor

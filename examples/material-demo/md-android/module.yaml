@@ -2,7 +2,7 @@
 product: android/app
 
 dependencies:
-  - //examples/material-demo/catalog
+  - //examples/material-demo/md-catalog
   # ComponentActivity and setContent — the only Android-specific thing the demo needs.
   - $libs.androidx.activity.compose
 
