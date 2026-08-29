@@ -47,6 +47,11 @@ dependencies:
   # no reason to carry any of it.
   - $spring.boot.starter.data.mongodb.reactive: compile-only
 
+  # Object diffing, for the Mongo audit trail alone: it compares the previous stored state with the
+  # one just saved and reports the changed properties, which is the whole reason that trail is more
+  # than a copy of the document.
+  - $libs.javers.core: compile-only
+
 test-dependencies:
   # The MongoDB the findPage specs page through: `MONGO_TEST_URI` when the workspace's replica set
   # is already up, a container started once for the run otherwise, and the specs report skipped when
@@ -61,6 +66,7 @@ test-dependencies:
   - $spring.boot.starter.validation
   - $spring.boot.starter.security
   - $spring.boot.starter.data.mongodb.reactive
+  - $libs.javers.core
   # ApplicationContextRunner, for asserting what does and does not appear in a context
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5
