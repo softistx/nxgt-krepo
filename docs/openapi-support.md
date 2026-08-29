@@ -1,6 +1,6 @@
 # What this generator understands
 
-The reference half of [`libs/openapi-generator`](../libs/openapi-generator/README.md): which parts
+The reference half of [`libs/stx-openapi-generator`](../libs/stx-openapi-generator/README.md): which parts
 of an OpenAPI document are read, what each becomes in Kotlin, and what is deliberately left out.
 The module's own README covers the shape of the code and what each client emitter produces; this
 file covers the document.

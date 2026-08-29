@@ -38,7 +38,7 @@ def newest_jar() -> Path:
     if not jars:
         sys.exit(
             f"no material3-desktop jar under {CACHE}\n"
-            "run `./kotlin build -m shared-material` once to populate the cache"
+            "run `./kotlin build -m stx-material` once to populate the cache"
         )
     return jars[-1]
 

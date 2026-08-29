@@ -2,7 +2,7 @@
 
 A Kotlin Toolchain plugin that generates Kotlin sources from an OpenAPI document at build time: the
 spec's schemas always, and a typed HTTP client when you ask for one. It is a thin wrapper — all the
-work is in [`libs/openapi-generator`](../../libs/openapi-generator/README.md), and this module
+work is in [`libs/stx-openapi-generator`](../../libs/stx-openapi-generator/README.md), and this module
 contributes the task, the typed settings, and the `generated.sources` entry that makes the output
 part of the consuming module's compilation.
 
@@ -229,5 +229,5 @@ Redirect to a file and check `$?`.
 
 ## Adding a client style
 
-See [the generator README](../../libs/openapi-generator/README.md#adding-a-client-style). On this
+See [the generator README](../../libs/stx-openapi-generator/README.md#adding-a-client-style). On this
 side it is one value in `ClientKind` and one branch in `ClientKind.emitter()`, both in `src/`.

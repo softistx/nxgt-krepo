@@ -1,12 +1,12 @@
-# What a shared-jpa entity may say
+# What a stx-jpa entity may say
 
 The mapping reference: which database, what a column ends up called, how an identifier is generated,
 the two Kotlin types this module converts, JSON columns, and Bean Validation. This is the half of
-`libs/shared-jpa` that gains an entry every phase — a `SqlTypes` code, a strategy, a converter — so
+`libs/stx-jpa` that gains an entry every phase — a `SqlTypes` code, a strategy, a converter — so
 it lives here rather than in the module README, which answers *why the library is shaped this way*
 and stays roughly the size it is.
 
-`docs/jpa-criteria.md` is the other half — what a *query* may say. `libs/shared-jpa/README.md` has
+`docs/jpa-criteria.md` is the other half — what a *query* may say. `libs/stx-jpa/README.md` has
 the reasoning behind both.
 
 ## Associations are lazy
@@ -19,7 +19,7 @@ What makes this a rule rather than advice is that the reactive session has no tr
 loading, so the two options are not "fast" and "slow": an unfetched lazy association throws, and an
 eager one silently multiplies statements. Neither is something to discover in production. The query
 says what it loads — `fetch`, `fetchEach`, or a projection that loads no entity — and
-`libs/shared-jpa/README.md` has the reasoning under *A query says what it loads*.
+`libs/stx-jpa/README.md` has the reasoning under *A query says what it loads*.
 
 ## Which database
 
@@ -39,7 +39,7 @@ being wrong.
 whose first authentication requires either TLS the client trusts or the server's RSA public key.
 A reactive client given neither drops the connection, and the error —
 `ClosedConnectionException: Failed to read any response from the server` — reads like a network
-fault. It is an authentication one. `mysqlContainer()` in `shared-testing` moves its `root` account
+fault. It is an authentication one. `mysqlContainer()` in `stx-testing` moves its `root` account
 onto `mysql_native_password` for exactly this reason, and says so at the point it does it.
 
 DB2 is shipped and unproven here: the driver is on the classpath and `DriversTest` covers that, but
