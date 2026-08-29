@@ -87,7 +87,7 @@ class MongoAutoConfiguration {
      */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(name = ["org.springframework.security.core.context.ReactiveSecurityContextHolder"])
-    @ConditionalOnProperty(prefix = "stx.data.mongo", name = ["auditing"], havingValue = "true")
+    @ConditionalOnProperty(prefix = "stx.data.mongo", name = ["auditor"], havingValue = "true")
     class AuditorConfiguration {
         /**
          * Who `@CreatedBy` and `@LastModifiedBy` are filled in with.
