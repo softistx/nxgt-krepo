@@ -15,18 +15,20 @@ import androidx.compose.material3.Checkbox as MaterialCheckbox
 /**
  * Any number of several, held as the set of what is ticked.
  *
- * A set rather than a list of booleans parallel to the options: the field then holds the answer
+ * A set rather than a list of booleans parallel to the options: the value is then the answer
  * ("Email and SMS") instead of the layout ("true, false, true"), and reordering the options cannot
  * silently change what was chosen.
  */
 @Composable
 fun <T> CheckboxGroup(
-    field: FieldState<Set<T>>,
+    value: Set<T>,
+    onValueChange: (Set<T>) -> Unit,
     options: List<T>,
     modifier: Modifier = Modifier,
     label: String? = null,
     required: Boolean = false,
     helper: String? = null,
+    supportingText: String? = null,
     enabled: Boolean = true,
     optionLabel: (T) -> String = { it.toString() },
 ) {
@@ -35,11 +37,11 @@ fun <T> CheckboxGroup(
         label = label,
         required = required,
         helper = helper,
-        error = field.visibleError,
+        error = supportingText,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
             options.forEach { option ->
-                val ticked = option in field.value
+                val ticked = option in value
                 Row(
                     modifier =
                         Modifier.toggleable(
@@ -47,8 +49,7 @@ fun <T> CheckboxGroup(
                             enabled = enabled,
                             role = Role.Checkbox,
                             onValueChange = { on ->
-                                field.change(if (on) field.value + option else field.value - option)
-                                field.touch()
+                                onValueChange(if (on) value + option else value - option)
                             },
                         ),
                     horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),

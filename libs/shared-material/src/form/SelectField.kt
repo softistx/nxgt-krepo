@@ -18,18 +18,21 @@ import com.strange.material.text.Typography
  * One of many, chosen from a list that is only open while it is being used.
  *
  * Material 3's `ExposedDropdownMenuBox` does the hard parts — the anchor, the popup's width and
- * placement, dismissal, the rotating chevron — so this is the binding plus the read-only text field
- * that is its anchor. The field holds the *value*; [optionLabel] turns it into words, so a menu
+ * placement, dismissal, the rotating chevron — so this is that plus the read-only text field that
+ * is its anchor. The control reports the *value*; [optionLabel] turns it into words, so a menu
  * whose wording changes does not invalidate what was chosen.
  */
 @Composable
 fun <T> SelectField(
-    field: FieldState<T?>,
+    value: T?,
+    onValueChange: (T) -> Unit,
     options: List<T>,
     modifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String = "Choose one",
     helper: String? = null,
+    isError: Boolean = false,
+    supportingText: String? = null,
     enabled: Boolean = true,
     optionLabel: (T) -> String = { it.toString() },
 ) {
@@ -37,16 +40,11 @@ fun <T> SelectField(
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { open ->
-            expanded = open
-            // Opening and closing the menu is the whole interaction, so closing it is the moment
-            // this field has been visited — there is no focus to leave.
-            if (!open) field.touch()
-        },
+        onExpandedChange = { expanded = it },
         modifier = modifier,
     ) {
         OutlinedTextField(
-            value = field.value?.let(optionLabel).orEmpty(),
+            value = value?.let(optionLabel).orEmpty(),
             onValueChange = {},
             modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
             enabled = enabled,
@@ -54,8 +52,8 @@ fun <T> SelectField(
             label = label?.let { { Typography(text = it) } },
             placeholder = { Typography(text = placeholder) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            supportingText = (field.visibleError ?: helper)?.let { { Typography(text = it) } },
-            isError = field.showError,
+            supportingText = (supportingText ?: helper)?.let { { Typography(text = it) } },
+            isError = isError,
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -63,8 +61,7 @@ fun <T> SelectField(
                 DropdownMenuItem(
                     text = { Typography(text = optionLabel(option)) },
                     onClick = {
-                        field.change(option)
-                        field.touch()
+                        onValueChange(option)
                         expanded = false
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,

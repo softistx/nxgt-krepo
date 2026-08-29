@@ -22,32 +22,31 @@ import androidx.compose.material3.Checkbox as MaterialCheckbox
  */
 @Composable
 fun Checkbox(
-    field: FieldState<Boolean>,
+    value: Boolean,
+    onValueChange: (Boolean) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
     helper: String? = null,
+    supportingText: String? = null,
     enabled: Boolean = true,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
         Row(
             modifier =
                 modifier.toggleable(
-                    value = field.value,
+                    value = value,
                     enabled = enabled,
                     role = Role.Checkbox,
-                    onValueChange = { next ->
-                        field.change(next)
-                        field.touch()
-                    },
+                    onValueChange = onValueChange,
                 ),
             horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            MaterialCheckbox(checked = field.value, onCheckedChange = null, enabled = enabled)
+            MaterialCheckbox(checked = value, onCheckedChange = null, enabled = enabled)
             Typography(text = label)
         }
-        if (field.visibleError != null || helper != null) {
-            HelperText(helper = helper, error = field.visibleError)
+        if (supportingText != null || helper != null) {
+            HelperText(helper = helper, error = supportingText)
         }
     }
 }

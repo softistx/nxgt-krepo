@@ -9,7 +9,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import com.strange.material.text.Typography
 
 /**
@@ -21,11 +20,14 @@ import com.strange.material.text.Typography
  */
 @Composable
 fun TextareaField(
-    field: FieldState<String>,
+    value: String,
+    onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String? = null,
     helper: String? = null,
+    isError: Boolean = false,
+    supportingText: String? = null,
     enabled: Boolean = true,
     minLines: Int = 3,
     maxLines: Int = 8,
@@ -36,22 +38,21 @@ fun TextareaField(
     val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     // A count is a hint about this field, so it goes where the hint goes rather than beside the
     // label, and it gives way to an error the way any other hint does.
-    val counted = maxLength?.let { "${field.value.length} / $it" }
+    val counted = maxLength?.let { "${value.length} / $it" }
 
     OutlinedTextField(
-        value = field.value,
-        onValueChange = { next -> field.change(maxLength?.let { next.take(it) } ?: next) },
+        value = value,
+        onValueChange = { next -> onValueChange(maxLength?.let { next.take(it) } ?: next) },
         modifier =
             modifier
                 .fillMaxWidth()
-                .styleable(styleState, fieldStyle, style)
-                .onFocusChanged { if (!it.isFocused && field.dirty) field.touch() },
+                .styleable(styleState, fieldStyle, style),
         enabled = enabled,
         label = label?.let { { Typography(text = it) } },
         placeholder = placeholder?.let { { Typography(text = it) } },
         supportingText =
-            (field.visibleError ?: helper ?: counted)?.let { { Typography(text = it) } },
-        isError = field.showError,
+            (supportingText ?: helper ?: counted)?.let { { Typography(text = it) } },
+        isError = isError,
         minLines = minLines,
         maxLines = maxLines,
         interactionSource = interactionSource,

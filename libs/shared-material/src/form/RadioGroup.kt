@@ -20,17 +20,19 @@ import com.strange.material.theme.StrangeTheme
  * here: `selectableGroup()`, which is what lets a screen reader say "2 of 4" instead of reading
  * four unrelated buttons, and a row-wide target so the label is clickable.
  *
- * [options] is a list of values and [label] turns one into its wording — the field holds the value,
- * never the string, so a selection survives a change of copy.
+ * [options] is a list of values and [optionLabel] turns one into its wording — the control reports
+ * the value, never the string, so a selection survives a change of copy.
  */
 @Composable
 fun <T> RadioGroup(
-    field: FieldState<T?>,
+    value: T?,
+    onValueChange: (T) -> Unit,
     options: List<T>,
     modifier: Modifier = Modifier,
     label: String? = null,
     required: Boolean = false,
     helper: String? = null,
+    supportingText: String? = null,
     enabled: Boolean = true,
     optionLabel: (T) -> String = { it.toString() },
 ) {
@@ -39,7 +41,7 @@ fun <T> RadioGroup(
         label = label,
         required = required,
         helper = helper,
-        error = field.visibleError,
+        error = supportingText,
     ) {
         Column(
             modifier = Modifier.selectableGroup(),
@@ -49,18 +51,15 @@ fun <T> RadioGroup(
                 Row(
                     modifier =
                         Modifier.selectable(
-                            selected = field.value == option,
+                            selected = value == option,
                             enabled = enabled,
                             role = Role.RadioButton,
-                            onClick = {
-                                field.change(option)
-                                field.touch()
-                            },
+                            onClick = { onValueChange(option) },
                         ),
                     horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    RadioButton(selected = field.value == option, onClick = null, enabled = enabled)
+                    RadioButton(selected = value == option, onClick = null, enabled = enabled)
                     Typography(text = optionLabel(option))
                 }
             }

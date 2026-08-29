@@ -30,11 +30,14 @@ import com.strange.material.theme.StrangeTheme
  */
 @Composable
 fun OtpField(
-    field: FieldState<String>,
+    value: String,
+    onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     length: Int = 6,
     label: String? = null,
     helper: String? = null,
+    isError: Boolean = false,
+    supportingText: String? = null,
     enabled: Boolean = true,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -44,21 +47,18 @@ fun OtpField(
         modifier = modifier,
         label = label,
         helper = helper,
-        error = field.visibleError,
+        error = supportingText,
     ) {
         BasicTextField(
-            value = field.value,
-            onValueChange = { next ->
-                field.change(next.filter(Char::isDigit).take(length))
-                if (field.value.length == length) field.touch()
-            },
+            value = value,
+            onValueChange = { next -> onValueChange(next.filter(Char::isDigit).take(length)) },
             enabled = enabled,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             cursorBrush = SolidColor(scheme.primary),
             decorationBox = {
                 Row(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs)) {
                     repeat(length) { index ->
-                        val digit = field.value.getOrNull(index)
+                        val digit = value.getOrNull(index)
                         val filled = digit != null
                         Box(
                             modifier =
@@ -70,7 +70,7 @@ fun OtpField(
                                         width = if (filled) 2.dp else 1.dp,
                                         color =
                                             when {
-                                                field.showError -> scheme.error
+                                                isError -> scheme.error
                                                 filled -> scheme.primary
                                                 else -> scheme.outlineVariant
                                             },
