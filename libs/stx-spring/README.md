@@ -73,6 +73,14 @@ Three decisions worth knowing:
 - **`debugMessage` is withheld unless `stx.errors.include-debug-message` is on.** What a thrower
   calls a debug message is routinely a query, a constraint name or an upstream body, and a response
   is the one place that reaches someone who was never meant to read it.
+- **`timestamp` is a `String`, and that is the interesting one.** It holds ISO-8601 text rather than
+  a `kotlin.time.Instant`, because the two codecs an application might have installed do not agree
+  about that type: Jackson — which is what WebFlux uses until something replaces it — writes
+  `{"epochSeconds":…,"nanosecondsOfSecond":…}`, while kotlinx writes `"2026-08-29T18:21:34.686Z"`.
+  Both serialize happily and only a client trying to read a timestamp finds out. A body whose shape
+  depends on a codec somebody may or may not have configured is not a contract.
+  `ErrorResponseWireTest` pins both codecs to the same string; `ErrorResponse.instant` parses it back
+  for a caller who wants the value.
 
 `ValidationExceptionHandler` is a separate class for a mechanical reason: Jakarta Validation is
 `compile-only` here, and a `@RestControllerAdvice` naming `ConstraintViolationException` in a method
