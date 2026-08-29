@@ -9,8 +9,8 @@ dependencies:
   # extensions return, so a consumer has to see both to build or call either.
   - //libs/stx-i18n: exported
 
-  # `Page` and `PageInfo` are what `Page<T>.response()` takes and what its envelope carries, so a
-  # route calling it names both.
+  # `Page` and `PageInfo` are what `Page<T>.response()` takes and what its envelope carries, and
+  # `CorsPolicy` is what `stx.cors` becomes — the same type stx-ktor installs Ktor's plugin from.
   - //libs/stx-common: exported
 
   # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.

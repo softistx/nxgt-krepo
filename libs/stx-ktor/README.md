@@ -171,6 +171,24 @@ colleague, and it is also a second thing the same URL can mean, which every cach
 service has to be told about. That is a decision to take, not a default to inherit. When it is on,
 it beats the header — it is the more deliberate of the two.
 
+## CORS
+
+```kotlin
+cors(CorsPolicy(origins = listOf("http://localhost:5173")))
+```
+
+The odd one out among the packages here: it wraps a *Ktor* plugin rather than one of these
+libraries. It belongs anyway, for the reason the rest of this module exists — an application should
+configure a policy once and not per framework. `CorsPolicy` lives in `stx-common`, and `stx-spring`
+builds Spring's `CorsConfiguration` from the same type, so the two cannot drift on what a given
+configuration means.
+
+The policy is validated before the plugin is installed, so a wildcard origin with credentials fails
+while the application is starting rather than on somebody's first preflight. Two of its fields have
+no Ktor equivalent — `path`, because Ktor scopes a plugin by installing it on a route, and
+`originPatterns`, because Ktor matches a host and a scheme rather than a glob. `CorsPolicy.ignoredByKtor`
+names them rather than letting them be silently absent.
+
 ## Why the plugins are not in the libraries they wrap
 
 So that `stx-i18n`, `stx-redis` and the rest stay free of Ktor. A worker, a CLI or a Kafka
