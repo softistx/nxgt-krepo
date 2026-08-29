@@ -275,9 +275,9 @@ strings, and the converters without which a `kotlin.time.Instant` cannot be a fi
 
 ```kotlin
 val cheap = all(Product::stock gt 0, Product::price lte 50).query
-val listed = request.mongoQuery      // ?filter=...&sort=... together
+val listed = template.find(request.mongoQuery, Order::class.java)   // ?filter= and ?sort= together
 
-val page = template.findPage<Order>(MongoPage.first(20, query = listed))
+val page = template.findPage<Order>(request.mongoPage())            // …plus ?size= and ?cursor=
 ```
 
 The vocabulary — every operator in both forms, the filter tokens and how each reads its value, the
@@ -295,6 +295,13 @@ that have no property to name them.
 the package. An unreadable `?filter=` clause is a 400; an unreadable `?sort=` clause is dropped.
 Dropping a filter returns *more* rows than the caller asked for, so `status:eq:PIAD` would answer
 with the whole collection rather than an empty page. Sorting can afford to shrug; narrowing cannot.
+
+**A page's ordering has exactly one source.** `mongoQuery` bakes `?sort=` into the query, which is
+what `find` wants and what a keyset page must not be given: the cursor is built from the window's
+`sort`, so an ordering arriving any other way produces a right-looking first page and an empty
+second one. `request.mongoPage()` is the correct spelling, `MongoPage` refuses the other, and
+`PageSortSourceTest` pins the row the defect used to lose — this README demonstrated it for four
+slices.
 
 **Paging is keyset, not `skip`.** An offset page re-reads every row it skips, so page 500 costs five
 hundred pages of work — and a row inserted while a client is paging shifts every later page by one,
