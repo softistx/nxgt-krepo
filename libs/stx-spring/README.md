@@ -221,6 +221,12 @@ stx:
     origins: [ "http://localhost:5173" ]
 ```
 
+**The properties become a `com.strange.common.http.CorsPolicy`, and Spring's `CorsConfiguration`
+after that.** `stx-ktor` installs Ktor's plugin from the same policy, so an application moving
+between the two frameworks keeps its origins, its methods and its keys — CORS is a browser policy,
+not a web-framework feature, and two configuration classes that agree today agree only for as long
+as somebody keeps them agreeing.
+
 `origins` is empty by default, because a browser policy that arrives already permitting somebody is
 the wrong shape of default. Everything else defaults permissively — once an origin is trusted,
 restricting which methods it may use adds nothing an attacker at that origin cannot work around.
@@ -228,9 +234,9 @@ restricting which methods it may use adds nothing an attacker at that origin can
 **One combination fails at startup on purpose.** `origins: ["*"]` with `allow-credentials: true` is
 forbidden by the CORS specification, and Spring throws when the *request* arrives rather than when
 the bean is built — which turns a configuration mistake into an intermittent browser failure found by
-whoever is testing the front end. This refuses it while the context is starting and names
-`origin-patterns`, which is what actually does the job: the concrete requesting origin is echoed back
-rather than a wildcard.
+whoever is testing the front end. The policy refuses it while the context is starting, and names
+`stx.cors.origin-patterns` — which is what actually does the job, since the concrete requesting
+origin is echoed back rather than a wildcard.
 
 ## JSON
 
