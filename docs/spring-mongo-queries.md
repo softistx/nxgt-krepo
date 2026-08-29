@@ -146,8 +146,12 @@ caller wanted; wrong *rows* is a different answer entirely.
 ## Paging
 
 ```kotlin
-val page = template.findPage<Order>(MongoPage.first(20, query = request.mongoQuery))
+val page = template.findPage<Order>(request.mongoPage())
 ```
+
+`mongoPage()` reads `?filter=`, `?sort=`, `?size=` and `?cursor=` and puts each where it belongs.
+Building the window by hand is fine too — `MongoPage.first(20, query = filter, sort = ordering)` —
+but the ordering goes in `sort`, never on the query.
 
 `MongoPage` is a `PageWindow` — `first`/`last`/`cursor`, the same interface `stx-mongo` and `stx-jpa`
 implement, validated in `init` so a contradictory window fails where it was written. What is specific
@@ -175,6 +179,11 @@ Three rules the implementation enforces, each of which is silent when it goes wr
   mapped by the template: a mapped object no longer has the stored values the cursor needs.
 - **A cursor from a differently sorted query is refused.** It would page along the wrong key and
   answer with rows that look perfectly plausible.
+- **The ordering must arrive as `sort`, not on the query.** `Query.with` appends, so a sort baked
+  into the query *does* order the rows — while the cursor, built from the window's `sort`, carries
+  `_id` alone. The first page is right, the second is empty, and the rest of the collection is
+  unreachable. `MongoPage` refuses a pre-sorted query for this reason; it was a real defect, and
+  this page's own example demonstrated it.
 
 Every failure is an `ApiException` — a contradictory window, a page size of zero and a foreign cursor
 are all a client sending something it should not have, so they are 400s under `pagination.invalid`
@@ -183,12 +192,14 @@ and they arrive translated.
 ## Reading a request
 
 ```kotlin
-val query = request.mongoQuery          // ?filter= and ?sort= together
+val page = request.mongoPage()          // ?filter= ?sort= ?size= ?cursor= — what a paged route wants
+val query = request.mongoQuery          // ?filter= and ?sort=, for `find`; never for a page window
 val filter = request.mongoFilter        // ?filter= alone
 ```
 
-`mongoQuery` is the one most routes want. `page`, `size`, `sort`, `requiredParam`, `listParam` and
-`body()` are in `web/` and documented in the module README — they have no Mongo in them.
+`mongoPage()` is the one a paged route wants; `mongoQuery` is for a `find` that returns everything
+matching. `page`, `size`, `cursor`, `sort`, `requiredParam`, `listParam` and `body()` are in `web/`
+and documented in the module README — they have no Mongo in them.
 
 ## The converters
 
