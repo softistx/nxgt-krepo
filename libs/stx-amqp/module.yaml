@@ -5,13 +5,14 @@ apply:
   - //publishing.module-template.yaml
 
 dependencies:
+  # the shared Json every body is read through, and the decode over it
+  - //libs/stx-common
+
   # Connection, Channel, AMQP.BasicProperties and Envelope are all over this module's public API
   - $libs.amqp.client: exported
   - $libs.kotlinx.coroutines.core: exported
   # message bodies are carried as their kotlinx.serialization form
   - $libs.kotlinx.serialization: exported
-  # the shared Json every body is read through, and the decode over it
-  - //libs/stx-common
 
 test-dependencies:
   # the broker the integration specs talk to, started for the run when the workspace's own is not

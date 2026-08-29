@@ -5,9 +5,6 @@ apply:
   - //publishing.module-template.yaml
 
 dependencies:
-  # ApplicationCall and the plugin API are all over this module's public surface
-  - $ktor.server.core: exported
-
   # One entry per integration, and every one of them compile-only.
   #
   # These are exposed by this module's API — `call.redis` returns a `Redis` — and they still do not
@@ -26,6 +23,17 @@ dependencies:
   - //libs/stx-storage: compile-only
   - //libs/stx-jpa: compile-only
 
+  # `CorsPolicy` is what `cors(policy)` takes, so a caller has to see it.
+  - //libs/stx-common: exported
+
+  # ApplicationCall and the plugin API are all over this module's public surface
+  - $ktor.server.core: exported
+
+  # Ktor's CORS plugin, for `com.strange.ktor.cors` alone and on the same terms as the libraries
+  # above: an application that never calls `cors(policy)` never loads a class from it.
+  - $ktor.server.cors: compile-only
+
+
   # Ktor's DI, for the registrations in `com.strange.ktor.di`. Compile-only for the same reason:
   # an application that never calls `provideRedis` never loads a class from it.
   - $libs.ktor.server.di: compile-only
@@ -39,12 +47,14 @@ test-dependencies:
   - //libs/stx-kafka
   - //libs/stx-storage
   - //libs/stx-jpa
+  # and the servers they connect to, started for the run
+  - //libs/stx-testing
+
   # the JpaConnection spec creates and drops its own schema with the Postgres client directly;
   # stx-jpa keeps its three drivers runtime-only, so nothing inherits a compile classpath for one
   - $libs.vertx.pg.client
-  # and the servers they connect to, started for the run
-  - //libs/stx-testing
   - $libs.ktor.server.di
+  - $ktor.server.cors
   - $ktor.server.testHost
   - $ktor.server.netty
   - $libs.kotest.runner.junit5
