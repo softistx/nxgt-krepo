@@ -40,6 +40,7 @@ import kotlin.uuid.ExperimentalUuidApi
 @OptIn(ExperimentalSerializationApi::class, ExperimentalUuidApi::class)
 internal class TypeMapper(
     private val serializers: SerializersModule,
+    private val extraFields: Map<String, List<TypeFieldMeta>> = emptyMap(),
 ) {
     private val outputs = linkedMapOf<String, GraphQLObjectType>()
     private val inputs = linkedMapOf<String, GraphQLInputObjectType>()
@@ -138,13 +139,30 @@ internal class TypeMapper(
                 .newObject()
                 .name(name)
                 .description(kClass.graphQLDescription())
+        val propertyNames = mutableSetOf<String>()
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
+            val fieldName = property.findAnnotationName() ?: elementName
+            propertyNames += fieldName
             builder.field { field ->
                 field
-                    .name(property.findAnnotationName() ?: elementName)
+                    .name(fieldName)
                     .description(property.graphQLDescription())
                     .type(output(elementType))
             }
+        }
+        extraFields[name].orEmpty().forEach { extra ->
+            if (extra.fieldName in propertyNames) {
+                throw GraphixException("duplicate field '${extra.fieldName}' on $name")
+            }
+            builder.field(
+                fieldDefinition(
+                    extra.function,
+                    extra.fieldName,
+                    output(extra.graphqlType),
+                    this,
+                    skip = { it.isGraphQLContext() || it == extra.parentParameter },
+                ),
+            )
         }
         building.remove(name)
         return builder.build().also { outputs[name] = it }

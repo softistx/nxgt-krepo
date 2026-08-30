@@ -27,6 +27,7 @@ fun Application.shop() {
             query(catalog)
             mutation(catalog)
             subscription(catalog)
+            type(catalog)
         }
     }
 }

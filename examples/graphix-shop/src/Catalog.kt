@@ -1,5 +1,6 @@
 package com.strange.example.graphix.shop
 
+import com.strange.graphix.schema.Batch
 import com.strange.graphix.schema.Mutation
 import com.strange.graphix.schema.Query
 import com.strange.graphix.schema.Subscription
@@ -15,7 +16,13 @@ data class Product(
     val price: Long,
 )
 
-/** In-memory products. Query, mutation and subscription live on the same instance. */
+@Serializable
+data class Review(
+    val id: String,
+    val body: String,
+)
+
+/** In-memory products. Query, mutation, subscription and type fields live on the same instance. */
 class Catalog {
     private val products =
         mutableListOf(
@@ -23,6 +30,11 @@ class Catalog {
             Product("p2", "Kettle", 4500),
         )
     private val added = MutableSharedFlow<Product>(extraBufferCapacity = 16)
+    private val reviews =
+        mutableMapOf(
+            "p1" to mutableListOf(Review("r1", "Holds coffee")),
+            "p2" to mutableListOf(Review("r2", "Boils fast")),
+        )
 
     @Query
     fun product(id: String): Product? = products.find { it.id == id }
@@ -43,4 +55,7 @@ class Catalog {
 
     @Subscription
     fun productAdded(): Flow<Product> = added
+
+    @Batch
+    fun reviews(products: List<Product>): Map<Product, List<Review>> = products.associateWith { reviews[it.id].orEmpty() }
 }

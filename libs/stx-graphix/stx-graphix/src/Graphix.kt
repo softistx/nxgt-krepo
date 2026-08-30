@@ -1,6 +1,7 @@
 package com.strange.graphix
 
 import com.strange.common.serialization.lenientJson
+import com.strange.graphix.execute.BatchBinding
 import com.strange.graphix.execute.executionInput
 import com.strange.graphix.execute.toGraphixResult
 import com.strange.graphix.schema.graphQLSchema
@@ -21,15 +22,17 @@ import kotlin.reflect.KClass
  *
  * The application **names** its roots. There is no classpath scan here — Spring may collect
  * `@GraphQLController` beans; that is `stx-graphix-spring`. A data fetcher is not part of this
- * API: each `@Query` / `@Mutation` / `@Subscription` is a function on the instance passed to
- * [GraphixBuilder.query], [GraphixBuilder.mutation] or [GraphixBuilder.subscription], so a
- * Spring `OrderService` lives on that instance's constructor, not in [execute]'s context map.
+ * API: each `@Query` / `@Mutation` / `@Subscription` / `@Field` is a function on the instance
+ * passed to [GraphixBuilder.query], [GraphixBuilder.mutation], [GraphixBuilder.subscription]
+ * or [GraphixBuilder.type], so a Spring `OrderService` lives on that instance's constructor,
+ * not in [execute]'s context map.
  *
  * ```kotlin
  * val graphix = Graphix {
  *     query(ProductQueries(store))
  *     mutation(ProductMutations(store))
  *     subscription(ProductSubscriptions(store))
+ *     type(ProductFields(reviews))
  * }
  * val result = graphix.execute(GraphixRequest("{ products { name } }"))
  * graphix.subscribe(GraphixRequest("subscription { productAdded { name } }"))
@@ -37,6 +40,7 @@ import kotlin.reflect.KClass
  */
 class Graphix internal constructor(
     internal val engine: GraphQL,
+    internal val batches: List<BatchBinding> = emptyList(),
 ) {
     /**
      * Runs one query or mutation. Field failures land in [GraphixResult.errors]; this call
@@ -61,7 +65,7 @@ class Graphix internal constructor(
         val job = SupervisorJob(currentCoroutineContext()[Job])
         val scope = CoroutineScope(currentCoroutineContext() + job + CoroutineName("graphql"))
         return try {
-            val result = engine.executeAsync(executionInput(request, context, scope)).await()
+            val result = engine.executeAsync(executionInput(request, context, scope, batches)).await()
             if (result.getData<Any?>() is Publisher<*>) {
                 throw GraphixException("this is a subscription — use Graphix.subscribe")
             }
@@ -76,9 +80,9 @@ class Graphix internal constructor(
 }
 
 /**
- * Accumulates query, mutation and subscription **instances**. Each instance is kept for the
- * life of the engine: the data fetcher calls methods on it, it does not construct a new one
- * per request.
+ * Accumulates query, mutation, subscription and type-field **instances**. Each instance is
+ * kept for the life of the engine: the data fetcher calls methods on it, it does not
+ * construct a new one per request.
  */
 class GraphixBuilder internal constructor(
     private val json: Json,
@@ -86,6 +90,7 @@ class GraphixBuilder internal constructor(
     private val queries = mutableListOf<Any>()
     private val mutations = mutableListOf<Any>()
     private val subscriptions = mutableListOf<Any>()
+    private val types = mutableListOf<Any>()
 
     /** Registers [instance]; every `@Query` function on it becomes a field on `Query`. */
     fun query(instance: Any) {
@@ -102,9 +107,17 @@ class GraphixBuilder internal constructor(
         subscriptions += instance
     }
 
+    /**
+     * Registers [instance]; every `@Field` / `@Batch` function becomes an extra field on its
+     * parent type. Nested `@Serializable` properties stay property getters.
+     */
+    fun type(instance: Any) {
+        types += instance
+    }
+
     internal fun build(): Graphix {
-        val schema = graphQLSchema(queries, mutations, subscriptions, json)
-        return Graphix(GraphQL.newGraphQL(schema).build())
+        val (schema, batches) = graphQLSchema(queries, mutations, subscriptions, types, json)
+        return Graphix(GraphQL.newGraphQL(schema).build(), batches)
     }
 }
 
@@ -112,7 +125,8 @@ class GraphixBuilder internal constructor(
  * Builds a [Graphix] from named roots. [json] is how arguments and `@Serializable` types are
  * read; the default is `stx-common`'s lenient `Json`.
  *
- * [GraphixBuilder.subscription] is optional. GraphQL still requires a query root.
+ * [GraphixBuilder.subscription] and [GraphixBuilder.type] are optional. GraphQL still
+ * requires a query root.
  */
 fun Graphix(
     json: Json = lenientJson,

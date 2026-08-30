@@ -20,11 +20,12 @@ class ShopTest :
                     val response =
                         client.post("/graphql") {
                             contentType(ContentType.Application.Json)
-                            setBody("""{"query":"{ products { name price } }"}""")
+                            setBody("""{"query":"{ products { name price reviews { body } } }"}""")
                         }
                     response.status shouldBe HttpStatusCode.OK
                     response.bodyAsText() shouldContain "Mug"
                     response.bodyAsText() shouldContain "Kettle"
+                    response.bodyAsText() shouldContain "Holds coffee"
                 }
             }
 
