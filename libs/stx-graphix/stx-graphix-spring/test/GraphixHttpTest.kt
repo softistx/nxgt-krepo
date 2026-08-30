@@ -10,6 +10,7 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.string.shouldContain
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBody
 
 class GraphixHttpTest :
     FeatureSpec({
@@ -37,7 +38,7 @@ class GraphixHttpTest :
                     .exchange()
                     .expectStatus()
                     .isOk
-                    .expectBody(String::class.java)
+                    .expectBody<String>()
                     .value { it shouldContain "world" }
             }
 
@@ -50,7 +51,7 @@ class GraphixHttpTest :
                     .exchange()
                     .expectStatus()
                     .isOk
-                    .expectBody(String::class.java)
+                    .expectBody<String>()
                     .value { it shouldContain "nope" }
             }
 
@@ -63,7 +64,7 @@ class GraphixHttpTest :
                     .exchange()
                     .expectStatus()
                     .isBadRequest
-                    .expectBody(String::class.java)
+                    .expectBody<String>()
                     .value { it shouldContain "malformed GraphQL JSON" }
             }
         }
@@ -78,7 +79,7 @@ class GraphixHttpTest :
                     .exchange()
                     .expectStatus()
                     .isBadRequest
-                    .expectBody(String::class.java)
+                    .expectBody<String>()
                     .value { it shouldContain "graphql-ws" }
             }
 
@@ -93,7 +94,7 @@ class GraphixHttpTest :
                     .isOk
                     .expectHeader()
                     .contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM)
-                    .expectBody(String::class.java)
+                    .expectBody<String>()
                     .value {
                         it shouldContain "ticks"
                         it shouldContain "1"
@@ -109,7 +110,7 @@ class GraphixHttpTest :
                     .exchange()
                     .expectStatus()
                     .isOk
-                    .expectBody(String::class.java)
+                    .expectBody<String>()
                     .value { it shouldContain "world" }
             }
         }

@@ -8,6 +8,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.valueParameters
 
@@ -112,13 +113,13 @@ private fun KFunction<*>.mappingFieldName(): String =
 
 internal fun KType.listElement(): KType? {
     val classifier = classifier as? KClass<*> ?: return null
-    if (!List::class.java.isAssignableFrom(classifier.java)) return null
+    if (!classifier.isSubclassOf(List::class)) return null
     return arguments.singleOrNull()?.type
 }
 
 internal fun KType.unwrapAsync(): KType {
     val classifier = classifier as? KClass<*> ?: return this
-    if (!java.util.concurrent.CompletionStage::class.java.isAssignableFrom(classifier.java)) return this
+    if (!classifier.isSubclassOf(java.util.concurrent.CompletionStage::class)) return this
     return arguments.singleOrNull()?.type
         ?: throw GraphixException("CompletionStage needs a type argument: $this")
 }
@@ -128,12 +129,12 @@ internal fun KType.batchPayload(): KType {
         classifier as? KClass<*>
             ?: throw GraphixException("@BatchMapping return type must be Map<Parent, T> or List<T>, got $this")
     return when {
-        Map::class.java.isAssignableFrom(classifier.java) -> {
+        classifier.isSubclassOf(Map::class) -> {
             arguments.getOrNull(1)?.type
                 ?: throw GraphixException("@BatchMapping Map needs a value type: $this")
         }
 
-        List::class.java.isAssignableFrom(classifier.java) -> {
+        classifier.isSubclassOf(List::class) -> {
             arguments.singleOrNull()?.type
                 ?: throw GraphixException("@BatchMapping List needs an element type: $this")
         }

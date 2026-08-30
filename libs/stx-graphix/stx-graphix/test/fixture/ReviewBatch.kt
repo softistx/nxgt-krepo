@@ -28,8 +28,8 @@ class DfeFields {
         prefix: String = "x",
         @GraphQLContext dfe: DataFetchingEnvironment,
     ): String {
-        val source = dfe.getSource<Product>() ?: product
-        val fromEnv = dfe.getArgument<String>("prefix") ?: prefix
+        val source = dfe.getSource() ?: product
+        val fromEnv = dfe.getArgument("prefix") ?: prefix
         return "$fromEnv-${source.name}"
     }
 }
