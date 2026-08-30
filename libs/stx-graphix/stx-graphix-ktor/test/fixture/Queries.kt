@@ -1,21 +1,21 @@
 package com.strange.graphix.ktor.fixture
 
-import com.strange.graphix.schema.Query
-import com.strange.graphix.schema.Subscription
+import com.strange.graphix.schema.QueryMapping
+import com.strange.graphix.schema.SubscriptionMapping
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 class GreetingQueries {
-    @Query
+    @QueryMapping
     fun hello(): String = "world"
 }
 
 class BoomQueries {
-    @Query
+    @QueryMapping
     fun boom(): String = throw IllegalStateException("nope")
 }
 
 class TickSubscriptions {
-    @Subscription
+    @SubscriptionMapping
     fun ticks(): Flow<Int> = flowOf(1, 2, 3)
 }

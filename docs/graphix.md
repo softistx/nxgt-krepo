@@ -10,18 +10,19 @@ in the module README, which answers *why the library is shaped this way*.
 
 | Annotation | Where | Becomes |
 | --- | --- | --- |
-| `@Query` | function on a class passed to `query(...)` | field on `Query` |
-| `@Mutation` | function on a class passed to `mutation(...)` | field on `Mutation` |
-| `@Subscription` | function on a class passed to `subscription(...)` | field on `Subscription` |
-| `@Field` | function on a class passed to `type(...)` | extra field on the parent type |
-| `@Batch` | function on a class passed to `type(...)` | extra field, loaded through DataLoader |
-| `@BatchLoading` | function on a class passed to `loader(...)` (or already registered as query/type) | named DataLoader keyed by the parent source |
+| `@QueryMapping` | function on a class passed to `query(...)` | field on `Query` |
+| `@MutationMapping` | function on a class passed to `mutation(...)` | field on `Mutation` |
+| `@SubscriptionMapping` | function on a class passed to `subscription(...)` | field on `Subscription` |
+| `@SchemaMapping` | function on a class passed to `type(...)` | extra field on the parent type |
+| `@BatchMapping` | function on a class passed to `type(...)` | extra field, DataLoader — no SchemaMapping on the same field |
 
-The GraphQL field name is `@Query(name=…)` / `@Mutation(name=…)` / `@Subscription(name=…)` if
-set, otherwise `@GraphQLName` on the function, otherwise the Kotlin name.
+The GraphQL field name is `@QueryMapping(name=…)` / `@MutationMapping(name=…)` /
+`@SubscriptionMapping(name=…)` if set, otherwise `@GraphQLName` on the function, otherwise the
+Kotlin name. `@SchemaMapping(typeName, field)` and `@BatchMapping(typeName, field)` default
+`typeName` to the simple name of the first argument's type and `field` to the function name.
 
-At least one `@Query` function is required. GraphQL's spec has no schema without a query root.
-`@Subscription` is optional. The Kotlin return type must be `Flow<T>` or a reactive-streams /
+At least one `@QueryMapping` function is required. GraphQL's spec has no schema without a query root.
+`@SubscriptionMapping` is optional. The Kotlin return type must be `Flow<T>` or a reactive-streams /
 JDK `Publisher<T>`; `T` is the GraphQL field type.
 
 ## Types
@@ -56,75 +57,42 @@ A type that is not `@Serializable` fails schema build, naming that type.
 | `@GraphQLDescription("…")` | same | GraphQL description |
 | `@GraphQLIgnore` | property | omitted from the GraphQL type |
 | `@Argument("foo")` | parameter | GraphQL argument name (Kotlin name is the default) |
-| `@GraphQLContext` | parameter | value from `Graphix.execute(..., context)` under that parameter's `KClass`. Not a GraphQL argument |
+| `@GraphQLContext` | parameter | `DataFetchingEnvironment` is this field; other types come from `execute`'s context map |
 
 A Kotlin default parameter is an optional GraphQL argument. A missing argument uses the default
 rather than passing null. A constructor default on an input-object property is an optional GraphQL
 input field for the same reason.
 
 Nested object fields are the `@Serializable` properties already in memory. Extra fields that need
-I/O are `@Field` / `@Batch` on an instance passed to `type(...)`. The first parameter that is not
-`@GraphQLContext` is the parent (`env.source`). Remaining `@Field` parameters are GraphQL
-arguments.
+I/O are `@SchemaMapping` or `@BatchMapping` on an instance passed to `type(...)`. **A given
+field is one or the other, not both.** `@BatchMapping` registers the field itself — no
+`@SchemaMapping` beside it.
 
 ```kotlin
-class ProductFields(
-    private val reviews: ReviewStore,
+class BookFields(
+    private val authors: AuthorStore,
 ) {
-    @Field
-    suspend fun extra(product: Product): String = product.name.uppercase()
+    @SchemaMapping(typeName = "Book", field = "titleUpper")
+    fun titleUpper(book: Book): String = book.title.uppercase()
 
-    @Batch
-    suspend fun reviews(products: List<Product>): Map<Product, List<Review>> =
-        reviews.forProducts(products.map { it.id })
-}
-
-Graphix {
-    query(ProductQueries(store))
-    type(ProductFields(reviews))
+    @BatchMapping
+    suspend fun author(books: List<Book>): Map<Book, Author> = authors.forBooks(books)
 }
 ```
 
-`@Batch` is a DataLoader wired as the field itself (one call per operation level, keyed by
-parent). `@BatchLoading` is a **named** DataLoader keyed by the same parent (the GraphQL
-source). The parameter is the sources of this level — `source: List<Product>` — and the return
-is `Map<Product, T>`. A single `Product` is N+1; Graphix refuses it.
+`typeName` defaults to the simple name of the first argument's type (`Book`). `field` defaults
+to the function name (`author`). `@BatchMapping` takes `List<Parent>` and returns
+`Map<Parent, T>` (or `List<T>` in key order). A single parent is N+1; Graphix refuses it.
 
-A `@Field` that needs the current field's source or arguments takes
+A `@SchemaMapping` that needs the current field's source or arguments takes
 `@GraphQLContext dfe: DataFetchingEnvironment`. That DFE is **this field**, not an entry in
-`execute`'s context map. Return `CompletableFuture` from `dfe.getDataLoader(name).load(source)`
-directly — wrapping `load` in `future { }` never completes.
+`execute`'s context map.
 
-```kotlin
-class ReviewLoaders(
-    private val store: ReviewStore,
-) {
-    @BatchLoading
-    suspend fun reviews(source: List<Product>): Map<Product, List<Review>> =
-        store.forProducts(source)
-}
-
-class ProductFields {
-    @Field
-    fun reviews(
-        product: Product,
-        @GraphQLContext dfe: DataFetchingEnvironment,
-    ): CompletableFuture<List<Review>> =
-        dfe.getDataLoader<Product, List<Review>>("reviews").load(product)
-}
-
-Graphix {
-    query(ProductQueries(store))
-    type(ProductFields())
-    loader(ReviewLoaders(reviews))
-}
-```
-
-`@Batch` cannot take GraphQL arguments — close over them, or use `@Field`. A `@Field` / `@Batch`
+`@BatchMapping` cannot take GraphQL arguments — close over them, or use `@SchemaMapping`. A
 name that collides with a property fails schema build; `@GraphQLIgnore` the property if the
 resolver should own the field.
 
-A `@Subscription` function returns a stream of `T`, not `T` itself. Collect it with
+A `@SubscriptionMapping` function returns a stream of `T`, not `T` itself. Collect it with
 `Graphix.subscribe`, which is a `Flow<GraphixResult>` — one item per event, cancelled when the
 collector is. `execute` on a subscription document throws rather than serialising graphql-java's
 `Publisher` as a single JSON object.
@@ -146,7 +114,7 @@ A Spring `OrderService` is not GraphQL context. It is injected when Spring build
 class OrderMutations(
     private val orders: OrderService,
 ) {
-    @Mutation
+    @MutationMapping
     suspend fun placeOrder(input: PlaceOrderInput): Order = orders.place(input)
 }
 ```
@@ -157,7 +125,7 @@ missing key fails the field with `GraphixException`:
 ```kotlin
 data class Caller(val userId: String)
 
-@Mutation
+@MutationMapping
 suspend fun placeOrder(
     input: PlaceOrderInput,
     @GraphQLContext caller: Caller,

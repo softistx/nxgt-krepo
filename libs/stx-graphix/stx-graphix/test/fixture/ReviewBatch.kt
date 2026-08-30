@@ -1,10 +1,9 @@
 package com.strange.graphix.fixture
 
-import com.strange.graphix.schema.BatchLoading
-import com.strange.graphix.schema.Field
+import com.strange.graphix.schema.BatchMapping
 import com.strange.graphix.schema.GraphQLContext
+import com.strange.graphix.schema.SchemaMapping
 import graphql.schema.DataFetchingEnvironment
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicInteger
 
 class ReviewBatch(
@@ -15,7 +14,7 @@ class ReviewBatch(
         ),
     val loads: AtomicInteger = AtomicInteger(),
 ) {
-    @BatchLoading
+    @BatchMapping
     fun reviews(source: List<Product>): Map<Product, List<Review>> {
         loads.incrementAndGet()
         return source.associateWith { reviews[it.id].orEmpty() }
@@ -23,7 +22,7 @@ class ReviewBatch(
 }
 
 class DfeFields {
-    @Field
+    @SchemaMapping
     fun tagged(
         product: Product,
         prefix: String = "x",
@@ -33,17 +32,9 @@ class DfeFields {
         val fromEnv = dfe.getArgument<String>("prefix") ?: prefix
         return "$fromEnv-${source.name}"
     }
-
-    @Field
-    fun reviews(
-        product: Product,
-        @GraphQLContext dfe: DataFetchingEnvironment,
-    ): CompletableFuture<List<Review>> =
-        dfe.getDataLoader<Product, List<Review>>("reviews")?.load(product)
-            ?: CompletableFuture.completedFuture(emptyList())
 }
 
 class SingularBatch {
-    @BatchLoading
+    @BatchMapping
     fun reviews(source: Product): Map<Product, List<Review>> = emptyMap()
 }

@@ -20,7 +20,7 @@ POST /graphql
 The subscription is `text/event-stream` on the same path.
 
 In-memory, no database. The point is the plugin: `install(GraphQL) { schema { query(catalog); mutation(catalog); subscription(catalog); type(catalog) } }`.
-`Catalog` is the store, the roots and the type fields: `reviews` is a `@Batch` on Product, one
+`Catalog` is the store, the roots and the type fields: `reviews` is a `@BatchMapping` on Product, one
 load for the list, not one per product. A Spring app would put `OrderService` on the controller
 constructor instead; that is still not GraphQL context.
 [`docs/graphix.md`](../../docs/graphix.md) draws the line.

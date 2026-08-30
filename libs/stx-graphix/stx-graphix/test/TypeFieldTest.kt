@@ -1,7 +1,9 @@
 package com.strange.graphix
 
 import com.strange.graphix.fixture.BadBatchFields
+import com.strange.graphix.fixture.BothMappings
 import com.strange.graphix.fixture.DuplicateNameFields
+import com.strange.graphix.fixture.NamedSchemaFields
 import com.strange.graphix.fixture.Product
 import com.strange.graphix.fixture.ProductFields
 import com.strange.graphix.fixture.ProductQueries
@@ -11,11 +13,12 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 class TypeFieldTest :
     FeatureSpec({
         feature("schema") {
-            scenario("@Field adds a field on the parent type") {
+            scenario("@SchemaMapping adds a field on the parent type") {
                 val sdl =
                     Graphix {
                         query(ProductQueries())
@@ -27,7 +30,7 @@ class TypeFieldTest :
                 sdl shouldContain "reviews: [Review!]!"
             }
 
-            scenario("a @Field that collides with a property fails schema build") {
+            scenario("a @SchemaMapping that collides with a property fails schema build") {
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
@@ -38,7 +41,28 @@ class TypeFieldTest :
                 failure.message shouldContain "duplicate field 'name'"
             }
 
-            scenario("@Batch cannot take GraphQL arguments") {
+            scenario("@SchemaMapping typeName and field override the defaults") {
+                val sdl =
+                    Graphix {
+                        query(ProductQueries())
+                        type(NamedSchemaFields())
+                    }.sdl()
+                sdl shouldContain "nick: String!"
+                sdl shouldNotContain "unused"
+            }
+
+            scenario("@SchemaMapping and @BatchMapping cannot both sit on the same function") {
+                val failure =
+                    shouldThrow<GraphixException> {
+                        Graphix {
+                            query(ProductQueries())
+                            type(BothMappings())
+                        }
+                    }
+                failure.message shouldContain "cannot both sit"
+            }
+
+            scenario("@BatchMapping cannot take GraphQL arguments") {
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
@@ -51,7 +75,7 @@ class TypeFieldTest :
         }
 
         feature("execute") {
-            scenario("@Field reads the parent and binds arguments") {
+            scenario("@SchemaMapping reads the parent and binds arguments") {
                 val graphql =
                     Graphix {
                         query(ProductQueries())
@@ -65,7 +89,7 @@ class TypeFieldTest :
                 (defaulted.data.shouldNotBeNull()["product"] as Map<*, *>)["tagged"] shouldBe "x-Mug"
             }
 
-            scenario("@Batch loads once for a list of parents") {
+            scenario("@BatchMapping loads once for a list of parents") {
                 val products = mutableListOf(Product("p1", "Mug"), Product("p2", "Kettle"))
                 val fields =
                     ProductFields(
