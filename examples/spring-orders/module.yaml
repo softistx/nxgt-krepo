@@ -30,6 +30,11 @@ test-dependencies:
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
 
+  # Spring's own test harness, driven by Kotest: `@SpringBootTest` starts the application once for
+  # the module's specs and injects its beans into their constructors. The same extension
+  # `nxgt-rest` registers, and the reason a spec here needs no bootstrap of its own.
+  - $libs.kotest.extensions.spring
+
 plugins:
   # The contract is `openapi/`, split across files and bundled to `api-docs.yaml` by redocly; this
   # turns that bundle into the models and the `@HttpExchange` interfaces the controllers implement.
