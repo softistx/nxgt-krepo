@@ -8,6 +8,8 @@ dependencies:
   - //libs/stx-graphql/stx-graphql: exported
   # RouterFunction and WebFlux types are the HTTP surface this module exposes
   - $spring.boot.starter.webflux: exported
+  # `mono { }` and `bodyValueAndAwait` compile into the caller
+  - $libs.kotlinx.coroutines.reactor: exported
   # Spring binds Kotlin configuration properties through the primary constructor only when reflect
   # is present — the same line stx-spring-boot carries, for the same reason.
   - $libs.kotlin.reflect

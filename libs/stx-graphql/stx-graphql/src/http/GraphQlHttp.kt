@@ -1,4 +1,4 @@
-package com.strange.graphql.ktor
+package com.strange.graphql.http
 
 import com.strange.graphql.GraphQlError
 import com.strange.graphql.GraphQlRequest
@@ -10,30 +10,38 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
 
+/**
+ * The JSON envelope both HTTP integrations speak. Ktor and Spring parse this; they do not
+ * invent a second shape.
+ */
 @Serializable
-internal data class HttpRequest(
+data class GraphQlHttpRequest(
     val query: String? = null,
     val operationName: String? = null,
     val variables: JsonObject? = null,
 )
 
 @Serializable
-internal data class HttpResponse(
+data class GraphQlHttpResponse(
     val data: JsonElement? = null,
-    val errors: List<HttpError>? = null,
+    val errors: List<GraphQlHttpError>? = null,
 )
 
 @Serializable
-internal data class HttpError(
+data class GraphQlHttpError(
     val message: String,
     val path: List<JsonElement> = emptyList(),
 )
 
-internal fun HttpRequest.toGraphQlRequest(): GraphQlRequest {
+class BadGraphQlHttp(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)
+
+fun GraphQlHttpRequest.toGraphQlRequest(): GraphQlRequest {
     val query = query ?: throw BadGraphQlHttp("a GraphQL request needs a query")
     return GraphQlRequest(
         query = query,
@@ -42,19 +50,14 @@ internal fun HttpRequest.toGraphQlRequest(): GraphQlRequest {
     )
 }
 
-internal fun GraphQlResult.toHttp(): HttpResponse =
-    HttpResponse(
+fun GraphQlResult.toHttp(): GraphQlHttpResponse =
+    GraphQlHttpResponse(
         data = data?.toJsonElement(),
         errors = errors.takeIf { it.isNotEmpty() }?.map { it.toHttp() },
     )
 
-internal class BadGraphQlHttp(
-    message: String,
-    cause: Throwable? = null,
-) : RuntimeException(message, cause)
-
-private fun GraphQlError.toHttp(): HttpError =
-    HttpError(
+private fun GraphQlError.toHttp(): GraphQlHttpError =
+    GraphQlHttpError(
         message = message,
         path = path.map { it.toJsonPrimitive() },
     )
@@ -66,7 +69,7 @@ private fun Any.toJsonPrimitive(): JsonElement =
         else -> JsonPrimitive(toString())
     }
 
-private fun JsonElement.toJava(): Any? =
+internal fun JsonElement.toJava(): Any? =
     when (this) {
         is JsonNull -> {
             null

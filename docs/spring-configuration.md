@@ -299,6 +299,23 @@ consume nothing.
 
 ---
 
+## `stx-graphql-spring`
+
+Not this module — `com.strange:stx-graphql-spring`. The keys follow the same opt-in rule, and the
+metadata lives in that module's `additional-spring-configuration-metadata.json`.
+
+### `stx.graphql`
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Serves POST/GET GraphQL at [path]. Collects `@GraphQLController` beans as roots. An application's own `GraphQl` bean wins |
+| `path` | string | `/graphql` | HTTP path |
+
+A field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. The annotation vocabulary is
+[`docs/graphql.md`](graphql.md).
+
+---
+
 ## Where these keys come from
 
 The IDE completes them from
