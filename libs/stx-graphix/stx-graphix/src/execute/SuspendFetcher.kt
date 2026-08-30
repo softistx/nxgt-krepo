@@ -3,6 +3,7 @@ package com.strange.graphix.execute
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.future.future
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.callSuspendBy
@@ -28,7 +29,12 @@ internal fun suspendFetcher(
         arguments[instanceParameter] = instance
         arguments.putAll(bind(environment))
         if (function.isSuspend) {
-            scope.future {
+            // UNDISPATCHED so Loader.load queues the key before DataFetcher.get returns —
+            // otherwise the level dispatches an empty DataLoader and sibling fields do not batch.
+            scope.future(
+                context = DataFetchingEnvironmentElement(environment),
+                start = CoroutineStart.UNDISPATCHED,
+            ) {
                 function.callSuspendBy(arguments)
             }
         } else {
