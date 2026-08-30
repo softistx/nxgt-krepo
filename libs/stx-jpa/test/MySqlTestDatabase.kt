@@ -2,6 +2,7 @@ package com.strange.jpa
 
 import com.strange.testing.containers.ContainerService
 import com.strange.testing.containers.MysqlEndpoint
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.mysqlContainer
 import io.vertx.core.Vertx
 import io.vertx.mysqlclient.MySQLBuilder
@@ -11,7 +12,6 @@ import io.vertx.sqlclient.PoolOptions
 import io.vertx.sqlclient.Tuple
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 /**
@@ -28,9 +28,10 @@ internal object MySqlTestDatabase {
 
     private val mysql = mysqlContainer()
 
-    private val databases = AtomicInteger()
+    /** A database per call, and one no other run will pick — see [TestNames]. */
+    private val databases = TestNames("stx_mysql_test", separator = "_")
 
-    val endpoint: MysqlEndpoint get() = requireNotNull(mysql.endpoint) { mysql.describe() }
+    val endpoint: MysqlEndpoint get() = mysql.requireEndpoint()
 
     /** Whether a server answered — checked once, so a machine without one skips instead of hanging. */
     val available: Boolean get() = probe == null
@@ -86,7 +87,7 @@ internal object MySqlTestDatabase {
         vararg entities: KClass<*>,
         block: suspend (Jpa) -> T,
     ): T {
-        val database = "shared_jpa_test_${databases.incrementAndGet()}"
+        val database = databases.next()
         return withClient(endpoint.uri) { client ->
             client.ask("drop database if exists $database")
             client.ask("create database $database")

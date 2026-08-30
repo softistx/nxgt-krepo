@@ -1,0 +1,15 @@
+# The `test` profile `SpringSpec` activates, for this module's own specs of `src/testing/`.
+#
+# It is short on purpose: what is being specced is that `com.strange.spring.testing` needs nothing
+# more than this one key from an application. Every stx integration auto-configuration is
+# `@ConditionalOnProperty(enabled = true)` and so stays off, which is why booting a whole application
+# here opens no socket to anything but the MongoDB the specs asked for.
+
+spring:
+  mongodb:
+    # `spring.mongodb`, and **not** `spring.data.mongodb` — see `MongoTestConfiguration`. This is the
+    # one line an application writes; `MongoSpecTest` asserts that it arrived.
+    #
+    # A prefix, not the database: `testDatabase` appends this run's suffix, so this module's specs and
+    # `examples/spring-orders`' can share a `MONGO_TEST_URI` server without clearing each other.
+    database: stx_spring_boot_test

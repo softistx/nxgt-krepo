@@ -24,6 +24,12 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory
  *
  * The proxy needs a *reactive* adapter because the generated functions are `suspend`;
  * `RestClientAdapter` would not do.
+ *
+ * **The assembly is spelled out here, and deliberately.** `stx-spring-boot`'s `generatedApiFactory`
+ * is these same four settings written once, and an application on Spring Boot should use it — but
+ * this module depends on `spring-web` and `spring-webflux` and on no Boot at all, which is the thing
+ * it exists to demonstrate. Taking that dependency to save fifteen lines would bring the whole
+ * starter, Reactor Netty included, and there would be nothing left to show.
  */
 public class SpringDemoClient(
     baseUrl: String,

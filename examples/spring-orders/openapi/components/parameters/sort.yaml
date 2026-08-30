@@ -1,0 +1,5 @@
+name: sort
+in: query
+description: The ordering, `field:DIRECTION` and comma-separated — `placedAt:DESC,total:ASC`.
+schema:
+  type: string

@@ -1,18 +1,15 @@
 package com.strange.spring.data.mongo.template
 
-import com.mongodb.reactivestreams.client.MongoClient
 import com.mongodb.reactivestreams.client.MongoClients
 import com.strange.spring.data.mongo.convert.stxMongoConversions
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.mongoContainer
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A `ReactiveMongoTemplate` over whatever Mongo this machine has — the workspace's replica set when
@@ -22,12 +19,11 @@ import java.util.concurrent.atomic.AtomicInteger
  * and not about Spring Boot's wiring; the auto-configuration has `ApplicationContextRunner` specs
  * and needs no server for them.
  */
-private const val PREFIX = "stx_spring_"
-
 internal object SpringMongo {
     private val mongo = mongoContainer()
 
-    private val databases = AtomicInteger()
+    /** A database per call, and one no other run will pick — see [TestNames]. */
+    private val databases = TestNames("stx_spring_test", separator = "_")
 
     /** Reachable at all. A spec that cannot reach a server reports skipped rather than failing. */
     val available: Boolean get() = mongo.available
@@ -41,11 +37,9 @@ internal object SpringMongo {
      * than usual: every scenario seeds the same six notes into the same collection name.
      */
     suspend fun <T> withTemplate(block: suspend (ReactiveMongoTemplate) -> T): T {
-        val uri = requireNotNull(mongo.endpoint) { mongo.describe() }
-        val name = "$PREFIX${databases.incrementAndGet()}"
-        val client = MongoClients.create(uri)
+        val client = MongoClients.create(mongo.requireEndpoint())
+        val name = databases.next()
         try {
-            sweep(client)
             val context = MongoMappingContext().apply { afterPropertiesSet() }
             val converter =
                 MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context).apply {
@@ -58,29 +52,5 @@ internal object SpringMongo {
             runCatching { client.getDatabase(name).drop().awaitFirstOrNull() }
             client.close()
         }
-    }
-}
-
-private var swept = false
-
-/**
- * Drops any database this harness left behind, once per run, before the first spec uses one.
- *
- * Cleaning up afterwards is the rule; this is what makes the rule survive a run that did not get
- * to. Without it a crashed run leaves `stx_spring_1` full of notes, the next run's counter starts
- * at 1 again, and every insert fails on a duplicate `_id` — which is how this came to be written.
- *
- * Only names this module issued, on a server that is usually somebody else's.
- */
-private suspend fun sweep(client: MongoClient) {
-    if (swept) return
-    swept = true
-    runCatching {
-        client
-            .listDatabaseNames()
-            .asFlow()
-            .toList()
-            .filter { it.startsWith(PREFIX) }
-            .forEach { client.getDatabase(it).drop().awaitFirstOrNull() }
     }
 }

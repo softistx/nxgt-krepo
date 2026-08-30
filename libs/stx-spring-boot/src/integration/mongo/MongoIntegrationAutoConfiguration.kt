@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean
 /**
  * What `stx.mongo` connects with.
  *
- * **Not `stx.data.mongo`, and not Spring Boot's `spring.data.mongodb`.** Those two configure Spring
+ * **Not `stx.data.mongo`, and not Spring Boot's `spring.mongodb`.** Those two configure Spring
  * Data's `ReactiveMongoTemplate`; this one hands the application `stx-mongo`'s coroutine client,
  * which is a different API onto the same server. An application uses one or the other, and an
  * application that somehow wants both gets two connection pools and should say so on purpose.

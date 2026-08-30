@@ -1,11 +1,17 @@
 spring:
   application:
     name: spring-orders
-  data:
-    mongodb:
-      # Spring Boot's own property, not one of ours: `stx.data.mongo` adds to Boot's Mongo
-      # configuration and does not re-express it. The workspace's replica set answers here.
-      uri: ${MONGO_URI:mongodb://localhost:27017/spring_orders}
+  mongodb:
+    # Spring Boot's own property, not one of ours: `stx.data.mongo` adds to Boot's Mongo
+    # configuration and does not re-express it. The workspace's replica set answers here.
+    #
+    # **`spring.mongodb`, and not `spring.data.mongodb`.** Boot 4 split the old prefix: the driver's
+    # URI, host, credentials and database are `MongoProperties` under `spring.mongodb`, while
+    # `spring.data.mongodb` kept only GridFS and the big-decimal representation. A `spring.data.mongodb.uri`
+    # binds to nothing and is reported by nothing — the driver falls back to `mongodb://localhost/test`,
+    # which on a developer machine is a real server that answers. This file said the old spelling until
+    # `MongoTestConfiguration` was written and a spec asked what database it had actually been using.
+    uri: ${MONGO_URI:mongodb://localhost:27017/spring_orders}
 
 # Everything below is off by default. Nothing in `stx-spring-boot` starts because the jar is on the
 # classpath — each of these lines is what turns one auto-configuration on, and removing one removes

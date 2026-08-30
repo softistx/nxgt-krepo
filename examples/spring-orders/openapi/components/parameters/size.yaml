@@ -1,0 +1,6 @@
+name: size
+in: query
+description: Rows per page. Defaults to 20, and never zero or negative.
+schema:
+  type: integer
+  minimum: 1

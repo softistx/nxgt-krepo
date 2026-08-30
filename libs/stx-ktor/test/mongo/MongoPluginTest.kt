@@ -3,6 +3,7 @@ package com.strange.ktor.mongo
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.strange.mongo.collection
 import com.strange.mongo.mongoClient
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.mongoContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
@@ -46,17 +47,22 @@ class MongoPluginTest :
 
         val server = mongoContainer()
 
+        // A database this run owns. It was a fixed `stx-ktor-spec`, which was safe against the
+        // container and not against `MONGO_TEST_URI`: the write scenario below ends in
+        // `database.drop()`, and two suites running at once would drop each other's.
+        val ourDatabase = TestNames("stx-ktor-spec").next()
+
         feature("a route reaching for the database").config(enabled = server.available) {
             scenario("gets the one the plugin was configured with") {
                 testApplication {
                     application {
                         install(MongoDB) {
-                            uri = server.endpoint!!
-                            database = "stx-ktor-spec"
+                            uri = server.requireEndpoint()
+                            database = ourDatabase
                         }
                         routing { get("/") { call.respondText(call.database.name) } }
                     }
-                    client.get("/").bodyAsText() shouldBe "stx-ktor-spec"
+                    client.get("/").bodyAsText() shouldBe ourDatabase
                 }
             }
 
@@ -64,8 +70,8 @@ class MongoPluginTest :
                 testApplication {
                     application {
                         install(MongoDB) {
-                            uri = server.endpoint!!
-                            database = "stx-ktor-spec"
+                            uri = server.requireEndpoint()
+                            database = ourDatabase
                         }
                         routing {
                             get("/") {
@@ -100,8 +106,8 @@ class MongoPluginTest :
                 testApplication {
                     application {
                         install(MongoDB) {
-                            uri = server.endpoint!!
-                            database = "stx-ktor-spec"
+                            uri = server.requireEndpoint()
+                            database = ourDatabase
                         }
                         routing {
                             get("/") {
@@ -119,7 +125,7 @@ class MongoPluginTest :
 
         feature("a client handed in rather than built").config(enabled = server.available) {
             scenario("is the one routes get, and is still open after the application stops") {
-                val mine = mongoClient(server.endpoint!!)
+                val mine = mongoClient(server.requireEndpoint())
                 try {
                     lateinit var captured: MongoClient
                     testApplication {
