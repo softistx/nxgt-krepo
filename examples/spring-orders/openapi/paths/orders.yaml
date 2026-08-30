@@ -29,7 +29,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: ../components/schemas/PlaceOrder.yaml
+          $ref: ../components/schemas/PlaceOrderRequest.yaml
   responses:
     '201':
       description: The order as placed, with the id it was given.
