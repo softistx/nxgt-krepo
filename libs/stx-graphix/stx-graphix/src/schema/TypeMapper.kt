@@ -46,10 +46,13 @@ internal class TypeMapper(
     private val enums = linkedMapOf<String, GraphQLEnumType>()
     private val building = mutableSetOf<String>()
 
+    /** GraphQL output type for [kType], including nullability. */
     fun output(kType: KType): GraphQLOutputType = wrapOutput(mapOutput(kType), kType.isMarkedNullable)
 
+    /** GraphQL input type for [kType], including nullability. */
     fun input(kType: KType): GraphQLInputType = wrapInput(mapInput(kType), kType.isMarkedNullable)
 
+    /** Named object, input object and enum types this mapper built — for `additionalTypes`. */
     fun additionalTypes(): Set<GraphQLType> = (outputs.values + inputs.values + enums.values).toSet()
 
     private fun mapOutput(kType: KType): GraphQLOutputType {
@@ -182,6 +185,10 @@ internal class TypeMapper(
         return builder.build().also { inputs[name] = it }
     }
 
+    /**
+     * GraphQL forbids one name as both object and input object. When [kClass] already mapped
+     * as output, the input is `{name}Input`. An explicit `@GraphQLName("…Input")` is left alone.
+     */
     private fun inputName(kClass: KClass<*>): String {
         val name = kClass.graphQLName()
         if (name.endsWith("Input")) return name
@@ -205,6 +212,10 @@ internal class TypeMapper(
         return builder.build().also { enums[name] = it }
     }
 
+    /**
+     * Serializer for [kType], or [GraphixException] naming the Kotlin type.
+     * An inline value class is unwrapped to its underlying descriptor.
+     */
     private fun descriptorOf(kType: KType): SerialDescriptor {
         val serializer =
             try {
@@ -240,6 +251,10 @@ internal class TypeMapper(
 
     private fun kotlin.reflect.KProperty<*>.findAnnotationName(): String? = findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }
 
+    /**
+     * A Kotlin default on the primary constructor is still a GraphQL `NonNull` unless unwrapped.
+     * graphql-java has no constructor defaults.
+     */
     private fun constructorOptional(
         kClass: KClass<*>,
         propertyName: String,

@@ -21,6 +21,11 @@ import org.springframework.web.reactive.function.server.ServerResponse
 @EnableConfigurationProperties(GraphixProperties::class)
 @ConditionalOnProperty(prefix = "stx.graphix", name = ["enabled"], havingValue = "true")
 class GraphixAutoConfiguration {
+    /**
+     * One engine from every `@GraphQLController` bean. A class with both `@Query` and
+     * `@Mutation` is registered as both roots. Skipped when the application already declared
+     * a [Graphix] — that instance is the one the router uses.
+     */
     @Bean
     @ConditionalOnMissingBean
     fun graphix(applicationContext: ApplicationContext): Graphix {
@@ -30,6 +35,7 @@ class GraphixAutoConfiguration {
         }
     }
 
+    /** POST and GET at [GraphixProperties.path]. Field errors stay HTTP 200. */
     @Bean
     fun graphixRouter(
         graphix: Graphix,

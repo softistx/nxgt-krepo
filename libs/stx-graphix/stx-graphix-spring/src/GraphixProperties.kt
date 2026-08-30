@@ -8,8 +8,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = "stx.graphix")
 data class GraphixProperties(
-    /** Serves POST/GET at [path]. */
+    /**
+     * Serves POST/GET at [path] and builds a [com.strange.graphix.Graphix] from
+     * `@GraphQLController` beans. Off unless set.
+     */
     val enabled: Boolean = false,
-    /** HTTP path. Default `/graphql`. */
+    /** HTTP path for POST and GET. The GraphQL protocol default, not a Graphix-specific name. */
     val path: String = "/graphql",
 )
