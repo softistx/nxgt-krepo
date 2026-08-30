@@ -2,6 +2,7 @@ package com.strange.graphix.spring
 
 import com.strange.common.serialization.lenientJson
 import com.strange.graphix.Graphix
+import org.springframework.beans.factory.getBeansWithAnnotation
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -29,7 +30,7 @@ class GraphixAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun graphix(applicationContext: ApplicationContext): Graphix {
-        val controllers = applicationContext.getBeansWithAnnotation(GraphQLController::class.java).values
+        val controllers = applicationContext.getBeansWithAnnotation<GraphQLController>().values
         return Graphix {
             controllers.forEach { addController(it) }
         }
