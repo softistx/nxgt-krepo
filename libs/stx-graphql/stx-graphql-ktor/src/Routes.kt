@@ -1,6 +1,13 @@
 package com.strange.graphql.ktor
 
 import com.strange.graphql.GraphQl
+import com.strange.graphql.GraphQlRequest
+import com.strange.graphql.http.BadGraphQlHttp
+import com.strange.graphql.http.GraphQlHttpError
+import com.strange.graphql.http.GraphQlHttpRequest
+import com.strange.graphql.http.GraphQlHttpResponse
+import com.strange.graphql.http.toGraphQlRequest
+import com.strange.graphql.http.toHttp
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -32,7 +39,7 @@ private suspend fun ApplicationCall.handlePost(
     val body = receiveText()
     val request =
         try {
-            json.decodeFromString(HttpRequest.serializer(), body).toGraphQlRequest()
+            json.decodeFromString(GraphQlHttpRequest.serializer(), body).toGraphQlRequest()
         } catch (failure: SerializationException) {
             return respondBadRequest(json, "malformed GraphQL JSON: ${failure.message}")
         } catch (failure: BadGraphQlHttp) {
@@ -58,7 +65,7 @@ private suspend fun ApplicationCall.handleGet(
             }
         }
     val request =
-        HttpRequest(
+        GraphQlHttpRequest(
             query = query,
             operationName = request.queryParameters["operationName"],
             variables = variables,
@@ -69,11 +76,11 @@ private suspend fun ApplicationCall.handleGet(
 private suspend fun ApplicationCall.respondResult(
     engine: GraphQl,
     json: Json,
-    request: com.strange.graphql.GraphQlRequest,
+    request: GraphQlRequest,
 ) {
     val result = engine.execute(request).toHttp()
     respondText(
-        json.encodeToString(HttpResponse.serializer(), result),
+        json.encodeToString(GraphQlHttpResponse.serializer(), result),
         ContentType.Application.Json,
         HttpStatusCode.OK,
     )
@@ -83,9 +90,9 @@ private suspend fun ApplicationCall.respondBadRequest(
     json: Json,
     message: String,
 ) {
-    val body = HttpResponse(errors = listOf(HttpError(message)))
+    val body = GraphQlHttpResponse(errors = listOf(GraphQlHttpError(message)))
     respondText(
-        json.encodeToString(HttpResponse.serializer(), body),
+        json.encodeToString(GraphQlHttpResponse.serializer(), body),
         ContentType.Application.Json,
         HttpStatusCode.BadRequest,
     )

@@ -1,0 +1,25 @@
+{
+  "groups": [
+    {
+      "name": "stx.graphql",
+      "type": "com.strange.graphql.spring.GraphQlProperties",
+      "sourceType": "com.strange.graphql.spring.GraphQlProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.graphql.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Serve GraphQL at stx.graphql.path. Off unless set: putting this library on the classpath must not open an endpoint.",
+      "sourceType": "com.strange.graphql.spring.GraphQlProperties",
+      "defaultValue": false
+    },
+    {
+      "name": "stx.graphql.path",
+      "type": "java.lang.String",
+      "description": "HTTP path for POST and GET. Default /graphql.",
+      "sourceType": "com.strange.graphql.spring.GraphQlProperties",
+      "defaultValue": "/graphql"
+    }
+  ]
+}
