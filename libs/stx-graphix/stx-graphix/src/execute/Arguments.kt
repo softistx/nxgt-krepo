@@ -14,6 +14,7 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.valueParameters
 
 /**
@@ -49,7 +50,7 @@ private fun contextValue(
     val classifier =
         parameter.type.classifier as? kotlin.reflect.KClass<*>
             ?: throw GraphixException("@GraphQLContext ${parameter.name} needs a class type")
-    if (DataFetchingEnvironment::class.java.isAssignableFrom(classifier.java)) {
+    if (classifier.isSubclassOf(DataFetchingEnvironment::class)) {
         return environment
     }
     return environment.graphQlContext.get<Any>(classifier)

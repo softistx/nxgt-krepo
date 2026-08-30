@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import org.reactivestreams.Publisher
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.isSubclassOf
 import java.util.concurrent.Flow as JdkFlow
 
 /**
@@ -22,9 +23,5 @@ internal fun KType.streamElement(): KType? {
         ?: throw GraphixException("a stream GraphQL type needs an element type: $this")
 }
 
-private fun KClass<*>.isStream(): Boolean {
-    val java = this.java
-    return Flow::class.java.isAssignableFrom(java) ||
-        Publisher::class.java.isAssignableFrom(java) ||
-        JdkFlow.Publisher::class.java.isAssignableFrom(java)
-}
+private fun KClass<*>.isStream(): Boolean =
+    isSubclassOf(Flow::class) || isSubclassOf(Publisher::class) || isSubclassOf(JdkFlow.Publisher::class)

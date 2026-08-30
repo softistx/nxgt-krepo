@@ -20,28 +20,14 @@ import kotlinx.serialization.json.Json
  * graphql-java executable schema from SDL files. Annotated functions become DataFetchers
  * on the types the documents already named — they do not grow the schema.
  */
-internal fun sdlGraphQLSchema(
-    files: List<SchemaFile>,
+internal fun List<SchemaFile>.sdlSchema(
     queries: List<Any>,
     mutations: List<Any>,
     subscriptions: List<Any>,
     typeInstances: List<Any>,
     json: Json,
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
-    val registry = TypeDefinitionRegistry()
-    files.forEach { file ->
-        val parsed =
-            try {
-                SchemaParser().parse(file.source)
-            } catch (failure: Exception) {
-                throw GraphixException("cannot parse GraphQL schema '${file.path}': ${failure.message}", failure)
-            }
-        try {
-            registry.merge(parsed)
-        } catch (failure: Exception) {
-            throw GraphixException("cannot merge GraphQL schema '${file.path}': ${failure.message}", failure)
-        }
-    }
+    val registry = typeRegistry()
     val typeFields = if (typeInstances.isEmpty()) emptyList() else collectTypeFields(typeInstances)
     val byType = linkedMapOf<String, TypeRuntimeWiring.Builder>()
 
@@ -52,13 +38,13 @@ internal fun sdlGraphQLSchema(
     ) {
         byType.getOrPut(parent) { TypeRuntimeWiring.newTypeWiring(parent) }.dataFetcher(field, fetcher)
     }
-    rootFunctions(RootKind.QUERY, queries).forEach { (instance, function) ->
+    queries.rootFunctions(RootKind.QUERY).forEach { (instance, function) ->
         wire("Query", function.graphQLName(RootKind.QUERY), resolverFetcher(instance, function, json))
     }
-    rootFunctions(RootKind.MUTATION, mutations).forEach { (instance, function) ->
+    mutations.rootFunctions(RootKind.MUTATION).forEach { (instance, function) ->
         wire("Mutation", function.graphQLName(RootKind.MUTATION), resolverFetcher(instance, function, json))
     }
-    rootFunctions(RootKind.SUBSCRIPTION, subscriptions).forEach { (instance, function) ->
+    subscriptions.rootFunctions(RootKind.SUBSCRIPTION).forEach { (instance, function) ->
         wire(
             "Subscription",
             function.graphQLName(RootKind.SUBSCRIPTION),
@@ -96,4 +82,22 @@ internal fun sdlGraphQLSchema(
         }
     }
     return schema to declared + batched
+}
+
+private fun List<SchemaFile>.typeRegistry(): TypeDefinitionRegistry {
+    val registry = TypeDefinitionRegistry()
+    forEach { file ->
+        val parsed =
+            try {
+                SchemaParser().parse(file.source)
+            } catch (failure: Exception) {
+                throw GraphixException("cannot parse GraphQL schema '${file.path}': ${failure.message}", failure)
+            }
+        try {
+            registry.merge(parsed)
+        } catch (failure: Exception) {
+            throw GraphixException("cannot merge GraphQL schema '${file.path}': ${failure.message}", failure)
+        }
+    }
+    return registry
 }

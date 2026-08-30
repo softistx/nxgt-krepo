@@ -229,7 +229,7 @@ Ktor: `schemaLocations` / `schemaFileExtensions` on `install(GraphQL)`. Spring:
 
 ```kotlin
 Graphix {
-    schemaLocations(listOf("classpath:graphql/", "classpath:extra/"))
+    schemaLocations("classpath:graphql/", "classpath:extra/")
     query(ProductQueries(store))
 }
 ```
