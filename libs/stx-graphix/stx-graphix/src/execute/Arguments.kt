@@ -26,9 +26,11 @@ internal fun bindArguments(
     function: KFunction<*>,
     environment: DataFetchingEnvironment,
     json: Json,
+    skip: Set<KParameter> = emptySet(),
 ): Map<KParameter, Any?> {
     val bound = LinkedHashMap<KParameter, Any?>()
     function.valueParameters.forEach { parameter ->
+        if (parameter in skip) return@forEach
         if (parameter.findAnnotation<GraphQLContext>() != null) {
             bound[parameter] = contextValue(parameter, environment)
             return@forEach

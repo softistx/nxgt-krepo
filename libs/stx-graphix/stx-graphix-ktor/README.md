@@ -8,6 +8,7 @@ install(GraphQL) {
         query(ProductQueries(store))
         mutation(ProductMutations(store))
         subscription(ProductSubscriptions(store))
+        type(ProductFields(reviews))
     }
 }
 ```
