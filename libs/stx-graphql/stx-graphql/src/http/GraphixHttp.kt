@@ -1,8 +1,8 @@
 package com.strange.graphql.http
 
-import com.strange.graphql.GraphQlError
-import com.strange.graphql.GraphQlRequest
-import com.strange.graphql.GraphQlResult
+import com.strange.graphql.GraphixError
+import com.strange.graphql.GraphixRequest
+import com.strange.graphql.GraphixResult
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -18,46 +18,46 @@ import kotlinx.serialization.json.longOrNull
  * invent a second shape.
  */
 @Serializable
-data class GraphQlHttpRequest(
+data class GraphixHttpRequest(
     val query: String? = null,
     val operationName: String? = null,
     val variables: JsonObject? = null,
 )
 
 @Serializable
-data class GraphQlHttpResponse(
+data class GraphixHttpResponse(
     val data: JsonElement? = null,
-    val errors: List<GraphQlHttpError>? = null,
+    val errors: List<GraphixHttpError>? = null,
 )
 
 @Serializable
-data class GraphQlHttpError(
+data class GraphixHttpError(
     val message: String,
     val path: List<JsonElement> = emptyList(),
 )
 
-class BadGraphQlHttp(
+class BadGraphixHttp(
     message: String,
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)
 
-fun GraphQlHttpRequest.toGraphQlRequest(): GraphQlRequest {
-    val query = query ?: throw BadGraphQlHttp("a GraphQL request needs a query")
-    return GraphQlRequest(
+fun GraphixHttpRequest.toGraphixRequest(): GraphixRequest {
+    val query = query ?: throw BadGraphixHttp("a GraphQL request needs a query")
+    return GraphixRequest(
         query = query,
         operationName = operationName,
         variables = variables?.mapValues { it.value.toJava() } ?: emptyMap(),
     )
 }
 
-fun GraphQlResult.toHttp(): GraphQlHttpResponse =
-    GraphQlHttpResponse(
+fun GraphixResult.toHttp(): GraphixHttpResponse =
+    GraphixHttpResponse(
         data = data?.toJsonElement(),
         errors = errors.takeIf { it.isNotEmpty() }?.map { it.toHttp() },
     )
 
-private fun GraphQlError.toHttp(): GraphQlHttpError =
-    GraphQlHttpError(
+private fun GraphixError.toHttp(): GraphixHttpError =
+    GraphixHttpError(
         message = message,
         path = path.map { it.toJsonPrimitive() },
     )

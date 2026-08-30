@@ -1,6 +1,6 @@
 package com.strange.graphql.schema
 
-import com.strange.graphql.GraphQlException
+import com.strange.graphql.GraphixException
 import com.strange.graphql.execute.bindArguments
 import com.strange.graphql.execute.suspendFetcher
 import com.strange.graphql.scalar.Scalars
@@ -13,12 +13,12 @@ internal fun graphQLSchema(
     mutations: List<Any>,
     json: Json,
 ): GraphQLSchema {
-    if (queries.isEmpty()) throw GraphQlException("GraphQl needs at least one query root")
+    if (queries.isEmpty()) throw GraphixException("Graphix needs at least one query root")
     val types = TypeMapper(json.serializersModule)
     val query =
         root("Query", RootKind.QUERY, queries, types) { instance, function ->
             suspendFetcher(instance, function) { env -> bindArguments(function, env, json) }
-        } ?: throw GraphQlException("GraphQl needs at least one query root")
+        } ?: throw GraphixException("Graphix needs at least one query root")
     val mutation =
         if (mutations.isEmpty()) {
             null

@@ -308,7 +308,7 @@ metadata lives in that module's `additional-spring-configuration-metadata.json`.
 
 | Key | Type | Default | |
 | --- | --- | --- | --- |
-| `enabled` | boolean | `false` | Serves POST/GET GraphQL at [path]. Collects `@GraphQLController` beans as roots. An application's own `GraphQl` bean wins |
+| `enabled` | boolean | `false` | Serves POST/GET GraphQL at [path]. Collects `@GraphQLController` beans as roots. An application's own `Graphix` bean wins |
 | `path` | string | `/graphql` | HTTP path |
 
 A field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. The annotation vocabulary is

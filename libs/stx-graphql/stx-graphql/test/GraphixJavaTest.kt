@@ -14,7 +14,7 @@ import io.kotest.matchers.shouldBe
  * through graphql-java 25 proves the coordinate resolved, not just that a jar named GraphQL
  * landed on the classpath.
  */
-class GraphqlJavaTest :
+class GraphixJavaTest :
     FeatureSpec({
         feature("graphql-java") {
             scenario("a hello-world schema executes") {

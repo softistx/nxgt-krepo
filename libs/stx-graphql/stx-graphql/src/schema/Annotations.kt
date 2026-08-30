@@ -47,7 +47,7 @@ annotation class GraphQLIgnore
 
 /**
  * Injects an operation-scoped value into a resolver parameter. The value is the one registered
- * under that parameter's Kotlin class in [com.strange.graphql.GraphQl.execute].
+ * under that parameter's Kotlin class in [com.strange.graphql.Graphix.execute].
  */
 @Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)

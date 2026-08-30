@@ -1,6 +1,6 @@
 package com.strange.graphql.execute
 
-import com.strange.graphql.GraphQlException
+import com.strange.graphql.GraphixException
 import com.strange.graphql.schema.GraphQLContext
 import com.strange.graphql.schema.graphQLName
 import graphql.schema.DataFetchingEnvironment
@@ -40,9 +40,9 @@ private fun contextValue(
 ): Any {
     val classifier =
         parameter.type.classifier as? kotlin.reflect.KClass<*>
-            ?: throw GraphQlException("@GraphQLContext ${parameter.name} needs a class type")
+            ?: throw GraphixException("@GraphQLContext ${parameter.name} needs a class type")
     return environment.graphQlContext.get<Any>(classifier)
-        ?: throw GraphQlException("no ${classifier.qualifiedName} in the operation context")
+        ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
 }
 
 private fun decode(
