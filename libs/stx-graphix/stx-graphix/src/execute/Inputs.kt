@@ -10,7 +10,7 @@ internal fun executionInput(
     request: GraphixRequest,
     context: Map<KClass<*>, Any>,
     scope: CoroutineScope,
-    batches: List<BatchBinding> = emptyList(),
+    loaders: List<RegisteredLoader> = emptyList(),
 ): ExecutionInput {
     val builder =
         ExecutionInput
@@ -23,8 +23,8 @@ internal fun executionInput(
                 graphQLContext.put(SubscriptionExecutionStrategy.KEEP_SUBSCRIPTION_EVENTS_ORDERED, true)
                 context.forEach { (key, value) -> graphQLContext.put(key, value) }
             }
-    if (batches.isNotEmpty()) {
-        builder.dataLoaderRegistry(dataLoaderRegistry(batches, scope, context))
+    if (loaders.isNotEmpty()) {
+        builder.dataLoaderRegistry(dataLoaderRegistry(loaders, scope, context))
     }
     return builder.build()
 }
