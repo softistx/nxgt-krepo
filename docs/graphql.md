@@ -50,7 +50,7 @@ A type that is not `@Serializable` fails schema build, naming that type.
 | `@GraphQLDescription("…")` | same | GraphQL description |
 | `@GraphQLIgnore` | property | omitted from the GraphQL type |
 | `@Argument("foo")` | parameter | GraphQL argument name (Kotlin name is the default) |
-| `@GraphQLContext` | parameter | injected from `GraphQl.execute(..., context)` under the parameter's `KClass`; not an argument |
+| `@GraphQLContext` | parameter | injected from `Graphix.execute(..., context)` under the parameter's `KClass`; not an argument |
 
 A Kotlin default parameter is an optional GraphQL argument. A missing argument uses the default
 rather than passing null. A constructor default on an input-object property is an optional GraphQL
@@ -63,7 +63,7 @@ I/O (a `Product.reviews` resolver, DataLoader) are a later phase.
 
 ```kotlin
 val result = graphql.execute(
-    GraphQlRequest(query = query, variables = mapOf("id" to "p1")),
+    GraphixRequest(query = query, variables = mapOf("id" to "p1")),
     context = mapOf(Caller::class to caller),
 )
 ```
@@ -83,7 +83,7 @@ object in the `variables` query parameter.
 **Ktor** — `install(GraphQL)` in `stx-graphql-ktor`, path configurable, default `/graphql`.
 
 **Spring Boot** — `stx.graphql.enabled=true` in `stx-graphql-spring`. Beans annotated
-`@GraphQLController` become query/mutation roots. An application's own `GraphQl` bean wins.
+`@GraphQLController` become query/mutation roots. An application's own `Graphix` bean wins.
 
 ## What this document does not cover yet
 

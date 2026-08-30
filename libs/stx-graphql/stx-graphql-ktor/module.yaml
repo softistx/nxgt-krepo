@@ -7,7 +7,7 @@ apply:
 dependencies:
   - //libs/stx-graphql/stx-graphql: exported
   - $ktor.server.core: exported
-  # Ktor DI, for `provideGraphQl`. Compile-only so an application that never sets injectable
+  # Ktor DI, for `provideGraphix`. Compile-only so an application that never sets injectable
   # never loads a class from it — the same rule as stx-ktor.
   - $libs.ktor.server.di: compile-only
 

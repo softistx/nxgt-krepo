@@ -1,11 +1,11 @@
 package com.strange.graphql.spring
 
-import com.strange.graphql.GraphQl
-import com.strange.graphql.http.BadGraphQlHttp
-import com.strange.graphql.http.GraphQlHttpError
-import com.strange.graphql.http.GraphQlHttpRequest
-import com.strange.graphql.http.GraphQlHttpResponse
-import com.strange.graphql.http.toGraphQlRequest
+import com.strange.graphql.Graphix
+import com.strange.graphql.http.BadGraphixHttp
+import com.strange.graphql.http.GraphixHttpError
+import com.strange.graphql.http.GraphixHttpRequest
+import com.strange.graphql.http.GraphixHttpResponse
+import com.strange.graphql.http.toGraphixRequest
 import com.strange.graphql.http.toHttp
 import kotlinx.coroutines.reactor.mono
 import kotlinx.serialization.SerializationException
@@ -19,8 +19,8 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import reactor.core.publisher.Mono
 
-internal class GraphQlHandler(
-    private val engine: GraphQl,
+internal class GraphixHandler(
+    private val engine: Graphix,
     private val json: Json,
     private val path: String,
 ) {
@@ -39,15 +39,15 @@ internal class GraphQlHandler(
     private fun get(request: ServerRequest): Mono<ServerResponse> = mono { handleGet(request) }
 
     private suspend fun handlePost(body: String): ServerResponse {
-        val graphQlRequest =
+        val graphixRequest =
             try {
-                json.decodeFromString(GraphQlHttpRequest.serializer(), body).toGraphQlRequest()
+                json.decodeFromString(GraphixHttpRequest.serializer(), body).toGraphixRequest()
             } catch (failure: SerializationException) {
                 return badRequest("malformed GraphQL JSON: ${failure.message}")
-            } catch (failure: BadGraphQlHttp) {
+            } catch (failure: BadGraphixHttp) {
                 return badRequest(failure.message ?: "malformed GraphQL request")
             }
-        return ok(engine.execute(graphQlRequest).toHttp())
+        return ok(engine.execute(graphixRequest).toHttp())
     }
 
     private suspend fun handleGet(request: ServerRequest): ServerResponse {
@@ -63,20 +63,20 @@ internal class GraphQlHandler(
                     return badRequest("malformed GraphQL variables: ${failure.message}")
                 }
             }
-        val graphQlRequest =
-            GraphQlHttpRequest(
+        val graphixRequest =
+            GraphixHttpRequest(
                 query = query,
                 operationName = request.queryParam("operationName").orElse(null),
                 variables = variables,
-            ).toGraphQlRequest()
-        return ok(engine.execute(graphQlRequest).toHttp())
+            ).toGraphixRequest()
+        return ok(engine.execute(graphixRequest).toHttp())
     }
 
-    private suspend fun ok(body: GraphQlHttpResponse): ServerResponse =
+    private suspend fun ok(body: GraphixHttpResponse): ServerResponse =
         ServerResponse
             .ok()
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValueAndAwait(json.encodeToString(GraphQlHttpResponse.serializer(), body))
+            .bodyValueAndAwait(json.encodeToString(GraphixHttpResponse.serializer(), body))
 
     private suspend fun badRequest(message: String): ServerResponse =
         ServerResponse
@@ -84,8 +84,8 @@ internal class GraphQlHandler(
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValueAndAwait(
                 json.encodeToString(
-                    GraphQlHttpResponse.serializer(),
-                    GraphQlHttpResponse(errors = listOf(GraphQlHttpError(message))),
+                    GraphixHttpResponse.serializer(),
+                    GraphixHttpResponse(errors = listOf(GraphixHttpError(message))),
                 ),
             )
 }

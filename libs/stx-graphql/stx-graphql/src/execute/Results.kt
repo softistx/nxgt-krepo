@@ -1,17 +1,17 @@
 package com.strange.graphql.execute
 
-import com.strange.graphql.GraphQlError
-import com.strange.graphql.GraphQlResult
+import com.strange.graphql.GraphixError
+import com.strange.graphql.GraphixResult
 import graphql.ExceptionWhileDataFetching
 import graphql.ExecutionResult
 import java.util.concurrent.CompletionException
 
-internal fun ExecutionResult.toGraphQlResult(): GraphQlResult =
-    GraphQlResult(
+internal fun ExecutionResult.toGraphixResult(): GraphixResult =
+    GraphixResult(
         data = getData<Map<String, Any?>?>(),
         errors =
             errors.map { error ->
-                GraphQlError(
+                GraphixError(
                     message = error.unwrappedMessage(),
                     path = error.path.orEmpty(),
                 )

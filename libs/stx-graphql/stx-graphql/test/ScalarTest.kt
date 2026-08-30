@@ -10,10 +10,10 @@ class ScalarTest :
     FeatureSpec({
         feature("scalars") {
             scenario("Instant, Uuid and Long coerce through their GraphQL scalars") {
-                val graphql = GraphQl { query(ScalarQueries()) }
+                val graphql = Graphix { query(ScalarQueries()) }
                 val result =
                     graphql.execute(
-                        GraphQlRequest("{ epoch id big(n: 41) }"),
+                        GraphixRequest("{ epoch id big(n: 41) }"),
                     )
                 result.isOk shouldBe true
                 result.data shouldBe

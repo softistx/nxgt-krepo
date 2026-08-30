@@ -1,6 +1,6 @@
 package com.strange.graphql.schema
 
-import com.strange.graphql.GraphQlException
+import com.strange.graphql.GraphixException
 import com.strange.graphql.scalar.Scalars
 import graphql.Scalars.GraphQLBoolean
 import graphql.Scalars.GraphQLFloat
@@ -59,7 +59,7 @@ internal class TypeMapper(
         return when (descriptor.kind) {
             StructureKind.LIST -> {
                 GraphQLList.list(
-                    output(kType.arguments.single().type ?: throw GraphQlException("a list GraphQL type needs an element type: $kType")),
+                    output(kType.arguments.single().type ?: throw GraphixException("a list GraphQL type needs an element type: $kType")),
                 )
             }
 
@@ -72,19 +72,19 @@ internal class TypeMapper(
             }
 
             is PrimitiveKind -> {
-                throw GraphQlException("unsupported primitive ${descriptor.kind} on $kType")
+                throw GraphixException("unsupported primitive ${descriptor.kind} on $kType")
             }
 
             StructureKind.MAP -> {
-                throw GraphQlException("Map is not a GraphQL type: $kType")
+                throw GraphixException("Map is not a GraphQL type: $kType")
             }
 
             is PolymorphicKind -> {
-                throw GraphQlException("polymorphic types are not GraphQL types yet: $kType")
+                throw GraphixException("polymorphic types are not GraphQL types yet: $kType")
             }
 
             else -> {
-                throw GraphQlException("cannot map ${descriptor.kind} as a GraphQL output type: $kType")
+                throw GraphixException("cannot map ${descriptor.kind} as a GraphQL output type: $kType")
             }
         }
     }
@@ -96,7 +96,7 @@ internal class TypeMapper(
         return when (descriptor.kind) {
             StructureKind.LIST -> {
                 GraphQLList.list(
-                    input(kType.arguments.single().type ?: throw GraphQlException("a list GraphQL type needs an element type: $kType")),
+                    input(kType.arguments.single().type ?: throw GraphixException("a list GraphQL type needs an element type: $kType")),
                 )
             }
 
@@ -109,15 +109,15 @@ internal class TypeMapper(
             }
 
             StructureKind.MAP -> {
-                throw GraphQlException("Map is not a GraphQL type: $kType")
+                throw GraphixException("Map is not a GraphQL type: $kType")
             }
 
             is PolymorphicKind -> {
-                throw GraphQlException("polymorphic types are not GraphQL types yet: $kType")
+                throw GraphixException("polymorphic types are not GraphQL types yet: $kType")
             }
 
             else -> {
-                throw GraphQlException("cannot map ${descriptor.kind} as a GraphQL input type: $kType")
+                throw GraphixException("cannot map ${descriptor.kind} as a GraphQL input type: $kType")
             }
         }
     }
@@ -211,7 +211,7 @@ internal class TypeMapper(
                 serializers.serializer(kType)
             } catch (failure: Exception) {
                 val typeName = (kType.classifier as? KClass<*>)?.qualifiedName ?: kType.toString()
-                throw GraphQlException("$typeName is not @Serializable", failure)
+                throw GraphixException("$typeName is not @Serializable", failure)
             }
         val descriptor = serializer.descriptor
         return if (descriptor.isInline) descriptor.getElementDescriptor(0) else descriptor
@@ -219,7 +219,7 @@ internal class TypeMapper(
 
     private fun kClassOf(kType: KType): KClass<*> =
         kType.classifier as? KClass<*>
-            ?: throw GraphQlException("GraphQL types must be classes, got $kType")
+            ?: throw GraphixException("GraphQL types must be classes, got $kType")
 
     private fun properties(
         kClass: KClass<*>,

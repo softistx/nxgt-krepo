@@ -1,6 +1,6 @@
 package com.strange.graphql.ktor
 
-import com.strange.graphql.GraphQl
+import com.strange.graphql.Graphix
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 
@@ -10,9 +10,9 @@ import io.ktor.server.plugins.di.dependencies
  * Off the plugin's default path because `ktor-server-di` is compile-only here. `install(GraphQL) {
  * injectable = true }` is the same call.
  */
-fun Application.provideGraphQl() {
-    val engine = graphQl
+fun Application.provideGraphix() {
+    val engine = graphix
     dependencies {
-        provide<GraphQl> { engine }
+        provide<Graphix> { engine }
     }
 }
