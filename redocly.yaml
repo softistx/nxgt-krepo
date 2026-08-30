@@ -1,0 +1,22 @@
+# Redocly's view of the OpenAPI documents in this repo. One alias per module that has one, so the
+# commands read `redocly lint orders@v1` rather than a path — see the `openapi-spec-first` skill.
+extends:
+  - recommended
+
+apis:
+  orders@v1:
+    root: ./examples/spring-orders/openapi/openapi.yaml
+    rules:
+      # Two paths that could match the same request is a routing bug, not a style question.
+      no-ambiguous-paths: error
+
+      # This demo authenticates nobody, and `recommended` requires every operation to name a scheme.
+      # Declaring one the application does not enforce would make the document lie, which is worse
+      # than the warning it silences. Delete this line the moment the example grows an auth scheme.
+      security-defined: off
+
+      # The server really is localhost: this is a demo run from a checkout, not a deployment.
+      no-server-example.com: off
+
+      # There is no LICENSE in this repo to point `info.license` at.
+      info-license: off

@@ -1,0 +1,6 @@
+type: object
+description: The health answer, in the same envelope as everything else.
+required: [ data ]
+properties:
+  data:
+    $ref: ./Health.yaml

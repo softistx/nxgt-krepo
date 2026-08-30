@@ -1,0 +1,27 @@
+patch:
+  tags:
+    - orders-controller
+  summary: Move an order along.
+  description: A save, so the audit trail records the transition and who made it.
+  operationId: changeStatus
+  parameters:
+    - $ref: ../components/parameters/id.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas/ChangeStatus.yaml
+  responses:
+    '200':
+      description: The order in its new status.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/OrderResponse.yaml
+    '400':
+      $ref: ../components/responses/BadRequest.yaml
+    '404':
+      $ref: ../components/responses/NotFound.yaml
+    '500':
+      $ref: ../components/responses/InternalError.yaml

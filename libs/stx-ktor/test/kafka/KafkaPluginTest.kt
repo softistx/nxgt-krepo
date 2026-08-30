@@ -79,7 +79,7 @@ class KafkaPluginTest :
             scenario("an admin client built from it reaches a broker") {
                 testApplication {
                     application {
-                        install(KafkaCluster) { config = KafkaConfig(bootstrap = cluster.endpoint!!) }
+                        install(KafkaCluster) { config = KafkaConfig(bootstrap = cluster.requireEndpoint()) }
                         routing {
                             get("/") {
                                 // The caller owns what it opens: this admin client is closed here,

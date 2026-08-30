@@ -1,0 +1,6 @@
+type: object
+description: What a client sends to move an order along.
+required: [ status ]
+properties:
+  status:
+    $ref: ./OrderStatus.yaml

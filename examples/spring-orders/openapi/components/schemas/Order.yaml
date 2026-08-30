@@ -1,0 +1,28 @@
+type: object
+description: An order as it appears on the wire — a view of the stored document, not the document.
+required: [ id, reference, customer, status, total, tags, placedAt ]
+properties:
+  id:
+    type: string
+    description: The unique identifier of the order.
+  reference:
+    type: string
+    description: The customer-facing reference. Unique, and stored as `ref`.
+  customer:
+    type: string
+    description: Who placed it.
+  status:
+    $ref: ./OrderStatus.yaml
+  total:
+    type: integer
+    format: int64
+    description: The total in minor units — an order total is not a decimal, and rounding a price is not a display choice.
+  tags:
+    type: array
+    description: Free-form labels.
+    items:
+      type: string
+  placedAt:
+    type: string
+    format: date-time
+    description: When it was placed, ISO-8601.

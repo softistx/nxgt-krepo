@@ -38,9 +38,13 @@ rather than left to ordering:
 
 Everything else that looks like an overlap is not one. `stx.mongo`, `stx.redis`, `stx.kafka`,
 `stx.amqp` and `stx.jpa` configure the **`stx-*` library's own client**, which is a different object
-from the one `spring.data.mongodb`, `spring.data.redis`, `spring.kafka`, `spring.rabbitmq` and
-`spring.datasource` configure. Setting both gives an application two clients, not one configured
-twice — which is a legitimate thing to want and an expensive thing to do by accident.
+from the one `spring.mongodb`, `spring.data.redis`, `spring.kafka`, `spring.rabbitmq` and
+`spring.datasource` configure. (`spring.mongodb` and not `spring.data.mongodb`: Boot 4 split them,
+leaving `spring.data.mongodb` with GridFS and the representation above, and a stale
+`spring.data.mongodb.uri` binds to nothing without warning.)
+
+Setting both gives an application two clients, not one configured twice — which is a legitimate
+thing to want and an expensive thing to do by accident.
 
 ---
 
@@ -198,7 +202,7 @@ has no opinion about are set by declaring your own bean, not by a key per driver
 | `uri` | string | — | Required when enabled |
 | `database` | string | — | Required when enabled |
 
-Not `stx.data.mongo`, and not Spring Boot's `spring.data.mongodb`. Those configure Spring Data's
+Not `stx.data.mongo`, and not Spring Boot's `spring.mongodb`. Those configure Spring Data's
 `ReactiveMongoTemplate`; this hands you `stx-mongo`'s coroutine client. Different APIs onto the same
 server — turning both on means two connection pools, which should be a decision somebody made.
 

@@ -68,6 +68,26 @@ dependencies:
   # than a copy of the document.
   - $libs.javers.core: compile-only
 
+  # What `src/testing/` is built from, and every one of them compile-only for the same reason as the
+  # integrations above: `com.strange.spring.testing` is a package an *application's test* classpath
+  # lights up. Nothing in `src/` refers to it and no auto-configuration imports it, so a production
+  # consumer never loads a class it has no jar for. Verified with
+  # `./kotlin show dependencies -m stx-spring-boot`: these sit in COMPILE and are absent from RUNTIME.
+
+  # mongoContainer(), which is where the URI in `MongoTestConfiguration` comes from. Declared in
+  # stx-testing's `Backends.kt`, never in this tree.
+  - //libs/stx-testing: compile-only
+
+  # @TestConfiguration, @SpringBootTest, @ActiveProfiles and WebTestClient.
+  - $spring.boot.starter.test: compile-only
+
+  # FeatureSpec, for the base specs, and AbstractProjectConfig, for the Kotest bootstrap.
+  - $libs.kotest.framework.engine: compile-only
+  # `eventually` and `shouldBe`, for the migration gate.
+  - $libs.kotest.assertions.core: compile-only
+  # SpringExtension — what makes @SpringBootTest mean anything to a Kotest spec.
+  - $libs.kotest.extensions.spring: compile-only
+
 test-dependencies:
   # The MongoDB the findPage specs page through: `MONGO_TEST_URI` when the workspace's replica set
   # is already up, a container started once for the run otherwise, and the specs report skipped when
@@ -96,6 +116,9 @@ test-dependencies:
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
+  # `src/testing/` is compile-only above, which keeps it off this module's *test* runtime as well —
+  # so the specs that exercise the base specs need the extension back at normal scope.
+  - $libs.kotest.extensions.spring
 
 settings:
   # Applies the Spring Boot BOM (4.1.0), the all-open and no-arg compiler plugins with the `spring`

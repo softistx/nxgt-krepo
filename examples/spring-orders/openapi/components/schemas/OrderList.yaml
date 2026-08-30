@@ -1,0 +1,9 @@
+type: object
+description: Several orders with no page around them.
+required: [ data ]
+properties:
+  data:
+    type: array
+    description: The matching orders.
+    items:
+      $ref: ./Order.yaml

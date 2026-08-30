@@ -116,7 +116,7 @@ class DependenciesTest :
                 testApplication {
                     application {
                         install(RedisConnection) {
-                            config = RedisConfig(uri = server.endpoint!!, namespace = "di")
+                            config = RedisConfig(uri = server.requireEndpoint(), namespace = "di")
                             injectable = true
                         }
 
@@ -149,7 +149,7 @@ class DependenciesTest :
                 testApplication {
                     application {
                         install(RedisConnection) {
-                            config = RedisConfig(uri = server.endpoint!!, namespace = "twice")
+                            config = RedisConfig(uri = server.requireEndpoint(), namespace = "twice")
                             injectable = true
                         }
 

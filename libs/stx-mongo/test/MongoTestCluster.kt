@@ -4,12 +4,12 @@ import com.mongodb.MongoClientSettings
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.reactivestreams.client.MongoClients
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.mongoContainer
 import kotlinx.coroutines.runBlocking
 import org.bson.BsonDocument
 import org.bson.BsonInt32
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import com.mongodb.reactivestreams.client.MongoClient as ReactiveMongoClient
 
 /**
@@ -32,10 +32,11 @@ import com.mongodb.reactivestreams.client.MongoClient as ReactiveMongoClient
 internal object MongoTestCluster {
     private val mongo = mongoContainer()
 
-    private val databases = AtomicInteger()
+    /** A database per call, and one no other run will pick — see [TestNames]. */
+    private val databases = TestNames("stx-mongo-test")
 
     /** Where the cluster is, for a spec that builds its own client rather than borrowing this one. */
-    val uri: String get() = requireNotNull(mongo.endpoint) { mongo.describe() }
+    val uri: String get() = mongo.requireEndpoint()
 
     /** Short server selection, or an absent server would cost 30s per spec before failing. */
     private fun settings(): MongoClientSettings =
@@ -72,7 +73,7 @@ internal object MongoTestCluster {
      */
     suspend fun <T> withDatabase(block: suspend (MongoClient, MongoDatabase) -> T): T =
         client().use { client ->
-            val database = client.getDatabase("stx-mongo-test-${databases.incrementAndGet()}")
+            val database = client.getDatabase(databases.next())
             try {
                 block(client, database)
             } finally {

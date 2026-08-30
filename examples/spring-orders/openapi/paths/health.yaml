@@ -1,0 +1,14 @@
+get:
+  tags:
+    - health-controller
+  summary: Whether the application is up.
+  operationId: health
+  responses:
+    '200':
+      description: It is.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/HealthResponse.yaml
+    '500':
+      $ref: ../components/responses/InternalError.yaml

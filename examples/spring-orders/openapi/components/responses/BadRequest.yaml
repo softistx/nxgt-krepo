@@ -1,0 +1,5 @@
+description: The request was invalid — a filter nobody can read, or a body that does not bind.
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ErrorResponse.yaml

@@ -1,6 +1,7 @@
 package com.strange.spring.data.mongo.migration
 
 import com.mongodb.reactivestreams.client.MongoClients
+import com.strange.spring.testing.UNREACHABLE_MONGO
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.boot.autoconfigure.AutoConfigurations
@@ -15,7 +16,7 @@ private class TemplateOnly {
     @Bean
     fun template(): ReactiveMongoTemplate =
         ReactiveMongoTemplate(
-            SimpleReactiveMongoDatabaseFactory(MongoClients.create("mongodb://localhost:27017"), "stx_wiring"),
+            SimpleReactiveMongoDatabaseFactory(MongoClients.create(UNREACHABLE_MONGO), "stx_wiring"),
         )
 }
 
@@ -25,7 +26,7 @@ private class OwnStore {
     fun migrationStore(): MigrationStore =
         MigrationStore(
             ReactiveMongoTemplate(
-                SimpleReactiveMongoDatabaseFactory(MongoClients.create("mongodb://localhost:27017"), "stx_wiring"),
+                SimpleReactiveMongoDatabaseFactory(MongoClients.create(UNREACHABLE_MONGO), "stx_wiring"),
             ),
             "somewhere_else",
         )

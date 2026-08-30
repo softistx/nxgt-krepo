@@ -1,11 +1,11 @@
 package com.strange.redis
 
 import com.strange.redis.codec.redisJson
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.redisContainer
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -21,13 +21,20 @@ import kotlin.time.Duration.Companion.seconds
 internal object RedisTestServer {
     private val redis = redisContainer()
 
-    private val namespaces = AtomicInteger()
+    /**
+     * A namespace per spec, and one no other run will pick — see [TestNames].
+     *
+     * This was a bare counter, which made it the one harness here whose names a crashed run left
+     * behind for the next one to reuse: `stx-redis-test:1` again, over the keys still in db 15.
+     * The colon is Redis's own separator, which is why [TestNames] takes one.
+     */
+    private val namespaces = TestNames("stx-redis-test", separator = ":")
 
     private fun config(
         namespace: String = "",
         json: Json = redisJson,
     ) = RedisConfig(
-        requireNotNull(redis.endpoint) { redis.describe() },
+        redis.requireEndpoint(),
         namespace,
         timeout = 2.seconds,
         json = json,
@@ -51,7 +58,7 @@ internal object RedisTestServer {
         json: Json = redisJson,
         block: suspend (Redis) -> Unit,
     ) {
-        Redis.connect(config("stx-redis-test:${namespaces.incrementAndGet()}", json)).use { redis ->
+        Redis.connect(config(namespaces.next(), json)).use { redis ->
             try {
                 block(redis)
             } finally {

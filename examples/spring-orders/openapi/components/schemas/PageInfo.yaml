@@ -1,0 +1,16 @@
+type: object
+description: Where this page sits in the result set, in the shape the Relay connection spec uses.
+required: [ hasPreviousPage, hasNextPage ]
+properties:
+  startCursor:
+    type: string
+    description: The cursor of the first row on this page.
+  endCursor:
+    type: string
+    description: The cursor of the last row — what to send as `?cursor=` for the next page.
+  hasPreviousPage:
+    type: boolean
+    description: Whether a page precedes this one.
+  hasNextPage:
+    type: boolean
+    description: Whether a page follows this one.

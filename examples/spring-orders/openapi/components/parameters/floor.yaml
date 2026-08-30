@@ -1,0 +1,7 @@
+name: floor
+in: query
+required: true
+description: The lowest total, in minor units, an order must reach to be counted.
+schema:
+  type: integer
+  format: int64

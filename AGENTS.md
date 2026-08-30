@@ -32,13 +32,17 @@ What exists:
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
 | `examples/jpa-shop` | A Ktor catalogue over Postgres showing `stx-jpa`'s CRUD extensions and audit layer |
-| `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring-boot` with no configuration class: functional routes, translated failures, keyset paging, an audit trail and two migrations |
+| `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring-boot` with no configuration class: a spec-first REST API whose controllers implement the generated `@HttpExchange` interfaces, translated failures, keyset paging, an audit trail and two migrations |
 | `examples/material-demo` | The `stx-material` catalogue — one Compose Multiplatform app in three modules: `md-catalog` holds every story, `md-desktop` and `md-android` are launchers |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
 
 ## The OpenAPI generator
+
+**How a document is authored and laid out is the `openapi-spec-first` skill** — the split under
+`<module>/openapi/`, the redocly commands, and what a controller built from the output looks like.
+This section is the generator itself.
 
 Two modules and one reference document — read those before changing either module:
 
@@ -137,6 +141,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
   python3 .agents/skills/skill-from-docs/scripts/fetch_docs.py --skill <name>
   ```
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
+- **`openapi-spec-first`** — how a REST API is authored here: a Redocly-split OpenAPI document under `<module>/openapi/`, the file and naming conventions the generator reads, and the repository → service → controller layering over the generated `@HttpExchange` interface. Read it before adding or changing an endpoint. Its `references/` are written by hand rather than fetched — `document-layout.md` for the split document and the redocly config, `spring-api.md` for the five files a Spring API is made of — and they stay in step with `examples/spring-orders`, which is the same thing running.
 - **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on `develop` on their own.
 
 Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
@@ -473,6 +478,32 @@ otherwise a container started once for the run, otherwise `available == false` a
 Mongo, Redis, AMQP and MinIO all work this way. Declare a new backend in `Backends.kt`, never in a
 library's own test tree.
 
+**A harness reaches the endpoint with `requireEndpoint()` and names its namespace with
+`TestNames`.** Both live in `stx-testing` and both replaced a pattern that was written out eleven
+times. `endpoint!!` past an `available` gate throws a `NullPointerException` naming a line, where
+`requireEndpoint()` throws `describe()` — which of the three resolutions this was, and why. And
+because a container is started once and *shared*, a spec's isolation is a database, schema, topic,
+bucket or key prefix of its own inside it: `TestNames("stx_mongo_test", separator = "_").next()`
+carries a per-run suffix, so a crashed run's leftovers cannot collide with the next run's names. The
+thing it replaced was a prefix *sweep* before the first spec, which could not tell a crashed run's
+databases from a concurrent run's and so had two suites deleting each other's data. Never reintroduce
+a sweep; name what cannot collide. `libs/stx-testing/README.md` has both.
+
+**A Spring application gets its MongoDB as a bean, not as a property.** `stx-spring-boot`'s
+`com.strange.spring.testing` ships `MongoSpec` — `@SpringBootTest` plus a `MongoConnectionDetails`
+contributed over `stx-testing` — so no application writes a `@DynamicPropertySource` of its own. That
+is not only about repetition: a property name can be wrong and say nothing, and one was. Boot 4 moved
+the driver's settings from `spring.data.mongodb` to **`spring.mongodb`**, and `examples/spring-orders`
+spent a phase talking to `mongodb://localhost/test` — the workspace's own replica set — with a
+container running beside it and a green suite. A bean is asked for by type and cannot be misspelled.
+`libs/stx-spring-boot/README.md` has the four lines an application writes.
+
+`spring.mongodb.database` there names a *prefix*, not a database: the test support appends the run
+suffix — the `TestNames` rule above, reached through a `BeanPostProcessor` because
+`reactiveMongoDatabaseFactory` reads the property before the connection string — and drops the result
+at JVM exit. Two suites against the workspace replica set therefore cannot clear each other's
+collections, and a run leaves it as it found it.
+
 | library | override | without it |
 | --- | --- | --- |
 | `stx-mongo` | `MONGO_TEST_URI` | `mongo:8`, a single-node replica set |
@@ -760,7 +791,7 @@ the same each time, and the mistakes are the same each time too.
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
-  | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, and why the locale comes off the exchange |
+  | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
   | `docs/spring-mongo-queries.md` | What a stx-spring-boot Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
   | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
   | `libs/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
@@ -771,7 +802,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
   | `examples/spring-orders/README.md` | What each file in the Spring demo is there to show, how to run it, and what it deliberately leaves out |
   | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
-  | `libs/stx-testing/README.md` | Where an integration spec's server comes from, and how a container declared there is cleaned up |
+  | `libs/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
