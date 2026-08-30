@@ -1,12 +1,17 @@
 package com.strange.graphix.ktor
 
+import com.strange.graphix.http.GRAPHQL_TRANSPORT_WS
+import com.strange.graphix.http.SubscriptionProtocol
 import com.strange.graphix.ktor.fixture.BoomQueries
 import com.strange.graphix.ktor.fixture.GreetingQueries
 import com.strange.graphix.ktor.fixture.TickSubscriptions
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -16,6 +21,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.install
 import io.ktor.server.testing.testApplication
+import io.ktor.websocket.Frame
+import io.ktor.websocket.readText
 
 class GraphixPluginTest :
     FeatureSpec({
@@ -101,6 +108,54 @@ class GraphixPluginTest :
                     body shouldContain "data:"
                     body shouldContain """"ticks":1"""
                     body shouldContain """"ticks":3"""
+                }
+            }
+        }
+
+        feature("graphql-ws") {
+            scenario("POST of a subscription is 400 when the protocol is graphql-ws") {
+                testApplication {
+                    application {
+                        install(GraphQL) {
+                            subscriptions = SubscriptionProtocol.GraphqlWs
+                            schema {
+                                query(GreetingQueries())
+                                subscription(TickSubscriptions())
+                            }
+                        }
+                    }
+                    val response =
+                        client.post("/graphql") {
+                            contentType(ContentType.Application.Json)
+                            setBody("""{"query":"subscription { ticks }"}""")
+                        }
+                    response.status shouldBe HttpStatusCode.BadRequest
+                    response.bodyAsText() shouldContain "graphql-ws"
+                }
+            }
+
+            scenario("a WebSocket subscription emits next then complete") {
+                testApplication {
+                    application {
+                        install(GraphQL) {
+                            subscriptions = SubscriptionProtocol.GraphqlWs
+                            schema {
+                                query(GreetingQueries())
+                                subscription(TickSubscriptions())
+                            }
+                        }
+                    }
+                    val wsClient = createClient { install(WebSockets) }
+                    wsClient.webSocket("/graphql", request = {
+                        header(HttpHeaders.SecWebSocketProtocol, GRAPHQL_TRANSPORT_WS)
+                    }) {
+                        send(Frame.Text("""{"type":"connection_init"}"""))
+                        incoming.receive().let { (it as Frame.Text).readText() shouldContain "connection_ack" }
+                        send(Frame.Text("""{"id":"1","type":"subscribe","payload":{"query":"subscription { ticks }"}}"""))
+                        val first = (incoming.receive() as Frame.Text).readText()
+                        first shouldContain "next"
+                        first shouldContain """"ticks":1"""
+                    }
                 }
             }
         }

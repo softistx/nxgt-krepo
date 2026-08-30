@@ -3,9 +3,11 @@ package com.strange.graphix.ktor
 import com.strange.graphix.Graphix
 import com.strange.graphix.GraphixRequest
 import com.strange.graphix.http.BadGraphixHttp
+import com.strange.graphix.http.GRAPHQL_TRANSPORT_WS
 import com.strange.graphix.http.GraphixHttpError
 import com.strange.graphix.http.GraphixHttpRequest
 import com.strange.graphix.http.GraphixHttpResponse
+import com.strange.graphix.http.SubscriptionProtocol
 import com.strange.graphix.http.toGraphixRequest
 import com.strange.graphix.http.toHttp
 import com.strange.graphix.http.toSse
@@ -21,25 +23,31 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import io.ktor.server.websocket.webSocket
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
-/** POST and GET at [path]. Field errors stay HTTP 200; malformed JSON is 400. Subscriptions are SSE. */
+/** POST and GET at [path]. Field errors stay HTTP 200; malformed JSON is 400. */
 internal fun Route.graphqlRoute(
     path: String,
     engine: Graphix,
     json: Json,
+    subscriptions: SubscriptionProtocol,
 ) {
     route(path) {
-        post { call.handlePost(engine, json) }
-        get { call.handleGet(engine, json) }
+        post { call.handlePost(engine, json, subscriptions) }
+        get { call.handleGet(engine, json, subscriptions) }
+        if (subscriptions == SubscriptionProtocol.GraphqlWs) {
+            webSocket(protocol = GRAPHQL_TRANSPORT_WS) { handleGraphqlWs(engine, json) }
+        }
     }
 }
 
 private suspend fun ApplicationCall.handlePost(
     engine: Graphix,
     json: Json,
+    subscriptions: SubscriptionProtocol,
 ) {
     val body = receiveText()
     val request =
@@ -50,12 +58,13 @@ private suspend fun ApplicationCall.handlePost(
         } catch (failure: BadGraphixHttp) {
             return respondBadRequest(json, failure.message ?: "malformed GraphQL request")
         }
-    respondResult(engine, json, request)
+    respondResult(engine, json, request, subscriptions)
 }
 
 private suspend fun ApplicationCall.handleGet(
     engine: Graphix,
     json: Json,
+    subscriptions: SubscriptionProtocol,
 ) {
     val query = request.queryParameters["query"]
     if (query.isNullOrBlank()) {
@@ -75,15 +84,19 @@ private suspend fun ApplicationCall.handleGet(
             operationName = request.queryParameters["operationName"],
             variables = variables,
         ).toGraphixRequest()
-    respondResult(engine, json, request)
+    respondResult(engine, json, request, subscriptions)
 }
 
 private suspend fun ApplicationCall.respondResult(
     engine: Graphix,
     json: Json,
     request: GraphixRequest,
+    subscriptions: SubscriptionProtocol,
 ) {
     if (request.isSubscription()) {
+        if (subscriptions == SubscriptionProtocol.GraphqlWs) {
+            return respondBadRequest(json, "subscriptions use graphql-ws")
+        }
         respondTextWriter(ContentType.Text.EventStream) {
             engine.subscribe(request).collect { result ->
                 append(result.toHttp().toSse(json))

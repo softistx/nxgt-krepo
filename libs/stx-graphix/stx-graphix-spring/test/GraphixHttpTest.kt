@@ -2,6 +2,7 @@ package com.strange.graphix.spring
 
 import com.strange.common.serialization.lenientJson
 import com.strange.graphix.Graphix
+import com.strange.graphix.http.SubscriptionProtocol
 import com.strange.graphix.spring.fixture.BoomQueries
 import com.strange.graphix.spring.fixture.GreetingQueries
 import com.strange.graphix.spring.fixture.TickSubscriptions
@@ -12,12 +13,18 @@ import org.springframework.test.web.reactive.server.WebTestClient
 
 class GraphixHttpTest :
     FeatureSpec({
-        fun client(vararg roots: Any): WebTestClient {
+        fun client(
+            vararg roots: Any,
+            subscriptions: SubscriptionProtocol = SubscriptionProtocol.Sse,
+        ): WebTestClient {
             val engine =
                 Graphix {
                     roots.forEach { addController(it) }
                 }
-            return WebTestClient.bindToRouterFunction(GraphixHandler(engine, lenientJson, "/graphql").router()).build()
+            return WebTestClient
+                .bindToRouterFunction(
+                    GraphixHandler(engine, lenientJson, "/graphql", subscriptions).router(),
+                ).build()
         }
 
         feature("POST /graphql") {
@@ -62,6 +69,19 @@ class GraphixHttpTest :
         }
 
         feature("POST /graphql subscription") {
+            scenario("graphql-ws refuses a POST subscription") {
+                client(GreetingQueries(), TickSubscriptions(), subscriptions = SubscriptionProtocol.GraphqlWs)
+                    .post()
+                    .uri("/graphql")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue("""{"query":"subscription { ticks }"}""")
+                    .exchange()
+                    .expectStatus()
+                    .isBadRequest
+                    .expectBody(String::class.java)
+                    .value { it shouldContain "graphql-ws" }
+            }
+
             scenario("a subscription is text/event-stream of GraphQL results") {
                 client(GreetingQueries(), TickSubscriptions())
                     .post()

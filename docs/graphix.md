@@ -194,9 +194,18 @@ query, or unparseable GET `variables` is HTTP **400** with `errors[]`.
 `GET /graphql?query=...` is for introspection and simple queries. Variables on GET are a JSON
 object in the `variables` query parameter.
 
-A **subscription** on the same path is `text/event-stream`: one `data: {json}` frame per event,
-the same `{ "data", "errors" }` envelope. Cancelling the HTTP client cancels the `Flow`.
-WebSocket (`graphql-ws`) is a later slice.
+A **subscription** is one of two protocols, configurable, default `sse`:
+
+| Protocol | Transport | Config |
+| --- | --- | --- |
+| `sse` | `text/event-stream` on POST, one `data: {json}` frame per event | Ktor `subscriptions = Sse`; Spring `stx.graphix.subscriptions=sse` |
+| `graphql-ws` | WebSocket on the same path, sub-protocol `graphql-transport-ws` | Ktor `subscriptions = GraphqlWs`; Spring `stx.graphix.subscriptions=graphql-ws` |
+
+SSE keeps the `{ "data", "errors" }` envelope. Cancelling the HTTP client cancels the `Flow`.
+`graphql-ws` speaks `connection_init` / `connection_ack`, `subscribe` / `next` / `complete`,
+and `ping` / `pong`. HTTP POST of a subscription document is then 400 — the socket is the
+subscription transport. Queries and mutations stay POST/GET, and also run as a single `next`
+over the socket.
 
 **Ktor** — `install(GraphQL)` in `stx-graphix-ktor`, path configurable, default `/graphql`.
 
@@ -206,5 +215,4 @@ bean wins.
 
 ## What this document does not cover yet
 
-Schema-first SDL, WebSocket (`graphql-ws`). Those land in later slices and get a paragraph here
-when they do.
+Schema-first SDL. That lands in a later slice and gets a paragraph here when it does.
