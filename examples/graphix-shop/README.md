@@ -20,6 +20,10 @@ POST /graphql
 The subscription is `text/event-stream` on the same path (`subscriptions = Sse`, the default).
 `subscriptions = GraphqlWs` serves `graphql-ws` on that path instead.
 
+The GraphQL schema is the files under `resources/graphql/` (`schema.graphqls`, `product.graphqls`,
+`review.graphqls`), merged the way Spring GraphQL merges a split document. `Catalog` is the
+DataFetchers for those fields.
+
 In-memory, no database. The point is the plugin: `install(GraphQL) { schema { query(catalog); mutation(catalog); subscription(catalog); type(catalog) } }`.
 `Catalog` is the store, the roots and the type fields: `reviews` is a `@BatchMapping` on Product, one
 load for the list, not one per product. A Spring app would put `OrderService` on the controller

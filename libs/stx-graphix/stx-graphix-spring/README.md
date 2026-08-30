@@ -8,6 +8,7 @@ stx:
     enabled: true
     path: /graphql
     subscriptions: sse   # or graphql-ws
+    schema-locations: classpath:graphql/
 ```
 
 ```kotlin
