@@ -299,12 +299,12 @@ consume nothing.
 
 ---
 
-## `stx-graphql-spring`
+## `stx-graphix-spring`
 
-Not this module — `com.strange:stx-graphql-spring`. The keys follow the same opt-in rule, and the
+Not this module — `com.strange:stx-graphix-spring`. The keys follow the same opt-in rule, and the
 metadata lives in that module's `additional-spring-configuration-metadata.json`.
 
-### `stx.graphql`
+### `stx.graphix`
 
 | Key | Type | Default | |
 | --- | --- | --- | --- |
@@ -312,7 +312,7 @@ metadata lives in that module's `additional-spring-configuration-metadata.json`.
 | `path` | string | `/graphql` | HTTP path |
 
 A field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. The annotation vocabulary is
-[`docs/graphql.md`](graphql.md).
+[`docs/graphix.md`](graphix.md).
 
 ---
 
