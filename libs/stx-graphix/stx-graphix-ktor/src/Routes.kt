@@ -8,11 +8,15 @@ import com.strange.graphix.http.GraphixHttpRequest
 import com.strange.graphix.http.GraphixHttpResponse
 import com.strange.graphix.http.toGraphixRequest
 import com.strange.graphix.http.toHttp
+import com.strange.graphix.http.toSse
+import com.strange.graphix.isSubscription
+import com.strange.graphix.subscribe
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondText
+import io.ktor.server.response.respondTextWriter
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -21,7 +25,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
-/** POST and GET at [path]. Field errors stay HTTP 200; malformed JSON is 400. */
+/** POST and GET at [path]. Field errors stay HTTP 200; malformed JSON is 400. Subscriptions are SSE. */
 internal fun Route.graphqlRoute(
     path: String,
     engine: Graphix,
@@ -79,6 +83,15 @@ private suspend fun ApplicationCall.respondResult(
     json: Json,
     request: GraphixRequest,
 ) {
+    if (request.isSubscription()) {
+        respondTextWriter(ContentType.Text.EventStream) {
+            engine.subscribe(request).collect { result ->
+                append(result.toHttp().toSse(json))
+                flush()
+            }
+        }
+        return
+    }
     val result = engine.execute(request).toHttp()
     respondText(
         json.encodeToString(GraphixHttpResponse.serializer(), result),

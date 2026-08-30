@@ -41,7 +41,7 @@ internal fun root(
             if (!seen.add(fieldName)) {
                 throw GraphixException("duplicate $kind field '$fieldName' on ${instance::class.qualifiedName}")
             }
-            fields += field(function, fieldName, types)
+            fields += field(function, fieldName, types, kind)
             fetchers += FieldCoordinates.coordinates(name, fieldName) to fetcher(instance, function)
         }
     }
@@ -72,6 +72,7 @@ private fun functions(
             when (kind) {
                 RootKind.QUERY -> function.hasAnnotation<Query>()
                 RootKind.MUTATION -> function.hasAnnotation<Mutation>()
+                RootKind.SUBSCRIPTION -> function.hasAnnotation<Subscription>()
             }
         }
     if (matches.isEmpty()) {
@@ -89,13 +90,14 @@ private fun field(
     function: KFunction<*>,
     name: String,
     types: TypeMapper,
+    kind: RootKind,
 ): GraphQLFieldDefinition {
     val builder =
         GraphQLFieldDefinition
             .newFieldDefinition()
             .name(name)
             .description(function.graphQLDescription())
-            .type(types.output(function.returnType))
+            .type(types.output(if (kind == RootKind.SUBSCRIPTION) function.returnType.subscriptionElement() else function.returnType))
     function.valueParameters.filterNot { it.hasAnnotation<GraphQLContext>() }.forEach { parameter ->
         // A Kotlin default is still GraphQL NonNull unless unwrapped: graphql-java has no defaults.
         val argumentType =

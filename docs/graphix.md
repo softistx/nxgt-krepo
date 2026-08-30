@@ -12,11 +12,14 @@ in the module README, which answers *why the library is shaped this way*.
 | --- | --- | --- |
 | `@Query` | function on a class passed to `query(...)` | field on `Query` |
 | `@Mutation` | function on a class passed to `mutation(...)` | field on `Mutation` |
+| `@Subscription` | function on a class passed to `subscription(...)` | field on `Subscription` |
 
-The GraphQL field name is `@Query(name=…)` / `@Mutation(name=…)` if set, otherwise `@GraphQLName`
-on the function, otherwise the Kotlin name.
+The GraphQL field name is `@Query(name=…)` / `@Mutation(name=…)` / `@Subscription(name=…)` if
+set, otherwise `@GraphQLName` on the function, otherwise the Kotlin name.
 
 At least one `@Query` function is required. GraphQL's spec has no schema without a query root.
+`@Subscription` is optional. The Kotlin return type must be `Flow<T>` or a reactive-streams /
+JDK `Publisher<T>`; `T` is the GraphQL field type.
 
 ## Types
 
@@ -58,6 +61,11 @@ input field for the same reason.
 
 Nested object fields are the `@Serializable` properties already in memory. Extra fields that need
 I/O (a `Product.reviews` resolver, DataLoader) are a later phase.
+
+A `@Subscription` function returns a stream of `T`, not `T` itself. Collect it with
+`Graphix.subscribe`, which is a `Flow<GraphixResult>` — one item per event, cancelled when the
+collector is. `execute` on a subscription document throws rather than serialising graphql-java's
+`Publisher` as a single JSON object.
 
 The data fetcher is not part of the public API. A resolver is a function on an instance Graphix
 already holds. What it can see is exactly three things:
@@ -114,10 +122,14 @@ val result = graphix.execute(
     GraphixRequest(query = query, variables = mapOf("id" to "p1")),
     context = mapOf(Caller::class to caller),
 )
+
+graphix.subscribe(GraphixRequest("subscription { productAdded { name } }"))
+    .collect { event -> /* one GraphixResult per event */ }
 ```
 
 `result.data` is the GraphQL data map. `result.errors` is the GraphQL error list. A resolver that
-throws becomes an error there; `execute` itself still returns.
+throws becomes an error there; `execute` itself still returns. Subscription events keep that same
+shape, in order (`KEEP_SUBSCRIPTION_EVENTS_ORDERED`).
 
 ## HTTP
 
@@ -128,12 +140,17 @@ query, or unparseable GET `variables` is HTTP **400** with `errors[]`.
 `GET /graphql?query=...` is for introspection and simple queries. Variables on GET are a JSON
 object in the `variables` query parameter.
 
+A **subscription** on the same path is `text/event-stream`: one `data: {json}` frame per event,
+the same `{ "data", "errors" }` envelope. Cancelling the HTTP client cancels the `Flow`.
+WebSocket (`graphql-ws`) is a later slice.
+
 **Ktor** — `install(GraphQL)` in `stx-graphix-ktor`, path configurable, default `/graphql`.
 
 **Spring Boot** — `stx.graphix.enabled=true` in `stx-graphix-spring`. Beans annotated
-`@GraphQLController` become query/mutation roots. An application's own `Graphix` bean wins.
+`@GraphQLController` become query/mutation/subscription roots. An application's own `Graphix`
+bean wins.
 
 ## What this document does not cover yet
 
-Subscriptions (`@Subscription` → `Flow`), type field resolvers, DataLoader / `@BatchMapping`,
-schema-first SDL. Those land in later slices and get a paragraph here when they do.
+Type field resolvers, DataLoader / `@BatchMapping`, schema-first SDL, WebSocket (`graphql-ws`).
+Those land in later slices and get a paragraph here when they do.

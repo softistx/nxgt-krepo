@@ -7,9 +7,11 @@ GraphQL for a Kotlin coroutine service, over graphql-java 25. Annotated function
 val graphql = Graphix {
     query(ProductQueries(store))
     mutation(ProductMutations(store))
+    subscription(ProductSubscriptions(store))
 }
 
 val result = graphql.execute(GraphixRequest("{ product(id: \"p1\") { name } }"))
+graphql.subscribe(GraphixRequest("subscription { productAdded { name } }"))
 ```
 
 Ktor and Spring Boot integrations live in `stx-graphix-ktor` and `stx-graphix-spring`. This module
@@ -22,7 +24,7 @@ schema may say — lives in [`docs/graphix.md`](../../../docs/graphix.md).
 
 ```
 com.strange.graphix            Graphix, GraphixRequest, GraphixResult, GraphixException
-com.strange.graphix.schema     @Query / @Mutation and the SerialDescriptor walk
+com.strange.graphix.schema     @Query / @Mutation / @Subscription and the SerialDescriptor walk
 com.strange.graphix.execute    the CompletableFuture bridge, argument binding, errors
 com.strange.graphix.scalar     Long, Instant, Uuid
 ```
@@ -52,18 +54,24 @@ same one `stx-jpa` uses. A `CoroutineScope` lives in the operation's `GraphQLCon
 cancelled when `execute` returns. `runBlocking` on the engine thread is the thing that deadlocks
 a client against its own I/O; it is not used here.
 
+A **subscription** is a `Flow<T>` (or a reactive-streams `Publisher<T>`) on `@Subscription`.
+graphql-java wants a `Publisher`; `Flow.asPublisher` on the operation scope is the bridge, and
+`Graphix.subscribe` is a `Flow<GraphixResult>` back. Cancelling the collector cancels the
+upstream. `execute` on a subscription throws — the engine result is a stream, not one JSON
+object.
+
 Field errors stay GraphQL errors. HTTP 200 plus `errors[]` is the spec; throwing out of `execute`
 is for a document that cannot even be submitted.
 
 ## No scan in core
 
-`Graphix { query(instance); mutation(instance) }`. Spring may collect `@GraphQLController` beans;
+`Graphix { query(instance); mutation(instance); subscription(instance) }`. Spring may collect `@GraphQLController` beans;
 that is the Spring module's job. A classpath walk in this type would make a worker with no
 Spring carry one.
 
 ## The data fetcher is not yours
 
-graphql-java wants a `DataFetcher`. Graphix builds one per `@Query` / `@Mutation` and never
+graphql-java wants a `DataFetcher`. Graphix builds one per `@Query` / `@Mutation` / `@Subscription` and never
 hands it out. The fetcher's job is to call the function on the **instance already registered** —
 `query(productQueries)` — and to bind arguments. That is why a Spring mutation that needs
 `OrderService` takes it on the controller constructor: the controller *is* the Spring bean, and
@@ -78,5 +86,5 @@ like DI". The first is a service locator. The second makes a singleton look requ
 
 ## What this slice does not do
 
-Code generation, a GraphQL skill, subscriptions, DataLoader / type field resolvers, schema-first
-SDL, Federation, a client. Those are later phases.
+Code generation, a GraphQL skill, DataLoader / type field resolvers, schema-first SDL,
+WebSocket (`graphql-ws`), Federation, a client. Those are later phases.

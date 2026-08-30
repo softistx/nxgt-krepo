@@ -7,6 +7,7 @@ install(GraphQL) {
     schema {
         query(ProductQueries(store))
         mutation(ProductMutations(store))
+        subscription(ProductSubscriptions(store))
     }
 }
 ```
@@ -24,5 +25,6 @@ Without `instance`, `schema { }` builds one at install.
 `injectable = true` registers that same engine with Ktor DI (`provideGraphix()`), off by default
 because `ktor-server-di` is compile-only.
 
-A GraphQL field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. The vocabulary
-is in [`docs/graphix.md`](../../../docs/graphix.md).
+A GraphQL field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. A subscription
+is `text/event-stream` on the same path, one `data:` frame per event. The vocabulary is in
+[`docs/graphix.md`](../../../docs/graphix.md).

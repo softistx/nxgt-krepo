@@ -19,6 +19,9 @@ class OrderMutations(
 
     @Mutation
     suspend fun placeOrder(input: PlaceOrderInput): Order = orders.place(input)
+
+    @Subscription
+    fun orderPlaced(): Flow<Order> = orders.placed
 }
 ```
 
@@ -33,6 +36,7 @@ operation. The HTTP handler does not yet put `ServerWebExchange` or the security
 that map — see [`docs/graphix.md`](../../../docs/graphix.md).
 
 POST and GET share the same JSON envelope as the Ktor plugin. A field error is HTTP 200 plus
-`errors[]`. Malformed JSON is HTTP 400. Keys live in
+`errors[]`. Malformed JSON is HTTP 400. A subscription is `text/event-stream` on the same path.
+Keys live in
 [`docs/spring-configuration.md`](../../../docs/spring-configuration.md); the annotation vocabulary
 is [`docs/graphix.md`](../../../docs/graphix.md).
