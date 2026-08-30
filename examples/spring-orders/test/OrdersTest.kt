@@ -1,13 +1,11 @@
 package com.strange.example.orders
 
+import com.strange.example.orders.api.apis.IHealthService
 import com.strange.example.orders.api.apis.IOrdersService
 import com.strange.example.orders.api.models.ChangeStatus
 import com.strange.example.orders.api.models.OrderStatus
 import com.strange.example.orders.api.models.PlaceOrder
 import com.strange.example.orders.api.utils.ErrorResponseException
-import com.strange.example.orders.api.utils.apiErrorFilter
-import com.strange.example.orders.api.utils.apiOperationProcessor
-import com.strange.example.orders.api.utils.registerApiEnumConverters
 import com.strange.testing.containers.mongoContainer
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
@@ -15,7 +13,10 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
@@ -26,19 +27,34 @@ import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.web.server.reactive.context.ReactiveWebServerApplicationContext
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.query.Query
-import org.springframework.format.support.DefaultFormattingConversionService
-import org.springframework.http.codec.json.KotlinSerializationJsonDecoder
-import org.springframework.http.codec.json.KotlinSerializationJsonEncoder
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.support.WebClientAdapter
-import org.springframework.web.service.invoker.HttpServiceProxyFactory
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
 private val mongo = mongoContainer()
 
 private val databases = AtomicInteger()
+
+/**
+ * [this] with its database replaced by [name].
+ *
+ * **Not `spring.data.mongodb.database`.** Boot reads that property only when it is building a
+ * connection string from `host`/`port`; once `spring.data.mongodb.uri` is set the database comes
+ * from the URI and the property is ignored, silently. `MongoDBContainer` hands back a URL ending in
+ * `/test` and a `MONGO_TEST_URI` naming the workspace's replica set usually ends in no database at
+ * all — so both spellings were landing every run in one shared database, and the isolation this
+ * spec's KDoc claims was not happening. What surfaced it was a manual `./kotlin run` against the
+ * same server leaving rows the paging scenario then counted.
+ */
+private fun String?.withDatabase(name: String): String {
+    // Non-null by the time this is called: `beforeSpec` returns early unless the service resolved.
+    val uri = requireNotNull(this) { "no MongoDB endpoint" }
+    val query = uri.substringAfter("?", "").let { if (it.isEmpty()) "" else "?$it" }
+    val base = uri.substringBefore("?").trimEnd('/')
+    // "mongodb://host:port" has two slashes; a third one starts the database path.
+    val host = if (base.count { it == '/' } > 2) base.substringBeforeLast('/') else base
+    return "$host/$name$query"
+}
 
 /**
  * The whole application over HTTP, on a real port, against a real MongoDB.
@@ -64,8 +80,9 @@ class OrdersTest :
         lateinit var client: WebTestClient
         lateinit var template: ReactiveMongoTemplate
 
-        // The same `IOrdersService` the controller implements, this time as a client.
+        // The same interfaces the controllers implement, this time as clients.
         lateinit var orders: IOrdersService
+        lateinit var health: IHealthService
 
         beforeSpec {
             if (!mongo.available) return@beforeSpec
@@ -73,15 +90,13 @@ class OrdersTest :
             val context =
                 SpringApplicationBuilder(OrdersApplication::class.java)
                     .web(WebApplicationType.REACTIVE)
-                    // Arguments and not `.properties()`. That method contributes Boot's
-                    // *default* property source, the lowest-precedence one there is, so
+                    // Arguments and not `.properties()`: that method contributes Boot's *default*
+                    // property source, the lowest-precedence one there is, so
                     // `resources/application.yaml` won every key it also names — including
-                    // `spring.data.mongodb.uri`, which meant the database below was never used and
-                    // a run shared its collections with whatever else had spoken to that server.
+                    // `spring.data.mongodb.uri`.
                     .run(
                         "--server.port=0",
-                        "--spring.data.mongodb.uri=${mongo.endpoint}",
-                        "--spring.data.mongodb.database=$database",
+                        "--spring.data.mongodb.uri=${mongo.endpoint.withDatabase(database)}",
                         // A test suite should not pass over a translation nobody wrote.
                         "--stx.i18n.fail-on-missing-key=true",
                     ) as ReactiveWebServerApplicationContext
@@ -90,32 +105,11 @@ class OrdersTest :
             val baseUrl = "http://localhost:${context.webServer!!.port}"
             client = WebTestClient.bindToServer().baseUrl(baseUrl).build()
 
-            // The `WebClient` is configured with the application's own kotlinx codecs, not left on
-            // Jackson: `models: Kotlinx` generates `@Serializable` classes whose `placedAt` is a
-            // `kotlin.time.Instant`, and Jackson has never heard of that type. This is what the
-            // plugin README means by "a Spring client whose WebClient uses kotlinx codecs".
-            val json = context.getBean("stxWebJson", Json::class.java)
-            val webClient =
-                WebClient
-                    .builder()
-                    .baseUrl(baseUrl)
-                    .codecs {
-                        it.defaultCodecs().kotlinSerializationJsonDecoder(KotlinSerializationJsonDecoder(json))
-                        it.defaultCodecs().kotlinSerializationJsonEncoder(KotlinSerializationJsonEncoder(json))
-                    }
-                    // Turns a documented non-2xx into the exception the document describes.
-                    .filter(apiErrorFilter())
-                    .build()
-
-            orders =
-                HttpServiceProxyFactory
-                    .builderFor(WebClientAdapter.create(webClient))
-                    // Spring writes an enum argument with `Enum.name()`, never `toString()`.
-                    .conversionService(DefaultFormattingConversionService().also(::registerApiEnumConverters))
-                    // What lets `apiErrorFilter` know which operation it is looking at.
-                    .httpRequestValuesProcessor(apiOperationProcessor())
-                    .build()
-                    .createClient(IOrdersService::class.java)
+            // The generated interfaces, as clients. `ApiClients.kt` has the three things that
+            // have to be true for the proxy to behave and the reason each one is not a build error.
+            val factory = apiFactory(baseUrl, context.getBean("stxWebJson", Json::class.java))
+            orders = factory.client()
+            health = factory.client()
         }
 
         afterSpec {
@@ -320,10 +314,16 @@ class OrdersTest :
             }
         }
 
-        feature("the generated interface is both the server contract and a typed client").config(
-            enabled = mongo.available,
-        ) {
-            scenario("a round trip through IOrdersService reads back what it wrote") {
+        // Named after the route, as in nxgt-rest: a failure names the endpoint that broke, and the
+        // list of features reads as the surface the document declares.
+        feature("GET /health, through IHealthService").config(enabled = mongo.available) {
+            scenario("answers UP") {
+                health.health().data.status shouldBe "UP"
+            }
+        }
+
+        feature("POST /orders, through IOrdersService").config(enabled = mongo.available) {
+            scenario("a placed order comes back with the id it was given") {
                 val placed = orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "lovelace", total = 12_000))
 
                 placed.data.reference shouldBe "C-3001"
@@ -342,6 +342,40 @@ class OrdersTest :
                 read.placedAt.toEpochMilliseconds() shouldBe placed.data.placedAt.toEpochMilliseconds()
             }
 
+            scenario("a reference already taken is the 409 the document declares") {
+                shouldThrow<ErrorResponseException> {
+                    orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "someone else", total = 1))
+                }.error.code shouldBe "orders.reference-taken"
+            }
+        }
+
+        feature("GET /orders, through IOrdersService").config(enabled = mongo.available) {
+            scenario("a page carries its rows and its cursors") {
+                val page = orders.findOrders(size = 1)
+
+                page.data shouldHaveSize 1
+                page.metadata.hasNextPage shouldBe true
+                page.metadata.endCursor.shouldNotBeNull()
+            }
+
+            scenario("the cursor resumes where the page ended") {
+                val first = orders.findOrders(sort = "total:ASC", size = 1)
+                val second = orders.findOrders(sort = "total:ASC", size = 1, cursor = first.metadata.endCursor)
+
+                second.data.single().id shouldNotBe first.data.single().id
+            }
+        }
+
+        feature("GET /orders/valuable, through IOrdersService").config(enabled = mongo.available) {
+            scenario("only paid orders at or above the floor come back") {
+                orders.valuableOrders(floor = 10_000).data.forEach {
+                    it.status shouldBe OrderStatus.PAID
+                    it.total shouldBeGreaterThanOrEqual 10_000
+                }
+            }
+        }
+
+        feature("PATCH /orders/{id}/status, through IOrdersService").config(enabled = mongo.available) {
             scenario("an enum argument goes out as the document spells it") {
                 val id =
                     orders
@@ -353,14 +387,13 @@ class OrdersTest :
                 orders.changeStatus(id, ChangeStatus(status = OrderStatus.SHIPPED)).data.status shouldBe
                     OrderStatus.SHIPPED
             }
+        }
 
+        feature("GET and DELETE /orders/{id}, through IOrdersService").config(enabled = mongo.available) {
             scenario("a documented failure arrives as the exception the document describes") {
                 // Not a WebClientResponseException carrying an unparsed body: `apiErrorFilter` read
                 // the document's 404 response, and `error` is the same `ErrorResponse` the server sent.
-                val thrown =
-                    shouldThrow<ErrorResponseException> {
-                        orders.findOrder("000000000000000000000000")
-                    }
+                val thrown = shouldThrow<ErrorResponseException> { orders.findOrder("000000000000000000000000") }
 
                 thrown.status shouldBe 404
                 thrown.error.code shouldBe "orders.not-found"

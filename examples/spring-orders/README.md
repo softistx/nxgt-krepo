@@ -55,7 +55,8 @@ implemented yet.
 | `mapper/OrderMappers.kt` | The document's types on one side, the database's on the other |
 | `migration/V1Seed.kt`, `migration/V2Tags.kt` | Two migrations, and how the class name becomes the version |
 | `resources/locales/` | Two catalogs. Every key a handler can raise has text in both |
-| `test/OrdersTest.kt` | The whole application over HTTP, then again through the generated client |
+| `test/ApiClients.kt` | The generated interfaces as typed clients, and the three things that must be true for the proxy |
+| `test/OrdersTest.kt` | The whole application over HTTP, then again through the generated interfaces |
 | `test/ErrorResponseShapeTest.kt` | That the document's `ErrorResponse` is the one the server actually writes |
 
 ## The things worth reading it for
@@ -138,6 +139,11 @@ rather than in it — which is why the spec polls there too.
 `HttpServiceProxyFactory` and drives the running server through it. One document, one interface, and
 neither side wrote it, so neither side can drift from it.
 
+It is built by `stx-spring-boot`'s own `httpServiceFactory`, whose `factory` parameter is the seam a
+generated client needs — the enum conversion service and the request-values processor belong to the
+proxy, not to the `WebClient`. Features are named after the route they drive, as in `nxgt-rest`, so a
+failure names the endpoint.
+
 That client's `WebClient` is configured with the application's own kotlinx codecs rather than left on
 Jackson, which is what `models: Kotlinx` costs and buys: the generated classes are `@Serializable`
 and `Order.placedAt` is a `kotlin.time.Instant`, a type Jackson has never heard of. The same fact
@@ -172,12 +178,14 @@ scenario runs against a database of its own, dropped when the spec ends — the 
 somebody else's, and a run that reuses one has to leave it as it found it. With no Docker and no
 `MONGO_TEST_URI` the spec reports skipped rather than failing.
 
-The per-run database is passed as **arguments** to `SpringApplicationBuilder.run`, not through
-`.properties()`. That method contributes Boot's *default* property source, the lowest-precedence one
-there is, so `resources/application.yaml` won every key it also names — including
-`spring.data.mongodb.uri`. The isolation the paragraph above describes was not actually happening
-until that changed, and what surfaced it was a manual `./kotlin run` against the same server leaving
-rows the spec then paged through.
+That isolation took two fixes, and both are worth knowing before writing another Spring spec here.
+The per-run settings are passed as **arguments** to `SpringApplicationBuilder.run` rather than
+through `.properties()`, which contributes Boot's *default* property source — the lowest-precedence
+one there is, so `application.yaml` won every key it also named. And the database goes **into the
+URI**: `spring.data.mongodb.database` is read only while Boot is building a connection string from
+`host`/`port`, so once `spring.data.mongodb.uri` is set it is ignored, silently, and every run shared
+one database while looking isolated. What surfaced both was a manual `./kotlin run` against the same
+server leaving rows the paging scenario then counted.
 
 Linting and bundling the document needs `@redocly/cli` on the PATH; `redocly.yaml` at the repo root
 defines the `orders@v1` alias. `.redocly.lint-ignore.yaml` carries one entry — `/health` has no 4XX
