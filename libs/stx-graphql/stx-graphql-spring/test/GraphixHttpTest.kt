@@ -1,7 +1,7 @@
 package com.strange.graphql.spring
 
 import com.strange.common.serialization.lenientJson
-import com.strange.graphql.GraphQl
+import com.strange.graphql.Graphix
 import com.strange.graphql.spring.fixture.BoomQueries
 import com.strange.graphql.spring.fixture.GreetingQueries
 import io.kotest.core.spec.style.FeatureSpec
@@ -9,14 +9,14 @@ import io.kotest.matchers.string.shouldContain
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 
-class GraphQlHttpTest :
+class GraphixHttpTest :
     FeatureSpec({
         fun client(vararg roots: Any): WebTestClient {
             val engine =
-                GraphQl {
+                Graphix {
                     roots.forEach { addController(it) }
                 }
-            return WebTestClient.bindToRouterFunction(GraphQlHandler(engine, lenientJson, "/graphql").router()).build()
+            return WebTestClient.bindToRouterFunction(GraphixHandler(engine, lenientJson, "/graphql").router()).build()
         }
 
         feature("POST /graphql") {

@@ -1,12 +1,12 @@
 package com.strange.graphql.ktor
 
-import com.strange.graphql.GraphQl
-import com.strange.graphql.GraphQlRequest
-import com.strange.graphql.http.BadGraphQlHttp
-import com.strange.graphql.http.GraphQlHttpError
-import com.strange.graphql.http.GraphQlHttpRequest
-import com.strange.graphql.http.GraphQlHttpResponse
-import com.strange.graphql.http.toGraphQlRequest
+import com.strange.graphql.Graphix
+import com.strange.graphql.GraphixRequest
+import com.strange.graphql.http.BadGraphixHttp
+import com.strange.graphql.http.GraphixHttpError
+import com.strange.graphql.http.GraphixHttpRequest
+import com.strange.graphql.http.GraphixHttpResponse
+import com.strange.graphql.http.toGraphixRequest
 import com.strange.graphql.http.toHttp
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -23,7 +23,7 @@ import kotlinx.serialization.json.JsonObject
 
 internal fun Route.graphqlRoute(
     path: String,
-    engine: GraphQl,
+    engine: Graphix,
     json: Json,
 ) {
     route(path) {
@@ -33,23 +33,23 @@ internal fun Route.graphqlRoute(
 }
 
 private suspend fun ApplicationCall.handlePost(
-    engine: GraphQl,
+    engine: Graphix,
     json: Json,
 ) {
     val body = receiveText()
     val request =
         try {
-            json.decodeFromString(GraphQlHttpRequest.serializer(), body).toGraphQlRequest()
+            json.decodeFromString(GraphixHttpRequest.serializer(), body).toGraphixRequest()
         } catch (failure: SerializationException) {
             return respondBadRequest(json, "malformed GraphQL JSON: ${failure.message}")
-        } catch (failure: BadGraphQlHttp) {
+        } catch (failure: BadGraphixHttp) {
             return respondBadRequest(json, failure.message ?: "malformed GraphQL request")
         }
     respondResult(engine, json, request)
 }
 
 private suspend fun ApplicationCall.handleGet(
-    engine: GraphQl,
+    engine: Graphix,
     json: Json,
 ) {
     val query = request.queryParameters["query"]
@@ -65,22 +65,22 @@ private suspend fun ApplicationCall.handleGet(
             }
         }
     val request =
-        GraphQlHttpRequest(
+        GraphixHttpRequest(
             query = query,
             operationName = request.queryParameters["operationName"],
             variables = variables,
-        ).toGraphQlRequest()
+        ).toGraphixRequest()
     respondResult(engine, json, request)
 }
 
 private suspend fun ApplicationCall.respondResult(
-    engine: GraphQl,
+    engine: Graphix,
     json: Json,
-    request: GraphQlRequest,
+    request: GraphixRequest,
 ) {
     val result = engine.execute(request).toHttp()
     respondText(
-        json.encodeToString(GraphQlHttpResponse.serializer(), result),
+        json.encodeToString(GraphixHttpResponse.serializer(), result),
         ContentType.Application.Json,
         HttpStatusCode.OK,
     )
@@ -90,9 +90,9 @@ private suspend fun ApplicationCall.respondBadRequest(
     json: Json,
     message: String,
 ) {
-    val body = GraphQlHttpResponse(errors = listOf(GraphQlHttpError(message)))
+    val body = GraphixHttpResponse(errors = listOf(GraphixHttpError(message)))
     respondText(
-        json.encodeToString(GraphQlHttpResponse.serializer(), body),
+        json.encodeToString(GraphixHttpResponse.serializer(), body),
         ContentType.Application.Json,
         HttpStatusCode.BadRequest,
     )
