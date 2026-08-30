@@ -88,6 +88,30 @@ A `@SchemaMapping` that needs the current field's source or arguments takes
 `@GraphQLContext dfe: DataFetchingEnvironment`. That DFE is **this field**, not an entry in
 `execute`'s context map.
 
+To load by key (including field arguments) from a `@SchemaMapping`, declare a `dataLoader` on
+the mapping class and `load()` it. The key type may be a `data class` that carries arguments:
+
+```kotlin
+data class ReviewKey(val bookId: String, val limit: Int)
+
+class BookFields(private val store: ReviewStore) {
+    val authors = dataLoader<String, Author> { ids -> store.authors(ids) }
+    val reviews = dataLoader<ReviewKey, List<Review>> { keys -> store.reviews(keys) }
+
+    @SchemaMapping
+    suspend fun author(book: Book): Author? = authors.load(book.authorId)
+
+    @SchemaMapping
+    suspend fun reviews(book: Book, limit: Int = 10): List<Review> =
+        reviews.load(ReviewKey(book.id, limit)).orEmpty()
+}
+```
+
+Graphix registers those properties per operation (the property name is the DataLoader name
+unless `dataLoader(name = …)` sets one). `load` is suspend and must run inside the resolver.
+Graphix starts that resolver undispatched so sibling `load`s share one batch, and dispatches
+when the engine is idle so a `load` after other suspend work still completes.
+
 `@BatchMapping` cannot take GraphQL arguments — close over them, or use `@SchemaMapping`. A
 name that collides with a property fails schema build; `@GraphQLIgnore` the property if the
 resolver should own the field.

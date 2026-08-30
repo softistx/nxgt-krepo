@@ -71,5 +71,13 @@ internal fun graphQLSchema(
             .additionalType(Scalars.Uuid)
             .codeRegistry(registry.build())
             .build()
-    return schema to typeFields.filter { it.batched }.map { it.toRegisteredLoader() }
+    val declared = collectDeclaredLoaders(queries + mutations + subscriptions + typeInstances)
+    val batched = typeFields.filter { it.batched }.map { it.toRegisteredLoader() }
+    val names = mutableSetOf<String>()
+    (declared + batched).forEach { loader ->
+        if (!names.add(loader.name)) {
+            throw GraphixException("duplicate DataLoader '${loader.name}'")
+        }
+    }
+    return schema to declared + batched
 }
