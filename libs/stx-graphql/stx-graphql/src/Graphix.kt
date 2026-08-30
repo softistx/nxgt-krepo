@@ -2,7 +2,7 @@ package com.strange.graphql
 
 import com.strange.common.serialization.lenientJson
 import com.strange.graphql.execute.OperationScope
-import com.strange.graphql.execute.toGraphQlResult
+import com.strange.graphql.execute.toGraphixResult
 import com.strange.graphql.schema.graphQLSchema
 import graphql.ExecutionInput
 import graphql.GraphQL
@@ -22,13 +22,13 @@ import kotlin.reflect.KClass
  * The application names its roots — there is no classpath scan here. Spring may scan; this type
  * does not.
  */
-class GraphQl internal constructor(
+class Graphix internal constructor(
     private val engine: GraphQL,
 ) {
     suspend fun execute(
-        request: GraphQlRequest,
+        request: GraphixRequest,
         context: Map<KClass<*>, Any> = emptyMap(),
-    ): GraphQlResult {
+    ): GraphixResult {
         val job = SupervisorJob(coroutineContext[Job])
         val scope = CoroutineScope(coroutineContext + job + CoroutineName("graphql"))
         val input =
@@ -43,7 +43,7 @@ class GraphQl internal constructor(
                 }.build()
         return try {
             val result = engine.executeAsync(input).await()
-            result.toGraphQlResult()
+            result.toGraphixResult()
         } finally {
             job.cancel()
         }
@@ -52,7 +52,7 @@ class GraphQl internal constructor(
     fun sdl(): String = SchemaPrinter().print(engine.graphQLSchema)
 }
 
-class GraphQlBuilder internal constructor(
+class GraphixBuilder internal constructor(
     private val json: Json,
 ) {
     private val queries = mutableListOf<Any>()
@@ -66,13 +66,13 @@ class GraphQlBuilder internal constructor(
         mutations += instance
     }
 
-    internal fun build(): GraphQl {
+    internal fun build(): Graphix {
         val schema = graphQLSchema(queries, mutations, json)
-        return GraphQl(GraphQL.newGraphQL(schema).build())
+        return Graphix(GraphQL.newGraphQL(schema).build())
     }
 }
 
-fun GraphQl(
+fun Graphix(
     json: Json = lenientJson,
-    block: GraphQlBuilder.() -> Unit,
-): GraphQl = GraphQlBuilder(json).apply(block).build()
+    block: GraphixBuilder.() -> Unit,
+): Graphix = GraphixBuilder(json).apply(block).build()

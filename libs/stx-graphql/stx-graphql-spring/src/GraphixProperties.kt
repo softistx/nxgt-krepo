@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * must not open a GraphQL endpoint.
  */
 @ConfigurationProperties(prefix = "stx.graphql")
-data class GraphQlProperties(
+data class GraphixProperties(
     /** Serves POST/GET at [path]. */
     val enabled: Boolean = false,
     /** HTTP path. Default `/graphql`. */

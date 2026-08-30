@@ -1,6 +1,6 @@
 package com.strange.graphql.schema
 
-import com.strange.graphql.GraphQlException
+import com.strange.graphql.GraphixException
 import graphql.schema.DataFetcher
 import graphql.schema.FieldCoordinates
 import graphql.schema.GraphQLArgument
@@ -34,14 +34,14 @@ internal fun root(
         functions(instance, kind).forEach { function ->
             val fieldName = function.graphQLName(kind)
             if (!seen.add(fieldName)) {
-                throw GraphQlException("duplicate $kind field '$fieldName' on ${instance::class.qualifiedName}")
+                throw GraphixException("duplicate $kind field '$fieldName' on ${instance::class.qualifiedName}")
             }
             fields += field(function, fieldName, types)
             fetchers += FieldCoordinates.coordinates(name, fieldName) to fetcher(instance, function)
         }
     }
     if (fields.isEmpty()) {
-        throw GraphQlException("no @$kind functions on ${instances.map { it::class.qualifiedName }}")
+        throw GraphixException("no @$kind functions on ${instances.map { it::class.qualifiedName }}")
     }
     val type =
         GraphQLObjectType
@@ -69,11 +69,11 @@ private fun functions(
             }
         }
     if (matches.isEmpty()) {
-        throw GraphQlException("${instance::class.qualifiedName} has no @$kind functions")
+        throw GraphixException("${instance::class.qualifiedName} has no @$kind functions")
     }
     matches.forEach { function ->
         if (function.instanceParameter == null) {
-            throw GraphQlException("@$kind ${function.name} is not a member function")
+            throw GraphixException("@$kind ${function.name} is not a member function")
         }
     }
     return matches

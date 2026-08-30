@@ -18,8 +18,8 @@ class ProductQueries(private val store: ProductStore) {
 ```
 
 The application still creates the controller bean (component scan, or an `@Bean`). This module
-collects every bean annotated `@GraphQLController` and builds one `GraphQl` from them. An
-application's own `GraphQl` bean wins (`@ConditionalOnMissingBean`).
+collects every bean annotated `@GraphQLController` and builds one `Graphix` from them. An
+application's own `Graphix` bean wins (`@ConditionalOnMissingBean`).
 
 POST and GET share the same JSON envelope as the Ktor plugin. A field error is HTTP 200 plus
 `errors[]`. Malformed JSON is HTTP 400. Keys live in

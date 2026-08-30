@@ -15,7 +15,7 @@ import io.ktor.http.contentType
 import io.ktor.server.application.install
 import io.ktor.server.testing.testApplication
 
-class GraphQlPluginTest :
+class GraphixPluginTest :
     FeatureSpec({
         feature("POST /graphql") {
             scenario("a JSON body executes and returns data") {
@@ -80,7 +80,7 @@ class GraphQlPluginTest :
         feature("instance") {
             scenario("an engine built elsewhere is the one the route uses") {
                 val engine =
-                    com.strange.graphql.GraphQl {
+                    com.strange.graphql.Graphix {
                         query(GreetingQueries())
                     }
                 testApplication {

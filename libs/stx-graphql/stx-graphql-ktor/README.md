@@ -15,7 +15,7 @@ install(GraphQL) {
 socket. `instance` adopts an engine a container already built; the plugin does not close it.
 Without `instance`, `schema { }` builds one at install.
 
-`injectable = true` registers that same engine with Ktor DI (`provideGraphQl()`), off by default
+`injectable = true` registers that same engine with Ktor DI (`provideGraphix()`), off by default
 because `ktor-server-di` is compile-only.
 
 A GraphQL field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. The vocabulary

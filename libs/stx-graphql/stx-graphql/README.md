@@ -4,12 +4,12 @@ GraphQL for a Kotlin coroutine service, over graphql-java 25. Annotated function
 `@Serializable` types are the GraphQL types, and a resolver is a suspend function.
 
 ```kotlin
-val graphql = GraphQl {
+val graphql = Graphix {
     query(ProductQueries(store))
     mutation(ProductMutations(store))
 }
 
-val result = graphql.execute(GraphQlRequest("{ product(id: \"p1\") { name } }"))
+val result = graphql.execute(GraphixRequest("{ product(id: \"p1\") { name } }"))
 ```
 
 Ktor and Spring Boot integrations live in `stx-graphql-ktor` and `stx-graphql-spring`. This module
@@ -21,7 +21,7 @@ schema may say — lives in [`docs/graphql.md`](../../../docs/graphql.md).
 ## Shape
 
 ```
-com.strange.graphql            GraphQl, GraphQlRequest, GraphQlResult, GraphQlException
+com.strange.graphql            Graphix, GraphixRequest, GraphixResult, GraphixException
 com.strange.graphql.schema     @Query / @Mutation and the SerialDescriptor walk
 com.strange.graphql.execute    the CompletableFuture bridge, argument binding, errors
 com.strange.graphql.scalar     Long, Instant, Uuid
@@ -57,7 +57,7 @@ is for a document that cannot even be submitted.
 
 ## No scan in core
 
-`GraphQl { query(instance); mutation(instance) }`. Spring may scan `@GraphQLController` beans;
+`Graphix { query(instance); mutation(instance) }`. Spring may scan `@GraphQLController` beans;
 that is the Spring module's job. A classpath walk in this type would make a worker with no
 Spring carry one.
 

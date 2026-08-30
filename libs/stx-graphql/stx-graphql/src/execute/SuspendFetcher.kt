@@ -20,7 +20,7 @@ internal fun suspendFetcher(
     DataFetcher { environment ->
         val scope =
             environment.graphQlContext.get<CoroutineScope>(OperationScope)
-                ?: error("no CoroutineScope in GraphQLContext — GraphQl.execute must install one")
+                ?: error("no CoroutineScope in GraphQLContext — Graphix.execute must install one")
         scope.future {
             val arguments = LinkedHashMap<kotlin.reflect.KParameter, Any?>()
             val instanceParameter =

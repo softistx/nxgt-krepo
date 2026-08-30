@@ -13,7 +13,7 @@ class SchemaTest :
     FeatureSpec({
         feature("schema from annotations") {
             scenario("query functions become fields, and @Serializable types become objects") {
-                val sdl = GraphQl { query(ProductQueries()) }.sdl()
+                val sdl = Graphix { query(ProductQueries()) }.sdl()
                 sdl shouldContain "type Query"
                 sdl shouldContain "product(id: String!): Product"
                 sdl shouldContain "type Product"
@@ -22,30 +22,30 @@ class SchemaTest :
             }
 
             scenario("a @GraphQLIgnore property is not a GraphQL field") {
-                val sdl = GraphQl { query(ProductQueries()) }.sdl()
+                val sdl = Graphix { query(ProductQueries()) }.sdl()
                 sdl shouldNotContain "secret"
             }
 
             scenario("@GraphQLName renames a field") {
-                val sdl = GraphQl { query(GreetingQueries()) }.sdl()
+                val sdl = Graphix { query(GreetingQueries()) }.sdl()
                 sdl shouldContain "shout"
                 sdl shouldNotContain "loud"
             }
 
             scenario("enums and lists round-trip through SerialDescriptor") {
-                val sdl = GraphQl { query(ProductQueries()) }.sdl()
+                val sdl = Graphix { query(ProductQueries()) }.sdl()
                 sdl shouldContain "enum Size"
                 sdl shouldContain "sizes: [Size!]!"
             }
 
             scenario("a type that is not @Serializable fails naming that type") {
-                val failure = shouldThrow<GraphQlException> { GraphQl { query(BadQueries()) } }
+                val failure = shouldThrow<GraphixException> { Graphix { query(BadQueries()) } }
                 failure.message shouldContain "NotSerializable"
                 failure.message shouldContain "not @Serializable"
             }
 
             scenario("no query root is a schema-build failure") {
-                shouldThrow<GraphQlException> { GraphQl { } }
+                shouldThrow<GraphixException> { Graphix { } }
             }
         }
     })

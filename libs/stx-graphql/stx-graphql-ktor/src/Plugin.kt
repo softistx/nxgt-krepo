@@ -1,8 +1,8 @@
 package com.strange.graphql.ktor
 
 import com.strange.common.serialization.lenientJson
-import com.strange.graphql.GraphQl
-import com.strange.graphql.GraphQlBuilder
+import com.strange.graphql.Graphix
+import com.strange.graphql.GraphixBuilder
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.routing.routing
 import io.ktor.util.AttributeKey
@@ -27,12 +27,12 @@ val GraphQL =
     createApplicationPlugin(name = "GraphQL", createConfiguration = ::GraphQLConfiguration) {
         val engine =
             pluginConfig.instance
-                ?: GraphQl(pluginConfig.json, pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance"))
-        application.attributes.put(GraphQlKey, engine)
+                ?: Graphix(pluginConfig.json, pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance"))
+        application.attributes.put(GraphixKey, engine)
         val path = pluginConfig.path
         val json = pluginConfig.json
         application.routing { graphqlRoute(path, engine, json) }
-        if (pluginConfig.injectable) application.provideGraphQl()
+        if (pluginConfig.injectable) application.provideGraphix()
     }
 
 class GraphQLConfiguration {
@@ -43,7 +43,7 @@ class GraphQLConfiguration {
      * An engine built elsewhere. When set, [schema] is ignored. Whoever created it owns it —
      * graphql-java has no socket to close, so this plugin never calls `close`.
      */
-    var instance: GraphQl? = null
+    var instance: Graphix? = null
 
     var json: Json = lenientJson
 
@@ -52,11 +52,11 @@ class GraphQLConfiguration {
      */
     var injectable: Boolean = false
 
-    internal var schemaBlock: (GraphQlBuilder.() -> Unit)? = null
+    internal var schemaBlock: (GraphixBuilder.() -> Unit)? = null
 
-    fun schema(block: GraphQlBuilder.() -> Unit) {
+    fun schema(block: GraphixBuilder.() -> Unit) {
         schemaBlock = block
     }
 }
 
-internal val GraphQlKey = AttributeKey<GraphQl>("com.strange.graphql.GraphQl")
+internal val GraphixKey = AttributeKey<Graphix>("com.strange.graphql.Graphix")
