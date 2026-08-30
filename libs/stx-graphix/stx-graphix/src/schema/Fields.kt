@@ -47,5 +47,3 @@ internal fun fieldDefinition(
 }
 
 internal fun KParameter.isGraphQLContext(): Boolean = hasAnnotation<GraphQLContext>()
-
-internal fun KParameter.isLoad(): Boolean = hasAnnotation<Load>()

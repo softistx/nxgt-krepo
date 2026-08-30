@@ -117,8 +117,8 @@ class GraphixBuilder internal constructor(
     }
 
     /**
-     * Registers [instance]; every `@Loader` function becomes a named DataLoader. Also picked
-     * up from query/type instances that already carry `@Loader`.
+     * Registers [instance]; every `@BatchLoading` function becomes a DataLoader keyed by the
+     * parent source. Also picked up from query/type instances that already carry it.
      */
     fun loader(instance: Any) {
         namedLoaders += instance

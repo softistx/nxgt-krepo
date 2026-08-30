@@ -21,17 +21,18 @@ internal fun suspendFetcher(
         val scope =
             environment.graphQlContext.get<CoroutineScope>(OperationScope)
                 ?: error("no CoroutineScope in GraphQLContext — Graphix.execute must install one")
-        scope.future {
-            val arguments = LinkedHashMap<kotlin.reflect.KParameter, Any?>()
-            val instanceParameter =
-                function.instanceParameter
-                    ?: error("${function.name} is not a member function")
-            arguments[instanceParameter] = instance
-            arguments.putAll(bind(environment))
-            if (function.isSuspend) {
+        val arguments = LinkedHashMap<kotlin.reflect.KParameter, Any?>()
+        val instanceParameter =
+            function.instanceParameter
+                ?: error("${function.name} is not a member function")
+        arguments[instanceParameter] = instance
+        arguments.putAll(bind(environment))
+        if (function.isSuspend) {
+            scope.future {
                 function.callSuspendBy(arguments)
-            } else {
-                function.callBy(arguments)
             }
+        } else {
+            // Return CompletionStage as-is — wrapping DataLoader.load in future { } never completes.
+            function.callBy(arguments)
         }
     }

@@ -71,35 +71,20 @@ annotation class Batch(
 )
 
 /**
- * A named DataLoader. The instance is passed to [com.strange.graphix.GraphixBuilder.loader],
- * or sits on a query/type instance Graphix already holds.
+ * A named DataLoader keyed by the field's **parent** (the GraphQL source).
  *
- * The first parameter is `List<K>`. Return `Map<K, V>` or `List<V>` in key order. Resolvers
- * receive `V` through [@Load], not a `DataLoader`.
+ * The parameter is the parents of this level — `source: List<Product>`. Return
+ * `Map<Product, T>` (or `List<T>` in source order). `T` is what a `@Field` gets from
+ * `DataFetchingEnvironment.getDataLoader(name).load(source)`.
+ *
+ * Register with [com.strange.graphix.GraphixBuilder.loader], or put it on a query/type
+ * instance Graphix already holds.
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Loader(
+annotation class BatchLoading(
     /** DataLoader name. Empty uses the Kotlin function name. */
     val name: String = "",
-)
-
-/**
- * Fills this parameter from a named [@Loader] (or `@Batch` loader). Not a GraphQL argument.
- *
- * [from] is the parent property (`@Field`) or GraphQL argument (a root) used as the key.
- * Empty: the parent itself on a type field, the first GraphQL argument on a root.
- *
- * The DataFetcher calls `load(key)` immediately and then the resolver — never
- * `load` inside `future { }`.
- */
-@Target(AnnotationTarget.VALUE_PARAMETER)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Load(
-    /** Loader name. Empty uses the parameter name. */
-    val name: String = "",
-    /** Parent property or argument name used as the key. */
-    val from: String = "",
 )
 
 /** Overrides the GraphQL name of a type, field, or argument. Empty [value] is ignored. */
@@ -134,11 +119,14 @@ annotation class GraphQLDescription(
 annotation class GraphQLIgnore
 
 /**
- * Injects a **per-operation** value into a resolver parameter. Looked up by the parameter's
- * `KClass` in [com.strange.graphix.Graphix.execute]'s `context` map. Missing → [com.strange.graphix.GraphixException].
+ * Injects a value into a resolver parameter by `KClass`.
+ *
+ * [graphql.schema.DataFetchingEnvironment] is **this field** — source, arguments, DataLoader —
+ * not an entry in [com.strange.graphix.Graphix.execute]'s map. Everything else is looked up in
+ * that map. Missing → [com.strange.graphix.GraphixException].
  *
  * Not a GraphQL argument, and not how a Spring bean is reached — those stay on the controller
- * constructor. HTTP plugins currently put only the operation `CoroutineScope` in that map.
+ * constructor.
  */
 @Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
