@@ -55,7 +55,7 @@ written down:
 | Unknown fields | `@JsonIgnoreUnknownKeys` | `@JsonIgnoreProperties(ignoreUnknown = true)` |
 
 A style governs the interfaces too, so a client's signatures always line up with its models.
-`ModelsOnlyEmitter` is the `client: None` case — the same models, no API surface.
+`ModelsOnlyEmitter` is the `client: None` case — the same models and the same `Endpoints`, no API surface.
 
 **One classpath consequence**: `format: date` in the kotlinx style emits `kotlinx.datetime.LocalDate`,
 so a module whose document uses it needs `$libs.kotlinx.datetime`. Everything else the kotlinx style
@@ -163,11 +163,18 @@ per-schema parse helper each one calls.
 `ModelsOnlyEmitter` emits none of it. `client: None` means no API surface, and an exception nothing
 can throw is API surface.
 
+It does emit `Endpoints`, and the distinction is the point. Endpoint constants are not a surface —
+they are the document's own path strings, useful to a caller, a test and a server alike. And a
+hand-written server is exactly what `client: None` exists for: the only stack with no generated
+interface to drift against, so its routes are the ones that go stale without a word.
+
 ## Adding a client style
 
 1. Add a package under `src/`, and a `SourceEmitter` in it.
 2. Reuse what is already shared: `typeNameOf` and `apiFile` from `emit/`, and `modelFiles` from
-   `models/`. Pick the `ModelStyle` your serializer needs; do not re-emit models.
+   `models/`. Pick the `ModelStyle` your serializer needs; do not re-emit models. `endpointsFile`
+   goes in every emitter's list — it depends on the IR alone, so all three produce it byte for byte,
+   and `EndpointsTest` asserts exactly that.
 3. Throw `EmitException` for anything the target cannot express, naming the operation. Do not
    silently drop it, and do not reach for `OpenApiParseException` — the document is not at fault.
 4. Add a value to `ClientKind` in `plugins/openapi/src/OpenApiSettings.kt` and a branch to

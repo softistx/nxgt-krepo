@@ -1,6 +1,8 @@
 package com.strange.example.orders
 
+import com.strange.example.orders.api.Endpoints
 import com.strange.example.orders.api.apis.IHealthService
+import com.strange.example.orders.api.path
 import com.strange.spring.client.withClient
 import com.strange.spring.testing.MongoSpec
 import com.strange.spring.testing.awaitMigrations
@@ -19,6 +21,9 @@ import org.bson.Document
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.query.Query
 import kotlin.time.Duration.Companion.seconds
+
+/** A well-formed ObjectId that no document carries, for the 404 paths. */
+private const val MISSING_ID = "000000000000000000000000"
 
 /**
  * What a typed client cannot say — asserted on the wire, with a `WebTestClient`.
@@ -46,7 +51,7 @@ class OrdersApplicationTest(
             scenario("a route answers, encoded by the kotlinx codecs stx.json installed") {
                 web
                     .get()
-                    .uri("/health")
+                    .uri(Endpoints.GET_HEALTH.value)
                     .exchange()
                     .expectStatus()
                     .isOk
@@ -83,7 +88,7 @@ class OrdersApplicationTest(
             scenario("a missing order is a 404 carrying the key as its code") {
                 web
                     .get()
-                    .uri("/orders/000000000000000000000000")
+                    .uri(Endpoints.GET_ORDERS_ID.path(MISSING_ID))
                     .exchange()
                     .expectStatus()
                     .isNotFound
@@ -97,7 +102,7 @@ class OrdersApplicationTest(
             scenario("the same failure answers in the caller's language") {
                 web
                     .get()
-                    .uri("/orders/000000000000000000000000")
+                    .uri(Endpoints.GET_ORDERS_ID.path(MISSING_ID))
                     .header("Accept-Language", "fr")
                     .exchange()
                     .expectStatus()
@@ -112,7 +117,7 @@ class OrdersApplicationTest(
                 // is asserted here: a generated client has no name for an undocumented failure.
                 web
                     .get()
-                    .uri("/orders?filter=status:nonsense:PAID")
+                    .uri("${Endpoints.GET_ORDERS.value}?filter=status:nonsense:PAID")
                     .exchange()
                     .expectStatus()
                     .isBadRequest
@@ -124,7 +129,7 @@ class OrdersApplicationTest(
                 val body =
                     web
                         .post()
-                        .uri("/orders")
+                        .uri(Endpoints.GET_ORDERS.value)
                         .bodyValue(mapOf("reference" to "B-2001", "customer" to "hopper", "total" to 7_500))
                         .exchange()
                         .expectStatus()
@@ -143,7 +148,7 @@ class OrdersApplicationTest(
                 // startup, which is what makes the one line in the yaml worth a scenario.
                 web
                     .get()
-                    .uri("/orders/$id")
+                    .uri(Endpoints.GET_ORDERS_ID.path(id))
                     .exchange()
                     .expectStatus()
                     .isOk
@@ -156,7 +161,7 @@ class OrdersApplicationTest(
                 val id =
                     web
                         .post()
-                        .uri("/orders")
+                        .uri(Endpoints.GET_ORDERS.value)
                         .bodyValue(mapOf("reference" to "B-2002", "customer" to "ada", "total" to 900))
                         .exchange()
                         .expectStatus()
@@ -169,7 +174,7 @@ class OrdersApplicationTest(
 
                 web
                     .patch()
-                    .uri("/orders/$id/status")
+                    .uri(Endpoints.PATCH_ORDERS_ID_STATUS.path(id))
                     .bodyValue(mapOf("status" to "SHIPPED"))
                     .exchange()
                     .expectStatus()
@@ -192,7 +197,7 @@ class OrdersApplicationTest(
                     .forEach { (reference, total) ->
                         web
                             .post()
-                            .uri("/orders")
+                            .uri(Endpoints.GET_ORDERS.value)
                             .bodyValue(mapOf("reference" to reference, "customer" to "ada", "total" to total))
                             .exchange()
                             .expectStatus()
@@ -205,7 +210,7 @@ class OrdersApplicationTest(
                     val page =
                         web
                             .get()
-                            .uri("/orders?sort=total:ASC&size=1${cursor?.let { c -> "&cursor=$c" } ?: ""}")
+                            .uri("${Endpoints.GET_ORDERS.value}?sort=total:ASC&size=1${cursor?.let { c -> "&cursor=$c" } ?: ""}")
                             .exchange()
                             .expectStatus()
                             .isOk

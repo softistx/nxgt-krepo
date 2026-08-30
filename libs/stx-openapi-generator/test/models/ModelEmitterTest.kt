@@ -14,11 +14,21 @@ class ModelEmitterTest :
     FeatureSpec({
 
         feature("emitting models without a client") {
-            scenario("models only: no interfaces, just the schemas") {
+            scenario("models only: no interfaces and no client machinery, just the schemas") {
                 val files = ModelsOnlyEmitter().render()
 
                 files.keys.none { it == "com.example.api.apis.CategoriesApi" } shouldBe true
-                files.keys.toList() shouldBe listOf("com.example.api.models.Category")
+                files.keys.none { it.startsWith("com.example.api.utils.") } shouldBe true
+            }
+
+            scenario("and the endpoint constants, which are not an API surface") {
+                // The one thing `client: None` does emit besides models. A hand-written server has
+                // no generated interface to drift against, so its routes are the ones that go stale
+                // in silence — and a path constant is the document's own string, not a surface.
+                val files = ModelsOnlyEmitter().render()
+
+                files.keys.toList() shouldBe
+                    listOf("com.example.api.models.Category", "com.example.api.Endpoints")
             }
 
             scenario("the kotlinx style is what a client-less module gets by default") {

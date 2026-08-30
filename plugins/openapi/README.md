@@ -25,20 +25,52 @@ Enable it from the `module.yaml` of the module that should hold the generated co
 plugins:
   openapi:
     enabled: true
-    client: Ktorfit                       # or Spring, or None for models only
-    specFile: ../demo-api/openapi.yaml
-    packageName: com.strange.demo.client.api
+    specs:
+      - spec: ../demo-api/openapi.yaml
+        packageName: com.strange.demo.client.api
+        client: Ktorfit                   # or Spring, or None for models only
+```
+
+`specs` is a list, so **one module can generate from several documents**. A client of three upstream
+APIs used to need three modules — a boundary drawn by the build rather than by the deployment.
+
+```yaml
+    specs:
+      - spec: ../demo-api/openapi.yaml
+        packageName: com.strange.demo.spring.api
+        client: Spring
+      - spec: ../spring-orders/openapi/api-docs.yaml
+        packageName: com.strange.demo.spring.orders
+        client: Spring
 ```
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| `specFile` | `openapi.yaml` | Path to the document, relative to the module root. May point outside it. |
-| `packageName` | `generated.api` | Root of the generated output; nothing is written here directly — see [where the output goes](#where-the-output-goes). Set it — the default only exists so `enabled: true` alone works. |
-| `client` | `Ktorfit` | `Ktorfit`, `Spring`, or `None`. Decides what is generated, and therefore what the module needs on its classpath. |
-| `groupBy` | `Tag` | `Tag`, `Path` or `None`. `Tag` turns `categories-controller` into `CategoriesApi`. Ignored when `client: None`. |
-| `models` | `Auto` | `Auto`, `Kotlinx` or `Jackson`. `Auto` follows the client. |
-| `interfacePrefix` | `""` | Prepended to every interface name — `"I"` gives `ICategoriesApi`. |
-| `interfaceSuffix` | `"Api"` | Appended to every interface name — `"Client"` gives `CategoriesClient`. |
+| `specs` | `[]` | One entry per document. Empty fails the build: an enabled plugin generating nothing is a mistake, not a no-op. |
+| `specs[].spec` | *required* | Path to the document, relative to the module root. `..` reaches outside it. No default — the schema refuses defaults for a path, which suits the one setting with no sensible guess. |
+| `specs[].packageName` | `generated.api` | Root of this document's output; nothing is written here directly — see [where the output goes](#where-the-output-goes). **Must differ between entries** — see below. |
+| `specs[].client` | `Ktorfit` | `Ktorfit`, `Spring`, or `None`. Decides what is generated, and therefore what the module needs on its classpath. |
+| `specs[].groupBy` | `Tag` | `Tag`, `Path` or `None`. `Tag` turns `categories-controller` into `CategoriesApi`. Ignored when `client: None`. |
+| `specs[].models` | `Auto` | `Auto`, `Kotlinx` or `Jackson`. `Auto` follows the client. |
+| `specs[].interfacePrefix` | `""` | Prepended to every interface name — `"I"` gives `ICategoriesApi`. |
+| `specs[].interfaceSuffix` | `"Api"` | Appended to every interface name — `"Client"` gives `CategoriesClient`. |
+
+Each entry may name a different client: a module can take a Ktorfit client off one document and a
+Spring one off another.
+
+### Two documents must not share a package
+
+Every spec writes into one output directory, so two entries with the same `packageName` would
+overwrite each other file for file — and nothing downstream would notice, because the duplicate check
+inside the writer only spans a single document's own files. The plugin refuses that combination
+before it writes anything, naming both documents.
+
+### Each document gets its own `utils`, including its own `ApiOperation`
+
+A consequence worth knowing rather than a problem to solve. `<packageName>.utils.ApiOperation` is
+generated per spec, and `apiOperationProcessor` keys on that annotation *class* — so a factory built
+for one document will not recognise another's operations. Build one factory per document. Sharing the
+package instead would couple two documents that have nothing to do with each other.
 
 Models are always generated; they are the part of the document every consumer needs, and making them
 optional only ever produced a client whose payload types came from somewhere else.
@@ -187,18 +219,36 @@ build/tasks/_<module>_generate@openapi/    what this plugin emits
 build/generated/<module>/main/src/ksp/     what ktorfit-ksp then generates from it
 ```
 
-Under the first, three packages below `packageName` — and nothing directly in it:
+Under the first, one tree per spec: three packages below its `packageName`, plus a single file in
+`packageName` itself.
 
 ```
-<packageName>.apis      CategoriesApi, TagsApi, …            one per tag
-<packageName>.models    Category, Tag, ErrorResponse, …      one per schema
-<packageName>.utils     ApiOperation, ApiExceptions,         what the client needs underneath
-                        ApiErrors, ApiAuth,
-                        ApiProxySupport, ApiEnumConverters
+<packageName>.Endpoints  Endpoint, Endpoints, path()          the document's routes as constants
+<packageName>.apis       CategoriesApi, TagsApi, …            one per tag
+<packageName>.models     Category, Tag, ErrorResponse, …      one per schema
+<packageName>.utils      ApiOperation, ApiExceptions,         what the client needs underneath
+                         ApiErrors, ApiAuth,
+                         ApiProxySupport, ApiEnumConverters
 ```
 
 So a document with a `tags` endpoint group *and* a `Tag` schema generates both without a collision,
 and the two imports say which one you meant. The names are fixed and not configurable.
+
+`Endpoints` is the exception that sits in `packageName` itself, because it is the one generated thing
+a *caller* reads rather than plumbing a client needs:
+
+```kotlin
+Endpoints.PATCH_ORDERS_ID_STATUS.value          // "/orders/{id}/status"
+Endpoints.PATCH_ORDERS_ID_STATUS.label          // "[PATCH] /orders/{id}/status"
+Endpoints.PATCH_ORDERS_ID_STATUS.operationId    // "changeStatus"
+Endpoints.PATCH_ORDERS_ID_STATUS.summary        // "Move an order along."
+Endpoints.GET_ORDERS_ID.path("42")              // "/orders/42"
+Endpoints.all                                   // every one of them
+```
+
+It is emitted for **every** client, `None` included — a hand-written server has no generated
+interface to drift against, so its routes are the ones that go stale in silence. `docs/openapi-support.md`
+has the naming rule and what to do when two paths reduce to one constant.
 
 Two directories, because two stages ran. If the second is empty for a Ktorfit client, KSP never saw
 the interfaces.
@@ -217,9 +267,10 @@ com.strange.openapi.parser.OpenApiParseException: could not parse /…/openapi.y
 malformed or unreadable swagger supplied
 ```
 
-A missing spec, a blank `packageName`, an unsupported request media type, and a multipart body with
-no declared properties are all reported the same way, as are two operations or two schemas whose
-generated names would collide — the message names the pair rather than letting one overwrite the
+An empty `specs`, two entries sharing a `packageName`, a missing spec, a blank `packageName`, an
+unsupported request media type, and a multipart body with no declared properties are all reported the
+same way, as are two operations or two schemas whose generated names would collide — or two
+operations whose verb and path reduce to one `Endpoints` entry — the message names the pair rather than letting one overwrite the
 other. `EmitException` is the neighbouring case: the document parsed, but the chosen client cannot
 express something in it, such as a `TRACE` operation with `client: Spring`.
 

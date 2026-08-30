@@ -1,5 +1,6 @@
 package com.strange.example.orders
 
+import com.strange.example.orders.api.Endpoints
 import com.strange.example.orders.api.apis.IOrdersService
 import com.strange.example.orders.api.models.ChangeStatusRequest
 import com.strange.example.orders.api.models.OrderStatus
@@ -52,7 +53,7 @@ class OrderControllerTest(
         // Each scenario writes what it reads, so none of them depends on another having run.
         beforeEach { if (mongoAvailable) template.clear("orders", "audits") }
 
-        feature("GET /orders").config(enabled = mongoAvailable) {
+        feature(Endpoints.GET_ORDERS.label).config(enabled = mongoAvailable) {
             scenario("a page carries its rows and its cursors") {
                 repeat(3) { orders.placeOrder(PlaceOrderRequest(reference = "P-$it", customer = "ada", total = 100L + it)) }
 
@@ -73,7 +74,7 @@ class OrderControllerTest(
             }
         }
 
-        feature("GET /orders/valuable").config(enabled = mongoAvailable) {
+        feature(Endpoints.GET_ORDERS_VALUABLE.label).config(enabled = mongoAvailable) {
             scenario("only paid orders at or above the floor come back") {
                 val big = orders.placeOrder(PlaceOrderRequest(reference = "V-1", customer = "ada", total = 132_000)).data.id
                 val small = orders.placeOrder(PlaceOrderRequest(reference = "V-2", customer = "grace", total = 4_500)).data.id
@@ -93,7 +94,7 @@ class OrderControllerTest(
             }
         }
 
-        feature("POST /orders").config(enabled = mongoAvailable) {
+        feature(Endpoints.POST_ORDERS.label).config(enabled = mongoAvailable) {
             scenario("a placed order comes back with the id it was given") {
                 val placed = orders.placeOrder(PlaceOrderRequest(reference = "C-3001", customer = "lovelace", total = 12_000))
 
@@ -111,7 +112,7 @@ class OrderControllerTest(
             }
         }
 
-        feature("GET /orders/{id}").config(enabled = mongoAvailable) {
+        feature(Endpoints.GET_ORDERS_ID.label).config(enabled = mongoAvailable) {
             scenario("an order is readable by the id its placement returned") {
                 val placed = orders.placeOrder(PlaceOrderRequest(reference = "C-3002", customer = "hopper", total = 7_500))
 
@@ -139,7 +140,7 @@ class OrderControllerTest(
             }
         }
 
-        feature("PATCH /orders/{id}/status").config(enabled = mongoAvailable) {
+        feature(Endpoints.PATCH_ORDERS_ID_STATUS.label).config(enabled = mongoAvailable) {
             scenario("an enum argument goes out as the document spells it") {
                 val id = orders.placeOrder(PlaceOrderRequest(reference = "C-3003", customer = "clarke", total = 100)).data.id
 
@@ -148,7 +149,7 @@ class OrderControllerTest(
             }
         }
 
-        feature("DELETE /orders/{id}").config(enabled = mongoAvailable) {
+        feature(Endpoints.DELETE_ORDERS_ID.label).config(enabled = mongoAvailable) {
             scenario("cancelling one leaves it gone") {
                 val id = orders.placeOrder(PlaceOrderRequest(reference = "C-3004", customer = "noether", total = 10)).data.id
 
