@@ -27,6 +27,20 @@ annotation class Mutation(
     val name: String = "",
 )
 
+/**
+ * Marks a function as a field on the Subscription root. Naming follows [Query]. The instance
+ * is the one passed to [com.strange.graphix.GraphixBuilder.subscription].
+ *
+ * The return type must be `Flow<T>` or a reactive-streams / JDK `Publisher<T>`. `T` is the
+ * GraphQL field type. Collect with [com.strange.graphix.Graphix.subscribe], not [com.strange.graphix.Graphix.execute].
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Subscription(
+    /** GraphQL field name. Empty uses [GraphQLName] or the Kotlin name. */
+    val name: String = "",
+)
+
 /** Overrides the GraphQL name of a type, field, or argument. Empty [value] is ignored. */
 @Target(
     AnnotationTarget.CLASS,

@@ -13,6 +13,7 @@ internal fun KFunction<*>.graphQLName(kind: RootKind): String {
         when (kind) {
             RootKind.QUERY -> findAnnotation<Query>()?.name.orEmpty()
             RootKind.MUTATION -> findAnnotation<Mutation>()?.name.orEmpty()
+            RootKind.SUBSCRIPTION -> findAnnotation<Subscription>()?.name.orEmpty()
         }
     if (fromKind.isNotEmpty()) return fromKind
     findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
@@ -39,5 +40,5 @@ internal fun KAnnotatedElement.graphQLDescription(): String? = findAnnotation<Gr
 
 internal fun KProperty<*>.isGraphQLIgnored(): Boolean = findAnnotation<GraphQLIgnore>() != null
 
-/** Query vs Mutation — which annotation and which root type to build. */
-internal enum class RootKind { QUERY, MUTATION }
+/** Query, Mutation or Subscription — which annotation and which root type to build. */
+internal enum class RootKind { QUERY, MUTATION, SUBSCRIPTION }

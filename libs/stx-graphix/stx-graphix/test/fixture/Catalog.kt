@@ -6,7 +6,12 @@ import com.strange.graphix.schema.GraphQLIgnore
 import com.strange.graphix.schema.GraphQLName
 import com.strange.graphix.schema.Mutation
 import com.strange.graphix.schema.Query
+import com.strange.graphix.schema.Subscription
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.serialization.Serializable
+import org.reactivestreams.Publisher
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -76,6 +81,28 @@ class ContextQueries {
 class BoomQueries {
     @Query
     fun boom(): String = throw IllegalStateException("nope")
+}
+
+class TickSubscriptions {
+    @Subscription
+    fun ticks(): Flow<Int> = flowOf(1, 2, 3)
+}
+
+class TickPublisherSubscriptions {
+    @Subscription
+    fun ticks(): Publisher<Int> = flowOf(1, 2).asPublisher()
+}
+
+class ContextSubscriptions {
+    @Subscription
+    fun who(
+        @GraphQLContext caller: Caller,
+    ): Flow<String> = flowOf(caller.locale)
+}
+
+class BadSubscriptions {
+    @Subscription
+    fun ticks(): Int = 1
 }
 
 @OptIn(ExperimentalUuidApi::class)
