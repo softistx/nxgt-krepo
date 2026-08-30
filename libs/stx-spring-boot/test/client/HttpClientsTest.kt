@@ -4,9 +4,11 @@ import com.strange.spring.error.ApiException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import org.springframework.format.support.DefaultFormattingConversionService
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.ExchangeFunction
 import org.springframework.web.service.annotation.GetExchange
@@ -17,6 +19,24 @@ import java.util.concurrent.CopyOnWriteArrayList
 private interface Catalog {
     @GetExchange("/products")
     suspend fun products(): String
+
+    @GetExchange("/products/{grade}")
+    suspend fun byGrade(
+        @PathVariable grade: Grade,
+    ): String
+}
+
+/**
+ * An enum whose wire value is not its Kotlin name — the shape `plugins/openapi` generates for a
+ * document whose enum is spelled in kebab-case.
+ */
+private enum class Grade(
+    val wireValue: String,
+) {
+    TOP_SHELF("top-shelf"),
+    ;
+
+    override fun toString(): String = wireValue
 }
 
 /** Answers every call with [status] and [body], without a socket. */
@@ -108,5 +128,39 @@ class HttpClientsTest :
                 }
 
             factory.createClient<Catalog>().products() shouldBe "ok"
+        }
+
+        "the proxy factory has an escape hatch of its own" {
+            // Spring writes an enum argument with `Enum.name()` and never consults `toString()`,
+            // so without a converter this asks for `/products/TOP_SHELF` — a request that succeeds
+            // against nothing. A generated client registers `registerApiEnumConverters` through
+            // exactly this parameter; here the converter is written out so the spec needs no
+            // generated code.
+            val asked = CopyOnWriteArrayList<String>()
+            val conversions =
+                DefaultFormattingConversionService().apply {
+                    addConverter(Grade::class.java, String::class.java) { it.wireValue }
+                }
+
+            val catalog =
+                httpClient<Catalog>(
+                    "https://catalog.test",
+                    configure = {
+                        exchangeFunction { request ->
+                            asked += request.url().path
+                            Mono.just(
+                                ClientResponse
+                                    .create(HttpStatus.OK)
+                                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                                    .body("one product")
+                                    .build(),
+                            )
+                        }
+                    },
+                    factory = { conversionService(conversions) },
+                )
+
+            catalog.byGrade(Grade.TOP_SHELF) shouldBe "one product"
+            asked.single() shouldBe "/products/top-shelf"
         }
     })

@@ -20,9 +20,8 @@ redocly bundle orders@v1 -o examples/spring-orders/openapi/api-docs.yaml
 ./kotlin build -m spring-orders
 ```
 
-**Bundle before building.** `specFile` names `api-docs.yaml`, not `openapi.yaml`, so an un-bundled
-edit compiles the previous contract and says nothing. The bundle is committed: it is what the
-generator actually saw.
+**Bundle before building.** `specFile` names `api-docs.yaml`, so an un-bundled edit compiles the
+previous contract and says nothing. The bundle is committed: it is what the generator actually saw.
 
 ## Where the document lives
 
@@ -34,8 +33,8 @@ openapi/
   api-docs.yaml           the bundle: redocly's output, committed, and what specFile names
   paths/                  one file per URL, snake_case, braces stripped: /orders/{id}/status → orders_id_status.yaml
   components/schemas/     one file per component, PascalCase, basename == component name
-  components/responses/   BadRequest.yaml NotFound.yaml Conflict.yaml ResourceDeleted.yaml
-  components/parameters/  lowercase, named after the parameter: id.yaml size.yaml cursor.yaml
+  components/responses/   PascalCase by HTTP meaning: BadRequest.yaml, Conflict.yaml
+  components/parameters/  lowercase, named after the parameter: id.yaml, cursor.yaml
   components/security/    PascalCase scheme name: Bearer.yaml
 ```
 
@@ -112,6 +111,33 @@ class OrderController(private val service: OrderService) : IOrdersService {
 **`coRouter` is still right for what a proxy cannot express** — streaming, multipart, and any
 signature needing `ServerWebExchange` or `FilePart`. The two styles coexist in one application.
 
+## Testing a Spring API
+
+**A spec drives the application through the same interfaces its controllers implement.** A
+`WebTestClient` proves the wire shape; a typed client proves the *contract*, and a document change
+that neither side followed stops compiling on both at once. `stx-spring-boot`'s `httpServiceFactory`
+builds it — its `factory` parameter is the seam a generated client needs:
+
+```kotlin
+// `factory` is for the proxy, the trailing lambda for the WebClient. Both are needed:
+// registerApiEnumConverters + apiOperationProcessor above, kotlinx codecs + apiErrorFilter below.
+val orders: IOrdersService = httpServiceFactory(baseUrl, factory = { … }) { … }.createClient()
+```
+
+`examples/spring-orders/test/ApiClients.kt` is that call written out, with the reason each half is
+there and why none of it fails at build time.
+
+- **Name a feature after the route** — `feature("POST /orders, through IOrdersService")` — so a
+  failure names the endpoint and the list of features reads as the surface the document declares.
+  `nxgt-rest` names them the same way.
+- **Reuse the application's own `stxWebJson` bean**, not a `Json` configured nearby.
+- **Keep a `WebTestClient` for what a typed client hides**: the envelope's JSON shape, the translated
+  message text, and a status for a case the document does not declare.
+- **`apiErrorFilter()` runs closer to the transport than `httpServiceFactory`'s own status handler**,
+  so a documented failure arrives as the generated `ErrorResponseException` carrying a parsed body.
+  Leave it out and it is the untyped `ApiException` — right for an internal caller, wrong for a spec
+  asserting the document.
+
 ## Ktor — `stx-ktor`, and the routes mirror the path files
 
 There is no Ktor *server* emitter — `client: Ktorfit` produces a client interface, which a server
@@ -121,9 +147,8 @@ consumer module takes `client: Ktorfit` off the same document.
 
 ## What only surfaces at run time
 
-- **The generated `.utils` package is client machinery, and a server gets it too** — the filters,
-  `ApiProxySupport`, `ApiEnumConverters`. Dead code there, and it compiles only because
-  `stx-spring-boot` exports the WebFlux starter, which brings the Jackson 3 they reference.
+- **The generated `.utils` package is client machinery, and a server gets it too.** Dead code there,
+  and it compiles only because `stx-spring-boot` exports the WebFlux starter, which brings Jackson 3.
 - **An error schema is parsed by Jackson even in the kotlinx style.** `apiErrorFilter` takes an
   `ObjectMapper` whatever `models` says, so a schema used by a non-2xx response must stay
   Jackson-bindable: a `format: date-time` in it becomes a `kotlin.time.Instant` that Jackson cannot
@@ -132,10 +157,9 @@ consumer module takes `client: Ktorfit` off the same document.
   exactly this reason.
 - **`@GetExchange(url = "orders/{id}")` has no leading slash** — a client gets its base from
   `WebClient.baseUrl` — and server-side that is still correct. Verified against the spring-webflux
-  7.0.8 sources: the mapping reads `@HttpExchange` with `SearchStrategy.TYPE_HIERARCHY` so an
-  implemented interface is found, `url` reaches `HttpExchange.value()` through a mutual `@AliasFor`,
-  and `RequestMappingInfo` puts every pattern through `PathPatternParser.initFullPathPattern`, which
-  prepends the `/`.
+  7.0.8 sources: the mapping reads `@HttpExchange` with `SearchStrategy.TYPE_HIERARCHY`, `url`
+  reaches `HttpExchange.value()` through a mutual `@AliasFor`, and `RequestMappingInfo` puts every
+  pattern through `PathPatternParser.initFullPathPattern`, which prepends the `/`.
 
 ## Where to read
 
