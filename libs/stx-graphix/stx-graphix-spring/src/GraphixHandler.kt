@@ -19,11 +19,13 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import reactor.core.publisher.Mono
 
+/** WebFlux adapter: the same JSON envelope as Ktor, over `RouterFunction`. */
 internal class GraphixHandler(
     private val engine: Graphix,
     private val json: Json,
     private val path: String,
 ) {
+    /** POST and GET at [path]. Field errors stay HTTP 200; malformed JSON is 400. */
     fun router(): RouterFunction<ServerResponse> =
         RouterFunctions
             .route()

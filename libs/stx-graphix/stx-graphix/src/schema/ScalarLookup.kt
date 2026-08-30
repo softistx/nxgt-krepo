@@ -15,6 +15,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
+/** Spec and Kotlin scalars by `KClass`. `null` means keep walking the SerialDescriptor. */
 @OptIn(ExperimentalUuidApi::class)
 internal fun scalarFromClass(kType: KType): GraphQLScalarType? {
     val classifier = kType.classifier as? KClass<*> ?: return null
@@ -30,6 +31,7 @@ internal fun scalarFromClass(kType: KType): GraphQLScalarType? {
     }
 }
 
+/** Same table as [scalarFromClass], keyed by `SerialDescriptor.serialName`. */
 internal fun scalarOf(descriptor: SerialDescriptor): GraphQLScalarType? =
     when (descriptor.serialName) {
         "kotlin.String", "String" -> {
@@ -72,11 +74,13 @@ internal fun scalarOf(descriptor: SerialDescriptor): GraphQLScalarType? =
         }
     }
 
+/** Wraps in GraphQL NonNull when [nullable] is false. */
 internal fun wrapOutput(
     type: GraphQLOutputType,
     nullable: Boolean,
 ): GraphQLOutputType = if (nullable) type else GraphQLNonNull.nonNull(type)
 
+/** Same wrapping as [wrapOutput], for input types. */
 internal fun wrapInput(
     type: GraphQLInputType,
     nullable: Boolean,

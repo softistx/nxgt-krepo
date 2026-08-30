@@ -16,6 +16,12 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.valueParameters
 
+/**
+ * Binds GraphQL arguments and `@GraphQLContext` parameters onto [function].
+ *
+ * An optional Kotlin parameter with no argument is omitted so `callBy` uses the default.
+ * `@GraphQLContext` is looked up by `KClass` and is not a GraphQL argument.
+ */
 internal fun bindArguments(
     function: KFunction<*>,
     environment: DataFetchingEnvironment,
