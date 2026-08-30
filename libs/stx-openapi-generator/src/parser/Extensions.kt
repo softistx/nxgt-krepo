@@ -23,6 +23,15 @@ internal object Ext {
 
     const val VALUE_CLASS: String = "x-kotlin-value-class"
 
+    /**
+     * Names an operation's entry in the generated `Endpoints` object.
+     *
+     * Distinct from [NAME], which renames the *function*: the constant is derived from the verb and
+     * the path rather than from the operationId, so the two can collide independently and each needs
+     * its own way out.
+     */
+    const val ENDPOINT: String = "x-kotlin-endpoint"
+
     /** Not in our namespace: these are the spellings other toolchains already write. */
     const val DEPRECATED_REASON: String = "x-deprecated-reason"
 
@@ -38,7 +47,7 @@ internal object Ext {
     const val ENUM_DESCRIPTIONS: String = "x-enum-descriptions"
 
     /** Every key in [KOTLIN_PREFIX] this generator implements. Adding a key means adding it here. */
-    val kotlinKeys: Set<String> = setOf(NAME, SKIP, TYPE, VALUE_CLASS)
+    val kotlinKeys: Set<String> = setOf(NAME, SKIP, TYPE, VALUE_CLASS, ENDPOINT)
 }
 
 /**
@@ -49,6 +58,15 @@ internal object Ext {
  */
 internal fun Map<String, Any?>?.kotlinName(where: String): String? =
     extensionString(Ext.NAME, where)?.also { requireIdentifier(it, Ext.NAME, where) }
+
+/**
+ * `x-kotlin-endpoint` — this operation's name in the generated `Endpoints` object.
+ *
+ * The escape hatch for the one collision the document cannot fix by renaming: two operations whose
+ * verb and path reduce to the same constant, which no `operationId` change can separate.
+ */
+internal fun Map<String, Any?>?.endpointConstant(where: String): String? =
+    extensionString(Ext.ENDPOINT, where)?.also { requireIdentifier(it, Ext.ENDPOINT, where) }
 
 /**
  * A name a document states has to be usable as written.

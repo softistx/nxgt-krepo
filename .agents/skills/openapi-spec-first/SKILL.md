@@ -20,7 +20,7 @@ redocly bundle orders@v1 -o examples/spring-orders/openapi/api-docs.yaml
 ./kotlin build -m spring-orders
 ```
 
-**Bundle before building.** `specFile` names `api-docs.yaml`, so an un-bundled edit compiles the
+**Bundle before building.** `spec` names `api-docs.yaml`, so an un-bundled edit compiles the
 previous contract and says nothing. The bundle is committed: it is what the generator actually saw.
 
 ## Where the document lives
@@ -35,6 +35,8 @@ component.
   path file is snake_case with the braces stripped: `/orders/{id}/status` → `orders_id_status.yaml`.
 - **A path file's top level is the set of verbs**, so every verb on one URL lives in one file, and
   `$ref` targets are relative and unquoted (`../components/schemas/Order.yaml`, `./PageInfo.yaml`).
+- **A module may generate from several documents.** `specs:` is a list; each entry needs a
+  `packageName` of its own, and the plugin refuses two that share one.
 - **A request body is named after its operation, suffixed `Request`** — `placeOrder` sends
   `PlaceOrderRequest`, `changeStatus` sends `ChangeStatusRequest`. Not after the resource: the body
   belongs to the operation, and two operations on one URL send different shapes.
@@ -115,8 +117,12 @@ contract. It is `nxgt-rest`'s convention; what differs here is that nobody write
   so the application starts once for the module. The base URL is a constant because the port is.
 - **The rest of the wiring is one test helper** — the factory, a `WebTestClient`, the cleanup —
   not repeated per spec: `nxgt-rest`'s `helpers/TestHelper.kt`, here `test/TestHelper.kt`.
-- **One spec per controller, features named after the route** — `feature("POST /orders")` — so a
-  failure names the endpoint and the list reads as the surface the document declares.
+- **One spec per controller, features named from the generated constants** —
+  `feature(Endpoints.POST_ORDERS.label)`, which reads `[POST] /orders` — so a failure names the
+  endpoint, the list reads as the surface the document declares, *and* a renamed path fails to
+  compile rather than leaving a test named after a route that no longer exists. `.path("42")` fills a
+  template for a `WebTestClient` `uri(...)`, and `Endpoints.all` lets a spec assert that no route
+  went untested.
 - **A documented failure is `shouldThrow<ErrorResponseException>`** on its `status` and its `code`,
   never on the message: `apiErrorFilter()` runs closer to the transport than `httpServiceFactory`'s
   status handler, so the parsed body is there — and the text is translated.

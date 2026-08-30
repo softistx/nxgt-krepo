@@ -19,18 +19,23 @@ Two rules hold across everything below:
 
 ## Where it lands
 
-Nothing is written to the package you name. Every generated file goes in one of three sub-packages
-below it:
+Almost nothing is written to the package you name. Every generated file goes in one of three
+sub-packages below it, with a single exception:
 
 ```
-<packageName>.apis      one interface per group
-<packageName>.models    one declaration per schema
-<packageName>.utils     the machinery a client needs and a caller mostly does not
+<packageName>.Endpoints  the document's routes as constants — the exception
+<packageName>.apis       one interface per group
+<packageName>.models     one declaration per schema
+<packageName>.utils      the machinery a client needs and a caller mostly does not
 ```
 
 This is why a document can have a `tags` endpoint group *and* a `Tag` schema: they are `apis.TagsApi`
 and `models.Tag`, and neither has to give way. Names still collide **within** a package, and those
 are [listed below](#colliding-names).
+
+`Endpoints` sits above the split because it does not belong to either side of it — it is not an API
+surface and not plumbing, but the document's own path strings, which a server, a client and a test
+all read. See [Endpoints](#endpoints).
 
 ## Type mapping
 
@@ -203,6 +208,7 @@ A document can say how it wants to become Kotlin, through `x-*`. What is read:
 | `x-kotlin-name` | schema, property, operation, parameter, tag | the Kotlin name; the wire name is untouched |
 | `x-kotlin-type` | schema, property | a type the consumer already owns; nothing is generated |
 | `x-kotlin-value-class` | scalar schema | a `@JvmInline value class` over that scalar |
+| `x-kotlin-endpoint` | operation | the name of its entry in `Endpoints`; unlike `x-kotlin-name`, the function keeps its own name |
 | `x-kotlin-skip` / `x-internal` | schema, operation | left out of the generated client |
 | `x-deprecated-reason` | schema, property, operation | the message inside `@Deprecated` |
 | `x-enum-varnames` / `x-enumNames` | enum schema | the entry names |
@@ -332,6 +338,61 @@ the credential is the answer to a server challenge rather than a value the calle
 one parses; an operation **requiring** one is an `EmitException` naming the operation and the
 scheme.
 
+## Endpoints
+
+Every operation becomes a constant, so the one thing a spec-first application still typed by hand
+stops being typed by hand: the route.
+
+```kotlin
+public data class Endpoint(
+    public val method: String,        // "PATCH"
+    public val `value`: String,       // "/orders/{id}/status"
+    public val operationId: String,   // "changeStatus"
+    public val summary: String?,      // "Move an order along."
+) {
+    public val label: String get() = "[$method] $value"
+}
+
+public object Endpoints {
+    public val PATCH_ORDERS_ID_STATUS: Endpoint = …
+    public val all: List<Endpoint> = …
+}
+
+public fun Endpoint.path(vararg values: String): String
+```
+
+**The name is the verb and the path**, uppercased with every separator becoming `_`: `PATCH` +
+`/orders/{id}/status` gives `PATCH_ORDERS_ID_STATUS`. A template variable's braces are punctuation
+like any other, which is what makes the name readable — and camel humps inside one are split, so
+`{orderId}` reads `ORDER_ID` rather than `ORDERID`. Derived from the path rather than from the
+`operationId` because a test name is read far more often than it is written, and `PUT_ORDERS_ID` says
+where the request goes.
+
+That derivation is also why two paths can reduce to one name; see [Colliding names](#colliding-names).
+
+**`label` is computed, not stored.** One definition of the `[PATCH] /orders/{id}/status` format, so it
+cannot drift between endpoints. It is written for a test name:
+
+```kotlin
+feature(Endpoints.PATCH_ORDERS_ID_STATUS.label) { … }
+```
+
+**`path` fills the template in order**, and throws on the wrong number of values rather than handing
+back a URL with a literal `{id}` still in it — which answers 404, and a 404 names nothing.
+
+**`all` is why this is an `object` and not an `enum`.** The listing an enum gives away for free,
+handed back: a spec can assert the document has no untested route by iterating rather than by
+remembering.
+
+**A `data class` and not a `value class`.** A Kotlin value class carries exactly one constructor
+property; an endpoint is four facts. Packing them into one delimited string and splitting it in the
+getters would trade a compile-time record for string surgery on every read.
+
+**Emitted for every `client`, `None` included.** Endpoint constants are not an API surface — that
+rule is about an exception nothing can throw, not about the document's own strings — and a
+hand-written server is the case with the most to lose, being the only stack with no generated
+interface to drift against.
+
 ## Colliding names
 
 Two different things in a spec can want the same Kotlin name, and the generator's rule is that a
@@ -346,6 +407,12 @@ collision is either merged or fatal — never silently resolved by whichever one
   `pageInfo` are both `PageInfo`.
 - **`writeAllTo` refuses a batch containing two files with the same fully-qualified name**, which
   catches anything the earlier checks did not — writing them in sequence would let the last win.
+- **Two operations whose verb and path reduce to one `Endpoints` entry fail.** A category of its
+  own, because `Endpoints` is a single object over the whole document: this collides *across* groups
+  where every other check here is per group or per file, and two properties of one object are not two
+  files, so `writeAllTo` never sees it. Left alone it would surface as *conflicting declarations*
+  inside a file nobody wrote. `x-kotlin-endpoint` is the way out — and it is the only one, since no
+  `operationId` change can separate two operations that share a verb and a path shape.
 - **A generated exception that would take a name the `utils` package already uses fails.** The
   exception for a schema is its name plus `Exception`, so a schema called `Api` derives
   `ApiException`, the base class every other one extends. Rename the schema with `x-kotlin-name`.

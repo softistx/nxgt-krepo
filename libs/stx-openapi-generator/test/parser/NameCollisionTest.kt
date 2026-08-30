@@ -89,6 +89,103 @@ class NameCollisionTest :
             }
         }
 
+        feature("endpoint constants that collide") {
+            scenario("a template variable and a literal segment reduce to one constant, and that is fatal") {
+                // Nothing downstream would catch this: two properties of one object are not two
+                // files, so the writer's duplicate check never sees them and the first symptom
+                // would be `conflicting declarations` inside a file nobody wrote.
+                val error =
+                    shouldThrow<OpenApiParseException> {
+                        OpenApiParser().parse(
+                            spec(
+                                """
+                                |  /orders/{id}:
+                                |    get:
+                                |      tags: [orders]
+                                |      operationId: findOrder
+                                |      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+                                |      responses: {'200': {description: ok}}
+                                |  /orders/id:
+                                |    get: {tags: [orders], operationId: findOrderById, responses: {'200': {description: ok}}}
+                                """.trimMargin(),
+                            ),
+                        )
+                    }
+
+                error.message shouldContain "GET_ORDERS_ID"
+                error.message shouldContain "GET /orders/{id}"
+                error.message shouldContain "GET /orders/id"
+                error.message shouldContain "x-kotlin-endpoint"
+            }
+
+            scenario("the same verb and path under two tags collides too, though neither group does") {
+                // The check runs over the whole document because `Endpoints` is one object over the
+                // whole document — every other collision check here is per group or per file.
+                val error =
+                    shouldThrow<OpenApiParseException> {
+                        OpenApiParser(grouping = Grouping.Path).parse(
+                            spec(
+                                """
+                                |  /orders:
+                                |    get: {tags: [a], operationId: findOrders, responses: {'200': {description: ok}}}
+                                |  /orders/:
+                                |    get: {tags: [b], operationId: listOrders, responses: {'200': {description: ok}}}
+                                """.trimMargin(),
+                            ),
+                        )
+                    }
+
+                error.message shouldContain "GET_ORDERS"
+            }
+
+            scenario("x-kotlin-endpoint separates them, which is what the message tells the author") {
+                val model =
+                    OpenApiParser().parse(
+                        spec(
+                            """
+                            |  /orders/{id}:
+                            |    get:
+                            |      tags: [orders]
+                            |      operationId: findOrder
+                            |      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+                            |      responses: {'200': {description: ok}}
+                            |  /orders/id:
+                            |    get:
+                            |      tags: [orders]
+                            |      operationId: findOrderById
+                            |      x-kotlin-endpoint: GET_ORDERS_ID_LITERAL
+                            |      responses: {'200': {description: ok}}
+                            """.trimMargin(),
+                        ),
+                    )
+
+                model.groups
+                    .flatMap { it.operations }
+                    .map { it.constant }
+                    .sorted() shouldContainExactly listOf("GET_ORDERS_ID", "GET_ORDERS_ID_LITERAL")
+            }
+
+            scenario("an x-kotlin-endpoint that is not an identifier is refused where it is written") {
+                val error =
+                    shouldThrow<OpenApiParseException> {
+                        OpenApiParser().parse(
+                            spec(
+                                """
+                                |  /orders:
+                                |    get:
+                                |      tags: [orders]
+                                |      operationId: findOrders
+                                |      x-kotlin-endpoint: not an identifier
+                                |      responses: {'200': {description: ok}}
+                                """.trimMargin(),
+                            ),
+                        )
+                    }
+
+                error.message shouldContain "x-kotlin-endpoint"
+            }
+        }
+
         feature("ambiguous responses") {
             scenario("the lowest 2xx decides the return type, whatever order the document lists") {
                 val model =

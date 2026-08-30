@@ -62,6 +62,9 @@ public class OpenApiParser(
                     Operation(
                         id = id,
                         name = operation.extensions.kotlinName("$method $path") ?: Naming.functionName(id),
+                        constant =
+                            operation.extensions.endpointConstant("$method $path")
+                                ?: Naming.endpointConstant(method.name, path),
                         httpMethod = method.name,
                         path = path.trimStart('/'),
                         parameters = openApi.parseParameters(operation, "$method $path"),
@@ -77,6 +80,9 @@ public class OpenApiParser(
         return byGroup
             .map { (tag, ops) -> ApiGroup(interfaceNameOf(openApi, tag), ops.sortedBy { it.name }) }
             .mergeSameNamedGroups()
+            // After the merge, because `Endpoints` is one object over the whole document: two tags
+            // that each carry `PUT /orders/{id}` collide there even though neither group does.
+            .requireDistinctEndpointConstants()
     }
 
     /**

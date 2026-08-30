@@ -21,8 +21,20 @@ test-dependencies:
   - $libs.kotest.assertions.core
 
 plugins:
+  # Two documents, two packages, one module. This is the case the list exists for: a client of more
+  # than one upstream API used to need a module per API, because the plugin took a single `specFile`
+  # and a single `packageName`. The packages must differ — every spec writes into one output
+  # directory, so sharing one would have the second overwrite the first, and the plugin refuses it.
   openapi:
     enabled: true
-    client: Spring
-    specFile: ../demo-api/openapi.yaml
-    packageName: com.strange.demo.spring.api
+    specs:
+      - spec: ../demo-api/openapi.yaml
+        packageName: com.strange.demo.spring.api
+        client: Spring
+
+      # The orders API, from the bundle `redocly` writes. Nothing here calls it; it is generated to
+      # prove that a second document lands beside the first with its own models, its own interfaces
+      # and its own `Endpoints`, and that the two do not tread on each other.
+      - spec: ../spring-orders/openapi/api-docs.yaml
+        packageName: com.strange.demo.spring.orders
+        client: Spring

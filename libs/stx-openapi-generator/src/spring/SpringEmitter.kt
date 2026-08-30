@@ -17,6 +17,7 @@ import com.strange.openapi.emit.SourceEmitter
 import com.strange.openapi.emit.apiExceptionFile
 import com.strange.openapi.emit.apiFile
 import com.strange.openapi.emit.apiOperationFile
+import com.strange.openapi.emit.endpointsFile
 import com.strange.openapi.emit.optionality
 import com.strange.openapi.emit.requireEverySchemeSatisfiable
 import com.strange.openapi.emit.requireExceptionNamesFree
@@ -63,6 +64,7 @@ public class SpringEmitter(
         model.requireEverySchemeSatisfiable()
         return model.groups.map { emitGroup(it, options) } +
             modelFiles(model, options, style) +
+            endpointsFile(model, options) +
             apiOperationFile(options) +
             apiExceptionFile(model, options) +
             proxySupportFile(options) +
