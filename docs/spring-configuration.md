@@ -1,21 +1,21 @@
-# What a stx-spring application may configure
+# What a stx-spring-boot application may configure
 
-Every `stx.*` key, what it switches on, and what it costs. This is the half of `libs/stx-spring` that
-gains an entry every phase — a key per capability, and roughly five per new integration — so it lives
-here rather than in the module README, which answers *why the integration is shaped this way* and
-stays roughly the size it is.
+Every `stx.*` key, what it switches on, and what it costs. This is the half of `libs/stx-spring-boot`
+that gains an entry every phase — a key per capability, and roughly five per new integration — so it
+lives here rather than in the module README, which answers *why the integration is shaped this way*
+and stays roughly the size it is.
 
-[`libs/stx-spring/README.md`](../libs/stx-spring/README.md) has the reasoning.
+[`libs/stx-spring-boot/README.md`](../libs/stx-spring-boot/README.md) has the reasoning.
 [`docs/spring-mongo-queries.md`](spring-mongo-queries.md) is the other half of this one — what a
 query may say.
 
 ## Four rules that apply to every key on this page
 
 **Nothing is on by default.** Every `enabled` below defaults to `false`, and every
-`@ConditionalOnProperty` behind them is written without `matchIfMissing`. Putting `stx-spring` on a
-classpath starts nothing, opens no connection and registers no filter. The one thing that does happen
-is that a package guarded by `@ConditionalOnClass` becomes reachable when the application adds that
-library itself.
+`@ConditionalOnProperty` behind them is written without `matchIfMissing`. Putting `stx-spring-boot`
+on a classpath starts nothing, opens no connection and registers no filter. The one thing that does
+happen is that a package guarded by `@ConditionalOnClass` becomes reachable when the application
+adds that library itself.
 
 **A `defaultValue` of — below means the key is genuinely required when its feature is enabled**, and
 the failure names the key: `stx.mongo.enabled is true but stx.mongo.uri is not set`. That is a
@@ -298,8 +298,8 @@ consume nothing.
 ## Where these keys come from
 
 The IDE completes them from
-`libs/stx-spring/resources/META-INF/additional-spring-configuration-metadata.json`, which is written
-by hand.
+`libs/stx-spring-boot/resources/META-INF/additional-spring-configuration-metadata.json`, which is
+written by hand.
 
 It has to be. `spring-boot-configuration-processor` is a *Java* annotation processor, this toolchain
 has no kapt, and its `settings.java.annotationProcessing` runs javac over Java sources only — so the

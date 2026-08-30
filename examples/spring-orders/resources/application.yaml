@@ -7,7 +7,7 @@ spring:
       # configuration and does not re-express it. The workspace's replica set answers here.
       uri: ${MONGO_URI:mongodb://localhost:27017/spring_orders}
 
-# Everything below is off by default. Nothing in `stx-spring` starts because the jar is on the
+# Everything below is off by default. Nothing in `stx-spring-boot` starts because the jar is on the
 # classpath — each of these lines is what turns one auto-configuration on, and removing one removes
 # exactly the feature it names. `docs/spring-configuration.md` is the full list.
 stx:

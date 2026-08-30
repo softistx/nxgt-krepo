@@ -85,9 +85,9 @@ class CorsTest :
 
         feature("the policy is checked before the server starts serving") {
             scenario("a wildcard origin with credentials fails at install") {
-                // The same rule stx-spring enforces, from the same code — this is the whole point of
-                // the policy being a shared type rather than two configuration classes that agree
-                // for as long as somebody keeps them agreeing.
+                // The same rule stx-spring-boot enforces, from the same code — this is the whole
+                // point of the policy being a shared type rather than two configuration classes
+                // that agree for as long as somebody keeps them agreeing.
                 shouldThrow<IllegalArgumentException> {
                     testApplication {
                         serve(CorsPolicy(origins = listOf("*"), allowCredentials = true))

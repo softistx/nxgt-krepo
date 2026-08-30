@@ -47,7 +47,8 @@ dependencies:
   # One entry per optional integration, and every one of them compile-only — the same rule and the
   # same reason as stx-ktor. A package guarded by `@ConditionalOnClass` is dark until the application
   # adds that library itself, so nothing here hands every consumer every dependency. Verified with
-  # `./kotlin show dependencies -m stx-spring`: these sit in COMPILE and are absent from RUNTIME.
+  # `./kotlin show dependencies -m stx-spring-boot`: these sit in COMPILE and are absent from
+  # RUNTIME.
 
   # Jakarta Validation, for `ValidationExceptionHandler` and `web/Validation.kt`. Also the reason
   # that handler is its own class: a `@RestControllerAdvice` naming a missing class cannot be loaded.
