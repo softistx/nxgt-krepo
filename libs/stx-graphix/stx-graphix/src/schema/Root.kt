@@ -3,16 +3,13 @@ package com.strange.graphix.schema
 import com.strange.graphix.GraphixException
 import graphql.schema.DataFetcher
 import graphql.schema.FieldCoordinates
-import graphql.schema.GraphQLArgument
 import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLObjectType
 import kotlin.reflect.KFunction
-import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberFunctions
-import kotlin.reflect.full.valueParameters
 
 /** One GraphQL root (`Query` or `Mutation`) and the data fetchers for its fields. */
 internal data class Root(
@@ -41,7 +38,18 @@ internal fun root(
             if (!seen.add(fieldName)) {
                 throw GraphixException("duplicate $kind field '$fieldName' on ${instance::class.qualifiedName}")
             }
-            fields += field(function, fieldName, types, kind)
+            val output =
+                types.output(
+                    if (kind == RootKind.SUBSCRIPTION) function.returnType.subscriptionElement() else function.returnType,
+                )
+            fields +=
+                fieldDefinition(
+                    function,
+                    fieldName,
+                    output,
+                    types,
+                    skip = { it.isGraphQLContext() },
+                )
             fetchers += FieldCoordinates.coordinates(name, fieldName) to fetcher(instance, function)
         }
     }
@@ -84,38 +92,4 @@ private fun functions(
         }
     }
     return matches
-}
-
-private fun field(
-    function: KFunction<*>,
-    name: String,
-    types: TypeMapper,
-    kind: RootKind,
-): GraphQLFieldDefinition {
-    val builder =
-        GraphQLFieldDefinition
-            .newFieldDefinition()
-            .name(name)
-            .description(function.graphQLDescription())
-            .type(types.output(if (kind == RootKind.SUBSCRIPTION) function.returnType.subscriptionElement() else function.returnType))
-    function.valueParameters.filterNot { it.hasAnnotation<GraphQLContext>() }.forEach { parameter ->
-        // A Kotlin default is still GraphQL NonNull unless unwrapped: graphql-java has no defaults.
-        val argumentType =
-            types.input(parameter.type).let { type ->
-                if (parameter.isOptional && type is graphql.schema.GraphQLNonNull) {
-                    type.wrappedType as graphql.schema.GraphQLInputType
-                } else {
-                    type
-                }
-            }
-        builder.argument(
-            GraphQLArgument
-                .newArgument()
-                .name(parameter.graphQLName())
-                .description(parameter.findAnnotation<GraphQLDescription>()?.value)
-                .type(argumentType)
-                .build(),
-        )
-    }
-    return builder.build()
 }

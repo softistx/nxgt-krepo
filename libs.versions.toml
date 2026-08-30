@@ -154,6 +154,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 
 graphql-java = { module = "com.graphql-java:graphql-java", version.ref = "graphql-java" }
+java-dataloader = { module = "com.graphql-java:java-dataloader", version = "6.0.0" }
 swagger-parser = { module = "io.swagger.parser.v3:swagger-parser", version.ref = "swagger-parser" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }

@@ -41,6 +41,35 @@ annotation class Subscription(
     val name: String = "",
 )
 
+/**
+ * Extra field on a `@Serializable` type, not a root. The instance is passed to
+ * [com.strange.graphix.GraphixBuilder.type].
+ *
+ * The first parameter that is not `@GraphQLContext` is the parent (`env.source`). Remaining
+ * parameters are GraphQL arguments. Nested object properties stay property getters; this is
+ * for fields that need I/O.
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Field(
+    /** GraphQL field name. Empty uses [GraphQLName] or the Kotlin name. */
+    val name: String = "",
+)
+
+/**
+ * Batched extra field on a `@Serializable` type. graphql-java DataLoader is underneath;
+ * Graphix never hands it out.
+ *
+ * The first parameter is `List<Parent>`. Return `Map<Parent, T>` or `List<T>` in key order.
+ * `T` is the GraphQL field type. No GraphQL arguments — close over them, or use [Field].
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Batch(
+    /** GraphQL field name. Empty uses [GraphQLName] or the Kotlin name. */
+    val name: String = "",
+)
+
 /** Overrides the GraphQL name of a type, field, or argument. Empty [value] is ignored. */
 @Target(
     AnnotationTarget.CLASS,

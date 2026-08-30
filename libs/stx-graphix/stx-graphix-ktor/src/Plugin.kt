@@ -17,6 +17,7 @@ import kotlinx.serialization.json.Json
  *         query(ProductQueries(store))
  *         mutation(ProductMutations(store))
  *         subscription(ProductSubscriptions(store))
+ *         type(ProductFields(reviews))
  *     }
  * }
  * ```

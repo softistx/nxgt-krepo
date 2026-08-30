@@ -10,14 +10,21 @@ internal fun executionInput(
     request: GraphixRequest,
     context: Map<KClass<*>, Any>,
     scope: CoroutineScope,
-): ExecutionInput =
-    ExecutionInput
-        .newExecutionInput()
-        .query(request.query)
-        .variables(request.variables)
-        .operationName(request.operationName)
-        .graphQLContext { builder ->
-            builder.put(OperationScope, scope)
-            builder.put(SubscriptionExecutionStrategy.KEEP_SUBSCRIPTION_EVENTS_ORDERED, true)
-            context.forEach { (key, value) -> builder.put(key, value) }
-        }.build()
+    batches: List<BatchBinding> = emptyList(),
+): ExecutionInput {
+    val builder =
+        ExecutionInput
+            .newExecutionInput()
+            .query(request.query)
+            .variables(request.variables)
+            .operationName(request.operationName)
+            .graphQLContext { graphQLContext ->
+                graphQLContext.put(OperationScope, scope)
+                graphQLContext.put(SubscriptionExecutionStrategy.KEEP_SUBSCRIPTION_EVENTS_ORDERED, true)
+                context.forEach { (key, value) -> graphQLContext.put(key, value) }
+            }
+    if (batches.isNotEmpty()) {
+        builder.dataLoaderRegistry(dataLoaderRegistry(batches, scope, context))
+    }
+    return builder.build()
+}

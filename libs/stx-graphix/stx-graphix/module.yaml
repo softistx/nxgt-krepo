@@ -9,6 +9,8 @@ dependencies:
   - //libs/stx-common: exported
   # GraphQLSchema and ExecutionResult leak into this module's public types the way Session does in stx-jpa
   - $libs.graphql.java: exported
+  # DataLoaderRegistry is per execute. Not exported: Graphix never hands a DataLoader out.
+  - $libs.java.dataloader
   - $libs.kotlinx.serialization: exported
   - $libs.kotlinx.coroutines.core: exported
   # Annotated resolver functions are read reflectively at schema build. Not exported: an application
