@@ -124,9 +124,10 @@ The wiring is generated but installed by the consumer, because the consumer owns
 
 ## Instruction files
 
-- **`AGENTS.md`** (this file) — the shared, tool-agnostic instructions. Codex, Cursor, Gemini CLI, Zed, Aider and friends read it natively.
-- **`CLAUDE.md`** — Claude Code's entry point; it points here and adds only Claude-specific notes.
-- **`.agents/skills/`** — skills in the [Agent Skills](https://agentskills.io) `SKILL.md` format, at the cross-client convention path. `.claude/skills` is a symlink to it so Claude Code (which scans its own directory) sees the same files; there is one copy, not two.
+- **`AGENTS.md`** (this file) — the shared, tool-agnostic instructions. Codex, Cursor, Gemini CLI, Zed, Aider, Grok and friends read it natively.
+- **`CLAUDE.md`** — Claude Code's entry point; it points here and adds only Claude-specific notes. Grok loads it too.
+- **`.grok/rules/`** — Grok-specific notes. Grok scans every `*.md` here; shared conventions stay in this file.
+- **`.agents/skills/`** — skills in the [Agent Skills](https://agentskills.io) `SKILL.md` format, at the cross-client convention path. `.claude/skills` and `.grok/skills` are symlinks to it so Claude Code and Grok Build see the same files; there is one copy, not two.
 
 ## Skills
 
