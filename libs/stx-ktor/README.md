@@ -179,9 +179,9 @@ cors(CorsPolicy(origins = listOf("http://localhost:5173")))
 
 The odd one out among the packages here: it wraps a *Ktor* plugin rather than one of these
 libraries. It belongs anyway, for the reason the rest of this module exists — an application should
-configure a policy once and not per framework. `CorsPolicy` lives in `stx-common`, and `stx-spring`
-builds Spring's `CorsConfiguration` from the same type, so the two cannot drift on what a given
-configuration means.
+configure a policy once and not per framework. `CorsPolicy` lives in `stx-common`, and
+`stx-spring-boot` builds Spring's `CorsConfiguration` from the same type, so the two cannot drift on
+what a given configuration means.
 
 The policy is validated before the plugin is installed, so a wildcard origin with credentials fails
 while the application is starting rather than on somebody's first preflight. Two of its fields have

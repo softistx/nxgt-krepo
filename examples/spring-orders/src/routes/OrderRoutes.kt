@@ -24,7 +24,7 @@ import org.springframework.web.reactive.function.server.coRouter
 /**
  * The whole HTTP surface, as functions.
  *
- * Functional routing rather than `@RestController`, because that is what `stx-spring`'s `web/`
+ * Functional routing rather than `@RestController`, because that is what `stx-spring-boot`'s `web/`
  * package is built for: `request.body<PlaceOrder>()`, `request.id`, `request.mongoPage()` and
  * `something.ok()` are all extensions on `ServerRequest`, and a handler that uses them has nothing
  * in it but what the route actually does.
@@ -38,8 +38,8 @@ class OrderRoutes(
     private val orders: OrderService,
 ) {
     /**
-     * Two routers joined with `stx-spring`'s `and`, which folds left so the written order is the
-     * matched order.
+     * Two routers joined with `stx-spring-boot`'s `and`, which folds left so the written order is
+     * the matched order.
      *
      * Named `orderRouter` and not `orderRoutes`: a `@Bean` method may not share a name with the
      * `@Configuration` class that declares it, since component scanning already registered that
