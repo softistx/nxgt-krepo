@@ -3,7 +3,6 @@ package com.strange.graphix
 import com.strange.graphix.fixture.DfeFields
 import com.strange.graphix.fixture.Product
 import com.strange.graphix.fixture.ProductQueries
-import com.strange.graphix.fixture.Review
 import com.strange.graphix.fixture.ReviewBatch
 import com.strange.graphix.fixture.SingularBatch
 import io.kotest.assertions.throwables.shouldThrow
@@ -15,15 +14,13 @@ import io.kotest.matchers.string.shouldContain
 class BatchLoadingTest :
     FeatureSpec({
         feature("schema") {
-            scenario("@BatchLoading is not a GraphQL field — @Field is") {
+            scenario("@BatchMapping registers the field without SchemaMapping") {
                 val sdl =
                     Graphix {
                         query(ProductQueries())
-                        type(DfeFields())
-                        loader(ReviewBatch())
+                        type(ReviewBatch())
                     }.sdl()
                 sdl shouldContain "reviews: [Review!]!"
-                sdl shouldContain "tagged(prefix: String): String!"
             }
 
             scenario("a single parent instead of List<Parent> fails schema build") {
@@ -31,10 +28,10 @@ class BatchLoadingTest :
                     shouldThrow<GraphixException> {
                         Graphix {
                             query(ProductQueries())
-                            loader(SingularBatch())
+                            type(SingularBatch())
                         }
                     }
-                failure.message shouldContain "List<Parent>"
+                failure.message shouldContain "List<T>"
             }
         }
 
@@ -49,13 +46,12 @@ class BatchLoadingTest :
                 (tagged.data.shouldNotBeNull()["product"] as Map<*, *>)["tagged"] shouldBe "y-Mug"
             }
 
-            scenario("@BatchLoading keyed by source batches once for a list of parents") {
+            scenario("@BatchMapping keyed by source batches once for a list of parents") {
                 val batch = ReviewBatch()
                 val graphql =
                     Graphix {
                         query(ProductQueries(mutableListOf(Product("p1", "Mug"), Product("p2", "Kettle"))))
-                        type(DfeFields())
-                        loader(batch)
+                        type(batch)
                     }
                 val result = graphql.execute(GraphixRequest("{ products { name reviews { body } } }"))
                 result.isOk shouldBe true

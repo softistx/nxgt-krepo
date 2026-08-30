@@ -24,7 +24,7 @@ schema may say — lives in [`docs/graphix.md`](../../../docs/graphix.md).
 
 ```
 com.strange.graphix            Graphix, GraphixRequest, GraphixResult, GraphixException
-com.strange.graphix.schema     @Query / @Mutation / @Subscription and the SerialDescriptor walk
+com.strange.graphix.schema     @QueryMapping / @MutationMapping / @SubscriptionMapping and the SerialDescriptor walk
 com.strange.graphix.execute    the CompletableFuture bridge, argument binding, errors
 com.strange.graphix.scalar     Long, Instant, Uuid
 ```
@@ -54,7 +54,7 @@ same one `stx-jpa` uses. A `CoroutineScope` lives in the operation's `GraphQLCon
 cancelled when `execute` returns. `runBlocking` on the engine thread is the thing that deadlocks
 a client against its own I/O; it is not used here.
 
-A **subscription** is a `Flow<T>` (or a reactive-streams `Publisher<T>`) on `@Subscription`.
+A **subscription** is a `Flow<T>` (or a reactive-streams `Publisher<T>`) on `@SubscriptionMapping`.
 graphql-java wants a `Publisher`; `Flow.asPublisher` on the operation scope is the bridge, and
 `Graphix.subscribe` is a `Flow<GraphixResult>` back. Cancelling the collector cancels the
 upstream. `execute` on a subscription throws — the engine result is a stream, not one JSON
@@ -71,17 +71,17 @@ Spring carry one.
 
 ## The data fetcher is not yours
 
-graphql-java wants a `DataFetcher`. Graphix builds one per `@Query` / `@Mutation` / `@Subscription` /
-`@Field` / `@Batch` and never hands it out. The fetcher's job is to call the function on the
+graphql-java wants a `DataFetcher`. Graphix builds one per `@QueryMapping` / `@MutationMapping` / `@SubscriptionMapping` /
+`@SchemaMapping` / `@BatchMapping` and never hands it out. The fetcher's job is to call the function on the
 **instance already registered** — `query(productQueries)` / `type(productFields)` — and to bind
 arguments. That is why a Spring mutation that needs `OrderService` takes it on the controller
 constructor: the controller *is* the Spring bean, and the fetcher holds that bean for the life
 of the engine.
 
-`@Field` is a per-parent resolver. `@Batch` is a DataLoader wired as that field. `@BatchLoading`
-is a named DataLoader keyed by the parent source (`List<Product>` → `Map<Product, T>`). A field
-that needs source or arguments takes `@GraphQLContext dfe: DataFetchingEnvironment` and may
-`getDataLoader(name).load(source)`.
+`@SchemaMapping` is a per-parent resolver. `@BatchMapping` is the same field behind a DataLoader
+(`List<Book>` → `Map<Book, Author>`) and registers the field — do not also put `@SchemaMapping`
+on it. A field that needs this field's source or arguments takes
+`@GraphQLContext dfe: DataFetchingEnvironment`.
 
 Per-request state is the other bag. `@GraphQLContext` reads `Graphix.execute(..., context)` by
 `KClass`. Mixing the two is the usual mistake: looking up `ApplicationContext` from a resolver

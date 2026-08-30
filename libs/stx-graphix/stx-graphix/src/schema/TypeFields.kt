@@ -28,17 +28,20 @@ internal fun collectTypeFields(instances: List<Any>): List<TypeFieldMeta> {
     val result = mutableListOf<TypeFieldMeta>()
     val seen = mutableSetOf<Pair<String, String>>()
     instances.forEach { instance ->
-        val functions = instance::class.memberFunctions.filter { it.hasAnnotation<Field>() || it.hasAnnotation<Batch>() }
+        val functions =
+            instance::class.memberFunctions.filter {
+                it.hasAnnotation<SchemaMapping>() || it.hasAnnotation<BatchMapping>()
+            }
         if (functions.isEmpty()) {
-            throw GraphixException("${instance::class.qualifiedName} has no @Field or @Batch functions")
+            throw GraphixException("${instance::class.qualifiedName} has no @SchemaMapping or @BatchMapping functions")
         }
         functions.forEach { function ->
-            if (function.hasAnnotation<Field>() && function.hasAnnotation<Batch>()) {
-                throw GraphixException("@Field and @Batch cannot both sit on ${function.name}")
+            if (function.hasAnnotation<SchemaMapping>() && function.hasAnnotation<BatchMapping>()) {
+                throw GraphixException("@SchemaMapping and @BatchMapping cannot both sit on ${function.name}")
             }
             if (function.instanceParameter == null) {
                 throw GraphixException(
-                    "@${if (function.hasAnnotation<Batch>()) "Batch" else "Field"} ${function.name} is not a member function",
+                    "@${if (function.hasAnnotation<BatchMapping>()) "BatchMapping" else "SchemaMapping"} ${function.name} is not a member function",
                 )
             }
             result += typeField(instance, function, seen)
@@ -52,29 +55,30 @@ private fun typeField(
     function: KFunction<*>,
     seen: MutableSet<Pair<String, String>>,
 ): TypeFieldMeta {
-    val batched = function.hasAnnotation<Batch>()
+    val batched = function.hasAnnotation<BatchMapping>()
+    val kind = if (batched) "BatchMapping" else "SchemaMapping"
     val parentParameter =
         function.valueParameters.firstOrNull { !it.isGraphQLContext() }
-            ?: throw GraphixException("@${if (batched) "Batch" else "Field"} ${function.name} needs a parent parameter")
+            ?: throw GraphixException("@$kind ${function.name} needs a parent parameter")
     val parentType =
         if (batched) {
             parentParameter.type.listElement()
-                ?: throw GraphixException("@Batch ${function.name} parent must be List<T>")
+                ?: throw GraphixException("@BatchMapping ${function.name} parent must be List<T>")
         } else {
             parentParameter.type
         }
     val parentClass =
         parentType.classifier as? KClass<*>
-            ?: throw GraphixException("@${if (batched) "Batch" else "Field"} ${function.name} parent must be a class")
-    val parentName = parentClass.graphQLName()
-    val fieldName = function.typeFieldName()
+            ?: throw GraphixException("@$kind ${function.name} parent must be a class")
+    val parentName = function.mappingTypeName() ?: parentClass.graphQLName()
+    val fieldName = function.mappingFieldName()
     if (!seen.add(parentName to fieldName)) {
-        throw GraphixException("duplicate field '$fieldName' on $parentName")
+        throw GraphixException("duplicate field '$fieldName' on $parentName — use @SchemaMapping or @BatchMapping, not both")
     }
     if (batched) {
         val extras = function.valueParameters.filter { it != parentParameter && !it.isGraphQLContext() }
         if (extras.isNotEmpty()) {
-            throw GraphixException("@Batch ${function.name} cannot have GraphQL arguments")
+            throw GraphixException("@BatchMapping ${function.name} cannot have GraphQL arguments")
         }
     }
     val graphqlType =
@@ -91,17 +95,20 @@ private fun typeField(
         parentParameter = parentParameter,
         fieldName = fieldName,
         batched = batched,
-        loaderName = "$parentName.$fieldName",
+        loaderName = fieldName,
         graphqlType = graphqlType,
     )
 }
 
-internal fun KFunction<*>.typeFieldName(): String {
-    findAnnotation<Field>()?.name?.takeIf { it.isNotEmpty() }?.let { return it }
-    findAnnotation<Batch>()?.name?.takeIf { it.isNotEmpty() }?.let { return it }
-    findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
-    return name
-}
+private fun KFunction<*>.mappingTypeName(): String? =
+    findAnnotation<SchemaMapping>()?.typeName?.takeIf { it.isNotEmpty() }
+        ?: findAnnotation<BatchMapping>()?.typeName?.takeIf { it.isNotEmpty() }
+
+private fun KFunction<*>.mappingFieldName(): String =
+    findAnnotation<SchemaMapping>()?.field?.takeIf { it.isNotEmpty() }
+        ?: findAnnotation<BatchMapping>()?.field?.takeIf { it.isNotEmpty() }
+        ?: findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }
+        ?: name
 
 internal fun KType.listElement(): KType? {
     val classifier = classifier as? KClass<*> ?: return null
@@ -119,20 +126,20 @@ internal fun KType.unwrapAsync(): KType {
 internal fun KType.batchPayload(): KType {
     val classifier =
         classifier as? KClass<*>
-            ?: throw GraphixException("@Batch return type must be Map<Parent, T> or List<T>, got $this")
+            ?: throw GraphixException("@BatchMapping return type must be Map<Parent, T> or List<T>, got $this")
     return when {
         Map::class.java.isAssignableFrom(classifier.java) -> {
             arguments.getOrNull(1)?.type
-                ?: throw GraphixException("@Batch Map needs a value type: $this")
+                ?: throw GraphixException("@BatchMapping Map needs a value type: $this")
         }
 
         List::class.java.isAssignableFrom(classifier.java) -> {
             arguments.singleOrNull()?.type
-                ?: throw GraphixException("@Batch List needs an element type: $this")
+                ?: throw GraphixException("@BatchMapping List needs an element type: $this")
         }
 
         else -> {
-            throw GraphixException("@Batch must return Map<Parent, T> or List<T>, got $this")
+            throw GraphixException("@BatchMapping must return Map<Parent, T> or List<T>, got $this")
         }
     }
 }

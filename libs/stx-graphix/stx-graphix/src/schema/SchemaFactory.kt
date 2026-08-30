@@ -12,13 +12,12 @@ import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLSchema
 import kotlinx.serialization.json.Json
 
-/** Builds the graphql-java schema from named roots and type fields. Needs at least one `@Query`. */
+/** Builds the graphql-java schema from named roots and type fields. Needs at least one `@QueryMapping`. */
 internal fun graphQLSchema(
     queries: List<Any>,
     mutations: List<Any>,
     subscriptions: List<Any>,
     typeInstances: List<Any>,
-    loaderInstances: List<Any>,
     json: Json,
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     if (queries.isEmpty()) throw GraphixException("Graphix needs at least one query root")
@@ -72,10 +71,5 @@ internal fun graphQLSchema(
             .additionalType(Scalars.Uuid)
             .codeRegistry(registry.build())
             .build()
-    val loaders =
-        mergeLoaders(
-            collectLoaders(loaderInstances + typeInstances + queries + mutations + subscriptions),
-            typeFields,
-        )
-    return schema to loaders
+    return schema to typeFields.filter { it.batched }.map { it.toRegisteredLoader() }
 }
