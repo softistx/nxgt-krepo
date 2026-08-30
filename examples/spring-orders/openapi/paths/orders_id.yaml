@@ -1,0 +1,33 @@
+get:
+  tags:
+    - orders-controller
+  summary: One order.
+  operationId: findOrder
+  parameters:
+    - $ref: ../components/parameters/id.yaml
+  responses:
+    '200':
+      description: The order that matches the id.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/OrderResponse.yaml
+    '404':
+      $ref: ../components/responses/NotFound.yaml
+    '500':
+      $ref: ../components/responses/InternalError.yaml
+delete:
+  tags:
+    - orders-controller
+  summary: Cancel an order.
+  description: The audit trail records a TERMINAL entry carrying its last known state.
+  operationId: cancelOrder
+  parameters:
+    - $ref: ../components/parameters/id.yaml
+  responses:
+    '204':
+      $ref: ../components/responses/ResourceDeleted.yaml
+    '404':
+      $ref: ../components/responses/NotFound.yaml
+    '500':
+      $ref: ../components/responses/InternalError.yaml

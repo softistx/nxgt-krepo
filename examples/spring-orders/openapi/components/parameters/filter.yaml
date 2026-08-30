@@ -1,0 +1,7 @@
+name: filter
+in: query
+description: |
+  A filter in the `field:operator:value` grammar, comma-separated —
+  `status:eq:PAID,total:gte:1000`. `docs/spring-mongo-queries.md` has the tokens.
+schema:
+  type: string

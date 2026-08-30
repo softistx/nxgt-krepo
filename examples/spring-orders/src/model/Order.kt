@@ -1,4 +1,4 @@
-package com.strange.example.orders.domain
+package com.strange.example.orders.model
 
 import com.strange.spring.data.mongo.audit.Auditable
 import org.bson.types.ObjectId

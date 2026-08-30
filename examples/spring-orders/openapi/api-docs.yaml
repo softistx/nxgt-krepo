@@ -1,0 +1,401 @@
+openapi: 3.1.0
+info:
+  title: Spring Orders
+  description: A demo order book on stx-spring-boot — keyset paging, an audit trail and translated failures.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Dev server
+tags:
+  - name: orders-controller
+    description: Placing, reading and moving orders along
+  - name: health-controller
+    description: Whether the application is up
+paths:
+  /orders:
+    get:
+      tags:
+        - orders-controller
+      summary: A page of orders, narrowed and ordered by the query string.
+      operationId: findOrders
+      parameters:
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/cursor'
+      responses:
+        '200':
+          description: One page, with the cursors to ask for the next.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - orders-controller
+      summary: Place an order.
+      operationId: placeOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceOrder'
+      responses:
+        '201':
+          description: The order as placed, with the id it was given.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /orders/valuable:
+    get:
+      tags:
+        - orders-controller
+      summary: Every paid order at or above a floor.
+      description: The same store as findOrders, queried from Kotlin rather than from a query string, and unpaged.
+      operationId: valuableOrders
+      parameters:
+        - $ref: '#/components/parameters/floor'
+      responses:
+        '200':
+          description: The matching orders, in no particular order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /orders/{id}:
+    get:
+      tags:
+        - orders-controller
+      summary: One order.
+      operationId: findOrder
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The order that matches the id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - orders-controller
+      summary: Cancel an order.
+      description: The audit trail records a TERMINAL entry carrying its last known state.
+      operationId: cancelOrder
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          $ref: '#/components/responses/ResourceDeleted'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /orders/{id}/status:
+    patch:
+      tags:
+        - orders-controller
+      summary: Move an order along.
+      description: A save, so the audit trail records the transition and who made it.
+      operationId: changeStatus
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeStatus'
+      responses:
+        '200':
+          description: The order in its new status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /health:
+    get:
+      tags:
+        - health-controller
+      summary: Whether the application is up.
+      operationId: health
+      responses:
+        '200':
+          description: It is.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+components:
+  parameters:
+    filter:
+      name: filter
+      in: query
+      description: |
+        A filter in the `field:operator:value` grammar, comma-separated —
+        `status:eq:PAID,total:gte:1000`. `docs/spring-mongo-queries.md` has the tokens.
+      schema:
+        type: string
+    sort:
+      name: sort
+      in: query
+      description: The ordering, `field:DIRECTION` and comma-separated — `placedAt:DESC,total:ASC`.
+      schema:
+        type: string
+    size:
+      name: size
+      in: query
+      description: Rows per page. Defaults to 20, and never zero or negative.
+      schema:
+        type: integer
+        minimum: 1
+    cursor:
+      name: cursor
+      in: query
+      description: |
+        Where a keyset page resumes from — the `endCursor` of the previous page, absent on the first.
+        Opaque, and one issued for a differently sorted query is refused rather than followed.
+      schema:
+        type: string
+    floor:
+      name: floor
+      in: query
+      required: true
+      description: The lowest total, in minor units, an order must reach to be counted.
+      schema:
+        type: integer
+        format: int64
+    id:
+      name: id
+      in: path
+      required: true
+      description: The unique identifier of the order.
+      schema:
+        type: string
+  schemas:
+    OrderStatus:
+      type: string
+      description: Where an order has got to.
+      enum:
+        - PENDING
+        - PAID
+        - SHIPPED
+        - CANCELLED
+    Order:
+      type: object
+      description: An order as it appears on the wire — a view of the stored document, not the document.
+      required:
+        - id
+        - reference
+        - customer
+        - status
+        - total
+        - tags
+        - placedAt
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the order.
+        reference:
+          type: string
+          description: The customer-facing reference. Unique, and stored as `ref`.
+        customer:
+          type: string
+          description: Who placed it.
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        total:
+          type: integer
+          format: int64
+          description: The total in minor units — an order total is not a decimal, and rounding a price is not a display choice.
+        tags:
+          type: array
+          description: Free-form labels.
+          items:
+            type: string
+        placedAt:
+          type: string
+          format: date-time
+          description: When it was placed, ISO-8601.
+    PageInfo:
+      type: object
+      description: Where this page sits in the result set, in the shape the Relay connection spec uses.
+      required:
+        - hasPreviousPage
+        - hasNextPage
+      properties:
+        startCursor:
+          type: string
+          description: The cursor of the first row on this page.
+        endCursor:
+          type: string
+          description: The cursor of the last row — what to send as `?cursor=` for the next page.
+        hasPreviousPage:
+          type: boolean
+          description: Whether a page precedes this one.
+        hasNextPage:
+          type: boolean
+          description: Whether a page follows this one.
+    OrderPage:
+      type: object
+      description: One page of orders — the rows in `data`, the cursors in `metadata`.
+      required:
+        - data
+        - metadata
+      properties:
+        data:
+          type: array
+          description: The rows on this page.
+          items:
+            $ref: '#/components/schemas/Order'
+        metadata:
+          $ref: '#/components/schemas/PageInfo'
+    ErrorResponse:
+      type: object
+      description: |
+        What a failure looks like on the wire — one shape for every error this service returns.
+        It mirrors `com.strange.spring.error.ErrorResponse` field for field; `ErrorResponseShapeTest`
+        is what keeps the two from drifting.
+      required:
+        - message
+        - status
+        - timestamp
+      properties:
+        message:
+          type: string
+          description: Already translated into the requesting locale. Display it as-is.
+        status:
+          type: string
+          description: The HTTP status, by name.
+        code:
+          type: string
+          description: The untranslated message key. This is what a client branches on — text changes, keys do not.
+        timestamp:
+          type: string
+          description: When the failure was built, ISO-8601 text.
+        debugMessage:
+          type: string
+          description: Absent unless `stx.errors.include-debug-message` is on. Written for a developer, not for a reader.
+    PlaceOrder:
+      type: object
+      description: What a client sends to place an order.
+      required:
+        - reference
+        - customer
+        - total
+      properties:
+        reference:
+          type: string
+          description: The customer-facing reference. Taken already is a 409.
+        customer:
+          type: string
+          description: Who is placing it.
+        total:
+          type: integer
+          format: int64
+          description: The total in minor units.
+        tags:
+          type: array
+          description: Free-form labels. Empty when absent.
+          items:
+            type: string
+    OrderResponse:
+      type: object
+      description: One order, in the envelope every response here uses.
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Order'
+    OrderList:
+      type: object
+      description: Several orders with no page around them.
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          description: The matching orders.
+          items:
+            $ref: '#/components/schemas/Order'
+    ChangeStatus:
+      type: object
+      description: What a client sends to move an order along.
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+    Health:
+      type: object
+      description: Whether the application is up.
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: UP, and nothing else so far.
+    HealthResponse:
+      type: object
+      description: The health answer, in the same envelope as everything else.
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Health'
+  responses:
+    BadRequest:
+      description: The request was invalid — a filter nobody can read, or a body that does not bind.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: An unexpected error occurred on the server.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: The reference is already taken.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: No order has that id.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ResourceDeleted:
+      description: The order was cancelled. No body.

@@ -1,0 +1,5 @@
+description: No order has that id.
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ErrorResponse.yaml

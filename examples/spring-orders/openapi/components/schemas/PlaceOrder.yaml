@@ -1,0 +1,19 @@
+type: object
+description: What a client sends to place an order.
+required: [ reference, customer, total ]
+properties:
+  reference:
+    type: string
+    description: The customer-facing reference. Taken already is a 409.
+  customer:
+    type: string
+    description: Who is placing it.
+  total:
+    type: integer
+    format: int64
+    description: The total in minor units.
+  tags:
+    type: array
+    description: Free-form labels. Empty when absent.
+    items:
+      type: string

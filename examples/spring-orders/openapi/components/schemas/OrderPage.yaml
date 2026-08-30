@@ -1,0 +1,11 @@
+type: object
+description: One page of orders — the rows in `data`, the cursors in `metadata`.
+required: [ data, metadata ]
+properties:
+  data:
+    type: array
+    description: The rows on this page.
+    items:
+      $ref: ./Order.yaml
+  metadata:
+    $ref: ./PageInfo.yaml
