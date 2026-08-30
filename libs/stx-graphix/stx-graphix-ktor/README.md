@@ -11,6 +11,12 @@ install(GraphQL) {
 }
 ```
 
+`store` is closed over when the engine is built, the same way a Spring controller takes
+`OrderService` on its constructor. Per-request values (`ApplicationCall`, a principal) belong in
+`Graphix.execute(..., context)` and `@GraphQLContext`. The plugin does not yet forward the call
+into that map — [`docs/graphix.md`](../../../docs/graphix.md) has the three columns a resolver
+sees.
+
 **Whoever created it closes it** still holds, and here it is almost nothing: graphql-java has no
 socket. `instance` adopts an engine a container already built; the plugin does not close it.
 Without `instance`, `schema { }` builds one at install.
