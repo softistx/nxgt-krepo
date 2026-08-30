@@ -26,6 +26,7 @@ fun Application.shop() {
         schema {
             query(catalog)
             mutation(catalog)
+            subscription(catalog)
         }
     }
 }

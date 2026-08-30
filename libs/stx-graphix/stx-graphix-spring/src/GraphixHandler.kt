@@ -1,7 +1,11 @@
 package com.strange.graphix.spring
 
 import com.strange.graphix.Graphix
+import com.strange.graphix.GraphixRequest
 import com.strange.graphix.http.*
+import com.strange.graphix.isSubscription
+import com.strange.graphix.subscribe
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.reactor.mono
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -10,7 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.server.*
 import reactor.core.publisher.Mono
 
-/** WebFlux adapter: the same JSON envelope as Ktor, over `RouterFunction`. */
+/** WebFlux adapter: the same JSON envelope as Ktor, over `RouterFunction`. Subscriptions are SSE. */
 internal class GraphixHandler(
     private val engine: Graphix,
     private val json: Json,
@@ -40,7 +44,7 @@ internal class GraphixHandler(
             } catch (failure: BadGraphixHttp) {
                 return badRequest(failure.message ?: "malformed GraphQL request")
             }
-        return ok(engine.execute(graphixRequest).toHttp())
+        return respond(graphixRequest)
     }
 
     private suspend fun handleGet(request: ServerRequest): ServerResponse {
@@ -62,7 +66,19 @@ internal class GraphixHandler(
                 operationName = request.queryParam("operationName").orElse(null),
                 variables = variables,
             ).toGraphixRequest()
-        return ok(engine.execute(graphixRequest).toHttp())
+        return respond(graphixRequest)
+    }
+
+    private suspend fun respond(request: GraphixRequest): ServerResponse {
+        if (request.isSubscription()) {
+            val events =
+                engine.subscribe(request).map { json.encodeToString(GraphixHttpResponse.serializer(), it.toHttp()) }
+            return ServerResponse
+                .ok()
+                .contentType(MediaType.TEXT_EVENT_STREAM)
+                .bodyAndAwait(events)
+        }
+        return ok(engine.execute(request).toHttp())
     }
 
     private suspend fun ok(body: GraphixHttpResponse): ServerResponse =

@@ -15,8 +15,8 @@ import org.springframework.web.reactive.function.server.ServerResponse
 /**
  * GraphQL over WebFlux, opt-in behind `stx.graphix.enabled`.
  *
- * Collects every `@GraphQLController` bean as query/mutation roots. An application that already
- * has a [Graphix] bean keeps it — `@ConditionalOnMissingBean`.
+ * Collects every `@GraphQLController` bean as query/mutation/subscription roots. An application
+ * that already has a [Graphix] bean keeps it — `@ConditionalOnMissingBean`.
  */
 @AutoConfiguration
 @EnableConfigurationProperties(GraphixProperties::class)

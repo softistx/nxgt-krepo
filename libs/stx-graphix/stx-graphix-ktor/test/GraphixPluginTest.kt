@@ -2,6 +2,7 @@ package com.strange.graphix.ktor
 
 import com.strange.graphix.ktor.fixture.BoomQueries
 import com.strange.graphix.ktor.fixture.GreetingQueries
+import com.strange.graphix.ktor.fixture.TickSubscriptions
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -10,6 +11,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.install
@@ -73,6 +75,32 @@ class GraphixPluginTest :
                     val response = client.get("/graphql?query=%7Bhello%7D")
                     response.status shouldBe HttpStatusCode.OK
                     response.bodyAsText() shouldContain """"hello":"world""""
+                }
+            }
+        }
+
+        feature("POST /graphql subscription") {
+            scenario("a subscription is text/event-stream of GraphQL results") {
+                testApplication {
+                    application {
+                        install(GraphQL) {
+                            schema {
+                                query(GreetingQueries())
+                                subscription(TickSubscriptions())
+                            }
+                        }
+                    }
+                    val response =
+                        client.post("/graphql") {
+                            contentType(ContentType.Application.Json)
+                            setBody("""{"query":"subscription { ticks }"}""")
+                        }
+                    response.status shouldBe HttpStatusCode.OK
+                    response.headers[HttpHeaders.ContentType] shouldContain "text/event-stream"
+                    val body = response.bodyAsText()
+                    body shouldContain "data:"
+                    body shouldContain """"ticks":1"""
+                    body shouldContain """"ticks":3"""
                 }
             }
         }

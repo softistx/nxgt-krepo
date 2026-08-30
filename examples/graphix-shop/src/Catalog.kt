@@ -2,6 +2,9 @@ package com.strange.example.graphix.shop
 
 import com.strange.graphix.schema.Mutation
 import com.strange.graphix.schema.Query
+import com.strange.graphix.schema.Subscription
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.Serializable
 
 /** A catalogue item. [price] is minor units, a GraphQL `Long`. */
@@ -12,13 +15,14 @@ data class Product(
     val price: Long,
 )
 
-/** In-memory products. Query and mutation live on the same instance. */
+/** In-memory products. Query, mutation and subscription live on the same instance. */
 class Catalog {
     private val products =
         mutableListOf(
             Product("p1", "Mug", 1200),
             Product("p2", "Kettle", 4500),
         )
+    private val added = MutableSharedFlow<Product>(extraBufferCapacity = 16)
 
     @Query
     fun product(id: String): Product? = products.find { it.id == id }
@@ -33,6 +37,10 @@ class Catalog {
     ): Product {
         val created = Product(id = "p${products.size + 1}", name = name, price = price)
         products += created
+        added.tryEmit(created)
         return created
     }
+
+    @Subscription
+    fun productAdded(): Flow<Product> = added
 }

@@ -308,11 +308,11 @@ metadata lives in that module's `additional-spring-configuration-metadata.json`.
 
 | Key | Type | Default | |
 | --- | --- | --- | --- |
-| `enabled` | boolean | `false` | Serves POST/GET GraphQL at [path]. Collects `@GraphQLController` beans as roots — those beans are ordinary Spring objects, so a mutation's `OrderService` is constructor injection, not GraphQL context. An application's own `Graphix` bean wins |
+| `enabled` | boolean | `false` | Serves POST/GET GraphQL at [path], subscriptions as SSE. Collects `@GraphQLController` beans as roots — those beans are ordinary Spring objects, so a mutation's `OrderService` is constructor injection, not GraphQL context. An application's own `Graphix` bean wins |
 | `path` | string | `/graphql` | HTTP path |
 
-A field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. The annotation vocabulary is
-[`docs/graphix.md`](graphix.md).
+A field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. A subscription is
+`text/event-stream`. The annotation vocabulary is [`docs/graphix.md`](graphix.md).
 
 ---
 
