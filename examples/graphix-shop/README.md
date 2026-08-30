@@ -15,3 +15,6 @@ POST /graphql
 ```
 
 In-memory, no database. The point is the plugin: `install(GraphQL) { schema { query(catalog); mutation(catalog) } }`.
+`Catalog` is both the store and the root: mutations call methods on the same instance the queries
+do. A Spring app would put `OrderService` on the controller constructor instead; that is still
+not GraphQL context. [`docs/graphix.md`](../../docs/graphix.md) draws the line.
