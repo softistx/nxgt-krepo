@@ -2,49 +2,52 @@ package com.strange.graphix.execute
 
 import com.strange.graphix.GraphixException
 import com.strange.graphix.schema.GraphQLContext
-import com.strange.graphix.schema.TypeFieldMeta
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.future.future
 import org.dataloader.DataLoaderFactory
 import org.dataloader.DataLoaderRegistry
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
+import kotlin.reflect.KParameter
 import kotlin.reflect.full.callSuspendBy
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
 
-internal data class BatchBinding(
-    val field: TypeFieldMeta,
+internal data class RegisteredLoader(
+    val name: String,
+    val instance: Any,
+    val function: KFunction<*>,
+    val keysParameter: KParameter,
 )
 
 internal fun dataLoaderRegistry(
-    batches: List<BatchBinding>,
+    loaders: List<RegisteredLoader>,
     scope: CoroutineScope,
     context: Map<KClass<*>, Any>,
 ): DataLoaderRegistry {
     val registry = DataLoaderRegistry()
-    batches.forEach { batch ->
+    loaders.forEach { loader ->
         registry.register(
-            batch.field.loaderName,
+            loader.name,
             DataLoaderFactory.newMappedDataLoader<Any, Any> { keys ->
-                scope.future { batch.load(keys, context) }
+                scope.future { loader.load(keys, context) }
             },
         )
     }
     return registry
 }
 
-private suspend fun BatchBinding.load(
+private suspend fun RegisteredLoader.load(
     keys: Set<Any>,
     context: Map<KClass<*>, Any>,
 ): Map<Any, Any> {
-    val function = field.function
-    val arguments = LinkedHashMap<kotlin.reflect.KParameter, Any?>()
+    val arguments = LinkedHashMap<KParameter, Any?>()
     val instanceParameter =
         function.instanceParameter
             ?: error("${function.name} is not a member function")
-    arguments[instanceParameter] = field.instance
-    arguments[field.parentParameter] = keys.toList()
+    arguments[instanceParameter] = instance
+    arguments[keysParameter] = keys.toList()
     function.valueParameters.forEach { parameter ->
         if (parameter.findAnnotation<GraphQLContext>() != null) {
             val classifier =

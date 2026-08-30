@@ -160,7 +160,7 @@ internal class TypeMapper(
                     extra.fieldName,
                     output(extra.graphqlType),
                     this,
-                    skip = { it.isGraphQLContext() || it == extra.parentParameter },
+                    skip = { it.isGraphQLContext() || it.isLoad() || it == extra.parentParameter },
                 ),
             )
         }

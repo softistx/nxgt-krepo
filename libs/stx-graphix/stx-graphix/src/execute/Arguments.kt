@@ -2,6 +2,7 @@ package com.strange.graphix.execute
 
 import com.strange.graphix.GraphixException
 import com.strange.graphix.schema.GraphQLContext
+import com.strange.graphix.schema.Load
 import com.strange.graphix.schema.graphQLName
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.serialization.json.Json
@@ -33,6 +34,9 @@ internal fun bindArguments(
         if (parameter in skip) return@forEach
         if (parameter.findAnnotation<GraphQLContext>() != null) {
             bound[parameter] = contextValue(parameter, environment)
+            return@forEach
+        }
+        if (parameter.findAnnotation<Load>() != null) {
             return@forEach
         }
         val raw: Any? = environment.getArgument(parameter.graphQLName())
