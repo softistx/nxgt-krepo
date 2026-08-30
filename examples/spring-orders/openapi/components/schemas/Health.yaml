@@ -1,0 +1,7 @@
+type: object
+description: Whether the application is up.
+required: [ status ]
+properties:
+  status:
+    type: string
+    description: UP, and nothing else so far.

@@ -1,0 +1,7 @@
+type: string
+description: Where an order has got to.
+enum:
+  - PENDING
+  - PAID
+  - SHIPPED
+  - CANCELLED

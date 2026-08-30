@@ -1,0 +1,19 @@
+get:
+  tags:
+    - orders-controller
+  summary: Every paid order at or above a floor.
+  description: The same store as findOrders, queried from Kotlin rather than from a query string, and unpaged.
+  operationId: valuableOrders
+  parameters:
+    - $ref: ../components/parameters/floor.yaml
+  responses:
+    '200':
+      description: The matching orders, in no particular order.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/OrderList.yaml
+    '400':
+      $ref: ../components/responses/BadRequest.yaml
+    '500':
+      $ref: ../components/responses/InternalError.yaml

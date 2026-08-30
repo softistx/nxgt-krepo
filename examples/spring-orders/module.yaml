@@ -1,5 +1,5 @@
 product: jvm/app
-description: "A demo order book on stx-spring-boot: functional WebFlux routes, keyset paging, an audit trail and two migrations"
+description: "A demo order book on stx-spring-boot: a spec-first REST API, keyset paging, an audit trail and two migrations"
 
 dependencies:
   # The library this example is about: the error handler, the web helpers, the Mongo criteria and
@@ -29,6 +29,22 @@ test-dependencies:
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
+
+plugins:
+  # The contract is `openapi/`, split across files and bundled to `api-docs.yaml` by redocly; this
+  # turns that bundle into the models and the `@HttpExchange` interfaces the controllers implement.
+  # `redocly bundle orders@v1` before building, or this reads the previous contract and says nothing.
+  openapi:
+    enabled: true
+    client: Spring
+    # Not `Auto`, which would give Jackson: `stx.json.enabled` puts kotlinx codecs on WebFlux, so a
+    # model that is not `@Serializable` fails to encode at the first response.
+    models: Kotlinx
+    specFile: openapi/api-docs.yaml
+    packageName: com.strange.example.orders.api
+    # `orders-controller` -> `IOrdersService`, `health-controller` -> `IHealthService`.
+    interfacePrefix: I
+    interfaceSuffix: Service
 
 settings:
   # Applies the Spring Boot BOM (4.1.0), all-open with the `spring` preset — so `@Configuration` and

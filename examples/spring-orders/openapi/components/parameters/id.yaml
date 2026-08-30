@@ -1,0 +1,6 @@
+name: id
+in: path
+required: true
+description: The unique identifier of the order.
+schema:
+  type: string

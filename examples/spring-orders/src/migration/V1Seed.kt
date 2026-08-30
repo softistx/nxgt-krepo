@@ -1,7 +1,7 @@
 package com.strange.example.orders.migration
 
-import com.strange.example.orders.domain.Order
-import com.strange.example.orders.domain.OrderStatus
+import com.strange.example.orders.model.Order
+import com.strange.example.orders.model.OrderStatus
 import com.strange.spring.data.mongo.migration.Migration
 import com.strange.spring.data.mongo.migration.MigrationUnit
 import kotlinx.coroutines.reactive.awaitFirstOrNull

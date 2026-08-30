@@ -32,13 +32,17 @@ What exists:
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
 | `examples/jpa-shop` | A Ktor catalogue over Postgres showing `stx-jpa`'s CRUD extensions and audit layer |
-| `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring-boot` with no configuration class: functional routes, translated failures, keyset paging, an audit trail and two migrations |
+| `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring-boot` with no configuration class: a spec-first REST API whose controllers implement the generated `@HttpExchange` interfaces, translated failures, keyset paging, an audit trail and two migrations |
 | `examples/material-demo` | The `stx-material` catalogue — one Compose Multiplatform app in three modules: `md-catalog` holds every story, `md-desktop` and `md-android` are launchers |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
 
 ## The OpenAPI generator
+
+**How a document is authored and laid out is the `openapi-spec-first` skill** — the split under
+`<module>/openapi/`, the redocly commands, and what a controller built from the output looks like.
+This section is the generator itself.
 
 Two modules and one reference document — read those before changing either module:
 
@@ -137,6 +141,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
   python3 .agents/skills/skill-from-docs/scripts/fetch_docs.py --skill <name>
   ```
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
+- **`openapi-spec-first`** — how a REST API is authored here: a Redocly-split OpenAPI document under `<module>/openapi/`, the file and naming conventions the generator reads, and the repository → service → controller layering over the generated `@HttpExchange` interface. Read it before adding or changing an endpoint.
 - **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on `develop` on their own.
 
 Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:

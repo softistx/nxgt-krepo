@@ -1,0 +1,6 @@
+type: object
+description: One order, in the envelope every response here uses.
+required: [ data ]
+properties:
+  data:
+    $ref: ./Order.yaml

@@ -1,0 +1,7 @@
+name: cursor
+in: query
+description: |
+  Where a keyset page resumes from — the `endCursor` of the previous page, absent on the first.
+  Opaque, and one issued for a differently sorted query is refused rather than followed.
+schema:
+  type: string
