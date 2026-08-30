@@ -63,11 +63,15 @@ object.
 Field errors stay GraphQL errors. HTTP 200 plus `errors[]` is the spec; throwing out of `execute`
 is for a document that cannot even be submitted.
 
-## No scan in core
+## No resolver scan in core
 
 `Graphix { query(instance); mutation(instance); subscription(instance); type(instance) }`. Spring may collect `@GraphQLController` beans;
-that is the Spring module's job. A classpath walk in this type would make a worker with no
+that is the Spring module's job. A classpath walk for *classes* would make a worker with no
 Spring carry one.
+
+Schema **documents** are the other scan, and it is the Spring GraphQL one: `classpath:graphql/`,
+every `.graphqls` / `.gqls` file, merged. Present files are the schema; annotated functions
+are the DataFetchers. No files, the `@Serializable` types stay the schema.
 
 ## The data fetcher is not yours
 
@@ -93,5 +97,4 @@ like DI". The first is a service locator. The second makes a singleton look requ
 
 ## What this slice does not do
 
-Code generation, a GraphQL skill, schema-first SDL, Federation, a client. Those are later
-phases.
+Code generation, a GraphQL skill, Federation, a client. Those are later phases.

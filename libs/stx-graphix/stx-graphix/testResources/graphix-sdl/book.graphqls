@@ -1,0 +1,17 @@
+extend type Query {
+  book: Book
+  books: [Book!]!
+}
+
+type Book {
+  id: String!
+  authorId: String!
+  title: String!
+  author: Author
+  snippets(limit: Int): [String!]!
+}
+
+type Author {
+  id: String!
+  name: String!
+}

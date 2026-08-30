@@ -19,8 +19,12 @@ internal fun graphQLSchema(
     subscriptions: List<Any>,
     typeInstances: List<Any>,
     json: Json,
+    schemaFiles: List<SchemaFile> = emptyList(),
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     if (queries.isEmpty()) throw GraphixException("Graphix needs at least one query root")
+    if (schemaFiles.isNotEmpty()) {
+        return sdlGraphQLSchema(schemaFiles, queries, mutations, subscriptions, typeInstances, json)
+    }
     val typeFields = collectTypeFields(typeInstances)
     val types = TypeMapper(json.serializersModule, typeFields.groupBy { it.parentName })
     val query =

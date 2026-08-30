@@ -1,0 +1,14 @@
+scalar Long
+
+type Query {
+  product(id: String!): Product
+  products: [Product!]!
+}
+
+type Mutation {
+  addProduct(name: String!, price: Long!): Product!
+}
+
+type Subscription {
+  productAdded: Product!
+}

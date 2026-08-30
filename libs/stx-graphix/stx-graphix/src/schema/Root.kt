@@ -33,7 +33,7 @@ internal fun root(
     val fetchers = mutableListOf<Pair<FieldCoordinates, DataFetcher<*>>>()
     val seen = mutableSetOf<String>()
     instances.forEach { instance ->
-        functions(instance, kind).forEach { function ->
+        mappingFunctions(instance, kind).forEach { function ->
             val fieldName = function.graphQLName(kind)
             if (!seen.add(fieldName)) {
                 throw GraphixException("duplicate $kind field '$fieldName' on ${instance::class.qualifiedName}")
@@ -74,7 +74,12 @@ internal fun GraphQLCodeRegistry.Builder.putAll(root: Root): GraphQLCodeRegistry
     return this
 }
 
-private fun functions(
+internal fun rootFunctions(
+    kind: RootKind,
+    instances: List<Any>,
+): List<Pair<Any, KFunction<*>>> = instances.flatMap { instance -> mappingFunctions(instance, kind).map { instance to it } }
+
+internal fun mappingFunctions(
     instance: Any,
     kind: RootKind,
 ): List<KFunction<*>> {
