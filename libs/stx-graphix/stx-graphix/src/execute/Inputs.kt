@@ -2,6 +2,7 @@ package com.strange.graphix.execute
 
 import com.strange.graphix.GraphixRequest
 import graphql.ExecutionInput
+import graphql.GraphQL
 import graphql.execution.SubscriptionExecutionStrategy
 import kotlinx.coroutines.CoroutineScope
 import kotlin.reflect.KClass
@@ -21,6 +22,10 @@ internal fun executionInput(
             .graphQLContext { graphQLContext ->
                 graphQLContext.put(OperationScope, scope)
                 graphQLContext.put(SubscriptionExecutionStrategy.KEEP_SUBSCRIPTION_EVENTS_ORDERED, true)
+                GraphQL
+                    .unusualConfiguration(graphQLContext)
+                    .dataloaderConfig()
+                    .enableDataLoaderExhaustedDispatching(true)
                 context.forEach { (key, value) -> graphQLContext.put(key, value) }
             }
     if (loaders.isNotEmpty()) {
