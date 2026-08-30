@@ -794,6 +794,7 @@ the same each time, and the mistakes are the same each time too.
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `docs/graphql.md` | What a stx-graphql schema may say — the annotations, scalars, execute contract. **This is where a new annotation or scalar is documented** |
   | `libs/stx-graphql/stx-graphql/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no scan in core |
+  | `libs/stx-graphql/stx-graphql-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, `injectable` |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
