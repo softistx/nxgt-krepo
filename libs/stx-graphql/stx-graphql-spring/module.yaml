@@ -1,0 +1,25 @@
+product: jvm/lib
+description: "Spring Boot auto-configuration for stx-graphql, opt-in behind stx.graphql"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  - //libs/stx-graphql/stx-graphql: exported
+  # RouterFunction and WebFlux types are the HTTP surface this module exposes
+  - $spring.boot.starter.webflux: exported
+  # Spring binds Kotlin configuration properties through the primary constructor only when reflect
+  # is present — the same line stx-spring-boot carries, for the same reason.
+  - $libs.kotlin.reflect
+
+test-dependencies:
+  - $spring.boot.starter.test
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  springBoot: enabled
+  kotlin:
+    serialization: json
