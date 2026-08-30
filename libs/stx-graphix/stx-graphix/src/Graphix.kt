@@ -127,17 +127,25 @@ class GraphixBuilder internal constructor(
      * Every `.graphqls` / `.gqls` under the directory is merged (`extend type` works).
      * An empty scan keeps the annotation-derived schema.
      */
-    fun schemaLocations(locations: Iterable<String>) {
+    fun schemaLocations(vararg locations: String) {
+        schemaLocations(locations.asList())
+    }
+
+    fun schemaLocations(locations: Collection<String>) {
         resourceLocations = locations.toList()
     }
 
     /** File suffixes scanned under [schemaLocations]. Default `.graphqls` and `.gqls`. */
-    fun schemaFileExtensions(extensions: Iterable<String>) {
+    fun schemaFileExtensions(vararg extensions: String) {
+        schemaFileExtensions(extensions.asList())
+    }
+
+    fun schemaFileExtensions(extensions: Collection<String>) {
         resourceExtensions = extensions.toList()
     }
 
     internal fun build(): Graphix {
-        val files = loadSchemaFiles(resourceLocations, resourceExtensions)
+        val files = resourceLocations.loadSchemaFiles(resourceExtensions)
         val (schema, loaders) = graphQLSchema(queries, mutations, subscriptions, types, json, files)
         return Graphix(GraphQL.newGraphQL(schema).build(), loaders)
     }

@@ -1,5 +1,7 @@
 package com.strange.graphix
 
+import graphql.language.Definition
+import graphql.language.Document
 import graphql.language.OperationDefinition
 import graphql.parser.Parser
 
@@ -23,7 +25,7 @@ fun GraphixRequest.operation(): GraphixOperation? {
         } catch (_: Exception) {
             return null
         }
-    val operations = document.getDefinitionsOfType(OperationDefinition::class.java)
+    val operations = document.definitionsOfType<OperationDefinition>()
     val selected =
         when {
             !operationName.isNullOrBlank() -> operations.find { it.name == operationName }
@@ -39,3 +41,5 @@ fun GraphixRequest.operation(): GraphixOperation? {
 
 /** `true` when [operation] is a subscription. A document that does not parse is not. */
 fun GraphixRequest.isSubscription(): Boolean = operation() == GraphixOperation.SUBSCRIPTION
+
+private inline fun <reified T : Definition<*>> Document.definitionsOfType(): List<T> = getDefinitionsOfType(T::class.java)

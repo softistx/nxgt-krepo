@@ -11,8 +11,8 @@ internal fun batchFieldFetcher(loaderName: String): DataFetcher<*> =
         val loader =
             environment.getDataLoader<Any, Any>(loaderName)
                 ?: error("no DataLoader '$loaderName' — Graphix.execute must register @BatchMapping loaders")
-        val parent =
-            environment.getSource<Any>()
+        val parent: Any =
+            environment.getSource()
                 ?: error("no parent source for '$loaderName'")
         loader.load(parent)
     }

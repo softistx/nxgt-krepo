@@ -33,7 +33,7 @@ internal fun root(
     val fetchers = mutableListOf<Pair<FieldCoordinates, DataFetcher<*>>>()
     val seen = mutableSetOf<String>()
     instances.forEach { instance ->
-        mappingFunctions(instance, kind).forEach { function ->
+        instance.mappingFunctions(kind).forEach { function ->
             val fieldName = function.graphQLName(kind)
             if (!seen.add(fieldName)) {
                 throw GraphixException("duplicate $kind field '$fieldName' on ${instance::class.qualifiedName}")
@@ -74,17 +74,12 @@ internal fun GraphQLCodeRegistry.Builder.putAll(root: Root): GraphQLCodeRegistry
     return this
 }
 
-internal fun rootFunctions(
-    kind: RootKind,
-    instances: List<Any>,
-): List<Pair<Any, KFunction<*>>> = instances.flatMap { instance -> mappingFunctions(instance, kind).map { instance to it } }
+internal fun List<Any>.rootFunctions(kind: RootKind): List<Pair<Any, KFunction<*>>> =
+    flatMap { instance -> instance.mappingFunctions(kind).map { instance to it } }
 
-internal fun mappingFunctions(
-    instance: Any,
-    kind: RootKind,
-): List<KFunction<*>> {
+internal fun Any.mappingFunctions(kind: RootKind): List<KFunction<*>> {
     val matches =
-        instance::class.memberFunctions.filter { function ->
+        this::class.memberFunctions.filter { function ->
             when (kind) {
                 RootKind.QUERY -> function.hasAnnotation<QueryMapping>()
                 RootKind.MUTATION -> function.hasAnnotation<MutationMapping>()
@@ -92,7 +87,7 @@ internal fun mappingFunctions(
             }
         }
     if (matches.isEmpty()) {
-        throw GraphixException("${instance::class.qualifiedName} has no @$kind functions")
+        throw GraphixException("${this::class.qualifiedName} has no @$kind functions")
     }
     matches.forEach { function ->
         if (function.instanceParameter == null) {
