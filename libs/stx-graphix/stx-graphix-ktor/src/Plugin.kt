@@ -35,8 +35,9 @@ val GraphQL =
         if (pluginConfig.injectable) application.provideGraphix()
     }
 
+/** What [GraphQL] installs with. Either [schema] or [instance] must be set. */
 class GraphQLConfiguration {
-    /** HTTP path. Default `/graphql`. */
+    /** HTTP path for POST and GET. Default `/graphql`. */
     var path: String = "/graphql"
 
     /**
@@ -45,6 +46,7 @@ class GraphQLConfiguration {
      */
     var instance: Graphix? = null
 
+    /** How the HTTP envelope and GraphQL arguments are decoded. */
     var json: Json = lenientJson
 
     /**
@@ -54,9 +56,14 @@ class GraphQLConfiguration {
 
     internal var schemaBlock: (GraphixBuilder.() -> Unit)? = null
 
+    /**
+     * Builds the engine at install. Query/mutation instances passed here are kept for the
+     * life of the application — put stores and Spring-like services on those instances.
+     */
     fun schema(block: GraphixBuilder.() -> Unit) {
         schemaBlock = block
     }
 }
 
+/** Application attribute the [GraphQL] plugin writes. */
 internal val GraphixKey = AttributeKey<Graphix>("com.strange.graphix.Graphix")

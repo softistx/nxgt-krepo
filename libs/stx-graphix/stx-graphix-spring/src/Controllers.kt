@@ -6,6 +6,7 @@ import com.strange.graphix.schema.Query
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.memberFunctions
 
+/** Registers [instance] as query, mutation, or both — one class may carry both annotations. */
 internal fun GraphixBuilder.addController(instance: Any) {
     val functions = instance::class.memberFunctions
     if (functions.any { it.hasAnnotation<Query>() }) query(instance)

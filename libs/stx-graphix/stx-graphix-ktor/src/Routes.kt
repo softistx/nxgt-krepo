@@ -21,6 +21,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
+/** POST and GET at [path]. Field errors stay HTTP 200; malformed JSON is 400. */
 internal fun Route.graphqlRoute(
     path: String,
     engine: Graphix,
