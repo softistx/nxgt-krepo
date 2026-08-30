@@ -22,6 +22,9 @@ class OrderMutations(
 
     @Subscription
     fun orderPlaced(): Flow<Order> = orders.placed
+
+    @Batch
+    fun items(orders: List<Order>): Map<Order, List<LineItem>> = this.orders.items(orders)
 }
 ```
 

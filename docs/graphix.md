@@ -13,6 +13,8 @@ in the module README, which answers *why the library is shaped this way*.
 | `@Query` | function on a class passed to `query(...)` | field on `Query` |
 | `@Mutation` | function on a class passed to `mutation(...)` | field on `Mutation` |
 | `@Subscription` | function on a class passed to `subscription(...)` | field on `Subscription` |
+| `@Field` | function on a class passed to `type(...)` | extra field on the parent type |
+| `@Batch` | function on a class passed to `type(...)` | extra field, loaded through DataLoader |
 
 The GraphQL field name is `@Query(name=…)` / `@Mutation(name=…)` / `@Subscription(name=…)` if
 set, otherwise `@GraphQLName` on the function, otherwise the Kotlin name.
@@ -60,7 +62,33 @@ rather than passing null. A constructor default on an input-object property is a
 input field for the same reason.
 
 Nested object fields are the `@Serializable` properties already in memory. Extra fields that need
-I/O (a `Product.reviews` resolver, DataLoader) are a later phase.
+I/O are `@Field` / `@Batch` on an instance passed to `type(...)`. The first parameter that is not
+`@GraphQLContext` is the parent (`env.source`). Remaining `@Field` parameters are GraphQL
+arguments.
+
+```kotlin
+class ProductFields(
+    private val reviews: ReviewStore,
+) {
+    @Field
+    suspend fun extra(product: Product): String = product.name.uppercase()
+
+    @Batch
+    suspend fun reviews(products: List<Product>): Map<Product, List<Review>> =
+        reviews.forProducts(products.map { it.id })
+}
+
+Graphix {
+    query(ProductQueries(store))
+    type(ProductFields(reviews))
+}
+```
+
+`@Batch` is a DataLoader: one call per operation level for all parents, not one per parent.
+Return `Map<Parent, T>` or `List<T>` in key order. `T` is the GraphQL field type. `@Batch`
+cannot take GraphQL arguments — close over them, or use `@Field`. Graphix never hands out a
+`DataLoader`. A `@Field` / `@Batch` name that collides with a property fails schema build;
+`@GraphQLIgnore` the property if the resolver should own the field.
 
 A `@Subscription` function returns a stream of `T`, not `T` itself. Collect it with
 `Graphix.subscribe`, which is a `Flow<GraphixResult>` — one item per event, cancelled when the
@@ -72,7 +100,7 @@ already holds. What it can see is exactly three things:
 
 | Need | Where it comes from |
 | --- | --- |
-| A Spring bean, a store, a client | The constructor (or property) of the query/mutation class. The data fetcher calls *that* instance |
+| A Spring bean, a store, a client | The constructor (or property) of the query/mutation/type class. The data fetcher calls *that* instance |
 | Arguments from the GraphQL document | Function parameters, bound from `variables` / literals |
 | Who is calling, the locale, anything per request | `@GraphQLContext` on a parameter, filled from `execute`'s `context` map |
 
@@ -152,5 +180,5 @@ bean wins.
 
 ## What this document does not cover yet
 
-Type field resolvers, DataLoader / `@BatchMapping`, schema-first SDL, WebSocket (`graphql-ws`).
-Those land in later slices and get a paragraph here when they do.
+Schema-first SDL, WebSocket (`graphql-ws`). Those land in later slices and get a paragraph here
+when they do.

@@ -1,5 +1,7 @@
 package com.strange.graphix.fixture
 
+import com.strange.graphix.schema.Batch
+import com.strange.graphix.schema.Field
 import com.strange.graphix.schema.GraphQLContext
 import com.strange.graphix.schema.GraphQLDescription
 import com.strange.graphix.schema.GraphQLIgnore
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.serialization.Serializable
 import org.reactivestreams.Publisher
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -45,6 +48,46 @@ class ProductQueries(
 
     @Query
     fun sizes(): List<Size> = Size.entries
+}
+
+@Serializable
+data class Review(
+    val id: String,
+    val body: String,
+)
+
+class ProductFields(
+    private val reviews: Map<String, List<Review>> =
+        mapOf("p1" to listOf(Review("r1", "Nice mug"))),
+    val loads: AtomicInteger = AtomicInteger(),
+) {
+    @Field
+    fun extra(product: Product): String = product.name.uppercase()
+
+    @Field
+    fun tagged(
+        product: Product,
+        prefix: String = "x",
+    ): String = "$prefix-${product.name}"
+
+    @Batch
+    fun reviews(products: List<Product>): Map<Product, List<Review>> {
+        loads.incrementAndGet()
+        return products.associateWith { reviews[it.id].orEmpty() }
+    }
+}
+
+class DuplicateNameFields {
+    @Field
+    fun name(product: Product): String = product.name
+}
+
+class BadBatchFields {
+    @Batch
+    fun reviews(
+        products: List<Product>,
+        limit: Int,
+    ): Map<Product, List<Review>> = emptyMap()
 }
 
 class ProductMutations(

@@ -65,17 +65,21 @@ is for a document that cannot even be submitted.
 
 ## No scan in core
 
-`Graphix { query(instance); mutation(instance); subscription(instance) }`. Spring may collect `@GraphQLController` beans;
+`Graphix { query(instance); mutation(instance); subscription(instance); type(instance) }`. Spring may collect `@GraphQLController` beans;
 that is the Spring module's job. A classpath walk in this type would make a worker with no
 Spring carry one.
 
 ## The data fetcher is not yours
 
-graphql-java wants a `DataFetcher`. Graphix builds one per `@Query` / `@Mutation` / `@Subscription` and never
-hands it out. The fetcher's job is to call the function on the **instance already registered** —
-`query(productQueries)` — and to bind arguments. That is why a Spring mutation that needs
-`OrderService` takes it on the controller constructor: the controller *is* the Spring bean, and
-the fetcher holds that bean for the life of the engine.
+graphql-java wants a `DataFetcher`. Graphix builds one per `@Query` / `@Mutation` / `@Subscription` /
+`@Field` / `@Batch` and never hands it out. The fetcher's job is to call the function on the
+**instance already registered** — `query(productQueries)` / `type(productFields)` — and to bind
+arguments. That is why a Spring mutation that needs `OrderService` takes it on the controller
+constructor: the controller *is* the Spring bean, and the fetcher holds that bean for the life
+of the engine.
+
+`@Field` is a per-parent resolver. `@Batch` is a DataLoader: graphql-java dispatches one load
+per operation level. The DataLoader is not part of the public API.
 
 Per-request state is the other bag. `@GraphQLContext` reads `Graphix.execute(..., context)` by
 `KClass`. Mixing the two is the usual mistake: looking up `ApplicationContext` from a resolver
@@ -86,5 +90,5 @@ like DI". The first is a service locator. The second makes a singleton look requ
 
 ## What this slice does not do
 
-Code generation, a GraphQL skill, DataLoader / type field resolvers, schema-first SDL,
-WebSocket (`graphql-ws`), Federation, a client. Those are later phases.
+Code generation, a GraphQL skill, schema-first SDL, WebSocket (`graphql-ws`), Federation, a
+client. Those are later phases.
