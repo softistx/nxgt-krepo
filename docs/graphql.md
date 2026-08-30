@@ -71,9 +71,7 @@ val result = graphql.execute(
 `result.data` is the GraphQL data map. `result.errors` is the GraphQL error list. A resolver that
 throws becomes an error there; `execute` itself still returns.
 
-## HTTP (Ktor)
-
-`install(GraphQL)` in `stx-graphql-ktor` serves `POST` and `GET` at `/graphql` (configurable).
+## HTTP
 
 The JSON envelope is `{ "query", "variables", "operationName" }`. The response is
 `{ "data", "errors" }`. A field error is HTTP **200** with `errors[]`. Malformed JSON, a missing
@@ -82,8 +80,12 @@ query, or unparseable GET `variables` is HTTP **400** with `errors[]`.
 `GET /graphql?query=...` is for introspection and simple queries. Variables on GET are a JSON
 object in the `variables` query parameter.
 
+**Ktor** — `install(GraphQL)` in `stx-graphql-ktor`, path configurable, default `/graphql`.
+
+**Spring Boot** — `stx.graphql.enabled=true` in `stx-graphql-spring`. Beans annotated
+`@GraphQLController` become query/mutation roots. An application's own `GraphQl` bean wins.
+
 ## What this document does not cover yet
 
 Subscriptions (`@Subscription` → `Flow`), type field resolvers, DataLoader / `@BatchMapping`,
-schema-first SDL, the Spring Boot plugin. Those land in later slices and get a paragraph here
-when they do.
+schema-first SDL. Those land in later slices and get a paragraph here when they do.
