@@ -1,22 +1,13 @@
 package com.strange.graphix.spring
 
 import com.strange.graphix.Graphix
-import com.strange.graphix.http.BadGraphixHttp
-import com.strange.graphix.http.GraphixHttpError
-import com.strange.graphix.http.GraphixHttpRequest
-import com.strange.graphix.http.GraphixHttpResponse
-import com.strange.graphix.http.toGraphixRequest
-import com.strange.graphix.http.toHttp
+import com.strange.graphix.http.*
 import kotlinx.coroutines.reactor.mono
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.springframework.http.MediaType
-import org.springframework.web.reactive.function.server.RouterFunction
-import org.springframework.web.reactive.function.server.RouterFunctions
-import org.springframework.web.reactive.function.server.ServerRequest
-import org.springframework.web.reactive.function.server.ServerResponse
-import org.springframework.web.reactive.function.server.bodyValueAndAwait
+import org.springframework.web.reactive.function.server.*
 import reactor.core.publisher.Mono
 
 /** WebFlux adapter: the same JSON envelope as Ktor, over `RouterFunction`. */
@@ -34,7 +25,7 @@ internal class GraphixHandler(
             .build()
 
     private fun post(request: ServerRequest): Mono<ServerResponse> =
-        request.bodyToMono(String::class.java).defaultIfEmpty("").flatMap { body ->
+        request.bodyToMono<String>().defaultIfEmpty("").flatMap { body ->
             mono { handlePost(body) }
         }
 
