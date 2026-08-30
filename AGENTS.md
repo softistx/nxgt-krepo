@@ -26,6 +26,7 @@ What exists:
 | `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/stx-spring-boot` | Spring Boot integration for the libraries here, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, and every auto-configuration opt-in behind `stx.*` |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
+| `libs/stx-graphql` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphql-ktor` and `stx-graphql-spring` are the HTTP integrations |
 | `libs/stx-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `examples/demo-api` | Ktor server implementing a slice of `examples/demo-api/openapi.yaml` |
@@ -614,17 +615,18 @@ A module's own composition — what it is built out of — reads before what it 
 outside, and a `//libs/` entry buried between two catalog aliases is the one a reader misses when
 asking what a module actually depends on.
 
-Modules are registered in `project.yaml`, and this repo registers them **by glob**, so a new module under `libs/`, `plugins/`, `examples/<name>/` or `examples/<group>/<name>/` is picked up without editing the file:
+Modules are registered in `project.yaml`, and this repo registers them **by glob**, so a new module under `libs/`, `libs/<group>/`, `plugins/`, `examples/<name>/` or `examples/<group>/<name>/` is picked up without editing the file:
 
 ```yaml
 modules:
   - examples/*
   - examples/*/*
   - libs/*
+  - libs/*/*
   - plugins/*
 ```
 
-Only directories that directly contain a `module.yaml` are matched, so grouping directories such as `examples/material-demo` and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported as an error, so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
+Only directories that directly contain a `module.yaml` are matched, so grouping directories such as `examples/material-demo` and `libs/stx-graphql` and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported as an error, so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
 
 Rules that are easy to get wrong:
 
@@ -790,6 +792,8 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
+  | `docs/graphql.md` | What a stx-graphql schema may say — the annotations, scalars, execute contract. **This is where a new annotation or scalar is documented** |
+  | `libs/stx-graphql/stx-graphql/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no scan in core |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
