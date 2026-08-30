@@ -54,6 +54,15 @@ because nullability alone does not stop Spring's argument resolver throwing on a
 
 ## rest/ — the controller
 
+**A generated `url` has no leading slash, and the mapping is still correct.** `@GetExchange(url =
+"orders/{id}")` is written that way because a client gets its base from `WebClient.baseUrl`. Verified
+against the spring-webflux 7.0.8 sources: `RequestMappingHandlerMapping` reads `@HttpExchange` with
+`SearchStrategy.TYPE_HIERARCHY`, so an interface a `@RestController` implements is found; `url`
+reaches `HttpExchange.value()` through a mutual `@AliasFor`; and `RequestMappingInfo` puts every
+pattern through `PathPatternParser.initFullPathPattern`, which prepends the `/`. A 404 on every route
+after wiring a controller this way means one of those three is not what it was.
+
+
 No `@RequestMapping` and no `@GetMapping`: the routing is inherited. What stays is the two things
 the interface cannot carry.
 
@@ -170,12 +179,34 @@ fun ApiOrderStatus.toDomain(): OrderStatus? =
 The generated one carries an `UNKNOWN` sentinel so a client can read a status a newer server
 invented, and a sentinel is exactly what must never reach the database.
 
-## test/ — the interface again, as a client
+## test/ — e2e through the generated clients
+
+**The client extensions are the library's.** `com.strange.spring.client` already has
+`httpServiceFactory`, `httpClient<T>()` and `withClient<T>()`; a spec that assembled its own
+`WebClient` would be asserting against a transport no caller uses. What a *generated* client adds on
+top is four settings, and none of them fails at build time when left out.
 
 ```kotlin
-fun apiFactory(baseUrl: String, json: Json): HttpServiceProxyFactory =
+// test/OrdersApi.kt — the fixture: one per spec, each with a database of its own
+class OrdersApi {
+    lateinit var baseUrl: String private set
+    lateinit var web: WebTestClient private set          // for what a typed client cannot say
+    lateinit var factory: HttpServiceProxyFactory private set
+
+    fun start(headers: (HttpHeaders) -> Unit = {}) {
+        val app = SpringApplicationBuilder(OrdersApplication::class.java)
+            .web(WebApplicationType.REACTIVE)
+            .run("--server.port=0", "--spring.data.mongodb.uri=$uri") as ReactiveWebServerApplicationContext
+        baseUrl = "http://localhost:${app.webServer!!.port}"
+        web = WebTestClient.bindToServer().baseUrl(baseUrl).build()
+        factory = apiFactory(baseUrl, app.getBean("stxWebJson", Json::class.java), headers)
+    }
+}
+
+fun apiFactory(baseUrl: String, json: Json, headers: (HttpHeaders) -> Unit = {}) =
     httpServiceFactory(
         baseUrl,
+        headers,                                   // per request: `{ it.setBearerAuth(token) }`
         factory = {
             conversionService(DefaultFormattingConversionService().also(::registerApiEnumConverters))
             httpRequestValuesProcessor(apiOperationProcessor())
@@ -187,38 +218,74 @@ fun apiFactory(baseUrl: String, json: Json): HttpServiceProxyFactory =
         }
         filter(apiErrorFilter())
     }
-
-// in the spec
-val factory = apiFactory(baseUrl, context.getBean("stxWebJson", Json::class.java))
-val orders: IOrdersService = factory.createClient()
-
-feature("POST /orders, through IOrdersService") {
-    scenario("a reference already taken is the 409 the document declares") {
-        shouldThrow<ErrorResponseException> {
-            orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "someone else", total = 1))
-        }.error.code shouldBe "orders.reference-taken"
-    }
-}
 ```
 
-Three things have to be true and none of them fails at build time: the `WebClient` decodes with
-kotlinx (a generated `placedAt` is a `kotlin.time.Instant`, which Jackson has never heard of), the
-conversion service knows the generated enums (Spring writes an enum argument with `Enum.name()` and
-never consults `toString()`), and `apiOperationProcessor` carries the operation across (by the time a
-`ClientRequest` exists the method is gone, so `apiErrorFilter` cannot otherwise tell which operation
-failed).
+```kotlin
+// test/OrderControllerTest.kt — one spec per controller, features named after the route
+class OrderControllerTest : FeatureSpec({
+    val api = OrdersApi()
+    lateinit var orders: IOrdersService
+
+    beforeSpec {
+        api.start()
+        orders = api.factory.withClient()           // one client per tag, off the one factory
+        api.ready()
+    }
+    afterSpec { api.stop() }
+
+    feature("POST /orders") {
+        scenario("a placed order comes back with the id it was given") {
+            orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "lovelace", total = 12_000))
+                .data.status shouldBe OrderStatus.PENDING
+        }
+
+        scenario("a reference already taken is the 409 the document declares") {
+            shouldThrow<ErrorResponseException> {
+                orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "someone else", total = 1))
+            }.error.code shouldBe "orders.reference-taken"
+        }
+    }
+})
+```
+
+Nothing in that spec builds a request: the paths, the verbs, the parameters, the statuses and the
+body types are all the document's. Assert a failure on `status` and `code`, never on the message —
+the text is translated and changes the day somebody improves a sentence.
+
+The four settings, and what each one silently costs:
+
+| Setting | Left out |
+| --- | --- |
+| kotlinx codecs, from the app's own `stxWebJson` | a generated `placedAt` is a `kotlin.time.Instant`, which Jackson has never heard of |
+| `registerApiEnumConverters` | Spring writes an enum with `Enum.name()` and never consults `toString()`: `IN_PROGRESS` where the document says `in-progress` |
+| `apiOperationProcessor` | by the time a `ClientRequest` exists the method is gone, so `apiErrorFilter` cannot tell which operation failed |
+| `apiErrorFilter()` | a documented failure arrives as the untyped `ApiException`, not `ErrorResponseException` with a parsed body |
 
 ## Where each kind of assertion belongs
 
-| Claim | Driven by |
-| --- | --- |
-| The contract: types, statuses, typed failures | the generated interface as a client |
-| The wire: the envelope's JSON shape, `$.data.length()` | `WebTestClient` |
-| Translation: the same 404 in English and in French | `WebTestClient`, with `Accept-Language` |
-| A case the document does not declare | `WebTestClient` — a typed client has no name for it |
+| Claim | Spec | Driven by |
+| --- | --- | --- |
+| The contract: types, statuses, typed failures | `<X>ControllerTest` | the generated interface as a client |
+| The wire: the envelope's JSON shape, `$.data.length()` | `<App>ApplicationTest` | `WebTestClient` |
+| Translation: the same 404 in English and in French | `<App>ApplicationTest` | `WebTestClient`, with `Accept-Language` |
+| A case the document does not declare | `<App>ApplicationTest` | `WebTestClient` — a typed client has no name for it |
 
 **A per-run database goes in the URI.** `spring.data.mongodb.database` is read only while Boot is
 building a connection string from `host`/`port`, so once `spring.data.mongodb.uri` is set it is
 ignored, silently, and every run shares one database while looking isolated. Pass the settings as
 arguments to `SpringApplicationBuilder.run` too: `.properties()` contributes Boot's *default*
 property source, the lowest there is, so `application.yaml` wins every key it also names.
+
+**Wait for what starts after the port opens.** `MigrationRunner` listens for `ApplicationReadyEvent`
+and suspends, and Spring does not wait for a suspending listener — so a seed lands shortly *after*
+`run` returns. The fixture's `ready()` polls for it; a spec that assumed otherwise fails on whichever
+scenario went first. `nxgt-rest` has no such gate because it cleans between tests instead
+(`beforeEach { cleanUp() }` over an injected `ReactiveMongoTemplate`) — either discipline works, and
+having neither is what does not.
+
+**On `@SpringBootTest`.** `nxgt-rest` boots with `@ActiveProfiles("test")` +
+`@SpringBootTest(webEnvironment = DEFINED_PORT)` and Kotest's `SpringExtension`, which is why its
+base URL is the constant `http://localhost:8088`. That needs `kotest-extensions-spring`, which is not
+in this repo's catalog; the fixture above is the same thing without the dependency, and it buys a
+port picked at random and a database per spec. Either is the convention — the client wiring below the
+bootstrap is what must not vary.

@@ -84,25 +84,34 @@ signature needing `ServerWebExchange` or `FilePart`. The two styles coexist in o
 
 `references/spring-api.md` has the `module.yaml`, the five files written out, and the test wiring.
 
-## Testing a Spring API
+## E2E tests for a Spring controller
 
-**A spec drives the application through the same interfaces its controllers implement.** A
-`WebTestClient` proves the wire shape; a typed client proves the *contract*, and a document change
-that neither side followed stops compiling on both at once.
+**A controller is tested end to end, through the interface it implements.** The generated `I*Service`
+is the client — reused, never re-declared — built with `stx-spring-boot`'s own extensions from
+`com.strange.spring.client` against the running application, so the spec speaks over the transport
+its callers use. A hand-written client or a mocked service proves neither the routing nor the
+contract. It is `nxgt-rest`'s convention; what differs here is that nobody writes the interface.
 
-- **Build the client with `stx-spring-boot`'s `httpServiceFactory`**, whose `factory` parameter is
-  the seam a generated client needs: `registerApiEnumConverters` and `apiOperationProcessor` belong
-  to the proxy, kotlinx codecs and `apiErrorFilter()` to the `WebClient`. Neither omission fails at
-  build time.
-- **Name a feature after the route** — `feature("POST /orders, through IOrdersService")`, as
-  `nxgt-rest` does — so a failure names the endpoint. Reuse the application's own `stxWebJson` bean
-  rather than a `Json` configured nearby.
-- **Keep a `WebTestClient` for what a typed client hides**: the envelope's JSON shape, the translated
-  message text, and a status for a case the document does not declare.
-- **`apiErrorFilter()` runs closer to the transport than `httpServiceFactory`'s own status handler**,
-  so a documented failure arrives as the generated `ErrorResponseException` carrying a parsed body.
-  Leave it out and it is the untyped `ApiException` — right for an internal caller, wrong for a spec
-  asserting the document.
+- **One factory, one client per tag.** `httpServiceFactory(baseUrl, headers) { … }` once, then
+  `factory.withClient<IOrdersService>()`, `factory.withClient<IHealthService>()`. A factory per
+  interface rebuilds the `WebClient`, and the second interface is where a codec quietly goes missing.
+- **The `factory` parameter is the seam a generated client needs**: `registerApiEnumConverters` and
+  `apiOperationProcessor` belong to the proxy, the kotlinx codecs and `apiErrorFilter()` to the
+  `WebClient`. None of the four fails at build time when left out. Reuse the application's own
+  `stxWebJson` bean rather than a `Json` configured nearby.
+- **Authentication goes in the `headers` hook**, which runs per request —
+  `httpServiceFactory(baseUrl, { it.setBearerAuth(token) })`, as `nxgt-rest` does. `defaultHeaders`
+  would pin the first caller's token onto every later call.
+- **The wiring lives in one test-scoped fixture** — base URL, factory, `WebTestClient`, per-run
+  database — not repeated per spec: `nxgt-rest`'s `helpers/TestHelper.kt`, here `test/OrdersApi.kt`.
+- **One spec per controller, features named after the route** — `feature("POST /orders")` — so a
+  failure names the endpoint and the list reads as the surface the document declares.
+- **A documented failure is `shouldThrow<ErrorResponseException>`** on its `status` and its `code`,
+  never on the message: `apiErrorFilter()` runs closer to the transport than `httpServiceFactory`'s
+  status handler, so the parsed body is there — and the text is translated.
+- **Keep a `WebTestClient` for what a typed client cannot say**: the envelope's JSON shape, the
+  translated text, a status the document does not declare. In a spec of its own, beside the
+  controller specs rather than inside them.
 
 ## Ktor — `stx-ktor`, and the routes mirror the path files
 
@@ -120,17 +129,13 @@ consumer module takes `client: Ktorfit` off the same document.
   Jackson-bindable: a `format: date-time` becomes a `kotlin.time.Instant` Jackson cannot read, and
   every typed failure degrades to the untyped `ApiException` with nothing said. Keep it to plain
   scalars — `ErrorResponse.timestamp` is a `string`, not a `date-time`, for exactly this reason.
-- **`@GetExchange(url = "orders/{id}")` has no leading slash** — a client gets its base from
-  `WebClient.baseUrl` — and server-side that is still correct. Verified against the spring-webflux
-  7.0.8 sources: the mapping reads `@HttpExchange` with `SearchStrategy.TYPE_HIERARCHY`, `url`
-  reaches `HttpExchange.value()` through a mutual `@AliasFor`, and `RequestMappingInfo` puts every
-  pattern through `PathPatternParser.initFullPathPattern`, which prepends the `/`.
+- **A generated `url` has no leading slash and is still right server-side** — the mapping searches
+  the type hierarchy and `PathPatternParser` prepends it. `references/spring-api.md` has the proof.
 
 ## Where to read
 
-`references/` here is written by hand, not fetched: this skill has no `docs-source.json`, and what
-the pages hold is this repo's own convention. They stay in step with `examples/spring-orders`, which
-is the same thing running.
+`references/` here is written by hand, not fetched — it holds this repo's own convention, and stays
+in step with `examples/spring-orders`, which is the same thing running.
 
 | Topic | File |
 | --- | --- |

@@ -55,8 +55,9 @@ implemented yet.
 | `mapper/OrderMappers.kt` | The document's types on one side, the database's on the other |
 | `migration/V1Seed.kt`, `migration/V2Tags.kt` | Two migrations, and how the class name becomes the version |
 | `resources/locales/` | Two catalogs. Every key a handler can raise has text in both |
-| `test/ApiClients.kt` | The generated interfaces as typed clients, and the three things that must be true for the proxy |
-| `test/OrdersTest.kt` | The whole application over HTTP, then again through the generated interfaces |
+| `test/OrdersApi.kt` | The fixture: the application on a real port, a database per spec, and the generated interfaces as clients |
+| `test/OrderControllerTest.kt` | The controller end to end, through the interface it implements — one feature per route |
+| `test/OrdersApplicationTest.kt` | What a typed client cannot say: the envelope, the translations, the migrations, the audit trail |
 | `test/ErrorResponseShapeTest.kt` | That the document's `ErrorResponse` is the one the server actually writes |
 
 ## The things worth reading it for
@@ -105,9 +106,9 @@ when somebody improves a sentence and a client matching on text breaks that day.
 
 The throw happens in the service, one layer below the controller, and nothing in between converts
 it. `ApiExceptionHandler` is a `@RestControllerAdvice`, so it answers a dispatch error whatever
-raised it — and `OrdersTest` asserts the 404 in English and in French rather than leaving that to
-memory. The generated client's own `apiErrorFilter` reads the same response back into the typed
-`ErrorResponseException`, which the last feature in that spec asserts: the document's account of a
+raised it — and `OrdersApplicationTest` asserts the 404 in English and in French rather than leaving
+that to memory. The generated client's own `apiErrorFilter` reads the same response back into the
+typed `ErrorResponseException`, which `OrderControllerTest` asserts: the document's account of a
 failure is exercised from both ends.
 
 **A page's ordering has exactly one source.** `OrderService.findOrders` reads `filter`, `sort`,
@@ -118,15 +119,15 @@ controller is handed the four values already bound, so it assembles the window i
 The tempting spelling — `MongoPage.first(size, query = mongoQuery)` — puts the ordering on the
 *query*, where the keyset machinery cannot see it: the first page is right, the second is empty, and
 the rest of the collection is unreachable. `MongoPage` refuses it now.
-`OrdersTest` pages through all four orders one at a time and asserts every one is seen exactly once.
+`OrdersApplicationTest` pages through all four orders one at a time and asserts every one is seen exactly once.
 
 **A migration is a class whose name is its version.** `V1Seed` is order 1, `V2Tags` is order 2, and
 the runner records each in `migrations` on success so it never runs again. Two things follow that are
 easy to get wrong: there is no `rollback` — a migration that needs undoing is undone by the next one,
 which is a thing somebody reviewed — and the runner is **not a startup gate**. It listens for
 `ApplicationReadyEvent` and suspends, and Spring does not wait for a suspending listener, so the
-records appear shortly after the port opens rather than before it. `OrdersTest` polls for them for
-exactly that reason.
+records appear shortly after the port opens rather than before it. `OrdersApi.ready()` polls for them for
+exactly that reason, before any spec asserts anything.
 
 **The audit trail is one annotation.** `@Auditable` on `Order` and `stx.data.mongo.audit.enabled` in
 the yaml; nothing in `OrderService` mentions it. Every save appends a version to `audits` carrying
@@ -134,15 +135,19 @@ the whole state and the properties that changed, and a delete appends a `TERMINA
 the history. The writes happen on a scope of their own, so they land shortly after the response
 rather than in it — which is why the spec polls there too.
 
-**The generated interface is also a typed client.** The last feature in `OrdersTest` builds
-`IOrdersService` — the very interface `OrderController` implements — into a client with
-`HttpServiceProxyFactory` and drives the running server through it. One document, one interface, and
-neither side wrote it, so neither side can drift from it.
+**The generated interface is also the test client.** `OrderControllerTest` never builds a request:
+every scenario calls `IOrdersService` — the very interface `OrderController` implements — over a
+client pointed at the running server, so the paths, the verbs, the parameters, the statuses and the
+body types are all the document's. One document, one interface, and neither side wrote it, so neither
+side can drift from it. Features are named after the route, as in `nxgt-rest`, and a documented
+failure is asserted on its status and its `code` rather than on its message, which is translated.
 
-It is built by `stx-spring-boot`'s own `httpServiceFactory`, whose `factory` parameter is the seam a
-generated client needs — the enum conversion service and the request-values processor belong to the
-proxy, not to the `WebClient`. Features are named after the route they drive, as in `nxgt-rest`, so a
-failure names the endpoint.
+The client is not this module's: `stx-spring-boot` has `httpServiceFactory` and `withClient`, and
+`OrdersApi` adds only what a *generated* client needs on top — the enum conversion service and the
+request-values processor belong to the proxy, the kotlinx codecs and `apiErrorFilter` to the
+`WebClient`, and none of the four fails at build time when left out. One factory serves both tags.
+`OrdersApplicationTest` keeps a `WebTestClient` for the claims the contract has no name for: the
+envelope's JSON shape, the same 404 in two languages, and the 400 from a filter nobody can read.
 
 That client's `WebClient` is configured with the application's own kotlinx codecs rather than left on
 Jackson, which is what `models: Kotlinx` costs and buys: the generated classes are `@Serializable`
@@ -156,7 +161,7 @@ the kotlinx style, and a `date-time` there would silently degrade every typed fa
 `stx.data.mongo.enabled` the converters are absent and this field fails at *query* time with
 `Can't find a codec` — not at insert time, and not at startup. A demo that used
 `java.time.Instant` would boot and pass and prove nothing, so this one uses the type that actually
-needs the line in the yaml, and `OrdersTest` reads the seeded orders back to prove it.
+needs the line in the yaml, and `OrdersApplicationTest` reads the seeded orders back to prove it.
 
 `reference` is stored as `ref` for a related reason: a keyset cursor carries the *stored* field
 name, so sorting on a renamed property only works because the cursor is built from the mapping
@@ -172,11 +177,11 @@ the default in `application.yaml`; `MONGO_URI` overrides it.
 ./kotlin test -m spring-orders
 ```
 
-`OrdersTest` needs no server of its own: `MONGO_TEST_URI` reuses one that is already up, and
-otherwise `stx-testing` starts a `mongo:8` container for the run and stops it afterwards. Every
-scenario runs against a database of its own, dropped when the spec ends — the server is usually
-somebody else's, and a run that reuses one has to leave it as it found it. With no Docker and no
-`MONGO_TEST_URI` the spec reports skipped rather than failing.
+The specs need no server of their own: `MONGO_TEST_URI` reuses one that is already up, and otherwise
+`stx-testing` starts a `mongo:8` container for the run and stops it afterwards. Each spec runs
+against a database of its own, dropped when it ends — the server is usually somebody else's, and a
+run that reuses one has to leave it as it found it. With no Docker and no `MONGO_TEST_URI` they
+report skipped rather than failing.
 
 That isolation took two fixes, and both are worth knowing before writing another Spring spec here.
 The per-run settings are passed as **arguments** to `SpringApplicationBuilder.run` rather than
