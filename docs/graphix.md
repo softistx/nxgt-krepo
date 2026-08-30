@@ -50,7 +50,7 @@ A type that is not `@Serializable` fails schema build, naming that type.
 | `@GraphQLDescription("…")` | same | GraphQL description |
 | `@GraphQLIgnore` | property | omitted from the GraphQL type |
 | `@Argument("foo")` | parameter | GraphQL argument name (Kotlin name is the default) |
-| `@GraphQLContext` | parameter | injected from `Graphix.execute(..., context)` under the parameter's `KClass`; not an argument |
+| `@GraphQLContext` | parameter | value from `Graphix.execute(..., context)` under that parameter's `KClass`. Not a GraphQL argument |
 
 A Kotlin default parameter is an optional GraphQL argument. A missing argument uses the default
 rather than passing null. A constructor default on an input-object property is an optional GraphQL
@@ -59,10 +59,58 @@ input field for the same reason.
 Nested object fields are the `@Serializable` properties already in memory. Extra fields that need
 I/O (a `Product.reviews` resolver, DataLoader) are a later phase.
 
+The data fetcher is not part of the public API. A resolver is a function on an instance Graphix
+already holds. What it can see is exactly three things:
+
+| Need | Where it comes from |
+| --- | --- |
+| A Spring bean, a store, a client | The constructor (or property) of the query/mutation class. The data fetcher calls *that* instance |
+| Arguments from the GraphQL document | Function parameters, bound from `variables` / literals |
+| Who is calling, the locale, anything per request | `@GraphQLContext` on a parameter, filled from `execute`'s `context` map |
+
+A Spring `OrderService` is not GraphQL context. It is injected when Spring builds the
+`@GraphQLController`, and Graphix keeps that bean:
+
+```kotlin
+@GraphQLController
+class OrderMutations(
+    private val orders: OrderService,
+) {
+    @Mutation
+    suspend fun placeOrder(input: PlaceOrderInput): Order = orders.place(input)
+}
+```
+
+Per-request values do not exist at `@Bean` time. They go on `execute`, keyed by `KClass`, and a
+missing key fails the field with `GraphixException`:
+
+```kotlin
+data class Caller(val userId: String)
+
+@Mutation
+suspend fun placeOrder(
+    input: PlaceOrderInput,
+    @GraphQLContext caller: Caller,
+): Order = orders.place(input, caller.userId)
+
+graphix.execute(
+    GraphixRequest(query),
+    context = mapOf(Caller::class to Caller(userId)),
+)
+```
+
+The HTTP plugins (Ktor and Spring) currently put only the operation `CoroutineScope` in that map,
+so that `suspend` resolvers run. They do not yet forward `ApplicationCall`, `ServerWebExchange` or
+Spring Security. Until they do, a per-request `Caller` has to be passed to `execute` by whoever
+owns the HTTP call — or the resolver reads it some other way.
+
+`DataFetchingEnvironment` stays inside Graphix. A resolver that needs it is a resolver that has
+left the API.
+
 ## Execute
 
 ```kotlin
-val result = graphql.execute(
+val result = graphix.execute(
     GraphixRequest(query = query, variables = mapOf("id" to "p1")),
     context = mapOf(Caller::class to caller),
 )

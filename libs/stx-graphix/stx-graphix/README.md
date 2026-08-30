@@ -57,9 +57,24 @@ is for a document that cannot even be submitted.
 
 ## No scan in core
 
-`Graphix { query(instance); mutation(instance) }`. Spring may scan `@GraphQLController` beans;
+`Graphix { query(instance); mutation(instance) }`. Spring may collect `@GraphQLController` beans;
 that is the Spring module's job. A classpath walk in this type would make a worker with no
 Spring carry one.
+
+## The data fetcher is not yours
+
+graphql-java wants a `DataFetcher`. Graphix builds one per `@Query` / `@Mutation` and never
+hands it out. The fetcher's job is to call the function on the **instance already registered** —
+`query(productQueries)` — and to bind arguments. That is why a Spring mutation that needs
+`OrderService` takes it on the controller constructor: the controller *is* the Spring bean, and
+the fetcher holds that bean for the life of the engine.
+
+Per-request state is the other bag. `@GraphQLContext` reads `Graphix.execute(..., context)` by
+`KClass`. Mixing the two is the usual mistake: looking up `ApplicationContext` from a resolver
+to find `OrderService`, or putting `OrderService` in the operation context because it "feels
+like DI". The first is a service locator. The second makes a singleton look request-scoped.
+
+[`docs/graphix.md`](../../../docs/graphix.md) has the three columns a resolver may see.
 
 ## What this slice does not do
 
