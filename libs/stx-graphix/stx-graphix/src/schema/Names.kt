@@ -7,13 +7,13 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.findAnnotation
 
-/** GraphQL field name: `@Query(name)` / `@Mutation(name)`, then `@GraphQLName`, then the Kotlin name. */
+/** GraphQL field name: `@QueryMapping(name)` / `@MutationMapping(name)`, then `@GraphQLName`, then the Kotlin name. */
 internal fun KFunction<*>.graphQLName(kind: RootKind): String {
     val fromKind =
         when (kind) {
-            RootKind.QUERY -> findAnnotation<Query>()?.name.orEmpty()
-            RootKind.MUTATION -> findAnnotation<Mutation>()?.name.orEmpty()
-            RootKind.SUBSCRIPTION -> findAnnotation<Subscription>()?.name.orEmpty()
+            RootKind.QUERY -> findAnnotation<QueryMapping>()?.name.orEmpty()
+            RootKind.MUTATION -> findAnnotation<MutationMapping>()?.name.orEmpty()
+            RootKind.SUBSCRIPTION -> findAnnotation<SubscriptionMapping>()?.name.orEmpty()
         }
     if (fromKind.isNotEmpty()) return fromKind
     findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }

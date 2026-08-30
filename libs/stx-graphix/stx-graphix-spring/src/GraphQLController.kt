@@ -1,8 +1,8 @@
 package com.strange.graphix.spring
 
 /**
- * A Spring bean whose `@Query` / `@Mutation` / `@Subscription` / `@Field` / `@Batch` /
- * `@BatchLoading` functions become GraphQL roots, type fields and named DataLoaders.
+ * A Spring bean whose `@QueryMapping` / `@MutationMapping` / `@SubscriptionMapping` /
+ * `@SchemaMapping` / `@BatchMapping` functions become GraphQL roots and type fields.
  *
  * Not a `@Component`: the application (or its scan) still creates the bean. This module collects
  * every bean that carries the annotation when `stx.graphix.enabled` is true.

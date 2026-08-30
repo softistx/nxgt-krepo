@@ -23,8 +23,8 @@ import org.springframework.web.reactive.function.server.ServerResponse
 @ConditionalOnProperty(prefix = "stx.graphix", name = ["enabled"], havingValue = "true")
 class GraphixAutoConfiguration {
     /**
-     * One engine from every `@GraphQLController` bean. A class with both `@Query` and
-     * `@Mutation` is registered as both roots. Skipped when the application already declared
+     * One engine from every `@GraphQLController` bean. A class with both `@QueryMapping` and
+     * `@MutationMapping` is registered as both roots. Skipped when the application already declared
      * a [Graphix] — that instance is the one the router uses.
      */
     @Bean

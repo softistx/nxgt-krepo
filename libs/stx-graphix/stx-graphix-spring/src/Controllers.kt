@@ -1,21 +1,19 @@
 package com.strange.graphix.spring
 
 import com.strange.graphix.GraphixBuilder
-import com.strange.graphix.schema.Batch
-import com.strange.graphix.schema.BatchLoading
-import com.strange.graphix.schema.Field
-import com.strange.graphix.schema.Mutation
-import com.strange.graphix.schema.Query
-import com.strange.graphix.schema.Subscription
+import com.strange.graphix.schema.BatchMapping
+import com.strange.graphix.schema.MutationMapping
+import com.strange.graphix.schema.QueryMapping
+import com.strange.graphix.schema.SchemaMapping
+import com.strange.graphix.schema.SubscriptionMapping
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.memberFunctions
 
-/** Registers [instance] as query, mutation, subscription, type fields, loaders, or any mix. */
+/** Registers [instance] as query, mutation, subscription, type fields, or any mix of those. */
 internal fun GraphixBuilder.addController(instance: Any) {
     val functions = instance::class.memberFunctions
-    if (functions.any { it.hasAnnotation<Query>() }) query(instance)
-    if (functions.any { it.hasAnnotation<Mutation>() }) mutation(instance)
-    if (functions.any { it.hasAnnotation<Subscription>() }) subscription(instance)
-    if (functions.any { it.hasAnnotation<Field>() || it.hasAnnotation<Batch>() }) type(instance)
-    if (functions.any { it.hasAnnotation<BatchLoading>() }) loader(instance)
+    if (functions.any { it.hasAnnotation<QueryMapping>() }) query(instance)
+    if (functions.any { it.hasAnnotation<MutationMapping>() }) mutation(instance)
+    if (functions.any { it.hasAnnotation<SubscriptionMapping>() }) subscription(instance)
+    if (functions.any { it.hasAnnotation<SchemaMapping>() || it.hasAnnotation<BatchMapping>() }) type(instance)
 }

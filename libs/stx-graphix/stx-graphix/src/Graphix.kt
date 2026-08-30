@@ -22,7 +22,7 @@ import kotlin.reflect.KClass
  *
  * The application **names** its roots. There is no classpath scan here — Spring may collect
  * `@GraphQLController` beans; that is `stx-graphix-spring`. A data fetcher is not part of this
- * API: each `@Query` / `@Mutation` / `@Subscription` / `@Field` is a function on the instance
+ * API: each `@QueryMapping` / `@MutationMapping` / `@SubscriptionMapping` / `@SchemaMapping` is a function on the instance
  * passed to [GraphixBuilder.query], [GraphixBuilder.mutation], [GraphixBuilder.subscription]
  * or [GraphixBuilder.type], so a Spring `OrderService` lives on that instance's constructor,
  * not in [execute]'s context map.
@@ -91,41 +91,33 @@ class GraphixBuilder internal constructor(
     private val mutations = mutableListOf<Any>()
     private val subscriptions = mutableListOf<Any>()
     private val types = mutableListOf<Any>()
-    private val namedLoaders = mutableListOf<Any>()
 
-    /** Registers [instance]; every `@Query` function on it becomes a field on `Query`. */
+    /** Registers [instance]; every `@QueryMapping` function on it becomes a field on `Query`. */
     fun query(instance: Any) {
         queries += instance
     }
 
-    /** Registers [instance]; every `@Mutation` function on it becomes a field on `Mutation`. */
+    /** Registers [instance]; every `@MutationMapping` function on it becomes a field on `Mutation`. */
     fun mutation(instance: Any) {
         mutations += instance
     }
 
-    /** Registers [instance]; every `@Subscription` function on it becomes a field on `Subscription`. */
+    /** Registers [instance]; every `@SubscriptionMapping` function on it becomes a field on `Subscription`. */
     fun subscription(instance: Any) {
         subscriptions += instance
     }
 
     /**
-     * Registers [instance]; every `@Field` / `@Batch` function becomes an extra field on its
-     * parent type. Nested `@Serializable` properties stay property getters.
+     * Registers [instance]; every `@SchemaMapping` / `@BatchMapping` function becomes an extra
+     * field on its parent type. Nested `@Serializable` properties stay property getters.
+     * A field is one or the other, not both.
      */
     fun type(instance: Any) {
         types += instance
     }
 
-    /**
-     * Registers [instance]; every `@BatchLoading` function becomes a DataLoader keyed by the
-     * parent source. Also picked up from query/type instances that already carry it.
-     */
-    fun loader(instance: Any) {
-        namedLoaders += instance
-    }
-
     internal fun build(): Graphix {
-        val (schema, loaders) = graphQLSchema(queries, mutations, subscriptions, types, namedLoaders, json)
+        val (schema, loaders) = graphQLSchema(queries, mutations, subscriptions, types, json)
         return Graphix(GraphQL.newGraphQL(schema).build(), loaders)
     }
 }
@@ -134,8 +126,8 @@ class GraphixBuilder internal constructor(
  * Builds a [Graphix] from named roots. [json] is how arguments and `@Serializable` types are
  * read; the default is `stx-common`'s lenient `Json`.
  *
- * [GraphixBuilder.subscription], [GraphixBuilder.type] and [GraphixBuilder.loader] are
- * optional. GraphQL still requires a query root.
+ * [GraphixBuilder.subscription] and [GraphixBuilder.type] are optional. GraphQL still
+ * requires a query root.
  */
 fun Graphix(
     json: Json = lenientJson,

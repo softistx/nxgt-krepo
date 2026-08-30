@@ -8,12 +8,12 @@ import kotlin.reflect.KType
 import java.util.concurrent.Flow as JdkFlow
 
 /**
- * Element type of a `@Subscription` return. Must be `Flow<T>` or `Publisher<T>` — T is the
+ * Element type of a `@SubscriptionMapping` return. Must be `Flow<T>` or `Publisher<T>` — T is the
  * GraphQL field type.
  */
 internal fun KType.subscriptionElement(): KType =
     streamElement()
-        ?: throw GraphixException("@Subscription must return Flow<T> or Publisher<T>, got $this")
+        ?: throw GraphixException("@SubscriptionMapping must return Flow<T> or Publisher<T>, got $this")
 
 internal fun KType.streamElement(): KType? {
     val classifier = classifier as? KClass<*> ?: return null

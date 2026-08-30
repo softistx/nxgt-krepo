@@ -1,9 +1,9 @@
 package com.strange.example.graphix.shop
 
-import com.strange.graphix.schema.Batch
-import com.strange.graphix.schema.Mutation
-import com.strange.graphix.schema.Query
-import com.strange.graphix.schema.Subscription
+import com.strange.graphix.schema.BatchMapping
+import com.strange.graphix.schema.MutationMapping
+import com.strange.graphix.schema.QueryMapping
+import com.strange.graphix.schema.SubscriptionMapping
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.Serializable
@@ -36,13 +36,13 @@ class Catalog {
             "p2" to mutableListOf(Review("r2", "Boils fast")),
         )
 
-    @Query
+    @QueryMapping
     fun product(id: String): Product? = products.find { it.id == id }
 
-    @Query
+    @QueryMapping
     fun products(): List<Product> = products.toList()
 
-    @Mutation
+    @MutationMapping
     fun addProduct(
         name: String,
         price: Long,
@@ -53,9 +53,9 @@ class Catalog {
         return created
     }
 
-    @Subscription
+    @SubscriptionMapping
     fun productAdded(): Flow<Product> = added
 
-    @Batch
+    @BatchMapping
     fun reviews(products: List<Product>): Map<Product, List<Review>> = products.associateWith { reviews[it.id].orEmpty() }
 }

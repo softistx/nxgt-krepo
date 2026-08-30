@@ -63,7 +63,7 @@ class ExecuteTest :
                     Graphix {
                         query(
                             object {
-                                @com.strange.graphix.schema.Query
+                                @com.strange.graphix.schema.QueryMapping
                                 suspend fun later(): String {
                                     delay(10)
                                     return "ok"

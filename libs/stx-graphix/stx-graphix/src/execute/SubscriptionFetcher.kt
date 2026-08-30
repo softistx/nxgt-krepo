@@ -67,6 +67,6 @@ private fun toPublisher(
         }
 
         else -> {
-            error("@Subscription must return Flow or Publisher, got ${value::class.qualifiedName}")
+            error("@SubscriptionMapping must return Flow or Publisher, got ${value::class.qualifiedName}")
         }
     }
