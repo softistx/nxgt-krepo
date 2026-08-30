@@ -9,7 +9,7 @@ stays roughly the size it is.
 [`docs/spring-mongo-queries.md`](spring-mongo-queries.md) is the other half of this one — what a
 query may say.
 
-## Two rules that apply to every key on this page
+## Four rules that apply to every key on this page
 
 **Nothing is on by default.** Every `enabled` below defaults to `false`, and every
 `@ConditionalOnProperty` behind them is written without `matchIfMissing`. Putting `stx-spring` on a
@@ -25,6 +25,22 @@ be a guess about somebody's cluster or — worse — a credential in source cont
 **Durations are `java.time.Duration`**, spelled `30s`, `500ms` or `PT30S`. Spring's binder has never
 heard of `kotlin.time.Duration`, so a property written the Kotlin way binds correctly only while
 nobody sets it; each integration converts at the boundary.
+
+**Where a `stx.*` key overlaps one of Spring Boot's own, Boot's wins.** A `stx.*` key is a better
+default than the framework's, never an override of what the application asked for by name. There are
+only two places on this page where the two describe the same bean, and both are pinned by a spec
+rather than left to ordering:
+
+| `stx.*` | Spring Boot | Who wins |
+| --- | --- | --- |
+| `stx.i18n.languages` / `.fallback` | `spring.web.locale` / `spring.web.locale-resolver` | Boot's, when either is set — `stx.i18n`'s resolver stands down and only the catalogs load |
+| `stx.data.mongo.enabled` | `spring.data.mongodb.representation.big-decimal` | Neither: the `MongoCustomConversions` bean is this module's, and it reads Boot's property and applies it |
+
+Everything else that looks like an overlap is not one. `stx.mongo`, `stx.redis`, `stx.kafka`,
+`stx.amqp` and `stx.jpa` configure the **`stx-*` library's own client**, which is a different object
+from the one `spring.data.mongodb`, `spring.data.redis`, `spring.kafka`, `spring.rabbitmq` and
+`spring.datasource` configure. Setting both gives an application two clients, not one configured
+twice — which is a legitimate thing to want and an expensive thing to do by accident.
 
 ---
 
@@ -117,6 +133,12 @@ should not fail a request over a translation, and a test suite should not pass o
 It also replaces WebFlux's `LocaleContextResolver` with one that only answers with a language it has.
 The default answers with whatever `Accept-Language` asked for, so a browser asking for Japanese
 produces a `Translator` for Japanese that falls back key by key.
+
+**Unless the application set `spring.web.locale` or `spring.web.locale-resolver`**, in which case
+Boot's resolver stays in charge and only the catalogs load here — the rule at the top of this page.
+Both halves of that are ordering-sensitive and both are pinned by `LocaleResolverPrecedenceTest`:
+before it existed, Boot's resolver won in every arrangement, including with no `spring.web.*` set,
+and these two keys configured a bean that never reached a request.
 
 ---
 
