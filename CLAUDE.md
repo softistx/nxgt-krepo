@@ -13,8 +13,10 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   the document is split with redocly under `<module>/openapi/` and bundled to `api-docs.yaml` *before* the build reads
   it, a Spring Boot API is `stx-spring-boot` with a `@RestController` implementing the **generated** `@HttpExchange`
   interface, a Ktor API is `stx-ktor` with `client: None` and hand-written routes, and both lay out as
-  repository → service → controller. `plugins/openapi/README.md` is what each `client` needs on the classpath;
-  `docs/openapi-support.md` is what the generator makes of a document.
+  repository → service → controller. A spec then drives the application through the very interfaces its
+  controllers implement. Its two `references/` pages are hand-written, not fetched — read
+  `spring-api.md` before writing a controller or its spec. `plugins/openapi/README.md` is what each
+  `client` needs on the classpath; `docs/openapi-support.md` is what the generator makes of a document.
 - **`compose-multiplatform`** before touching `libs/stx-material` or `examples/material-demo`, and **`material3-compose`** before theming or extending a Material 3 component. The first records what this host actually verifies — Apple targets are *silently skipped* on Linux, so a green local build proves nothing about them — and the second is generated from the resolved jar, because `$compose.material3` sits on its own alpha version line and the androidx docs describe a different artifact.
 - **Check Material 3 before writing a `libs/stx-material` component.** M3 already has `Button`,
   `IconButton`, `ButtonGroup`, `Card`, the chips, `Badge`, `ListItem`, `Text`, `Icon`, `Surface`

@@ -25,23 +25,18 @@ previous contract and says nothing. The bundle is committed: it is what the gene
 
 ## Where the document lives
 
-`<module>/openapi/`, beside `module.yaml` — not under `src/`, which holds Kotlin here.
+`<module>/openapi/`, beside `module.yaml` — not under `src/`, which holds Kotlin here. `openapi.yaml`
+is `$ref` wiring and zero inline schemas, `api-docs.yaml` is redocly's bundle of it, and below those
+`paths/` takes one file per URL and `components/{schemas,responses,parameters,security}/` one per
+component.
 
-```
-openapi/
-  openapi.yaml            info, servers, tags, the paths map, securitySchemes — $ref wiring, zero inline schemas
-  api-docs.yaml           the bundle: redocly's output, committed, and what specFile names
-  paths/                  one file per URL, snake_case, braces stripped: /orders/{id}/status → orders_id_status.yaml
-  components/schemas/     one file per component, PascalCase, basename == component name
-  components/responses/   PascalCase by HTTP meaning: BadRequest.yaml, Conflict.yaml
-  components/parameters/  lowercase, named after the parameter: id.yaml, cursor.yaml
-  components/security/    PascalCase scheme name: Bearer.yaml
-```
+- **A filename is a name.** Redocly rewrites a file `$ref` into `#/components/schemas/<Basename>`,
+  so `Order.yaml` *is* the `Order` schema. Components are PascalCase, parameters lowercase, and a
+  path file is snake_case with the braces stripped: `/orders/{id}/status` → `orders_id_status.yaml`.
+- **A path file's top level is the set of verbs**, so every verb on one URL lives in one file, and
+  `$ref` targets are relative and unquoted (`../components/schemas/Order.yaml`, `./PageInfo.yaml`).
 
-A path file's top level is the set of verbs, so every verb on one URL lives in one file. `$ref`
-targets are relative and unquoted — root → `paths/orders_id.yaml`, path file →
-`../components/schemas/Order.yaml`, schema → sibling `./PageInfo.yaml`. Redocly rewrites each into
-`#/components/schemas/<Basename>` when it bundles, which is why the filename *is* the component name.
+`references/document-layout.md` has the tree, the redocly config and a worked file of each kind.
 
 ## What a name in the document becomes in Kotlin
 
@@ -57,24 +52,9 @@ and what is not handled — is `docs/openapi-support.md`. Read it rather than gu
 
 ## Spring Boot — `stx-spring-boot`, and the controller implements the generated interface
 
-```yaml
-plugins:
-  openapi:
-    enabled: true
-    client: Spring
-    models: Kotlinx        # NOT the default — see below
-    specFile: openapi/api-docs.yaml
-    packageName: com.strange.example.orders.api
-    interfacePrefix: I
-    interfaceSuffix: Service
-```
-
-**`models: Kotlinx` is required, not a preference.** `Auto` gives Jackson for a Spring client, but
-`stx.json.enabled` installs `KotlinSerializationJsonEncoder`/`Decoder` as a `CodecCustomizer`, so a
-model that is not `@Serializable` fails to encode at the first response.
-
-Then four packages and a mapper, one role each — the layering `nxgt-ktor` and `nxgt-rest` use, minus
-their hand-written `port/`, which is generated here as `<packageName>.apis`:
+`client: Spring` with `interfacePrefix: I` / `interfaceSuffix: Service`, and then four packages and
+a mapper, one role each — the layering `nxgt-ktor` and `nxgt-rest` use, minus their hand-written
+`port/`, which is generated here as `<packageName>.apis`:
 
 | Package | Holds | Speaks |
 | --- | --- | --- |
@@ -84,17 +64,9 @@ their hand-written `port/`, which is generated here as `<packageName>.apis`:
 | `rest/` | `@RestController … : IOrdersService` — one-line delegates | generated DTOs |
 | `mapper/` | `Order.view()`, `Page<Order>.page()` — pure functions, no Spring | both |
 
-```kotlin
-@RestController
-class OrderController(private val service: OrderService) : IOrdersService {
-    @ResponseStatus(HttpStatus.CREATED)
-    override suspend fun placeOrder(@RequestBody payload: PlaceOrder) = service.placeOrder(payload)
-
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    override suspend fun cancelOrder(@PathVariable id: String) = service.cancelOrder(id)
-}
-```
-
+- **`models: Kotlinx` is required, not a preference.** `Auto` gives Jackson for a Spring client, but
+  `stx.json.enabled` installs `KotlinSerializationJsonEncoder`/`Decoder` as a `CodecCustomizer`, so
+  a model that is not `@Serializable` fails to encode at the first response.
 - **A status other than 200 comes from `@ResponseStatus` on the override.** The generated interface
   carries the path, the verb and the parameter bindings; it cannot carry a status.
 - **Repeat the binding annotations on the override.** Spring does not reliably inherit parameter
@@ -102,35 +74,29 @@ class OrderController(private val service: OrderService) : IOrdersService {
 - **Inject the concrete `OrderService`, never `IOrdersService`.** The service implements the same
   interface — that is the point — so two beans satisfy it and by-type injection is ambiguous.
 - **The envelope is part of the contract, so it goes in the document.** A controller returns a body,
-  not a `ServerResponse`, so `stx-spring-boot`'s `Response<D, M>` and the `.ok()`/`.created()` chain
-  have no place here. Declare `OrderPage { data: [Order], metadata: PageInfo }` and return the
-  generated type; it matches `com.strange.common.page.Page` field for field.
+  not a `ServerResponse`, so `Response<D, M>` and the `.ok()`/`.created()` chain have no place here.
+  Declare `OrderPage { data: [Order], metadata: PageInfo }` — it matches `Page` field for field.
 - **`ErrorResponse` in the document must match `com.strange.spring.error.ErrorResponse`** —
   `message`, `status`, `code`, `timestamp`, `debugMessage`. Nothing checks it; a round-trip spec does.
 
 **`coRouter` is still right for what a proxy cannot express** — streaming, multipart, and any
 signature needing `ServerWebExchange` or `FilePart`. The two styles coexist in one application.
 
+`references/spring-api.md` has the `module.yaml`, the five files written out, and the test wiring.
+
 ## Testing a Spring API
 
 **A spec drives the application through the same interfaces its controllers implement.** A
 `WebTestClient` proves the wire shape; a typed client proves the *contract*, and a document change
-that neither side followed stops compiling on both at once. `stx-spring-boot`'s `httpServiceFactory`
-builds it — its `factory` parameter is the seam a generated client needs:
+that neither side followed stops compiling on both at once.
 
-```kotlin
-// `factory` is for the proxy, the trailing lambda for the WebClient. Both are needed:
-// registerApiEnumConverters + apiOperationProcessor above, kotlinx codecs + apiErrorFilter below.
-val orders: IOrdersService = httpServiceFactory(baseUrl, factory = { … }) { … }.createClient()
-```
-
-`examples/spring-orders/test/ApiClients.kt` is that call written out, with the reason each half is
-there and why none of it fails at build time.
-
-- **Name a feature after the route** — `feature("POST /orders, through IOrdersService")` — so a
-  failure names the endpoint and the list of features reads as the surface the document declares.
-  `nxgt-rest` names them the same way.
-- **Reuse the application's own `stxWebJson` bean**, not a `Json` configured nearby.
+- **Build the client with `stx-spring-boot`'s `httpServiceFactory`**, whose `factory` parameter is
+  the seam a generated client needs: `registerApiEnumConverters` and `apiOperationProcessor` belong
+  to the proxy, kotlinx codecs and `apiErrorFilter()` to the `WebClient`. Neither omission fails at
+  build time.
+- **Name a feature after the route** — `feature("POST /orders, through IOrdersService")`, as
+  `nxgt-rest` does — so a failure names the endpoint. Reuse the application's own `stxWebJson` bean
+  rather than a `Json` configured nearby.
 - **Keep a `WebTestClient` for what a typed client hides**: the envelope's JSON shape, the translated
   message text, and a status for a case the document does not declare.
 - **`apiErrorFilter()` runs closer to the transport than `httpServiceFactory`'s own status handler**,
@@ -151,10 +117,9 @@ consumer module takes `client: Ktorfit` off the same document.
   and it compiles only because `stx-spring-boot` exports the WebFlux starter, which brings Jackson 3.
 - **An error schema is parsed by Jackson even in the kotlinx style.** `apiErrorFilter` takes an
   `ObjectMapper` whatever `models` says, so a schema used by a non-2xx response must stay
-  Jackson-bindable: a `format: date-time` in it becomes a `kotlin.time.Instant` that Jackson cannot
-  read, and every typed failure degrades to the untyped `ApiException` with nothing said. Keep such
-  a schema to plain scalars — `ErrorResponse.timestamp` is a `string`, not a `date-time`, for
-  exactly this reason.
+  Jackson-bindable: a `format: date-time` becomes a `kotlin.time.Instant` Jackson cannot read, and
+  every typed failure degrades to the untyped `ApiException` with nothing said. Keep it to plain
+  scalars — `ErrorResponse.timestamp` is a `string`, not a `date-time`, for exactly this reason.
 - **`@GetExchange(url = "orders/{id}")` has no leading slash** — a client gets its base from
   `WebClient.baseUrl` — and server-side that is still correct. Verified against the spring-webflux
   7.0.8 sources: the mapping reads `@HttpExchange` with `SearchStrategy.TYPE_HIERARCHY`, `url`
@@ -163,9 +128,15 @@ consumer module takes `client: Ktorfit` off the same document.
 
 ## Where to read
 
+`references/` here is written by hand, not fetched: this skill has no `docs-source.json`, and what
+the pages hold is this repo's own convention. They stay in step with `examples/spring-orders`, which
+is the same thing running.
+
 | Topic | File |
 | --- | --- |
+| The tree, the redocly config, and a worked file of each kind | `references/document-layout.md` |
+| The `module.yaml`, the five packages written out, and the test wiring | `references/spring-api.md` |
 | What the generator makes of a document — *the file that grows* | `docs/openapi-support.md` |
 | Turning the plugin on, and what each `client` needs on the classpath | `plugins/openapi/README.md` |
-| The worked example: split document, controllers, typed-client spec | `examples/spring-orders` |
+| The worked example, running | `examples/spring-orders` |
 | A generated Spring client, and a Ktor server with its Ktorfit consumer | `examples/demo-spring-client`, `examples/demo-api` + `examples/demo-client` |
