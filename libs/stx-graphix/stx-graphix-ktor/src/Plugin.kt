@@ -16,6 +16,7 @@ import kotlinx.serialization.json.Json
  *     schema {
  *         query(ProductQueries(store))
  *         mutation(ProductMutations(store))
+ *         subscription(ProductSubscriptions(store))
  *     }
  * }
  * ```
@@ -57,8 +58,9 @@ class GraphQLConfiguration {
     internal var schemaBlock: (GraphixBuilder.() -> Unit)? = null
 
     /**
-     * Builds the engine at install. Query/mutation instances passed here are kept for the
-     * life of the application — put stores and Spring-like services on those instances.
+     * Builds the engine at install. Query/mutation/subscription instances passed here are
+     * kept for the life of the application — put stores and Spring-like services on those
+     * instances.
      */
     fun schema(block: GraphixBuilder.() -> Unit) {
         schemaBlock = block

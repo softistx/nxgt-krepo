@@ -16,6 +16,8 @@ dependencies:
   - $libs.kotlin.reflect
   # `future { }`, the CompletableFuture bridge graphql-java's engine speaks. Internal to execute.
   - $libs.kotlinx.coroutines.jdk8
+  # `Flow.asPublisher` / `Publisher.asFlow` — graphql-java subscriptions speak reactive-streams.
+  - $libs.kotlinx.coroutines.reactive
 
 test-dependencies:
   - $libs.kotest.runner.junit5

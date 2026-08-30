@@ -4,6 +4,7 @@ import com.strange.common.serialization.lenientJson
 import com.strange.graphix.Graphix
 import com.strange.graphix.spring.fixture.BoomQueries
 import com.strange.graphix.spring.fixture.GreetingQueries
+import com.strange.graphix.spring.fixture.TickSubscriptions
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.string.shouldContain
 import org.springframework.http.MediaType
@@ -57,6 +58,26 @@ class GraphixHttpTest :
                     .isBadRequest
                     .expectBody(String::class.java)
                     .value { it shouldContain "malformed GraphQL JSON" }
+            }
+        }
+
+        feature("POST /graphql subscription") {
+            scenario("a subscription is text/event-stream of GraphQL results") {
+                client(GreetingQueries(), TickSubscriptions())
+                    .post()
+                    .uri("/graphql")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue("""{"query":"subscription { ticks }"}""")
+                    .exchange()
+                    .expectStatus()
+                    .isOk
+                    .expectHeader()
+                    .contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM)
+                    .expectBody(String::class.java)
+                    .value {
+                        it shouldContain "ticks"
+                        it shouldContain "1"
+                    }
             }
         }
 

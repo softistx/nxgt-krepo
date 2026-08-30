@@ -4,6 +4,7 @@ import com.strange.graphix.GraphixError
 import com.strange.graphix.GraphixRequest
 import com.strange.graphix.GraphixResult
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -72,6 +73,9 @@ fun GraphixResult.toHttp(): GraphixHttpResponse =
         data = data?.toJsonElement(),
         errors = errors.takeIf { it.isNotEmpty() }?.map { it.toHttp() },
     )
+
+/** One SSE `data:` frame. HTTP plugins stream these for subscription operations. */
+fun GraphixHttpResponse.toSse(json: Json): String = "data: ${json.encodeToString(GraphixHttpResponse.serializer(), this)}\n\n"
 
 private fun GraphixError.toHttp(): GraphixHttpError =
     GraphixHttpError(
