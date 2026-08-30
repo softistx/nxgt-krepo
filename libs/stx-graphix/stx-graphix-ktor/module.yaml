@@ -1,0 +1,27 @@
+product: jvm/lib
+description: "Ktor plugin for stx-graphix: one GraphQL engine per application, POST/GET /graphql"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  - //libs/stx-graphix/stx-graphix: exported
+  - $ktor.server.core: exported
+  # Ktor DI, for `provideGraphix`. Compile-only so an application that never sets injectable
+  # never loads a class from it — the same rule as stx-ktor.
+  - $libs.ktor.server.di: compile-only
+
+test-dependencies:
+  - $libs.ktor.server.di
+  - $ktor.server.testHost
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  ktor:
+    enabled: true
+    version: 3.5.2
+  kotlin:
+    serialization: json

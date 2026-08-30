@@ -1,0 +1,105 @@
+package com.strange.graphix.http
+
+import com.strange.graphix.GraphixError
+import com.strange.graphix.GraphixRequest
+import com.strange.graphix.GraphixResult
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.longOrNull
+
+/**
+ * The JSON envelope both HTTP integrations speak. Ktor and Spring parse this; they do not
+ * invent a second shape.
+ */
+@Serializable
+data class GraphixHttpRequest(
+    val query: String? = null,
+    val operationName: String? = null,
+    val variables: JsonObject? = null,
+)
+
+@Serializable
+data class GraphixHttpResponse(
+    val data: JsonElement? = null,
+    val errors: List<GraphixHttpError>? = null,
+)
+
+@Serializable
+data class GraphixHttpError(
+    val message: String,
+    val path: List<JsonElement> = emptyList(),
+)
+
+class BadGraphixHttp(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)
+
+fun GraphixHttpRequest.toGraphixRequest(): GraphixRequest {
+    val query = query ?: throw BadGraphixHttp("a GraphQL request needs a query")
+    return GraphixRequest(
+        query = query,
+        operationName = operationName,
+        variables = variables?.mapValues { it.value.toJava() } ?: emptyMap(),
+    )
+}
+
+fun GraphixResult.toHttp(): GraphixHttpResponse =
+    GraphixHttpResponse(
+        data = data?.toJsonElement(),
+        errors = errors.takeIf { it.isNotEmpty() }?.map { it.toHttp() },
+    )
+
+private fun GraphixError.toHttp(): GraphixHttpError =
+    GraphixHttpError(
+        message = message,
+        path = path.map { it.toJsonPrimitive() },
+    )
+
+private fun Any.toJsonPrimitive(): JsonElement =
+    when (this) {
+        is Number -> JsonPrimitive(toLong())
+        is Boolean -> JsonPrimitive(this)
+        else -> JsonPrimitive(toString())
+    }
+
+internal fun JsonElement.toJava(): Any? =
+    when (this) {
+        is JsonNull -> {
+            null
+        }
+
+        is JsonPrimitive -> {
+            if (isString) {
+                content
+            } else {
+                booleanOrNull ?: longOrNull ?: doubleOrNull ?: content
+            }
+        }
+
+        is JsonObject -> {
+            mapValues { it.value.toJava() }
+        }
+
+        is JsonArray -> {
+            map { it.toJava() }
+        }
+    }
+
+internal fun Any?.toJsonElement(): JsonElement =
+    when (this) {
+        null -> JsonNull
+        is JsonElement -> this
+        is Map<*, *> -> JsonObject(entries.associate { (key, value) -> key.toString() to value.toJsonElement() })
+        is List<*> -> JsonArray(map { it.toJsonElement() })
+        is Number -> JsonPrimitive(this)
+        is Boolean -> JsonPrimitive(this)
+        is String -> JsonPrimitive(this)
+        else -> JsonPrimitive(toString())
+    }
