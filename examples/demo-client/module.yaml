@@ -31,5 +31,8 @@ settings:
 plugins:
   openapi:
     enabled: true
-    specFile: ../demo-api/openapi.yaml
-    packageName: com.strange.demo.client.api
+    specs:
+      # `spec` is a Path the frontend resolves against this module's root, so `..` reaches the
+      # neighbouring module that owns the document.
+      - spec: ../demo-api/openapi.yaml
+        packageName: com.strange.demo.client.api

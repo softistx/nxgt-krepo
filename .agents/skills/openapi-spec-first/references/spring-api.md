@@ -9,20 +9,24 @@ The five files `examples/spring-orders` is made of, written out. Written by hand
 plugins:
   openapi:
     enabled: true
-    client: Spring
-    # Not `Auto`, which would give Jackson: `stx.json.enabled` puts kotlinx codecs on WebFlux, so a
-    # model that is not `@Serializable` fails to encode at the first response.
-    models: Kotlinx
-    specFile: openapi/api-docs.yaml
-    packageName: com.strange.example.orders.api
-    # `orders-controller` -> `IOrdersService`, `health-controller` -> `IHealthService`.
-    interfacePrefix: I
-    interfaceSuffix: Service
+    # A list: one entry per document. A module consuming several APIs generates them all here, each
+    # into a package of its own — two entries sharing a `packageName` is refused, because they write
+    # into one directory and would overwrite each other.
+    specs:
+      - spec: openapi/api-docs.yaml
+        packageName: com.strange.example.orders.api
+        client: Spring
+        # Not `Auto`, which would give Jackson: `stx.json.enabled` puts kotlinx codecs on WebFlux, so
+        # a model that is not `@Serializable` fails to encode at the first response.
+        models: Kotlinx
+        # `orders-controller` -> `IOrdersService`, `health-controller` -> `IHealthService`.
+        interfacePrefix: I
+        interfaceSuffix: Service
 ```
 
-Nothing is written to `packageName` itself. Interfaces land in `<packageName>.apis`, schemas in
-`.models`, and the client machinery in `.utils`. A Spring server needs no dependency beyond what
-`stx-spring-boot` already exports.
+Interfaces land in `<packageName>.apis`, schemas in `.models`, and the client machinery in `.utils`.
+The one file in `packageName` itself is `Endpoints`, the document's routes as constants. A Spring
+server needs no dependency beyond what `stx-spring-boot` already exports.
 
 ## What the generator emits
 
@@ -231,7 +235,7 @@ class OrderControllerTest(
     beforeSpec { template.awaitMigrations(expected = 2) }
     beforeEach { template.clear("orders", "audits") } // each scenario writes what it reads
 
-    feature("POST /orders") {
+    feature(Endpoints.POST_ORDERS.label) {
         scenario("a placed order comes back with the id it was given") {
             orders.placeOrder(PlaceOrderRequest(reference = "C-3001", customer = "lovelace", total = 12_000))
                 .data.status shouldBe OrderStatus.PENDING

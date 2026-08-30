@@ -1,5 +1,7 @@
 package com.strange.openapi
 
+import com.strange.openapi.parser.Naming
+
 /**
  * Frontend-agnostic description of a client to generate.
  *
@@ -38,6 +40,18 @@ public data class Operation(
     val httpMethod: String,
     /** Path relative to the base URL, without a leading slash. */
     val path: String,
+    /**
+     * This operation's entry in the generated `Endpoints` object — `PATCH_ORDERS_ID_STATUS`.
+     *
+     * Separate from [name] because the two are derived from different things and so collide
+     * independently: [name] comes from the `operationId`, which OpenAPI already requires to be
+     * unique, while two paths differing only in a template brace reduce to one constant.
+     *
+     * Defaulted to the derivation rather than left required, because the parser is the only thing
+     * that builds an [Operation] and would pass exactly this — the parameter exists for the one case
+     * that differs, an `x-kotlin-endpoint` naming the constant outright.
+     */
+    val constant: String = Naming.endpointConstant(httpMethod, path),
     val parameters: List<Param>,
     val returnType: TypeRef,
     val summary: String? = null,

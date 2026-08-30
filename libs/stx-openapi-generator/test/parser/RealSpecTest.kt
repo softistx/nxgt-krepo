@@ -7,6 +7,7 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldMatch
 import java.nio.file.Path
 import kotlin.io.path.exists
 
@@ -26,6 +27,23 @@ class RealSpecTest :
             val path = checkNotNull(spec) { "no project.yaml above user.dir=${System.getProperty("user.dir")}" }
             check(path.exists()) { "the repo root at $repoRoot has no examples/demo-api/openapi.yaml" }
             return path
+        }
+
+        feature("endpoint constants over a real document") {
+            scenario("every operation gets one, and no two collide") {
+                // 51 operations across 10 tags is where a derived name actually gets tested: the
+                // parser would have thrown on a collision, so reaching the assertion is half of it,
+                // and the count proves none were quietly merged away.
+                val model = OpenApiParser().parse(specPath())
+                val operations = model.groups.flatMap { it.operations }
+                val constants = operations.map { it.constant }
+
+                constants.distinct().size shouldBe operations.size
+                constants.forEach { it shouldMatch Regex("[A-Z][A-Z0-9_]*") }
+                // `refresh-token` is the one worth naming: a kebab segment is where a derived
+                // constant could plausibly come out unusable, and it reads POST_AUTH_REFRESH_TOKEN.
+                constants shouldContainAll listOf("POST_AUTH_LOGIN", "POST_AUTH_REFRESH_TOKEN")
+            }
         }
 
         feature("the demo spec") {

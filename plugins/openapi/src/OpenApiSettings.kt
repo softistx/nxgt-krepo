@@ -1,6 +1,7 @@
 package com.strange.openapi.plugin
 
 import org.jetbrains.amper.plugins.Configurable
+import java.nio.file.Path
 
 /**
  * What to generate from the document.
@@ -16,7 +17,7 @@ public enum class ClientKind {
     /** `@HttpExchange` interfaces for Spring's `HttpServiceProxyFactory`, with Jackson models. */
     Spring,
 
-    /** Models only, in whichever style [OpenApiSettings.models] names. */
+    /** Models only, in whichever style [SpecSettings.models] names. */
     None,
 }
 
@@ -49,15 +50,51 @@ public enum class GroupBy { Tag, Path, None }
 /**
  * Settings for the `openapi` plugin.
  *
- * Every setting has a default, so `openapi: enabled` alone is a working configuration for a
- * module with an `openapi.yaml` in its root.
+ * One entry in [specs] per document. A module consuming three upstream APIs generates all three
+ * here, into three packages, rather than being split across three modules by the build.
+ *
+ * ```yaml
+ * plugins:
+ *   openapi:
+ *     enabled: true
+ *     specs:
+ *       - spec: openapi/api-docs.yaml
+ *         packageName: com.example.orders.api
+ *         client: Spring
+ * ```
  */
 @Configurable
 public interface OpenApiSettings {
-    /** Path to the OpenAPI document, relative to the module root. */
-    public val specFile: String get() = "openapi.yaml"
+    /**
+     * The documents to generate from, one entry each.
+     *
+     * Empty is a failure rather than a no-op: a plugin turned on and generating nothing is the
+     * kind of quiet nothing this repo fails on elsewhere.
+     */
+    public val specs: List<SpecSettings> get() = emptyList()
+}
 
-    /** Package for the generated API interfaces; models go in `<packageName>.model`. */
+/**
+ * One document, and what to make of it.
+ *
+ * Every generated file lands under [packageName], so two entries must not share one — the writer
+ * only detects duplicate names within a single document, and two documents in one package would
+ * overwrite each other file for file. [generateClient] refuses that before it writes anything.
+ */
+@Configurable
+public interface SpecSettings {
+    /**
+     * The OpenAPI document, relative to the module root — `../shared/api.yaml` reaches outside it.
+     *
+     * Typed as a `Path` rather than a `String` because the frontend resolves it against the module
+     * directory and hands the task an absolute path; a `String` would need `${module.rootDir}/`
+     * pasted in front of it, and there is no way to interpolate a list element. The consequence is
+     * that it takes no default — the schema processor refuses defaults for `Path` — which is right
+     * for the one setting that has no sensible guess.
+     */
+    public val spec: Path
+
+    /** Package for the generated API interfaces; models go in `<packageName>.models`. */
     public val packageName: String get() = "generated.api"
 
     /** What to generate: a Ktorfit client, a Spring client, or models alone. */
