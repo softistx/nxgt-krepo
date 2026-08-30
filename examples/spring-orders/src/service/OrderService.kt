@@ -1,11 +1,11 @@
 package com.strange.example.orders.service
 
 import com.strange.example.orders.api.apis.IOrdersService
-import com.strange.example.orders.api.models.ChangeStatus
+import com.strange.example.orders.api.models.ChangeStatusRequest
 import com.strange.example.orders.api.models.OrderList
 import com.strange.example.orders.api.models.OrderPage
 import com.strange.example.orders.api.models.OrderResponse
-import com.strange.example.orders.api.models.PlaceOrder
+import com.strange.example.orders.api.models.PlaceOrderRequest
 import com.strange.example.orders.mapper.list
 import com.strange.example.orders.mapper.page
 import com.strange.example.orders.mapper.response
@@ -92,7 +92,7 @@ class OrderService(
      * what actually decides. The check is here so the ordinary case gets a translated 409 instead of
      * a driver exception, not because it is a lock.
      */
-    override suspend fun placeOrder(body: PlaceOrder): OrderResponse {
+    override suspend fun placeOrder(body: PlaceOrderRequest): OrderResponse {
         if (orders.existsByReference(body.reference)) {
             throw ApiException.conflict(KEY_REFERENCE_TAKEN, mapOf("reference" to body.reference))
         }
@@ -102,7 +102,7 @@ class OrderService(
     /** `PATCH /orders/{id}/status` — a save, so the audit trail records the transition. */
     override suspend fun changeStatus(
         id: String,
-        body: ChangeStatus,
+        body: ChangeStatusRequest,
     ): OrderResponse {
         val status =
             body.status.toDomain()

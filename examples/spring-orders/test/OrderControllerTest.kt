@@ -1,9 +1,9 @@
 package com.strange.example.orders
 
 import com.strange.example.orders.api.apis.IOrdersService
-import com.strange.example.orders.api.models.ChangeStatus
+import com.strange.example.orders.api.models.ChangeStatusRequest
 import com.strange.example.orders.api.models.OrderStatus
-import com.strange.example.orders.api.models.PlaceOrder
+import com.strange.example.orders.api.models.PlaceOrderRequest
 import com.strange.example.orders.api.utils.ErrorResponseException
 import com.strange.spring.client.withClient
 import com.strange.spring.testing.MongoSpec
@@ -54,7 +54,7 @@ class OrderControllerTest(
 
         feature("GET /orders").config(enabled = mongoAvailable) {
             scenario("a page carries its rows and its cursors") {
-                repeat(3) { orders.placeOrder(PlaceOrder(reference = "P-$it", customer = "ada", total = 100L + it)) }
+                repeat(3) { orders.placeOrder(PlaceOrderRequest(reference = "P-$it", customer = "ada", total = 100L + it)) }
 
                 val page = orders.findOrders(size = 1)
 
@@ -64,7 +64,7 @@ class OrderControllerTest(
             }
 
             scenario("the cursor resumes where the page ended") {
-                repeat(3) { orders.placeOrder(PlaceOrder(reference = "P-$it", customer = "ada", total = 100L + it)) }
+                repeat(3) { orders.placeOrder(PlaceOrderRequest(reference = "P-$it", customer = "ada", total = 100L + it)) }
 
                 val first = orders.findOrders(sort = "total:ASC", size = 1)
                 val second = orders.findOrders(sort = "total:ASC", size = 1, cursor = first.metadata.endCursor)
@@ -75,13 +75,13 @@ class OrderControllerTest(
 
         feature("GET /orders/valuable").config(enabled = mongoAvailable) {
             scenario("only paid orders at or above the floor come back") {
-                val big = orders.placeOrder(PlaceOrder(reference = "V-1", customer = "ada", total = 132_000)).data.id
-                val small = orders.placeOrder(PlaceOrder(reference = "V-2", customer = "grace", total = 4_500)).data.id
+                val big = orders.placeOrder(PlaceOrderRequest(reference = "V-1", customer = "ada", total = 132_000)).data.id
+                val small = orders.placeOrder(PlaceOrderRequest(reference = "V-2", customer = "grace", total = 4_500)).data.id
                 // Placed orders are PENDING; the endpoint filters on PAID, so two of these three are
                 // out for a different reason each — one on its status, one on its total.
-                orders.placeOrder(PlaceOrder(reference = "V-3", customer = "ada", total = 24_990))
-                orders.changeStatus(big, ChangeStatus(status = OrderStatus.PAID))
-                orders.changeStatus(small, ChangeStatus(status = OrderStatus.PAID))
+                orders.placeOrder(PlaceOrderRequest(reference = "V-3", customer = "ada", total = 24_990))
+                orders.changeStatus(big, ChangeStatusRequest(status = OrderStatus.PAID))
+                orders.changeStatus(small, ChangeStatusRequest(status = OrderStatus.PAID))
 
                 val valuable = orders.valuableOrders(floor = 10_000).data
 
@@ -95,7 +95,7 @@ class OrderControllerTest(
 
         feature("POST /orders").config(enabled = mongoAvailable) {
             scenario("a placed order comes back with the id it was given") {
-                val placed = orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "lovelace", total = 12_000))
+                val placed = orders.placeOrder(PlaceOrderRequest(reference = "C-3001", customer = "lovelace", total = 12_000))
 
                 placed.data.reference shouldBe "C-3001"
                 placed.data.status shouldBe OrderStatus.PENDING
@@ -103,17 +103,17 @@ class OrderControllerTest(
             }
 
             scenario("a reference already taken is the 409 the document declares") {
-                orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "lovelace", total = 12_000))
+                orders.placeOrder(PlaceOrderRequest(reference = "C-3001", customer = "lovelace", total = 12_000))
 
                 shouldThrow<ErrorResponseException> {
-                    orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "someone else", total = 1))
+                    orders.placeOrder(PlaceOrderRequest(reference = "C-3001", customer = "someone else", total = 1))
                 }.error.code shouldBe "orders.reference-taken"
             }
         }
 
         feature("GET /orders/{id}").config(enabled = mongoAvailable) {
             scenario("an order is readable by the id its placement returned") {
-                val placed = orders.placeOrder(PlaceOrder(reference = "C-3002", customer = "hopper", total = 7_500))
+                val placed = orders.placeOrder(PlaceOrderRequest(reference = "C-3002", customer = "hopper", total = 7_500))
 
                 val read = orders.findOrder(placed.data.id).data
 
@@ -141,16 +141,16 @@ class OrderControllerTest(
 
         feature("PATCH /orders/{id}/status").config(enabled = mongoAvailable) {
             scenario("an enum argument goes out as the document spells it") {
-                val id = orders.placeOrder(PlaceOrder(reference = "C-3003", customer = "clarke", total = 100)).data.id
+                val id = orders.placeOrder(PlaceOrderRequest(reference = "C-3003", customer = "clarke", total = 100)).data.id
 
-                orders.changeStatus(id, ChangeStatus(status = OrderStatus.SHIPPED)).data.status shouldBe
+                orders.changeStatus(id, ChangeStatusRequest(status = OrderStatus.SHIPPED)).data.status shouldBe
                     OrderStatus.SHIPPED
             }
         }
 
         feature("DELETE /orders/{id}").config(enabled = mongoAvailable) {
             scenario("cancelling one leaves it gone") {
-                val id = orders.placeOrder(PlaceOrder(reference = "C-3004", customer = "noether", total = 10)).data.id
+                val id = orders.placeOrder(PlaceOrderRequest(reference = "C-3004", customer = "noether", total = 10)).data.id
 
                 orders.cancelOrder(id)
 

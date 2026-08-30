@@ -44,7 +44,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PlaceOrder'
+              $ref: '#/components/schemas/PlaceOrderRequest'
       responses:
         '201':
           description: The order as placed, with the id it was given.
@@ -126,7 +126,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChangeStatus'
+              $ref: '#/components/schemas/ChangeStatusRequest'
       responses:
         '200':
           description: The order in its new status.
@@ -305,7 +305,7 @@ components:
         debugMessage:
           type: string
           description: Absent unless `stx.errors.include-debug-message` is on. Written for a developer, not for a reader.
-    PlaceOrder:
+    PlaceOrderRequest:
       type: object
       description: What a client sends to place an order.
       required:
@@ -347,7 +347,7 @@ components:
           description: The matching orders.
           items:
             $ref: '#/components/schemas/Order'
-    ChangeStatus:
+    ChangeStatusRequest:
       type: object
       description: What a client sends to move an order along.
       required:

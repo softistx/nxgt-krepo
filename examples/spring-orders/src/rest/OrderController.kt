@@ -1,8 +1,8 @@
 package com.strange.example.orders.rest
 
 import com.strange.example.orders.api.apis.IOrdersService
-import com.strange.example.orders.api.models.ChangeStatus
-import com.strange.example.orders.api.models.PlaceOrder
+import com.strange.example.orders.api.models.ChangeStatusRequest
+import com.strange.example.orders.api.models.PlaceOrderRequest
 import com.strange.example.orders.service.OrderService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PathVariable
@@ -51,12 +51,12 @@ class OrderController(
 
     @ResponseStatus(HttpStatus.CREATED)
     override suspend fun placeOrder(
-        @RequestBody body: PlaceOrder,
+        @RequestBody body: PlaceOrderRequest,
     ) = service.placeOrder(body)
 
     override suspend fun changeStatus(
         @PathVariable id: String,
-        @RequestBody body: ChangeStatus,
+        @RequestBody body: ChangeStatusRequest,
     ) = service.changeStatus(id, body)
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
