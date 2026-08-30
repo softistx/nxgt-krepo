@@ -478,6 +478,17 @@ otherwise a container started once for the run, otherwise `available == false` a
 Mongo, Redis, AMQP and MinIO all work this way. Declare a new backend in `Backends.kt`, never in a
 library's own test tree.
 
+**A harness reaches the endpoint with `requireEndpoint()` and names its namespace with
+`TestNames`.** Both live in `stx-testing` and both replaced a pattern that was written out eleven
+times. `endpoint!!` past an `available` gate throws a `NullPointerException` naming a line, where
+`requireEndpoint()` throws `describe()` — which of the three resolutions this was, and why. And
+because a container is started once and *shared*, a spec's isolation is a database, schema, topic,
+bucket or key prefix of its own inside it: `TestNames("stx_mongo_test", separator = "_").next()`
+carries a per-run suffix, so a crashed run's leftovers cannot collide with the next run's names. The
+thing it replaced was a prefix *sweep* before the first spec, which could not tell a crashed run's
+databases from a concurrent run's and so had two suites deleting each other's data. Never reintroduce
+a sweep; name what cannot collide. `libs/stx-testing/README.md` has both.
+
 **A Spring application gets its MongoDB as a bean, not as a property.** `stx-spring-boot`'s
 `com.strange.spring.testing` ships `MongoSpec` — `@SpringBootTest` plus a `MongoConnectionDetails`
 contributed over `stx-testing` — so no application writes a `@DynamicPropertySource` of its own. That
@@ -486,6 +497,12 @@ the driver's settings from `spring.data.mongodb` to **`spring.mongodb`**, and `e
 spent a phase talking to `mongodb://localhost/test` — the workspace's own replica set — with a
 container running beside it and a green suite. A bean is asked for by type and cannot be misspelled.
 `libs/stx-spring-boot/README.md` has the four lines an application writes.
+
+`spring.mongodb.database` there names a *prefix*, not a database: the test support appends the run
+suffix — the `TestNames` rule above, reached through a `BeanPostProcessor` because
+`reactiveMongoDatabaseFactory` reads the property before the connection string — and drops the result
+at JVM exit. Two suites against the workspace replica set therefore cannot clear each other's
+collections, and a run leaves it as it found it.
 
 | library | override | without it |
 | --- | --- | --- |
@@ -785,7 +802,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
   | `examples/spring-orders/README.md` | What each file in the Spring demo is there to show, how to run it, and what it deliberately leaves out |
   | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
-  | `libs/stx-testing/README.md` | Where an integration spec's server comes from, and how a container declared there is cleaned up |
+  | `libs/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not

@@ -3,6 +3,7 @@ package com.strange.spring.testing
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldStartWith
 import kotlinx.coroutines.reactor.awaitSingle
 import org.bson.Document
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -13,7 +14,10 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.query.Query
 
 /** `spring.mongodb.database` in `testResources/application-test.yaml`, and nothing else names it. */
-private const val DATABASE = "stx_spring_boot_test"
+private const val PREFIX = "stx_spring_boot_test"
+
+/** What the prefix becomes: `testDatabase` puts this run's suffix on it. */
+private val DATABASE = testDatabase(PREFIX)
 
 private const val COLLECTION = "spec_documents"
 
@@ -41,6 +45,13 @@ class MongoSpecTest(
             scenario("the connection string names the database the test profile asked for") {
                 // The auto-configuration's own details would answer `test`, out of the default URI.
                 connectionDetails.connectionString.database shouldBe DATABASE
+            }
+
+            scenario("and that database is this run's, not one shared with whatever else is running") {
+                // The prefix is the application's; the suffix is what keeps two suites against the
+                // same `MONGO_TEST_URI` from emptying each other's collections.
+                DATABASE shouldStartWith "${PREFIX}_"
+                DATABASE shouldNotBe PREFIX
             }
 
             scenario("and it reads that name from the prefix Boot 4 actually binds") {

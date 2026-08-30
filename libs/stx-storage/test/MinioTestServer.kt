@@ -1,11 +1,11 @@
 package com.strange.storage
 
 import com.strange.storage.bucket.StorageBucket
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.minioContainer
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * The MinIO the integration specs talk to: one started for this run, unless
@@ -31,21 +31,22 @@ import java.util.concurrent.atomic.AtomicInteger
 internal object MinioTestServer {
     private val minio = minioContainer()
 
-    val endpoint: String get() = requireNotNull(minio.endpoint) { minio.describe() }.url
+    val endpoint: String get() = minio.requireEndpoint().url
 
-    private val buckets = AtomicInteger()
+    /** A bucket per spec, and one no other run will pick — see [TestNames]. */
+    private val buckets = TestNames("stx-storage-test")
 
-    private fun config(): StorageConfig? = minio.endpoint?.let { StorageConfig(it.url, it.accessKey, it.secretKey) }
+    private fun config(): StorageConfig = minio.requireEndpoint().let { StorageConfig(it.url, it.accessKey, it.secretKey) }
 
     val available: Boolean by lazy {
-        val config = config() ?: return@lazy false
-        runCatching { ObjectStorage.connect(config).use { runBlocking { it.buckets() } } }.isSuccess
+        minio.available &&
+            runCatching { ObjectStorage.connect(config()).use { runBlocking { it.buckets() } } }.isSuccess
     }
 
-    fun connect(): ObjectStorage = ObjectStorage.connect(config() ?: error(minio.describe()))
+    fun connect(): ObjectStorage = ObjectStorage.connect(config())
 
     /** A bucket name no other spec is using, and legal: lowercase, hyphens, under 63 characters. */
-    fun bucketName(): String = "stx-storage-test-${buckets.incrementAndGet()}-${System.nanoTime()}"
+    fun bucketName(): String = buckets.next()
 
     suspend fun withStorage(block: suspend (ObjectStorage) -> Unit) = connect().use { block(it) }
 
@@ -57,8 +58,12 @@ internal object MinioTestServer {
             try {
                 block(bucket)
             } finally {
-                bucket.deleteAll(bucket.list().map { it.key }.toList())
-                storage.deleteBucket(name)
+                // `runCatching`, as everywhere else here: an unguarded cleanup throws over whatever
+                // the spec was actually failing on, and the report then names the tidy-up.
+                runCatching {
+                    bucket.deleteAll(bucket.list().map { it.key }.toList())
+                    storage.deleteBucket(name)
+                }
             }
         }
 }

@@ -1,6 +1,7 @@
 package com.strange.spring.testing
 
 import com.mongodb.ConnectionString
+import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.mongodb.autoconfigure.MongoConnectionDetails
 import org.springframework.boot.mongodb.autoconfigure.MongoProperties
 import org.springframework.boot.test.context.TestConfiguration
@@ -29,9 +30,22 @@ import org.springframework.context.annotation.Bean
  * be misspelled, and `MongoSpecTest` pins the prefix so a future rename fails loudly instead of
  * silently pointing a suite at somebody's own MongoDB.
  *
- * An application writes one line in `testResources/application-test.yaml` and no Kotlin. The name is
- * spliced into the connection string here — see [withDatabase] for why it goes there rather than
- * being left to the auto-configuration to apply.
+ * An application writes one line in `testResources/application-test.yaml` and no Kotlin. What it
+ * names is a *prefix*: [testDatabase] puts this run's suffix on it, so two suites against the same
+ * server cannot empty each other's collections.
+ *
+ * **The suffix is applied to the property, not only to the connection string, and that is not
+ * belt-and-braces.** `DataMongoReactiveAutoConfiguration.reactiveMongoDatabaseFactory` reads
+ * `MongoProperties.getDatabase()` *first* and only falls back to the connection string's database
+ * when it is null — so contributing the name through the URI alone leaves the driver connected to one
+ * database and `ReactiveMongoTemplate` reading another. That is not a guess: the first run of this
+ * with the suffix in the URI alone failed `MongoSpecTest` with `expected:<…_d6yhy7pd> but
+ * was:<stx_spring_boot_test>`, and both scenarios are still there so the two can never drift apart
+ * again. The name goes into the connection string as well, for [withDatabase]'s reason — an endpoint
+ * that already ends in a database would otherwise decide where an unqualified operation lands.
+ *
+ * The database is dropped when the run ends — see [MongoTestCleanup] for why that is a shutdown hook
+ * and not a bean's destroy method.
  *
  * **An unreachable URI is deliberate when there is no server.** Contributing nothing would leave
  * `application.yaml`'s real URI in place and point a suite at the database a `./kotlin run` writes to.
@@ -44,14 +58,38 @@ class MongoTestConfiguration {
     fun mongoConnectionDetails(properties: MongoProperties): MongoConnectionDetails =
         MongoConnectionDetails {
             val database = properties.database ?: DEFAULT_DATABASE
-            ConnectionString(TestMongo.service.endpoint?.withDatabase(database) ?: "$UNREACHABLE/$database")
+            val uri = TestMongo.service.endpoint?.withDatabase(database) ?: "$UNREACHABLE_MONGO/$database"
+            MongoTestCleanup.dropAtExit(uri, database)
+            ConnectionString(uri)
         }
 
-    private companion object {
-        /** Used when an application named no database. Shared, and so worth not relying on. */
-        const val DEFAULT_DATABASE = "stx_test"
+    companion object {
+        /** The prefix used when an application named no database. Generic, and so worth not relying on. */
+        private const val DEFAULT_DATABASE = "stx_test"
 
-        /** A port nothing listens on, reached only where there is neither Docker nor `MONGO_TEST_URI`. */
-        const val UNREACHABLE = "mongodb://127.0.0.1:1"
+        /**
+         * Renames the bound database to this run's, before anything has read it.
+         *
+         * A post-processor rather than a side effect in [mongoConnectionDetails], because the order
+         * in which two `@Bean` methods read a shared properties object is not something a test
+         * harness should have to be right about. This runs when `MongoProperties` is initialised,
+         * which is before any bean can be injected with it.
+         *
+         * `@JvmStatic` is required, not stylistic: a `BeanPostProcessor` returned from an instance
+         * method forces its configuration class to be instantiated ahead of the post-processor
+         * registry, and Spring warns that the class is then not eligible for processing by all of it.
+         */
+        @Bean
+        @JvmStatic
+        fun testDatabaseNaming(): BeanPostProcessor =
+            object : BeanPostProcessor {
+                override fun postProcessAfterInitialization(
+                    bean: Any,
+                    beanName: String,
+                ): Any =
+                    bean.also {
+                        if (it is MongoProperties) it.database = testDatabase(it.database ?: DEFAULT_DATABASE)
+                    }
+            }
     }
 }

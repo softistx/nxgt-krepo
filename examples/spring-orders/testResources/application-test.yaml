@@ -11,10 +11,11 @@ server:
 
 spring:
   mongodb:
-    # The database the specs share: their own, and never the `spring_orders` a `./kotlin run` writes
-    # to. `MongoTestConfiguration` splices it into the connection string it builds from the container
-    # or from the server `MONGO_TEST_URI` names — so no URI is named here, and there is no placeholder
-    # to mistake for one.
+    # The database these specs get, and never the `spring_orders` a `./kotlin run` writes to. It is a
+    # *prefix*: `stx-spring-boot`'s `testDatabase` appends this run's suffix, so a second suite against
+    # the same `MONGO_TEST_URI` server cannot clear this one's orders. `MongoTestConfiguration` splices
+    # the result into the connection string it builds from the container or from that server — so no
+    # URI is named here, and there is no placeholder to mistake for one.
     database: spring_orders_test
 
 stx:

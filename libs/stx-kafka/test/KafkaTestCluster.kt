@@ -1,5 +1,6 @@
 package com.strange.kafka
 
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.kafkaContainer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -11,7 +12,6 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -48,7 +48,7 @@ import kotlin.time.Duration.Companion.seconds
 internal object KafkaTestCluster {
     private val cluster = kafkaContainer()
 
-    val bootstrap: String get() = requireNotNull(cluster.endpoint) { cluster.describe() }
+    val bootstrap: String get() = cluster.requireEndpoint()
 
     /**
      * As many replicas as this cluster can actually give, capped at three.
@@ -74,7 +74,10 @@ internal object KafkaTestCluster {
     /** The cluster handle the specs build their clients from. */
     fun kafka(properties: Map<String, String> = emptyMap()): Kafka = Kafka(KafkaConfig(bootstrap, properties = properties))
 
-    private val counter = AtomicInteger()
+    /** A topic per spec and a group per raw consumer, each unique across runs — see [TestNames]. */
+    private val topics = TestNames("stx-kafka-test")
+
+    private val groups = TestNames("stx-kafka-test-raw")
 
     /** Fails fast rather than retrying into the spec's timeout when the cluster is not there. */
     fun admin(): Admin =
@@ -91,7 +94,7 @@ internal object KafkaTestCluster {
         cluster.available && runCatching { admin().use { it.describeCluster().nodes().get() } }.isSuccess
     }
 
-    fun topicName(): String = "stx-kafka-test-${counter.incrementAndGet()}-${System.nanoTime()}"
+    fun topicName(): String = topics.next()
 
     /**
      * A topic of its own, deleted — and *gone* — when [block] returns.
@@ -145,7 +148,7 @@ internal object KafkaTestCluster {
             KafkaConsumer(
                 mapOf(
                     ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrap,
-                    ConsumerConfig.GROUP_ID_CONFIG to "stx-kafka-test-raw-${counter.incrementAndGet()}",
+                    ConsumerConfig.GROUP_ID_CONFIG to groups.next(),
                     ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
                     ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
                 ),

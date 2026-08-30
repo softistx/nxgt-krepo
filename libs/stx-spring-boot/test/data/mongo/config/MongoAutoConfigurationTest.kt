@@ -1,6 +1,7 @@
 package com.strange.spring.data.mongo.config
 
 import com.mongodb.reactivestreams.client.MongoClients
+import com.strange.spring.testing.UNREACHABLE_MONGO
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.beans.factory.ObjectProvider
@@ -24,14 +25,16 @@ import kotlin.time.Instant
 /**
  * What Spring Boot would otherwise have provided, stood in for.
  *
- * Creating a `MongoClient` opens no connection, so this needs no server — which is the point: the
- * wiring is what these specs are about, and `FindPageTest` is where a real one is paged through.
+ * The wiring is what these specs are about; `FindPageTest` is where a real server is paged through.
+ * So the client is pointed at [UNREACHABLE_MONGO] rather than at a plausible-looking `localhost:27017`
+ * — creating a client opens no connection *here*, but the driver's cluster monitor connects on its
+ * own thread, and on a developer machine 27017 answers. These specs asserted bean wiring while
+ * holding an open connection to somebody's real database.
  */
 @Configuration(proxyBeanMethods = false)
 private class MongoInfrastructure {
     @Bean
-    fun factory(): ReactiveMongoDatabaseFactory =
-        SimpleReactiveMongoDatabaseFactory(MongoClients.create("mongodb://localhost:27017"), "stx_wiring")
+    fun factory(): ReactiveMongoDatabaseFactory = SimpleReactiveMongoDatabaseFactory(MongoClients.create(UNREACHABLE_MONGO), "stx_wiring")
 
     /**
      * An `ObjectProvider`, because half these specs run with the auto-configuration switched off and

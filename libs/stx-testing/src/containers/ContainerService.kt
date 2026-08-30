@@ -61,6 +61,17 @@ class ContainerService<C : GenericContainer<*>, E : Any> internal constructor(
     /** Whether a spec that needs this service can run. */
     val available: Boolean get() = endpoint != null
 
+    /**
+     * The endpoint, or a failure that says which of the three outcomes this was.
+     *
+     * What a harness calls once it is past its [available] gate. `endpoint!!` is the alternative, and
+     * it answers a question nobody asked with a `NullPointerException` naming a line — where this
+     * answers *"mongodb: unavailable — MONGO_TEST_URI is unset and Docker is not reachable"*, or the
+     * exception a container start threw. The distinction has cost an afternoon twice, which is why
+     * [describe] exists at all; reaching it through `!!` throws that away.
+     */
+    fun requireEndpoint(): E = requireNotNull(endpoint) { describe() }
+
     /** Where this one ended up, for a log line or a failure that needs to say why it skipped. */
     fun describe(): String =
         when (origin.also { endpoint }) {

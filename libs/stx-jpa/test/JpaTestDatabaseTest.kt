@@ -21,7 +21,7 @@ class JpaTestDatabaseTest :
                 lateinit var used: String
                 JpaTestDatabase.withSchema { schema ->
                     used = schema
-                    schema shouldStartWith "shared_jpa_test_"
+                    schema shouldStartWith "stx_jpa_test_"
                 }
 
                 JpaTestDatabase.withSchema { next -> (next == used) shouldBe false }

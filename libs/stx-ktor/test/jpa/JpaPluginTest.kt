@@ -6,6 +6,7 @@ import com.strange.jpa.JpaMappingException
 import com.strange.jpa.SchemaMode
 import com.strange.jpa.session.transaction
 import com.strange.ktor.jpa.entity.Note
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.postgresContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
@@ -41,11 +42,14 @@ class JpaPluginTest :
     FeatureSpec({
 
         val postgres = postgresContainer()
-        val schema = "shared_ktor_jpa_test"
+        // A schema this run owns. It was fixed, and `afterSpec` drops it with `cascade` — so two
+        // suites at once, or a run sharing `POSTGRES_TEST_URI` with another, would drop the
+        // other's tables out from under it.
+        val schema = TestNames("stx_ktor_jpa_test", separator = "_").next()
 
         /** The specs own a schema of their own on whatever server answered, and leave nothing behind. */
         suspend fun schema(sql: String) {
-            val endpoint = postgres.endpoint!!
+            val endpoint = postgres.requireEndpoint()
             val vertx = Vertx.vertx()
             val pool =
                 PgBuilder
@@ -72,9 +76,9 @@ class JpaPluginTest :
 
         fun config() =
             JpaConfig(
-                uri = postgres.endpoint!!.uri,
-                username = postgres.endpoint!!.username,
-                password = postgres.endpoint!!.password,
+                uri = postgres.requireEndpoint().uri,
+                username = postgres.requireEndpoint().username,
+                password = postgres.requireEndpoint().password,
                 schema = schema,
                 schemaMode = SchemaMode.CREATE_DROP,
             )

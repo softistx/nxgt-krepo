@@ -30,7 +30,7 @@ class RedisPluginTest :
             scenario("gets a working connection, namespaced as configured") {
                 testApplication {
                     application {
-                        install(RedisConnection) { config = RedisConfig(uri = server.endpoint!!, namespace = "orders") }
+                        install(RedisConnection) { config = RedisConfig(uri = server.requireEndpoint(), namespace = "orders") }
                         routing {
                             get("/") {
                                 call.redis.commands.set(call.redis.key("greeting"), "hello")
@@ -47,7 +47,7 @@ class RedisPluginTest :
             scenario("it is one connection, not one per request") {
                 testApplication {
                     application {
-                        install(RedisConnection) { config = RedisConfig(uri = server.endpoint!!) }
+                        install(RedisConnection) { config = RedisConfig(uri = server.requireEndpoint()) }
                         routing { get("/") { call.respondText("${System.identityHashCode(call.redis)}") } }
                     }
                     val first = client.get("/").bodyAsText()
@@ -60,7 +60,7 @@ class RedisPluginTest :
                 lateinit var captured: Redis
                 testApplication {
                     application {
-                        install(RedisConnection) { config = RedisConfig(uri = server.endpoint!!) }
+                        install(RedisConnection) { config = RedisConfig(uri = server.requireEndpoint()) }
                         routing {
                             get("/") {
                                 captured = call.redis
@@ -79,7 +79,7 @@ class RedisPluginTest :
 
         feature("a connection handed in rather than opened").config(enabled = server.available) {
             scenario("is the one routes get, and is still open after the application stops") {
-                val mine = Redis.connect(RedisConfig(uri = server.endpoint!!, namespace = "adopted"))
+                val mine = Redis.connect(RedisConfig(uri = server.requireEndpoint(), namespace = "adopted"))
                 try {
                     lateinit var captured: Redis
                     testApplication {
