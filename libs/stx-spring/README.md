@@ -45,6 +45,18 @@ Every key, its default and what it costs is
 [`docs/spring-configuration.md`](../../docs/spring-configuration.md) — the other half that grows a
 row per capability.
 
+**And where a `stx.*` key overlaps one of Spring Boot's own, Boot's wins.** A `stx.*` key is a better
+default than the framework's, never an override of what the application asked for by name — so
+`spring.web.locale` beats `stx.i18n.fallback`, and `stx.i18n` then contributes only its catalogs.
+
+That is not free, because both sides express their beans with `@ConditionalOnMissingBean` and the
+outcome is therefore a property of *ordering* — plausible either way until it is measured. It was
+measured, and it was backwards: Boot's `LocaleContextResolver` won in every arrangement, including
+with no `spring.web.*` property set at all, so `stx.i18n.languages` and `stx.i18n.fallback`
+configured a bean that never reached a request. Nothing failed and no spec noticed; only the
+reference page described what was supposed to happen. `LocaleResolverPrecedenceTest` now pins both
+directions, and each half of the fix fails it on its own.
+
 ## Configuration metadata is written by hand
 
 `resources/META-INF/additional-spring-configuration-metadata.json` is what an IDE completes `stx.*`
