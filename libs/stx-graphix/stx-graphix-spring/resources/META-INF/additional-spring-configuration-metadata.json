@@ -27,6 +27,20 @@
       "description": "How subscriptions are served: sse (text/event-stream on POST) or graphql-ws (WebSocket on the same path).",
       "sourceType": "com.strange.graphix.spring.GraphixProperties",
       "defaultValue": "sse"
+    },
+    {
+      "name": "stx.graphix.schema-locations",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Directories of GraphQL schema documents. Default classpath:graphql/, scanned recursively. Several files merge.",
+      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "defaultValue": "classpath:graphql/"
+    },
+    {
+      "name": "stx.graphix.schema-file-extensions",
+      "type": "java.util.List<java.lang.String>",
+      "description": "File suffixes scanned under schema-locations. Default .graphqls and .gqls.",
+      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "defaultValue": ".graphqls,.gqls"
     }
   ]
 }

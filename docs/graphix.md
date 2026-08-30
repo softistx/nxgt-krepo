@@ -213,6 +213,23 @@ over the socket.
 `@GraphQLController` become query/mutation/subscription roots. An application's own `Graphix`
 bean wins.
 
-## What this document does not cover yet
+## Schema documents
 
-Schema-first SDL. That lands in a later slice and gets a paragraph here when it does.
+By default Graphix scans `classpath:graphql/` the way Spring GraphQL does: every
+`.graphqls` and `.gqls` file under that directory, nested folders included, is parsed and
+**merged** (`extend type Query` is how a file adds fields to a type another file named).
+The documents are the GraphQL schema; `@QueryMapping` / `@SchemaMapping` / `@BatchMapping`
+are DataFetchers on those fields. Custom scalars `Long`, `Instant` and `Uuid` are wired
+automatically — declare them in SDL if a field uses them (`scalar Long`).
+
+No files found: the annotated `@Serializable` types remain the schema, as before.
+
+Ktor: `schemaLocations` / `schemaFileExtensions` on `install(GraphQL)`. Spring:
+`stx.graphix.schema-locations` and `stx.graphix.schema-file-extensions`. Core:
+
+```kotlin
+Graphix {
+    schemaLocations(listOf("classpath:graphql/", "classpath:extra/"))
+    query(ProductQueries(store))
+}
+```

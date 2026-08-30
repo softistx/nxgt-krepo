@@ -23,6 +23,9 @@ sees.
 socket. `instance` adopts an engine a container already built; the plugin does not close it.
 Without `instance`, `schema { }` builds one at install.
 
+`schemaLocations` defaults to `classpath:graphql/` — split `.graphqls` / `.gqls` files, merged.
+An empty folder keeps the annotated schema.
+
 `injectable = true` registers that same engine with Ktor DI (`provideGraphix()`), off by default
 because `ktor-server-di` is compile-only.
 
