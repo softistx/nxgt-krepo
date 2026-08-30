@@ -19,6 +19,7 @@ fun main() {
     embeddedServer(Netty, port = 8080, module = Application::shop).start(wait = true)
 }
 
+/** Installs GraphQL at `/graphql` over an in-memory [Catalog]. */
 fun Application.shop() {
     val catalog = Catalog()
     install(GraphQL) {

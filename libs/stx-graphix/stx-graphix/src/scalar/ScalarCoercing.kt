@@ -14,6 +14,7 @@ import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+/** Serializes as an integer. A float literal is refused; an `IntValue` larger than Long throws. */
 internal object LongCoercing : Coercing<Long, Long> {
     override fun serialize(
         dataFetcherResult: Any,
@@ -39,6 +40,7 @@ internal object LongCoercing : Coercing<Long, Long> {
     }
 }
 
+/** `kotlin.time.Instant`, not `java.time`. Wire format is ISO-8601. */
 internal object InstantCoercing : Coercing<Instant, String> {
     override fun serialize(
         dataFetcherResult: Any,
@@ -68,6 +70,7 @@ internal object InstantCoercing : Coercing<Instant, String> {
     }
 }
 
+/** `kotlin.uuid.Uuid`. Wire format is the canonical hyphenated string. */
 @OptIn(ExperimentalUuidApi::class)
 internal object UuidCoercing : Coercing<Uuid, String> {
     override fun serialize(

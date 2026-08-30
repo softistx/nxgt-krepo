@@ -14,11 +14,16 @@ import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.valueParameters
 
+/** One GraphQL root (`Query` or `Mutation`) and the data fetchers for its fields. */
 internal data class Root(
     val type: GraphQLObjectType,
     val fetchers: List<Pair<FieldCoordinates, DataFetcher<*>>>,
 )
 
+/**
+ * Builds [Root] from [instances]. Duplicate GraphQL field names across instances fail schema
+ * build, naming the second class.
+ */
 internal fun root(
     name: String,
     kind: RootKind,
@@ -52,6 +57,7 @@ internal fun root(
     return Root(type, fetchers)
 }
 
+/** Registers every fetcher on [root] into this registry. */
 internal fun GraphQLCodeRegistry.Builder.putAll(root: Root): GraphQLCodeRegistry.Builder {
     root.fetchers.forEach { (coordinates, fetcher) -> dataFetcher(coordinates, fetcher) }
     return this
@@ -91,6 +97,7 @@ private fun field(
             .description(function.graphQLDescription())
             .type(types.output(function.returnType))
     function.valueParameters.filterNot { it.hasAnnotation<GraphQLContext>() }.forEach { parameter ->
+        // A Kotlin default is still GraphQL NonNull unless unwrapped: graphql-java has no defaults.
         val argumentType =
             types.input(parameter.type).let { type ->
                 if (parameter.isOptional && type is graphql.schema.GraphQLNonNull) {

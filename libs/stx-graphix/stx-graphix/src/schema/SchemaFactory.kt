@@ -8,6 +8,7 @@ import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLSchema
 import kotlinx.serialization.json.Json
 
+/** Builds the graphql-java schema from named query/mutation instances. Needs at least one `@Query`. */
 internal fun graphQLSchema(
     queries: List<Any>,
     mutations: List<Any>,

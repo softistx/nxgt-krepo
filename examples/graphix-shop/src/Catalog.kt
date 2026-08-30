@@ -4,6 +4,7 @@ import com.strange.graphix.schema.Mutation
 import com.strange.graphix.schema.Query
 import kotlinx.serialization.Serializable
 
+/** A catalogue item. [price] is minor units, a GraphQL `Long`. */
 @Serializable
 data class Product(
     val id: String,
@@ -11,6 +12,7 @@ data class Product(
     val price: Long,
 )
 
+/** In-memory products. Query and mutation live on the same instance. */
 class Catalog {
     private val products =
         mutableListOf(

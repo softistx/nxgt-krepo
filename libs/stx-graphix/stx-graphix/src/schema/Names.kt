@@ -7,6 +7,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.findAnnotation
 
+/** GraphQL field name: `@Query(name)` / `@Mutation(name)`, then `@GraphQLName`, then the Kotlin name. */
 internal fun KFunction<*>.graphQLName(kind: RootKind): String {
     val fromKind =
         when (kind) {
@@ -18,12 +19,17 @@ internal fun KFunction<*>.graphQLName(kind: RootKind): String {
     return name
 }
 
+/**
+ * GraphQL argument name: `@Argument`, then `@GraphQLName`, then the Kotlin parameter name.
+ * Parameter names must be retained at compile time — otherwise this throws.
+ */
 internal fun KParameter.graphQLName(): String {
     findAnnotation<Argument>()?.name?.takeIf { it.isNotEmpty() }?.let { return it }
     findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
     return name ?: throw IllegalStateException("a resolver parameter has no name; compile with parameter names retained")
 }
 
+/** GraphQL type name: `@GraphQLName`, then the Kotlin simple name. */
 internal fun KClass<*>.graphQLName(): String {
     findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
     return simpleName ?: throw IllegalStateException("a GraphQL type has no name: $qualifiedName")
@@ -33,4 +39,5 @@ internal fun KAnnotatedElement.graphQLDescription(): String? = findAnnotation<Gr
 
 internal fun KProperty<*>.isGraphQLIgnored(): Boolean = findAnnotation<GraphQLIgnore>() != null
 
+/** Query vs Mutation — which annotation and which root type to build. */
 internal enum class RootKind { QUERY, MUTATION }

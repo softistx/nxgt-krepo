@@ -6,6 +6,10 @@ import graphql.ExceptionWhileDataFetching
 import graphql.ExecutionResult
 import java.util.concurrent.CompletionException
 
+/**
+ * graphql-java wraps a resolver throw in `ExceptionWhileDataFetching`. The message here is
+ * the cause's, not that wrapper's `": null"`.
+ */
 internal fun ExecutionResult.toGraphixResult(): GraphixResult =
     GraphixResult(
         data = getData<Map<String, Any?>?>(),
