@@ -33,7 +33,12 @@ val GraphQL =
     createApplicationPlugin(name = "GraphQL", createConfiguration = ::GraphQLConfiguration) {
         val engine =
             pluginConfig.instance
-                ?: Graphix(pluginConfig.json, pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance"))
+                ?: Graphix(pluginConfig.json) {
+                    schemaLocations(pluginConfig.schemaLocations)
+                    schemaFileExtensions(pluginConfig.schemaFileExtensions)
+                    val block = pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance")
+                    block()
+                }
         application.attributes.put(GraphixKey, engine)
         val path = pluginConfig.path
         val json = pluginConfig.json
@@ -70,6 +75,15 @@ class GraphQLConfiguration {
      * Registers the engine with Ktor DI. Off by default: `ktor-server-di` is compile-only.
      */
     var injectable: Boolean = false
+
+    /**
+     * Directories of `.graphqls` / `.gqls` files. Default `classpath:graphql/`, the same
+     * place Spring GraphQL looks. Several files merge. An empty scan keeps the annotated schema.
+     */
+    var schemaLocations: List<String> = listOf("classpath:graphql/")
+
+    /** File suffixes under [schemaLocations]. Default `.graphqls` and `.gqls`. */
+    var schemaFileExtensions: List<String> = listOf(".graphqls", ".gqls")
 
     internal var schemaBlock: (GraphixBuilder.() -> Unit)? = null
 

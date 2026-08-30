@@ -21,4 +21,11 @@ data class GraphixProperties(
      * `graphql-ws` is a WebSocket on [path]; HTTP POST of a subscription is then 400.
      */
     val subscriptions: SubscriptionProtocol = SubscriptionProtocol.Sse,
+    /**
+     * Directories of `.graphqls` / `.gqls` files. Default `classpath:graphql/`, Spring GraphQL's
+     * location. Several files merge. An empty scan keeps the annotated schema.
+     */
+    val schemaLocations: List<String> = listOf("classpath:graphql/"),
+    /** File suffixes under [schemaLocations]. Default `.graphqls` and `.gqls`. */
+    val schemaFileExtensions: List<String> = listOf(".graphqls", ".gqls"),
 )

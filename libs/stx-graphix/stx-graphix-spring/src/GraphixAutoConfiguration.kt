@@ -31,9 +31,14 @@ class GraphixAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    fun graphix(applicationContext: ApplicationContext): Graphix {
+    fun graphix(
+        applicationContext: ApplicationContext,
+        properties: GraphixProperties,
+    ): Graphix {
         val controllers = applicationContext.getBeansWithAnnotation<GraphQLController>().values
         return Graphix {
+            schemaLocations(properties.schemaLocations)
+            schemaFileExtensions(properties.schemaFileExtensions)
             controllers.forEach { addController(it) }
         }
     }

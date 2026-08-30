@@ -4,7 +4,10 @@ import com.strange.common.serialization.lenientJson
 import com.strange.graphix.execute.RegisteredLoader
 import com.strange.graphix.execute.executionInput
 import com.strange.graphix.execute.toGraphixResult
+import com.strange.graphix.schema.DefaultSchemaExtensions
+import com.strange.graphix.schema.DefaultSchemaLocations
 import com.strange.graphix.schema.graphQLSchema
+import com.strange.graphix.schema.loadSchemaFiles
 import graphql.GraphQL
 import graphql.schema.idl.SchemaPrinter
 import kotlinx.coroutines.CoroutineName
@@ -20,8 +23,9 @@ import kotlin.reflect.KClass
 /**
  * A GraphQL engine built from annotated Kotlin functions and `@Serializable` types.
  *
- * The application **names** its roots. There is no classpath scan here — Spring may collect
- * `@GraphQLController` beans; that is `stx-graphix-spring`. A data fetcher is not part of this
+ * The application **names** its roots. There is no classpath scan for resolver classes — Spring
+ * may collect `@GraphQLController` beans; that is `stx-graphix-spring`. Schema documents under
+ * `classpath:graphql/` are scanned, Spring GraphQL's default. A data fetcher is not part of this
  * API: each `@QueryMapping` / `@MutationMapping` / `@SubscriptionMapping` / `@SchemaMapping` is a function on the instance
  * passed to [GraphixBuilder.query], [GraphixBuilder.mutation], [GraphixBuilder.subscription]
  * or [GraphixBuilder.type], so a Spring `OrderService` lives on that instance's constructor,
@@ -91,6 +95,8 @@ class GraphixBuilder internal constructor(
     private val mutations = mutableListOf<Any>()
     private val subscriptions = mutableListOf<Any>()
     private val types = mutableListOf<Any>()
+    private var resourceLocations: List<String> = DefaultSchemaLocations
+    private var resourceExtensions: List<String> = DefaultSchemaExtensions
 
     /** Registers [instance]; every `@QueryMapping` function on it becomes a field on `Query`. */
     fun query(instance: Any) {
@@ -116,8 +122,23 @@ class GraphixBuilder internal constructor(
         types += instance
     }
 
+    /**
+     * Directories of schema documents, Spring GraphQL's `classpath:graphql/` among them.
+     * Every `.graphqls` / `.gqls` under the directory is merged (`extend type` works).
+     * An empty scan keeps the annotation-derived schema.
+     */
+    fun schemaLocations(locations: Iterable<String>) {
+        resourceLocations = locations.toList()
+    }
+
+    /** File suffixes scanned under [schemaLocations]. Default `.graphqls` and `.gqls`. */
+    fun schemaFileExtensions(extensions: Iterable<String>) {
+        resourceExtensions = extensions.toList()
+    }
+
     internal fun build(): Graphix {
-        val (schema, loaders) = graphQLSchema(queries, mutations, subscriptions, types, json)
+        val files = loadSchemaFiles(resourceLocations, resourceExtensions)
+        val (schema, loaders) = graphQLSchema(queries, mutations, subscriptions, types, json, files)
         return Graphix(GraphQL.newGraphQL(schema).build(), loaders)
     }
 }
