@@ -14,16 +14,16 @@ stx:
 class OrderMutations(
     private val orders: OrderService,
 ) {
-    @Query
+    @QueryMapping
     suspend fun order(id: String): Order? = orders.find(id)
 
-    @Mutation
+    @MutationMapping
     suspend fun placeOrder(input: PlaceOrderInput): Order = orders.place(input)
 
-    @Subscription
+    @SubscriptionMapping
     fun orderPlaced(): Flow<Order> = orders.placed
 
-    @Batch
+    @BatchMapping
     fun items(orders: List<Order>): Map<Order, List<LineItem>> = this.orders.items(orders)
 }
 ```

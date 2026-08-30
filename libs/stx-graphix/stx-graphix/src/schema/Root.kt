@@ -81,9 +81,9 @@ private fun functions(
     val matches =
         instance::class.memberFunctions.filter { function ->
             when (kind) {
-                RootKind.QUERY -> function.hasAnnotation<Query>()
-                RootKind.MUTATION -> function.hasAnnotation<Mutation>()
-                RootKind.SUBSCRIPTION -> function.hasAnnotation<Subscription>()
+                RootKind.QUERY -> function.hasAnnotation<QueryMapping>()
+                RootKind.MUTATION -> function.hasAnnotation<MutationMapping>()
+                RootKind.SUBSCRIPTION -> function.hasAnnotation<SubscriptionMapping>()
             }
         }
     if (matches.isEmpty()) {

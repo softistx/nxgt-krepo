@@ -26,7 +26,7 @@ class SubscriptionTest :
                 sdl shouldContain "ticks: Int!"
             }
 
-            scenario("a @Subscription that does not return Flow or Publisher fails schema build") {
+            scenario("a @SubscriptionMapping that does not return Flow or Publisher fails schema build") {
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {

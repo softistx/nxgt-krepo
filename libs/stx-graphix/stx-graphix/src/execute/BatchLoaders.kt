@@ -81,7 +81,7 @@ private fun align(
 
         is List<*> -> {
             if (raw.size != keys.size) {
-                throw GraphixException("@Batch returned ${raw.size} values for ${keys.size} keys")
+                throw GraphixException("@BatchMapping returned ${raw.size} values for ${keys.size} keys")
             }
             buildMap {
                 keys.zip(raw).forEach { (key, value) ->
@@ -91,6 +91,6 @@ private fun align(
         }
 
         else -> {
-            throw GraphixException("@Batch must return Map<Parent, T> or List<T>, got ${raw?.let { it::class.qualifiedName }}")
+            throw GraphixException("@BatchMapping must return Map<Parent, T> or List<T>, got ${raw?.let { it::class.qualifiedName }}")
         }
     }
