@@ -77,6 +77,5 @@ internal fun graphQLSchema(
             collectLoaders(loaderInstances + typeInstances + queries + mutations + subscriptions),
             typeFields,
         )
-    validateLoads(queries + mutations + typeInstances, loaders.map { it.name }.toSet())
     return schema to loaders
 }

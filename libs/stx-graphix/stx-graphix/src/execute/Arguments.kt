@@ -2,7 +2,6 @@ package com.strange.graphix.execute
 
 import com.strange.graphix.GraphixException
 import com.strange.graphix.schema.GraphQLContext
-import com.strange.graphix.schema.Load
 import com.strange.graphix.schema.graphQLName
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.serialization.json.Json
@@ -36,9 +35,6 @@ internal fun bindArguments(
             bound[parameter] = contextValue(parameter, environment)
             return@forEach
         }
-        if (parameter.findAnnotation<Load>() != null) {
-            return@forEach
-        }
         val raw: Any? = environment.getArgument(parameter.graphQLName())
         if (raw == null && parameter.isOptional) return@forEach
         bound[parameter] = decode(raw, parameter, json)
@@ -53,6 +49,9 @@ private fun contextValue(
     val classifier =
         parameter.type.classifier as? kotlin.reflect.KClass<*>
             ?: throw GraphixException("@GraphQLContext ${parameter.name} needs a class type")
+    if (DataFetchingEnvironment::class.java.isAssignableFrom(classifier.java)) {
+        return environment
+    }
     return environment.graphQlContext.get<Any>(classifier)
         ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
 }
