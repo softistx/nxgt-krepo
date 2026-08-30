@@ -9,7 +9,9 @@ import com.strange.graphix.schema.MutationMapping
 import com.strange.graphix.schema.QueryMapping
 import com.strange.graphix.schema.SchemaMapping
 import com.strange.graphix.schema.SubscriptionMapping
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.reactive.asPublisher
 import kotlinx.serialization.Serializable
@@ -140,6 +142,11 @@ class BoomQueries {
 class TickSubscriptions {
     @SubscriptionMapping
     fun ticks(): Flow<Int> = flowOf(1, 2, 3)
+}
+
+class HangSubscriptions {
+    @SubscriptionMapping
+    fun hang(): Flow<Int> = flow { awaitCancellation() }
 }
 
 class TickPublisherSubscriptions {
