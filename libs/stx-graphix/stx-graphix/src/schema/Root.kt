@@ -48,7 +48,7 @@ internal fun root(
                     fieldName,
                     output,
                     types,
-                    skip = { it.isGraphQLContext() },
+                    skip = { it.isGraphQLContext() || it.isLoad() },
                 )
             fetchers += FieldCoordinates.coordinates(name, fieldName) to fetcher(instance, function)
         }

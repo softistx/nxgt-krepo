@@ -70,6 +70,38 @@ annotation class Batch(
     val name: String = "",
 )
 
+/**
+ * A named DataLoader. The instance is passed to [com.strange.graphix.GraphixBuilder.loader],
+ * or sits on a query/type instance Graphix already holds.
+ *
+ * The first parameter is `List<K>`. Return `Map<K, V>` or `List<V>` in key order. Resolvers
+ * receive `V` through [@Load], not a `DataLoader`.
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Loader(
+    /** DataLoader name. Empty uses the Kotlin function name. */
+    val name: String = "",
+)
+
+/**
+ * Fills this parameter from a named [@Loader] (or `@Batch` loader). Not a GraphQL argument.
+ *
+ * [from] is the parent property (`@Field`) or GraphQL argument (a root) used as the key.
+ * Empty: the parent itself on a type field, the first GraphQL argument on a root.
+ *
+ * The DataFetcher calls `load(key)` immediately and then the resolver — never
+ * `load` inside `future { }`.
+ */
+@Target(AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Load(
+    /** Loader name. Empty uses the parameter name. */
+    val name: String = "",
+    /** Parent property or argument name used as the key. */
+    val from: String = "",
+)
+
 /** Overrides the GraphQL name of a type, field, or argument. Empty [value] is ignored. */
 @Target(
     AnnotationTarget.CLASS,
