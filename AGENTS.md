@@ -478,6 +478,15 @@ otherwise a container started once for the run, otherwise `available == false` a
 Mongo, Redis, AMQP and MinIO all work this way. Declare a new backend in `Backends.kt`, never in a
 library's own test tree.
 
+**A Spring application gets its MongoDB as a bean, not as a property.** `stx-spring-boot`'s
+`com.strange.spring.testing` ships `MongoSpec` — `@SpringBootTest` plus a `MongoConnectionDetails`
+contributed over `stx-testing` — so no application writes a `@DynamicPropertySource` of its own. That
+is not only about repetition: a property name can be wrong and say nothing, and one was. Boot 4 moved
+the driver's settings from `spring.data.mongodb` to **`spring.mongodb`**, and `examples/spring-orders`
+spent a phase talking to `mongodb://localhost/test` — the workspace's own replica set — with a
+container running beside it and a green suite. A bean is asked for by type and cannot be misspelled.
+`libs/stx-spring-boot/README.md` has the four lines an application writes.
+
 | library | override | without it |
 | --- | --- | --- |
 | `stx-mongo` | `MONGO_TEST_URI` | `mongo:8`, a single-node replica set |
@@ -765,7 +774,7 @@ the same each time, and the mistakes are the same each time too.
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
-  | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, and why the locale comes off the exchange |
+  | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
   | `docs/spring-mongo-queries.md` | What a stx-spring-boot Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
   | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
   | `libs/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |

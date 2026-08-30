@@ -16,14 +16,20 @@ dependencies:
   - $libs.javers.core
 
 test-dependencies:
-  # The MongoDB `OrdersTest` drives the whole application against: `MONGO_TEST_URI` when the
-  # workspace's replica set is already up, a container started once for the run otherwise, and the
-  # spec reports skipped when neither is there.
+  # The MongoDB the specs drive the whole application against: `MONGO_TEST_URI` when the workspace's
+  # replica set is already up, a container started once for the run otherwise, and every feature
+  # reports skipped when neither is there.
+  #
+  # Named here even though `stx-spring-boot`'s `MongoTestConfiguration` is what reads it, because
+  # that module holds this one `compile-only` — a test-support package is not something every
+  # consumer of the library should inherit, so an application that writes specs opts in by adding the
+  # line. `$spring.boot.starter.test` and the Kotest entries below are here for the same reason.
   - //libs/stx-testing
 
   # `WebTestClient`, which is what makes this an end-to-end test rather than a unit one: it speaks
   # HTTP to a real port, so the routes, the codecs, the exception advice and the Mongo mapping are
-  # all exercised the way a client exercises them.
+  # all exercised the way a client exercises them. Also `@SpringBootTest` itself, which `MongoSpec`
+  # carries.
   - $spring.boot.starter.test
 
   - $libs.kotest.runner.junit5
@@ -32,7 +38,8 @@ test-dependencies:
 
   # Spring's own test harness, driven by Kotest: `@SpringBootTest` starts the application once for
   # the module's specs and injects its beans into their constructors. The same extension
-  # `nxgt-rest` registers, and the reason a spec here needs no bootstrap of its own.
+  # `nxgt-rest` registers, and the reason a spec here needs no bootstrap of its own — `ProjectConfig`
+  # is one line over `stx-spring-boot`'s `SpringProjectConfig`, which is what registers it.
   - $libs.kotest.extensions.spring
 
 plugins:

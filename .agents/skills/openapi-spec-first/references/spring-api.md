@@ -181,66 +181,55 @@ invented, and a sentinel is exactly what must never reach the database.
 
 ## test/ — e2e through the generated clients
 
-**The client extensions are the library's.** `com.strange.spring.client` already has
-`httpServiceFactory`, `httpClient<T>()` and `withClient<T>()`; a spec that assembled its own
-`WebClient` would be asserting against a transport no caller uses. What a *generated* client adds on
-top is four settings, and none of them fails at build time when left out.
+**The client assembly is the library's.** `com.strange.spring.client` has `httpServiceFactory`,
+`httpClient<T>()`, `withClient<T>()` and — for a *generated* interface — `generatedApiFactory`, which
+is the four settings such a client needs and nothing else. A spec that assembled its own `WebClient`
+would be asserting against a transport no caller uses.
 
-The application is Spring's to start: `$libs.kotest.extensions.spring` in `test-dependencies`, a
-`test` profile under `testResources/`, and a base spec carrying the annotations.
+The application is Spring's to start, and **none of that bootstrap is written per application** —
+`stx-spring-boot`'s `com.strange.spring.testing` ships it. Add `//libs/stx-spring-boot` and
+`//libs/stx-testing` to `test-dependencies`, along with `$libs.kotest.extensions.spring`, and write
+these two files:
 
 ```kotlin
-// test/OrdersSpec.kt — the bootstrap, once, for every spec in the module
-@ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-abstract class OrdersSpec(body: FeatureSpec.() -> Unit) : FeatureSpec(body) {
-    companion object {
-        const val BASE_URL = "http://localhost:8088"          // `server.port` in the test profile
-        val mongo = mongoContainer()                          // declared; nothing started yet
-
-        // Read while the context is being built — so the container starts when a spec that needs
-        // one is reached, and outranks every property source, including `application.yaml`.
-        @JvmStatic
-        @DynamicPropertySource
-        fun mongoUri(registry: DynamicPropertyRegistry) {
-            registry.add("spring.data.mongodb.uri") { mongo.endpoint?.withDatabase(DATABASE) ?: UNREACHABLE }
-        }
-    }
-}
-
 // test/ProjectConfig.kt — in package io.kotest.provided, where Kotest looks for it
-object ProjectConfig : AbstractProjectConfig() {
-    override val extensions = listOf(SpringExtension())
-}
+object ProjectConfig : SpringProjectConfig()
 
-// test/TestHelper.kt — the client wiring, and nothing about starting anything
-fun apiFactory(json: Json, baseUrl: String = OrdersSpec.BASE_URL, headers: (HttpHeaders) -> Unit = {}) =
-    httpServiceFactory(
+// test/TestHelper.kt — this module's four generated symbols, and nothing else
+fun apiFactory(json: Json, baseUrl: String = TestServer.baseUrl, headers: (HttpHeaders) -> Unit = {}) =
+    generatedApiFactory(
         baseUrl,
-        headers,                                   // per request: `{ it.setBearerAuth(token) }`
-        factory = {
-            conversionService(DefaultFormattingConversionService().also(::registerApiEnumConverters))
-            httpRequestValuesProcessor(apiOperationProcessor())
-        },
-    ) {
-        codecs {
-            it.defaultCodecs().kotlinSerializationJsonDecoder(KotlinSerializationJsonDecoder(json))
-            it.defaultCodecs().kotlinSerializationJsonEncoder(KotlinSerializationJsonEncoder(json))
-        }
-        filter(apiErrorFilter())
-    }
+        json = json,                               // the application's own `stxWebJson` bean
+        enums = ::registerApiEnumConverters,
+        operations = apiOperationProcessor(),
+        filters = listOf(apiErrorFilter()),
+        headers = headers,                         // per request: `{ it.setBearerAuth(token) }`
+    )
 ```
+
+```yaml
+# testResources/application-test.yaml — the other half, and the whole of it
+server:
+  port: 8088                       # TestServer.STX_TEST_PORT, so no client spells a URL
+spring:
+  mongodb:
+    database: spring_orders_test   # its own, never the one a `./kotlin run` writes to
+```
+
+There is no base spec to write: `MongoSpec` carries `@ActiveProfiles("test")`,
+`@SpringBootTest(DEFINED_PORT)` and the test beans that say where MongoDB is. `SpringSpec` is the
+same without Mongo. Re-annotating a subclass overrides any of it — `RANDOM_PORT` is one annotation.
 
 ```kotlin
 // test/OrderControllerTest.kt — one spec per controller, features named after the route
 class OrderControllerTest(
     template: ReactiveMongoTemplate,                // autowired: Spring built the context
     json: Json,                                     // the application's own `stxWebJson`
-) : OrdersSpec({
+) : MongoSpec({
     val orders = apiFactory(json).withClient<IOrdersService>()   // one client per tag, off one factory
 
-    beforeSpec { template.awaitMigrations() }
-    beforeEach { template.clean() }                 // each scenario writes what it reads
+    beforeSpec { template.awaitMigrations(expected = 2) }
+    beforeEach { template.clear("orders", "audits") } // each scenario writes what it reads
 
     feature("POST /orders") {
         scenario("a placed order comes back with the id it was given") {
@@ -263,14 +252,19 @@ Nothing in that spec builds a request: the paths, the verbs, the parameters, the
 body types are all the document's. Assert a failure on `status` and `code`, never on the message —
 the text is translated and changes the day somebody improves a sentence.
 
-The four settings, and what each one silently costs:
+The four settings, and what each one silently costs — none of them fails at build time, which is why
+`generatedApiFactory` names all four rather than leaving them to be remembered:
 
 | Setting | Left out |
 | --- | --- |
-| kotlinx codecs, from the app's own `stxWebJson` | a generated `placedAt` is a `kotlin.time.Instant`, which Jackson has never heard of |
-| `registerApiEnumConverters` | Spring writes an enum with `Enum.name()` and never consults `toString()`: `IN_PROGRESS` where the document says `in-progress` |
-| `apiOperationProcessor` | by the time a `ClientRequest` exists the method is gone, so `apiErrorFilter` cannot tell which operation failed |
-| `apiErrorFilter()` | a documented failure arrives as the untyped `ApiException`, not `ErrorResponseException` with a parsed body |
+| `json`, the app's own `stxWebJson` | a generated `placedAt` is a `kotlin.time.Instant`, which Jackson has never heard of |
+| `enums = ::registerApiEnumConverters` | Spring writes an enum with `Enum.name()` and never consults `toString()`: `IN_PROGRESS` where the document says `in-progress` |
+| `operations = apiOperationProcessor()` | by the time a `ClientRequest` exists the method is gone, so `apiErrorFilter` cannot tell which operation failed |
+| `apiErrorFilter()` in `filters` | a documented failure arrives as the untyped `ApiException`, not `ErrorResponseException` with a parsed body |
+
+The symbols are generated into each module's own `<packageName>.utils`, so they are *passed* — same
+shapes everywhere, different classes, and the same Spring types, which is what lets the assembly live
+in the library. An API with a `security` requirement adds `apiAuthFilter(credentials)` to `filters`.
 
 ## Where each kind of assertion belongs
 
@@ -281,21 +275,25 @@ The four settings, and what each one silently costs:
 | Translation: the same 404 in English and in French | `<App>ApplicationTest` | `WebTestClient`, with `Accept-Language` |
 | A case the document does not declare | `<App>ApplicationTest` | `WebTestClient` — a typed client has no name for it |
 
-**A per-run database goes in the URI.** `spring.data.mongodb.database` is read only while Boot is
-building a connection string from `host`/`port`, so once `spring.data.mongodb.uri` is set it is
-ignored, silently, and every run shares one database while looking isolated — including the one a
-`./kotlin run` writes to.
+**The Mongo prefix is `spring.mongodb`, not `spring.data.mongodb`.** Spring Boot 4 split the old
+one: the driver's URI, credentials and database are `MongoProperties` under `spring.mongodb`, and
+`spring.data.mongodb` kept only GridFS and the big-decimal representation. A `spring.data.mongodb.uri`
+carried over from Boot 3 binds to nothing, is reported by nothing, and leaves the driver on
+`mongodb://localhost/test` — which on a developer machine is a real server that answers. This is not
+a hypothetical: `examples/spring-orders` was doing it, container and all, and its suite passed the
+whole time. `MongoTestConfiguration` answers with a bean instead of a property because a bean is
+asked for by type and cannot be misspelled, and `MongoSpecTest` pins the prefix.
 
 **A container starts when a spec needs it, and not before.** `ContainerService.endpoint` is a `lazy`,
-so `mongoContainer()` at the top of a file starts nothing; the first read is the
-`@DynamicPropertySource` supplier, which Spring evaluates while building the context for the first
-spec that runs. Resolve it any earlier — in `beforeProject`, or in a property initialiser that
-connects — and a run whose specs are all skipped still pays for a container.
+so declaring the service starts nothing; the first read is `MongoTestConfiguration`'s bean, which
+Spring calls while building the context for the first spec that runs. Resolve it any earlier — in
+`beforeProject`, or in a property initialiser that connects — and a run whose specs are all skipped
+still pays for a container.
 
 **Wait for what starts after the port opens.** `MigrationRunner` listens for `ApplicationReadyEvent`
 and suspends, and Spring does not wait for a suspending listener — so a seed lands shortly *after*
 the server is up, and lands in the middle of whichever scenario went first if nothing waits.
-`beforeSpec { template.awaitMigrations() }` is the gate; `beforeEach { template.clean() }` is the
+`beforeSpec { template.awaitMigrations(expected = 2) }` is the gate; `beforeEach { template.clear(…) }` is the
 discipline that makes each scenario name its own state, as `nxgt-rest`'s `cleanUp()` does.
 
 **One context, cached, for every spec that shares the configuration.** Spring's test context cache

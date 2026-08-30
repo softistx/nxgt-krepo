@@ -6,6 +6,10 @@ import com.strange.example.orders.api.models.OrderStatus
 import com.strange.example.orders.api.models.PlaceOrder
 import com.strange.example.orders.api.utils.ErrorResponseException
 import com.strange.spring.client.withClient
+import com.strange.spring.testing.MongoSpec
+import com.strange.spring.testing.awaitMigrations
+import com.strange.spring.testing.clear
+import com.strange.spring.testing.mongoAvailable
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
@@ -30,23 +34,23 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate
  * a failure is asserted as one — `shouldThrow<ErrorResponseException>` on the status and the `code`,
  * never on the message, which is translated and changes the day somebody improves a sentence.
  *
- * The application and the beans are Spring's doing: `OrdersSpec` carries the annotations, and what
+ * The application and the beans are Spring's doing: `MongoSpec` carries the annotations, and what
  * this class asks for in its constructor is autowired into it. `OrdersApplicationTest` holds the
  * claims a typed client cannot make.
  */
 class OrderControllerTest(
     template: ReactiveMongoTemplate,
     json: Json,
-) : OrdersSpec({
+) : MongoSpec({
 
         // One factory, one client per tag: `OrdersApplicationTest` takes `IHealthService` off its
         // own. Rebuilding it per interface rebuilds the WebClient, and with it every codec and
         // filter a generated client needs.
         val orders = apiFactory(json).withClient<IOrdersService>()
 
-        beforeSpec { if (mongoAvailable) template.awaitMigrations() }
+        beforeSpec { if (mongoAvailable) template.awaitMigrations(expected = 2) }
         // Each scenario writes what it reads, so none of them depends on another having run.
-        beforeEach { if (mongoAvailable) template.clean() }
+        beforeEach { if (mongoAvailable) template.clear("orders", "audits") }
 
         feature("GET /orders").config(enabled = mongoAvailable) {
             scenario("a page carries its rows and its cursors") {

@@ -1,16 +1,13 @@
 package io.kotest.provided
 
-import io.kotest.core.config.AbstractProjectConfig
-import io.kotest.extensions.spring.SpringExtension
+import com.strange.spring.testing.SpringProjectConfig
 
 /**
- * What lets a Kotest spec be a Spring test.
+ * What lets a Kotest spec here be a Spring test.
  *
- * Kotest looks for this exact class in this exact package, and the extension is what makes
- * `@SpringBootTest` mean anything: it prepares the test context around each spec and autowires the
- * beans a spec declares in its constructor. Without it the annotations on `OrdersSpec` are inert and
- * every spec fails on a missing bean, which is a confusing way to learn this file was deleted.
+ * Kotest looks for this exact class in this exact package, so it cannot live in a library — but what
+ * goes in it can, and does: [SpringProjectConfig] registers the `SpringExtension` that makes the
+ * annotations on `MongoSpec` mean anything. An extension of this application's own would be passed to
+ * the constructor rather than overriding `extensions`, which is how it keeps the Spring one.
  */
-object ProjectConfig : AbstractProjectConfig() {
-    override val extensions = listOf(SpringExtension())
-}
+object ProjectConfig : SpringProjectConfig()
