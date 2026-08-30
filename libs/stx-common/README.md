@@ -153,9 +153,9 @@ database-free, fully specified implementation to save two files is not a trade w
 ## One CORS policy, two frameworks
 
 `CorsPolicy` says which browsers may call a service, and nothing about how that is enforced.
-`stx-ktor` installs Ktor's plugin from it and `stx-spring` builds Spring's `CorsConfiguration` from
-it, so an application moving between the two keeps its origins, its methods and its configuration
-keys.
+`stx-ktor` installs Ktor's plugin from it and `stx-spring-boot` builds Spring's `CorsConfiguration`
+from it, so an application moving between the two keeps its origins, its methods and its
+configuration keys.
 
 That is the argument for it being here rather than in either integration: CORS is a *browser* policy.
 The rules are the browser's, they are identical whichever server answers, and two configuration

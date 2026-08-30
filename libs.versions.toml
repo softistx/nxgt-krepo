@@ -59,9 +59,10 @@ classgraph = "4.8.184"
 # annotations artifact for everything downstream of stx-jpa, for an annotation nobody runs.
 jetbrains-annotations = "23.0.0"
 spring = "7.0.9"
-# Object diffing for the stx-spring Mongo audit trail: it compares the previous stored state with
-# the one just saved and reports the changed properties, which is the whole reason that trail is
-# more than a copy of the document. Compile-only in stx-spring — nothing else has it on a classpath.
+# Object diffing for the stx-spring-boot Mongo audit trail: it compares the previous stored state
+# with the one just saved and reports the changed properties, which is the whole reason that trail is
+# more than a copy of the document. Compile-only in stx-spring-boot — nothing else has it on a
+# classpath.
 javers = "7.11.8"
 jackson = "3.2.2"
 

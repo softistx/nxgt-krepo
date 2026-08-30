@@ -11,8 +11,9 @@ import kotlinx.serialization.Serializable
  *
  * CORS is a browser policy, not a web-framework feature: the same list of origins means the same
  * thing behind Ktor and behind Spring, and an application moving between them should not have to
- * relearn its own configuration keys. `stx-ktor`'s `Cors` plugin and `stx-spring`'s `stx.cors`
- * properties both build from this, so the two agree by construction rather than by review.
+ * relearn its own configuration keys. `stx-ktor`'s `Cors` plugin and `stx-spring-boot`'s
+ * `stx.cors` properties both build from this, so the two agree by construction rather than by
+ * review.
  *
  * [origins] is empty by default because a browser policy that arrives already permitting somebody is
  * the wrong shape of default. The rest default permissively — once an origin is trusted, restricting
