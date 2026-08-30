@@ -5,6 +5,15 @@ public object Naming {
     private val separators = Regex("[^A-Za-z0-9]+")
 
     /**
+     * The boundary inside `orderId`, so an endpoint constant reads `ORDER_ID` and not `ORDERID`.
+     *
+     * Applied only by [endpointConstant]. [enumEntry] deliberately leaves camelCase alone: it names
+     * entries after wire values that are already published, and splitting them would rename every
+     * enum a document declares in that style.
+     */
+    private val camelHump = Regex("([a-z0-9])([A-Z])")
+
+    /**
      * `categories-controller` -> `CategoriesApi`, `users` -> `UsersApi`.
      *
      * A `-controller` suffix is dropped first: it names the server class in specs generated from
@@ -39,6 +48,19 @@ public object Naming {
             else -> joined
         }
     }
+
+    /**
+     * A verb and a path as a constant name: `PATCH` + `orders/{id}/status` -> `PATCH_ORDERS_ID_STATUS`.
+     *
+     * The template braces are separators like any other punctuation, which is what makes the name
+     * readable — and also what makes it ambiguous, since `orders/{id}` and `orders/id` reduce to the
+     * same thing. `NameCollisions.kt` reports that rather than letting two identical properties into
+     * one object; `x-kotlin-endpoint` is the way out for a document that legitimately has both.
+     */
+    public fun endpointConstant(
+        method: String,
+        path: String,
+    ): String = enumEntry("${method}_${path.replace(camelHump, "$1_$2")}")
 
     public fun pascal(value: String): String =
         value

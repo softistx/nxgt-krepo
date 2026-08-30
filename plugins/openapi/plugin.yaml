@@ -1,16 +1,16 @@
 tasks:
   generate:
     action: !com.strange.openapi.plugin.generateClient
-      specFile: ${module.rootDir}/${pluginSettings.specFile}
+      # The whole list, in one reference. `plugin.yaml` has no way to name a list element —
+      # `${pluginSettings.specs.0.spec}` is not expressible — so per-spec interpolation is out and
+      # the loop lives in Kotlin. `spec` is a `Path`, which the frontend has already resolved
+      # against the module root, so there is no `${module.rootDir}/` to paste in front of it.
+      specs: ${pluginSettings.specs}
       outputDir: ${taskOutputDir}
-      packageName: ${pluginSettings.packageName}
-      client: ${pluginSettings.client}
-      groupBy: ${pluginSettings.groupBy}
-      models: ${pluginSettings.models}
-      interfacePrefix: ${pluginSettings.interfacePrefix}
-      interfaceSuffix: ${pluginSettings.interfaceSuffix}
 
 generated:
   sources:
     - language: kotlin
+      # One directory for every spec, because `generated.sources` is static too and each entry has
+      # to name a registered task output. The specs stay apart by package, not by directory.
       directory: ${tasks.generate.action.outputDir}
