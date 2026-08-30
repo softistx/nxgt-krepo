@@ -3,8 +3,12 @@ package com.strange.graphix.ktor
 import com.strange.common.serialization.lenientJson
 import com.strange.graphix.Graphix
 import com.strange.graphix.GraphixBuilder
+import com.strange.graphix.http.SubscriptionProtocol
 import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.install
+import io.ktor.server.application.pluginOrNull
 import io.ktor.server.routing.routing
+import io.ktor.server.websocket.WebSockets
 import io.ktor.util.AttributeKey
 import kotlinx.serialization.json.Json
 
@@ -33,7 +37,11 @@ val GraphQL =
         application.attributes.put(GraphixKey, engine)
         val path = pluginConfig.path
         val json = pluginConfig.json
-        application.routing { graphqlRoute(path, engine, json) }
+        val subscriptions = pluginConfig.subscriptions
+        if (subscriptions == SubscriptionProtocol.GraphqlWs && application.pluginOrNull(WebSockets) == null) {
+            application.install(WebSockets)
+        }
+        application.routing { graphqlRoute(path, engine, json, subscriptions) }
         if (pluginConfig.injectable) application.provideGraphix()
     }
 
@@ -41,6 +49,13 @@ val GraphQL =
 class GraphQLConfiguration {
     /** HTTP path for POST and GET. Default `/graphql`. */
     var path: String = "/graphql"
+
+    /**
+     * How subscriptions are served. [SubscriptionProtocol.Sse] (default) is
+     * `text/event-stream` on POST. [SubscriptionProtocol.GraphqlWs] is a WebSocket
+     * on the same path; HTTP POST of a subscription is then 400.
+     */
+    var subscriptions: SubscriptionProtocol = SubscriptionProtocol.Sse
 
     /**
      * An engine built elsewhere. When set, [schema] is ignored. Whoever created it owns it —

@@ -31,6 +31,24 @@ class GraphixAutoConfigurationTest :
                     }
             }
 
+            scenario("graphql-ws registers a WebSocket handler") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true", "stx.graphix.subscriptions=graphql-ws")
+                    .withUserConfiguration(GreetingConfiguration::class.java)
+                    .run { context ->
+                        context.getBeansOfType(GraphixWebSocketHandler::class.java).size shouldBe 1
+                    }
+            }
+
+            scenario("sse does not register a WebSocket handler") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true")
+                    .withUserConfiguration(GreetingConfiguration::class.java)
+                    .run { context ->
+                        context.getBeansOfType(GraphixWebSocketHandler::class.java).isEmpty() shouldBe true
+                    }
+            }
+
             scenario("an application's own Graphix bean wins") {
                 runner
                     .withPropertyValues("stx.graphix.enabled=true")

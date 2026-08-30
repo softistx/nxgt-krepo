@@ -9,8 +9,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
+import org.springframework.web.reactive.HandlerMapping
 import org.springframework.web.reactive.function.server.RouterFunction
 import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter
 
 /**
  * GraphQL over WebFlux, opt-in behind `stx.graphix.enabled`.
@@ -41,5 +43,22 @@ class GraphixAutoConfiguration {
     fun graphixRouter(
         graphix: Graphix,
         properties: GraphixProperties,
-    ): RouterFunction<ServerResponse> = GraphixHandler(graphix, lenientJson, properties.path).router()
+    ): RouterFunction<ServerResponse> = GraphixHandler(graphix, lenientJson, properties.path, properties.subscriptions).router()
+
+    /** graphql-ws on [GraphixProperties.path]. Absent unless `stx.graphix.subscriptions=graphql-ws`. */
+    @Bean
+    @ConditionalOnProperty(prefix = "stx.graphix", name = ["subscriptions"], havingValue = "graphql-ws")
+    fun graphixWebSocketHandler(graphix: Graphix): GraphixWebSocketHandler = GraphixWebSocketHandler(graphix, lenientJson)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "stx.graphix", name = ["subscriptions"], havingValue = "graphql-ws")
+    fun graphixWebSocketMapping(
+        handler: GraphixWebSocketHandler,
+        properties: GraphixProperties,
+    ): HandlerMapping = GraphixUpgradeMapping(properties.path, handler)
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "stx.graphix", name = ["subscriptions"], havingValue = "graphql-ws")
+    fun graphixWebSocketHandlerAdapter(): WebSocketHandlerAdapter = WebSocketHandlerAdapter()
 }

@@ -7,6 +7,7 @@ stx:
   graphix:
     enabled: true
     path: /graphql
+    subscriptions: sse   # or graphql-ws
 ```
 
 ```kotlin
@@ -39,7 +40,8 @@ operation. The HTTP handler does not yet put `ServerWebExchange` or the security
 that map — see [`docs/graphix.md`](../../../docs/graphix.md).
 
 POST and GET share the same JSON envelope as the Ktor plugin. A field error is HTTP 200 plus
-`errors[]`. Malformed JSON is HTTP 400. A subscription is `text/event-stream` on the same path.
+`errors[]`. Malformed JSON is HTTP 400. Subscriptions default to `text/event-stream`;
+`stx.graphix.subscriptions=graphql-ws` is a WebSocket on the same path.
 Keys live in
 [`docs/spring-configuration.md`](../../../docs/spring-configuration.md); the annotation vocabulary
 is [`docs/graphix.md`](../../../docs/graphix.md).

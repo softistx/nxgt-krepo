@@ -20,6 +20,13 @@
       "description": "HTTP path for POST and GET. Default /graphql.",
       "sourceType": "com.strange.graphix.spring.GraphixProperties",
       "defaultValue": "/graphql"
+    },
+    {
+      "name": "stx.graphix.subscriptions",
+      "type": "com.strange.graphix.http.SubscriptionProtocol",
+      "description": "How subscriptions are served: sse (text/event-stream on POST) or graphql-ws (WebSocket on the same path).",
+      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "defaultValue": "sse"
     }
   ]
 }

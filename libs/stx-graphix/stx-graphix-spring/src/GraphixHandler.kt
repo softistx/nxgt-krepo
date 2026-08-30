@@ -2,7 +2,13 @@ package com.strange.graphix.spring
 
 import com.strange.graphix.Graphix
 import com.strange.graphix.GraphixRequest
-import com.strange.graphix.http.*
+import com.strange.graphix.http.BadGraphixHttp
+import com.strange.graphix.http.GraphixHttpError
+import com.strange.graphix.http.GraphixHttpRequest
+import com.strange.graphix.http.GraphixHttpResponse
+import com.strange.graphix.http.SubscriptionProtocol
+import com.strange.graphix.http.toGraphixRequest
+import com.strange.graphix.http.toHttp
 import com.strange.graphix.isSubscription
 import com.strange.graphix.subscribe
 import kotlinx.coroutines.flow.map
@@ -14,11 +20,12 @@ import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.server.*
 import reactor.core.publisher.Mono
 
-/** WebFlux adapter: the same JSON envelope as Ktor, over `RouterFunction`. Subscriptions are SSE. */
+/** WebFlux adapter: the same JSON envelope as Ktor, over `RouterFunction`. */
 internal class GraphixHandler(
     private val engine: Graphix,
     private val json: Json,
     private val path: String,
+    private val subscriptions: SubscriptionProtocol = SubscriptionProtocol.Sse,
 ) {
     /** POST and GET at [path]. Field errors stay HTTP 200; malformed JSON is 400. */
     fun router(): RouterFunction<ServerResponse> =
@@ -71,6 +78,9 @@ internal class GraphixHandler(
 
     private suspend fun respond(request: GraphixRequest): ServerResponse {
         if (request.isSubscription()) {
+            if (subscriptions == SubscriptionProtocol.GraphqlWs) {
+                return badRequest("subscriptions use graphql-ws")
+            }
             val events =
                 engine.subscribe(request).map { json.encodeToString(GraphixHttpResponse.serializer(), it.toHttp()) }
             return ServerResponse
