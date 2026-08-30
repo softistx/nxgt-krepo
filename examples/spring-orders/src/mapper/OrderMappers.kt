@@ -4,7 +4,7 @@ import com.strange.common.page.Page
 import com.strange.example.orders.api.models.OrderList
 import com.strange.example.orders.api.models.OrderPage
 import com.strange.example.orders.api.models.OrderResponse
-import com.strange.example.orders.api.models.PlaceOrder
+import com.strange.example.orders.api.models.PlaceOrderRequest
 import com.strange.example.orders.model.Order
 import com.strange.example.orders.model.OrderStatus
 import com.strange.example.orders.api.models.Order as ApiOrder
@@ -59,7 +59,7 @@ fun Page<Order>.page(): OrderPage =
     )
 
 /** What a placed order starts as. The id, the status and the timestamp are the entity's defaults. */
-fun PlaceOrder.toEntity(): Order =
+fun PlaceOrderRequest.toEntity(): Order =
     Order(
         reference = reference,
         customer = customer,

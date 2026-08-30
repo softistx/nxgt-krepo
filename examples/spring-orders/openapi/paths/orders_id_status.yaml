@@ -11,7 +11,7 @@ patch:
     content:
       application/json:
         schema:
-          $ref: ../components/schemas/ChangeStatus.yaml
+          $ref: ../components/schemas/ChangeStatusRequest.yaml
   responses:
     '200':
       description: The order in its new status.

@@ -21,9 +21,48 @@ openapi/
 | --- | --- | --- |
 | `paths/` | snake_case, URL segments joined by `_`, path-template braces stripped, kebab → `_` | `/auth/refresh-token` → `auth_refresh_token.yaml` |
 | `components/schemas/` | PascalCase; the basename is the component name in the bundle | `Order.yaml` → `#/components/schemas/Order` |
+| a request body | the operation's name in PascalCase, suffixed **`Request`** | `placeOrder` → `PlaceOrderRequest.yaml` |
 | `components/responses/` | PascalCase by what the status *means*, not by its number | `ResourceDeleted.yaml` |
 | `components/parameters/` | lowercase, the parameter's own name | `cursor.yaml` |
 | bundle | always `api-docs.yaml`, sibling of `openapi.yaml`, committed | |
+
+## Naming a body, and what the suffix is doing
+
+**A request body schema is named after its operation, with a `Request` suffix.** `placeOrder` takes
+`PlaceOrderRequest`, `changeStatus` takes `ChangeStatusRequest`. Two reasons, and the second is the
+one that bites:
+
+- A schema is a noun and an `operationId` is a verb phrase, so an unsuffixed `PlaceOrder` reads as a
+  *command* — and generated, it is a Kotlin class that looks like a use case sitting next to a
+  function of nearly the same name. `service.placeOrder(PlaceOrderRequest(…))` says which is which.
+- It keeps the body's name tied to the operation it belongs to. A body is not a resource: two
+  operations on `/orders` may send different shapes, and naming both after the resource forces a
+  choice between an unhelpfully generic name and a wrong one.
+
+**Name it after the operation, not after the resource.** `PATCH /orders/{id}/status` is
+`changeStatus`, so its body is `ChangeStatusRequest` — not `UpdateOrderRequest`, which describes a
+different operation and would leave the schema and the `operationId` telling two stories. If the name
+reads wrong, the `operationId` is the thing to reconsider; the schema follows it.
+
+**`Request` and `Response` are not symmetrical here, on purpose.** `OrderResponse` is the *envelope*
+— `{ data: Order }`, matching what the controller actually returns — while `PlaceOrderRequest` is the
+body itself, unenveloped, because that is what a client sends. Do not "fix" the asymmetry by wrapping
+requests: the envelope exists so a response can carry `metadata`, and a request has none.
+
+## Reusable parameters, and one place they stop working
+
+**Every parameter used more than once is a file in `components/parameters/`**, `$ref`d from each
+operation. `id.yaml` is written once and referenced by every operation on `/orders/{id}` and
+`/orders/{id}/status`; a parameter's description, type and `required` then have one home, and a
+change to paging cannot land on three of the four operations that page.
+
+**But `$ref` them per operation, never from the path item.** OpenAPI lets a path item declare
+`parameters` that apply to all its verbs, which would let `/orders/{id}` name `id` once for both
+`get` and `delete`. **This generator ignores them**, and it does so silently: it emits
+`findOrder(): OrderResponse` and `cancelOrder()` with no `id` parameter and no warning. It was caught
+here only because a hand-written controller then failed to override anything — an API with no
+implementor to contradict it would have shipped a route that drops its path variable. Verified
+against `spring-orders` on the 3.1 document; `docs/openapi-support.md` records it.
 
 ## The root
 

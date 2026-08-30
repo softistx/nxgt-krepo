@@ -368,7 +368,35 @@ left to document order: an operation with several 2xx responses takes its return
   generator can name, so the property keeps the free-form type.
 - **Float and mixed-type enums.** Only `string` and `integer` enums become enum classes; the rest
   keep the scalar underneath, which is a visible limitation rather than a wrong one.
+- **Path-item-level `parameters`.** OpenAPI lets a path item declare parameters shared by all its
+  verbs; only an operation's own `parameters` are read. This one is worth more than a line, because
+  it is the only entry here that produces a *wrong signature* rather than a loose type — see below.
 
 An unsupported request media type is an error naming the operation, not a silently skipped endpoint
 — the same is true of a multipart body with no declared properties, and of every case above where
 the text says "failure" rather than "falls back".
+
+### Path-level parameters go missing without a word
+
+Declared on the path item, a parameter is dropped from every operation under it. Given
+
+```yaml
+# paths/orders_id.yaml
+parameters:
+  - $ref: ../components/parameters/id.yaml
+get:
+  operationId: findOrder
+  responses: { … }
+```
+
+the generator emits `findOrder(): OrderResponse` — no `id`, no warning, and an interface that
+compiles. The document is valid: `redocly lint` passes, because the spelling is correct OpenAPI.
+
+The failure therefore surfaces only where something contradicts the signature. In `spring-orders` a
+hand-written `@RestController` implements the generated interface, so it failed the build with
+`'findOrder' overrides nothing` — which is the layering earning its keep. An API with no implementor
+on that interface, or a Ktorfit client generated for a consumer, would have got a route that quietly
+drops its path variable and a 404 or a null at run time instead.
+
+**So `$ref` a shared parameter from each operation**, which costs one line per verb and is what
+`components/parameters/` is for. The `openapi-spec-first` skill states the rule; this is why.

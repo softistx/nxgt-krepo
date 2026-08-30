@@ -35,6 +35,12 @@ component.
   path file is snake_case with the braces stripped: `/orders/{id}/status` → `orders_id_status.yaml`.
 - **A path file's top level is the set of verbs**, so every verb on one URL lives in one file, and
   `$ref` targets are relative and unquoted (`../components/schemas/Order.yaml`, `./PageInfo.yaml`).
+- **A request body is named after its operation, suffixed `Request`** — `placeOrder` sends
+  `PlaceOrderRequest`, `changeStatus` sends `ChangeStatusRequest`. Not after the resource: the body
+  belongs to the operation, and two operations on one URL send different shapes.
+- **A parameter used twice is a file in `components/parameters/`, `$ref`d per operation.** Never from
+  the path item — the generator ignores path-level `parameters` and emits the operation with the
+  parameter missing, saying nothing.
 
 `references/document-layout.md` has the tree, the redocly config and a worked file of each kind.
 
