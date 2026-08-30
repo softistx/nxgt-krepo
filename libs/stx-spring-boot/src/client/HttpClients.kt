@@ -91,6 +91,23 @@ fun httpServiceFactory(
 }
 
 /**
+ * One more interface off a factory already built — `factory.withClient<IOrdersService>()`.
+ *
+ * An API split across tags generates one interface per tag, and they all speak to the same upstream
+ * over the same `WebClient`. Building a factory per interface would rebuild that client, and with it
+ * every codec, filter and converter the generated proxies need, so the second interface is where a
+ * seam quietly goes missing. Build the factory once with [httpServiceFactory], then take a client
+ * per interface from it.
+ *
+ * ```kotlin
+ * val factory = httpServiceFactory(baseUrl) { … }
+ * val orders = factory.withClient<IOrdersService>()
+ * val health = factory.withClient<IHealthService>()
+ * ```
+ */
+inline fun <reified T : Any> HttpServiceProxyFactory.withClient(): T = createClient<T>()
+
+/**
  * The upstream's error body, read as this repo's error shape, and everything else as a fallback.
  *
  * The body is read as a map rather than as `ErrorResponse` on purpose: an upstream that is not one

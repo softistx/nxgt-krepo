@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.ExchangeFunction
 import org.springframework.web.service.annotation.GetExchange
-import org.springframework.web.service.invoker.createClient
 import reactor.core.publisher.Mono
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -24,6 +23,12 @@ private interface Catalog {
     suspend fun byGrade(
         @PathVariable grade: Grade,
     ): String
+}
+
+/** A second tag against the same upstream — what an API split across tags generates. */
+private interface Warehouse {
+    @GetExchange("/stock")
+    suspend fun stock(): String
 }
 
 /**
@@ -122,12 +127,15 @@ class HttpClientsTest :
         }
 
         "one factory serves several interfaces against the same upstream" {
+            // The shape an e2e spec wants: the codecs, filters and converters a generated client
+            // needs are configured once, and each tag's interface is taken off the finished factory.
             val factory =
                 httpServiceFactory("https://catalog.test") {
                     exchangeFunction(answering(HttpStatus.OK, "ok"))
                 }
 
-            factory.createClient<Catalog>().products() shouldBe "ok"
+            factory.withClient<Catalog>().products() shouldBe "ok"
+            factory.withClient<Warehouse>().stock() shouldBe "ok"
         }
 
         "the proxy factory has an escape hatch of its own" {
