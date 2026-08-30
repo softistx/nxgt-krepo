@@ -213,7 +213,7 @@ server:
   port: 8088                       # TestServer.STX_TEST_PORT, so no client spells a URL
 spring:
   mongodb:
-    database: spring_orders_test   # its own, never the one a `./kotlin run` writes to
+    database: spring_orders_test   # a prefix: `testDatabase` appends this run's suffix
 ```
 
 There is no base spec to write: `MongoSpec` carries `@ActiveProfiles("test")`,

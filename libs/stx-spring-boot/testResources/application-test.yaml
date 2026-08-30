@@ -9,4 +9,7 @@ spring:
   mongodb:
     # `spring.mongodb`, and **not** `spring.data.mongodb` — see `MongoTestConfiguration`. This is the
     # one line an application writes; `MongoSpecTest` asserts that it arrived.
+    #
+    # A prefix, not the database: `testDatabase` appends this run's suffix, so this module's specs and
+    # `examples/spring-orders`' can share a `MONGO_TEST_URI` server without clearing each other.
     database: stx_spring_boot_test

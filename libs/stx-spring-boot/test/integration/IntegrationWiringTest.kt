@@ -15,7 +15,10 @@ import com.strange.spring.integration.mongo.MongoIntegrationAutoConfiguration
 import com.strange.spring.integration.redis.RedisIntegrationAutoConfiguration
 import com.strange.spring.integration.storage.StorageIntegrationAutoConfiguration
 import com.strange.spring.integration.storage.StorageIntegrationProperties
+import com.strange.spring.testing.UNREACHABLE_MONGO
 import com.strange.storage.ObjectStorage
+import com.strange.testing.containers.rabbitContainer
+import com.strange.testing.containers.redisContainer
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -53,7 +56,7 @@ class IntegrationWiringTest :
             mongo()
                 .withPropertyValues(
                     "stx.mongo.enabled=true",
-                    "stx.mongo.uri=mongodb://localhost:27017",
+                    "stx.mongo.uri=$UNREACHABLE_MONGO",
                     "stx.mongo.database=orders",
                 ).run { context ->
                     context.getBeanNamesForType(MongoClient::class.java).size shouldBe 1
@@ -75,7 +78,7 @@ class IntegrationWiringTest :
             mongo()
                 .withPropertyValues(
                     "stx.mongo.enabled=true",
-                    "stx.mongo.uri=mongodb://localhost:27017",
+                    "stx.mongo.uri=$UNREACHABLE_MONGO",
                     "stx.mongo.database=orders",
                 ).withUserConfiguration(OwnMongoClient::class.java)
                 .run { context ->
@@ -105,7 +108,7 @@ class IntegrationWiringTest :
             storage()
                 .withPropertyValues(
                     "stx.storage.enabled=true",
-                    "stx.storage.endpoint=http://localhost:9000",
+                    "stx.storage.endpoint=$UNREACHABLE_HTTP",
                     "stx.storage.access-key=who",
                     "stx.storage.secret-key=cares",
                 ).run { context -> context.getBeanNamesForType(ObjectStorage::class.java).size shouldBe 1 }
@@ -114,7 +117,7 @@ class IntegrationWiringTest :
         "storage: a missing credential names itself, and none of them has a default" {
             // A credential with a default is a credential in source control.
             storage()
-                .withPropertyValues("stx.storage.enabled=true", "stx.storage.endpoint=http://localhost:9000")
+                .withPropertyValues("stx.storage.enabled=true", "stx.storage.endpoint=$UNREACHABLE_HTTP")
                 .run { context -> context.failure() shouldContain "stx.storage.access-key" }
 
             with(StorageIntegrationProperties()) {
@@ -147,11 +150,9 @@ class IntegrationWiringTest :
             redis().run { context -> context.getBeanNamesForType(Redis::class.java).size shouldBe 0 }
         }
 
-        "redis: enabling it opens a connection".config(enabled = REDIS != null) {
-            // Gated on a server that is already up rather than on one this run starts: the
-            // workspace's backends do not all fit at once.
+        "redis: enabling it opens a connection".config(enabled = redisServer.available) {
             redis()
-                .withPropertyValues("stx.redis.enabled=true", "stx.redis.uri=$REDIS", "stx.redis.namespace=orders")
+                .withPropertyValues("stx.redis.enabled=true", "stx.redis.uri=${redisServer.endpoint}", "stx.redis.namespace=orders")
                 .run { context -> context.getBean(Redis::class.java).namespace shouldBe "orders" }
         }
 
@@ -159,9 +160,9 @@ class IntegrationWiringTest :
             amqp().run { context -> context.getBeanNamesForType(Amqp::class.java).size shouldBe 0 }
         }
 
-        "amqp: enabling it opens a connection".config(enabled = AMQP != null) {
+        "amqp: enabling it opens a connection".config(enabled = amqpBroker.available) {
             amqp()
-                .withPropertyValues("stx.amqp.enabled=true", "stx.amqp.uri=$AMQP", "stx.amqp.connection-name=orders")
+                .withPropertyValues("stx.amqp.enabled=true", "stx.amqp.uri=${amqpBroker.endpoint}", "stx.amqp.connection-name=orders")
                 .run { context -> context.getBeanNamesForType(Amqp::class.java).size shouldBe 1 }
         }
 
@@ -193,9 +194,28 @@ class IntegrationWiringTest :
         }
     })
 
-/** A Redis and a broker that are already up, or null. Nothing here starts a container. */
-private val REDIS: String? = System.getenv("REDIS_TEST_URI")
-private val AMQP: String? = System.getenv("AMQP_TEST_URI")
+/**
+ * An HTTP address nothing listens on, for the same reason as [UNREACHABLE_MONGO].
+ *
+ * `localhost:9000` is the workspace's MinIO, which every property in this file used to name. The
+ * credentials here are junk, so a real store would have refused them — but a wiring spec that points
+ * at a port somebody else is serving is one library change away from doing something on it.
+ */
+private const val UNREACHABLE_HTTP = "http://127.0.0.1:1"
+
+/**
+ * The two backends the specs above really do connect to, resolved the way every other spec in this
+ * repo resolves one: `stx-testing` declares them, and asking for the endpoint is what starts a
+ * container — or reuses the server `REDIS_TEST_URI` / `AMQP_TEST_URI` names.
+ *
+ * These read `System.getenv` directly until every other harness had stopped doing so. A spec gated on
+ * a variable being exported proves nothing on a machine where nobody exported it, which is the whole
+ * reason `ContainerService` defaults to a container. Two small images — Redis is ~30 MiB, RabbitMQ
+ * ~200 MiB — and neither is the Kafka cluster this file has no reason to start.
+ */
+private val redisServer = redisContainer()
+
+private val amqpBroker = rabbitContainer()
 
 private fun mongo() = runnerFor(MongoIntegrationAutoConfiguration::class.java)
 
@@ -222,5 +242,5 @@ private fun AssertableApplicationContext.failure(): String =
 @Configuration(proxyBeanMethods = false)
 private class OwnMongoClient {
     @Bean
-    fun ownClient(): MongoClient = MongoClient.create("mongodb://localhost:27017")
+    fun ownClient(): MongoClient = MongoClient.create(UNREACHABLE_MONGO)
 }

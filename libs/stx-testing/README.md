@@ -43,6 +43,38 @@ and never runs, or is refused as still-alive and takes the whole registry's init
 it. The JVM swallows both. This module shipped with exactly that bug and nothing noticed, because
 Ryuk was doing all the cleaning; three specs in `ContainerServiceTest` now pin it.
 
+## Two conventions every harness follows
+
+A container is started **once** and shared, so the two things a spec does with it — ask for its
+address, and carve out something of its own inside it — are the same two lines in eleven modules.
+They are one shape each here rather than eleven.
+
+**`requireEndpoint()`, never `endpoint!!`.** Past an `available` gate the endpoint is there, and the
+question is what happens on the day it is not. `!!` answers with a `NullPointerException` naming a
+line; this answers with `describe()` — *"mongodb: unavailable — MONGO_TEST_URI is unset and Docker is
+not reachable"*, or the exception the container start threw. That distinction is the entire reason
+`describe()` exists, and 29 call sites were throwing it away.
+
+**`TestNames` for the namespace a spec owns.** A database, a schema, a topic, a bucket, a key prefix:
+
+```kotlin
+private val databases = TestNames("stx_mongo_test", separator = "_")
+
+val database = client.getDatabase(databases.next())
+```
+
+The name carries a per-run suffix, and that is the load-bearing half. A plain counter restarts at 1
+in the next JVM, so a run that crashed leaves `stx_mongo_test_1` populated and the next run's first
+insert fails on a duplicate `_id`. This repo shipped that bug and patched it by *sweeping* every
+database matching the prefix before the first spec — which cannot tell a crashed run's leftovers from
+a **concurrent** run's, and so two suites at once deleted each other's data. A name that cannot
+collide needs no sweep, and every sweep here is gone.
+
+The trade is that a crashed run leaves its namespace behind on a server `MONGO_TEST_URI` names. That
+is the cheap side: against a container, which is the default, the server itself is thrown away at JVM
+exit. `separator` is a parameter because the namespaces disagree — `_` for SQL identifiers and Mongo
+databases, `-` for topics and buckets, `:` for Redis keys.
+
 ## The backends
 
 | | image | override | resolved value |
@@ -52,6 +84,9 @@ Ryuk was doing all the cleaning; three specs in `ContainerServiceTest` now pin i
 | `rabbitContainer()` | `rabbitmq:4-management` | `AMQP_TEST_URI` | `amqp://user:pass@host:port` |
 | `minioContainer()` | `minio/minio:latest` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `MinioEndpoint(url, accessKey, secretKey)` |
 | `kafkaContainer()` | `confluentinc/cp-kafka:latest` | `KAFKA_TEST_BOOTSTRAP` | the bootstrap servers |
+| `postgresContainer()` | `postgres:18-alpine` | `POSTGRES_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `PostgresEndpoint(uri, username, password, database)` |
+| `mysqlContainer()` | `mysql:8.4` | `MYSQL_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `MysqlEndpoint(uri, username, password, database)` |
+| `db2Endpoint()` | none — reused or skipped | `DB2_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `Db2Endpoint(uri, username, password, database)`, or `null` |
 
 **Kafka's container is one broker**, where the workspace cluster is three with
 `min.insync.replicas = 2`. So `acks = all` waits for a quorum there and for one broker here — the
@@ -81,14 +116,20 @@ spelled — live in `Backends.kt`, not in every library that talks to it. `stx-m
 needs; it does not configure a `MongoDBContainer`.
 
 ```kotlin
-fun mongoContainer(image: String = MONGO_IMAGE): ContainerService<MongoDBContainer> =
+fun mongoContainer(image: String = MONGO_IMAGE): ContainerService<MongoDBContainer, String> =
     ContainerService.declare(
         name = "mongodb",
         reusing = "MONGO_TEST_URI",
-        create = { MongoDBContainer(DockerImageName.parse(image)) },
+        create = { MongoDBContainer(DockerImageName.parse(image).asCompatibleSubstituteFor("mongo")) },
         endpointOf = MongoDBContainer::getReplicaSetUrl,
     )
 ```
+
+Two parameters, not one: the second is what the endpoint *resolves to*. Most backends answer with a
+URI and take the `endpointOf` overload above; MinIO, Postgres and MySQL need credentials alongside
+the address, so they take the `fromEnvironment`/`fromContainer` one and answer with a data class.
+`asCompatibleSubstituteFor` is what lets the image be overridden — a pinned digest, or a mirror —
+without Testcontainers refusing a name it does not recognise.
 
 Image tags match what the workspace already runs — `mongo:8` — so a machine that has the image pulls
 nothing.
@@ -96,6 +137,14 @@ nothing.
 `MongoDBContainer` rather than a bare `GenericContainer` because it initiates a single-node replica
 set, and `startTransaction` fails outright against a standalone `mongod`. That is verified, not
 assumed: `stx-mongo`'s transaction specs pass against the container with `MONGO_TEST_URI` unset.
+
+## Using one from a Spring application
+
+Not directly. `stx-spring-boot`'s `com.strange.spring.testing` wraps `mongoContainer()` in a
+`MongoConnectionDetails` bean and a `MongoSpec` base class, so an application's specs never name a
+container or a property — they extend `MongoSpec` and say which database they want in
+`application-test.yaml`. That is the same three-way resolution as everything here; what it adds is
+the one thing this module cannot know, which is how Spring is told.
 
 ## Why this is not a `testFixtures` of each library
 

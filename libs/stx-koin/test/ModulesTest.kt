@@ -56,7 +56,7 @@ class ModulesTest :
 
         feature("the Redis module").config(enabled = redis.available) {
             scenario("hands out one connection and closes it when the container stops") {
-                val app = koinApplication { modules(redisModule(RedisConfig(uri = redis.endpoint!!, namespace = "koin"))) }
+                val app = koinApplication { modules(redisModule(RedisConfig(uri = redis.requireEndpoint(), namespace = "koin"))) }
                 val connection = app.koin.get<Redis>()
 
                 connection.ping() shouldBe "PONG"
@@ -70,7 +70,7 @@ class ModulesTest :
 
         feature("the AMQP module").config(enabled = broker.available) {
             scenario("connects, though Koin cannot suspend and Amqp.connect does") {
-                val app = koinApplication { modules(amqpModule(AmqpConfig(uri = broker.endpoint!!, connectionName = "koin"))) }
+                val app = koinApplication { modules(amqpModule(AmqpConfig(uri = broker.requireEndpoint(), connectionName = "koin"))) }
                 val connection = app.koin.get<Amqp>()
 
                 connection.isOpen shouldBe true
@@ -88,9 +88,9 @@ class ModulesTest :
                         modules(
                             jpaModule(
                                 JpaConfig(
-                                    uri = postgres.endpoint!!.uri,
-                                    username = postgres.endpoint!!.username,
-                                    password = postgres.endpoint!!.password,
+                                    uri = postgres.requireEndpoint().uri,
+                                    username = postgres.requireEndpoint().username,
+                                    password = postgres.requireEndpoint().password,
                                 ),
                                 Entry::class,
                             ),
@@ -117,9 +117,9 @@ class ModulesTest :
                         modules(
                             jpaScanModule(
                                 JpaConfig(
-                                    uri = postgres.endpoint!!.uri,
-                                    username = postgres.endpoint!!.username,
-                                    password = postgres.endpoint!!.password,
+                                    uri = postgres.requireEndpoint().uri,
+                                    username = postgres.requireEndpoint().username,
+                                    password = postgres.requireEndpoint().password,
                                 ),
                                 "com.strange.koin.entity",
                             ),
@@ -139,7 +139,7 @@ class ModulesTest :
 
         feature("the Mongo module").config(enabled = mongo.available) {
             scenario("registers the client and the database over it, and closes the client") {
-                val app = koinApplication { modules(mongoModule(mongo.endpoint!!, database = "koin-spec")) }
+                val app = koinApplication { modules(mongoModule(mongo.requireEndpoint(), database = "koin-spec")) }
                 val client = app.koin.get<MongoClient>()
 
                 app.koin.get<MongoDatabase>().name shouldBe "koin-spec"
@@ -153,7 +153,7 @@ class ModulesTest :
 
         feature("the object-storage module").config(enabled = minio.available) {
             scenario("hands out a client that works, and closes it") {
-                val endpoint = minio.endpoint!!
+                val endpoint = minio.requireEndpoint()
                 val app =
                     koinApplication {
                         modules(storageModule(StorageConfig(endpoint.url, endpoint.accessKey, endpoint.secretKey)))

@@ -27,7 +27,7 @@ class AmqpPluginTest :
             scenario("gets an open connection it can take a channel from") {
                 testApplication {
                     application {
-                        install(AmqpConnection) { config = AmqpConfig(uri = broker.endpoint!!, connectionName = "spec") }
+                        install(AmqpConnection) { config = AmqpConfig(uri = broker.requireEndpoint(), connectionName = "spec") }
                         routing {
                             get("/") {
                                 val queue = call.amqp.withChannel { it.queueDeclare().queue }
@@ -43,7 +43,7 @@ class AmqpPluginTest :
                 lateinit var captured: Amqp
                 testApplication {
                     application {
-                        install(AmqpConnection) { config = AmqpConfig(uri = broker.endpoint!!) }
+                        install(AmqpConnection) { config = AmqpConfig(uri = broker.requireEndpoint()) }
                         routing {
                             get("/") {
                                 captured = call.amqp
@@ -60,7 +60,7 @@ class AmqpPluginTest :
 
         feature("a connection handed in rather than opened").config(enabled = broker.available) {
             scenario("is the one routes get, and is still open after the application stops") {
-                val mine = Amqp.connect(AmqpConfig(uri = broker.endpoint!!, connectionName = "adopted"))
+                val mine = Amqp.connect(AmqpConfig(uri = broker.requireEndpoint(), connectionName = "adopted"))
                 try {
                     lateinit var captured: Amqp
                     testApplication {

@@ -21,7 +21,7 @@ class StoragePluginTest :
 
         val server = minioContainer()
 
-        fun config(): StorageConfig = server.endpoint!!.let { StorageConfig(it.url, it.accessKey, it.secretKey) }
+        fun config(): StorageConfig = server.requireEndpoint().let { StorageConfig(it.url, it.accessKey, it.secretKey) }
 
         feature("a route reaching for the store").config(enabled = server.available) {
             scenario("gets a client that can make and drop a bucket") {

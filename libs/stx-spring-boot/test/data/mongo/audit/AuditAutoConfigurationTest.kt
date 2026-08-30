@@ -1,6 +1,7 @@
 package com.strange.spring.data.mongo.audit
 
 import com.mongodb.reactivestreams.client.MongoClients
+import com.strange.spring.testing.UNREACHABLE_MONGO
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.isActive
@@ -17,7 +18,7 @@ private class TemplateOnly {
     @Bean
     fun template(): ReactiveMongoTemplate =
         ReactiveMongoTemplate(
-            SimpleReactiveMongoDatabaseFactory(MongoClients.create("mongodb://localhost:27017"), "stx_wiring"),
+            SimpleReactiveMongoDatabaseFactory(MongoClients.create(UNREACHABLE_MONGO), "stx_wiring"),
         )
 }
 

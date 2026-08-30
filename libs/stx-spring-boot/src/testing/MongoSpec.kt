@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Import
  *
  * The only thing it adds is [MongoTestConfiguration], which answers where that MongoDB is — a
  * container, or the server `MONGO_TEST_URI` names — and which database inside it this module gets.
- * An application declares the database in `testResources/application-test.yaml` and writes no Kotlin:
+ * An application declares that database in `testResources/application-test.yaml` and writes no Kotlin:
  *
  * ```yaml
  * spring:
  *   mongodb:                            # `spring.mongodb`, not `spring.data.mongodb` — Boot 4 split them
- *     database: spring_orders_test      # its own, and never the one a `./kotlin run` writes to
+ *     database: spring_orders_test      # a prefix: `testDatabase` appends this run's suffix
  * ```
  *
  * ```kotlin

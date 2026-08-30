@@ -629,7 +629,7 @@ server:
   port: 8088                       # TestServer.STX_TEST_PORT, so a client needs no URL spelled out
 spring:
   mongodb:
-    database: spring_orders_test   # its own, and never the one a `./kotlin run` writes to
+    database: spring_orders_test   # a prefix: `testDatabase` appends this run's suffix
 ```
 
 That is the whole surface. `MongoSpec` is `@ActiveProfiles("test")` plus
@@ -652,6 +652,23 @@ reported by nothing, and leaves the driver on `MongoProperties.DEFAULT_URI` — 
 which on a developer machine is a real server that answers. `examples/spring-orders` was doing
 exactly that, container and all, and its suite passed the whole time. A bean is asked for by type and
 cannot be misspelled; `MongoSpecTest` pins the prefix so the next rename fails loudly.
+
+**The database is the run's, and it is given back.** What `application-test.yaml` names is a prefix:
+`testDatabase` appends `stx-testing`'s run suffix, and a `BeanPostProcessor` rewrites
+`MongoProperties.database` with the result before anything reads it. Both halves are load-bearing.
+The suffix is the convention every harness here follows — a fixed name on a server
+`MONGO_TEST_URI` points at is shared with whatever else is running, and these specs empty
+collections, so two suites at once would clear each other's; a suite run twice would also find its
+migrations already recorded and never re-seed what the first run cleared. And the *post-processor*
+rather than a name spliced into the URI alone, because
+`DataMongoReactiveAutoConfiguration.reactiveMongoDatabaseFactory` reads `MongoProperties.getDatabase()`
+first and only falls back to the connection string — so the URI-only version left the driver on one
+database and `ReactiveMongoTemplate` on another, which is how `MongoSpecTest` found it. Then
+`MongoTestCleanup` drops that database at JVM exit, as a shutdown hook and not a bean's destroy
+method: the database belongs to the run, and Spring's context cache may close one context while
+another is still writing. Against a container it costs a connection and nothing else; against the
+workspace's own replica set it is the difference between leaving one database per run behind and
+leaving none.
 
 **The port is not a constant anybody keeps in sync.** `TestServer.port` starts at
 `STX_TEST_PORT` — what `DEFINED_PORT` binds and what a spec body reads before any context exists —

@@ -1,6 +1,7 @@
 package com.strange.jpa
 
 import com.strange.testing.containers.PostgresEndpoint
+import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.postgresContainer
 import io.vertx.core.Vertx
 import io.vertx.pgclient.PgBuilder
@@ -10,7 +11,6 @@ import io.vertx.sqlclient.PoolOptions
 import io.vertx.sqlclient.Tuple
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 /**
@@ -29,9 +29,16 @@ import kotlin.reflect.KClass
 internal object JpaTestDatabase {
     private val postgres = postgresContainer()
 
-    private val schemas = AtomicInteger()
+    /**
+     * A schema per call, and one no other run will pick — see [TestNames].
+     *
+     * `stx_jpa_test`, not the name this and [MySqlTestDatabase] both used to issue: two
+     * independent counters spelling one prefix means the third schema of each run is two
+     * different things the moment both are pointed at a single server.
+     */
+    private val schemas = TestNames("stx_jpa_test", separator = "_")
 
-    val endpoint: PostgresEndpoint get() = requireNotNull(postgres.endpoint) { postgres.describe() }
+    val endpoint: PostgresEndpoint get() = postgres.requireEndpoint()
 
     /** Whether a server answered — checked once, so a machine without one skips instead of hanging. */
     val available: Boolean by lazy {
@@ -51,7 +58,7 @@ internal object JpaTestDatabase {
      * Hibernate to create in it.
      */
     suspend fun <T> withSchema(block: suspend (String) -> T): T {
-        val schema = "shared_jpa_test_${schemas.incrementAndGet()}"
+        val schema = schemas.next()
         return withClient { client ->
             client.ask("drop schema if exists $schema cascade")
             client.ask("create schema $schema")
