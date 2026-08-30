@@ -2,13 +2,12 @@ package com.strange.graphix.execute
 
 import com.strange.graphix.GraphixException
 import com.strange.graphix.schema.GraphQLContext
+import com.strange.graphix.schema.TypeFieldMeta
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.future.future
 import org.dataloader.DataLoaderFactory
 import org.dataloader.DataLoaderRegistry
 import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
 import kotlin.reflect.full.callSuspendBy
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.instanceParameter
@@ -16,9 +15,7 @@ import kotlin.reflect.full.valueParameters
 
 internal data class RegisteredLoader(
     val name: String,
-    val instance: Any,
-    val function: KFunction<*>,
-    val keysParameter: KParameter,
+    val loadBatch: suspend (keys: Set<Any>, context: Map<KClass<*>, Any>) -> Map<Any, Any>,
 )
 
 internal fun dataLoaderRegistry(
@@ -31,23 +28,25 @@ internal fun dataLoaderRegistry(
         registry.register(
             loader.name,
             DataLoaderFactory.newMappedDataLoader<Any, Any> { keys ->
-                scope.future { loader.load(keys, context) }
+                scope.future { loader.loadBatch(keys, context) }
             },
         )
     }
     return registry
 }
 
-private suspend fun RegisteredLoader.load(
+internal suspend fun loadBatchMapping(
+    field: TypeFieldMeta,
     keys: Set<Any>,
     context: Map<KClass<*>, Any>,
 ): Map<Any, Any> {
-    val arguments = LinkedHashMap<KParameter, Any?>()
+    val function = field.function
+    val arguments = LinkedHashMap<kotlin.reflect.KParameter, Any?>()
     val instanceParameter =
         function.instanceParameter
             ?: error("${function.name} is not a member function")
-    arguments[instanceParameter] = instance
-    arguments[keysParameter] = keys.toList()
+    arguments[instanceParameter] = field.instance
+    arguments[field.parentParameter] = keys.toList()
     function.valueParameters.forEach { parameter ->
         if (parameter.findAnnotation<GraphQLContext>() != null) {
             val classifier =
