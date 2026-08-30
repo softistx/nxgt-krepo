@@ -93,5 +93,5 @@ like DI". The first is a service locator. The second makes a singleton look requ
 
 ## What this slice does not do
 
-Code generation, a GraphQL skill, schema-first SDL, WebSocket (`graphql-ws`), Federation, a
-client. Those are later phases.
+Code generation, a GraphQL skill, schema-first SDL, Federation, a client. Those are later
+phases.

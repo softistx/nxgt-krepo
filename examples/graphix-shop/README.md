@@ -17,7 +17,8 @@ POST /graphql
 { "query": "subscription { productAdded { name price } }" }
 ```
 
-The subscription is `text/event-stream` on the same path.
+The subscription is `text/event-stream` on the same path (`subscriptions = Sse`, the default).
+`subscriptions = GraphqlWs` serves `graphql-ws` on that path instead.
 
 In-memory, no database. The point is the plugin: `install(GraphQL) { schema { query(catalog); mutation(catalog); subscription(catalog); type(catalog) } }`.
 `Catalog` is the store, the roots and the type fields: `reviews` is a `@BatchMapping` on Product, one
