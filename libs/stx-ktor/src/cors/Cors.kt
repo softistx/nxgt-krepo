@@ -19,9 +19,10 @@ import io.ktor.server.plugins.cors.routing.CORS
  * cors(policy)
  * ```
  *
- * **The policy is the shared type on purpose.** `stx-spring` builds Spring's `CorsConfiguration`
- * from the same one, so an application that moves between the two frameworks keeps its origins, its
- * methods and its configuration keys. CORS is a browser policy, not a web-framework feature.
+ * **The policy is the shared type on purpose.** `stx-spring-boot` builds Spring's
+ * `CorsConfiguration` from the same one, so an application that moves between the two frameworks
+ * keeps its origins, its methods and its configuration keys. CORS is a browser policy, not a
+ * web-framework feature.
  *
  * [CorsPolicy.validate] runs first, so a wildcard origin with credentials fails here while the
  * application is starting rather than on somebody's first preflight.

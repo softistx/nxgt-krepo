@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 /**
- * An order book over MongoDB — the smallest thing that shows `stx-spring` end to end.
+ * An order book over MongoDB — the smallest thing that shows `stx-spring-boot` end to end.
  *
  * ```
  * MONGO_URI=mongodb://localhost:27017 ./kotlin run -m spring-orders
@@ -16,8 +16,8 @@ import org.springframework.boot.runApplication
  * an application writes is its own routes and its own documents.
  *
  * `@SpringBootApplication` and not `@ComponentScan` + `@ConfigurationPropertiesScan` + the rest:
- * `stx-spring` registers itself through `AutoConfiguration.imports`, so nothing here has to name a
- * package of somebody else's.
+ * `stx-spring-boot` registers itself through `AutoConfiguration.imports`, so nothing here has to
+ * name a package of somebody else's.
  */
 @SpringBootApplication
 class OrdersApplication

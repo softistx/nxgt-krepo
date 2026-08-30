@@ -1,6 +1,6 @@
 # spring-orders
 
-An order book over MongoDB — the smallest thing that shows `stx-spring` end to end.
+An order book over MongoDB — the smallest thing that shows `stx-spring-boot` end to end.
 
 ```
 MONGO_URI=mongodb://localhost:27017/orders ./kotlin run -m spring-orders
@@ -111,5 +111,5 @@ reason: nobody is signed in.
 
 No `stx-mongo`, `stx-jpa`, `stx-redis`, `stx-kafka`, `stx-amqp` or `stx-storage`. Those are the
 `integration/` package — one auto-configuration each, opt-in the same way — and each needs its own
-server to demonstrate. `libs/stx-spring/README.md` has the list and
+server to demonstrate. `libs/stx-spring-boot/README.md` has the list and
 `docs/spring-configuration.md` every key.

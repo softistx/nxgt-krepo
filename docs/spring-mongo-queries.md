@@ -1,12 +1,12 @@
-# What a stx-spring Mongo query may say
+# What a stx-spring-boot Mongo query may say
 
 The vocabulary `com.strange.spring.data.mongo` adds to Spring Data Reactive Mongo — a predicate, a
-filter operator, a page. This is the half of `libs/stx-spring` that gains an entry every phase, so it
-lives here rather than in the module README, which answers *why the integration is shaped this way*
-and stays roughly the size it is.
+filter operator, a page. This is the half of `libs/stx-spring-boot` that gains an entry every phase,
+so it lives here rather than in the module README, which answers *why the integration is shaped this
+way* and stays roughly the size it is.
 
-[`libs/stx-spring/README.md`](../libs/stx-spring/README.md) has the rest: the opt-in model, the
-error and locale decisions, and the seven library integrations.
+[`libs/stx-spring-boot/README.md`](../libs/stx-spring-boot/README.md) has the rest: the opt-in
+model, the error and locale decisions, and the seven library integrations.
 [`docs/spring-configuration.md`](spring-configuration.md) is the other half of this one — every
 `stx.*` key an application may set.
 

@@ -28,7 +28,7 @@ const val KEY_REFERENCE_TAKEN = "orders.reference-taken"
  * Reading and writing orders.
  *
  * A plain `@Service` over `ReactiveMongoTemplate` — there is no repository interface, and nothing in
- * `stx-spring` provides a base class to extend. What a base class would have earned is here as
+ * `stx-spring-boot` provides a base class to extend. What a base class would have earned is here as
  * extensions instead: `findPage<Order>(window)` needs no `KClass` because it is `reified`, and a
  * class cannot be.
  */

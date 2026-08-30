@@ -1,13 +1,13 @@
 product: jvm/app
-description: "A demo order book on stx-spring: functional WebFlux routes, keyset paging, an audit trail and two migrations"
+description: "A demo order book on stx-spring-boot: functional WebFlux routes, keyset paging, an audit trail and two migrations"
 
 dependencies:
   # The library this example is about: the error handler, the web helpers, the Mongo criteria and
   # filter grammar, the audit trail and the migration runner. It exports stx-i18n and stx-common,
   # so `Messages`, `Page` and `ApiException` come with it.
-  - //libs/stx-spring
+  - //libs/stx-spring-boot
 
-  # Spring Data Reactive Mongo is `compile-only` in stx-spring — a package guarded by
+  # Spring Data Reactive Mongo is `compile-only` in stx-spring-boot — a package guarded by
   # `@ConditionalOnClass` is dark until the application adds the library itself. This is the
   # application adding it, and it is the whole demonstration of that rule.
   - $spring.boot.starter.data.mongodb.reactive

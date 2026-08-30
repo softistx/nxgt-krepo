@@ -24,7 +24,7 @@ What exists:
 | `libs/stx-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
 | `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
 | `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
-| `libs/stx-spring` | Spring Boot integration for the libraries here, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, and every auto-configuration opt-in behind `stx.*` |
+| `libs/stx-spring-boot` | Spring Boot integration for the libraries here, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, and every auto-configuration opt-in behind `stx.*` |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `libs/stx-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
@@ -32,7 +32,7 @@ What exists:
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
 | `examples/jpa-shop` | A Ktor catalogue over Postgres showing `stx-jpa`'s CRUD extensions and audit layer |
-| `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring` with no configuration class: functional routes, translated failures, keyset paging, an audit trail and two migrations |
+| `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring-boot` with no configuration class: functional routes, translated failures, keyset paging, an audit trail and two migrations |
 | `examples/material-demo` | The `stx-material` catalogue — one Compose Multiplatform app in three modules: `md-catalog` holds every story, `md-desktop` and `md-android` are launchers |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
@@ -291,6 +291,16 @@ so the directory name *is* the artifact name and there is no second place to kee
 module's `description:` becomes the POM `<description>`, which is the other reason every library has
 one.
 
+**`stx-spring-boot` is the one library not named `stx-<technology>`, and the suffix is deliberate.**
+Spring reserves the `spring-boot*` prefix for itself and asks a third party for its own namespace,
+naming an auto-configuration module `<ns>-spring-boot` and a dependency-only aggregator
+`<ns>-spring-boot-starter`. This module is the first: it ships `AutoConfiguration.imports` and the
+configuration metadata, and every optional library behind it is `compile-only`, so it hands a
+consumer no opinionated dependencies — which is the one job a starter has. Merging the two is
+allowed only for an auto-configuration with no optional features, and this one is almost entirely
+optional features. `stx-spring` was also the wrong half of the name: nothing here works outside
+Spring Boot.
+
 ```bash
 ./kotlin publish -m stx-mongo --transitive mavenLocal    # one library and what it depends on
 ./kotlin publish $(ls libs | sed 's/^/-m /') mavenLocal  # all of them
@@ -422,8 +432,8 @@ a library cannot opt out. The drivers do not agree here either: Lettuce and the 
 a second close, the RabbitMQ client throws. Any new `AutoCloseable` in these libraries closes through
 the guard, so that all of it stays a question of tidiness rather than of correctness.
 
-`libs/stx-spring` is the same seam for Spring that `stx-ktor` is for Ktor, and it follows the same
-`compile-only` rule for the same reason. Two things about it are specific to this toolchain and
+`libs/stx-spring-boot` is the same seam for Spring that `stx-ktor` is for Ktor, and it follows the
+same `compile-only` rule for the same reason. Two things about it are specific to this toolchain and
 neither is guessable:
 
 - **Nothing it registers is on until a property asks for it.** Every bean is
@@ -750,8 +760,8 @@ the same each time, and the mistakes are the same each time too.
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
-  | `libs/stx-spring/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, and why the locale comes off the exchange |
-  | `docs/spring-mongo-queries.md` | What a stx-spring Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
+  | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, and why the locale comes off the exchange |
+  | `docs/spring-mongo-queries.md` | What a stx-spring-boot Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
   | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
   | `libs/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |

@@ -1,4 +1,4 @@
-# stx-spring
+# stx-spring-boot
 
 Spring Boot integration for the libraries here — the same job `stx-ktor` does for Ktor, and the same
 shape: one package per concern, one module for all of them.
@@ -19,8 +19,8 @@ com.strange.spring.integration  one auto-configuration per stx-* library
 class at all**, whose whole wiring is `stx.*` lines in `application.yaml`, and whose spec drives it
 over HTTP against a real MongoDB.
 
-An application needs nothing beside `//libs/stx-spring` to use any of this. The one dependency worth
-knowing about is `kotlinx-coroutines-reactor`, which is `exported` deliberately: `body<T>()`,
+An application needs nothing beside `//libs/stx-spring-boot` to use any of this. The one dependency
+worth knowing about is `kotlinx-coroutines-reactor`, which is `exported` deliberately: `body<T>()`,
 `existsBy<T>()` and `findAsFlow<T>()` are `inline`, so the `awaitSingle`/`asFlow` calls in them are
 compiled into the *caller* and have to resolve on the caller's own classpath.
 
@@ -512,8 +512,8 @@ Every one of them is the same shape, and the shape is the point:
 
 - **`@ConditionalOnClass`**, so the `compile-only` dependency stays optional at runtime. A package
   nobody added the library for is dark.
-- **`@ConditionalOnProperty` with no `matchIfMissing`.** Putting `stx-spring` on a classpath opens no
-  connection to anything.
+- **`@ConditionalOnProperty` with no `matchIfMissing`.** Putting `stx-spring-boot` on a classpath
+  opens no connection to anything.
 - **`@ConditionalOnMissingBean` on every bean**, which is how a deployment sets the things this
   module has no opinion about. TLS, pool sizes and read concerns are not properties here; declaring
   your own `MongoClient` bean is the answer, and the `MongoDatabase` is still built over it rather
@@ -582,8 +582,8 @@ That is not theoretical. `ErrorAutoConfigurationTest` found no `ValidationExcept
 first run, because `compile-only` had done exactly what it says — which is what a consumer without
 validation sees.
 
-Verify it with `./kotlin show dependencies -m stx-spring`: a compile-only entry is in the COMPILE
-scope and absent from RUNTIME.
+Verify it with `./kotlin show dependencies -m stx-spring-boot`: a compile-only entry is in the
+COMPILE scope and absent from RUNTIME.
 
 ## Where to read next
 
