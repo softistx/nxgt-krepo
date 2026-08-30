@@ -77,7 +77,12 @@ private fun typeField(
             throw GraphixException("@Batch ${function.name} cannot have GraphQL arguments")
         }
     }
-    val graphqlType = if (batched) function.returnType.batchPayload() else function.returnType
+    val graphqlType =
+        if (batched) {
+            function.returnType.batchPayload()
+        } else {
+            function.returnType.unwrapAsync()
+        }
     return TypeFieldMeta(
         instance = instance,
         function = function,
@@ -102,6 +107,13 @@ internal fun KType.listElement(): KType? {
     val classifier = classifier as? KClass<*> ?: return null
     if (!List::class.java.isAssignableFrom(classifier.java)) return null
     return arguments.singleOrNull()?.type
+}
+
+internal fun KType.unwrapAsync(): KType {
+    val classifier = classifier as? KClass<*> ?: return this
+    if (!java.util.concurrent.CompletionStage::class.java.isAssignableFrom(classifier.java)) return this
+    return arguments.singleOrNull()?.type
+        ?: throw GraphixException("CompletionStage needs a type argument: $this")
 }
 
 internal fun KType.batchPayload(): KType {

@@ -40,7 +40,10 @@ internal fun root(
             }
             val output =
                 types.output(
-                    if (kind == RootKind.SUBSCRIPTION) function.returnType.subscriptionElement() else function.returnType,
+                    when (kind) {
+                        RootKind.SUBSCRIPTION -> function.returnType.subscriptionElement()
+                        else -> function.returnType.unwrapAsync()
+                    },
                 )
             fields +=
                 fieldDefinition(
@@ -48,7 +51,7 @@ internal fun root(
                     fieldName,
                     output,
                     types,
-                    skip = { it.isGraphQLContext() || it.isLoad() },
+                    skip = { it.isGraphQLContext() },
                 )
             fetchers += FieldCoordinates.coordinates(name, fieldName) to fetcher(instance, function)
         }

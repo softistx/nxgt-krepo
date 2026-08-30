@@ -2,8 +2,8 @@ package com.strange.graphix.spring
 
 import com.strange.graphix.GraphixBuilder
 import com.strange.graphix.schema.Batch
+import com.strange.graphix.schema.BatchLoading
 import com.strange.graphix.schema.Field
-import com.strange.graphix.schema.Loader
 import com.strange.graphix.schema.Mutation
 import com.strange.graphix.schema.Query
 import com.strange.graphix.schema.Subscription
@@ -17,5 +17,5 @@ internal fun GraphixBuilder.addController(instance: Any) {
     if (functions.any { it.hasAnnotation<Mutation>() }) mutation(instance)
     if (functions.any { it.hasAnnotation<Subscription>() }) subscription(instance)
     if (functions.any { it.hasAnnotation<Field>() || it.hasAnnotation<Batch>() }) type(instance)
-    if (functions.any { it.hasAnnotation<Loader>() }) loader(instance)
+    if (functions.any { it.hasAnnotation<BatchLoading>() }) loader(instance)
 }

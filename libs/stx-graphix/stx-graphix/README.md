@@ -78,9 +78,10 @@ arguments. That is why a Spring mutation that needs `OrderService` takes it on t
 constructor: the controller *is* the Spring bean, and the fetcher holds that bean for the life
 of the engine.
 
-`@Field` is a per-parent resolver. `@Batch` is a DataLoader keyed by the parent. `@Loader` is a
-named DataLoader keyed by `K`; `@Load` injects the loaded value into a resolver. Graphix never
-hands a `DataLoader` out.
+`@Field` is a per-parent resolver. `@Batch` is a DataLoader wired as that field. `@BatchLoading`
+is a named DataLoader keyed by the parent source (`List<Product>` → `Map<Product, T>`). A field
+that needs source or arguments takes `@GraphQLContext dfe: DataFetchingEnvironment` and may
+`getDataLoader(name).load(source)`.
 
 Per-request state is the other bag. `@GraphQLContext` reads `Graphix.execute(..., context)` by
 `KClass`. Mixing the two is the usual mistake: looking up `ApplicationContext` from a resolver

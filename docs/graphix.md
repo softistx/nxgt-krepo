@@ -15,8 +15,7 @@ in the module README, which answers *why the library is shaped this way*.
 | `@Subscription` | function on a class passed to `subscription(...)` | field on `Subscription` |
 | `@Field` | function on a class passed to `type(...)` | extra field on the parent type |
 | `@Batch` | function on a class passed to `type(...)` | extra field, loaded through DataLoader |
-| `@Loader` | function on a class passed to `loader(...)` (or already registered as query/type) | named DataLoader, keyed by `K` |
-| `@Load("name")` | resolver parameter | value from that DataLoader; not a GraphQL argument |
+| `@BatchLoading` | function on a class passed to `loader(...)` (or already registered as query/type) | named DataLoader keyed by the parent source |
 
 The GraphQL field name is `@Query(name=…)` / `@Mutation(name=…)` / `@Subscription(name=…)` if
 set, otherwise `@GraphQLName` on the function, otherwise the Kotlin name.
@@ -86,41 +85,44 @@ Graphix {
 }
 ```
 
-`@Batch` is a DataLoader keyed by the parent object. `@Loader` is a **named** DataLoader keyed
-by `K` (`List<K>` in, `Map<K, V>` out). A resolver parameter annotated `@Load("reviews")` is
-filled with `V` after `load(key)` — Graphix never hands out a `DataLoader`. `from` names the
-parent property or GraphQL argument used as the key; empty means the parent itself on a type
-field, or the first argument on a root.
+`@Batch` is a DataLoader wired as the field itself (one call per operation level, keyed by
+parent). `@BatchLoading` is a **named** DataLoader keyed by the same parent (the GraphQL
+source). The parameter is the sources of this level — `source: List<Product>` — and the return
+is `Map<Product, T>`. A single `Product` is N+1; Graphix refuses it.
+
+A `@Field` that needs the current field's source or arguments takes
+`@GraphQLContext dfe: DataFetchingEnvironment`. That DFE is **this field**, not an entry in
+`execute`'s context map. Return `CompletableFuture` from `dfe.getDataLoader(name).load(source)`
+directly — wrapping `load` in `future { }` never completes.
 
 ```kotlin
-class ProductLoaders(
+class ReviewLoaders(
     private val store: ReviewStore,
 ) {
-    @Loader
-    suspend fun reviews(ids: List<String>): Map<String, List<Review>> = store.forIds(ids)
+    @BatchLoading
+    suspend fun reviews(source: List<Product>): Map<Product, List<Review>> =
+        store.forProducts(source)
 }
 
 class ProductFields {
     @Field
     fun reviews(
         product: Product,
-        @Load("reviews", from = "id") loaded: List<Review>,
-    ): List<Review> = loaded
+        @GraphQLContext dfe: DataFetchingEnvironment,
+    ): CompletableFuture<List<Review>> =
+        dfe.getDataLoader<Product, List<Review>>("reviews").load(product)
 }
 
 Graphix {
     query(ProductQueries(store))
     type(ProductFields())
-    loader(ProductLoaders(reviews))
+    loader(ReviewLoaders(reviews))
 }
 ```
 
-The DataFetcher calls `load(key)` immediately and runs the Kotlin function afterwards. Putting
-`load` inside `future { }` is the hang graphql-java warns about; Graphix does not do that.
-
-`@Batch` cannot take GraphQL arguments — close over them, or use `@Field` with `@Load`. A
-`@Field` / `@Batch` name that collides with a property fails schema build; `@GraphQLIgnore`
-the property if the resolver should own the field.
+`@Batch` cannot take GraphQL arguments — close over them, or use `@Field`. A `@Field` / `@Batch`
+name that collides with a property fails schema build; `@GraphQLIgnore` the property if the
+resolver should own the field.
 
 A `@Subscription` function returns a stream of `T`, not `T` itself. Collect it with
 `Graphix.subscribe`, which is a `Flow<GraphixResult>` — one item per event, cancelled when the
