@@ -1,0 +1,28 @@
+product: jvm/lib
+description: "GraphQL for a Kotlin coroutine service: annotations, kotlinx.serialization, suspending execution over graphql-java"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Json and CloseGuard — variables decode through the same lenient Json the rest of the stack uses
+  - //libs/stx-common: exported
+  # GraphQLSchema and ExecutionResult leak into this module's public types the way Session does in stx-jpa
+  - $libs.graphql.java: exported
+  - $libs.kotlinx.serialization: exported
+  - $libs.kotlinx.coroutines.core: exported
+  # Annotated resolver functions are read reflectively at schema build. Not exported: an application
+  # writes the annotations this module defines and never touches a KFunction.
+  - $libs.kotlin.reflect
+  # `future { }`, the CompletableFuture bridge graphql-java's engine speaks. Internal to execute.
+  - $libs.kotlinx.coroutines.jdk8
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    serialization: json
