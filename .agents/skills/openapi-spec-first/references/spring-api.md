@@ -37,7 +37,7 @@ public interface IOrdersService {
 
   @PostExchange(url = "orders", contentType = "application/json")
   @ApiOperation(id = "placeOrder")
-  public suspend fun placeOrder(@RequestBody body: PlaceOrder): OrderResponse
+  public suspend fun placeOrder(@RequestBody body: PlaceOrderRequest): OrderResponse
 
   @GetExchange(url = "orders")
   @ApiOperation(id = "findOrders")
@@ -80,7 +80,7 @@ class OrderController(
 
     @ResponseStatus(HttpStatus.CREATED)
     override suspend fun placeOrder(
-        @RequestBody body: PlaceOrder,
+        @RequestBody body: PlaceOrderRequest,
     ) = service.placeOrder(body)
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -114,7 +114,7 @@ class OrderService(
                 ),
             ).page()
 
-    override suspend fun placeOrder(body: PlaceOrder): OrderResponse {
+    override suspend fun placeOrder(body: PlaceOrderRequest): OrderResponse {
         if (orders.existsByReference(body.reference)) {
             throw ApiException.conflict(KEY_REFERENCE_TAKEN, mapOf("reference" to body.reference))
         }
@@ -233,15 +233,15 @@ class OrderControllerTest(
 
     feature("POST /orders") {
         scenario("a placed order comes back with the id it was given") {
-            orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "lovelace", total = 12_000))
+            orders.placeOrder(PlaceOrderRequest(reference = "C-3001", customer = "lovelace", total = 12_000))
                 .data.status shouldBe OrderStatus.PENDING
         }
 
         scenario("a reference already taken is the 409 the document declares") {
-            orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "lovelace", total = 12_000))
+            orders.placeOrder(PlaceOrderRequest(reference = "C-3001", customer = "lovelace", total = 12_000))
 
             shouldThrow<ErrorResponseException> {
-                orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "someone else", total = 1))
+                orders.placeOrder(PlaceOrderRequest(reference = "C-3001", customer = "someone else", total = 1))
             }.error.code shouldBe "orders.reference-taken"
         }
     }
