@@ -102,8 +102,13 @@ contract. It is `nxgt-rest`'s convention; what differs here is that nobody write
 - **Authentication goes in the `headers` hook**, which runs per request —
   `httpServiceFactory(baseUrl, { it.setBearerAuth(token) })`, as `nxgt-rest` does. `defaultHeaders`
   would pin the first caller's token onto every later call.
-- **The wiring lives in one test-scoped fixture** — base URL, factory, `WebTestClient`, per-run
-  database — not repeated per spec: `nxgt-rest`'s `helpers/TestHelper.kt`, here `test/OrdersApi.kt`.
+- **Let Spring start the application.** `@ActiveProfiles("test")` +
+  `@SpringBootTest(webEnvironment = DEFINED_PORT)` on a base spec, `SpringExtension` in
+  `io.kotest.provided.ProjectConfig`, and the beans a spec needs in its constructor. No
+  `SpringApplicationBuilder`, no context to close, no port to discover — and the context is cached,
+  so the application starts once for the module. The base URL is a constant because the port is.
+- **The rest of the wiring is one test helper** — the factory, a `WebTestClient`, the cleanup —
+  not repeated per spec: `nxgt-rest`'s `helpers/TestHelper.kt`, here `test/TestHelper.kt`.
 - **One spec per controller, features named after the route** — `feature("POST /orders")` — so a
   failure names the endpoint and the list reads as the surface the document declares.
 - **A documented failure is `shouldThrow<ErrorResponseException>`** on its `status` and its `code`,

@@ -55,7 +55,10 @@ implemented yet.
 | `mapper/OrderMappers.kt` | The document's types on one side, the database's on the other |
 | `migration/V1Seed.kt`, `migration/V2Tags.kt` | Two migrations, and how the class name becomes the version |
 | `resources/locales/` | Two catalogs. Every key a handler can raise has text in both |
-| `test/OrdersApi.kt` | The fixture: the application on a real port, a database per spec, and the generated interfaces as clients |
+| `testResources/application-test.yaml` | The `test` profile: the port the specs dial, and the three keys they override |
+| `test/OrdersSpec.kt` | The bootstrap: `@SpringBootTest` on a base spec, and where MongoDB is resolved |
+| `test/ProjectConfig.kt` | The one file that makes a Kotest spec a Spring test |
+| `test/TestHelper.kt` | The generated interfaces as clients, a `WebTestClient`, and the cleanup |
 | `test/OrderControllerTest.kt` | The controller end to end, through the interface it implements — one feature per route |
 | `test/OrdersApplicationTest.kt` | What a typed client cannot say: the envelope, the translations, the migrations, the audit trail |
 | `test/ErrorResponseShapeTest.kt` | That the document's `ErrorResponse` is the one the server actually writes |
@@ -126,8 +129,9 @@ the runner records each in `migrations` on success so it never runs again. Two t
 easy to get wrong: there is no `rollback` — a migration that needs undoing is undone by the next one,
 which is a thing somebody reviewed — and the runner is **not a startup gate**. It listens for
 `ApplicationReadyEvent` and suspends, and Spring does not wait for a suspending listener, so the
-records appear shortly after the port opens rather than before it. `OrdersApi.ready()` polls for them for
-exactly that reason, before any spec asserts anything.
+records appear shortly after the port opens rather than before it. `awaitMigrations()` polls for them in
+`beforeSpec` for exactly that reason: the seed would otherwise land in the middle of whichever
+scenario went first.
 
 **The audit trail is one annotation.** `@Auditable` on `Order` and `stx.data.mongo.audit.enabled` in
 the yaml; nothing in `OrderService` mentions it. Every save appends a version to `audits` carrying
@@ -143,9 +147,10 @@ side can drift from it. Features are named after the route, as in `nxgt-rest`, a
 failure is asserted on its status and its `code` rather than on its message, which is translated.
 
 The client is not this module's: `stx-spring-boot` has `httpServiceFactory` and `withClient`, and
-`OrdersApi` adds only what a *generated* client needs on top — the enum conversion service and the
+`TestHelper` adds only what a *generated* client needs on top — the enum conversion service and the
 request-values processor belong to the proxy, the kotlinx codecs and `apiErrorFilter` to the
-`WebClient`, and none of the four fails at build time when left out. One factory serves both tags.
+`WebClient`, and none of the four fails at build time when left out — one factory, then a client
+per tag with `withClient`.
 `OrdersApplicationTest` keeps a `WebTestClient` for the claims the contract has no name for: the
 envelope's JSON shape, the same 404 in two languages, and the 400 from a filter nobody can read.
 
@@ -161,7 +166,7 @@ the kotlinx style, and a `date-time` there would silently degrade every typed fa
 `stx.data.mongo.enabled` the converters are absent and this field fails at *query* time with
 `Can't find a codec` — not at insert time, and not at startup. A demo that used
 `java.time.Instant` would boot and pass and prove nothing, so this one uses the type that actually
-needs the line in the yaml, and `OrdersApplicationTest` reads the seeded orders back to prove it.
+needs the line in the yaml, and `OrdersApplicationTest` writes an order and reads it back to prove it.
 
 `reference` is stored as `ref` for a related reason: a keyset cursor carries the *stored* field
 name, so sorting on a renamed property only works because the cursor is built from the mapping
@@ -177,19 +182,25 @@ the default in `application.yaml`; `MONGO_URI` overrides it.
 ./kotlin test -m spring-orders
 ```
 
-The specs need no server of their own: `MONGO_TEST_URI` reuses one that is already up, and otherwise
-`stx-testing` starts a `mongo:8` container for the run and stops it afterwards. Each spec runs
-against a database of its own, dropped when it ends — the server is usually somebody else's, and a
-run that reuses one has to leave it as it found it. With no Docker and no `MONGO_TEST_URI` they
-report skipped rather than failing.
+**The specs start nothing themselves.** `@SpringBootTest(webEnvironment = DEFINED_PORT)` on
+`OrdersSpec` builds the application, binds the port `application-test.yaml` names, and autowires
+what a spec asks for into its constructor; `ProjectConfig` registers the Kotest extension that makes
+those annotations mean something. Spring caches the context, so the application starts once for the
+module and the specs clean between scenarios rather than isolating — `beforeEach { template.clean() }`,
+the discipline `nxgt-rest` follows.
 
-That isolation took two fixes, and both are worth knowing before writing another Spring spec here.
-The per-run settings are passed as **arguments** to `SpringApplicationBuilder.run` rather than
-through `.properties()`, which contributes Boot's *default* property source — the lowest-precedence
-one there is, so `application.yaml` won every key it also named. And the database goes **into the
-URI**: `spring.data.mongodb.database` is read only while Boot is building a connection string from
+MongoDB is the one thing an annotation cannot name, because it is resolved at run time:
+`MONGO_TEST_URI` reuses a server that is already up, and otherwise `stx-testing` starts a `mongo:8`
+container and stops it when the JVM exits. It arrives through `@DynamicPropertySource`, which Spring
+reads while building the context — so the container starts when the first spec that needs one is
+reached and not when the file is loaded, and it outranks `application.yaml`, so a run can never write
+to the database `./kotlin run` uses. With no Docker and no `MONGO_TEST_URI` the features report
+skipped rather than failing.
+
+One detail there is worth knowing before writing another Spring spec: the database goes **into the
+URI**. `spring.data.mongodb.database` is read only while Boot is building a connection string from
 `host`/`port`, so once `spring.data.mongodb.uri` is set it is ignored, silently, and every run shared
-one database while looking isolated. What surfaced both was a manual `./kotlin run` against the same
+one database while looking isolated. What surfaced it was a manual `./kotlin run` against the same
 server leaving rows the paging scenario then counted.
 
 Linting and bundling the document needs `@redocly/cli` on the PATH; `redocly.yaml` at the repo root

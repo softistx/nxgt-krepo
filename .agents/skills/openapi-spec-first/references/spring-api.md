@@ -186,24 +186,35 @@ invented, and a sentinel is exactly what must never reach the database.
 `WebClient` would be asserting against a transport no caller uses. What a *generated* client adds on
 top is four settings, and none of them fails at build time when left out.
 
-```kotlin
-// test/OrdersApi.kt — the fixture: one per spec, each with a database of its own
-class OrdersApi {
-    lateinit var baseUrl: String private set
-    lateinit var web: WebTestClient private set          // for what a typed client cannot say
-    lateinit var factory: HttpServiceProxyFactory private set
+The application is Spring's to start: `$libs.kotest.extensions.spring` in `test-dependencies`, a
+`test` profile under `testResources/`, and a base spec carrying the annotations.
 
-    fun start(headers: (HttpHeaders) -> Unit = {}) {
-        val app = SpringApplicationBuilder(OrdersApplication::class.java)
-            .web(WebApplicationType.REACTIVE)
-            .run("--server.port=0", "--spring.data.mongodb.uri=$uri") as ReactiveWebServerApplicationContext
-        baseUrl = "http://localhost:${app.webServer!!.port}"
-        web = WebTestClient.bindToServer().baseUrl(baseUrl).build()
-        factory = apiFactory(baseUrl, app.getBean("stxWebJson", Json::class.java), headers)
+```kotlin
+// test/OrdersSpec.kt — the bootstrap, once, for every spec in the module
+@ActiveProfiles("test")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+abstract class OrdersSpec(body: FeatureSpec.() -> Unit) : FeatureSpec(body) {
+    companion object {
+        const val BASE_URL = "http://localhost:8088"          // `server.port` in the test profile
+        val mongo = mongoContainer()                          // declared; nothing started yet
+
+        // Read while the context is being built — so the container starts when a spec that needs
+        // one is reached, and outranks every property source, including `application.yaml`.
+        @JvmStatic
+        @DynamicPropertySource
+        fun mongoUri(registry: DynamicPropertyRegistry) {
+            registry.add("spring.data.mongodb.uri") { mongo.endpoint?.withDatabase(DATABASE) ?: UNREACHABLE }
+        }
     }
 }
 
-fun apiFactory(baseUrl: String, json: Json, headers: (HttpHeaders) -> Unit = {}) =
+// test/ProjectConfig.kt — in package io.kotest.provided, where Kotest looks for it
+object ProjectConfig : AbstractProjectConfig() {
+    override val extensions = listOf(SpringExtension())
+}
+
+// test/TestHelper.kt — the client wiring, and nothing about starting anything
+fun apiFactory(json: Json, baseUrl: String = OrdersSpec.BASE_URL, headers: (HttpHeaders) -> Unit = {}) =
     httpServiceFactory(
         baseUrl,
         headers,                                   // per request: `{ it.setBearerAuth(token) }`
@@ -222,16 +233,14 @@ fun apiFactory(baseUrl: String, json: Json, headers: (HttpHeaders) -> Unit = {})
 
 ```kotlin
 // test/OrderControllerTest.kt — one spec per controller, features named after the route
-class OrderControllerTest : FeatureSpec({
-    val api = OrdersApi()
-    lateinit var orders: IOrdersService
+class OrderControllerTest(
+    template: ReactiveMongoTemplate,                // autowired: Spring built the context
+    json: Json,                                     // the application's own `stxWebJson`
+) : OrdersSpec({
+    val orders = apiFactory(json).withClient<IOrdersService>()   // one client per tag, off one factory
 
-    beforeSpec {
-        api.start()
-        orders = api.factory.withClient()           // one client per tag, off the one factory
-        api.ready()
-    }
-    afterSpec { api.stop() }
+    beforeSpec { template.awaitMigrations() }
+    beforeEach { template.clean() }                 // each scenario writes what it reads
 
     feature("POST /orders") {
         scenario("a placed order comes back with the id it was given") {
@@ -240,6 +249,8 @@ class OrderControllerTest : FeatureSpec({
         }
 
         scenario("a reference already taken is the 409 the document declares") {
+            orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "lovelace", total = 12_000))
+
             shouldThrow<ErrorResponseException> {
                 orders.placeOrder(PlaceOrder(reference = "C-3001", customer = "someone else", total = 1))
             }.error.code shouldBe "orders.reference-taken"
@@ -272,20 +283,21 @@ The four settings, and what each one silently costs:
 
 **A per-run database goes in the URI.** `spring.data.mongodb.database` is read only while Boot is
 building a connection string from `host`/`port`, so once `spring.data.mongodb.uri` is set it is
-ignored, silently, and every run shares one database while looking isolated. Pass the settings as
-arguments to `SpringApplicationBuilder.run` too: `.properties()` contributes Boot's *default*
-property source, the lowest there is, so `application.yaml` wins every key it also names.
+ignored, silently, and every run shares one database while looking isolated — including the one a
+`./kotlin run` writes to.
+
+**A container starts when a spec needs it, and not before.** `ContainerService.endpoint` is a `lazy`,
+so `mongoContainer()` at the top of a file starts nothing; the first read is the
+`@DynamicPropertySource` supplier, which Spring evaluates while building the context for the first
+spec that runs. Resolve it any earlier — in `beforeProject`, or in a property initialiser that
+connects — and a run whose specs are all skipped still pays for a container.
 
 **Wait for what starts after the port opens.** `MigrationRunner` listens for `ApplicationReadyEvent`
 and suspends, and Spring does not wait for a suspending listener — so a seed lands shortly *after*
-`run` returns. The fixture's `ready()` polls for it; a spec that assumed otherwise fails on whichever
-scenario went first. `nxgt-rest` has no such gate because it cleans between tests instead
-(`beforeEach { cleanUp() }` over an injected `ReactiveMongoTemplate`) — either discipline works, and
-having neither is what does not.
+the server is up, and lands in the middle of whichever scenario went first if nothing waits.
+`beforeSpec { template.awaitMigrations() }` is the gate; `beforeEach { template.clean() }` is the
+discipline that makes each scenario name its own state, as `nxgt-rest`'s `cleanUp()` does.
 
-**On `@SpringBootTest`.** `nxgt-rest` boots with `@ActiveProfiles("test")` +
-`@SpringBootTest(webEnvironment = DEFINED_PORT)` and Kotest's `SpringExtension`, which is why its
-base URL is the constant `http://localhost:8088`. That needs `kotest-extensions-spring`, which is not
-in this repo's catalog; the fixture above is the same thing without the dependency, and it buys a
-port picked at random and a database per spec. Either is the convention — the client wiring below the
-bootstrap is what must not vary.
+**One context, cached, for every spec that shares the configuration.** Spring's test context cache
+keys on the annotations, so two specs annotated alike get one application — which is why the specs
+clean rather than isolate, and why a spec must not depend on another having run.
