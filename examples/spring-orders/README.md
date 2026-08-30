@@ -55,10 +55,9 @@ implemented yet.
 | `mapper/OrderMappers.kt` | The document's types on one side, the database's on the other |
 | `migration/V1Seed.kt`, `migration/V2Tags.kt` | Two migrations, and how the class name becomes the version |
 | `resources/locales/` | Two catalogs. Every key a handler can raise has text in both |
-| `testResources/application-test.yaml` | The `test` profile: the port the specs dial, and the three keys they override |
-| `test/OrdersSpec.kt` | The bootstrap: `@SpringBootTest` on a base spec, and where MongoDB is resolved |
-| `test/ProjectConfig.kt` | The one file that makes a Kotest spec a Spring test |
-| `test/TestHelper.kt` | The generated interfaces as clients, a `WebTestClient`, and the cleanup |
+| `testResources/application-test.yaml` | The `test` profile, and the whole of the test bootstrap: a port and a database name |
+| `test/ProjectConfig.kt` | One line. The file that makes a Kotest spec a Spring test |
+| `test/TestHelper.kt` | What a *generated* client needs on top of `stx-spring-boot`'s factory — and nothing else |
 | `test/OrderControllerTest.kt` | The controller end to end, through the interface it implements — one feature per route |
 | `test/OrdersApplicationTest.kt` | What a typed client cannot say: the envelope, the translations, the migrations, the audit trail |
 | `test/ErrorResponseShapeTest.kt` | That the document's `ErrorResponse` is the one the server actually writes |
@@ -182,26 +181,29 @@ the default in `application.yaml`; `MONGO_URI` overrides it.
 ./kotlin test -m spring-orders
 ```
 
-**The specs start nothing themselves.** `@SpringBootTest(webEnvironment = DEFINED_PORT)` on
-`OrdersSpec` builds the application, binds the port `application-test.yaml` names, and autowires
-what a spec asks for into its constructor; `ProjectConfig` registers the Kotest extension that makes
-those annotations mean something. Spring caches the context, so the application starts once for the
-module and the specs clean between scenarios rather than isolating — `beforeEach { template.clean() }`,
-the discipline `nxgt-rest` follows.
+**The specs start nothing themselves, and this module writes no bootstrap at all.** Each one extends
+`MongoSpec` from `stx-spring-boot`'s `com.strange.spring.testing`, which carries
+`@SpringBootTest(webEnvironment = DEFINED_PORT)`, `@ActiveProfiles("test")` and the test beans that
+say where MongoDB is; `ProjectConfig` is one line and registers the Kotest extension that makes those
+annotations mean something. Spring caches the context, so the application starts once for the module
+and the specs clean between scenarios rather than isolating —
+`beforeEach { template.clear("orders", "audits") }`, the discipline `nxgt-rest` follows.
 
 MongoDB is the one thing an annotation cannot name, because it is resolved at run time:
 `MONGO_TEST_URI` reuses a server that is already up, and otherwise `stx-testing` starts a `mongo:8`
-container and stops it when the JVM exits. It arrives through `@DynamicPropertySource`, which Spring
-reads while building the context — so the container starts when the first spec that needs one is
-reached and not when the file is loaded, and it outranks `application.yaml`, so a run can never write
-to the database `./kotlin run` uses. With no Docker and no `MONGO_TEST_URI` the features report
-skipped rather than failing.
+container and stops it when the JVM exits. It arrives as a `MongoConnectionDetails` **bean**, which
+Boot's own auto-configuration declares `@ConditionalOnMissingBean` of — so the test one wins, and the
+container starts when the first spec that needs one is reached rather than when a file is loaded.
+With no Docker and no `MONGO_TEST_URI` the features report skipped rather than failing.
 
-One detail there is worth knowing before writing another Spring spec: the database goes **into the
-URI**. `spring.data.mongodb.database` is read only while Boot is building a connection string from
-`host`/`port`, so once `spring.data.mongodb.uri` is set it is ignored, silently, and every run shared
-one database while looking isolated. What surfaced it was a manual `./kotlin run` against the same
-server leaving rows the paging scenario then counted.
+One detail there is worth knowing before writing another Spring spec, and it cost this module a
+quiet wrong answer: **Spring Boot 4 renamed the Mongo prefix to `spring.mongodb`.** The driver's URI,
+credentials and database are `MongoProperties` under `spring.mongodb`; `spring.data.mongodb` kept only
+GridFS and the big-decimal representation. A `spring.data.mongodb.uri` carried over from Boot 3 binds
+to nothing and is reported by nothing — the driver falls back to `mongodb://localhost/test`, which on
+this machine is the workspace's own replica set and answers happily. That is what these specs were
+talking to, container running and unused, while passing. A bean is asked for by type and cannot be
+misspelled, which is the argument for `MongoTestConfiguration` over a property in the first place.
 
 Linting and bundling the document needs `@redocly/cli` on the PATH; `redocly.yaml` at the repo root
 defines the `orders@v1` alias. `.redocly.lint-ignore.yaml` carries one entry — `/health` has no 4XX

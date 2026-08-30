@@ -2,6 +2,11 @@ package com.strange.example.orders
 
 import com.strange.example.orders.api.apis.IHealthService
 import com.strange.spring.client.withClient
+import com.strange.spring.testing.MongoSpec
+import com.strange.spring.testing.awaitMigrations
+import com.strange.spring.testing.clear
+import com.strange.spring.testing.mongoAvailable
+import com.strange.spring.testing.webTestClient
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -27,15 +32,15 @@ import kotlin.time.Duration.Companion.seconds
 class OrdersApplicationTest(
     template: ReactiveMongoTemplate,
     json: Json,
-) : OrdersSpec({
+) : MongoSpec({
 
         val web = webTestClient()
 
         // The second tag, off this spec's own factory.
         val health = apiFactory(json).withClient<IHealthService>()
 
-        beforeSpec { if (mongoAvailable) template.awaitMigrations() }
-        beforeEach { if (mongoAvailable) template.clean() }
+        beforeSpec { if (mongoAvailable) template.awaitMigrations(expected = 2) }
+        beforeEach { if (mongoAvailable) template.clear("orders", "audits") }
 
         feature("the application boots into a working state").config(enabled = mongoAvailable) {
             scenario("a route answers, encoded by the kotlinx codecs stx.json installed") {

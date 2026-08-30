@@ -1,20 +1,21 @@
-# The `test` profile the specs activate with `@ActiveProfiles("test")`. It overrides three keys of
+# The `test` profile the specs activate through `MongoSpec`. It overrides three keys of
 # `resources/application.yaml` and inherits the rest, so the specs exercise the application's real
 # configuration rather than a second copy of it.
 
 server:
-  # `@SpringBootTest(webEnvironment = DEFINED_PORT)` binds the port named here, which is what lets
-  # the clients hold a constant base URL. Not 8080: a demo left running in another terminal should
-  # not make the suite fail — or worse, pass against the wrong process.
+  # `@SpringBootTest(webEnvironment = DEFINED_PORT)` — inherited from `SpringSpec` — binds the port
+  # named here, and `stx-spring-boot`'s `TestServer.STX_TEST_PORT` is the same number, which is what
+  # lets a client be built without anybody spelling a URL. Not 8080: a demo left running in another
+  # terminal should not make the suite fail — or worse, pass against the wrong process.
   port: 8088
 
 spring:
-  data:
-    mongodb:
-      # A placeholder. `OrdersSpec` registers the resolved endpoint through `@DynamicPropertySource`,
-      # which outranks every property source there is, so what a spec talks to is the container or
-      # the server `MONGO_TEST_URI` names — never the `spring_orders` database a `./kotlin run` uses.
-      uri: mongodb://127.0.0.1:27017/spring_orders_test
+  mongodb:
+    # The database the specs share: their own, and never the `spring_orders` a `./kotlin run` writes
+    # to. `MongoTestConfiguration` splices it into the connection string it builds from the container
+    # or from the server `MONGO_TEST_URI` names — so no URI is named here, and there is no placeholder
+    # to mistake for one.
+    database: spring_orders_test
 
 stx:
   i18n:
