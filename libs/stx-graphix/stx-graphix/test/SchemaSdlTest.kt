@@ -17,7 +17,7 @@ class SchemaSdlTest :
             scenario("several files under a directory merge, including nested .gqls") {
                 val graphql =
                     Graphix {
-                        schemaLocations(listOf("classpath:graphix-sdl/"))
+                        schemaLocations("classpath:graphix-sdl/")
                         query(GreetingQueries())
                     }
                 graphql.sdl() shouldContain "hello: String!"
@@ -29,7 +29,7 @@ class SchemaSdlTest :
             scenario("annotated resolvers run against the SDL schema") {
                 val graphql =
                     Graphix {
-                        schemaLocations(listOf("classpath:graphix-sdl/"))
+                        schemaLocations("classpath:graphix-sdl/")
                         query(GreetingQueries())
                     }
                 val hello = graphql.execute(GraphixRequest("{ hello }"))
@@ -43,7 +43,7 @@ class SchemaSdlTest :
                 val fields = BookFields()
                 val graphql =
                     Graphix {
-                        schemaLocations(listOf("classpath:graphix-sdl/"))
+                        schemaLocations("classpath:graphix-sdl/")
                         query(BookQueries())
                         type(fields)
                     }
@@ -56,7 +56,7 @@ class SchemaSdlTest :
             scenario("a missing directory after an explicit location keeps the annotated schema") {
                 val graphql =
                     Graphix {
-                        schemaLocations(listOf("classpath:does-not-exist-sdl/"))
+                        schemaLocations("classpath:does-not-exist-sdl/")
                         query(GreetingQueries())
                     }
                 graphql.execute(GraphixRequest("{ hello }")).data shouldBe mapOf("hello" to "world")
@@ -68,7 +68,7 @@ class SchemaSdlTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            schemaLocations(listOf("file:${dir.toAbsolutePath()}"))
+                            schemaLocations("file:${dir.toAbsolutePath()}")
                             query(GreetingQueries())
                         }
                     }
