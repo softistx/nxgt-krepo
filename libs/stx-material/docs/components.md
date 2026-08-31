@@ -249,6 +249,25 @@ single pane; expanded windows show both. Entries opt in with `metadata = ListDet
 The caller owns the back stack (`mutableStateListOf` is enough). Transitions are a fade on the
 effects axis — Adaptive already owns the spatial motion of the panes.
 
+## Surfaces
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `ConfirmDialog` | `visible`, `title`, `text`, `onConfirm`, `onDismiss`, `destructive` | `surfaces/confirm-dialog` |
+| `Sheet` | `visible`, `onDismiss`, `content` | `surfaces/sheet` |
+| `Drawer` | `open`, `onDismiss`, `drawer`, `content` | `surfaces/drawer` |
+| `Tooltip` | `text`, `content` | `surfaces/tooltip` |
+| `Menu` | `expanded`, `onDismiss`, `items` | `surfaces/menu` |
+| `Progress` | `progress: Float? = null`, `kind = Linear` | `surfaces/progress` |
+| `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `surfaces/toast` |
+| `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |
+| `Carousel` | `count`, `peek = 48.dp`, `page` | `surfaces/carousel` |
+| `SwipeActions` | `onDismiss`, `background`, `content` | `surfaces/swipe-actions` |
+
+`ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of M3 `Snackbar`s painted with
+`Tone` — M3's host holds one, a dashboard often needs two. `Accordion` and `Carousel` are built
+here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
+
 ## Motion helpers
 
 | Helper | What it does | Story |

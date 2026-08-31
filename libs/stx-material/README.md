@@ -20,6 +20,8 @@ libs/stx-material/
   src/display/  Card, Chip, StatusBadge, ListTile, Alert, EmptyState, Skeleton
   src/form/     the field/form state layer, the rules, and every input
   src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, Breadcrumb
+  src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, Menu, Accordion, Carousel, SwipeActions
+  src/feedback/   Progress, Toaster
 ```
 
 ## The shape of it
