@@ -241,6 +241,7 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       `ReactionBar`, `AnnouncementBar`, `QuoteBlock`, `LinkPreview`, `Checklist`.
 - [x] **8h — Fil de discussion.** `MessageBubble`, `Comment`, `ReplyPreview`, `PinBar`,
       `MentionChip`, `SeenBy`.
+- [x] **8i — Commerce.** `Price`, `FeatureList`, `PricingCard`, `PromoBanner`.
 - [ ] **9 — Graphiques.** `Area`, `Bar`, `Line`, `Pie`, `Radar`, `Scatter`, `Funnel`, `Heatmap`
       au `Canvas`, thème dérivé des tokens
 - [ ] **10 — i18n et publication.** Catalogue de messages multiplateforme, locales `en`/`fr`,

@@ -17,7 +17,7 @@ libs/stx-material/
   src/text/     Typography and the variant scale
   src/icon/     Icon and the library's own icon set
   src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar, IconBadge, ViewToggle
-  src/display/  Card, Chip, ActionChip, SuggestionChip, FileChip, StatusBadge, StatusDot, Kbd, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText, ReactionBar, AnnouncementBar, QuoteBlock, LinkPreview, MessageBubble, Comment, ReplyPreview, PinBar, MentionChip
+  src/display/  Card, Chip, ActionChip, SuggestionChip, FileChip, StatusBadge, StatusDot, Kbd, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText, ReactionBar, AnnouncementBar, QuoteBlock, LinkPreview, MessageBubble, Comment, ReplyPreview, PinBar, MentionChip, Price, FeatureList, PricingCard, PromoBanner
   src/form/     the field/form state layer, the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter, CopyField, TriStateCheckbox, ThemeToggle, FormSection, DangerZone, Composer, Checklist
   src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, StepFooter, BottomBar, Breadcrumb
   src/layout/     ResponsiveGrid, ScrollToTop, LoadMoreButton, SelectionBar, RefreshBox
