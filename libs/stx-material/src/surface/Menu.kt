@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
 import com.strange.material.icon.Icon
 import com.strange.material.text.Typography
 
@@ -30,8 +32,14 @@ fun Menu(
     onDismiss: () -> Unit,
     items: List<MenuItem>,
     modifier: Modifier = Modifier,
+    offset: DpOffset = DpOffset(0.dp, 0.dp),
 ) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss, modifier = modifier) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        offset = offset,
+    ) {
         items.forEach { item ->
             DropdownMenuItem(
                 text = { Typography(text = item.label) },
