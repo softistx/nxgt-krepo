@@ -1,6 +1,7 @@
 package com.strange.graphix
 
 import com.strange.graphix.fixture.BadPickQueries
+import com.strange.graphix.fixture.DefaultedDeprecatedQueries
 import com.strange.graphix.fixture.GreetingQueries
 import com.strange.graphix.fixture.RequiredDeprecatedQueries
 import com.strange.graphix.fixture.SpecQueries
@@ -58,6 +59,13 @@ class SpecDirectiveTest :
                 val failure = shouldThrow<GraphixException> { Graphix { query(RequiredDeprecatedQueries()) } }
 
                 failure.message shouldContain "cannot be @GraphQLDeprecated"
+            }
+
+            scenario("a non-null argument with a default may be deprecated — omitting it still works") {
+                val graphql = Graphix { query(DefaultedDeprecatedQueries()) }
+
+                graphql.sdl() shouldContain "limit: Int! = 10 @deprecated(reason : \"use cursor\")"
+                graphql.execute(GraphixRequest("{ page }")).data?.get("page") shouldBe 10
             }
         }
 

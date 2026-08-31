@@ -77,6 +77,19 @@ class PolymorphicExecuteTest :
                 result.isOk shouldBe true
                 result.data?.get("media") shouldBe listOf(mapOf("slug" to "film-f1"), mapOf("slug" to "ocean"))
             }
+
+            scenario("and still wins when the interface mapping is registered first") {
+                val graphql =
+                    Graphix {
+                        query(MediaQueries())
+                        type(MediaFields())
+                        type(FilmOverrideFields())
+                    }
+                val result = graphql.execute(GraphixRequest("{ media { slug } }"))
+
+                result.isOk shouldBe true
+                result.data?.get("media") shouldBe listOf(mapOf("slug" to "film-f1"), mapOf("slug" to "ocean"))
+            }
         }
 
         feature("type resolution") {

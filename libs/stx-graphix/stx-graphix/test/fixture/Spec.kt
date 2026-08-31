@@ -1,6 +1,7 @@
 package com.strange.graphix.fixture
 
 import com.strange.graphix.schema.Argument
+import com.strange.graphix.schema.GraphQLDefault
 import com.strange.graphix.schema.GraphQLDeprecated
 import com.strange.graphix.schema.GraphQLOneOf
 import com.strange.graphix.schema.QueryMapping
@@ -62,6 +63,14 @@ class RequiredDeprecatedQueries {
     fun need(
         @GraphQLDeprecated("gone") @Argument id: String,
     ): String = id
+}
+
+/** Non-null but with a default, so the spec allows deprecating it: omitting it still works. */
+class DefaultedDeprecatedQueries {
+    @QueryMapping
+    fun page(
+        @GraphQLDeprecated("use cursor") @GraphQLDefault("10") @Argument limit: Int = 10,
+    ): Int = limit
 }
 
 @Serializable
