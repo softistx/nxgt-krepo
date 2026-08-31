@@ -277,6 +277,25 @@ owns the HTTP call — or the resolver reads it some other way.
 that needs this field's source, arguments or DataLoader takes `dfe: DataFetchingEnvironment`
 by type — no `@GraphQLContext`.
 
+## Documents
+
+What the *query* may say is graphql-java's, not Graphix's: nothing below needs wiring, an
+annotation or a builder call, and `ConformanceTest` is what proves it.
+
+| In a document | Notes |
+| --- | --- |
+| `@skip(if:)` / `@include(if:)` | The two spec directives. A skipped field is absent from `data`, not null |
+| Named fragments, inline fragments | `fragment f on Product { … }`, `... on Product { … }` |
+| Aliases | Two aliases of one field with different arguments are two independent fields — and, for `@BatchMapping`, two DataLoader keys |
+| Variables, with their own defaults | `query Q($n: String = "ada")`. A variable explicitly `null` on an optional argument falls through to the Kotlin default |
+| `operationName` | Which operation runs when the document holds more than one |
+| `__typename`, `__schema`, `__type` | Introspection is on and has no off switch yet |
+
+**Not supported.** `@defer` and `@stream` are `@ExperimentalApi` in graphql-java 26: they need
+incremental support switched on, an `IncrementalExecutionResult` path through `execute`, and
+`multipart/mixed` on both HTTP plugins. Automatic persisted queries, the multipart upload spec and
+Apollo Federation are outside graphql-java core and are not wrapped here.
+
 ## Execute
 
 ```kotlin
