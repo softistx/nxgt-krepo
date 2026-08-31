@@ -3,6 +3,7 @@ package com.strange.graphix.schema
 import com.strange.graphix.GraphixException
 import graphql.language.Value
 import graphql.parser.Parser
+import kotlinx.serialization.SerialName
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -46,6 +47,19 @@ internal fun KClass<*>.graphQLNameOrNull(): String? {
     findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
     return simpleName
 }
+
+/**
+ * GraphQL field name of a `@Serializable` property: [GraphQLName], then `@SerialName`, then the
+ * Kotlin name.
+ *
+ * `@SerialName` counts because the SerialDescriptor **is** the type system here. A property renamed
+ * for the wire is renamed in the schema too — otherwise the field would be absent from the object
+ * type, and an input object would decode by a name the schema never advertised.
+ */
+internal fun KProperty<*>.graphQLPropertyName(): String =
+    findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }
+        ?: findAnnotation<SerialName>()?.value
+        ?: name
 
 internal fun KAnnotatedElement.graphQLDescription(): String? = findAnnotation<GraphQLDescription>()?.value
 
