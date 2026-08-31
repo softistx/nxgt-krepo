@@ -47,9 +47,14 @@ fun KnobsPanel(
             }
             controls.forEach { KnobControl(knobs = knobs, knob = it) }
         }
-        PaneScrollbar(
-            state = scrollState,
-            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-        )
+        // matchParentSize, not fillMaxHeight on the scrollbar itself: fillMaxHeight participates
+        // in measuring this wrap-content Box and stretches it to the pane, which used to leave
+        // StoryStage at height 0 — controls visible, preview gone.
+        Box(Modifier.matchParentSize()) {
+            PaneScrollbar(
+                state = scrollState,
+                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+            )
+        }
     }
 }
