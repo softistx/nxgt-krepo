@@ -20,6 +20,7 @@ import com.strange.material.media.AvatarItem
 import com.strange.material.media.CameraSurface
 import com.strange.material.media.Lightbox
 import com.strange.material.media.PdfSurface
+import com.strange.material.media.PersonCard
 import com.strange.material.media.VideoSurface
 import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
@@ -48,6 +49,16 @@ val MediaStories =
                         AvatarItem("Léa Martin"),
                     ),
                 max = knobs.number("Max faces", 3f, 1f..5f, steps = 3).toInt(),
+            )
+        }
+
+        story("Person card") { knobs ->
+            PersonCard(
+                name = knobs.text("Name", "Amara Diallo"),
+                supporting = "Finance · last seen this morning",
+                tone = if (knobs.flag("Online", true)) Tone.Success else null,
+                onClick = {},
+                action = { Button(text = "Message", onClick = {}) },
             )
         }
 
