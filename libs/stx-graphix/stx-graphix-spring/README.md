@@ -9,6 +9,7 @@ stx:
     path: /graphql
     subscriptions: sse   # or graphql-ws
     schema-locations: classpath:graphql/
+    sandbox: true        # Apollo Sandbox at /sandbox, off by default
 ```
 
 ```kotlin
@@ -41,7 +42,12 @@ when Boot builds `OrderMutations`. Graphix keeps that instance and the data fetc
 operation. The HTTP handler does not yet put `ServerWebExchange` or the security principal in
 that map — see [`docs/graphix.md`](../../../docs/graphix.md).
 
-Introspection (`{ __schema }`, `{ __type }`) is on the same path.
+Introspection (`{ __schema }`, `{ __type }`) is on the same path; `stx.graphix.introspection=false`
+turns it off.
+
+`stx.graphix.sandbox=true` serves an Apollo Sandbox at `/sandbox`. It is off by default — enabling
+GraphQL should not also open an HTML page that advertises the schema — and the page resolves
+`/graphql` from the browser's own origin, so it is correct behind a proxy without being told.
 
 POST and GET share the same JSON envelope as the Ktor plugin. A field error is HTTP 200 plus
 `errors[]`. Malformed JSON is HTTP 400. Subscriptions default to `text/event-stream`;

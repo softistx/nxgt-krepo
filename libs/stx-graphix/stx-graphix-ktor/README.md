@@ -34,8 +34,15 @@ Ktor DI — the same types Spring collects as beans.
 `injectable = true` registers that same engine with Ktor DI (`provideGraphix()`), off by default
 because `ktor-server-di` is compile-only.
 
+`sandbox = true` serves an Apollo Sandbox at `/sandbox` — off by default, because installing this
+plugin is a decision to open a GraphQL endpoint and not one to open a page advertising the schema.
+`sandboxPath` moves it. The page finds `/graphql` on its own from the browser's origin, so it works
+behind a proxy and in a container without configuration; `sandboxEndpoint` pins an absolute URL when
+it should point elsewhere.
+
 A GraphQL field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. Introspection
-(`{ __schema }`, `{ __type(name: …) }`) is on; GraphiQL talks to this path. Subscriptions
+(`{ __schema }`, `{ __type(name: …) }`) is on — GraphiQL and the sandbox talk to this path — and
+`introspection = false` turns it off. Subscriptions
 default to `text/event-stream` on the same path. Set `subscriptions = GraphqlWs` for
 `graphql-ws` (`graphql-transport-ws` on that path); HTTP POST of a subscription is then 400.
 The vocabulary is in [`docs/graphix.md`](../../../docs/graphix.md).
