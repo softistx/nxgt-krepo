@@ -131,15 +131,15 @@ annotation class GraphQLIgnore
 annotation class GraphQLContext
 
 /**
- * Marks a GraphQL argument. Required on every argument — a resolver parameter, and every
- * property of a GraphQL input object. The parent source, this field's
- * [graphql.schema.DataFetchingEnvironment], and `@GraphQLContext` do not take it. Output-type
- * properties are fields, not arguments.
+ * Marks a GraphQL argument. Required on every resolver parameter that is an argument.
+ * The parent source, this field's [graphql.schema.DataFetchingEnvironment], and
+ * `@GraphQLContext` do not take it. An input object's fields do not take it either — the
+ * object is already the argument.
  *
- * [name] defaults to the Kotlin parameter / property name (or `@GraphQLName`). Compile with
- * parameter names retained or a constructor parameter has nothing to read.
+ * [name] defaults to the Kotlin parameter name (or `@GraphQLName`). Compile with parameter
+ * names retained or this has nothing to read.
  */
-@Target(AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Argument(
     /** GraphQL argument name. Empty uses [GraphQLName] or the Kotlin parameter name. */

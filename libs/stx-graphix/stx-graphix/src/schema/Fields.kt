@@ -60,8 +60,7 @@ internal fun KParameter.isDataFetchingEnvironment(): Boolean {
 
 /**
  * Every value parameter is the parent source, this field's DFE, `@GraphQLContext`, or `@Argument`.
- * GraphQL arguments must be marked — that is what keeps DFE and operation context from becoming
- * schema arguments.
+ * GraphQL arguments must be marked. Input-object fields are not arguments.
  */
 internal fun KFunction<*>.requireArgumentAnnotations(parent: KParameter? = null) {
     valueParameters.forEach { parameter ->

@@ -65,7 +65,7 @@ class SchemaTest :
                 failure.message shouldContain "must be @Argument"
             }
 
-            scenario("an input-object property must be @Argument") {
+            scenario("an input-object field must not be @Argument") {
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
@@ -75,7 +75,7 @@ class SchemaTest :
                             )
                         }
                     }
-                failure.message shouldContain "must be @Argument"
+                failure.message shouldContain "must not be @Argument"
                 failure.message shouldContain "name"
             }
         }
