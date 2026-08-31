@@ -21,8 +21,13 @@ The subscription is `text/event-stream` on the same path (`subscriptions = Sse`,
 `subscriptions = GraphqlWs` serves `graphql-ws` on that path instead.
 
 The GraphQL schema is the files under `resources/graphql/` (`schema.graphqls`, `product.graphqls`,
-`review.graphqls`), merged the way Spring GraphQL merges a split document. `Catalog` is the
-DataFetchers for those fields.
+`review.graphqls`, `search.graphqls`), merged the way Spring GraphQL merges a split document.
+`Catalog` is the DataFetchers for those fields.
+
+`search.graphqls` declares `union SearchResult = Product | Review` and nothing registers a type
+resolver for it: Graphix matches each row on its Kotlin class name. The resolver returns
+`List<Any>`, because Kotlin has no union type and, on this path, the document is the schema — a
+resolver's Kotlin return type is never read.
 
 In-memory, no database. The point is the plugin: `install(GraphQL) { schema { query(catalog); mutation(catalog); subscription(catalog); type(catalog) } }`.
 `Catalog` is the store, the roots and the type fields: `reviews` is a `@BatchMapping` on Product, one

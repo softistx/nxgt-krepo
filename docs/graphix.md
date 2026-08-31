@@ -44,10 +44,73 @@ ends in `Input` keeps it.
 | `List<T>` | `[T]` |
 | `T?` | nullable `T` |
 | enum class | GraphQL enum, constant names from the serializer |
+| `sealed` with shared properties | GraphQL `interface` — see *Interfaces and unions* |
+| `sealed` with none, or `@GraphQLUnion` | GraphQL `union` |
 
 A type that is not `@Serializable` fails schema build, naming that type.
 
-`Map` and polymorphic serializers are not GraphQL types yet.
+`Map` is not a GraphQL type. A `sealed` hierarchy is — see the next section. An `abstract` or
+`open` polymorphic type registered in a `SerializersModule` is not: GraphQL needs a closed set of
+possible types, and only a sealed hierarchy has one.
+
+## Interfaces and unions
+
+A `sealed` hierarchy is the abstract type. Which one it becomes is the shape of the Kotlin code,
+not a second annotation:
+
+```kotlin
+@Serializable
+sealed interface Media {              // -> interface Media { id: String!  title: String! }
+    val id: String
+    val title: String
+}
+
+@Serializable data class Film(override val id: String, override val title: String, val minutes: Int) : Media
+@Serializable data class Song(override val id: String, override val title: String, val bpm: Int) : Media
+
+@Serializable
+sealed interface SearchHit            // -> union SearchHit = BookHit | AuthorHit
+
+@Serializable data class BookHit(val title: String) : SearchHit
+@Serializable data class AuthorHit(val name: String) : SearchHit
+```
+
+A sealed type that declares properties every subclass carries is an `interface`; one that declares
+none can only be a `union`, since a GraphQL interface needs at least one field. `@GraphQLUnion` on
+the sealed type forces the union direction when it does have shared properties. There is no
+annotation for the other direction.
+
+A nested `sealed` level is Kotlin structure: only the concrete leaves are member types.
+
+**Type resolution** is the runtime value's own name — `@GraphQLName` on its class, otherwise the
+Kotlin simple name — because the object *is* the Kotlin instance. Nothing round-trips through
+kotlinx.serialization on the way out, so the discriminator the serializer would have written is not
+there to read. Nothing is registered, and this works identically on an SDL schema: a document may
+declare `union` and `interface` and Graphix wires the resolver for each.
+
+A value it cannot place is a **GraphQL error on that field**, in `errors[]` — not a thrown
+exception. Override the rule per type when the class name is not the GraphQL name:
+
+```kotlin
+Graphix {
+    typeResolver("SearchResult") { value -> if (value is Row) "Product" else "Review" }
+    query(SearchQueries(store))
+}
+```
+
+`@SchemaMapping` and `@BatchMapping` may target an **interface**: the field is added to the
+interface and to every implementor, and the resolver is registered at each implementor's
+coordinates — a data fetcher is never inherited down an interface. A mapping declared on one
+implementor for the same field wins over the inherited one. On a **union** it is a schema-build
+failure: a GraphQL union has no fields.
+
+Two things a sealed hierarchy may not do. It cannot be an **input**: GraphQL has no input unions,
+so take a discriminator argument and one input object per case. And a member type needs at least
+one field, so a `data object` member fails schema build naming the Kotlin object.
+
+On the **SDL path** a resolver's Kotlin return type is never read — the document is the schema — so
+a union field is written `List<Any>`, which is the only way to say it in Kotlin. On the annotation
+path the same field is a sealed hierarchy.
 
 ## Custom scalars and field directives
 
@@ -346,6 +409,8 @@ bean wins.
 By default Graphix scans `classpath:graphql/` the way Spring GraphQL does: every
 `.graphqls` and `.gqls` file under that directory, nested folders included, is parsed and
 **merged** (`extend type Query` is how a file adds fields to a type another file named).
+`union` and `interface` declarations need no wiring either: Graphix registers a type resolver for
+each, and `typeResolver(name) { }` overrides one.
 The documents are the GraphQL schema; `@QueryMapping` / `@SchemaMapping` / `@BatchMapping`
 are DataFetchers on those fields. Custom scalars `Long`, `Instant` and `Uuid` are wired
 automatically — declare them in SDL if a field uses them (`scalar Long`).

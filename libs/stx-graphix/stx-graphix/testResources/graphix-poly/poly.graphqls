@@ -1,0 +1,25 @@
+type Query {
+  search: [SearchResult!]!
+  nodes: [Node!]!
+}
+
+union SearchResult = Film | Song
+
+interface Node {
+  id: ID!
+  slug: String!
+}
+
+type Film implements Node {
+  id: ID!
+  slug: String!
+  title: String!
+  minutes: Int!
+}
+
+type Song implements Node {
+  id: ID!
+  slug: String!
+  title: String!
+  bpm: Int!
+}

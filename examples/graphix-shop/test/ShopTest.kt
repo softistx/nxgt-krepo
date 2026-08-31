@@ -29,6 +29,23 @@ class ShopTest :
                 }
             }
 
+            scenario("a union query selects with inline fragments, resolved by class name alone") {
+                testApplication {
+                    application { shop() }
+                    val response =
+                        client.post("/graphql") {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                """{"query":"{ search(term: \"co\") { __typename ... on Product { name } ... on Review { body } } }"}""",
+                            )
+                        }
+                    response.status shouldBe HttpStatusCode.OK
+                    val body = response.bodyAsText()
+                    body shouldContain "\"__typename\":\"Review\""
+                    body shouldContain "Holds coffee"
+                }
+            }
+
             scenario("a mutation writes and the next query reads it") {
                 testApplication {
                     application { shop() }
