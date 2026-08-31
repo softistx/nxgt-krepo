@@ -49,6 +49,35 @@ class SchemaTest :
             scenario("no query root is a schema-build failure") {
                 shouldThrow<GraphixException> { Graphix { } }
             }
+
+            scenario("a GraphQL argument must be @Argument") {
+                val failure =
+                    shouldThrow<GraphixException> {
+                        Graphix {
+                            query(
+                                object {
+                                    @com.strange.graphix.schema.QueryMapping
+                                    fun product(id: String): String = id
+                                },
+                            )
+                        }
+                    }
+                failure.message shouldContain "must be @Argument"
+            }
+
+            scenario("an input-object property must be @Argument") {
+                val failure =
+                    shouldThrow<GraphixException> {
+                        Graphix {
+                            query(
+                                com.strange.graphix.fixture
+                                    .BadInputQueries(),
+                            )
+                        }
+                    }
+                failure.message shouldContain "must be @Argument"
+                failure.message shouldContain "name"
+            }
         }
 
         feature("introspection") {

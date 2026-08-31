@@ -18,6 +18,7 @@ internal data class TypeFieldMeta(
     val parentName: String,
     val parentType: KType,
     val parentParameter: KParameter,
+    val argumentParameters: List<KParameter>,
     val fieldName: String,
     val batched: Boolean,
     val loaderName: String,
@@ -59,7 +60,7 @@ private fun typeField(
     val batched = function.hasAnnotation<BatchMapping>()
     val kind = if (batched) "BatchMapping" else "SchemaMapping"
     val parentParameter =
-        function.valueParameters.firstOrNull { !it.isGraphQLContext() }
+        function.valueParameters.firstOrNull { !it.isGraphQLContext() && !it.isDataFetchingEnvironment() }
             ?: throw GraphixException("@$kind ${function.name} needs a parent parameter")
     val parentType =
         if (batched) {
@@ -76,12 +77,7 @@ private fun typeField(
     if (!seen.add(parentName to fieldName)) {
         throw GraphixException("duplicate field '$fieldName' on $parentName — use @SchemaMapping or @BatchMapping, not both")
     }
-    if (batched) {
-        val extras = function.valueParameters.filter { it != parentParameter && !it.isGraphQLContext() }
-        if (extras.isNotEmpty()) {
-            throw GraphixException("@BatchMapping ${function.name} cannot have GraphQL arguments")
-        }
-    }
+    function.requireArgumentAnnotations(parentParameter)
     val graphqlType =
         if (batched) {
             function.returnType.batchPayload()
@@ -94,6 +90,7 @@ private fun typeField(
         parentName = parentName,
         parentType = parentType,
         parentParameter = parentParameter,
+        argumentParameters = function.valueParameters.filter { it.isArgument() },
         fieldName = fieldName,
         batched = batched,
         loaderName = fieldName,

@@ -139,13 +139,15 @@ same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 | `@GraphQLName("foo")` | class, function, property, parameter | GraphQL name |
 | `@GraphQLDescription("…")` | same | GraphQL description |
 | `@GraphQLIgnore` | property | omitted from the GraphQL type |
-| `@Argument("foo")` | parameter | GraphQL argument name (Kotlin name is the default) |
-| `@GraphQLContext` | parameter | `DataFetchingEnvironment` is this field; other types come from `execute`'s context map |
+| `@Argument("foo")` | parameter | **Required** on every GraphQL argument. [name] defaults to the Kotlin parameter name |
+| `@GraphQLContext` | parameter | other types from `execute`'s context map. `DataFetchingEnvironment` is this field **by type** and does not need the annotation |
 | `@Directive("name")` | mapping function | wraps the field with the `fieldDirective("name")` registered on the builder |
 
-A Kotlin default parameter is an optional GraphQL argument. A missing argument uses the default
-rather than passing null. A constructor default on an input-object property is an optional GraphQL
-input field for the same reason.
+`@Argument` is required on every GraphQL argument: resolver parameters **and** every property
+of a GraphQL input object. Unmarked resolver parameters are not arguments: the parent source
+(`SchemaMapping` / `BatchMapping` first parameter), this field's `DataFetchingEnvironment`
+(by type), and `@GraphQLContext` values. Output-type properties are fields, not arguments.
+A Kotlin default on an `@Argument` parameter (or input-object property) is optional GraphQL.
 
 Nested object fields are the `@Serializable` properties already in memory. Extra fields that need
 I/O are `@SchemaMapping` or `@BatchMapping` on an instance passed to `type(...)`. **A given
@@ -161,15 +163,23 @@ class BookFields(
 
     @BatchMapping
     suspend fun author(books: List<Book>): Map<Book, Author> = authors.forBooks(books)
+
+    @BatchMapping
+    suspend fun snippets(books: List<Book>, @Argument limit: Int): Map<Book, List<String>> =
+        authors.snippets(books, limit)
 }
 ```
 
 `typeName` defaults to the simple name of the first argument's type (`Book`). `field` defaults
 to the function name (`author`). `@BatchMapping` takes `List<Parent>` and returns
 `Map<Parent, T>` (or `List<T>` in key order). A single parent is N+1; Graphix refuses it.
+`@Argument` parameters are GraphQL arguments: the DataLoader key is the parent plus those
+values, so two aliases of the same field with different arguments do not share a cached row.
+A DataLoader is **per GraphQL operation**, not per HTTP request — two concurrent operations
+do not batch together.
 
-A `@SchemaMapping` that needs the current field's source or arguments takes
-`@GraphQLContext dfe: DataFetchingEnvironment`. That DFE is **this field**, not an entry in
+A `@SchemaMapping` that needs this field's source or arguments takes
+`dfe: DataFetchingEnvironment` (no annotation). That DFE is **this field**, not an entry in
 `execute`'s context map.
 
 To load by key (including field arguments) from a `@SchemaMapping`, declare a `dataLoader` on
@@ -180,13 +190,15 @@ data class ReviewKey(val bookId: String, val limit: Int)
 
 class BookFields(private val store: ReviewStore) {
     val authors = dataLoader<String, Author> { ids -> store.authors(ids) }
-    val reviews = dataLoader<ReviewKey, List<Review>> { keys -> store.reviews(keys) }
+    val reviews = dataLoader<ReviewKey, List<Review>> { keys, env ->
+        store.reviews(keys, env.graphQlContext)
+    }
 
     @SchemaMapping
     suspend fun author(book: Book): Author? = authors.load(book.authorId)
 
     @SchemaMapping
-    suspend fun reviews(book: Book, limit: Int = 10): List<Review> =
+    suspend fun reviews(book: Book, @Argument limit: Int = 10): List<Review> =
         reviews.load(ReviewKey(book.id, limit)).orEmpty()
 }
 ```
@@ -196,9 +208,13 @@ unless `dataLoader(name = …)` sets one). `load` is suspend and must run inside
 Graphix starts that resolver undispatched so sibling `load`s share one batch, and dispatches
 when the engine is idle so a `load` after other suspend work still completes.
 
-`@BatchMapping` cannot take GraphQL arguments — close over them, or use `@SchemaMapping`. A
-name that collides with a property fails schema build; `@GraphQLIgnore` the property if the
-resolver should own the field.
+The batch lambda is `(List<K>) -> Map<K, V>` or `(List<K>, DataFetchingEnvironment) -> Map<K, V>`.
+The DFE is this field's: `graphQlContext`, source, arguments. One DFE represents the whole
+batch — GraphQLContext is shared; a field's source and arguments belong in the key.
+
+`@BatchMapping` may take `@Argument` parameters and this field's `DataFetchingEnvironment`.
+A name that collides with a property fails schema build; `@GraphQLIgnore` the property if
+the resolver should own the field.
 
 A `@SubscriptionMapping` function returns a stream of `T`, not `T` itself. Collect it with
 `Graphix.subscribe`, which is a `Flow<GraphixResult>` — one item per event, cancelled when the
@@ -211,7 +227,7 @@ already holds. What it can see is exactly three things:
 | Need | Where it comes from |
 | --- | --- |
 | A Spring bean, a store, a client | The constructor (or property) of the query/mutation/type class. The data fetcher calls *that* instance |
-| Arguments from the GraphQL document | Function parameters, bound from `variables` / literals |
+| Arguments from the GraphQL document | `@Argument` parameters, bound from `variables` / literals |
 | Who is calling, the locale, anything per request | `@GraphQLContext` on a parameter, filled from `execute`'s `context` map |
 
 A Spring `OrderService` is not GraphQL context. It is injected when Spring builds the
@@ -223,8 +239,14 @@ class OrderMutations(
     private val orders: OrderService,
 ) {
     @MutationMapping
-    suspend fun placeOrder(input: PlaceOrderInput): Order = orders.place(input)
+    suspend fun placeOrder(@Argument input: PlaceOrderInput): Order = orders.place(input)
 }
+
+@Serializable
+data class PlaceOrderInput(
+    @Argument val sku: String,
+    @Argument val quantity: Int = 1,
+)
 ```
 
 Per-request values do not exist at `@Bean` time. They go on `execute`, keyed by `KClass`, and a
@@ -235,7 +257,7 @@ data class Caller(val userId: String)
 
 @MutationMapping
 suspend fun placeOrder(
-    input: PlaceOrderInput,
+    @Argument input: PlaceOrderInput,
     @GraphQLContext caller: Caller,
 ): Order = orders.place(input, caller.userId)
 
@@ -251,8 +273,8 @@ Spring Security. Until they do, a per-request `Caller` has to be passed to `exec
 owns the HTTP call — or the resolver reads it some other way.
 
 `DataFetchingEnvironment` is not a constructor argument and not a GraphQL argument. A mapping
-that needs this field's source, arguments or DataLoader takes it as
-`@GraphQLContext dfe: DataFetchingEnvironment`.
+that needs this field's source, arguments or DataLoader takes `dfe: DataFetchingEnvironment`
+by type — no `@GraphQLContext`.
 
 ## Execute
 

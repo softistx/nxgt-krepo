@@ -4,6 +4,7 @@ import com.strange.graphix.GraphixException
 import com.strange.graphix.Loader
 import com.strange.graphix.execute.RegisteredLoader
 import com.strange.graphix.execute.loadBatchMapping
+import kotlinx.serialization.json.Json
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
@@ -37,13 +38,17 @@ internal fun collectDeclaredLoaders(instances: List<Any>): List<RegisteredLoader
 }
 
 internal fun Loader<*, *>.toRegisteredLoader(): RegisteredLoader =
-    RegisteredLoader(name) { keys, _ ->
+    RegisteredLoader(name) { keys, _, environment ->
+        val dfe =
+            environment
+                ?: error("Loader batch needs a DataFetchingEnvironment")
+
         @Suppress("UNCHECKED_CAST")
         val typed = this as Loader<Any, Any>
-        typed.batch(keys.toList())
+        typed.batch(keys.toList(), dfe)
     }
 
-internal fun TypeFieldMeta.toRegisteredLoader(): RegisteredLoader =
-    RegisteredLoader(loaderName) { keys, context ->
-        loadBatchMapping(this, keys, context)
+internal fun TypeFieldMeta.toRegisteredLoader(json: Json): RegisteredLoader =
+    RegisteredLoader(loaderName) { keys, context, environment ->
+        loadBatchMapping(this, keys, context, environment, json)
     }

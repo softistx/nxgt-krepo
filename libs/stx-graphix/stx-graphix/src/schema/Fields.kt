@@ -1,14 +1,18 @@
 package com.strange.graphix.schema
 
+import com.strange.graphix.GraphixException
+import graphql.schema.DataFetchingEnvironment
 import graphql.schema.GraphQLArgument
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLInputType
 import graphql.schema.GraphQLNonNull
 import graphql.schema.GraphQLOutputType
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.valueParameters
 
 internal fun fieldDefinition(
@@ -16,7 +20,6 @@ internal fun fieldDefinition(
     name: String,
     output: GraphQLOutputType,
     types: TypeMapper,
-    skip: (KParameter) -> Boolean,
 ): GraphQLFieldDefinition {
     val builder =
         GraphQLFieldDefinition
@@ -24,7 +27,7 @@ internal fun fieldDefinition(
             .name(name)
             .description(function.graphQLDescription())
             .type(output)
-    function.valueParameters.filterNot(skip).forEach { parameter ->
+    function.valueParameters.filter { it.isArgument() }.forEach { parameter ->
         // A Kotlin default is still GraphQL NonNull unless unwrapped: graphql-java has no defaults.
         val argumentType =
             types.input(parameter.type).let { type ->
@@ -47,3 +50,28 @@ internal fun fieldDefinition(
 }
 
 internal fun KParameter.isGraphQLContext(): Boolean = hasAnnotation<GraphQLContext>()
+
+internal fun KParameter.isArgument(): Boolean = hasAnnotation<Argument>()
+
+internal fun KParameter.isDataFetchingEnvironment(): Boolean {
+    val classifier = type.classifier as? KClass<*> ?: return false
+    return classifier.isSubclassOf(DataFetchingEnvironment::class)
+}
+
+/**
+ * Every value parameter is the parent source, this field's DFE, `@GraphQLContext`, or `@Argument`.
+ * GraphQL arguments must be marked — that is what keeps DFE and operation context from becoming
+ * schema arguments.
+ */
+internal fun KFunction<*>.requireArgumentAnnotations(parent: KParameter? = null) {
+    valueParameters.forEach { parameter ->
+        if (parameter == parent) return@forEach
+        if (parameter.isDataFetchingEnvironment() || parameter.isGraphQLContext() || parameter.isArgument()) {
+            return@forEach
+        }
+        throw GraphixException(
+            "$name parameter '${parameter.name}' must be @Argument — " +
+                "DataFetchingEnvironment, the parent source, and @GraphQLContext do not take it",
+        )
+    }
+}

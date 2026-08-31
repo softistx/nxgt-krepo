@@ -47,8 +47,8 @@ annotation class SubscriptionMapping(
  * [com.strange.graphix.GraphixBuilder.type].
  *
  * [typeName] defaults to the simple name of the first argument's type. [field] defaults to
- * the Kotlin function name. The first parameter that is not `@GraphQLContext` is the parent
- * (`env.source`). Remaining parameters are GraphQL arguments.
+ * the Kotlin function name. The first parameter that is not DFE / `@GraphQLContext` is the
+ * parent (`env.source`). GraphQL arguments are `[Argument]` parameters.
  *
  * A field is either this or [BatchMapping], not both.
  */
@@ -63,13 +63,19 @@ annotation class SchemaMapping(
  * Batched extra field on a `@Serializable` type. graphql-java DataLoader is underneath;
  * Graphix registers the field — no [SchemaMapping] on the same field.
  *
- * The first parameter is the parents of this level (`books: List<Book>`). Return
- * `Map<Book, T>` or `List<T>` in key order. [typeName] defaults to the list element's simple
- * name, [field] to the Kotlin function name.
+ * The first parameter is the parents of this level (`books: List<Book>`). GraphQL arguments
+ * are `[Argument]` parameters — DataLoader keys include those values, so aliases with
+ * different arguments do not share a cached row. An optional
+ * [graphql.schema.DataFetchingEnvironment] is this field's DFE. Return `Map<Book, T>` or
+ * `List<T>` in key order. [typeName] defaults to the list element's simple name, [field] to
+ * the Kotlin function name.
  *
  * ```kotlin
  * @BatchMapping
  * suspend fun author(books: List<Book>): Map<Book, Author>
+ *
+ * @BatchMapping
+ * suspend fun snippets(books: List<Book>, @Argument limit: Int): Map<Book, List<String>>
  * ```
  */
 @Target(AnnotationTarget.FUNCTION)
@@ -113,9 +119,9 @@ annotation class GraphQLIgnore
 /**
  * Injects a value into a resolver parameter by `KClass`.
  *
- * [graphql.schema.DataFetchingEnvironment] is **this field** — source, arguments, DataLoader —
- * not an entry in [com.strange.graphix.Graphix.execute]'s map. Everything else is looked up in
- * that map. Missing → [com.strange.graphix.GraphixException].
+ * [graphql.schema.DataFetchingEnvironment] is recognized by type and does not need this
+ * annotation. Other types are looked up in [com.strange.graphix.Graphix.execute]'s map.
+ * Missing → [com.strange.graphix.GraphixException].
  *
  * Not a GraphQL argument, and not how a Spring bean is reached — those stay on the controller
  * constructor.
@@ -125,10 +131,15 @@ annotation class GraphQLIgnore
 annotation class GraphQLContext
 
 /**
- * Overrides the GraphQL argument name. The Kotlin parameter name is the default; compile with
- * parameter names retained or this has nothing to read.
+ * Marks a GraphQL argument. Required on every argument — a resolver parameter, and every
+ * property of a GraphQL input object. The parent source, this field's
+ * [graphql.schema.DataFetchingEnvironment], and `@GraphQLContext` do not take it. Output-type
+ * properties are fields, not arguments.
+ *
+ * [name] defaults to the Kotlin parameter / property name (or `@GraphQLName`). Compile with
+ * parameter names retained or a constructor parameter has nothing to read.
  */
-@Target(AnnotationTarget.VALUE_PARAMETER)
+@Target(AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Argument(
     /** GraphQL argument name. Empty uses [GraphQLName] or the Kotlin parameter name. */
