@@ -19,3 +19,7 @@ settings:
     version: 3.5.2
   kotlin:
     serialization: json
+  jvm:
+    # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file
+    # named `main.kt`; this one is `DemoServer.kt`.
+    mainClass: com.strange.demo.api.DemoServerKt
