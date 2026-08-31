@@ -1,0 +1,156 @@
+# stx-workflow
+
+Workflows for a Kotlin coroutine service: an ordered declaration of steps, a compensation per step,
+and state written down after each one so a process that dies mid-run can be picked up where it
+stopped.
+
+It is a plain `jvm/lib` with no store in it. The engine talks to a `WorkflowStore`, and which one it
+is gets decided once, by the application — `stx-workflow-redis` is the one that ships with this
+phase, and `InMemoryStore` is here for tests and for a worker that has nothing to survive.
+
+```kotlin
+@Serializable
+data class Checkout(
+    val items: List<Item>,
+    val card: Card,
+    val reservationId: String? = null,
+    val chargeId: String? = null,
+)
+
+val checkout = workflow<Checkout>("checkout") {
+    step("reserve") { context.copy(reservationId = stock.reserve(context.items)) }
+        .compensate { stock.release(context.reservationId!!) }
+
+    step("charge") { context.copy(chargeId = payments.charge(context.card, key = "$instanceId:$stepName")) }
+        .compensate { payments.refund(context.chargeId!!) }
+
+    step("confirm") { orders.confirm(context.reservationId!!); context }
+}
+
+val engine = WorkflowEngine(RedisWorkflowStore(redis)) { register(checkout) }
+val instance = engine.start(checkout, Checkout(items, card))
+```
+
+## Shape
+
+```
+com.strange.workflow          Workflow, WorkflowEngine, WorkflowInstance, WorkflowStatus, the exceptions
+com.strange.workflow.dsl      the verbs — step, branch, parallel, retry, timeout, compensate
+com.strange.workflow.engine   the loop: one attempt, the walk, the unwind
+com.strange.workflow.store    WorkflowStore, the persisted record and journal, InMemoryStore
+```
+
+## Checkpointed, not replayed
+
+There are two ways to make a workflow survive a restart. One is to re-run the workflow function from
+the top and feed each step its recorded result instead of running it — Temporal's model. It buys
+arbitrary imperative control flow, and it charges for it in determinism: `now()`, `random()`, a
+`Map` iteration order and an `if` on a field that has since changed are all bugs, and they are bugs
+that show up days later on a resume rather than in the test that ran the code once.
+
+This library takes the other one. The declaration is data — an ordered list of nodes — and the engine
+walks it, writing down what happened after each one. Nothing constrains what a step body does,
+because a step body is never re-run for bookkeeping: it is run when it has not been done, and
+skipped when it has. What it costs is that control flow has to be *said* rather than written — a
+fork is `branch { }` and not an `if` — and that is the trade this repo wants.
+
+## Delivery is at-least-once
+
+**The checkpoint is written after the effect.** A process that dies between a step's effect and its
+checkpoint replays that step when the instance resumes, because from the outside those two are
+indistinguishable from a process that died during the effect.
+
+That is not a gap to be closed. Writing the checkpoint *before* the effect would give at-most-once
+and lose work — a step that never ran costs the order — and there is no third option over arbitrary
+user code. So: **a step body must be idempotent, or must have a compensation that tolerates being
+asked to undo something that was never done.** The `StepScope` a step runs in exists to make the
+first one writable: `"$instanceId:$stepName"` is the same string on every replay of the same node of
+the same instance, which is exactly what a payment provider's idempotency key wants.
+
+The same is true one layer down, and for the same reason. A `RedisLock` is a lock on one Redis, not
+a consensus across several; a failover to a replica that had not seen it hands the instance to two
+runners. The conclusion is the sentence above, again.
+
+## One typed context, and where it does not fit
+
+A workflow's state is one `@Serializable` type threaded through every step. It makes the persisted
+form obvious, the resume exact, and every step's input and output the same thing, which is what lets
+a step be skipped without anybody having to reason about what it would have produced.
+
+Two rules come out of it being persisted, and both are review's job rather than a runtime check:
+
+- **Every field added to it later needs a default.** An instance written by the previous deploy has
+  to decode under the next one, or a rolling deploy becomes a fleet half of which cannot resume the
+  other half's work. The engine's `Json` is lenient about unknown keys for the same reason, so
+  *removing* a field is already safe. A context that will not decode does not crash-loop a worker:
+  the instance is marked `Failed`, leaves the runnable index, and waits for somebody.
+- **It holds references to large things, never the things.** The whole context is written again
+  after every node, so a document belongs in it as a storage key — `stx-storage` is right there —
+  and not as bytes.
+
+And one place a single typed context genuinely cannot express what is happening: **a fan-out**. Two
+legs cannot both return `C`, and merging two `C`s by field is either reflection or last-writer-wins,
+both of which are wrong quietly. So each leg produces a value of its own type, named by an
+`outcome<T>` key, and a `merge` — ordinary Kotlin, checked by the compiler — folds them in:
+
+```kotlin
+private val CHARGE = outcome<String>("charge")
+private val COURIER = outcome<Booking>("courier")
+
+parallel("provision") {
+    branch(CHARGE) { payments.charge(context.card) }.compensate { id -> payments.refund(id) }
+    branch(COURIER) { courier.book(context.items) }.compensate { b -> courier.cancel(b.id) }
+
+    merge { out -> context.copy(chargeId = out[CHARGE], booking = out[COURIER]) }
+}
+```
+
+Each leg is checkpointed on its own, so an instance that died with the charge through and the courier
+still in flight comes back and books the courier without charging twice.
+
+## A leg whose sibling fails is not cancelled
+
+It is allowed to finish, and if it succeeds it is recorded and then compensated like anything else.
+Cancelling it would stop it in the middle of a remote call whose result nobody saw — an effect that
+is neither written down nor undoable, which is the one state a compensating engine has no answer
+for. Waiting costs the time of the slowest leg, once.
+
+## The journal is the only record of progress
+
+There is no cursor. A cursor would be a second answer to the same question, and the two disagree the
+moment a node is nested — an index into the top-level list cannot say which of a branch arm's own
+steps have run. So a node is skipped when its **last** journal entry says it succeeded, and that one
+rule works at every level.
+
+It is also why a `branch` writes down which arm it took **before** running it. A fork re-decided on
+resume, against a context its own steps have since changed, sends the engine down the other arm and
+leaves it unwinding through steps that never happened.
+
+## A failed compensation stops everything
+
+The unwind runs newest first over the nodes whose last entry says they succeeded, checkpointing each
+one, so an interrupted unwind resumes rather than refunding twice. When a compensation fails for
+good, the instance lands `Failed` with the node named and **nothing further is undone**. Releasing
+the reservation for an order that is still charged leaves a state nobody can describe; a person is
+the right answer, and `Failed` is how this says so.
+
+`Compensated` is the ordinary outcome of a workflow that failed. `Failed` is the one that needs
+somebody, and it is the only status exempt from the store's retention.
+
+## Resume is not a worker
+
+`engine.resume(id)` is for an operator, a test, or an application with a scheduler of its own.
+Anybody who wants instances picked up automatically after a crash wants `WorkflowWorker` from
+`stx-workflow-redis`; `resume` in a `while (true)` loop is that class, written again and worse.
+
+## What this slice does not do
+
+- **No signals, so no human approval yet.** `WorkflowStatus.Awaiting` and `Sleeping` and the record's
+  `awaiting`/`wakeAt` fields exist and the engine's loop and the store's index are already shaped
+  around them, so the phase that adds `await(Approval)` adds a node type and a `signal` call rather
+  than a migration.
+- **No timers.** Same fields, same reason. A retry's backoff is held in the process today.
+- **No annotations.** They will produce a `Workflow<C>` through this same builder — the DSL verbs are
+  already thin extensions over one `add`, so a reflective front end needs no new hook.
+- **No Ktor or Spring integration**, and no store but Redis and memory. All four are sibling modules
+  when they come, and none of them changes anything here.

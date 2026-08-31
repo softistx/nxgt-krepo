@@ -27,6 +27,7 @@ What exists:
 | `libs/stx-spring-boot` | Spring Boot integration for the libraries here, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, and every auto-configuration opt-in behind `stx.*` |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `libs/stx-graphix` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphix-ktor` and `stx-graphix-spring` are the HTTP integrations |
+| `libs/stx-workflow` | Compensable workflows for a Kotlin coroutine service: a DSL of steps each with its own compensation, one `@Serializable` context threaded through them, and state checkpointed after every node so a process that dies mid-run is picked up where it stopped. `stx-workflow-redis` is the store and the worker |
 | `libs/stx-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `plugins/dgs-codegen` | Toolchain adapter of Netflix DGS codegen — GraphQL schema to Kotlin types |
@@ -802,6 +803,9 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no class scan in core |
   | `libs/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, `injectable` |
   | `libs/stx-graphix/stx-graphix-spring/README.md` | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
+  | `docs/workflow.md` | What a stx-workflow declaration may say — every verb, the step scope, the statuses and their transitions, the persisted record, the store contract. **This is where a new verb, retry policy or status is documented** |
+  | `libs/stx-workflow/stx-workflow/README.md` | How the workflow engine is shaped — why checkpointing and not replay, what at-least-once asks of a step, why a fan-out needs an explicit merge |
+  | `libs/stx-workflow/stx-workflow-redis/README.md` | The Redis store — the key layout, why a sorted set and not a stream, the lease, and why a finished instance expires but a failed one does not |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |

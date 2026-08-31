@@ -44,6 +44,7 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/stx-spring-boot` | Spring Boot integration for the libraries here: one auto-configuration per library, every bean off unless a `stx.*` property asks for it, plus the WebFlux helpers — a translated error body and the request's own locale, taken from the exchange rather than a `ThreadLocal` |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets and objects as coroutines, and presigned URLs and upload forms for browsers |
 | `libs/stx-graphix` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphix-ktor` and `stx-graphix-spring` are the HTTP integrations |
+| `libs/stx-workflow` | Workflows that survive a restart: steps declared in order, each with the compensation that undoes it, one typed context threaded through them, and the state written down after every node — so a crash resumes rather than restarts. `stx-workflow-redis` keeps them in Redis and picks up what nobody is advancing |
 | `libs/stx-testing` | What the integration specs run against: a backing service reused from the environment when one is named, and started as a container for the run when it is not |
 
 ## Getting started
@@ -87,6 +88,9 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`examples/material-demo/README.md`](examples/material-demo/README.md) | The catalogue — why it is three modules, how to run it, how a story is registered |
 | [`libs/stx-kafka/README.md`](libs/stx-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/stx-mongo/README.md`](libs/stx-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
+| [`docs/workflow.md`](docs/workflow.md) | What a stx-workflow declaration may say — the verbs, the step scope, the statuses, the record and the store contract |
+| [`libs/stx-workflow/stx-workflow/README.md`](libs/stx-workflow/stx-workflow/README.md) | The workflow engine — checkpointing rather than replay, what at-least-once asks of a step, and why a fan-out merges explicitly |
+| [`libs/stx-workflow/stx-workflow-redis/README.md`](libs/stx-workflow/stx-workflow-redis/README.md) | The Redis store — keys, the sorted set, the lease held across the work, and retention |
 | [`libs/stx-redis/README.md`](libs/stx-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
 | [`libs/stx-storage/README.md`](libs/stx-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
 | [`libs/stx-testing/README.md`](libs/stx-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |
