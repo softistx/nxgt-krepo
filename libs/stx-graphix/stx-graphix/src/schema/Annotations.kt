@@ -167,3 +167,32 @@ annotation class Directive(
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class GraphQLUnion
+
+/**
+ * Marks a field, an argument or an input-object field `@deprecated` in the schema.
+ *
+ * Kotlin's own `@Deprecated` is `BINARY`-retained and cannot be read through reflection, so this
+ * is a separate annotation. A GraphQL argument or input field may only be deprecated when it is
+ * optional — the spec forbids deprecating one a caller has to send.
+ */
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.VALUE_PARAMETER,
+)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLDeprecated(
+    /** The reason clients see in introspection. */
+    val reason: String = "No longer supported",
+)
+
+/**
+ * Marks a `@Serializable` class used as an input as a GraphQL **`@oneOf` input object**: exactly
+ * one of its fields may be given, and it may not be null.
+ *
+ * This is GraphQL's answer to the input union a sealed hierarchy cannot be. Every field must be
+ * nullable, which is what lets a caller send only one.
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLOneOf
