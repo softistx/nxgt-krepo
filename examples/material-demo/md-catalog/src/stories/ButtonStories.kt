@@ -20,6 +20,7 @@ import com.strange.material.button.Button
 import com.strange.material.button.ButtonColor
 import com.strange.material.button.ButtonRow
 import com.strange.material.button.ButtonVariant
+import com.strange.material.button.ConfirmButton
 import com.strange.material.button.CopyButton
 import com.strange.material.button.Fab
 import com.strange.material.button.FabAction
@@ -197,6 +198,15 @@ val ButtonStories =
         story("Copy button") { knobs ->
             CopyButton(
                 text = knobs.text("Value", "ord_9f3a"),
+                enabled = knobs.flag("Enabled", true),
+            )
+        }
+
+        story("Confirm button") { knobs ->
+            ConfirmButton(
+                text = knobs.text("Label", "Delete"),
+                onConfirm = {},
+                confirmText = "Confirm delete?",
                 enabled = knobs.flag("Enabled", true),
             )
         }

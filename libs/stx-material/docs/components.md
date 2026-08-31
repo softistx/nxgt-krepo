@@ -13,9 +13,10 @@ has them.
 added is the default that was missing: the colour matrix resolved into M3's own `*Colors`, the
 padding and rhythm inside a card, a hover state M3's chip does not have, and a press that gives
 under the finger. Only `Alert`, `EmptyState`, `Skeleton`, `ResponsiveButton`, `Rating`, `Stat`,
-`LabeledDivider`, `FilterBar`, `UploadField`, `StatusDot`, `Kbd`, `QuantityField` and `AvatarGroup`
-are built from primitives, because M3 has nothing to start from. AGENTS.md's *Building a component*
-is the rule.
+`LabeledDivider`, `FilterBar`, `UploadField`, `StatusDot`, `Kbd`, `QuantityField`, `AvatarGroup`,
+`InlineEdit`, `ExpandableText`, `CodeBlock`, `SectionHeader`, `RelativeTime`, `ConfirmButton` and
+`PasswordMeter` are built from primitives, because M3 has nothing to start from. AGENTS.md's
+*Building a component* is the rule.
 
 ## Foundation
 
@@ -62,10 +63,10 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds twenty-three hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StrangeIcons` holds twenty-four hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
-`Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`.
-They are defined
+`Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`,
+`Attach`. They are defined
 in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
 has no key for the Material icons, `$compose.material` does not carry `material-icons-core` in
 Compose Multiplatform 1.11, and the AndroidX icon artifacts are Android-only. An application that
@@ -87,6 +88,7 @@ component here takes one.
 | `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled` | `buttons/toggle-button` |
 | `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color` | `buttons/icon-toggle` |
 | `CopyButton` | `text`, `description = "Copy"` | `buttons/copy-button` |
+| `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000` | `buttons/confirm-button` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonColor` — `Primary`, `Secondary`, `Success`, `Info`, `Warning`, `Danger`, `Neutral`.
@@ -115,6 +117,8 @@ trailing chevron opens a `Menu` of alternatives.
 `ToggleButton` is M3's `ToggleButton` — Follow, pin, list-or-grid — and `IconToggle` is the icon
 form. Unchecked is quiet; checked uses the colour pair. `CopyButton` copies and flashes a check;
 it uses `ClipboardManager.setText`, the portable API (`ClipEntry` is a native handle).
+`ConfirmButton` arms on the first click and fires on the second; wait three seconds and it
+disarms. A sentence of warning still belongs on `ConfirmDialog`.
 
 **Collapsed, it is an `IconButton`** — round, 40 × 40, M3's own metrics — not a pill with the label
 taken out. The two forms are two components and `AnimatedContent` morphs between them.
@@ -138,6 +142,11 @@ taken out. The two forms are two components and `AnimatedContent` morphs between
 | `ActionChip` | `text`, `onClick`, `leading?`, `trailing?` | `display/action-chip` |
 | `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `display/status-dot` |
 | `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `display/keyboard-shortcut` |
+| `SuggestionChip` | `text`, `onClick`, `leading?` | `display/suggestion-chip` |
+| `FileChip` | `name`, `sizeLabel?`, `onRemove?`, `onClick?` | `display/file-chip` |
+| `SectionHeader` | `title`, `supporting?`, `action?` | `display/section-header` |
+| `CodeBlock` | `text`, `copyable = true` | `display/code-block` |
+| `ExpandableText` | `text`, `collapsedLines = 3`, `more`, `less` | `display/expandable-text` |
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
@@ -170,6 +179,11 @@ with a word in the gap.
 `Chip` is a filter (it stays selected). `ActionChip` is a verb — M3's `AssistChip` — so "Call" does
 not wear a tick. `StatusDot` is presence next to a name; an `Avatar` already has a tone ring for
 the same fact on a face. `Kbd` draws a shortcut as keycaps.
+
+`SuggestionChip` is a completion, not a filter and not a verb. `FileChip` is what landed in an
+`UploadField`. `SectionHeader` titles a block (`EntityHeader` titles a page). `CodeBlock` is
+`TypographyVariant.Code` plus `CopyButton`. `ExpandableText` only grows a "Read more" when the
+paragraph actually overflows.
 
 ## Forms
 
@@ -222,6 +236,8 @@ adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.me
 | `OtpField` | `field`, `length = 6`, `label?`, `helper?` | `forms/one-time-code` |
 | `InputGroup` | `content: RowScope` | `forms/input-group` |
 | `UploadField` | `onClick`, `label`, `supporting?`, `enabled` | `forms/upload` |
+| `InlineEdit` | `value`, `onValueChange`, `placeholder`, `enabled` | `forms/inline-edit` |
+| `PasswordMeter` | `value` | `forms/password-meter` |
 | `ExtendedLabel` | `text`, `required`, `optional`, `trailing?` | used by the above |
 | `HelperText` | `helper?`, `error?` | used by the above |
 | `FieldScaffold` | `label?`, `required`, `helper?`, `error?`, `content` | used by the above |
@@ -245,6 +261,10 @@ one picker on every platform — so `onClick` is the application's.
 backspace on an empty draft removes the last tag. Duplicates are ignored, case insensitive.
 `QuantityField` is plus and minus around a metric; M3 has no stepper. `SliderField` has a second
 overload for a `ClosedFloatingPointRange` — M3's `RangeSlider`, with both ends printed.
+
+`InlineEdit` keeps a draft until it is committed, so Escape can put the previous value back.
+`PasswordMeter` is four segments graded locally (length, case, digit, symbol) — not a breach
+check.
 
 `CheckboxGroup` holds the set of what is ticked rather than a list of booleans parallel to the
 options, so the field holds the answer and reordering the options cannot silently change it.
@@ -357,9 +377,12 @@ indicators; `Linear` / `Circular` stay the quiet ones.
 | `DateRangeField` | `start`, `end`, `onValueChange` | `date-and-time/date-range-field` |
 | `TimeField` | `value: LocalTime?`, `onValueChange`, `label` | `date-and-time/time-field` |
 | `Calendar` | `value: LocalDate?`, `onValueChange` | `date-and-time/calendar` |
+| `RelativeTime` | `at: Instant`, `now: Instant`, `zone = UTC` | `date-and-time/relative-time` |
 
 The fields are how a form asks; the pickers stay in a dialog. `Calendar` is the same `DatePicker`
 inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate` / `LocalTime`.
+`RelativeTime` takes `now` as an argument: a ticking label is the screen's, a snapshot test needs
+a frozen instant.
 
 ## Data
 
