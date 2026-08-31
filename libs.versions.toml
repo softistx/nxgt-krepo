@@ -57,7 +57,7 @@ hibernate-orm = "7.4.5.Final"
 jakarta-persistence = "3.2.0"
 # Bean Validation: the reference implementation, the API an entity writes against, and the
 # expression language its default message interpolator needs at runtime.
-hibernate-validator = "9.0.1.Final"
+hibernate-validator = "9.1.3.Final"
 jakarta-validation = "3.1.1"
 expressly = "6.0.0"
 # Classpath scanning, for `Jpa.scan`. The version kotest already resolves, so a test run carries one.
