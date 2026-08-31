@@ -63,10 +63,10 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds twenty-four hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StrangeIcons` holds twenty-seven hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
 `Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`,
-`Attach`. They are defined
+`Attach`, `Info`, `ViewList`, `ViewGrid`. They are defined
 in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
 has no key for the Material icons, `$compose.material` does not carry `material-icons-core` in
 Compose Multiplatform 1.11, and the AndroidX icon artifacts are Android-only. An application that
@@ -92,6 +92,8 @@ component here takes one.
 | `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled` | `buttons/busy-button` |
 | `MoreMenu` | `items: List<MenuItem>`, `description = "More"` | `buttons/more-menu` |
 | `OverflowBar` | `actions: List<OverflowAction>`, `maxVisible` | `buttons/overflow-bar` |
+| `IconBadge` | `icon`, `description`, `onClick`, `count = 0`, `tone = Error` | `buttons/icon-badge` |
+| `ViewToggle` | `value: ViewMode`, `onChange` | `buttons/view-toggle` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonColor` — `Primary`, `Secondary`, `Success`, `Info`, `Warning`, `Danger`, `Neutral`.
@@ -123,7 +125,8 @@ it uses `ClipboardManager.setText`, the portable API (`ClipEntry` is a native ha
 `ConfirmButton` arms on the first click and fires on the second; wait three seconds and it
 disarms. A sentence of warning still belongs on `ConfirmDialog`. `BusyButton` swaps the label
 for a spinner. `MoreMenu` is the trailing more on a row. `OverflowBar` is M3's `AppBarRow`:
-visible icons stay in the row, the rest land in the overflow menu.
+visible icons stay in the row, the rest land in the overflow menu. `IconBadge` is an `IconButton`
+in a `BadgedBox`; count zero shows no badge. `ViewToggle` is list-or-grid as two `IconToggle`s.
 
 **Collapsed, it is an `IconButton`** — round, 40 × 40, M3's own metrics — not a pill with the label
 taken out. The two forms are two components and `AnimatedContent` morphs between them.
@@ -245,6 +248,9 @@ adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.me
 | `InlineEdit` | `value`, `onValueChange`, `placeholder`, `enabled` | `forms/inline-edit` |
 | `PasswordMeter` | `value` | `forms/password-meter` |
 | `CopyField` | `value`, `label?`, `helper?` | `forms/copy-field` |
+| `ThemeToggle` | `value: ColorMode`, `onChange` | `forms/theme-toggle` |
+| `FormSection` | `title`, `supporting?`, `content` | `forms/form-section` |
+| `DangerZone` | `text`, `title = "Danger zone"`, `action` | `forms/danger-zone` |
 | `ExtendedLabel` | `text`, `required`, `optional`, `trailing?` | used by the above |
 | `HelperText` | `helper?`, `error?` | used by the above |
 | `FieldScaffold` | `label?`, `required`, `helper?`, `error?`, `content` | used by the above |
@@ -273,6 +279,9 @@ overload for a `ClosedFloatingPointRange` — M3's `RangeSlider`, with both ends
 `PasswordMeter` is four segments graded locally (length, case, digit, symbol) — not a breach
 check. `CopyField` is a read-only field with a `CopyButton`. `TriStateCheckbox` is the parent of
 a group: Off, On, or Indeterminate; `cycleCheckState` is the usual next value.
+`ThemeToggle` names Light / Dark / System; the host still installs the scheme. `FormSection` is a
+`SectionHeader` plus its fields. `DangerZone` is an outlined card with the error colour on the
+title, so a delete is not just another section.
 
 `CheckboxGroup` holds the set of what is ticked rather than a list of booleans parallel to the
 options, so the field holds the answer and reordering the options cannot silently change it.
@@ -293,8 +302,13 @@ because M3 has neither.
 | `FloatingToolbar` | `expanded`, `leading?`, `trailing?`, `content` | `navigation/floating-toolbar` |
 | `Breadcrumb` | `items: List<BreadcrumbItem>` | `navigation/breadcrumb` |
 | `Stepper` | `steps`, `current`, `onStep?`, `collapseBelow = 520.dp` | `navigation/stepper` |
+| `StepFooter` | `onNext`, `onBack?`, `nextLabel`, `busy` | `navigation/step-footer` |
+| `BottomBar` | `actions`, `fab?` | `navigation/bottom-bar` |
 
 `AppBarSize` — `Small`, `Centered`, `Medium`, `Large`, mapped onto M3's four top app bars.
+`StepFooter` is Back (optional) and Continue under a stepper; `busy` turns Continue into a
+`BusyButton`. `BottomBar` is M3's `BottomAppBar` — verbs for this screen, not destinations
+(`NavigationSuite` is the destinations).
 
 `NavigationDestination` is a label and an icon, then the decorations a real app actually hangs on
 a destination — not only a badge and a chip:
@@ -361,6 +375,7 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 | `Sheet` | `visible`, `onDismiss`, `content` | `surfaces/sheet` |
 | `Drawer` | `open`, `onDismiss`, `drawer`, `content` | `surfaces/drawer` |
 | `Tooltip` | `text`, `content` | `surfaces/tooltip` |
+| `HelpTip` | `text`, `description = "More information"` | `surfaces/help-tip` |
 | `HoverCard` | `title`, `text`, `action?`, `onAction?`, `content` | `surfaces/hover-card` |
 | `Menu` | `expanded`, `onDismiss`, `items` | `surfaces/menu` |
 | `ContextMenu` | `items`, `content` | `surfaces/context-menu` |
@@ -373,7 +388,8 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 | `Carousel` | `count`, `peek = 48.dp`, `page` | `surfaces/carousel` |
 | `SwipeActions` | `onDismiss`, `background`, `content` | `surfaces/swipe-actions` |
 
-`ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of M3 `Snackbar`s painted with
+`HelpTip` is a `Tooltip` around an info `IconButton`, so the sentence and the affordance stay
+together. `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of M3 `Snackbar`s painted with
 `Tone` — M3's host holds one, a dashboard often needs two. `Accordion` and `Carousel` are built
 here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
 `Disclosure` is one panel; `Accordion` is a list with at most one open. `LabeledProgress` prints
@@ -407,10 +423,13 @@ a frozen instant.
 | `EntityHeader` | `title`, `supporting?`, `leading?`, `actions` | `data/entity-header` |
 | `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext` | `data/pagination` |
 | `Timeline` | `items: List<TimelineItem>` | `data/timeline` |
+| `SortControl` | `options`, `selected`, `direction`, `onSelectedChange`, `onDirectionChange` | `data/sort-control` |
 
 `DataTable` is a table in expanded panes and a stack of `Description` cards below `collapseBelow`,
 measured on the offered width. `Pagination` is previous/next for a keyset page, not `page=3`.
 `CommandPalette` filters by a case-insensitive contains; the host opens it (typically ⌘K).
+`SortControl` is a `SelectField` plus a direction icon; `cycleSortDirection` is the usual next
+value.
 
 ## Media
 
