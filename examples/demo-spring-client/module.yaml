@@ -38,3 +38,9 @@ plugins:
       - spec: ../spring-orders/openapi/api-docs.yaml
         packageName: com.strange.demo.spring.orders
         client: Spring
+
+settings:
+  jvm:
+    # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file
+    # named `main.kt`; this one is `SpringDemo.kt`.
+    mainClass: com.strange.demo.spring.SpringDemoKt
