@@ -7,3 +7,5 @@ modules:
 
 plugins:
   - ./plugins/openapi
+  - ./plugins/dgs-codegen
+  - ./plugins/apollo

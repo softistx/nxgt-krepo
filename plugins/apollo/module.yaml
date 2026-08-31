@@ -1,0 +1,14 @@
+product: jvm/amper-plugin
+description: Kotlin Toolchain adapter of Apollo Kotlin codegen — schema and documents to Kotlin models
+
+dependencies:
+  - $libs.apollo.compiler
+  - $libs.slf4j.nop
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+pluginInfo:
+  settingsClass: com.strange.apollo.plugin.ApolloSettings

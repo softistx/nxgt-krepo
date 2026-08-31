@@ -23,7 +23,8 @@ two serialization libraries about what the document means fails a test rather th
 
 `examples/jpa-shop` is separate from that chain: a Ktor catalogue over Postgres showing
 `stx-jpa`'s CRUD extensions, transaction guard and audit layer end to end. So is
-`examples/graphix-shop`, a Ktor GraphQL catalogue over `stx-graphix-ktor`, and
+`examples/graphix-shop`, a Ktor GraphQL catalogue over `stx-graphix-ktor`,
+`examples/graphix-codegen`, the two GraphQL codegen plugins on one schema, and
 `examples/material-demo`, the catalogue for the UI library — `./kotlin run -m md-desktop`.
 
 Alongside them are the shared service libraries, which have nothing to do with the generator:
@@ -77,6 +78,9 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-graphix/stx-graphix-ktor/README.md`](libs/stx-graphix/stx-graphix-ktor/README.md) | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, `injectable` |
 | [`libs/stx-graphix/stx-graphix-spring/README.md`](libs/stx-graphix/stx-graphix-spring/README.md) | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
 | [`examples/graphix-shop/README.md`](examples/graphix-shop/README.md) | The GraphQL catalogue — how to run it, the split SDL under `resources/graphql/` |
+| [`plugins/dgs-codegen/README.md`](plugins/dgs-codegen/README.md) | DGS codegen plugin — schema to Kotlin types |
+| [`plugins/apollo/README.md`](plugins/apollo/README.md) | Apollo codegen plugin — schema and documents to Kotlin models |
+| [`examples/graphix-codegen/README.md`](examples/graphix-codegen/README.md) | Both plugins on one schema |
 | [`libs/stx-material/README.md`](libs/stx-material/README.md) | The UI library — its shape, how `StrangeTheme` slots into an existing Material 3 application, and how a component is added |
 | [`libs/stx-material/docs/tokens.md`](libs/stx-material/docs/tokens.md) | What a token may say — colour roles, spacing, durations and easings, and why shapes and elevation stay M3's |
 | [`libs/stx-material/docs/components.md`](libs/stx-material/docs/components.md) | Every component, its parameters, and its story in the catalogue |
