@@ -121,7 +121,7 @@ A scalar is declared on `GraphixBuilder` — lambdas run with the operation
 data class Money(val cents: Long)
 
 Graphix {
-    scalar("Money", kotlinType = Money::class) {
+    scalar("Money", kotlinType = Money::class, specifiedBy = "https://example.test/money") {
         serialize { value -> (value as Money).cents.toString() }
         parseValue { input -> Money((input as String).toLong()) }
         parseLiteral { input -> Money((input as graphql.language.StringValue).value!!.toLong()) }
@@ -132,7 +132,9 @@ Graphix {
 
 `kotlinType` is how an annotated field of that class becomes this scalar. Without it the
 scalar exists on the schema (SDL `scalar Money`, or `additionalType`) but Kotlin fields
-still need a serializer.
+still need a serializer. `specifiedBy` is GraphQL's `@specifiedBy` — the URL of the scalar's own
+specification, which is what a client generator reads to learn what the string actually holds.
+It surfaces as `__type(name: "Money") { specifiedByURL }`.
 
 A **field directive** wraps the original fetcher. `proceed()` is suspend; the wrapper
 sees `environment` and `graphQlContext`:
@@ -205,6 +207,30 @@ same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 | `@Argument("foo")` | parameter | **Required** on every GraphQL argument. [name] defaults to the Kotlin parameter name |
 | `@GraphQLContext` | parameter | other types from `execute`'s context map. `DataFetchingEnvironment` is this field **by type** and does not need the annotation |
 | `@Directive("name")` | mapping function | wraps the field with the `fieldDirective("name")` registered on the builder |
+| `@GraphQLDeprecated("why")` | function, property, parameter | GraphQL `@deprecated`. Kotlin's own `@Deprecated` is `BINARY`-retained and unreadable by reflection, hence a second annotation |
+| `@GraphQLOneOf` | class used as an input | GraphQL `@oneOf`: exactly one field, and not null |
+
+A deprecated field stays in the schema and keeps resolving; introspection hides it unless the
+query asks (`fields(includeDeprecated: true)`). An **argument** or **input field** may only be
+deprecated when it is optional — the spec forbids deprecating one a caller has to send, and
+Graphix says so at schema build rather than letting graphql-java reject the schema.
+
+`@GraphQLOneOf` is GraphQL's answer to the input union a sealed hierarchy cannot be:
+
+```kotlin
+@GraphQLOneOf
+@Serializable
+data class PickInput(
+    val byId: String? = null,
+    val byName: String? = null,
+)
+```
+
+Every field must be nullable — that is what lets a caller send only one — and a non-nullable one
+fails schema build naming it. The `= null` defaults are not decoration: graphql-java coerces a
+oneOf input to a map holding only the field that was given, so a property with neither a default
+nor a value has nothing to be constructed from. Sending two fields, none, or one that is `null` is
+a GraphQL error, enforced by graphql-java. An SDL `input X @oneOf` behaves identically.
 
 `@Argument` is required on every GraphQL argument — a resolver parameter. Unmarked parameters
 are not arguments: the parent source (`SchemaMapping` / `BatchMapping` first parameter), this

@@ -2,6 +2,7 @@ package com.strange.graphix.schema
 
 import com.strange.graphix.GraphixException
 import com.strange.graphix.scalar.Scalars
+import graphql.Directives
 import graphql.Scalars.GraphQLBoolean
 import graphql.Scalars.GraphQLFloat
 import graphql.Scalars.GraphQLInt
@@ -174,6 +175,7 @@ internal class TypeMapper(
                     .name(fieldName)
                     .description(property.graphQLDescription())
                     .type(output(elementType))
+                    .apply { property.graphQLDeprecation()?.let { deprecate(it) } }
             }
         }
         val own = extraFields[name].orEmpty()
@@ -231,6 +233,7 @@ internal class TypeMapper(
                     .name(property.graphQLPropertyName())
                     .description(property.graphQLDescription())
                     .type(output(property.returnType))
+                    .apply { property.graphQLDeprecation()?.let { deprecate(it) } }
             }
         }
         extraFields[name].orEmpty().forEach { extra ->
@@ -272,11 +275,13 @@ internal class TypeMapper(
         val name = inputName(kClass)
         inputs[name]?.let { return it }
         if (!building.add(name)) return GraphQLTypeReference.typeRef(name)
+        val oneOf = kClass.findAnnotation<GraphQLOneOf>() != null
         val builder =
             GraphQLInputObjectType
                 .newInputObject()
                 .name(name)
                 .description(kClass.graphQLDescription())
+        if (oneOf) builder.withDirective(Directives.OneOfDirective)
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
             refuseArgumentOnInputField(kClass, property)
             val argumentType =
@@ -287,14 +292,24 @@ internal class TypeMapper(
                         type
                     }
                 }
-            builder.field(
+            val fieldName = property.findAnnotationName() ?: elementName
+            if (oneOf && argumentType is GraphQLNonNull) {
+                throw GraphixException(
+                    "$name is @GraphQLOneOf but '$fieldName' is not nullable — " +
+                        "every field of a oneOf input object must be, so a caller can send exactly one",
+                )
+            }
+            val field =
                 GraphQLInputObjectField
                     .newInputObjectField()
-                    .name(property.findAnnotationName() ?: elementName)
+                    .name(fieldName)
                     .description(property.graphQLDescription())
                     .type(argumentType)
-                    .build(),
-            )
+            property.graphQLDeprecation()?.let { reason ->
+                refuseRequiredDeprecation("input field '$fieldName' of $name", argumentType)
+                field.deprecate(reason)
+            }
+            builder.field(field.build())
         }
         building.remove(name)
         return builder.build().also { inputs[name] = it }
