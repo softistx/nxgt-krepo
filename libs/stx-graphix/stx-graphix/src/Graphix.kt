@@ -6,9 +6,12 @@ import com.strange.graphix.execute.executionInput
 import com.strange.graphix.execute.toGraphixResult
 import com.strange.graphix.schema.DefaultSchemaExtensions
 import com.strange.graphix.schema.DefaultSchemaLocations
+import com.strange.graphix.schema.FieldDirectiveWrap
+import com.strange.graphix.schema.GraphixDirective
 import com.strange.graphix.schema.graphQLSchema
 import com.strange.graphix.schema.loadSchemaFiles
 import graphql.GraphQL
+import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.SchemaPrinter
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -97,6 +100,10 @@ class GraphixBuilder internal constructor(
     private val types = mutableListOf<Any>()
     private var resourceLocations: List<String> = DefaultSchemaLocations
     private var resourceExtensions: List<String> = DefaultSchemaExtensions
+    private val customScalars = mutableListOf<GraphQLScalarType>()
+    private val kotlinScalars = mutableMapOf<KClass<*>, GraphQLScalarType>()
+    private val fieldDirectives = mutableMapOf<String, FieldDirectiveWrap>()
+    private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
 
     /** Registers [instance]; every `@QueryMapping` function on it becomes a field on `Query`. */
     fun query(instance: Any) {
@@ -144,10 +151,46 @@ class GraphixBuilder internal constructor(
         resourceExtensions = extensions.toList()
     }
 
+    internal fun addScalar(
+        type: GraphQLScalarType,
+        kotlinType: KClass<*>?,
+    ) {
+        if (customScalars.any { it.name == type.name }) {
+            throw GraphixException("duplicate scalar '${type.name}'")
+        }
+        customScalars += type
+        if (kotlinType != null) kotlinScalars[kotlinType] = type
+    }
+
+    internal fun addFieldDirective(directive: GraphixDirective) {
+        if (!fieldDirectives.containsKey(directive.name)) {
+            fieldDirectives[directive.name] = directive.wrap
+            return
+        }
+        throw GraphixException("duplicate field directive '${directive.name}'")
+    }
+
+    internal fun addEngineCustomizer(customizer: GraphQLEngineCustomizer) {
+        engineCustomizers += customizer
+    }
+
     internal fun build(): Graphix {
         val files = resourceLocations.loadSchemaFiles(resourceExtensions)
-        val (schema, loaders) = graphQLSchema(queries, mutations, subscriptions, types, json, files)
-        return Graphix(GraphQL.newGraphQL(schema).build(), loaders)
+        val (schema, loaders) =
+            graphQLSchema(
+                queries,
+                mutations,
+                subscriptions,
+                types,
+                json,
+                files,
+                customScalars,
+                kotlinScalars,
+                fieldDirectives,
+            )
+        val builder = GraphQL.newGraphQL(schema)
+        engineCustomizers.forEach { with(it) { builder.customize() } }
+        return Graphix(builder.build(), loaders)
     }
 }
 

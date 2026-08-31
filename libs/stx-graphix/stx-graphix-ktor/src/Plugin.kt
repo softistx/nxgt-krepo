@@ -1,8 +1,11 @@
 package com.strange.graphix.ktor
 
 import com.strange.common.serialization.lenientJson
+import com.strange.graphix.GraphQLEngineCustomizer
 import com.strange.graphix.Graphix
 import com.strange.graphix.GraphixBuilder
+import com.strange.graphix.GraphixCustomizer
+import com.strange.graphix.engine
 import com.strange.graphix.http.SubscriptionProtocol
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
@@ -11,6 +14,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
 import io.ktor.util.AttributeKey
 import kotlinx.serialization.json.Json
+import graphql.GraphQL as GraphQLEngine
 
 /**
  * One GraphQL engine for the application, served at [GraphQLConfiguration.path].
@@ -38,6 +42,9 @@ val GraphQL =
                     schemaFileExtensions(pluginConfig.schemaFileExtensions)
                     val block = pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance")
                     block()
+                    pluginConfig.customizeBlock?.invoke(this)
+                    if (pluginConfig.fromDi) application.applyGraphixDi(this)
+                    pluginConfig.engineBlock?.let { engine(it) }
                 }
         application.attributes.put(GraphixKey, engine)
         val path = pluginConfig.path
@@ -85,7 +92,15 @@ class GraphQLConfiguration {
     /** File suffixes under [schemaLocations]. Default `.graphqls` and `.gqls`. */
     var schemaFileExtensions: List<String> = listOf(".graphqls", ".gqls")
 
+    /**
+     * Pull [GraphixCustomizer], scalars and field directives from Ktor DI — the same
+     * beans Spring collects. Off by default: `ktor-server-di` is compile-only.
+     */
+    var fromDi: Boolean = false
+
     internal var schemaBlock: (GraphixBuilder.() -> Unit)? = null
+    internal var customizeBlock: (GraphixBuilder.() -> Unit)? = null
+    internal var engineBlock: GraphQLEngineCustomizer? = null
 
     /**
      * Builds the engine at install. Query/mutation/subscription instances passed here are
@@ -94,6 +109,16 @@ class GraphQLConfiguration {
      */
     fun schema(block: GraphixBuilder.() -> Unit) {
         schemaBlock = block
+    }
+
+    /** Extra [GraphixBuilder] configuration after [schema], same role as a Spring [GraphixCustomizer] bean. */
+    fun customize(block: GraphixBuilder.() -> Unit) {
+        customizeBlock = block
+    }
+
+    /** graphql-java [GraphQLEngine.Builder] after the schema is built. */
+    fun engine(block: GraphQLEngine.Builder.() -> Unit) {
+        engineBlock = GraphQLEngineCustomizer(block)
     }
 }
 

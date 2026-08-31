@@ -49,6 +49,58 @@ A type that is not `@Serializable` fails schema build, naming that type.
 
 `Map` and polymorphic serializers are not GraphQL types yet.
 
+## Custom scalars and field directives
+
+A scalar is declared on `GraphixBuilder` — lambdas run with the operation
+`GraphQLContext` as receiver, the same bag `@GraphQLContext` reads:
+
+```kotlin
+data class Money(val cents: Long)
+
+Graphix {
+    scalar("Money", kotlinType = Money::class) {
+        serialize { value -> (value as Money).cents.toString() }
+        parseValue { input -> Money((input as String).toLong()) }
+        parseLiteral { input -> Money((input as graphql.language.StringValue).value!!.toLong()) }
+    }
+    query(PriceQueries())
+}
+```
+
+`kotlinType` is how an annotated field of that class becomes this scalar. Without it the
+scalar exists on the schema (SDL `scalar Money`, or `additionalType`) but Kotlin fields
+still need a serializer.
+
+A **field directive** wraps the original fetcher. `proceed()` is suspend; the wrapper
+sees `environment` and `graphQlContext`:
+
+```kotlin
+Graphix {
+    fieldDirective("uppercase") {
+        val value = proceed()
+        (value as? String)?.uppercase() ?: value
+    }
+    query(UpperQueries())
+}
+
+class UpperQueries {
+    @QueryMapping
+    @Directive("uppercase")
+    fun hello(): String = "world"
+}
+```
+
+On an SDL schema, `@uppercase` on the field is enough — `SchemaDirectiveWiring` is
+registered under that name. `@Directive` is the annotation-schema equivalent.
+
+Spring collects `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and
+`GraphQLEngineCustomizer` beans the way it collects `@GraphQLController`.
+`GraphixCustomizer` is `fun GraphixBuilder.customize()`; `GraphQLEngineCustomizer` is
+`fun GraphQL.Builder.customize()` (instrumentation, execution strategy).
+
+Ktor: `customize { }` / `engine { }` on `install(GraphQL)`, and `fromDi = true` pulls the
+same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
+
 ## Fields and arguments
 
 | Annotation | Where | Effect |

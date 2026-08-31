@@ -31,8 +31,9 @@ class OrderMutations(
 ```
 
 The application still creates the controller bean (component scan, or an `@Bean`). This module
-collects every bean annotated `@GraphQLController` and builds one `Graphix` from them. An
-application's own `Graphix` bean wins (`@ConditionalOnMissingBean`).
+collects every bean annotated `@GraphQLController` and builds one `Graphix` from them, plus
+`GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and `GraphQLEngineCustomizer`
+beans. An application's own `Graphix` bean wins (`@ConditionalOnMissingBean`).
 
 **A Spring bean is the controller's constructor, not GraphQL context.** `OrderService` is injected
 when Boot builds `OrderMutations`. Graphix keeps that instance and the data fetcher calls it.

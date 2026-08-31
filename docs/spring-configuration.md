@@ -308,7 +308,7 @@ metadata lives in that module's `additional-spring-configuration-metadata.json`.
 
 | Key | Type | Default | |
 | --- | --- | --- | --- |
-| `enabled` | boolean | `false` | Serves POST/GET GraphQL at [path]. Collects `@GraphQLController` beans as roots — those beans are ordinary Spring objects, so a mutation's `OrderService` is constructor injection, not GraphQL context. An application's own `Graphix` bean wins |
+| `enabled` | boolean | `false` | Serves POST/GET GraphQL at [path]. Collects `@GraphQLController` beans as roots, plus `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and `GraphQLEngineCustomizer` beans. Those beans are ordinary Spring objects, so a mutation's `OrderService` is constructor injection, not GraphQL context. An application's own `Graphix` bean wins |
 | `path` | string | `/graphql` | HTTP path |
 | `subscriptions` | `sse` \| `graphql-ws` | `sse` | `sse` is `text/event-stream` on POST. `graphql-ws` is a WebSocket on [path] (`graphql-transport-ws`); HTTP POST of a subscription is then 400 |
 | `schema-locations` | list | `classpath:graphql/` | Directories of `.graphqls` / `.gqls` files, scanned recursively and merged. Empty scan keeps the annotated schema. Same default as Spring GraphQL |
