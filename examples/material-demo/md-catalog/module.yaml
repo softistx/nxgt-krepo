@@ -35,6 +35,6 @@ settings:
       - androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
   compose:
     enabled: true
-    version: 1.11.1
+    version: 1.12.0
   android:
     namespace: com.strange.material.demo
