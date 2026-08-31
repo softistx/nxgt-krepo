@@ -8,6 +8,7 @@ import com.strange.graphix.schema.DefaultSchemaExtensions
 import com.strange.graphix.schema.DefaultSchemaLocations
 import com.strange.graphix.schema.FieldDirectiveWrap
 import com.strange.graphix.schema.GraphixDirective
+import com.strange.graphix.schema.GraphixTypeName
 import com.strange.graphix.schema.graphQLSchema
 import com.strange.graphix.schema.loadSchemaFiles
 import com.strange.graphix.validation.GraphixValidation
@@ -108,6 +109,7 @@ class GraphixBuilder internal constructor(
     private val customScalars = mutableListOf<GraphQLScalarType>()
     private val kotlinScalars = mutableMapOf<KClass<*>, GraphQLScalarType>()
     private val fieldDirectives = mutableMapOf<String, FieldDirectiveWrap>()
+    private val typeResolvers = mutableMapOf<String, GraphixTypeName>()
     private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
     private var validation: GraphixValidation? = null
 
@@ -176,6 +178,15 @@ class GraphixBuilder internal constructor(
         throw GraphixException("duplicate field directive '${directive.name}'")
     }
 
+    internal fun addTypeResolver(
+        typeName: String,
+        resolver: GraphixTypeName,
+    ) {
+        if (typeResolvers.putIfAbsent(typeName, resolver) != null) {
+            throw GraphixException("duplicate type resolver for '$typeName'")
+        }
+    }
+
     internal fun addEngineCustomizer(customizer: GraphQLEngineCustomizer) {
         engineCustomizers += customizer
     }
@@ -206,6 +217,7 @@ class GraphixBuilder internal constructor(
                 customScalars,
                 kotlinScalars,
                 fieldDirectives,
+                typeResolvers,
             )
         val builder = GraphQL.newGraphQL(schema)
         validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }

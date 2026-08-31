@@ -31,9 +31,17 @@ internal fun KParameter.graphQLName(): String {
 }
 
 /** GraphQL type name: `@GraphQLName`, then the Kotlin simple name. */
-internal fun KClass<*>.graphQLName(): String {
+internal fun KClass<*>.graphQLName(): String =
+    graphQLNameOrNull() ?: throw IllegalStateException("a GraphQL type has no name: $qualifiedName")
+
+/**
+ * Same as [graphQLName], but `null` for a type that has no name at all — an anonymous or local
+ * class. Type resolution runs per value at execute time, where a throw is a crashed operation
+ * rather than a schema-build failure.
+ */
+internal fun KClass<*>.graphQLNameOrNull(): String? {
     findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
-    return simpleName ?: throw IllegalStateException("a GraphQL type has no name: $qualifiedName")
+    return simpleName
 }
 
 internal fun KAnnotatedElement.graphQLDescription(): String? = findAnnotation<GraphQLDescription>()?.value

@@ -155,3 +155,15 @@ annotation class Argument(
 annotation class Directive(
     val name: String,
 )
+
+/**
+ * Forces a `sealed` type to become a GraphQL `union` rather than an `interface`.
+ *
+ * Without it, a sealed type that declares properties every subclass carries becomes an
+ * `interface`, and one that declares none becomes a `union`. There is no annotation for the
+ * other direction: a GraphQL interface needs at least one field, so a sealed type with no shared
+ * properties can only be a union.
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLUnion
