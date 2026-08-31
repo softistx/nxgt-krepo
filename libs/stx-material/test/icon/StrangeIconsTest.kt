@@ -29,6 +29,8 @@ class StrangeIconsTest :
                 "Home" to StrangeIcons.Home,
                 "Menu" to StrangeIcons.Menu,
                 "MoreHoriz" to StrangeIcons.MoreHoriz,
+                "Calendar" to StrangeIcons.Calendar,
+                "Schedule" to StrangeIcons.Schedule,
                 "Search" to StrangeIcons.Search,
                 "Warning" to StrangeIcons.Warning,
             )
