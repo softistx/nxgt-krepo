@@ -23,6 +23,7 @@ two serialization libraries about what the document means fails a test rather th
 
 `examples/jpa-shop` is separate from that chain: a Ktor catalogue over Postgres showing
 `stx-jpa`'s CRUD extensions, transaction guard and audit layer end to end. So is
+`examples/graphix-shop`, a Ktor GraphQL catalogue over `stx-graphix-ktor`, and
 `examples/material-demo`, the catalogue for the UI library — `./kotlin run -m md-desktop`.
 
 Alongside them are the shared service libraries, which have nothing to do with the generator:
@@ -41,6 +42,7 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/stx-redis` | A namespaced connection over Lettuce owning one `Json`, and the four kotlinx-serialized things built on one: a typed cache, a lock, topics, and streams with consumer groups |
 | `libs/stx-spring-boot` | Spring Boot integration for the libraries here: one auto-configuration per library, every bean off unless a `stx.*` property asks for it, plus the WebFlux helpers — a translated error body and the request's own locale, taken from the exchange rather than a `ThreadLocal` |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets and objects as coroutines, and presigned URLs and upload forms for browsers |
+| `libs/stx-graphix` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphix-ktor` and `stx-graphix-spring` are the HTTP integrations |
 | `libs/stx-testing` | What the integration specs run against: a backing service reused from the environment when one is named, and started as a container for the run when it is not |
 
 ## Getting started
@@ -70,6 +72,11 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-jpa/README.md`](libs/stx-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, and why each part is shaped the way it is |
 | [`docs/jpa-criteria.md`](docs/jpa-criteria.md) | What a stx-jpa query may say — operators, joins, fetch joins, entity graphs, projections, and the two escapes |
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a stx-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
+| [`docs/graphix.md`](docs/graphix.md) | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, SDL scan, HTTP/SSE/graphql-ws |
+| [`libs/stx-graphix/stx-graphix/README.md`](libs/stx-graphix/stx-graphix/README.md) | The GraphQL engine — why SerialDescriptor and not Jackson, why there is no class scan in core |
+| [`libs/stx-graphix/stx-graphix-ktor/README.md`](libs/stx-graphix/stx-graphix-ktor/README.md) | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, `injectable` |
+| [`libs/stx-graphix/stx-graphix-spring/README.md`](libs/stx-graphix/stx-graphix-spring/README.md) | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
+| [`examples/graphix-shop/README.md`](examples/graphix-shop/README.md) | The GraphQL catalogue — how to run it, the split SDL under `resources/graphql/` |
 | [`libs/stx-material/README.md`](libs/stx-material/README.md) | The UI library — its shape, how `StrangeTheme` slots into an existing Material 3 application, and how a component is added |
 | [`libs/stx-material/docs/tokens.md`](libs/stx-material/docs/tokens.md) | What a token may say — colour roles, spacing, durations and easings, and why shapes and elevation stay M3's |
 | [`libs/stx-material/docs/components.md`](libs/stx-material/docs/components.md) | Every component, its parameters, and its story in the catalogue |
