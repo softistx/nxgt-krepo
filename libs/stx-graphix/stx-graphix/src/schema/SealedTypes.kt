@@ -120,8 +120,6 @@ internal fun KClass<*>.graphQLInterfaces(): List<KType> {
     return found.values.toList()
 }
 
-internal fun KProperty1<*, *>.graphQLPropertyName(): String = findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() } ?: name
-
 /** A GraphQL object type needs at least one field, so a `data object` member is a build failure. */
 private fun KClass<*>.refuseEmpty(abstractName: String) {
     if (memberProperties.none { !it.isGraphQLIgnored() }) {
@@ -132,17 +130,22 @@ private fun KClass<*>.refuseEmpty(abstractName: String) {
     }
 }
 
-/** An implementor may not rename a field the interface declares: GraphQL matches on the name. */
+/**
+ * An implementor may not name a field differently from the interface that declares it: GraphQL
+ * matches on the name, and neither `@GraphQLName` nor `@SerialName` is inherited by an override.
+ */
 private fun KClass<*>.refuseRenamed(
     base: KClass<*>,
     abstractName: String,
 ) {
-    val declared = base.sharedGraphQLProperties().map { it.name }.toSet()
+    val declared = base.sharedGraphQLProperties().associate { it.name to it.graphQLPropertyName() }
     memberProperties.forEach { property ->
-        if (property.name in declared && property.graphQLPropertyName() != property.name) {
+        val expected = declared[property.name] ?: return@forEach
+        val actual = property.graphQLPropertyName()
+        if (actual != expected) {
             throw GraphixException(
-                "$simpleName.${property.name} is renamed but interface '$abstractName' declares it — " +
-                    "an implementor must keep the interface's field name",
+                "$simpleName.${property.name} is '$actual' but interface '$abstractName' declares it as " +
+                    "'$expected' — an implementor must keep the interface's field name",
             )
         }
     }
