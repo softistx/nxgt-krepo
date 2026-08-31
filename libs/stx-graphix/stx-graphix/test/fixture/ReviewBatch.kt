@@ -1,7 +1,7 @@
 package com.strange.graphix.fixture
 
+import com.strange.graphix.schema.Argument
 import com.strange.graphix.schema.BatchMapping
-import com.strange.graphix.schema.GraphQLContext
 import com.strange.graphix.schema.SchemaMapping
 import graphql.schema.DataFetchingEnvironment
 import java.util.concurrent.atomic.AtomicInteger
@@ -21,16 +21,42 @@ class ReviewBatch(
     }
 }
 
+class DfeBatch(
+    val fieldNames: MutableList<String> = mutableListOf(),
+) {
+    @BatchMapping
+    fun notes(
+        products: List<Product>,
+        dfe: DataFetchingEnvironment,
+    ): Map<Product, String> {
+        fieldNames += dfe.field.name
+        return products.associateWith { dfe.field.name }
+    }
+}
+
 class DfeFields {
     @SchemaMapping
     fun tagged(
         product: Product,
-        prefix: String = "x",
-        @GraphQLContext dfe: DataFetchingEnvironment,
+        @Argument prefix: String = "x",
+        dfe: DataFetchingEnvironment,
     ): String {
         val source = dfe.getSource() ?: product
         val fromEnv = dfe.getArgument("prefix") ?: prefix
         return "$fromEnv-${source.name}"
+    }
+}
+
+class LimitedSnippets(
+    val loads: AtomicInteger = AtomicInteger(),
+) {
+    @BatchMapping
+    fun snippets(
+        products: List<Product>,
+        @Argument limit: Int,
+    ): Map<Product, List<String>> {
+        loads.incrementAndGet()
+        return products.associateWith { (1..limit).map { n -> "s$n" } }
     }
 }
 

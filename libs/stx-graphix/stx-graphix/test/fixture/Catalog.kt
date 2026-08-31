@@ -1,5 +1,6 @@
 package com.strange.graphix.fixture
 
+import com.strange.graphix.schema.Argument
 import com.strange.graphix.schema.BatchMapping
 import com.strange.graphix.schema.GraphQLContext
 import com.strange.graphix.schema.GraphQLDescription
@@ -34,8 +35,8 @@ enum class Size { S, M, L }
 
 @Serializable
 data class CreateProductInput(
-    val name: String,
-    val tags: List<String> = emptyList(),
+    @Argument val name: String,
+    @Argument val tags: List<String> = emptyList(),
 )
 
 class ProductQueries(
@@ -43,7 +44,9 @@ class ProductQueries(
 ) {
     @QueryMapping
     @GraphQLDescription("A product by id, or null.")
-    suspend fun product(id: String): Product? = products.find { it.id == id }
+    suspend fun product(
+        @Argument id: String,
+    ): Product? = products.find { it.id == id }
 
     @QueryMapping
     fun products(): List<Product> = products
@@ -69,7 +72,7 @@ class ProductFields(
     @SchemaMapping
     fun tagged(
         product: Product,
-        prefix: String = "x",
+        @Argument prefix: String = "x",
     ): String = "$prefix-${product.name}"
 
     @BatchMapping
@@ -107,7 +110,9 @@ class ProductMutations(
     private val products: MutableList<Product>,
 ) {
     @MutationMapping
-    suspend fun createProduct(input: CreateProductInput): Product {
+    suspend fun createProduct(
+        @Argument input: CreateProductInput,
+    ): Product {
         val created = Product(id = "p${products.size + 1}", name = input.name, tags = input.tags)
         products += created
         return created
@@ -120,7 +125,9 @@ class GreetingQueries {
 
     @QueryMapping
     @GraphQLName("shout")
-    fun loud(name: String = "stranger"): String = name.uppercase()
+    fun loud(
+        @Argument name: String = "stranger",
+    ): String = name.uppercase()
 }
 
 data class Caller(
@@ -175,7 +182,9 @@ class ScalarQueries {
     fun id(): Uuid = Uuid.parse("00112233-4455-6677-8899-aabbccddeeff")
 
     @QueryMapping
-    fun big(n: Long): Long = n + 1
+    fun big(
+        @Argument n: Long,
+    ): Long = n + 1
 }
 
 class NotSerializable
@@ -183,4 +192,16 @@ class NotSerializable
 class BadQueries {
     @QueryMapping
     fun bad(): NotSerializable = NotSerializable()
+}
+
+@Serializable
+data class UnmarkedInput(
+    val name: String,
+)
+
+class BadInputQueries {
+    @QueryMapping
+    fun echo(
+        @Argument input: UnmarkedInput,
+    ): String = input.name
 }

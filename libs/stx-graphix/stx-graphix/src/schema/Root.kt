@@ -45,13 +45,13 @@ internal fun root(
                         else -> function.returnType.unwrapAsync()
                     },
                 )
+            function.requireArgumentAnnotations()
             fields +=
                 fieldDefinition(
                     function,
                     fieldName,
                     output,
                     types,
-                    skip = { it.isGraphQLContext() },
                 )
             fetchers += FieldCoordinates.coordinates(name, fieldName) to fetcher(instance, function)
         }

@@ -1,5 +1,6 @@
 package com.strange.example.graphix.shop
 
+import com.strange.graphix.schema.Argument
 import com.strange.graphix.schema.BatchMapping
 import com.strange.graphix.schema.MutationMapping
 import com.strange.graphix.schema.QueryMapping
@@ -37,15 +38,17 @@ class Catalog {
         )
 
     @QueryMapping
-    fun product(id: String): Product? = products.find { it.id == id }
+    fun product(
+        @Argument id: String,
+    ): Product? = products.find { it.id == id }
 
     @QueryMapping
     fun products(): List<Product> = products.toList()
 
     @MutationMapping
     fun addProduct(
-        name: String,
-        price: Long,
+        @Argument name: String,
+        @Argument price: Long,
     ): Product {
         val created = Product(id = "p${products.size + 1}", name = name, price = price)
         products += created
