@@ -63,10 +63,10 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds twenty-eight hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StrangeIcons` holds twenty-nine hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
 `Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`,
-`Attach`, `Info`, `ViewList`, `ViewGrid`, `Send`. They are defined
+`Attach`, `Info`, `ViewList`, `ViewGrid`, `Send`, `Pin`. They are defined
 in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
 has no key for the Material icons, `$compose.material` does not carry `material-icons-core` in
 Compose Multiplatform 1.11, and the AndroidX icon artifacts are Android-only. An application that
@@ -159,6 +159,11 @@ taken out. The two forms are two components and `AnimatedContent` morphs between
 | `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `action?` | `display/announcement-bar` |
 | `QuoteBlock` | `text`, `attribution?` | `display/quote-block` |
 | `LinkPreview` | `title`, `url`, `description?`, `onClick?`, `leading?` | `display/link-preview` |
+| `MessageBubble` | `text`, `outgoing`, `name?`, `meta?`, `onClick?` | `display/message-bubble` |
+| `Comment` | `name`, `text`, `supporting?`, `trailing?` | `display/comment` |
+| `ReplyPreview` | `name`, `text`, `onDismiss?` | `display/reply-preview` |
+| `PinBar` | `text`, `onClick?`, `onDismiss?` | `display/pin-bar` |
+| `MentionChip` | `name`, `onClick`, `onRemove?` | `display/mention-chip` |
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
@@ -202,6 +207,12 @@ below zero. `AnnouncementBar` is the strip at the top of a page — `Alert` is a
 body; missing `onDismiss` means the bar cannot be put away. `QuoteBlock` is M3's `VerticalDivider`
 plus the words. `LinkPreview` is chrome around a URL: the library does not fetch Open Graph,
 `leading` is the thumbnail the host already has.
+
+`MessageBubble` is a chat turn — incoming on the start edge, outgoing in `primaryContainer` on the
+end. A `ListTile` is a row in a list. `Comment` is the named paragraph under an article, with a
+trailing slot for a `ReactionBar`. `ReplyPreview` sits above a `Composer`; `QuoteBlock` is a
+passage in the body. `PinBar` is a message the room chose to keep; `AnnouncementBar` is an
+incident. `MentionChip` is who was @-named (`FileChip` is what landed in an upload).
 
 ## Forms
 
@@ -457,6 +468,7 @@ value.
 | `Avatar` | `name`, `image?`, `tone?`, `size = 40.dp` | `media/avatar` |
 | `AvatarGroup` | `items: List<AvatarItem>`, `max = 4`, `size = 32.dp` | `media/avatar-group` |
 | `PersonCard` | `name`, `supporting?`, `image?`, `tone?`, `onClick?`, `action?` | `media/person-card` |
+| `SeenBy` | `items`, `max = 3`, `label?` | `media/seen-by` |
 | `StrangeImage` | `model`, `description` | — |
 | `Gallery` | `images`, `onSelect?` | — |
 | `Lightbox` | `visible`, `model`, `onDismiss`, `onPrevious?`, `onNext?` | `media/lightbox` |
@@ -465,7 +477,8 @@ value.
 `Avatar` shows initials when there is no image, and an optional `Tone` ring. `AvatarGroup` stacks
 them with a `+N` overflow circle — not initials of `"+12"`, which would read `+1`. `PersonCard` is
 the compact identity that sits in a grid, a mention, a search hit: a `ListTile` is a row in a list,
-`EntityHeader` is the top of a page. `StrangeImage` is Coil
+`EntityHeader` is the top of a page. `SeenBy` is an `AvatarGroup` plus `seenByLabel` — "Sent" when
+nobody has looked, "Seen by N" otherwise. `StrangeImage` is Coil
 with this library's `Skeleton` / `EmptyState`. Video, PDF and camera are **chrome**: the host fills
 the slot with a renderer, so `Button` never pays for Media3, PdfRenderer or CameraX.
 
