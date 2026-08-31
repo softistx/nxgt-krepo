@@ -73,6 +73,34 @@ class GraphixPluginTest :
             }
         }
 
+        feature("introspection") {
+            scenario("POST { __schema } returns the query type") {
+                testApplication {
+                    application {
+                        install(GraphQL) { schema { query(GreetingQueries()) } }
+                    }
+                    val response =
+                        client.post("/graphql") {
+                            contentType(ContentType.Application.Json)
+                            setBody("""{"query":"{ __schema { queryType { name } } }"}""")
+                        }
+                    response.status shouldBe HttpStatusCode.OK
+                    response.bodyAsText() shouldContain """"name":"Query""""
+                }
+            }
+
+            scenario("GET query={ __schema } is the same") {
+                testApplication {
+                    application {
+                        install(GraphQL) { schema { query(GreetingQueries()) } }
+                    }
+                    val response = client.get("/graphql?query=%7B__schema%7BqueryType%7Bname%7D%7D%7D")
+                    response.status shouldBe HttpStatusCode.OK
+                    response.bodyAsText() shouldContain """"name":"Query""""
+                }
+            }
+        }
+
         feature("GET /graphql") {
             scenario("the query parameter executes") {
                 testApplication {
