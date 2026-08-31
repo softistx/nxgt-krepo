@@ -60,9 +60,9 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds seventeen hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StrangeIcons` holds nineteen hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`, `Home`,
-`Menu`, `MoreHoriz`, `Search`, `Warning`. They are defined in code because **no icon pack is
+`Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Search`, `Warning`. They are defined in code because **no icon pack is
 reachable from here**: the Kotlin Toolchain's `$compose` catalog has no key for the Material icons,
 `$compose.material` does not carry `material-icons-core` in Compose Multiplatform 1.11, and the
 AndroidX icon artifacts are Android-only. An application that wants a thousand glyphs should depend
@@ -267,6 +267,18 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of M3 `Snackbar`s painted with
 `Tone` — M3's host holds one, a dashboard often needs two. `Accordion` and `Carousel` are built
 here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
+
+## Date and time
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `DateField` | `value: LocalDate?`, `onValueChange`, `label` | `date-and-time/date-field` |
+| `DateRangeField` | `start`, `end`, `onValueChange` | `date-and-time/date-range-field` |
+| `TimeField` | `value: LocalTime?`, `onValueChange`, `label` | `date-and-time/time-field` |
+| `Calendar` | `value: LocalDate?`, `onValueChange` | `date-and-time/calendar` |
+
+The fields are how a form asks; the pickers stay in a dialog. `Calendar` is the same `DatePicker`
+inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate` / `LocalTime`.
 
 ## Motion helpers
 

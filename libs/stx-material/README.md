@@ -22,6 +22,7 @@ libs/stx-material/
   src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, Breadcrumb
   src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, Menu, Accordion, Carousel, SwipeActions
   src/feedback/   Progress, Toaster
+  src/datetime/   DateField, DateRangeField, TimeField, Calendar
 ```
 
 ## The shape of it

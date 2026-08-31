@@ -18,6 +18,8 @@ val CatalogIcons: List<Pair<String, ImageVector>> =
         "Edit" to StrangeIcons.Edit,
         "Inbox" to StrangeIcons.Inbox,
         "Person" to StrangeIcons.Person,
+        "Calendar" to StrangeIcons.Calendar,
+        "Schedule" to StrangeIcons.Schedule,
         "Search" to StrangeIcons.Search,
         "Warning" to StrangeIcons.Warning,
     )
