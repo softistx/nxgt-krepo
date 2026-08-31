@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.strange.material.button.BusyButton
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonColor
 import com.strange.material.button.ButtonRow
@@ -27,6 +28,9 @@ import com.strange.material.button.FabAction
 import com.strange.material.button.FabMenu
 import com.strange.material.button.IconButton
 import com.strange.material.button.IconToggle
+import com.strange.material.button.MoreMenu
+import com.strange.material.button.OverflowAction
+import com.strange.material.button.OverflowBar
 import com.strange.material.button.ResponsiveButton
 import com.strange.material.button.SplitButton
 import com.strange.material.button.ToggleButton
@@ -209,5 +213,40 @@ val ButtonStories =
                 confirmText = "Confirm delete?",
                 enabled = knobs.flag("Enabled", true),
             )
+        }
+
+        story("Busy button") { knobs ->
+            BusyButton(
+                text = knobs.text("Label", "Save changes"),
+                onClick = {},
+                busy = knobs.flag("Busy", true),
+                enabled = knobs.flag("Enabled", true),
+            )
+        }
+
+        story("More menu") { _ ->
+            MoreMenu(
+                items =
+                    listOf(
+                        MenuItem("Edit", onClick = {}, leading = StrangeIcons.Edit),
+                        MenuItem("Delete", onClick = {}, leading = StrangeIcons.Delete),
+                    ),
+            )
+        }
+
+        story("Overflow bar") { knobs ->
+            val max = knobs.number("Max visible", 2f, 1f..5f, steps = 3).toInt()
+            Box(modifier = Modifier.width(280.dp)) {
+                OverflowBar(
+                    actions =
+                        listOf(
+                            OverflowAction("Edit", StrangeIcons.Edit, onClick = {}),
+                            OverflowAction("Delete", StrangeIcons.Delete, onClick = {}),
+                            OverflowAction("Search", StrangeIcons.Search, onClick = {}),
+                            OverflowAction("Share", StrangeIcons.Copy, onClick = {}),
+                        ),
+                    maxVisible = max,
+                )
+            }
         }
     }
