@@ -1,6 +1,6 @@
 package com.strange.graphix
 
-import com.strange.graphix.fixture.PosterQueries
+import com.strange.graphix.fixture.RecordQueries
 import com.strange.graphix.fixture.SlippedQueries
 import com.strange.graphix.fixture.StampedQueries
 import com.strange.graphix.fixture.TrackQueries
@@ -11,11 +11,10 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 
 /**
- * A property whose GraphQL name is not its Kotlin name. `@SerialName` renames it because the
- * SerialDescriptor **is** the type system here — the schema and the JSON a resolver decodes agree
- * on one spelling — and `@GraphQLName` renames it in the schema alone. Either way graphql-java's
- * default fetcher would look for the GraphQL name on the Kotlin object and find nothing, so the
- * field gets a fetcher that knows both names.
+ * A property whose GraphQL name is not its Kotlin name. `@SerialName` is the only thing that
+ * renames one, because the SerialDescriptor **is** the type system here. graphql-java's default
+ * fetcher would look for the GraphQL name on the Kotlin object and find nothing, so the field gets
+ * a fetcher that knows both names.
  */
 class PropertyNameTest :
     FeatureSpec({
@@ -47,16 +46,16 @@ class PropertyNameTest :
             }
         }
 
-        feature("@GraphQLName on a property") {
-            scenario("renames the field in the schema, and still reads the Kotlin property") {
-                val graphql = Graphix { query(PosterQueries()) }
+        feature("@GraphQLName names a type, and only a type") {
+            scenario("the object type is the annotation's name, in the schema and in __typename") {
+                val graphql = Graphix { query(RecordQueries()) }
 
-                graphql.sdl() shouldContain "headline: String!"
-                graphql.sdl().substringAfter("type Poster").substringBefore("}") shouldNotContain "caption"
-                val result = graphql.execute(GraphixRequest("{ poster { headline } }"))
+                graphql.sdl() shouldContain "type Vinyl"
+                graphql.sdl() shouldNotContain "type Record"
+                val result = graphql.execute(GraphixRequest("{ record { label __typename } }"))
 
                 result.isOk shouldBe true
-                result.data?.get("poster") shouldBe mapOf("headline" to "Dune")
+                result.data?.get("record") shouldBe mapOf("label" to "Blue Note", "__typename" to "Vinyl")
             }
         }
 

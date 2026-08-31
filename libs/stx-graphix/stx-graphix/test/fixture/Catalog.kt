@@ -5,7 +5,6 @@ import com.strange.graphix.schema.BatchMapping
 import com.strange.graphix.schema.GraphQLContext
 import com.strange.graphix.schema.GraphQLDescription
 import com.strange.graphix.schema.GraphQLIgnore
-import com.strange.graphix.schema.GraphQLName
 import com.strange.graphix.schema.MutationMapping
 import com.strange.graphix.schema.QueryMapping
 import com.strange.graphix.schema.SchemaMapping
@@ -123,8 +122,7 @@ class GreetingQueries {
     @QueryMapping
     fun hello(): String = "world"
 
-    @QueryMapping
-    @GraphQLName("shout")
+    @QueryMapping(name = "shout")
     fun loud(
         @Argument name: String = "stranger",
     ): String = name.uppercase()
