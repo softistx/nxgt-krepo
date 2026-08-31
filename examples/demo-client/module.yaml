@@ -27,6 +27,10 @@ settings:
     ksp:
       processors:
         - $libs.ktorfit.ksp
+  jvm:
+    # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file
+    # named `main.kt`; this one is `DemoClient.kt`.
+    mainClass: com.strange.demo.client.DemoClientKt
 
 plugins:
   openapi:
