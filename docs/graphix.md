@@ -415,13 +415,20 @@ graphix.subscribe(GraphixRequest("subscription { productAdded { name } }"))
 ```
 
 `result.data` is the GraphQL data map. `result.errors` is the GraphQL error list. A resolver that
-throws becomes an error there; `execute` itself still returns. Subscription events keep that same
+throws becomes an error there; `execute` itself still returns.
+
+A `GraphixError` carries the whole spec shape — `message`, `path`, `locations` (1-based line and
+column), `extensions`, and graphql-java's `errorType` classification (`ValidationError`,
+`DataFetchingException`, and so on), which is what tells a bad document from a resolver that threw.
+`result.extensions` is whatever instrumentation put in the result's, usually empty. Subscription events keep that same
 shape, in order (`KEEP_SUBSCRIPTION_EVENTS_ORDERED`).
 
 ## HTTP
 
-The JSON envelope is `{ "query", "variables", "operationName" }`. The response is
-`{ "data", "errors" }`. A field error is HTTP **200** with `errors[]`. Malformed JSON, a missing
+The JSON envelope is `{ "query", "variables", "operationName", "extensions" }`. The response is
+`{ "data", "errors", "extensions" }`, where an error carries `message`, `path`, `locations` and its
+own `extensions`. Anything empty is **omitted** rather than sent as `[]` or `{}`. Request
+`extensions` are passed through to the operation untouched, where instrumentation can read them. A field error is HTTP **200** with `errors[]`. Malformed JSON, a missing
 query, or unparseable GET `variables` is HTTP **400** with `errors[]`.
 
 `GET /graphql?query=...` is for introspection and simple queries. Variables on GET are a JSON
