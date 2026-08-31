@@ -143,11 +143,12 @@ same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 | `@GraphQLContext` | parameter | other types from `execute`'s context map. `DataFetchingEnvironment` is this field **by type** and does not need the annotation |
 | `@Directive("name")` | mapping function | wraps the field with the `fieldDirective("name")` registered on the builder |
 
-`@Argument` is required on every GraphQL argument: resolver parameters **and** every property
-of a GraphQL input object. Unmarked resolver parameters are not arguments: the parent source
-(`SchemaMapping` / `BatchMapping` first parameter), this field's `DataFetchingEnvironment`
-(by type), and `@GraphQLContext` values. Output-type properties are fields, not arguments.
-A Kotlin default on an `@Argument` parameter (or input-object property) is optional GraphQL.
+`@Argument` is required on every GraphQL argument — a resolver parameter. Unmarked parameters
+are not arguments: the parent source (`SchemaMapping` / `BatchMapping` first parameter), this
+field's `DataFetchingEnvironment` (by type), and `@GraphQLContext` values. An input object's
+fields are not arguments either: `CreateProductInput` is the `@Argument`, `name` and `tags`
+are its fields (`@GraphQLName` / `@GraphQLIgnore` still apply). A Kotlin default on an
+`@Argument` parameter, or on an input-object property, is optional GraphQL.
 
 Nested object fields are the `@Serializable` properties already in memory. Extra fields that need
 I/O are `@SchemaMapping` or `@BatchMapping` on an instance passed to `type(...)`. **A given
@@ -244,8 +245,8 @@ class OrderMutations(
 
 @Serializable
 data class PlaceOrderInput(
-    @Argument val sku: String,
-    @Argument val quantity: Int = 1,
+    val sku: String,
+    val quantity: Int = 1,
 )
 ```
 
