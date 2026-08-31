@@ -1,0 +1,21 @@
+product: jvm/lib
+description: Tiny catalogue that turns on both GraphQL codegen plugins against one schema
+
+dependencies:
+  - $libs.jackson.annotations
+  - $libs.apollo.api
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+plugins:
+  dgs-codegen:
+    enabled: true
+    packageName: com.strange.example.graphix.codegen.dgs
+  apollo:
+    enabled: true
+    packageName: com.strange.example.graphix.codegen.apollo
+    generateOptionalOperationVariables: false
+    generateDataBuilders: true

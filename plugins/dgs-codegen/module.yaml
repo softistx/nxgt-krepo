@@ -1,0 +1,15 @@
+product: jvm/amper-plugin
+description: Kotlin Toolchain adapter of Netflix DGS codegen — schema to Kotlin types at build time
+
+dependencies:
+  - $libs.graphql.dgs.codegen.core
+  # DGS codegen logs through SLF4J; without a provider every build prints a warning
+  - $libs.slf4j.nop
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+pluginInfo:
+  settingsClass: com.strange.dgs.plugin.DgsCodegenSettings
