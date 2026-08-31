@@ -29,12 +29,14 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   did not.
 - **`styles`** is the pattern for what Material 3 cannot express, not background reading: a component's look is a `Style` in its own file, its interaction states are `pressed`/`hovered`/`disabled` blocks with `animate` inside them, and its signature carries one `style: Style = Style` instead of colour and shape parameters. AGENTS.md's *Styling a component* has the rules. **`adaptive`** and **`edge-to-edge`** come from the same catalogue and describe *Jetpack* Compose — check any API they name against `material3-compose`'s `references/components.md`, and read the two ways that search goes wrong before concluding something is missing.
 - **`skill-from-docs`** to add a skill for another library or tool, or to refresh a cached one. It owns the token budget rules that every skill here follows. To pull one from Google's catalogue instead, `android skills add <name> --project=. --agent=common` — the `--agent=common` is what puts it in `.agents/skills/` rather than in your home directory. AGENTS.md's *Finding and installing a skill* has the three sources.
-- **`large-feature-branch-workflow`** when a feature needs more than one PR.
+- **`large-feature-branch-workflow`** when a feature needs more than one PR — it owns the two-level shape: an integration branch off `develop`, a slice PR'd into it per step, then one PR from the integration branch to `develop`.
 
 ## Working here
 
 - **Every PR targets `develop`, never `main`.** Branch off `develop`, `gh pr create --base develop`,
-  merge it there. `main` is aligned from `develop` only when the user asks, and aligning means
+  merge it there. The one exception is a feature too large for a single PR: its slices target that
+  feature's integration branch and the integration branch targets `develop` —
+  `large-feature-branch-workflow` owns that shape. `main` is aligned from `develop` only when the user asks, and aligning means
   fast-forwarding `main` onto `develop` — not merging a feature branch into it. Check the base before
   opening a PR. The repo's default branch is now `develop`, so `gh pr create` picks the right base on
   its own — pass `--base develop` anyway rather than trusting a setting a fork or a stale clone may

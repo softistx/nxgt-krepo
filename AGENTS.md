@@ -148,7 +148,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
   ```
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
 - **`openapi-spec-first`** — how a REST API is authored here: a Redocly-split OpenAPI document under `<module>/openapi/`, the file and naming conventions the generator reads, and the repository → service → controller layering over the generated `@HttpExchange` interface. Read it before adding or changing an endpoint. Its `references/` are written by hand rather than fetched — `document-layout.md` for the split document and the redocly config, `spring-api.md` for the five files a Spring API is made of — and they stay in step with `examples/spring-orders`, which is the same thing running.
-- **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on `develop` on their own.
+- **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on one integration branch, which then lands on `develop` as the feature.
 
 Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
 
@@ -875,10 +875,15 @@ the same each time, and the mistakes are the same each time too.
   classes it expects to find, which is why those fixtures sit in `test/entity/scan/` instead of
   beside the rest.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.
-- **`develop` is the integration branch and every PR targets it.** Branch off `develop`, open the
+- **`develop` is where work lands and every PR targets it.** Branch off `develop`, open the
   pull request against `develop`, and merge it there. Nothing is merged directly into `main`, however
   small and however green — a PR opened against `main` has the wrong base and wants recreating, not
   merging.
+
+  One exception, and only one: the slices of a feature too large for a single PR target that
+  feature's own integration branch, and that branch is what targets `develop`. See
+  `large-feature-branch-workflow`, which owns the shape. Everything else is one branch, one PR,
+  base `develop`.
 - **`main` is aligned from `develop`, only when that is asked for.** Aligning is not part of finishing
   a feature: it happens when someone asks for it, and it is `git checkout main && git merge develop`
   — never merging a feature branch into `main`, never cherry-picking across. That fast-forwards while
