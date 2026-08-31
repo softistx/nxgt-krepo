@@ -29,4 +29,5 @@ val CatalogIcons: List<Pair<String, ImageVector>> =
         "Warning" to StrangeIcons.Warning,
         "Copy" to StrangeIcons.Copy,
         "Minus" to StrangeIcons.Minus,
+        "Attach" to StrangeIcons.Attach,
     )

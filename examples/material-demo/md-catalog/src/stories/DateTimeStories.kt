@@ -9,11 +9,17 @@ import androidx.compose.runtime.setValue
 import com.strange.material.datetime.Calendar
 import com.strange.material.datetime.DateField
 import com.strange.material.datetime.DateRangeField
+import com.strange.material.datetime.RelativeTime
 import com.strange.material.datetime.TimeField
 import com.strange.material.demo.storyGroup
+import com.strange.material.text.Typography
 import com.strange.material.theme.StrangeTheme
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 val DateTimeStories =
     storyGroup("Date and time") {
@@ -40,6 +46,23 @@ val DateTimeStories =
             var date by remember { mutableStateOf<LocalDate?>(LocalDate(2026, 8, 31)) }
             Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
                 Calendar(value = date, onValueChange = { date = it })
+            }
+        }
+
+        story("Relative time") { _ ->
+            val now = Instant.fromEpochSeconds(1_777_766_400)
+            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                listOf(
+                    30.minutes to "half an hour ago",
+                    5.hours to "this morning",
+                    1.days to "yesterday",
+                    10.days to "last week",
+                ).forEach { (ago, caption) ->
+                    Column {
+                        Typography(text = caption)
+                        RelativeTime(at = now - ago, now = now)
+                    }
+                }
             }
         }
     }
