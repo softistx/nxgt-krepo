@@ -1,6 +1,7 @@
 package com.strange.material.demo
 
 import com.strange.material.demo.stories.ButtonStories
+import com.strange.material.demo.stories.DataStories
 import com.strange.material.demo.stories.DateTimeStories
 import com.strange.material.demo.stories.DisplayStories
 import com.strange.material.demo.stories.FormStories
@@ -27,5 +28,6 @@ val CatalogGroups: List<StoryGroup> =
         NavigationStories,
         SurfaceStories,
         DateTimeStories,
+        DataStories,
         ScreenStories,
     )

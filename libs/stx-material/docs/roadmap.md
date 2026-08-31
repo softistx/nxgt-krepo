@@ -220,8 +220,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       `Toast` + `Toaster`, `Progress`, `Accordion`, `Carousel`, `SwipeActions`
 - [x] **5 — Date et heure.** `DateField`, `DateRangeField`, `TimeField`, `Calendar` on
       kotlinx-datetime. The pickers stay in a dialog; the field is what a form writes.
-- [ ] **6 — Données.** `DataTable` (tri, sélection, colonnes, pagination), `Pagination`, `Table`,
-      `SummaryData`, `Description`, `EntityHeader`, `Activity`, `Autocomplete`, `Combobox`, `Command`
+- [x] **6 — Données.** `DataTable` (table / cartes selon la largeur), `Pagination` (keyset),
+      `Description`, `EntityHeader`, `CommandPalette`, `Timeline`. Combobox is `SelectField`.
 - [ ] **7 — Filtres.** Le sous-système complet : schéma, chips, presets, persistance, validation
 - [ ] **8 — Médias et saisie riche.** `Avatar`, `Gallery`, `LightboxGallery`, `ImageField`,
       `UploadField`, `QRCode`, `Barcode`, `Camera`, `RichTextEditor`
