@@ -1,10 +1,13 @@
 package com.strange.graphix.ktor
 
+import com.strange.graphix.GraphixCustomizer
 import com.strange.graphix.http.GRAPHQL_TRANSPORT_WS
 import com.strange.graphix.http.SubscriptionProtocol
 import com.strange.graphix.ktor.fixture.BoomQueries
 import com.strange.graphix.ktor.fixture.GreetingQueries
 import com.strange.graphix.ktor.fixture.TickSubscriptions
+import com.strange.graphix.scalar.graphQLScalar
+import com.strange.graphix.scalar.scalar
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -20,6 +23,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.install
+import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
@@ -184,6 +188,53 @@ class GraphixPluginTest :
                         first shouldContain "next"
                         first shouldContain """"ticks":1"""
                     }
+                }
+            }
+        }
+
+        feature("customize and DI") {
+            scenario("customize { } registers a scalar") {
+                testApplication {
+                    application {
+                        install(GraphQL) {
+                            schema { query(GreetingQueries()) }
+                            customize {
+                                scalar(
+                                    graphQLScalar("Money") { serialize { value -> value.toString() } },
+                                )
+                            }
+                        }
+                    }
+                    val sdl =
+                        client
+                            .post("/graphql") {
+                                contentType(ContentType.Application.Json)
+                                setBody("""{"query":"{ __type(name: \"Money\") { name } }"}""")
+                            }.bodyAsText()
+                    sdl shouldContain "Money"
+                }
+            }
+
+            scenario("fromDi applies a GraphixCustomizer") {
+                testApplication {
+                    application {
+                        dependencies {
+                            provide<GraphixCustomizer> {
+                                GraphixCustomizer {
+                                    scalar(graphQLScalar("Money") { serialize { value -> value.toString() } })
+                                }
+                            }
+                        }
+                        install(GraphQL) {
+                            fromDi = true
+                            schema { query(GreetingQueries()) }
+                        }
+                    }
+                    client
+                        .post("/graphql") {
+                            contentType(ContentType.Application.Json)
+                            setBody("""{"query":"{ __type(name: \"Money\") { name } }"}""")
+                        }.bodyAsText() shouldContain "Money"
                 }
             }
         }

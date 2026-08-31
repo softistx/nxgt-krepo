@@ -26,6 +26,11 @@ Without `instance`, `schema { }` builds one at install.
 `schemaLocations` defaults to `classpath:graphql/` — split `.graphqls` / `.gqls` files, merged.
 An empty folder keeps the annotated schema.
 
+`customize { }` is extra `GraphixBuilder` configuration (scalars, field directives) after
+`schema { }`. `engine { }` customises graphql-java's builder. `fromDi = true` pulls
+`GraphixCustomizer`, `GraphQLScalarType`, `GraphixDirective` and engine customizers from
+Ktor DI — the same types Spring collects as beans.
+
 `injectable = true` registers that same engine with Ktor DI (`provideGraphix()`), off by default
 because `ktor-server-di` is compile-only.
 
