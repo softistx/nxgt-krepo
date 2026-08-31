@@ -1,5 +1,7 @@
 package com.strange.graphix
 
+import com.strange.graphix.fixture.BadFilterQueries
+import com.strange.graphix.fixture.GoodFilterQueries
 import com.strange.graphix.fixture.PosterQueries
 import com.strange.graphix.fixture.SlippedQueries
 import com.strange.graphix.fixture.StampedQueries
@@ -57,6 +59,23 @@ class PropertyNameTest :
 
                 result.isOk shouldBe true
                 result.data?.get("poster") shouldBe mapOf("headline" to "Dune")
+            }
+        }
+
+        feature("an input object's field name is its serial name") {
+            scenario("@GraphQLName that disagrees with the wire fails schema build naming both") {
+                val failure = shouldThrow<GraphixException> { Graphix { query(BadFilterQueries()) } }
+
+                failure.message shouldContain "BadFilter.id is 'track_id' in the schema but 'id' on the wire"
+                failure.message shouldContain "@SerialName"
+            }
+
+            scenario("and one that agrees with it is left alone") {
+                val graphql = Graphix { query(GoodFilterQueries()) }
+                val result = graphql.execute(GraphixRequest("""{ find(filter: { track_id: "t9" }) }"""))
+
+                result.isOk shouldBe true
+                result.data?.get("find") shouldBe "t9"
             }
         }
 

@@ -326,6 +326,7 @@ internal class TypeMapper(
         if (oneOf) builder.withDirective(Directives.OneOfDirective)
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
             refuseArgumentOnInputField(kClass, property)
+            refuseRenamedInputField(kClass, property, elementName)
             val fieldName = property.graphQLPropertyName()
             val default = property.graphQLDefault("$name.$fieldName")
             if (oneOf && default != null) {
@@ -449,6 +450,26 @@ internal class TypeMapper(
                     "the input object is the argument, its fields are not",
             )
         }
+    }
+
+    /**
+     * An input object's field name **is** its serial name. The GraphQL argument map arrives keyed by
+     * the field names the schema advertises and is decoded as-is, so a schema name that differs from
+     * the serial name decodes to a missing field — or, when the property has a Kotlin default,
+     * silently to that default, losing what the caller sent.
+     */
+    private fun refuseRenamedInputField(
+        kClass: KClass<*>,
+        property: kotlin.reflect.KProperty<*>,
+        elementName: String,
+    ) {
+        val fieldName = property.graphQLPropertyName()
+        if (fieldName == elementName) return
+        throw GraphixException(
+            "${kClass.simpleName}.${property.name} is '$fieldName' in the schema but '$elementName' on the wire — " +
+                "an input object's field name is its serial name, so rename it with @SerialName. " +
+                "A type that needs different names as an output and as an input is two types",
+        )
     }
 
     /**

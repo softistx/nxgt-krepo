@@ -276,3 +276,29 @@ class SlippedQueries {
     @QueryMapping
     fun slipped(): Slipped = Missed("2026-08-31")
 }
+
+/** `@GraphQLName` on an input field: the schema would advertise a name the decoder cannot read. */
+@Serializable
+data class BadFilter(
+    @GraphQLName("track_id") val id: String,
+)
+
+class BadFilterQueries {
+    @QueryMapping
+    fun find(
+        @Argument filter: BadFilter,
+    ): String = filter.id
+}
+
+/** Renaming both sides at once is what @SerialName is for, and it is allowed. */
+@Serializable
+data class GoodFilter(
+    @SerialName("track_id") @GraphQLName("track_id") val id: String,
+)
+
+class GoodFilterQueries {
+    @QueryMapping
+    fun find(
+        @Argument filter: GoodFilter,
+    ): String = filter.id
+}

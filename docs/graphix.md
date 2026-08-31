@@ -51,11 +51,16 @@ ends in `Input` keeps it.
 A type that is not `@Serializable` fails schema build, naming that type.
 
 **A field's name** is `@GraphQLName` on the property, then `@SerialName`, then the Kotlin name.
-`@SerialName` counts because the SerialDescriptor is the type system here — a property renamed for
-the wire is renamed in the schema, so an input object decodes by the same name the schema
-advertises. `@GraphQLName` renames the field in the schema alone and leaves the JSON as it was;
-on an input object that means the schema and the decoder disagree, so prefer `@SerialName` there.
-Either way the field reads the Kotlin property it renamed.
+`@SerialName` counts because the SerialDescriptor is the type system here. On an **output** type the
+two differ in reach: `@SerialName` renames the field on the wire and in the schema, `@GraphQLName`
+renames it in the schema alone — either way the field reads the Kotlin property it renamed.
+
+On an **input** object they may not differ at all: an input object's field name **is** its serial
+name. The argument map arrives keyed by the names the schema advertises and is decoded as-is, so a
+schema name that is not the serial name decodes to a missing field — or, when the property has a
+Kotlin default, silently to that default, losing what the caller sent. A `@GraphQLName` that
+disagrees is a schema-build failure naming both spellings; rename with `@SerialName`, which moves
+both. A type that needs different names as an output and as an input is two types.
 
 `Map` is not a GraphQL type. A `sealed` hierarchy is — see the next section. An `abstract` or
 `open` polymorphic type registered in a `SerializersModule` is not: GraphQL needs a closed set of
@@ -239,7 +244,7 @@ same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 
 | Annotation | Where | Effect |
 | --- | --- | --- |
-| `@GraphQLName("foo")` | class, function, property, parameter | GraphQL name. On a property it outranks `@SerialName`, and renames the schema only — see *Types* |
+| `@GraphQLName("foo")` | class, function, property, parameter | GraphQL name. On a property it outranks `@SerialName` and renames the schema only, so on an **input** field it must agree with the serial name — see *Types* |
 | `@GraphQLDescription("…")` | same | GraphQL description |
 | `@GraphQLIgnore` | property | omitted from the GraphQL type |
 | `@Argument("foo")` | parameter | **Required** on every GraphQL argument. [name] defaults to the Kotlin parameter name |
