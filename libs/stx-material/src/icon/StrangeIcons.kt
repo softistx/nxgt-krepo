@@ -30,6 +30,9 @@ object StrangeIcons {
                 "13.41 17.59 19 19 17.59 13.41 12z",
         )
 
+    val ChevronLeft: ImageVector =
+        icon("ChevronLeft", "M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z")
+
     val ChevronRight: ImageVector =
         icon("ChevronRight", "M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z")
 
@@ -80,6 +83,19 @@ object StrangeIcons {
             "Person",
             "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 " +
                 "0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z",
+        )
+
+    val Home: ImageVector =
+        icon("Home", "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z")
+
+    val Menu: ImageVector =
+        icon("Menu", "M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z")
+
+    val MoreHoriz: ImageVector =
+        icon(
+            "MoreHoriz",
+            "M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 " +
+                "2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z",
         )
 
     val Search: ImageVector =
