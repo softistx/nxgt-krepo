@@ -1,38 +1,16 @@
 package com.strange.material.navigation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.display.Chip
-import com.strange.material.display.StatusBadge
-import com.strange.material.icon.Icon
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.dp
+import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
+import com.strange.material.text.TypographyVariant
 import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
-
-/**
- * One destination in a [NavigationSuite].
- *
- * The suite picks bar, rail or drawer from the window; the destination is only what to show and
- * whether it is current. [badge] is a short label ("3", "new") drawn with [StatusBadge] — M3's
- * item already has the slot, so this is the tone sitting in it, not a second badge.
- */
-@Immutable
-data class NavigationDestination(
-    val label: String,
-    val icon: ImageVector,
-    val selectedIcon: ImageVector? = null,
-    val badge: String? = null,
-    val badgeTone: Tone = Tone.Info,
-    val chip: String? = null,
-    val enabled: Boolean = true,
-)
 
 /**
  * The chrome around an application: a bar, a rail or a drawer, from one list of destinations.
@@ -44,6 +22,9 @@ data class NavigationDestination(
  * Material 3 Adaptive's `NavigationSuiteScaffold` is the thing that morphs. This is the vocabulary
  * in front of it, so a caller never writes three layouts and a `when` on width. [primaryAction]
  * is the FAB that the suite places in the rail header or above the bar, depending on which it is.
+ *
+ * Compact drops section headers, supporting text, chips and shortcuts. Badge and unread dot stay:
+ * they are why M3's item has a badge slot.
  */
 @Composable
 fun NavigationSuite(
@@ -54,28 +35,37 @@ fun NavigationSuite(
     primaryAction: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
+    val compact = LocalWindowInfo.current.containerDpSize.width < 600.dp
     NavigationSuiteScaffold(
         navigationItems = {
+            var previousSection: String? = null
             destinations.forEachIndexed { index, destination ->
+                if (destination.showSection(compact, previousSection)) {
+                    Typography(
+                        text = destination.section!!,
+                        variant = TypographyVariant.Overline,
+                        emphasis = Emphasis.Subtle,
+                        modifier =
+                            Modifier.padding(
+                                start = StrangeTheme.spacing.md,
+                                top = StrangeTheme.spacing.md,
+                                bottom = StrangeTheme.spacing.xs,
+                            ),
+                    )
+                }
+                previousSection = destination.section
+                val badge = destination.resolvedBadge()
                 NavigationSuiteItem(
                     selected = index == selected,
                     onClick = { onSelect(index) },
-                    icon = {
-                        Icon(
-                            icon =
-                                if (index == selected) {
-                                    destination.selectedIcon ?: destination.icon
-                                } else {
-                                    destination.icon
-                                },
-                            description = null,
-                        )
-                    },
-                    label = { DestinationLabel(destination) },
+                    icon = { DestinationLeading(destination, selected = index == selected) },
+                    label = { DestinationLabel(destination, compact) },
                     enabled = destination.enabled,
                     badge =
-                        destination.badge?.let { text ->
-                            { StatusBadge(text = text, tone = destination.badgeTone) }
+                        if (badge is ResolvedBadge.None) {
+                            null
+                        } else {
+                            { DestinationBadge(destination) }
                         },
                 )
             }
@@ -84,19 +74,4 @@ fun NavigationSuite(
         primaryActionContent = primaryAction ?: {},
         content = content,
     )
-}
-
-@Composable
-private fun DestinationLabel(destination: NavigationDestination) {
-    if (destination.chip == null) {
-        Typography(text = destination.label)
-        return
-    }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
-    ) {
-        Typography(text = destination.label)
-        Chip(text = destination.chip)
-    }
 }
