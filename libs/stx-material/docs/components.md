@@ -60,8 +60,9 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds thirteen hand-built vectors: `Add`, `Check`, `Close`, `ChevronRight`,
-`ChevronDown`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`, `Search`, `Warning`. They are defined in code because **no icon pack is
+`StrangeIcons` holds seventeen hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`ChevronRight`, `ChevronDown`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`, `Home`,
+`Menu`, `MoreHoriz`, `Search`, `Warning`. They are defined in code because **no icon pack is
 reachable from here**: the Kotlin Toolchain's `$compose` catalog has no key for the Material icons,
 `$compose.material` does not carry `material-icons-core` in Compose Multiplatform 1.11, and the
 AndroidX icon artifacts are Android-only. An application that wants a thousand glyphs should depend
@@ -199,6 +200,37 @@ works, autofill lands in one place, and a screen reader gets a single input.
 
 `CheckboxGroup` holds the set of what is ticked rather than a list of booleans parallel to the
 options, so the field holds the answer and reordering the options cannot silently change it.
+
+## Navigation
+
+The chrome around a screen. Bar, rail and drawer are one list of destinations; the suite picks
+which. Tabs, search and a segmented control wrap Material 3. Breadcrumb and stepper are built here
+because M3 has neither.
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `AppBar` | `title`, `size = Small`, `navigationIcon?`, `onNavigation?`, `actions` | `navigation/app-bar` |
+| `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `results` | `navigation/search` |
+| `NavigationSuite` | `destinations`, `selected`, `onSelect`, `primaryAction?`, `content` | `navigation/navigation-suite` |
+| `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false` | `navigation/tabs` |
+| `SegmentedControl` | `options`, `selected`, `onSelect` | `navigation/segmented-control` |
+| `FloatingToolbar` | `expanded`, `leading?`, `trailing?`, `content` | `navigation/floating-toolbar` |
+| `Breadcrumb` | `items: List<BreadcrumbItem>` | `navigation/breadcrumb` |
+| `Stepper` | `steps`, `current`, `onStep?`, `collapseBelow = 520.dp` | `navigation/stepper` |
+
+`AppBarSize` — `Small`, `Centered`, `Medium`, `Large`, mapped onto M3's four top app bars.
+
+`NavigationDestination` is a label, an icon, an optional selected icon, and an optional badge. The
+badge is a `StatusBadge` in M3's own item slot, so a count or a "new" chip rides with the
+destination rather than being painted on afterwards.
+
+`NavigationSuite` is `NavigationSuiteScaffold`. The caller never writes a `when` on width: compact
+is a short bar, a tabletop or short window is a medium bar, anything wider is a collapsed wide
+rail. `primaryAction` is the FAB the suite places in the rail header or above the bar.
+
+A `Breadcrumb` of more than four items collapses the middle behind a menu. The last crumb is never
+a control. A `Stepper` only lets a completed step be pressed, so it cannot skip ahead on a tap;
+below `collapseBelow` it stacks.
 
 ## Motion helpers
 
