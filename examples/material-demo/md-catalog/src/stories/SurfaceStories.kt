@@ -25,6 +25,7 @@ import com.strange.material.feedback.LoadingMark
 import com.strange.material.feedback.Progress
 import com.strange.material.feedback.ProgressKind
 import com.strange.material.feedback.Toaster
+import com.strange.material.feedback.TypingIndicator
 import com.strange.material.feedback.rememberToasterState
 import com.strange.material.icon.StrangeIcons
 import com.strange.material.surface.Accordion
@@ -136,6 +137,10 @@ val SurfaceStories =
         story("Loading mark") { knobs ->
             val determinate = knobs.flag("Determinate", false)
             LoadingMark(progress = if (determinate) 0.45f else null)
+        }
+
+        story("Typing indicator") { knobs ->
+            TypingIndicator(label = knobs.text("Label", "Amara is typing"))
         }
 
         story("Toast") { _ ->

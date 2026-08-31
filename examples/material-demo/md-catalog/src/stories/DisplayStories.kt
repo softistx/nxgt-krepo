@@ -18,6 +18,7 @@ import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
 import com.strange.material.display.ActionChip
 import com.strange.material.display.Alert
+import com.strange.material.display.AnnouncementBar
 import com.strange.material.display.Card
 import com.strange.material.display.CardVariant
 import com.strange.material.display.Chip
@@ -28,14 +29,19 @@ import com.strange.material.display.FileChip
 import com.strange.material.display.FilterBar
 import com.strange.material.display.Kbd
 import com.strange.material.display.LabeledDivider
+import com.strange.material.display.LinkPreview
 import com.strange.material.display.ListTile
+import com.strange.material.display.QuoteBlock
 import com.strange.material.display.Rating
+import com.strange.material.display.Reaction
+import com.strange.material.display.ReactionBar
 import com.strange.material.display.SectionHeader
 import com.strange.material.display.Skeleton
 import com.strange.material.display.Stat
 import com.strange.material.display.StatusBadge
 import com.strange.material.display.StatusDot
 import com.strange.material.display.SuggestionChip
+import com.strange.material.display.toggleReaction
 import com.strange.material.icon.Icon
 import com.strange.material.icon.IconSize
 import com.strange.material.icon.StrangeIcons
@@ -246,6 +252,62 @@ val DisplayStories =
                             "will keep showing this note on every order in the batch.",
                     ),
                 collapsedLines = knobs.number("Lines", 3f, 1f..6f, steps = 4).toInt(),
+            )
+        }
+
+        story("Reaction bar") { _ ->
+            var reactions by remember {
+                mutableStateOf(
+                    listOf(
+                        Reaction("👍", 12, selected = true),
+                        Reaction("🎉", 4),
+                        Reaction("❤️", 2),
+                    ),
+                )
+            }
+            ReactionBar(
+                reactions =
+                    reactions.mapIndexed { index, reaction ->
+                        reaction.copy(
+                            onClick = {
+                                val (count, selected) = toggleReaction(reaction.count, reaction.selected)
+                                reactions =
+                                    reactions.mapIndexed { i, item ->
+                                        if (i == index) item.copy(count = count, selected = selected) else item
+                                    }
+                            },
+                        )
+                    },
+            )
+        }
+
+        story("Announcement bar") { knobs ->
+            var visible by remember { mutableStateOf(true) }
+            if (visible) {
+                AnnouncementBar(
+                    text = knobs.text("Text", "The bank is delayed until Tuesday."),
+                    tone = knobs.enumChoice("Tone", Tone.Warning),
+                    onDismiss = { visible = false },
+                    action = { Button(text = "Details", onClick = {}, variant = ButtonVariant.Link) },
+                )
+            } else {
+                Button(text = "Show again", onClick = { visible = true }, variant = ButtonVariant.Ghost)
+            }
+        }
+
+        story("Quote block") { knobs ->
+            QuoteBlock(
+                text = knobs.text("Text", "Ship the small thing. The large thing is made of those."),
+                attribution = knobs.text("Attribution", "Amara Diallo"),
+            )
+        }
+
+        story("Link preview") { _ ->
+            LinkPreview(
+                title = "Orders API",
+                url = "https://api.strange.dev/orders",
+                description = "Create, list and refund orders.",
+                onClick = {},
             )
         }
     }
