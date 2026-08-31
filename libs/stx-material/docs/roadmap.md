@@ -208,9 +208,13 @@ qui attendent leur tour, un bouton qui sait s'il peut être pressé — s'écrit
 
 Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
 
-- [ ] **3 — Navigation et layouts adaptatifs.** `TopAppBar`, `BottomAppBar`, `NavigationRail`,
-      `Sidebar`, `Tabs`, `Breadcrumb`, `Stepper`, `Switcher`, `ListDetailsLayout`, `PaneLayout`,
-      `ResponsiveGrid`, `ScrollToTop`, `LoadMoreButton`
+- [x] **3 — Navigation (chrome).** `AppBar`, `Search`, `NavigationSuite` (bar / rail / drawer from
+      one destinations list), `Tabs` (M3 `PrimaryTabRow`, replacing the hand-built `widgets/Tab`),
+      `SegmentedControl`, `FloatingToolbar`, `Breadcrumb`, `Stepper`
+- [ ] **3b — Layouts Navigation 3.** Scenes réutilisables au-dessus de `ListDetailSceneStrategy` /
+      `SupportingPaneSceneStrategy`, items avec badge et chip, catalogue plié en list-detail
+- [ ] **3c — Layouts restants.** `ListDetailsLayout` wrappers, `PaneLayout`, `ResponsiveGrid`,
+      `ScrollToTop`, `LoadMoreButton`
 - [ ] **4 — Surfaces et retour.** `Dialog`, `ConfirmDialog`, `Sheet`, `Drawer`, `Popover`,
       `Tooltip`, `HoverCard`, `DropdownMenu`, `ContextMenu`, `Toast` + `Toaster`, `Progress`,
       `CircularProgress`, `Spinner`, `Accordion`, `AccordionCard`, `Collapsible`, `Carousel`

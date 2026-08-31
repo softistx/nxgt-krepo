@@ -17,6 +17,7 @@ class StrangeIconsTest :
                 "Add" to StrangeIcons.Add,
                 "Check" to StrangeIcons.Check,
                 "Close" to StrangeIcons.Close,
+                "ChevronLeft" to StrangeIcons.ChevronLeft,
                 "ChevronRight" to StrangeIcons.ChevronRight,
                 "ChevronDown" to StrangeIcons.ChevronDown,
                 "Eye" to StrangeIcons.Eye,
@@ -25,6 +26,9 @@ class StrangeIconsTest :
                 "Edit" to StrangeIcons.Edit,
                 "Inbox" to StrangeIcons.Inbox,
                 "Person" to StrangeIcons.Person,
+                "Home" to StrangeIcons.Home,
+                "Menu" to StrangeIcons.Menu,
+                "MoreHoriz" to StrangeIcons.MoreHoriz,
                 "Search" to StrangeIcons.Search,
                 "Warning" to StrangeIcons.Warning,
             )
