@@ -216,9 +216,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       folds itself; the rewrite onto these scenes is slice 7.
 - [ ] **3c — Layouts restants.** `ListDetailsLayout` wrappers, `PaneLayout`, `ResponsiveGrid`,
       `ScrollToTop`, `LoadMoreButton`
-- [ ] **4 — Surfaces et retour.** `Dialog`, `ConfirmDialog`, `Sheet`, `Drawer`, `Popover`,
-      `Tooltip`, `HoverCard`, `DropdownMenu`, `ContextMenu`, `Toast` + `Toaster`, `Progress`,
-      `CircularProgress`, `Spinner`, `Accordion`, `AccordionCard`, `Collapsible`, `Carousel`
+- [x] **4 — Surfaces et retour.** `ConfirmDialog`, `Sheet`, `Drawer`, `Tooltip`, `Menu`,
+      `Toast` + `Toaster`, `Progress`, `Accordion`, `Carousel`, `SwipeActions`
 - [ ] **5 — Date et heure.** `Calendar`, `CalendarYearView`, `DateField`, `DateRangeField`,
       `TimeField`, `TimePicker`, sur kotlinx-datetime
 - [ ] **6 — Données.** `DataTable` (tri, sélection, colonnes, pagination), `Pagination`, `Table`,
