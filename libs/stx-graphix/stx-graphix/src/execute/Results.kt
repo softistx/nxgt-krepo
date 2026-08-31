@@ -12,7 +12,7 @@ import java.util.concurrent.CompletionException
  */
 internal fun ExecutionResult.toGraphixResult(): GraphixResult =
     GraphixResult(
-        data = getData<Map<String, Any?>?>(),
+        data = getData<Any>() as Map<String, Any?>?,
         errors =
             errors.map { error ->
                 GraphixError(
