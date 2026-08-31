@@ -25,6 +25,9 @@ growing, something is in the wrong module.
 There is no iOS launcher: the library declares the Apple targets, the demo runs where it can be run
 from here. Adding `ios/app` on a macOS host touches nothing in `md-catalog`.
 
+The three panes of the catalogue are Navigation 3 list-detail (`AdaptiveNavDisplay`): the story
+list, then the stage with its knobs. Compact shows one at a time; a wide window shows both.
+
 ## Adding a story
 
 ```kotlin

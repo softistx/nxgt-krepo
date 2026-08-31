@@ -212,8 +212,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       one destinations list), `Tabs` (M3 `PrimaryTabRow`, replacing the hand-built `widgets/Tab`),
       `SegmentedControl`, `FloatingToolbar`, `Breadcrumb`, `Stepper`
 - [x] **3b — Layouts Navigation 3.** `AdaptiveNavDisplay` (list-detail + supporting-pane scenes),
-      `ListDetail` / `SupportingPane` metadata, destination badge *and* chip. The catalogue still
-      folds itself; the rewrite onto these scenes is slice 7.
+      `ListDetail` / `SupportingPane` metadata, destination badge *and* chip. The catalogue
+      folds with `AdaptiveNavDisplay`.
 - [ ] **3c — Layouts restants.** `ListDetailsLayout` wrappers, `PaneLayout`, `ResponsiveGrid`,
       `ScrollToTop`, `LoadMoreButton`
 - [x] **4 — Surfaces et retour.** `ConfirmDialog`, `Sheet`, `Drawer`, `Tooltip`, `Menu`,

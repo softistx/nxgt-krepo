@@ -1,18 +1,31 @@
 package com.strange.material.demo
 
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.entryProvider
+import com.strange.material.demo.knobs.KnobsPanel
+import com.strange.material.navigation.AdaptiveNavDisplay
+import com.strange.material.navigation.ListDetail
+
+private sealed interface CatalogRoute
+
+private data object CatalogList : CatalogRoute
+
+private data class CatalogStory(
+    val id: String,
+) : CatalogRoute
 
 /**
- * The catalogue, laid out for the window it is in: three panes on a desktop, two on a tablet, one
- * at a time on a phone. The breakpoints are read from the pane the catalogue actually occupies —
- * not from the screen — so a resized desktop window folds the same way a small device does.
+ * The catalogue, laid out by Navigation 3 list-detail rather than a hand-written `when` on width.
+ *
+ * Compact: the list, then the story (system back pops). Expanded: list and story side by side.
+ * The knobs travel with the story — they are the story's controls, not a third destination.
  */
 @Composable
 fun CatalogScaffold(
@@ -21,32 +34,52 @@ fun CatalogScaffold(
     modifier: Modifier = Modifier,
 ) {
     val stories = remember(groups) { groups.flatMap(StoryGroup::stories) }
-    val story =
-        remember(state.storyId, stories) {
-            stories.firstOrNull { it.id == state.storyId } ?: stories.first()
-        }
     val knobs = rememberKnobsStore()
+    val backStack =
+        remember {
+            mutableStateListOf<CatalogRoute>(CatalogList, CatalogStory(state.storyId))
+        }
+
+    fun open(story: Story) {
+        state.storyId = story.id
+        val last = backStack.lastOrNull()
+        if (last is CatalogStory) {
+            backStack[backStack.lastIndex] = CatalogStory(story.id)
+        } else {
+            backStack.add(CatalogStory(story.id))
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         CatalogTopBar(state = state)
         HorizontalDivider()
-        BoxWithConstraints(modifier = Modifier.weight(1f)) {
-            when {
-                maxWidth >= ThreePaneWidth -> {
-                    ThreePane(state = state, groups = groups, story = story, knobs = knobs)
-                }
-
-                maxWidth >= TwoPaneWidth -> {
-                    TwoPane(state = state, groups = groups, story = story, knobs = knobs)
-                }
-
-                else -> {
-                    SinglePane(state = state, groups = groups, story = story, knobs = knobs)
-                }
-            }
-        }
+        AdaptiveNavDisplay(
+            backStack = backStack,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            onBack = {
+                if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+            },
+            entryProvider =
+                entryProvider {
+                    entry<CatalogList>(
+                        metadata = ListDetail.list(placeholderTitle = "Pick a story"),
+                    ) {
+                        StoryList(
+                            groups = groups,
+                            selectedId = state.storyId,
+                            onSelect = { open(it) },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    entry<CatalogStory>(metadata = ListDetail.detail()) { route ->
+                        val story = stories.firstOrNull { it.id == route.id } ?: stories.first()
+                        Column(Modifier.fillMaxSize()) {
+                            StoryStage(story = story, knobs = knobs, modifier = Modifier.weight(1f))
+                            HorizontalDivider()
+                            KnobsPanel(knobs = knobs.of(story), modifier = Modifier.fillMaxWidth())
+                        }
+                    }
+                },
+        )
     }
 }
-
-private val ThreePaneWidth = 1040.dp
-private val TwoPaneWidth = 680.dp
