@@ -220,9 +220,23 @@ because M3 has neither.
 
 `AppBarSize` — `Small`, `Centered`, `Medium`, `Large`, mapped onto M3's four top app bars.
 
-`NavigationDestination` is a label, an icon, an optional selected icon, an optional badge and an
-optional chip. The badge is a `StatusBadge` in M3's own item slot; the chip sits in the label,
-which is how a destination carries a category without a second control.
+`NavigationDestination` is a label and an icon, then the decorations a real app actually hangs on
+a destination — not only a badge and a chip:
+
+| Decoration | Compact bar | Rail / drawer |
+| --- | --- | --- |
+| `badge` (count or "new") | yes — M3's badge slot | yes |
+| `unread` (a dot, no count) | yes, unless `badge` is set | yes |
+| `supporting` (second line) | no | yes |
+| `chip` (category) | no | yes |
+| `shortcut` (`⌘K`) | no | yes |
+| `section` (group header) | no | yes, when it changes |
+| `avatar` / `picture` | yes — replaces the vector | yes |
+| `busy` (spinner over the leading) | yes | yes |
+| `tone` (tints the vector) | yes | yes |
+
+A `badge` wins over `unread`: a count is more specific than a dot. Compact keeps only what fits
+the bar's badge slot and the leading; everything that needs a labelled row waits for a rail.
 
 `NavigationSuite` is `NavigationSuiteScaffold`. The caller never writes a `when` on width: compact
 is a short bar, a tabletop or short window is a medium bar, anything wider is a collapsed wide
