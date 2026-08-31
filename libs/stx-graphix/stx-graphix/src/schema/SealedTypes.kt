@@ -93,20 +93,32 @@ internal fun KClass<*>.sharedGraphQLProperties(): List<KProperty1<*, *>> =
     memberProperties.filterNot { it.isGraphQLIgnored() }.sortedBy { it.graphQLPropertyName() }
 
 /**
- * Sealed `@Serializable` supertypes of [this] that become GraphQL interfaces — what the object
- * type declares `implements` for. A sealed supertype that is not `@Serializable` is Kotlin
- * structure, not a GraphQL type, and is left alone.
+ * Sealed `@Serializable` supertypes of [this] that become GraphQL interfaces — what the type
+ * declares `implements` for. A sealed supertype that is not `@Serializable` is Kotlin structure,
+ * not a GraphQL type, and is left alone.
+ *
+ * The walk is **transitive**, because GraphQL's is not: an object reached through an intermediate
+ * sealed level (`Boarding : Paper : Ticketed`) must declare every interface in the chain, or it is
+ * not a possible type of the outermost one and resolving it fails at execute time.
  */
-internal fun KClass<*>.graphQLInterfaces(): List<KType> =
-    supertypes.mapNotNull { supertype ->
-        val classifier = supertype.classifier as? KClass<*> ?: return@mapNotNull null
-        supertype.takeIf {
-            classifier.isSealed &&
-                classifier.hasAnnotation<Serializable>() &&
-                classifier.typeParameters.isEmpty() &&
-                classifier.sealedShape() == SealedShape.INTERFACE
+internal fun KClass<*>.graphQLInterfaces(): List<KType> {
+    val found = linkedMapOf<KClass<*>, KType>()
+
+    fun walk(kClass: KClass<*>) {
+        kClass.supertypes.forEach { supertype ->
+            val classifier = supertype.classifier as? KClass<*> ?: return@forEach
+            if (classifier in found) return@forEach
+            if (!classifier.isSealed || !classifier.hasAnnotation<Serializable>() || classifier.typeParameters.isNotEmpty()) {
+                return@forEach
+            }
+            if (classifier.sealedShape() == SealedShape.INTERFACE) found[classifier] = supertype
+            // A union level is not a GraphQL type of its own, but what is above it may be.
+            walk(classifier)
         }
     }
+    walk(this)
+    return found.values.toList()
+}
 
 internal fun KProperty1<*, *>.graphQLPropertyName(): String = findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() } ?: name
 

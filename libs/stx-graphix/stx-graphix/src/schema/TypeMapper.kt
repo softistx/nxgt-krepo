@@ -249,6 +249,12 @@ internal class TypeMapper(
                 .newInterface()
                 .name(name)
                 .description(hierarchy.base.graphQLDescription())
+        // An interface reached through an intermediate sealed level implements the one above it.
+        hierarchy.base.graphQLInterfaces().forEach { supertype ->
+            val above = (supertype.classifier as KClass<*>).graphQLName()
+            builder.withInterface(GraphQLTypeReference.typeRef(above))
+            if (above !in interfaces && above !in building) mapOutput(supertype)
+        }
         hierarchy.sharedProperties.forEach { property ->
             builder.field { field ->
                 field
@@ -336,7 +342,7 @@ internal class TypeMapper(
                     .type(argumentType)
                     .apply { if (default != null) defaultValueLiteral(default) }
             property.graphQLDeprecation()?.let { reason ->
-                refuseRequiredDeprecation("input field '$fieldName' of $name", argumentType)
+                refuseRequiredDeprecation("input field '$fieldName' of $name", argumentType, default != null)
                 field.deprecate(reason)
             }
             builder.field(field.build())

@@ -44,11 +44,11 @@ internal fun fieldDefinition(
             GraphQLArgument
                 .newArgument()
                 .name(parameter.graphQLName())
-                .description(parameter.findAnnotation<GraphQLDescription>()?.value)
+                .description(parameter.graphQLDescription())
                 .type(argumentType)
                 .apply { if (default != null) defaultValueLiteral(default) }
         parameter.graphQLDeprecation()?.let { reason ->
-            refuseRequiredDeprecation("argument '${parameter.graphQLName()}' of $name", argumentType)
+            refuseRequiredDeprecation("argument '${parameter.graphQLName()}' of $name", argumentType, default != null)
             argument.deprecate(reason)
         }
         builder.argument(argument.build())
@@ -82,12 +82,19 @@ internal fun KFunction<*>.requireArgumentAnnotations(parent: KParameter? = null)
     }
 }
 
-/** GraphQL forbids deprecating an input a caller has to send: there would be no way to stop sending it. */
+/**
+ * GraphQL forbids deprecating an input a caller has to send: there would be no way to stop sending
+ * it. *Required* is non-null **and** without a default — `limit: Int! = 10` may be deprecated,
+ * because omitting it still works.
+ */
 internal fun refuseRequiredDeprecation(
     what: String,
     type: GraphQLInputType,
+    hasDefault: Boolean = false,
 ) {
-    if (type is GraphQLNonNull) {
-        throw GraphixException("$what is required, so it cannot be @GraphQLDeprecated — make it optional first")
+    if (type is GraphQLNonNull && !hasDefault) {
+        throw GraphixException(
+            "$what is required, so it cannot be @GraphQLDeprecated — make it optional, or give it a @GraphQLDefault",
+        )
     }
 }
