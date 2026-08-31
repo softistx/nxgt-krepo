@@ -80,7 +80,10 @@ internal fun graphQLSchema(
             else -> Unit
         }
     }
-    typeFields.forEach { field ->
+    // Concrete parents first: an explicit mapping on an implementor outranks the one it inherits,
+    // and dataFetcherIfAbsent keeps whichever was registered first. Same rule as the SDL path.
+    val (abstractParents, concreteParents) = typeFields.partition { types.implementorsOf(it.parentName).isNotEmpty() }
+    (concreteParents + abstractParents).forEach { field ->
         val fetcher =
             if (field.batched) {
                 batchFieldFetcher(field)

@@ -81,7 +81,12 @@ none can only be a `union`, since a GraphQL interface needs at least one field. 
 the sealed type forces the union direction when it does have shared properties. There is no
 annotation for the other direction.
 
-A nested `sealed` level is Kotlin structure: only the concrete leaves are member types.
+A nested `sealed` level under a **union** is Kotlin structure: only the concrete leaves are member
+types. Under an **interface** it is a GraphQL interface of its own, because it carries the shared
+properties too — `sealed interface Paper : Ticketed` prints as `interface Paper implements Ticketed`,
+and a leaf under it declares the whole chain (`type Boarding implements Paper & Ticketed`). GraphQL
+does not infer that from `Paper`, so a leaf that named only its nearest level would not be a possible
+type of the outermost one.
 
 **Type resolution** is the runtime value's own name — `@GraphQLName` on its class, otherwise the
 Kotlin simple name — because the object *is* the Kotlin instance. Nothing round-trips through
@@ -233,7 +238,7 @@ same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 | `@Argument("foo")` | parameter | **Required** on every GraphQL argument. [name] defaults to the Kotlin parameter name |
 | `@GraphQLContext` | parameter | other types from `execute`'s context map. `DataFetchingEnvironment` is this field **by type** and does not need the annotation |
 | `@Directive("name")` | mapping function | wraps the field with the `fieldDirective("name")` registered on the builder |
-| `@GraphQLDeprecated("why")` | function, property, parameter | GraphQL `@deprecated`. Kotlin's own `@Deprecated` is `BINARY`-retained and unreadable by reflection, hence a second annotation |
+| `@GraphQLDeprecated("why")` | function, property, parameter | GraphQL `@deprecated`. Kotlin's own `@Deprecated` is `BINARY`-retained and unreadable by reflection, hence a second annotation. An argument or input field may only carry it when it is **not required** — nullable, or non-null with a `@GraphQLDefault`; the spec forbids deprecating one a caller has no way to stop sending |
 | `@GraphQLOneOf` | class used as an input | GraphQL `@oneOf`: exactly one field, and not null |
 | `@GraphQLId` | function, property, parameter | GraphQL `ID` instead of `String` / `Uuid` / `Long` |
 | `@GraphQLDefault("10")` | parameter, input-object property | the GraphQL default, as a literal |

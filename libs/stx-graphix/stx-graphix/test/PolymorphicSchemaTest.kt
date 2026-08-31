@@ -5,6 +5,7 @@ import com.strange.graphix.fixture.EmptyQueries
 import com.strange.graphix.fixture.MediaFields
 import com.strange.graphix.fixture.MediaQueries
 import com.strange.graphix.fixture.RenamedQueries
+import com.strange.graphix.fixture.TicketedQueries
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -64,6 +65,28 @@ class PolymorphicSchemaTest :
                 sdl shouldContain "slug: String!"
                 sdl.substringAfter("type Film implements Media").substringBefore("}") shouldContain "slug"
                 sdl.substringAfter("type Song implements Media").substringBefore("}") shouldContain "slug"
+            }
+        }
+
+        feature("a sealed level between an implementor and its interface") {
+            scenario("the object declares every interface in the chain, and the middle one implements the top") {
+                val sdl = Graphix { query(TicketedQueries()) }.sdl()
+
+                sdl shouldContain "interface Paper implements Ticketed"
+                sdl shouldContain "type Boarding implements Paper & Ticketed"
+                sdl shouldContain "type Digital implements Ticketed"
+            }
+
+            scenario("and a value of the nested level still resolves") {
+                val graphql = Graphix { query(TicketedQueries()) }
+                val result = graphql.execute(GraphixRequest("{ ticketed { code __typename } }"))
+
+                result.isOk shouldBe true
+                result.data?.get("ticketed") shouldBe
+                    listOf(
+                        mapOf("code" to "b1", "__typename" to "Boarding"),
+                        mapOf("code" to "d1", "__typename" to "Digital"),
+                    )
             }
         }
 
