@@ -21,7 +21,7 @@ val checkout = workflow<Checkout>("checkout") {
     step("reserve") { context.copy(reservationId = stock.reserve(context.items)) }
         .compensate { stock.release(context.reservationId!!) }
 
-    step("charge") { context.copy(chargeId = payments.charge(context.card, key = "$instanceId:$stepName")) }
+    step("charge") { context.copy(chargeId = payments.charge(context.card, key = idempotencyKey)) }
         .compensate { payments.refund(context.chargeId!!) }
 
     step("confirm") { orders.confirm(context.reservationId!!); context }
@@ -64,8 +64,10 @@ That is not a gap to be closed. Writing the checkpoint *before* the effect would
 and lose work — a step that never ran costs the order — and there is no third option over arbitrary
 user code. So: **a step body must be idempotent, or must have a compensation that tolerates being
 asked to undo something that was never done.** The `StepScope` a step runs in exists to make the
-first one writable: `"$instanceId:$stepName"` is the same string on every replay of the same node of
-the same instance, which is exactly what a payment provider's idempotency key wants.
+first one writable: `idempotencyKey` is the same string on every replay of the same node of the same
+instance, and different for every other one — which is exactly what a payment provider's
+idempotency key asks for. `idempotencyKey("tip")` is the same thing for a step that makes more than
+one call, because giving two calls one key is how a provider is told to skip the second.
 
 The same is true one layer down, and for the same reason. A `RedisLock` is a lock on one Redis, not
 a consensus across several; a failover to a replica that had not seen it hands the instance to two

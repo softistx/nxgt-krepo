@@ -29,7 +29,9 @@ fun <C> workflow(name: String, serializer: KSerializer<C>, block: WorkflowBuilde
 survives a restart.
 
 `name` is what the store records and what an engine looks a definition up by, so it has to be stable
-across deploys — renaming a workflow orphans every instance of it still in flight.
+across deploys — renaming a workflow orphans every instance of it still in flight. **Node names are
+the same kind of promise**: the journal is keyed on them, so renaming a node makes a resumed instance
+believe it never ran, and it is half of every `idempotencyKey`.
 
 A `Workflow<C>` holds no state and runs nothing. Build one at startup and hand it to an engine, which
 runs many instances of it; a step body closes over its collaborators, never over anything belonging
@@ -205,7 +207,7 @@ private val CHARGE = outcome<String>("charge")
 private val COURIER = outcome<Booking>("courier")
 
 parallel("provision") {
-    branch(CHARGE) { payments.charge(context.card, key = "$instanceId:$stepName") }
+    branch(CHARGE) { payments.charge(context.card, key = idempotencyKey) }
         .compensate { id -> payments.refund(id) }
     branch(COURIER) { courier.book(context.items) }
         .compensate { booking -> courier.cancel(booking.id) }
@@ -244,12 +246,35 @@ Every block — a step, a leg, a compensation, a merge — runs with a `StepScop
 | `stepName: String` | The node's **qualified** name — `"provision/charge"` |
 | `attempt: Int` | 1 on the first try |
 | `startedAt: Instant` | When this attempt began |
-
-The metadata is not decoration. Delivery is at-least-once, so correct step code is idempotent, and
-the usual way to make a remote call idempotent is a key that is stable across replays of the same
-node of the same instance — which is `"$instanceId:$stepName"`.
+| `idempotencyKey: String` | `"<workflow>:<instance>:<node>"` — see below |
+| `idempotencyKey(discriminator)` | The same, suffixed, for a node making more than one call |
 
 In a compensation, `attempt` counts that compensation's own attempts.
+
+### Idempotency
+
+Delivery is at-least-once: the checkpoint is written after the effect, so a node whose process died
+in between runs again on resume. **`idempotencyKey` is what makes a step's own effects survive that.**
+It is the same string on a retry, on a resume, and on a second engine picking the instance up, and
+different for every other node, instance and workflow.
+
+```kotlin
+step("charge") { context.copy(chargeId = payments.charge(context.card, key = idempotencyKey)) }
+```
+
+Three things it does not do, and they are the author's:
+
+- **A node making two calls that both need a key must discriminate them** —
+  `idempotencyKey("charge")` and `idempotencyKey("tip")`. The bare key is one string, and giving two
+  calls one key is how a provider is told to skip the second.
+- **A remote call given no key is not idempotent.** Nothing checks that one was passed.
+- **The key is tied to the node's name.** Renaming a step changes the keys of every instance still in
+  flight, so a node that has already run somewhere is renamed with the same care as the workflow
+  itself — for the same reason, and see [Declaring a workflow](#declaring-a-workflow).
+
+What the **engine** makes idempotent, by contrast, needs nothing from the caller: a node whose
+checkpoint landed is never run twice, a compensation already recorded is never repeated, and two
+engines cannot both append to one journal — the write is conditional on the record's version.
 
 ## Running one
 
