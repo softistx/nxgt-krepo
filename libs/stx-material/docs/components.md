@@ -12,8 +12,9 @@ has them.
 `FilterChip`, `Card`, `ListTile` and `StatusBadge` are its `Card`, `ListItem` and `Badge`. What is
 added is the default that was missing: the colour matrix resolved into M3's own `*Colors`, the
 padding and rhythm inside a card, a hover state M3's chip does not have, and a press that gives
-under the finger. Only `Alert`, `EmptyState`, `Skeleton` and `ResponsiveButton` are built from
-primitives, because M3 has nothing to start from. AGENTS.md's *Building a component* is the rule.
+under the finger. Only `Alert`, `EmptyState`, `Skeleton`, `ResponsiveButton`, `Rating`, `Stat`,
+`LabeledDivider`, `FilterBar` and `UploadField` are built from primitives, because M3 has nothing
+to start from. AGENTS.md's *Building a component* is the rule.
 
 ## Foundation
 
@@ -60,13 +61,14 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds twenty hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
-`ChevronRight`, `ChevronDown`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`, `Home`,
-`Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Search`, `Warning`, `ChevronUp`. They are defined in code because **no icon pack is
-reachable from here**: the Kotlin Toolchain's `$compose` catalog has no key for the Material icons,
-`$compose.material` does not carry `material-icons-core` in Compose Multiplatform 1.11, and the
-AndroidX icon artifacts are Android-only. An application that wants a thousand glyphs should depend
-on a pack directly and pass the `ImageVector` in — every component here takes one.
+`StrangeIcons` holds twenty-one hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
+`Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`. They are defined
+in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
+has no key for the Material icons, `$compose.material` does not carry `material-icons-core` in
+Compose Multiplatform 1.11, and the AndroidX icon artifacts are Android-only. An application that
+wants a thousand glyphs should depend on a pack directly and pass the `ImageVector` in — every
+component here takes one.
 
 ## Buttons
 
@@ -77,6 +79,9 @@ on a pack directly and pass the `ImageVector` in — every component here takes 
 | `IconButton` | `icon`, `description`, `onClick`, `variant = Ghost`, `color = Neutral`, `size`, `enabled` | `buttons/icon-button` |
 | `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp` | `buttons/responsive-button` |
 | `ButtonRow` | `align = End`, `content: RowScope` | `buttons/button-row` |
+| `Fab` | `icon`, `description`, `onClick`, `text?`, `expanded = true`, `color = Primary` | `buttons/fab` |
+| `FabMenu` | `expanded`, `onExpandedChange`, `actions: List<FabAction>` | `buttons/fab-menu` |
+| `SplitButton` | `text`, `onClick`, `overflow: List<MenuItem>`, `enabled` | `buttons/split-button` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonColor` — `Primary`, `Secondary`, `Success`, `Info`, `Warning`, `Danger`, `Neutral`.
@@ -96,6 +101,12 @@ a `ButtonGroupScope`. Two different things should not share a name.
 pane on a wide screen too. Its label becomes the icon's `contentDescription` when it collapses, so
 the button never goes silent.
 
+`Fab` is M3's `FloatingActionButton`, using the *container* pair of `ButtonColor` — M3's own FAB
+default. Pass `text` and it becomes the extended FAB. `FabMenu` is M3's `FloatingActionButtonMenu`:
+the main button swaps Add for Close, and each `FabAction` is a menu item that closes the fan on
+click. `SplitButton` is M3's `SplitButtonLayout`: the leading half is the primary action, the
+trailing chevron opens a `Menu` of alternatives.
+
 **Collapsed, it is an `IconButton`** — round, 40 × 40, M3's own metrics — not a pill with the label
 taken out. The two forms are two components and `AnimatedContent` morphs between them.
 `ResponsiveButtonTest` renders it and measures the box: 40 × 40 collapsed, 130 × 40 expanded.
@@ -111,6 +122,10 @@ taken out. The two forms are two components and `AnimatedContent` morphs between
 | `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `action?` | `display/alert` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `display/empty-state` |
 | `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `display/skeleton` |
+| `Stat` | `value`, `label`, `delta?`, `tone = Info` | `display/stat` |
+| `FilterBar` | `options`, `selected`, `onChange` | `display/filter-bar` |
+| `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `display/rating` |
+| `LabeledDivider` | `label` — no `style`: a divider is inert | `display/labeled-divider` |
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
@@ -134,6 +149,11 @@ floor.
 `Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
 `AnimatedVisibility` for the caller to write. `EmptyState` fades in for the same reason, and
 `Skeleton` shimmers on its own.
+
+`Stat` is a `Card` wearing `TypographyVariant.Metric`. `FilterBar` is a row of `Chip`s — not the
+filter subsystem of phase 7, a selected subset of names. The empty set is "everything". `Rating`
+is a row of `IconButton`s; M3 has no rating control. `LabeledDivider` is M3's `HorizontalDivider`
+with a word in the gap.
 
 ## Forms
 
@@ -183,6 +203,7 @@ adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.me
 | `SliderField` | `field`, `label?`, `range`, `steps`, `format` | `forms/slider` |
 | `OtpField` | `field`, `length = 6`, `label?`, `helper?` | `forms/one-time-code` |
 | `InputGroup` | `content: RowScope` | `forms/input-group` |
+| `UploadField` | `onClick`, `label`, `supporting?`, `enabled` | `forms/upload` |
 | `ExtendedLabel` | `text`, `required`, `optional`, `trailing?` | used by the above |
 | `HelperText` | `helper?`, `error?` | used by the above |
 | `FieldScaffold` | `label?`, `required`, `helper?`, `error?`, `content` | used by the above |
@@ -198,6 +219,9 @@ click on the box and handing a screen reader an unlabelled control beside some t
 
 `OtpField` is one field wearing several boxes, not one field per digit. Paste works, backspace
 works, autofill lands in one place, and a screen reader gets a single input.
+
+`UploadField` is chrome: a dashed well, a label and a hint. The host picks the file — there is no
+one picker on every platform — so `onClick` is the application's.
 
 `CheckboxGroup` holds the set of what is ticked rather than a list of booleans parallel to the
 options, so the field holds the answer and reordering the options cannot silently change it.
@@ -289,6 +313,7 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 | `Menu` | `expanded`, `onDismiss`, `items` | `surfaces/menu` |
 | `ContextMenu` | `items`, `content` | `surfaces/context-menu` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` | `surfaces/progress` |
+| `LoadingMark` | `progress: Float? = null` | `surfaces/loading-mark` |
 | `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `surfaces/toast` |
 | `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |
 | `Carousel` | `count`, `peek = 48.dp`, `page` | `surfaces/carousel` |
@@ -297,6 +322,8 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of M3 `Snackbar`s painted with
 `Tone` — M3's host holds one, a dashboard often needs two. `Accordion` and `Carousel` are built
 here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
+`LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content;
+`Progress` is the spinner attached to a control.
 
 ## Date and time
 

@@ -222,9 +222,12 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       kotlinx-datetime. The pickers stay in a dialog; the field is what a form writes.
 - [x] **6 — Données.** `DataTable` (table / cartes selon la largeur), `Pagination` (keyset),
       `Description`, `EntityHeader`, `CommandPalette`, `Timeline`. Combobox is `SelectField`.
-- [ ] **7 — Filtres.** Le sous-système complet : schéma, chips, presets, persistance, validation
+- [ ] **7 — Filtres.** Le sous-système complet : schéma, chips, presets, persistance, validation.
+      `FilterBar` (chips only) already shipped with the actions slice; this phase is the rest.
 - [x] **8 — Médias.** `Avatar`, `StrangeImage` (Coil), `Gallery`, `Lightbox`, `VideoSurface` /
       `PdfSurface` / `CameraSurface` as chrome slots. No decoder in the library.
+- [x] **8b — Actions et chrome.** `Fab` / `FabMenu` / `SplitButton`, `Stat`, `FilterBar` (chips),
+      `Rating`, `LabeledDivider`, `UploadField` (host picks the file), `LoadingMark`.
 - [ ] **9 — Graphiques.** `Area`, `Bar`, `Line`, `Pie`, `Radar`, `Scatter`, `Funnel`, `Heatmap`
       au `Canvas`, thème dérivé des tokens
 - [ ] **10 — i18n et publication.** Catalogue de messages multiplateforme, locales `en`/`fr`,
