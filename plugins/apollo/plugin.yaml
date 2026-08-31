@@ -1,0 +1,11 @@
+tasks:
+  generate:
+    action: !com.strange.apollo.plugin.generateApollo
+      settings: ${pluginSettings}
+      moduleRoot: ${module.rootDir}
+      outputDir: ${taskOutputDir}
+
+generated:
+  sources:
+    - language: kotlin
+      directory: ${tasks.generate.action.outputDir}
