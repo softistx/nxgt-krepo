@@ -85,6 +85,9 @@ settings:
       # ExposedDropdownMenuBox and its anchor, which SelectField is built on. Still experimental in
       # M3 1.11 after years of it, and there is no non-experimental way to anchor a menu to a field.
       - androidx.compose.material3.ExperimentalMaterial3Api
+      # rememberListDetailSceneStrategy / rememberSupportingPaneSceneStrategy. Adaptive 1.3 still
+      # gates the Nav3 scene strategies, and AdaptiveNavDisplay is how callers reach them.
+      - androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
   compose:
     enabled: true
     # Pinned to the toolchain 0.12.0 default, the way `ktor` is pinned in the modules that enable

@@ -211,8 +211,9 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
 - [x] **3 — Navigation (chrome).** `AppBar`, `Search`, `NavigationSuite` (bar / rail / drawer from
       one destinations list), `Tabs` (M3 `PrimaryTabRow`, replacing the hand-built `widgets/Tab`),
       `SegmentedControl`, `FloatingToolbar`, `Breadcrumb`, `Stepper`
-- [ ] **3b — Layouts Navigation 3.** Scenes réutilisables au-dessus de `ListDetailSceneStrategy` /
-      `SupportingPaneSceneStrategy`, items avec badge et chip, catalogue plié en list-detail
+- [x] **3b — Layouts Navigation 3.** `AdaptiveNavDisplay` (list-detail + supporting-pane scenes),
+      `ListDetail` / `SupportingPane` metadata, destination badge *and* chip. The catalogue still
+      folds itself; the rewrite onto these scenes is slice 7.
 - [ ] **3c — Layouts restants.** `ListDetailsLayout` wrappers, `PaneLayout`, `ResponsiveGrid`,
       `ScrollToTop`, `LoadMoreButton`
 - [ ] **4 — Surfaces et retour.** `Dialog`, `ConfirmDialog`, `Sheet`, `Drawer`, `Popover`,
