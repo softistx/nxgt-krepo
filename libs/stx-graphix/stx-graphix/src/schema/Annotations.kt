@@ -85,13 +85,15 @@ annotation class BatchMapping(
     val field: String = "",
 )
 
-/** Overrides the GraphQL name of a type, field, or argument. Empty [value] is ignored. */
-@Target(
-    AnnotationTarget.CLASS,
-    AnnotationTarget.FUNCTION,
-    AnnotationTarget.PROPERTY,
-    AnnotationTarget.VALUE_PARAMETER,
-)
+/**
+ * Overrides the GraphQL name of a **type**. Empty [value] is ignored.
+ *
+ * It names types and nothing else, because every other name already has an owner: a property's is
+ * `@SerialName`, an argument's is [Argument], a field's is its mapping annotation. A type's cannot
+ * come from `@SerialName` — that defaults to the fully-qualified class name and doubles as the
+ * polymorphic discriminator, which may hold characters GraphQL forbids.
+ */
+@Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class GraphQLName(
     /** GraphQL name. Empty is ignored, same as omitting the annotation. */
