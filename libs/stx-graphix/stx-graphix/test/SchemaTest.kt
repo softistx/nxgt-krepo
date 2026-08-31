@@ -5,6 +5,8 @@ import com.strange.graphix.fixture.GreetingQueries
 import com.strange.graphix.fixture.ProductQueries
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -46,6 +48,34 @@ class SchemaTest :
 
             scenario("no query root is a schema-build failure") {
                 shouldThrow<GraphixException> { Graphix { } }
+            }
+        }
+
+        feature("introspection") {
+            scenario("{ __schema } names the query type") {
+                val result =
+                    Graphix { query(GreetingQueries()) }
+                        .execute(GraphixRequest("{ __schema { queryType { name } } }"))
+                result.isOk shouldBe true
+                ((result.data.shouldNotBeNull()["__schema"] as Map<*, *>)["queryType"] as Map<*, *>)["name"] shouldBe "Query"
+            }
+
+            scenario("{ __type } describes an annotated object") {
+                val result =
+                    Graphix { query(ProductQueries()) }
+                        .execute(GraphixRequest("""{ __type(name: "Product") { name fields { name } } }"""))
+                result.isOk shouldBe true
+                val type = result.data.shouldNotBeNull()["__type"] as Map<*, *>
+                type["name"] shouldBe "Product"
+                (type["fields"] as List<*>).map { (it as Map<*, *>)["name"] } shouldContain "name"
+            }
+
+            scenario("the GraphQL introspection query completes") {
+                val result =
+                    Graphix { query(ProductQueries()) }
+                        .execute(GraphixRequest(graphql.introspection.IntrospectionQuery.INTROSPECTION_QUERY))
+                result.isOk shouldBe true
+                result.data.shouldNotBeNull().containsKey("__schema") shouldBe true
             }
         }
     })

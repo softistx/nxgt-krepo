@@ -192,7 +192,8 @@ The JSON envelope is `{ "query", "variables", "operationName" }`. The response i
 query, or unparseable GET `variables` is HTTP **400** with `errors[]`.
 
 `GET /graphql?query=...` is for introspection and simple queries. Variables on GET are a JSON
-object in the `variables` query parameter.
+object in the `variables` query parameter. `__schema` and `__type` are on by default — GraphiQL
+and Apollo Sandbox POST the standard introspection query to the same path.
 
 A **subscription** is one of two protocols, configurable, default `sse`:
 

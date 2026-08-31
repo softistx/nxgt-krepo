@@ -29,7 +29,8 @@ An empty folder keeps the annotated schema.
 `injectable = true` registers that same engine with Ktor DI (`provideGraphix()`), off by default
 because `ktor-server-di` is compile-only.
 
-A GraphQL field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. Subscriptions
+A GraphQL field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. Introspection
+(`{ __schema }`, `{ __type(name: …) }`) is on; GraphiQL talks to this path. Subscriptions
 default to `text/event-stream` on the same path. Set `subscriptions = GraphqlWs` for
 `graphql-ws` (`graphql-transport-ws` on that path); HTTP POST of a subscription is then 400.
 The vocabulary is in [`docs/graphix.md`](../../../docs/graphix.md).
