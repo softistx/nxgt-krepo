@@ -28,7 +28,16 @@ class EveryStoryRendersTest :
         feature("the registry") {
             scenario("has every group the catalogue claims, each with stories in it") {
                 CatalogGroups.map(StoryGroup::name) shouldBe
-                    listOf("Foundation", "Motion", "Buttons", "Display", "Forms", "Navigation", "Screens")
+                    listOf(
+                        "Foundation",
+                        "Motion",
+                        "Buttons",
+                        "Display",
+                        "Forms",
+                        "Navigation",
+                        "Surfaces",
+                        "Screens",
+                    )
                 CatalogGroups.forEach { it.stories.size shouldBeGreaterThan 0 }
             }
 
