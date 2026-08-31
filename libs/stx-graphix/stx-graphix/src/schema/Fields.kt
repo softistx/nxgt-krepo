@@ -27,24 +27,31 @@ internal fun fieldDefinition(
             .name(name)
             .description(function.graphQLDescription())
             .type(output)
+    function.graphQLDeprecation()?.let { builder.deprecate(it) }
     function.valueParameters.filter { it.isArgument() }.forEach { parameter ->
-        // A Kotlin default is still GraphQL NonNull unless unwrapped: graphql-java has no defaults.
+        val default = parameter.graphQLDefault("argument '${parameter.graphQLName()}' of $name")
+        // A Kotlin default alone only makes the argument optional — graphql-java has no Kotlin
+        // defaults. @GraphQLDefault puts the value in the schema and keeps the NonNull.
         val argumentType =
-            types.input(parameter.type).let { type ->
-                if (parameter.isOptional && type is GraphQLNonNull) {
+            types.input(parameter.type, parameter.isGraphQLId()).let { type ->
+                if (default == null && parameter.isOptional && type is GraphQLNonNull) {
                     type.wrappedType as GraphQLInputType
                 } else {
                     type
                 }
             }
-        builder.argument(
+        val argument =
             GraphQLArgument
                 .newArgument()
                 .name(parameter.graphQLName())
-                .description(parameter.findAnnotation<GraphQLDescription>()?.value)
+                .description(parameter.graphQLDescription())
                 .type(argumentType)
-                .build(),
-        )
+                .apply { if (default != null) defaultValueLiteral(default) }
+        parameter.graphQLDeprecation()?.let { reason ->
+            refuseRequiredDeprecation("argument '${parameter.graphQLName()}' of $name", argumentType, default != null)
+            argument.deprecate(reason)
+        }
+        builder.argument(argument.build())
     }
     return builder.build()
 }
@@ -71,6 +78,23 @@ internal fun KFunction<*>.requireArgumentAnnotations(parent: KParameter? = null)
         throw GraphixException(
             "$name parameter '${parameter.name}' must be @Argument — " +
                 "DataFetchingEnvironment, the parent source, and @GraphQLContext do not take it",
+        )
+    }
+}
+
+/**
+ * GraphQL forbids deprecating an input a caller has to send: there would be no way to stop sending
+ * it. *Required* is non-null **and** without a default — `limit: Int! = 10` may be deprecated,
+ * because omitting it still works.
+ */
+internal fun refuseRequiredDeprecation(
+    what: String,
+    type: GraphQLInputType,
+    hasDefault: Boolean = false,
+) {
+    if (type is GraphQLNonNull && !hasDefault) {
+        throw GraphixException(
+            "$what is required, so it cannot be @GraphQLDeprecated — make it optional, or give it a @GraphQLDefault",
         )
     }
 }

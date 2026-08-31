@@ -28,16 +28,20 @@ internal fun List<SchemaFile>.sdlSchema(
     json: Json,
     customScalars: List<graphql.schema.GraphQLScalarType> = emptyList(),
     fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
+    typeResolvers: Map<String, GraphixTypeName> = emptyMap(),
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     val registry = typeRegistry()
     val typeFields = if (typeInstances.isEmpty()) emptyList() else collectTypeFields(typeInstances)
     val byType = linkedMapOf<String, TypeRuntimeWiring.Builder>()
+    // RuntimeWiring is strict: a second fetcher for one coordinate throws rather than replacing.
+    val wired = mutableSetOf<Pair<String, String>>()
 
     fun wire(
         parent: String,
         field: String,
         fetcher: DataFetcher<*>,
     ) {
+        if (!wired.add(parent to field)) return
         byType.getOrPut(parent) { TypeRuntimeWiring.newTypeWiring(parent) }.dataFetcher(field, fetcher)
     }
     queries.rootFunctions(RootKind.QUERY).forEach { (instance, function) ->
@@ -62,7 +66,10 @@ internal fun List<SchemaFile>.sdlSchema(
                 .withDirectives(function, fieldDirectives),
         )
     }
-    typeFields.forEach { field ->
+    // Concrete parents first: an explicit mapping on an implementor outranks the one it inherits.
+    val (abstractParents, concreteParents) =
+        typeFields.partition { registry.implementorsOf(it.parentName).isNotEmpty() }
+    (concreteParents + abstractParents).forEach { field ->
         val fetcher =
             if (field.batched) {
                 batchFieldFetcher(field)
@@ -70,7 +77,20 @@ internal fun List<SchemaFile>.sdlSchema(
                 resolverFetcher(field.instance, field.function, json, field.parentParameter)
                     .withDirectives(field.function, fieldDirectives)
             }
+        val implementors = registry.implementorsOf(field.parentName)
+        if (implementors.isEmpty()) {
+            wire(field.parentName, field.fieldName, fetcher)
+            return@forEach
+        }
+        if (registry.isUnion(field.parentName)) {
+            throw GraphixException(
+                "@SchemaMapping ${field.function.name} targets union '${field.parentName}' — " +
+                    "a GraphQL union has no fields; put the field on each member type, or make it an interface",
+            )
+        }
+        // A data fetcher is never inherited down an interface: register it on every implementor.
         wire(field.parentName, field.fieldName, fetcher)
+        implementors.forEach { wire(it, field.fieldName, fetcher) }
     }
     val wiring =
         RuntimeWiring
@@ -81,6 +101,11 @@ internal fun List<SchemaFile>.sdlSchema(
     customScalars.forEach { wiring.scalar(it) }
     fieldDirectives.forEach { (name, wrap) ->
         wiring.directive(name, GraphixDirective(name, wrap).toSchemaWiring())
+    }
+    // Without a type resolver, SchemaGenerator refuses every interface and union in the document.
+    val resolver = GraphixTypeResolver(typeResolvers)
+    registry.abstractTypeNames().forEach { name ->
+        byType.getOrPut(name) { TypeRuntimeWiring.newTypeWiring(name) }.typeResolver(resolver)
     }
     byType.values.forEach { wiring.type(it) }
     val schema =

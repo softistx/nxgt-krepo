@@ -2,6 +2,7 @@ package com.strange.graphix.schema
 
 import com.strange.graphix.GraphixException
 import com.strange.graphix.scalar.Scalars
+import graphql.Directives
 import graphql.Scalars.GraphQLBoolean
 import graphql.Scalars.GraphQLFloat
 import graphql.Scalars.GraphQLInt
@@ -10,12 +11,14 @@ import graphql.schema.GraphQLEnumType
 import graphql.schema.GraphQLInputObjectField
 import graphql.schema.GraphQLInputObjectType
 import graphql.schema.GraphQLInputType
+import graphql.schema.GraphQLInterfaceType
 import graphql.schema.GraphQLList
 import graphql.schema.GraphQLNamedType
 import graphql.schema.GraphQLNonNull
 import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLOutputType
 import graphql.schema.GraphQLTypeReference
+import graphql.schema.GraphQLUnionType
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -46,25 +49,49 @@ internal class TypeMapper(
     private val outputs = linkedMapOf<String, GraphQLObjectType>()
     private val inputs = linkedMapOf<String, GraphQLInputObjectType>()
     private val enums = linkedMapOf<String, GraphQLEnumType>()
+    private val interfaces = linkedMapOf<String, GraphQLInterfaceType>()
+    private val unions = linkedMapOf<String, GraphQLUnionType>()
+    private val implementors = linkedMapOf<String, MutableSet<String>>()
     private val building = mutableSetOf<String>()
 
-    /** GraphQL output type for [kType], including nullability. */
-    fun output(kType: KType): GraphQLOutputType = wrapOutput(mapOutput(kType), kType.isMarkedNullable)
+    /** GraphQL output type for [kType], including nullability. [id] makes a string type `ID`. */
+    fun output(
+        kType: KType,
+        id: Boolean = false,
+    ): GraphQLOutputType = wrapOutput(mapOutput(kType, id), kType.isMarkedNullable)
 
-    /** GraphQL input type for [kType], including nullability. */
-    fun input(kType: KType): GraphQLInputType = wrapInput(mapInput(kType), kType.isMarkedNullable)
+    /** GraphQL input type for [kType], including nullability. [id] makes a string type `ID`. */
+    fun input(
+        kType: KType,
+        id: Boolean = false,
+    ): GraphQLInputType = wrapInput(mapInput(kType, id), kType.isMarkedNullable)
 
-    /** Named object, input object and enum types this mapper built — for `additionalTypes`. */
-    fun additionalTypes(): Set<GraphQLNamedType> = (outputs.values + inputs.values + enums.values).toSet()
+    /** Every named type this mapper built — for `additionalTypes`. */
+    fun additionalTypes(): Set<GraphQLNamedType> =
+        (outputs.values + inputs.values + enums.values + interfaces.values + unions.values).toSet()
 
-    private fun mapOutput(kType: KType): GraphQLOutputType {
+    /** The interfaces and unions this mapper built. Each needs a type resolver in the code registry. */
+    fun abstractTypes(): List<GraphQLNamedType> = interfaces.values + unions.values
+
+    /** Object types implementing [name], for fanning an interface-level mapping onto its implementors. */
+    fun implementorsOf(name: String): List<String> = implementors[name].orEmpty().toList()
+
+    private fun mapOutput(
+        kType: KType,
+        id: Boolean = false,
+    ): GraphQLOutputType {
+        if (id) idScalar(kType)?.let { return it }
         scalarFromClass(kType, kotlinScalars)?.let { return it }
         val descriptor = descriptorOf(kType)
         scalarOf(descriptor)?.let { return it }
         return when (descriptor.kind) {
             StructureKind.LIST -> {
                 GraphQLList.list(
-                    output(kType.arguments.single().type ?: throw GraphixException("a list GraphQL type needs an element type: $kType")),
+                    output(
+                        kType.arguments.single().type
+                            ?: throw GraphixException("a list GraphQL type needs an element type: $kType"),
+                        id,
+                    ),
                 )
             }
 
@@ -85,7 +112,7 @@ internal class TypeMapper(
             }
 
             is PolymorphicKind -> {
-                throw GraphixException("polymorphic types are not GraphQL types yet: $kType")
+                abstractType(kType, descriptor.kind as PolymorphicKind)
             }
 
             else -> {
@@ -94,14 +121,22 @@ internal class TypeMapper(
         }
     }
 
-    private fun mapInput(kType: KType): GraphQLInputType {
+    private fun mapInput(
+        kType: KType,
+        id: Boolean = false,
+    ): GraphQLInputType {
+        if (id) idScalar(kType)?.let { return it }
         scalarFromClass(kType, kotlinScalars)?.let { return it }
         val descriptor = descriptorOf(kType)
         scalarOf(descriptor)?.let { return it }
         return when (descriptor.kind) {
             StructureKind.LIST -> {
                 GraphQLList.list(
-                    input(kType.arguments.single().type ?: throw GraphixException("a list GraphQL type needs an element type: $kType")),
+                    input(
+                        kType.arguments.single().type
+                            ?: throw GraphixException("a list GraphQL type needs an element type: $kType"),
+                        id,
+                    ),
                 )
             }
 
@@ -118,7 +153,10 @@ internal class TypeMapper(
             }
 
             is PolymorphicKind -> {
-                throw GraphixException("polymorphic types are not GraphQL types yet: $kType")
+                throw GraphixException(
+                    "sealed $kType cannot be a GraphQL input — GraphQL has no input unions. " +
+                        "take a discriminator argument and one input object per case",
+                )
             }
 
             else -> {
@@ -140,6 +178,16 @@ internal class TypeMapper(
                 .newObject()
                 .name(name)
                 .description(kClass.graphQLDescription())
+        val inherited = mutableListOf<TypeFieldMeta>()
+        kClass.graphQLInterfaces().forEach { supertype ->
+            val interfaceName = (supertype.classifier as KClass<*>).graphQLName()
+            builder.withInterface(GraphQLTypeReference.typeRef(interfaceName))
+            implementors.getOrPut(interfaceName) { linkedSetOf() } += name
+            // An object type must declare every field of the interfaces it implements.
+            inherited += extraFields[interfaceName].orEmpty()
+            // The interface has to exist in the schema for the reference to resolve.
+            if (interfaceName !in interfaces && interfaceName !in building) mapOutput(supertype)
+        }
         val propertyNames = mutableSetOf<String>()
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
             val fieldName = property.findAnnotationName() ?: elementName
@@ -148,24 +196,103 @@ internal class TypeMapper(
                 field
                     .name(fieldName)
                     .description(property.graphQLDescription())
-                    .type(output(elementType))
+                    .type(output(elementType, property.isGraphQLId()))
+                    .apply { property.graphQLDeprecation()?.let { deprecate(it) } }
             }
         }
-        extraFields[name].orEmpty().forEach { extra ->
+        val own = extraFields[name].orEmpty()
+        (own + inherited.filterNot { extra -> own.any { it.fieldName == extra.fieldName } }).forEach { extra ->
             if (extra.fieldName in propertyNames) {
                 throw GraphixException("duplicate field '${extra.fieldName}' on $name")
             }
+            propertyNames += extra.fieldName
             builder.field(
                 fieldDefinition(
                     extra.function,
                     extra.fieldName,
-                    output(extra.graphqlType),
+                    output(extra.graphqlType, extra.function.isGraphQLId()),
                     this,
                 ),
             )
         }
         building.remove(name)
         return builder.build().also { outputs[name] = it }
+    }
+
+    /**
+     * A sealed hierarchy is a GraphQL `interface` when its subclasses share properties and a
+     * `union` when they do not. An open polymorphic type is neither: GraphQL needs a closed set.
+     */
+    private fun abstractType(
+        kType: KType,
+        kind: PolymorphicKind,
+    ): GraphQLOutputType {
+        if (kind != PolymorphicKind.SEALED) {
+            throw GraphixException(
+                "open polymorphic $kType is not a GraphQL type — " +
+                    "GraphQL needs a closed set of possible types; make it a sealed interface",
+            )
+        }
+        val hierarchy = kType.sealedHierarchy()
+        return when (hierarchy.shape) {
+            SealedShape.INTERFACE -> interfaceType(hierarchy)
+            SealedShape.UNION -> unionType(hierarchy)
+        }
+    }
+
+    private fun interfaceType(hierarchy: SealedHierarchy): GraphQLOutputType {
+        val name = hierarchy.name
+        interfaces[name]?.let { return it }
+        if (!building.add(name)) return GraphQLTypeReference.typeRef(name)
+        val builder =
+            GraphQLInterfaceType
+                .newInterface()
+                .name(name)
+                .description(hierarchy.base.graphQLDescription())
+        // An interface reached through an intermediate sealed level implements the one above it.
+        hierarchy.base.graphQLInterfaces().forEach { supertype ->
+            val above = (supertype.classifier as KClass<*>).graphQLName()
+            builder.withInterface(GraphQLTypeReference.typeRef(above))
+            if (above !in interfaces && above !in building) mapOutput(supertype)
+        }
+        hierarchy.sharedProperties.forEach { property ->
+            builder.field { field ->
+                field
+                    .name(property.graphQLPropertyName())
+                    .description(property.graphQLDescription())
+                    .type(output(property.returnType, property.isGraphQLId()))
+                    .apply { property.graphQLDeprecation()?.let { deprecate(it) } }
+            }
+        }
+        extraFields[name].orEmpty().forEach { extra ->
+            builder.field(fieldDefinition(extra.function, extra.fieldName, output(extra.graphqlType, extra.function.isGraphQLId()), this))
+        }
+        building.remove(name)
+        val type = builder.build().also { interfaces[name] = it }
+        // Members are built after the interface is memoised, so their `implements` reference resolves.
+        hierarchy.members.forEach { mapOutput(it) }
+        return type
+    }
+
+    private fun unionType(hierarchy: SealedHierarchy): GraphQLOutputType {
+        val name = hierarchy.name
+        unions[name]?.let { return it }
+        if (!building.add(name)) return GraphQLTypeReference.typeRef(name)
+        val members = hierarchy.members.map { mapOutput(it) }
+        val builder =
+            GraphQLUnionType
+                .newUnionType()
+                .name(name)
+                .description(hierarchy.base.graphQLDescription())
+        members.forEach { member ->
+            when (member) {
+                is GraphQLObjectType -> builder.possibleType(member)
+                is GraphQLTypeReference -> builder.possibleType(member)
+                else -> throw GraphixException("union '$name' member is not an object type: $member")
+            }
+        }
+        building.remove(name)
+        return builder.build().also { unions[name] = it }
     }
 
     private fun inputObjectType(
@@ -176,29 +303,49 @@ internal class TypeMapper(
         val name = inputName(kClass)
         inputs[name]?.let { return it }
         if (!building.add(name)) return GraphQLTypeReference.typeRef(name)
+        val oneOf = kClass.findAnnotation<GraphQLOneOf>() != null
         val builder =
             GraphQLInputObjectType
                 .newInputObject()
                 .name(name)
                 .description(kClass.graphQLDescription())
+        if (oneOf) builder.withDirective(Directives.OneOfDirective)
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
             refuseArgumentOnInputField(kClass, property)
+            val fieldName = property.findAnnotationName() ?: elementName
+            val default = property.graphQLDefault("$name.$fieldName")
+            if (oneOf && default != null) {
+                throw GraphixException(
+                    "$name is @GraphQLOneOf, so '$fieldName' may not have a @GraphQLDefault",
+                )
+            }
             val argumentType =
-                input(elementType).let { type ->
-                    if (constructorOptional(kClass, property.name) && type is GraphQLNonNull) {
+                input(elementType, property.isGraphQLId()).let { type ->
+                    // A GraphQL default keeps the NonNull: `size: Int! = 1` is what a Kotlin default means.
+                    if (default == null && constructorOptional(kClass, property.name) && type is GraphQLNonNull) {
                         type.wrappedType as GraphQLInputType
                     } else {
                         type
                     }
                 }
-            builder.field(
+            if (oneOf && argumentType is GraphQLNonNull) {
+                throw GraphixException(
+                    "$name is @GraphQLOneOf but '$fieldName' is not nullable — " +
+                        "every field of a oneOf input object must be, so a caller can send exactly one",
+                )
+            }
+            val field =
                 GraphQLInputObjectField
                     .newInputObjectField()
-                    .name(property.findAnnotationName() ?: elementName)
+                    .name(fieldName)
                     .description(property.graphQLDescription())
                     .type(argumentType)
-                    .build(),
-            )
+                    .apply { if (default != null) defaultValueLiteral(default) }
+            property.graphQLDeprecation()?.let { reason ->
+                refuseRequiredDeprecation("input field '$fieldName' of $name", argumentType, default != null)
+                field.deprecate(reason)
+            }
+            builder.field(field.build())
         }
         building.remove(name)
         return builder.build().also { inputs[name] = it }
@@ -211,7 +358,7 @@ internal class TypeMapper(
     private fun inputName(kClass: KClass<*>): String {
         val name = kClass.graphQLName()
         if (name.endsWith("Input")) return name
-        if (name in outputs) return name + "Input"
+        if (name in outputs || name in interfaces || name in unions) return name + "Input"
         return name
     }
 

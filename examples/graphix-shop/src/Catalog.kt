@@ -45,6 +45,20 @@ class Catalog {
     @QueryMapping
     fun products(): List<Product> = products.toList()
 
+    /**
+     * A `union SearchResult = Product | Review`. Kotlin has no union type, so the return type is
+     * `List<Any>` — on the SDL path the document is the schema, so a resolver's Kotlin type is
+     * never read. Graphix resolves each row by its class name, with nothing registered.
+     */
+    @QueryMapping
+    fun search(
+        @Argument term: String,
+    ): List<Any> {
+        val matches = term.lowercase()
+        return products.filter { it.name.lowercase().contains(matches) } +
+            reviews.values.flatten().filter { it.body.lowercase().contains(matches) }
+    }
+
     @MutationMapping
     fun addProduct(
         @Argument name: String,

@@ -8,6 +8,7 @@ import com.strange.graphix.schema.DefaultSchemaExtensions
 import com.strange.graphix.schema.DefaultSchemaLocations
 import com.strange.graphix.schema.FieldDirectiveWrap
 import com.strange.graphix.schema.GraphixDirective
+import com.strange.graphix.schema.GraphixTypeName
 import com.strange.graphix.schema.graphQLSchema
 import com.strange.graphix.schema.loadSchemaFiles
 import com.strange.graphix.validation.GraphixValidation
@@ -52,6 +53,7 @@ class Graphix internal constructor(
     internal val engine: GraphQL,
     internal val loaders: List<RegisteredLoader> = emptyList(),
     internal val validation: GraphixValidation? = null,
+    internal val introspection: Boolean = true,
 ) {
     /**
      * Runs one query or mutation. Field failures land in [GraphixResult.errors]; this call
@@ -77,7 +79,7 @@ class Graphix internal constructor(
         val scope = CoroutineScope(currentCoroutineContext() + job + CoroutineName("graphql"))
         return try {
             val result =
-                engine.executeAsync(executionInput(request, context, scope, loaders, validation)).await()
+                engine.executeAsync(executionInput(request, context, scope, loaders, validation, introspection)).await()
             if (result.getData<Any>() is Publisher<*>) {
                 throw GraphixException("this is a subscription — use Graphix.subscribe")
             }
@@ -108,6 +110,8 @@ class GraphixBuilder internal constructor(
     private val customScalars = mutableListOf<GraphQLScalarType>()
     private val kotlinScalars = mutableMapOf<KClass<*>, GraphQLScalarType>()
     private val fieldDirectives = mutableMapOf<String, FieldDirectiveWrap>()
+    private val typeResolvers = mutableMapOf<String, GraphixTypeName>()
+    private var introspection = true
     private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
     private var validation: GraphixValidation? = null
 
@@ -176,6 +180,24 @@ class GraphixBuilder internal constructor(
         throw GraphixException("duplicate field directive '${directive.name}'")
     }
 
+    /**
+     * Whether `__schema` and `__type` answer. On by default — GraphiQL and Apollo Sandbox need
+     * them. Turned off, an operation selecting either comes back with one GraphQL error and no
+     * data; every other operation is unaffected, and the schema itself is unchanged.
+     */
+    fun introspection(enabled: Boolean) {
+        introspection = enabled
+    }
+
+    internal fun addTypeResolver(
+        typeName: String,
+        resolver: GraphixTypeName,
+    ) {
+        if (typeResolvers.putIfAbsent(typeName, resolver) != null) {
+            throw GraphixException("duplicate type resolver for '$typeName'")
+        }
+    }
+
     internal fun addEngineCustomizer(customizer: GraphQLEngineCustomizer) {
         engineCustomizers += customizer
     }
@@ -206,11 +228,12 @@ class GraphixBuilder internal constructor(
                 customScalars,
                 kotlinScalars,
                 fieldDirectives,
+                typeResolvers,
             )
         val builder = GraphQL.newGraphQL(schema)
         validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }
         engineCustomizers.forEach { with(it) { builder.customize() } }
-        return Graphix(builder.build(), loaders, validation)
+        return Graphix(builder.build(), loaders, validation, introspection)
     }
 }
 

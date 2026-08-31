@@ -9,8 +9,10 @@ import com.strange.graphix.execute.subscriptionFetcher
 import com.strange.graphix.scalar.Scalars
 import graphql.schema.FieldCoordinates
 import graphql.schema.GraphQLCodeRegistry
+import graphql.schema.GraphQLInterfaceType
 import graphql.schema.GraphQLScalarType
 import graphql.schema.GraphQLSchema
+import graphql.schema.GraphQLUnionType
 import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
 
@@ -25,6 +27,7 @@ internal fun graphQLSchema(
     customScalars: List<GraphQLScalarType> = emptyList(),
     kotlinScalars: Map<KClass<*>, GraphQLScalarType> = emptyMap(),
     fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
+    typeResolvers: Map<String, GraphixTypeName> = emptyMap(),
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     if (queries.isEmpty()) throw GraphixException("Graphix needs at least one query root")
     if (schemaFiles.isNotEmpty()) {
@@ -36,6 +39,7 @@ internal fun graphQLSchema(
             json,
             customScalars,
             fieldDirectives,
+            typeResolvers,
         )
     }
     val typeFields = collectTypeFields(typeInstances)
@@ -68,7 +72,18 @@ internal fun graphQLSchema(
             .putAll(query)
             .apply { if (mutation != null) putAll(mutation) }
             .apply { if (subscription != null) putAll(subscription) }
-    typeFields.forEach { field ->
+    val resolver = GraphixTypeResolver(typeResolvers)
+    types.abstractTypes().forEach { abstract ->
+        when (abstract) {
+            is GraphQLInterfaceType -> registry.typeResolver(abstract, resolver)
+            is GraphQLUnionType -> registry.typeResolver(abstract, resolver)
+            else -> Unit
+        }
+    }
+    // Concrete parents first: an explicit mapping on an implementor outranks the one it inherits,
+    // and dataFetcherIfAbsent keeps whichever was registered first. Same rule as the SDL path.
+    val (abstractParents, concreteParents) = typeFields.partition { types.implementorsOf(it.parentName).isNotEmpty() }
+    (concreteParents + abstractParents).forEach { field ->
         val fetcher =
             if (field.batched) {
                 batchFieldFetcher(field)
@@ -76,21 +91,30 @@ internal fun graphQLSchema(
                 resolverFetcher(field.instance, field.function, json, field.parentParameter)
                     .withDirectives(field.function, fieldDirectives)
             }
-        registry.dataFetcher(FieldCoordinates.coordinates(field.parentName, field.fieldName), fetcher)
+        // A data fetcher is looked up by the concrete object type, never inherited down an
+        // interface, so a mapping on an interface has to be registered on every implementor.
+        val targets = types.implementorsOf(field.parentName).ifEmpty { listOf(field.parentName) }
+        targets.forEach { target ->
+            registry.dataFetcherIfAbsent(FieldCoordinates.coordinates(target, field.fieldName), fetcher)
+        }
     }
     val schema =
-        GraphQLSchema
-            .newSchema()
-            .query(query.type)
-            .mutation(mutation?.type)
-            .subscription(subscription?.type)
-            .additionalTypes(types.additionalTypes())
-            .additionalType(Scalars.Long)
-            .additionalType(Scalars.Instant)
-            .additionalType(Scalars.Uuid)
-            .apply { customScalars.forEach { additionalType(it) } }
-            .codeRegistry(registry.build())
-            .build()
+        try {
+            GraphQLSchema
+                .newSchema()
+                .query(query.type)
+                .mutation(mutation?.type)
+                .subscription(subscription?.type)
+                .additionalTypes(types.additionalTypes())
+                .additionalType(Scalars.Long)
+                .additionalType(Scalars.Instant)
+                .additionalType(Scalars.Uuid)
+                .apply { customScalars.forEach { additionalType(it) } }
+                .codeRegistry(registry.build())
+                .build()
+        } catch (failure: Exception) {
+            throw GraphixException("cannot build GraphQL schema: ${failure.message}", failure)
+        }
     val declared = collectDeclaredLoaders(queries + mutations + subscriptions + typeInstances)
     val batched = typeFields.filter { it.batched }.map { it.toRegisteredLoader(json) }
     val names = mutableSetOf<String>()

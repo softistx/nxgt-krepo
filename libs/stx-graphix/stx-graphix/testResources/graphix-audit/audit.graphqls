@@ -1,0 +1,16 @@
+directive @shout on FIELD_DEFINITION | OBJECT | INTERFACE
+
+type Query {
+  ticket: Ticket!
+  plain: Plain!
+  loud: String! @shout
+}
+
+type Ticket @shout {
+  title: String!
+  owner: String!
+}
+
+type Plain {
+  title: String!
+}

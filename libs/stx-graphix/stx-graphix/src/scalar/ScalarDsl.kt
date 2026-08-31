@@ -39,10 +39,14 @@ class ScalarSpec {
 /**
  * Builds a [GraphQLScalarType] from [ScalarSpec] lambdas. Register it with
  * [GraphixBuilder.scalar].
+ *
+ * [specifiedBy] is the URL of the scalar's specification — GraphQL's `@specifiedBy`, which tells
+ * a client generator what the string actually holds.
  */
 fun graphQLScalar(
     name: String,
     description: String = "",
+    specifiedBy: String = "",
     block: ScalarSpec.() -> Unit,
 ): GraphQLScalarType {
     val spec = ScalarSpec().apply(block)
@@ -50,6 +54,7 @@ fun graphQLScalar(
         .newScalar()
         .name(name)
         .description(description.ifEmpty { null })
+        .specifiedByUrl(specifiedBy.ifEmpty { null })
         .coercing(
             object : Coercing<Any, Any> {
                 override fun serialize(
@@ -103,12 +108,13 @@ fun GraphixBuilder.scalar(
     addScalar(type, kotlinType)
 }
 
-/** Declares a scalar in place. Same [kotlinType] rule as [scalar]. */
+/** Declares a scalar in place. Same [kotlinType] rule as [scalar], same [specifiedBy] as [graphQLScalar]. */
 fun GraphixBuilder.scalar(
     name: String,
     description: String = "",
     kotlinType: KClass<*>? = null,
+    specifiedBy: String = "",
     block: ScalarSpec.() -> Unit,
 ) {
-    scalar(graphQLScalar(name, description, block), kotlinType)
+    scalar(graphQLScalar(name, description, specifiedBy, block), kotlinType)
 }
