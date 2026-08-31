@@ -105,7 +105,6 @@ private fun KFunction<*>.mappingTypeName(): String? =
 private fun KFunction<*>.mappingFieldName(): String =
     findAnnotation<SchemaMapping>()?.field?.takeIf { it.isNotEmpty() }
         ?: findAnnotation<BatchMapping>()?.field?.takeIf { it.isNotEmpty() }
-        ?: findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }
         ?: name
 
 internal fun KType.listElement(): KType? {

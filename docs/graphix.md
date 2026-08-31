@@ -17,8 +17,7 @@ in the module README, which answers *why the library is shaped this way*.
 | `@BatchMapping` | function on a class passed to `type(...)` | extra field, DataLoader — no SchemaMapping on the same field |
 
 The GraphQL field name is `@QueryMapping(name=…)` / `@MutationMapping(name=…)` /
-`@SubscriptionMapping(name=…)` if set, otherwise `@GraphQLName` on the function, otherwise the
-Kotlin name. `@SchemaMapping(typeName, field)` and `@BatchMapping(typeName, field)` default
+`@SubscriptionMapping(name=…)` if set, otherwise the Kotlin name. `@SchemaMapping(typeName, field)` and `@BatchMapping(typeName, field)` default
 `typeName` to the simple name of the first argument's type and `field` to the function name.
 
 At least one `@QueryMapping` function is required. GraphQL's spec has no schema without a query root.
@@ -50,12 +49,18 @@ ends in `Input` keeps it.
 
 A type that is not `@Serializable` fails schema build, naming that type.
 
-**A field's name** is `@GraphQLName` on the property, then `@SerialName`, then the Kotlin name.
-`@SerialName` counts because the SerialDescriptor is the type system here — a property renamed for
-the wire is renamed in the schema, so an input object decodes by the same name the schema
-advertises. `@GraphQLName` renames the field in the schema alone and leaves the JSON as it was;
-on an input object that means the schema and the decoder disagree, so prefer `@SerialName` there.
-Either way the field reads the Kotlin property it renamed.
+**A field's name is `@SerialName`**, otherwise the Kotlin property name — the SerialDescriptor is
+the type system here, so it owns that name alone. The field still reads the Kotlin property it
+renamed: graphql-java's own fetcher would look for the GraphQL name on the object and find nothing,
+so a renamed field gets one that knows both.
+
+Nothing else may rename a property, and that is deliberate. An **input** object is decoded straight
+from the argument map, keyed by the names the schema advertises, so a schema name that was not the
+serial name would decode to a missing field — or, when the property has a Kotlin default, silently
+to that default, losing what the caller sent. On an **output** there is no separate wire at all:
+kotlinx-serialization never encodes a resolver's return value, the response JSON is built from the
+GraphQL data map, and its keys are the field names. So a second renaming annotation could only ever
+agree with `@SerialName` or be wrong.
 
 `Map` is not a GraphQL type. A `sealed` hierarchy is — see the next section. An `abstract` or
 `open` polymorphic type registered in a `SerializersModule` is not: GraphQL needs a closed set of
@@ -239,7 +244,7 @@ same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 
 | Annotation | Where | Effect |
 | --- | --- | --- |
-| `@GraphQLName("foo")` | class, function, property, parameter | GraphQL name. On a property it outranks `@SerialName`, and renames the schema only — see *Types* |
+| `@GraphQLName("foo")` | **class only** | GraphQL type name. A property is renamed with `@SerialName`, an argument with `@Argument(name=…)`, a field with its own mapping annotation — one owner per name |
 | `@GraphQLDescription("…")` | same | GraphQL description |
 | `@GraphQLIgnore` | property | omitted from the GraphQL type |
 | `@Argument("foo")` | parameter | **Required** on every GraphQL argument. [name] defaults to the Kotlin parameter name |
@@ -290,7 +295,7 @@ a GraphQL error, enforced by graphql-java. An SDL `input X @oneOf` behaves ident
 are not arguments: the parent source (`SchemaMapping` / `BatchMapping` first parameter), this
 field's `DataFetchingEnvironment` (by type), and `@GraphQLContext` values. An input object's
 fields are not arguments either: `CreateProductInput` is the `@Argument`, `name` and `tags`
-are its fields (`@GraphQLName` / `@GraphQLIgnore` still apply). A Kotlin default on an
+are its fields (`@SerialName` / `@GraphQLIgnore` still apply). A Kotlin default on an
 `@Argument` parameter, or on an input-object property, is optional GraphQL.
 
 Nested object fields are the `@Serializable` properties already in memory. Extra fields that need

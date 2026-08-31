@@ -11,7 +11,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.findAnnotation
 
-/** GraphQL field name: `@QueryMapping(name)` / `@MutationMapping(name)`, then `@GraphQLName`, then the Kotlin name. */
+/** GraphQL field name: `@QueryMapping(name)` / `@MutationMapping(name)`, then the Kotlin name. */
 internal fun KFunction<*>.graphQLName(kind: RootKind): String {
     val fromKind =
         when (kind) {
@@ -20,17 +20,15 @@ internal fun KFunction<*>.graphQLName(kind: RootKind): String {
             RootKind.SUBSCRIPTION -> findAnnotation<SubscriptionMapping>()?.name.orEmpty()
         }
     if (fromKind.isNotEmpty()) return fromKind
-    findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
     return name
 }
 
 /**
- * GraphQL argument name: `@Argument`, then `@GraphQLName`, then the Kotlin parameter name.
- * Parameter names must be retained at compile time — otherwise this throws.
+ * GraphQL argument name: `@Argument(name)`, then the Kotlin parameter name. Parameter names must be
+ * retained at compile time — otherwise this throws.
  */
 internal fun KParameter.graphQLName(): String {
     findAnnotation<Argument>()?.name?.takeIf { it.isNotEmpty() }?.let { return it }
-    findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
     return name ?: throw IllegalStateException("a resolver parameter has no name; compile with parameter names retained")
 }
 
@@ -49,17 +47,14 @@ internal fun KClass<*>.graphQLNameOrNull(): String? {
 }
 
 /**
- * GraphQL field name of a `@Serializable` property: [GraphQLName], then `@SerialName`, then the
- * Kotlin name.
+ * GraphQL field name of a `@Serializable` property: `@SerialName`, then the Kotlin name.
  *
- * `@SerialName` counts because the SerialDescriptor **is** the type system here. A property renamed
- * for the wire is renamed in the schema too — otherwise the field would be absent from the object
- * type, and an input object would decode by a name the schema never advertised.
+ * The SerialDescriptor **is** the type system here, so it owns this name alone. An input object is
+ * decoded straight from the argument map, keyed by the names the schema advertises, so a schema
+ * name that was not the serial name would decode to a missing field — or, with a Kotlin default,
+ * silently to that default, losing what the caller sent.
  */
-internal fun KProperty<*>.graphQLPropertyName(): String =
-    findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }
-        ?: findAnnotation<SerialName>()?.value
-        ?: name
+internal fun KProperty<*>.graphQLPropertyName(): String = findAnnotation<SerialName>()?.value ?: name
 
 internal fun KAnnotatedElement.graphQLDescription(): String? = findAnnotation<GraphQLDescription>()?.value
 

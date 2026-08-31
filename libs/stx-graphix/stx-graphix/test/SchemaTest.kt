@@ -28,7 +28,7 @@ class SchemaTest :
                 sdl shouldNotContain "secret"
             }
 
-            scenario("@GraphQLName renames a field") {
+            scenario("@QueryMapping(name) renames a root field") {
                 val sdl = Graphix { query(GreetingQueries()) }.sdl()
                 sdl shouldContain "shout"
                 sdl shouldNotContain "loud"
