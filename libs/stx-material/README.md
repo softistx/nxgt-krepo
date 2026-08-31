@@ -16,13 +16,13 @@ libs/stx-material/
   src/style/    StrangeStyles — every component default in one place
   src/text/     Typography and the variant scale
   src/icon/     Icon and the library's own icon set
-  src/button/   Button, IconButton, ResponsiveButton, ButtonRow
-  src/display/  Card, Chip, StatusBadge, ListTile, Alert, EmptyState, Skeleton
-  src/form/     the field/form state layer, the rules, and every input
+  src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton
+  src/display/  Card, Chip, StatusBadge, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider
+  src/form/     the field/form state layer, the rules, and every input including UploadField
   src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, Breadcrumb
   src/layout/     ResponsiveGrid, ScrollToTop, LoadMoreButton, RefreshBox
   src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, HoverCard, Menu, ContextMenu, Accordion, Carousel, SwipeActions
-  src/feedback/   Progress, Toaster
+  src/feedback/   Progress, LoadingMark, Toaster
   src/datetime/   DateField, DateRangeField, TimeField, Calendar
   src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline
   src/media/      Avatar, StrangeImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
@@ -67,8 +67,9 @@ M3 already ships is rebuilt from primitives — M3 gets the ripple, the disabled
 selected semantics and the accessibility right, and rebuilding a component throws all of that away
 to reproduce a container. What this library adds is the default that was missing: the colour matrix
 resolved once, the padding and rhythm inside a card, the hover state M3's chip does not have.
-`Alert`, `EmptyState`, `Skeleton` and `ResponsiveButton` are built from primitives because M3 has
-nothing to start from. AGENTS.md's *Building a component* is the rule.
+`Alert`, `EmptyState`, `Skeleton`, `ResponsiveButton`, `Rating`, `Stat`, `LabeledDivider`,
+`FilterBar` and `UploadField` are built from primitives because M3 has nothing to start from.
+AGENTS.md's *Building a component* is the rule.
 
 **Colour, shape, border and padding go through M3's own `*Colors` and `*Defaults`.** A `Style` is
 for what M3 has no parameter for:

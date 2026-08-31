@@ -32,6 +32,7 @@ class StrangeIconsTest :
                 "MoreHoriz" to StrangeIcons.MoreHoriz,
                 "Calendar" to StrangeIcons.Calendar,
                 "Schedule" to StrangeIcons.Schedule,
+                "Star" to StrangeIcons.Star,
                 "Search" to StrangeIcons.Search,
                 "Warning" to StrangeIcons.Warning,
             )

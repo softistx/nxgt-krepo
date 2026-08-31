@@ -47,7 +47,7 @@ class FormRenderTest :
 
 /** How many pixels are not the page — a crude but honest measure of "something was drawn". */
 private fun render(content: @Composable () -> Unit): Int {
-    val scene = ImageComposeScene(width = 420, height = 900)
+    val scene = ImageComposeScene(width = 420, height = 1100)
     try {
         scene.setContent {
             StrangeTheme(isDark = false) {
@@ -119,4 +119,5 @@ private fun paint(complaining: Boolean) {
     SliderField(value = 40f, onValueChange = {}, label = "Budget")
     OtpField(value = "12", onValueChange = {}, length = 4, label = "Code")
     InputGroup { TextField(value = "", onValueChange = {}, label = "Voucher") }
+    UploadField(onClick = {})
 }

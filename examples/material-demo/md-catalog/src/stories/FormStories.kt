@@ -23,6 +23,7 @@ import com.strange.material.form.SliderField
 import com.strange.material.form.Switch
 import com.strange.material.form.TextField
 import com.strange.material.form.TextareaField
+import com.strange.material.form.UploadField
 import com.strange.material.icon.Icon
 import com.strange.material.icon.StrangeIcons
 import com.strange.material.text.Typography
@@ -192,6 +193,14 @@ val FormStories =
                     Button("Apply", onClick = {}, variant = ButtonVariant.Tonal)
                 }
             }
+        }
+
+        story("Upload") { knobs ->
+            UploadField(
+                onClick = {},
+                label = knobs.text("Label", "Drop a file or browse"),
+                enabled = knobs.flag("Enabled", true),
+            )
         }
     }
 

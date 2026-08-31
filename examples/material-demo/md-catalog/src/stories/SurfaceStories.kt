@@ -19,6 +19,7 @@ import com.strange.material.button.ButtonVariant
 import com.strange.material.demo.storyGroup
 import com.strange.material.display.Card
 import com.strange.material.display.ListTile
+import com.strange.material.feedback.LoadingMark
 import com.strange.material.feedback.Progress
 import com.strange.material.feedback.ProgressKind
 import com.strange.material.feedback.Toaster
@@ -115,6 +116,11 @@ val SurfaceStories =
                 Progress(progress = if (determinate) 0.45f else null)
                 Progress(progress = if (determinate) 0.45f else null, kind = ProgressKind.Circular)
             }
+        }
+
+        story("Loading mark") { knobs ->
+            val determinate = knobs.flag("Determinate", false)
+            LoadingMark(progress = if (determinate) 0.45f else null)
         }
 
         story("Toast") { _ ->
