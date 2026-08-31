@@ -159,6 +159,31 @@ class UpperQueries {
 On an SDL schema, `@uppercase` on the field is enough — `SchemaDirectiveWiring` is
 registered under that name. `@Directive` is the annotation-schema equivalent.
 
+A directive wraps a **fetcher**, so the SDL locations it can honour are the ones that have
+fetchers behind them:
+
+| Location | What the wrapper does |
+| --- | --- |
+| `FIELD_DEFINITION` | Wraps that one field |
+| `OBJECT` | Wraps **every** field of the type |
+| `INTERFACE` | Wraps every field of the interface, on the interface's own coordinates |
+| `ARGUMENT_DEFINITION`, `INPUT_FIELD_DEFINITION` | **Not supported** — these transform an input value rather than wrap a fetcher |
+
+```graphql
+directive @audit on FIELD_DEFINITION | OBJECT | INTERFACE
+
+type Ticket @audit {
+  id: String!
+  title: String!
+}
+```
+
+One `fieldDirective("audit") { … }` then runs around `id` and `title` alike. The wrapper sees
+which field it is on through `environment.field`, and the directive's own arguments through
+`arguments` — on an `OBJECT` those are the arguments applied to the type, the same values for
+every field. `@Directive` on a Kotlin function is `FIELD_DEFINITION` only; a code-first schema
+has no type-level equivalent.
+
 Spring collects `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and
 `GraphQLEngineCustomizer` beans the way it collects `@GraphQLController`.
 `GraphixCustomizer` is `fun GraphixBuilder.customize()`; `GraphQLEngineCustomizer` is
@@ -395,7 +420,7 @@ annotation or a builder call, and `ConformanceTest` is what proves it.
 | Aliases | Two aliases of one field with different arguments are two independent fields — and, for `@BatchMapping`, two DataLoader keys |
 | Variables, with their own defaults | `query Q($n: String = "ada")`. A variable explicitly `null` on an optional argument falls through to the Kotlin default |
 | `operationName` | Which operation runs when the document holds more than one |
-| `__typename`, `__schema`, `__type` | Introspection is on and has no off switch yet |
+| `__typename`, `__schema`, `__type` | Introspection is on by default; `introspection(false)` turns `__schema`/`__type` off, and `__typename` keeps working |
 
 **Not supported.** `@defer` and `@stream` are `@ExperimentalApi` in graphql-java 26: they need
 incremental support switched on, an `IncrementalExecutionResult` path through `execute`, and
@@ -434,6 +459,19 @@ query, or unparseable GET `variables` is HTTP **400** with `errors[]`.
 `GET /graphql?query=...` is for introspection and simple queries. Variables on GET are a JSON
 object in the `variables` query parameter. `__schema` and `__type` are on by default — GraphiQL
 and Apollo Sandbox POST the standard introspection query to the same path.
+
+Turning them off is one switch, on the engine or through either integration:
+
+| Where | How |
+| --- | --- |
+| `Graphix { }` | `introspection(false)` |
+| Ktor | `install(GraphQL) { introspection = false }` |
+| Spring Boot | `stx.graphix.introspection=false` |
+
+A document that then asks for `__schema` or `__type` comes back as a GraphQL error rather than
+data; `__typename` is unaffected, and every other field runs as usual. An engine supplied by the
+application (Ktor `instance`, or a `Graphix` bean) already decided for itself and ignores the
+setting.
 
 A **subscription** is one of two protocols, configurable, default `sse`:
 

@@ -36,6 +36,13 @@
       "defaultValue": "classpath:graphql/"
     },
     {
+      "name": "stx.graphix.introspection",
+      "type": "java.lang.Boolean",
+      "description": "Whether __schema and __type answer. On by default \u2014 GraphiQL and Apollo Sandbox need them.",
+      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "defaultValue": true
+    },
+    {
       "name": "stx.graphix.schema-file-extensions",
       "type": "java.util.List<java.lang.String>",
       "description": "File suffixes scanned under schema-locations. Default .graphqls and .gqls.",
