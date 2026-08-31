@@ -36,6 +36,21 @@ dependencies:
   # and the value LocalWindowSize carries, so it is public API here. This is the Compose
   # Multiplatform build, not the androidx one — see the alias's note in libs.versions.toml.
   - $libs.compose.multiplatform.window.size.class: exported
+  # currentWindowAdaptiveInfo and the pane scaffolds. Not a `$compose.*` key — see the catalog.
+  - $libs.compose.multiplatform.adaptive: exported
+  - $libs.compose.multiplatform.adaptive.layout: exported
+  # ListDetailSceneStrategy / SupportingPaneSceneStrategy. Public API of the Nav3 layout wrappers.
+  - $libs.compose.multiplatform.adaptive.navigation3: exported
+  # NavigationSuiteScaffold: bar / rail / drawer from one items list. Public API of NavigationSuite.
+  - $libs.compose.multiplatform.adaptive.navigation.suite: exported
+  # NavDisplay and the back stack. Scene keys are in this module's public API, hence exported.
+  - $libs.jetbrains.navigation3.ui: exported
+  # Coil 3, the CMP line. AsyncImage types appear on StrangeImage, hence exported. Network is
+  # Ktor, not OkHttp — OkHttp has no Apple target.
+  - $libs.coil3.compose: exported
+  - $libs.coil3.network.ktor
+  # LocalDate / LocalTime on DateField and TimeField.
+  - $libs.kotlinx.datetime: exported
 
 test-dependencies:
   - $libs.kotest.framework.engine
