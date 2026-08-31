@@ -7,6 +7,7 @@ import com.strange.graphix.GraphixBuilder
 import com.strange.graphix.GraphixCustomizer
 import com.strange.graphix.engine
 import com.strange.graphix.http.SubscriptionProtocol
+import com.strange.graphix.http.apolloSandboxPage
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
 import io.ktor.server.application.pluginOrNull
@@ -51,10 +52,16 @@ val GraphQL =
         val path = pluginConfig.path
         val json = pluginConfig.json
         val subscriptions = pluginConfig.subscriptions
+        // A pure function of the configuration, so it is built once here rather than per request.
+        val sandbox = if (pluginConfig.sandbox) apolloSandboxPage(path, pluginConfig.sandboxEndpoint) else null
+        val sandboxPath = pluginConfig.sandboxPath
         if (subscriptions == SubscriptionProtocol.GraphqlWs && application.pluginOrNull(WebSockets) == null) {
             application.install(WebSockets)
         }
-        application.routing { graphqlRoute(path, engine, json, subscriptions) }
+        application.routing {
+            graphqlRoute(path, engine, json, subscriptions)
+            if (sandbox != null) sandboxRoute(sandboxPath, sandbox)
+        }
         if (pluginConfig.injectable) application.provideGraphix()
     }
 
@@ -75,6 +82,23 @@ class GraphQLConfiguration {
      * them. Ignored when [instance] is set: that engine already decided.
      */
     var introspection: Boolean = true
+
+    /**
+     * Serves an Apollo Sandbox at [sandboxPath]. **Off by default** — installing this plugin opens a
+     * GraphQL endpoint because that is what it is for; it should not also open an HTML page that
+     * advertises the schema. Unlike [introspection], this is honoured even when [instance] is set:
+     * the page is served by the plugin, not by the engine.
+     */
+    var sandbox: Boolean = false
+
+    /** Where the sandbox page is served. Default `/sandbox`, a sibling of [path]. */
+    var sandboxPath: String = "/sandbox"
+
+    /**
+     * GraphQL URL the sandbox opens with. Empty — the default — resolves it in the browser from the
+     * page's own origin and [path], which is what survives a proxy, https and a republished port.
+     */
+    var sandboxEndpoint: String = ""
 
     /**
      * An engine built elsewhere. When set, [schema] is ignored. Whoever created it owns it —

@@ -257,4 +257,77 @@ class GraphixPluginTest :
                 }
             }
         }
+
+        feature("GET /sandbox") {
+            scenario("is not served unless asked for") {
+                testApplication {
+                    application { install(GraphQL) { schema { query(GreetingQueries()) } } }
+
+                    client.get("/sandbox").status shouldBe HttpStatusCode.NotFound
+                }
+            }
+
+            scenario("sandbox = true serves the Apollo page as HTML") {
+                testApplication {
+                    application {
+                        install(GraphQL) {
+                            sandbox = true
+                            schema { query(GreetingQueries()) }
+                        }
+                    }
+                    val response = client.get("/sandbox")
+
+                    response.status shouldBe HttpStatusCode.OK
+                    response.headers[HttpHeaders.ContentType] shouldContain "text/html"
+                    response.bodyAsText() shouldContain "embeddable-sandbox.cdn.apollographql.com"
+                }
+            }
+
+            scenario("the page resolves the GraphQL path against its own origin") {
+                testApplication {
+                    application {
+                        install(GraphQL) {
+                            path = "/api/graphql"
+                            sandbox = true
+                            schema { query(GreetingQueries()) }
+                        }
+                    }
+
+                    client.get("/sandbox").bodyAsText() shouldContain
+                        """new URL("/api/graphql", window.location.origin)"""
+                }
+            }
+
+            scenario("sandboxPath moves it, and sandboxEndpoint pins the URL") {
+                testApplication {
+                    application {
+                        install(GraphQL) {
+                            sandbox = true
+                            sandboxPath = "/explorer"
+                            sandboxEndpoint = "https://api.example.test/graphql"
+                            schema { query(GreetingQueries()) }
+                        }
+                    }
+
+                    client.get("/sandbox").status shouldBe HttpStatusCode.NotFound
+                    val response = client.get("/explorer")
+                    response.status shouldBe HttpStatusCode.OK
+                    response.bodyAsText() shouldContain """const configured = "https://api.example.test/graphql";"""
+                }
+            }
+
+            scenario("an adopted engine still gets the page: the plugin serves it, not the engine") {
+                testApplication {
+                    val engine = com.strange.graphix.Graphix { query(GreetingQueries()) }
+                    application {
+                        install(GraphQL) {
+                            instance = engine
+                            sandbox = true
+                        }
+                    }
+
+                    client.get("/sandbox").status shouldBe HttpStatusCode.OK
+                }
+            }
+        }
     })

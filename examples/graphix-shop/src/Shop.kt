@@ -13,16 +13,18 @@ import io.ktor.server.netty.Netty
  * ./kotlin run -m graphix-shop
  * ```
  *
- * Then `POST /graphql` with `{ "query": "{ products { name price } }" }`.
+ * Then `POST /graphql` with `{ "query": "{ products { name price } }" }`, or open
+ * <http://localhost:8080/sandbox> for the Apollo Sandbox.
  */
 fun main() {
     embeddedServer(Netty, port = 8080, module = Application::shop).start(wait = true)
 }
 
-/** Installs GraphQL at `/graphql` over an in-memory [Catalog]. */
+/** Installs GraphQL at `/graphql`, and the Apollo Sandbox at `/sandbox`, over an in-memory [Catalog]. */
 fun Application.shop() {
     val catalog = Catalog()
     install(GraphQL) {
+        sandbox = true
         schema {
             query(catalog)
             mutation(catalog)

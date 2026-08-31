@@ -6,6 +6,9 @@ A shop catalogue over GraphQL — the smallest thing that shows `stx-graphix-kto
 ./kotlin run -m graphix-shop
 ```
 
+Then open <http://localhost:8080/sandbox> — `sandbox = true` on the plugin serves the Apollo
+Sandbox there, and it finds `/graphql` on its own from the page's origin. Or by hand:
+
 ```
 POST /graphql
 { "query": "{ products { name price reviews { body } } }" }

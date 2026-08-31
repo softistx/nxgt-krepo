@@ -490,6 +490,28 @@ data; `__typename` is unaffected, and every other field runs as usual. An engine
 application (Ktor `instance`, or a `Graphix` bean) already decided for itself and ignores the
 setting.
 
+### Apollo Sandbox
+
+`GET /sandbox` serves Apollo's embedded sandbox — a query editor with the schema in a side panel,
+against this server. **Off by default**: opening a GraphQL endpoint is what installing the plugin
+means, opening an HTML page that advertises the schema is not.
+
+| | Ktor | Spring Boot | Default |
+| --- | --- | --- | --- |
+| Serve it | `sandbox = true` | `stx.graphix.sandbox=true` | `false` |
+| Where | `sandboxPath = "/explorer"` | `stx.graphix.sandbox-path` | `/sandbox` |
+| Which endpoint | `sandboxEndpoint = "…"` | `stx.graphix.sandbox-endpoint` | empty — resolved in the browser |
+
+Left empty, the page resolves the endpoint itself: `new URL(<the GraphQL path>, window.location.origin)`.
+That is what survives a reverse proxy, https, and a container publishing a port other than the one
+the server bound — the host and port the *client* reached are the only ones that are right, and only
+the browser knows them. Set `sandbox-endpoint` to an absolute URL to point it somewhere else.
+
+Two things it needs. **Introspection**, since that is how it draws the schema: the page still loads
+with `introspection(false)`, the schema panel is just empty. And **the CDN** — the page pulls
+`embeddable-sandbox.cdn.apollographql.com`, so a strict `Content-Security-Policy` or an air-gapped
+network will block it, and the page renders blank with a console error.
+
 A **subscription** is one of two protocols, configurable, default `sse`:
 
 | Protocol | Transport | Config |

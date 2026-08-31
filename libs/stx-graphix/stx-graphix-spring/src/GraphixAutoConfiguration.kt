@@ -6,6 +6,7 @@ import com.strange.graphix.Graphix
 import com.strange.graphix.GraphixCustomizer
 import com.strange.graphix.customize
 import com.strange.graphix.engine
+import com.strange.graphix.http.apolloSandboxPage
 import com.strange.graphix.scalar.scalar
 import com.strange.graphix.schema.GraphixDirective
 import com.strange.graphix.schema.fieldDirective
@@ -66,6 +67,12 @@ class GraphixAutoConfiguration {
         graphix: Graphix,
         properties: GraphixProperties,
     ): RouterFunction<ServerResponse> = GraphixHandler(graphix, lenientJson, properties.path, properties.subscriptions).router()
+
+    /** The Apollo Sandbox page. Absent unless `stx.graphix.sandbox=true`. */
+    @Bean
+    @ConditionalOnProperty(prefix = "stx.graphix", name = ["sandbox"], havingValue = "true")
+    fun graphixSandboxRouter(properties: GraphixProperties): RouterFunction<ServerResponse> =
+        sandboxRouter(properties.sandboxPath, apolloSandboxPage(properties.path, properties.sandboxEndpoint))
 
     /** graphql-ws on [GraphixProperties.path]. Absent unless `stx.graphix.subscriptions=graphql-ws`. */
     @Bean

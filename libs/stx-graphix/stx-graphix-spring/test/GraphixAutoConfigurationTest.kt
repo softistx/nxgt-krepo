@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ReactiveWebApplicationContextRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.web.reactive.function.server.RouterFunction
 
 class GraphixAutoConfigurationTest :
     FeatureSpec({
@@ -72,6 +73,27 @@ class GraphixAutoConfigurationTest :
                     .withUserConfiguration(OwnEngineConfiguration::class.java)
                     .run { context ->
                         context.getBeansOfType(Graphix::class.java).keys shouldBe setOf("mine")
+                    }
+            }
+        }
+
+        feature("the sandbox") {
+            scenario("no router until stx.graphix.sandbox is true") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true")
+                    .withUserConfiguration(WiringConfiguration::class.java)
+                    .run { context ->
+                        context.containsBean("graphixSandboxRouter") shouldBe false
+                    }
+            }
+
+            scenario("stx.graphix.sandbox=true adds a second RouterFunction beside the GraphQL one") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true", "stx.graphix.sandbox=true")
+                    .withUserConfiguration(WiringConfiguration::class.java)
+                    .run { context ->
+                        context.containsBean("graphixSandboxRouter") shouldBe true
+                        context.getBeansOfType(RouterFunction::class.java).size shouldBe 2
                     }
             }
         }
