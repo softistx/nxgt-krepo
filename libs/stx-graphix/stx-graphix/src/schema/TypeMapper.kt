@@ -182,6 +182,7 @@ internal class TypeMapper(
                 .name(name)
                 .description(kClass.graphQLDescription())
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
+            refuseArgumentOnInputField(kClass, property)
             val argumentType =
                 input(elementType).let { type ->
                     if (constructorOptional(kClass, property.name) && type is GraphQLNonNull) {
@@ -193,7 +194,7 @@ internal class TypeMapper(
             builder.field(
                 GraphQLInputObjectField
                     .newInputObjectField()
-                    .name(inputFieldName(kClass, property, elementName))
+                    .name(property.findAnnotationName() ?: elementName)
                     .description(property.graphQLDescription())
                     .type(argumentType)
                     .build(),
@@ -269,22 +270,24 @@ internal class TypeMapper(
 
     private fun kotlin.reflect.KProperty<*>.findAnnotationName(): String? = findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }
 
-    /** GraphQL input fields are arguments: every property must be `@Argument` (or `@GraphQLIgnore`). */
-    private fun inputFieldName(
+    /**
+     * `@Argument` marks a resolver parameter. The input object is already that argument;
+     * its fields are not.
+     */
+    private fun refuseArgumentOnInputField(
         kClass: KClass<*>,
         property: kotlin.reflect.KProperty<*>,
-        elementName: String,
-    ): String {
+    ) {
         val parameter = kClass.primaryConstructor?.valueParameters?.find { it.name == property.name }
-        val argument =
-            parameter?.findAnnotation<Argument>()
-                ?: property.findAnnotation<Argument>()
-                ?: throw GraphixException(
-                    "${kClass.simpleName}.${property.name} must be @Argument — GraphQL input fields are arguments",
-                )
-        return argument.name.takeIf { it.isNotEmpty() }
-            ?: property.findAnnotationName()
-            ?: elementName
+        val marked =
+            parameter?.findAnnotation<Argument>() != null ||
+                property.findAnnotation<Argument>() != null
+        if (marked) {
+            throw GraphixException(
+                "${kClass.simpleName}.${property.name} must not be @Argument — " +
+                    "the input object is the argument, its fields are not",
+            )
+        }
     }
 
     /**

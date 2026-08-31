@@ -35,8 +35,8 @@ enum class Size { S, M, L }
 
 @Serializable
 data class CreateProductInput(
-    @Argument val name: String,
-    @Argument val tags: List<String> = emptyList(),
+    val name: String,
+    val tags: List<String> = emptyList(),
 )
 
 class ProductQueries(
@@ -195,13 +195,13 @@ class BadQueries {
 }
 
 @Serializable
-data class UnmarkedInput(
-    val name: String,
+data class MarkedInput(
+    @Argument val name: String,
 )
 
 class BadInputQueries {
     @QueryMapping
     fun echo(
-        @Argument input: UnmarkedInput,
+        @Argument input: MarkedInput,
     ): String = input.name
 }
