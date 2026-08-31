@@ -21,19 +21,25 @@ import com.strange.material.display.Alert
 import com.strange.material.display.Card
 import com.strange.material.display.CardVariant
 import com.strange.material.display.Chip
+import com.strange.material.display.CodeBlock
 import com.strange.material.display.EmptyState
+import com.strange.material.display.ExpandableText
+import com.strange.material.display.FileChip
 import com.strange.material.display.FilterBar
 import com.strange.material.display.Kbd
 import com.strange.material.display.LabeledDivider
 import com.strange.material.display.ListTile
 import com.strange.material.display.Rating
+import com.strange.material.display.SectionHeader
 import com.strange.material.display.Skeleton
 import com.strange.material.display.Stat
 import com.strange.material.display.StatusBadge
 import com.strange.material.display.StatusDot
+import com.strange.material.display.SuggestionChip
 import com.strange.material.icon.Icon
 import com.strange.material.icon.IconSize
 import com.strange.material.icon.StrangeIcons
+import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
 import com.strange.material.theme.StrangeTheme
@@ -190,5 +196,56 @@ val DisplayStories =
                 Kbd(keys = listOf("Ctrl", "K"))
                 Kbd(keys = listOf("⌘", "⇧", "P"))
             }
+        }
+
+        story("Suggestion chip") { _ ->
+            var query by remember { mutableStateOf("") }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                listOf("Amara Diallo", "Jonas Weber", "Priya Raman").forEach { name ->
+                    SuggestionChip(text = name, onClick = { query = name })
+                }
+            }
+            if (query.isNotEmpty()) {
+                Typography(text = query, emphasis = Emphasis.Medium)
+            }
+        }
+
+        story("File chip") { _ ->
+            var files by remember { mutableStateOf(listOf("invoice.pdf" to "240 KB", "brief.docx" to "1.2 MB")) }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                files.forEach { (name, size) ->
+                    FileChip(
+                        name = name,
+                        sizeLabel = size,
+                        onRemove = { files = files.filterNot { it.first == name } },
+                    )
+                }
+            }
+        }
+
+        story("Section header") { _ ->
+            SectionHeader(
+                title = "Recent orders",
+                supporting = "Last 7 days",
+                action = { Button(text = "See all", onClick = {}, variant = ButtonVariant.Link) },
+            )
+        }
+
+        story("Code block") { _ ->
+            CodeBlock(text = "curl https://api.strange.dev/orders/ord_9f3a")
+        }
+
+        story("Expandable text") { knobs ->
+            ExpandableText(
+                text =
+                    knobs.text(
+                        "Text",
+                        "The payout was held because two invoices could not be reconciled. " +
+                            "Amara flagged both on Tuesday; the bank has not answered. " +
+                            "Until they do, the balance stays in reserve and the dashboard " +
+                            "will keep showing this note on every order in the batch.",
+                    ),
+                collapsedLines = knobs.number("Lines", 3f, 1f..6f, steps = 4).toInt(),
+            )
         }
     }

@@ -231,6 +231,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
 - [x] **8c — Toggles, tokens, présence.** `ToggleButton` / `IconToggle`, `ActionChip`, `TagField`,
       `QuantityField`, `CopyButton`, `Kbd`, `StatusDot`, `AvatarGroup`, wavy `Progress`, range
       `SliderField`.
+- [x] **8d — Contenu et édition.** `InlineEdit`, `ExpandableText`, `CodeBlock`, `FileChip`,
+      `SectionHeader`, `SuggestionChip`, `ConfirmButton`, `RelativeTime`, `PasswordMeter`.
 - [ ] **9 — Graphiques.** `Area`, `Bar`, `Line`, `Pie`, `Radar`, `Scatter`, `Funnel`, `Heatmap`
       au `Canvas`, thème dérivé des tokens
 - [ ] **10 — i18n et publication.** Catalogue de messages multiplateforme, locales `en`/`fr`,
