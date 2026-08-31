@@ -295,6 +295,20 @@ inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate`
 measured on the offered width. `Pagination` is previous/next for a keyset page, not `page=3`.
 `CommandPalette` filters by a case-insensitive contains; the host opens it (typically ⌘K).
 
+## Media
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `Avatar` | `name`, `image?`, `tone?`, `size = 40.dp` | `media/avatar` |
+| `StrangeImage` | `model`, `description` | — |
+| `Gallery` | `images`, `onSelect?` | — |
+| `Lightbox` | `visible`, `model`, `onDismiss`, `onPrevious?`, `onNext?` | `media/lightbox` |
+| `VideoSurface` / `PdfSurface` / `CameraSurface` | `content` slot, `overlay`, `ratio` | `media/video-surface` |
+
+`Avatar` shows initials when there is no image, and an optional [Tone] ring. `StrangeImage` is Coil
+with this library's `Skeleton` / `EmptyState`. Video, PDF and camera are **chrome**: the host fills
+the slot with a renderer, so `Button` never pays for Media3, PdfRenderer or CameraX.
+
 ## Motion helpers
 
 | Helper | What it does | Story |
