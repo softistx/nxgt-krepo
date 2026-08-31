@@ -30,6 +30,9 @@ object StrangeIcons {
                 "13.41 17.59 19 19 17.59 13.41 12z",
         )
 
+    val ChevronUp: ImageVector =
+        icon("ChevronUp", "M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z")
+
     val ChevronLeft: ImageVector =
         icon("ChevronLeft", "M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z")
 
