@@ -220,9 +220,9 @@ because M3 has neither.
 
 `AppBarSize` — `Small`, `Centered`, `Medium`, `Large`, mapped onto M3's four top app bars.
 
-`NavigationDestination` is a label, an icon, an optional selected icon, and an optional badge. The
-badge is a `StatusBadge` in M3's own item slot, so a count or a "new" chip rides with the
-destination rather than being painted on afterwards.
+`NavigationDestination` is a label, an icon, an optional selected icon, an optional badge and an
+optional chip. The badge is a `StatusBadge` in M3's own item slot; the chip sits in the label,
+which is how a destination carries a category without a second control.
 
 `NavigationSuite` is `NavigationSuiteScaffold`. The caller never writes a `when` on width: compact
 is a short bar, a tabletop or short window is a medium bar, anything wider is a collapsed wide
@@ -231,6 +231,23 @@ rail. `primaryAction` is the FAB the suite places in the rail header or above th
 A `Breadcrumb` of more than four items collapses the middle behind a menu. The last crumb is never
 a control. A `Stepper` only lets a completed step be pressed, so it cannot skip ahead on a tap;
 below `collapseBelow` it stacks.
+
+### Navigation 3 scenes
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `AdaptiveNavDisplay` | `backStack`, `onBack`, `entryProvider` | `navigation/list-detail` |
+| `ListDetail.list / detail / extra` | metadata maps for the three panes | `navigation/list-detail` |
+| `SupportingPane.main / supporting / extra` | metadata maps for the inspector layout | — |
+
+`AdaptiveNavDisplay` is Navigation 3's `NavDisplay` with Material 3 Adaptive's list-detail and
+supporting-pane strategies already installed, in that order. Compact windows fall through to a
+single pane; expanded windows show both. Entries opt in with `metadata = ListDetail.list()` (or
+`.detail()`, or `SupportingPane.supporting()`). The list's empty detail is this library's
+`EmptyState`, not a blank pane.
+
+The caller owns the back stack (`mutableStateListOf` is enough). Transitions are a fade on the
+effects axis — Adaptive already owns the spatial motion of the panes.
 
 ## Motion helpers
 
