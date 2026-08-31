@@ -3,11 +3,13 @@ package com.strange.material.demo
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import com.strange.material.demo.knobs.KnobsPanel
 import com.strange.material.navigation.AdaptiveNavDisplay
@@ -76,7 +78,10 @@ fun CatalogScaffold(
                         Column(Modifier.fillMaxSize()) {
                             StoryStage(story = story, knobs = knobs, modifier = Modifier.weight(1f))
                             HorizontalDivider()
-                            KnobsPanel(knobs = knobs.of(story), modifier = Modifier.fillMaxWidth())
+                            KnobsPanel(
+                                knobs = knobs.of(story),
+                                modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp),
+                            )
                         }
                     }
                 },
