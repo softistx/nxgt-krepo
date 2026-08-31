@@ -110,6 +110,7 @@ same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 | `@GraphQLIgnore` | property | omitted from the GraphQL type |
 | `@Argument("foo")` | parameter | GraphQL argument name (Kotlin name is the default) |
 | `@GraphQLContext` | parameter | `DataFetchingEnvironment` is this field; other types come from `execute`'s context map |
+| `@Directive("name")` | mapping function | wraps the field with the `fieldDirective("name")` registered on the builder |
 
 A Kotlin default parameter is an optional GraphQL argument. A missing argument uses the default
 rather than passing null. A constructor default on an input-object property is an optional GraphQL
@@ -218,8 +219,9 @@ so that `suspend` resolvers run. They do not yet forward `ApplicationCall`, `Ser
 Spring Security. Until they do, a per-request `Caller` has to be passed to `execute` by whoever
 owns the HTTP call — or the resolver reads it some other way.
 
-`DataFetchingEnvironment` stays inside Graphix. A resolver that needs it is a resolver that has
-left the API.
+`DataFetchingEnvironment` is not a constructor argument and not a GraphQL argument. A mapping
+that needs this field's source, arguments or DataLoader takes it as
+`@GraphQLContext dfe: DataFetchingEnvironment`.
 
 ## Execute
 
