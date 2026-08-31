@@ -173,6 +173,9 @@ object StrangeIcons {
             "M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4z" +
                 "m-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z",
         )
+
+    val Send: ImageVector =
+        icon("Send", "M2.01 21L23 12 2.01 3 2 10l15 2-15 2z")
 }
 
 /**
