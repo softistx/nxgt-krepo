@@ -148,7 +148,7 @@ sealed interface Titled {
 
 @Serializable
 data class Renamed(
-    @GraphQLName("heading") override val title: String,
+    @SerialName("heading") override val title: String,
 ) : Titled
 
 class RenamedQueries {
@@ -208,17 +208,6 @@ class TicketedQueries {
     fun ticketed(): List<Ticketed> = listOf(Boarding("b1", "12A"), Digital("d1", "https://example.test"))
 }
 
-/** `@GraphQLName` renames a property in the schema only — the Kotlin name and the JSON stay. */
-@Serializable
-data class Poster(
-    @GraphQLName("headline") val caption: String,
-)
-
-class PosterQueries {
-    @QueryMapping
-    fun poster(): Poster = Poster("Dune")
-}
-
 /** `@SerialName` renames the property on the wire, so the GraphQL field follows it. */
 @Serializable
 data class Track(
@@ -275,4 +264,16 @@ data class Missed(
 class SlippedQueries {
     @QueryMapping
     fun slipped(): Slipped = Missed("2026-08-31")
+}
+
+/** The one thing `@GraphQLName` still names: a type. `@SerialName` cannot — it defaults to the FQCN. */
+@Serializable
+@GraphQLName("Vinyl")
+data class Record(
+    val label: String,
+)
+
+class RecordQueries {
+    @QueryMapping
+    fun record(): Record = Record("Blue Note")
 }
