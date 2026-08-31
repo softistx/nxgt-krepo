@@ -24,6 +24,7 @@ libs/stx-material/
   src/feedback/   Progress, Toaster
   src/datetime/   DateField, DateRangeField, TimeField, Calendar
   src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline
+  src/media/      Avatar, StrangeImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
 ```
 
 ## The shape of it
