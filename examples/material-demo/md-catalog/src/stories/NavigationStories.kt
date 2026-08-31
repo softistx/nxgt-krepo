@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonVariant
+import com.strange.material.button.Fab
 import com.strange.material.button.IconButton
 import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
@@ -26,6 +27,7 @@ import com.strange.material.icon.StrangeIcons
 import com.strange.material.navigation.AdaptiveNavDisplay
 import com.strange.material.navigation.AppBar
 import com.strange.material.navigation.AppBarSize
+import com.strange.material.navigation.BottomBar
 import com.strange.material.navigation.Breadcrumb
 import com.strange.material.navigation.BreadcrumbItem
 import com.strange.material.navigation.FloatingToolbar
@@ -35,6 +37,7 @@ import com.strange.material.navigation.NavigationSuite
 import com.strange.material.navigation.Search
 import com.strange.material.navigation.SegmentedControl
 import com.strange.material.navigation.Step
+import com.strange.material.navigation.StepFooter
 import com.strange.material.navigation.Stepper
 import com.strange.material.navigation.Tabs
 import com.strange.material.text.Typography
@@ -240,6 +243,24 @@ val NavigationStories =
                 current = current,
                 onStep = { current = it },
                 collapseBelow = if (knobs.flag("Force vertical", false)) 10_000.dp else 520.dp,
+            )
+        }
+
+        story("Bottom bar") { _ ->
+            BottomBar(
+                fab = { Fab(icon = StrangeIcons.Add, description = "New order", onClick = {}) },
+            ) {
+                IconButton(icon = StrangeIcons.Edit, description = "Edit", onClick = {})
+                IconButton(icon = StrangeIcons.Search, description = "Search", onClick = {})
+                IconButton(icon = StrangeIcons.Delete, description = "Delete", onClick = {})
+            }
+        }
+
+        story("Step footer") { knobs ->
+            StepFooter(
+                onNext = {},
+                onBack = if (knobs.flag("Show back", true)) ({ }) else null,
+                busy = knobs.flag("Busy", false),
             )
         }
     }

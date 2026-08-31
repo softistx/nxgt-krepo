@@ -16,15 +16,15 @@ libs/stx-material/
   src/style/    StrangeStyles — every component default in one place
   src/text/     Typography and the variant scale
   src/icon/     Icon and the library's own icon set
-  src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar
+  src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar, IconBadge, ViewToggle
   src/display/  Card, Chip, ActionChip, SuggestionChip, FileChip, StatusBadge, StatusDot, Kbd, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText
-  src/form/     the field/form state layer, the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter, CopyField, TriStateCheckbox
-  src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, Breadcrumb
+  src/form/     the field/form state layer, the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter, CopyField, TriStateCheckbox, ThemeToggle, FormSection, DangerZone
+  src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, StepFooter, BottomBar, Breadcrumb
   src/layout/     ResponsiveGrid, ScrollToTop, LoadMoreButton, SelectionBar, RefreshBox
-  src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, HoverCard, Menu, ContextMenu, Accordion, Disclosure, Carousel, SwipeActions
+  src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, HelpTip, HoverCard, Menu, ContextMenu, Accordion, Disclosure, Carousel, SwipeActions
   src/feedback/   Progress, LabeledProgress, LoadingMark, Toaster
   src/datetime/   DateField, DateRangeField, TimeField, Calendar, RelativeTime
-  src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline
+  src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline, SortControl
   src/media/      Avatar, AvatarGroup, StrangeImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
 ```
 
