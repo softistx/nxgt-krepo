@@ -13,6 +13,7 @@ import graphql.schema.GraphQLInterfaceType
 import graphql.schema.GraphQLScalarType
 import graphql.schema.GraphQLSchema
 import graphql.schema.GraphQLUnionType
+import graphql.schema.PropertyDataFetcher
 import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
 
@@ -97,6 +98,13 @@ internal fun graphQLSchema(
         targets.forEach { target ->
             registry.dataFetcherIfAbsent(FieldCoordinates.coordinates(target, field.fieldName), fetcher)
         }
+    }
+    // After the mappings: an explicit @SchemaMapping on the same coordinates outranks a property.
+    types.propertyRenames().forEach { rename ->
+        registry.dataFetcherIfAbsent(
+            FieldCoordinates.coordinates(rename.typeName, rename.fieldName),
+            PropertyDataFetcher.fetching<Any>(rename.propertyName),
+        )
     }
     val schema =
         try {

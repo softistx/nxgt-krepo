@@ -36,6 +36,13 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.full.valueParameters
 import kotlin.uuid.ExperimentalUuidApi
 
+/** A GraphQL field on [typeName] named [fieldName], backed by the Kotlin property [propertyName]. */
+internal data class PropertyRename(
+    val typeName: String,
+    val fieldName: String,
+    val propertyName: String,
+)
+
 /**
  * SerialDescriptor is the type system. A Kotlin type that has no serializer is a schema-build
  * failure naming that type, not a silent Map.
@@ -52,6 +59,7 @@ internal class TypeMapper(
     private val interfaces = linkedMapOf<String, GraphQLInterfaceType>()
     private val unions = linkedMapOf<String, GraphQLUnionType>()
     private val implementors = linkedMapOf<String, MutableSet<String>>()
+    private val renames = mutableListOf<PropertyRename>()
     private val building = mutableSetOf<String>()
 
     /** GraphQL output type for [kType], including nullability. [id] makes a string type `ID`. */
@@ -75,6 +83,9 @@ internal class TypeMapper(
 
     /** Object types implementing [name], for fanning an interface-level mapping onto its implementors. */
     fun implementorsOf(name: String): List<String> = implementors[name].orEmpty().toList()
+
+    /** Fields whose GraphQL name is not the Kotlin one. Each needs a fetcher that knows both. */
+    fun propertyRenames(): List<PropertyRename> = renames.toList()
 
     private fun mapOutput(
         kType: KType,
@@ -190,8 +201,11 @@ internal class TypeMapper(
         }
         val propertyNames = mutableSetOf<String>()
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
-            val fieldName = property.findAnnotationName() ?: elementName
+            val fieldName = property.graphQLPropertyName()
             propertyNames += fieldName
+            // graphql-java's default fetcher reads the *GraphQL* name off the source object, and
+            // a renamed property is not there under that name.
+            if (fieldName != property.name) renames += PropertyRename(name, fieldName, property.name)
             builder.field { field ->
                 field
                     .name(fieldName)
@@ -312,7 +326,7 @@ internal class TypeMapper(
         if (oneOf) builder.withDirective(Directives.OneOfDirective)
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
             refuseArgumentOnInputField(kClass, property)
-            val fieldName = property.findAnnotationName() ?: elementName
+            val fieldName = property.graphQLPropertyName()
             val default = property.graphQLDefault("$name.$fieldName")
             if (oneOf && default != null) {
                 throw GraphixException(
@@ -405,17 +419,17 @@ internal class TypeMapper(
         val byName = kClass.memberProperties.associateBy { it.name }
         return (0 until descriptor.elementsCount).mapNotNull { index ->
             val elementName = descriptor.getElementName(index)
+            // The element name is the serial name, which is the Kotlin name only when nothing
+            // renamed it. A property found by neither is one this descriptor does not describe.
             val property =
                 byName[elementName]
-                    ?: byName.values.find { it.findAnnotationName() == elementName }
+                    ?: byName.values.find { it.graphQLPropertyName() == elementName }
                     ?: return@mapNotNull null
             if (property.isGraphQLIgnored()) return@mapNotNull null
             val elementType = property.returnType
             Triple(elementName, elementType, property)
         }
     }
-
-    private fun kotlin.reflect.KProperty<*>.findAnnotationName(): String? = findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }
 
     /**
      * `@Argument` marks a resolver parameter. The input object is already that argument;
