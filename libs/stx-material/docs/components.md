@@ -43,7 +43,7 @@ keep their built-in animations, because a `MotionScheme` has no null.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `Typography` | `text`, `variant = BodyMedium`, `emphasis = Full`, `color`, `align`, `maxLines`, `overflow` | `foundation/typography` |
+| `Typography` | `text`, `variant = BodyMedium`, `emphasis = Full`, `color`, `align`, `decoration`, `maxLines`, `overflow` | `foundation/typography` |
 
 `TypographyVariant` is the 15 Material 3 roles plus five this library adds: `Overline`, `Caption`,
 `Metric` (a figure meant to be read at a glance), `Code` (monospaced), `Link` (underlined).
@@ -164,6 +164,10 @@ taken out. The two forms are two components and `AnimatedContent` morphs between
 | `ReplyPreview` | `name`, `text`, `onDismiss?` | `display/reply-preview` |
 | `PinBar` | `text`, `onClick?`, `onDismiss?` | `display/pin-bar` |
 | `MentionChip` | `name`, `onClick`, `onRemove?` | `display/mention-chip` |
+| `Price` | `amount`, `compareAt?`, `period?`, `tone?` | `display/price` |
+| `FeatureList` | `items: List<FeatureItem>` | `display/feature-list` |
+| `PricingCard` | `name`, `amount`, `features`, `highlighted`, `badge?`, `action?` | `display/pricing-card` |
+| `PromoBanner` | `text`, `code?`, `tone = Success`, `onDismiss?` | `display/promo-banner` |
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
@@ -213,6 +217,11 @@ end. A `ListTile` is a row in a list. `Comment` is the named paragraph under an 
 trailing slot for a `ReactionBar`. `ReplyPreview` sits above a `Composer`; `QuoteBlock` is a
 passage in the body. `PinBar` is a message the room chose to keep; `AnnouncementBar` is an
 incident. `MentionChip` is who was @-named (`FileChip` is what landed in an upload).
+
+`Price` is an already-formatted amount (`"€12"`), optional compare-at (struck through) and period
+(`/mo`). A `Stat` is a dashboard figure. `FeatureList` is a receipt of what a plan includes, not
+a form. `PricingCard` is name + `Price` + `FeatureList` + the CTA; `highlighted` lifts it.
+`PromoBanner` is an `AnnouncementBar` with a code and a `CopyButton`.
 
 ## Forms
 
