@@ -17,7 +17,7 @@ libs/stx-material/
   src/text/     Typography and the variant scale
   src/icon/     Icon and the library's own icon set
   src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar, IconBadge, ViewToggle
-  src/display/  Card, Chip, ActionChip, SuggestionChip, FileChip, StatusBadge, StatusDot, Kbd, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText, ReactionBar, AnnouncementBar, QuoteBlock, LinkPreview
+  src/display/  Card, Chip, ActionChip, SuggestionChip, FileChip, StatusBadge, StatusDot, Kbd, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText, ReactionBar, AnnouncementBar, QuoteBlock, LinkPreview, MessageBubble, Comment, ReplyPreview, PinBar, MentionChip
   src/form/     the field/form state layer, the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter, CopyField, TriStateCheckbox, ThemeToggle, FormSection, DangerZone, Composer, Checklist
   src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, StepFooter, BottomBar, Breadcrumb
   src/layout/     ResponsiveGrid, ScrollToTop, LoadMoreButton, SelectionBar, RefreshBox
@@ -25,7 +25,7 @@ libs/stx-material/
   src/feedback/   Progress, LabeledProgress, LoadingMark, TypingIndicator, Toaster
   src/datetime/   DateField, DateRangeField, TimeField, Calendar, RelativeTime
   src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline, SortControl
-  src/media/      Avatar, AvatarGroup, PersonCard, StrangeImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
+  src/media/      Avatar, AvatarGroup, PersonCard, SeenBy, StrangeImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
 ```
 
 ## The shape of it

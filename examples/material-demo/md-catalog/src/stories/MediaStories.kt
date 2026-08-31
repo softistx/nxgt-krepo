@@ -21,6 +21,7 @@ import com.strange.material.media.CameraSurface
 import com.strange.material.media.Lightbox
 import com.strange.material.media.PdfSurface
 import com.strange.material.media.PersonCard
+import com.strange.material.media.SeenBy
 import com.strange.material.media.VideoSurface
 import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
@@ -59,6 +60,19 @@ val MediaStories =
                 tone = if (knobs.flag("Online", true)) Tone.Success else null,
                 onClick = {},
                 action = { Button(text = "Message", onClick = {}) },
+            )
+        }
+
+        story("Seen by") { knobs ->
+            SeenBy(
+                items =
+                    listOf(
+                        AvatarItem("Amara Diallo", tone = Tone.Success),
+                        AvatarItem("Jonas Weber"),
+                        AvatarItem("Priya Raman", tone = Tone.Info),
+                        AvatarItem("Chen Wei"),
+                    ),
+                max = knobs.number("Max faces", 3f, 1f..4f, steps = 2).toInt(),
             )
         }
 

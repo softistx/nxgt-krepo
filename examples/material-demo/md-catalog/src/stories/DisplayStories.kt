@@ -23,6 +23,7 @@ import com.strange.material.display.Card
 import com.strange.material.display.CardVariant
 import com.strange.material.display.Chip
 import com.strange.material.display.CodeBlock
+import com.strange.material.display.Comment
 import com.strange.material.display.EmptyState
 import com.strange.material.display.ExpandableText
 import com.strange.material.display.FileChip
@@ -31,10 +32,14 @@ import com.strange.material.display.Kbd
 import com.strange.material.display.LabeledDivider
 import com.strange.material.display.LinkPreview
 import com.strange.material.display.ListTile
+import com.strange.material.display.MentionChip
+import com.strange.material.display.MessageBubble
+import com.strange.material.display.PinBar
 import com.strange.material.display.QuoteBlock
 import com.strange.material.display.Rating
 import com.strange.material.display.Reaction
 import com.strange.material.display.ReactionBar
+import com.strange.material.display.ReplyPreview
 import com.strange.material.display.SectionHeader
 import com.strange.material.display.Skeleton
 import com.strange.material.display.Stat
@@ -309,5 +314,71 @@ val DisplayStories =
                 description = "Create, list and refund orders.",
                 onClick = {},
             )
+        }
+
+        story("Message bubble") { knobs ->
+            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                MessageBubble(
+                    text = knobs.text("Incoming", "The payout landed this morning."),
+                    name = "Amara Diallo",
+                    meta = "14:02",
+                )
+                MessageBubble(
+                    text = knobs.text("Outgoing", "Noted, thanks."),
+                    outgoing = true,
+                    name = "You",
+                    meta = "Read",
+                )
+            }
+        }
+
+        story("Comment") { _ ->
+            Comment(
+                name = "Jonas Weber",
+                text = "Ship the small thing. The large thing is made of those.",
+                supporting = "2h ago",
+                trailing = {
+                    ReactionBar(reactions = listOf(Reaction("👍", 3, selected = true), Reaction("🎉", 1)))
+                },
+            )
+        }
+
+        story("Reply preview") { _ ->
+            var visible by remember { mutableStateOf(true) }
+            if (visible) {
+                ReplyPreview(
+                    name = "Amara Diallo",
+                    text = "The payout landed this morning.",
+                    onDismiss = { visible = false },
+                )
+            } else {
+                Button(text = "Reply again", onClick = { visible = true }, variant = ButtonVariant.Ghost)
+            }
+        }
+
+        story("Pin bar") { knobs ->
+            var visible by remember { mutableStateOf(true) }
+            if (visible) {
+                PinBar(
+                    text = knobs.text("Text", "Office closed on Monday."),
+                    onClick = {},
+                    onDismiss = { visible = false },
+                )
+            } else {
+                Button(text = "Pin again", onClick = { visible = true }, variant = ButtonVariant.Ghost)
+            }
+        }
+
+        story("Mention chip") { _ ->
+            var people by remember { mutableStateOf(listOf("Amara Diallo", "Jonas Weber")) }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                people.forEach { name ->
+                    MentionChip(
+                        name = name,
+                        onClick = {},
+                        onRemove = { people = people.filterNot { it == name } },
+                    )
+                }
+            }
         }
     }
