@@ -15,4 +15,8 @@ val ScreenStories =
         story("Sign-up form") { _ ->
             SignUpScreen()
         }
+
+        story("Checkout") { _ ->
+            CheckoutScreen()
+        }
     }
