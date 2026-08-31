@@ -27,6 +27,7 @@ internal fun fieldDefinition(
             .name(name)
             .description(function.graphQLDescription())
             .type(output)
+    function.graphQLDeprecation()?.let { builder.deprecate(it) }
     function.valueParameters.filter { it.isArgument() }.forEach { parameter ->
         // A Kotlin default is still GraphQL NonNull unless unwrapped: graphql-java has no defaults.
         val argumentType =
@@ -37,14 +38,17 @@ internal fun fieldDefinition(
                     type
                 }
             }
-        builder.argument(
+        val argument =
             GraphQLArgument
                 .newArgument()
                 .name(parameter.graphQLName())
                 .description(parameter.findAnnotation<GraphQLDescription>()?.value)
                 .type(argumentType)
-                .build(),
-        )
+        parameter.graphQLDeprecation()?.let { reason ->
+            refuseRequiredDeprecation("argument '${parameter.graphQLName()}' of $name", argumentType)
+            argument.deprecate(reason)
+        }
+        builder.argument(argument.build())
     }
     return builder.build()
 }
@@ -72,5 +76,15 @@ internal fun KFunction<*>.requireArgumentAnnotations(parent: KParameter? = null)
             "$name parameter '${parameter.name}' must be @Argument — " +
                 "DataFetchingEnvironment, the parent source, and @GraphQLContext do not take it",
         )
+    }
+}
+
+/** GraphQL forbids deprecating an input a caller has to send: there would be no way to stop sending it. */
+internal fun refuseRequiredDeprecation(
+    what: String,
+    type: GraphQLInputType,
+) {
+    if (type is GraphQLNonNull) {
+        throw GraphixException("$what is required, so it cannot be @GraphQLDeprecated — make it optional first")
     }
 }

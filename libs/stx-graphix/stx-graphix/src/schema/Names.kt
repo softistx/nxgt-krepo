@@ -46,6 +46,9 @@ internal fun KClass<*>.graphQLNameOrNull(): String? {
 
 internal fun KAnnotatedElement.graphQLDescription(): String? = findAnnotation<GraphQLDescription>()?.value
 
+/** Deprecation reason, or `null` when the element is not deprecated. */
+internal fun KAnnotatedElement.graphQLDeprecation(): String? = findAnnotation<GraphQLDeprecated>()?.reason
+
 internal fun KProperty<*>.isGraphQLIgnored(): Boolean = findAnnotation<GraphQLIgnore>() != null
 
 /** Query, Mutation or Subscription — which annotation and which root type to build. */
