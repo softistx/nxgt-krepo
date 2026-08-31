@@ -121,7 +121,8 @@ trailing chevron opens a `Menu` of alternatives.
 
 `ToggleButton` is M3's `ToggleButton` — Follow, pin, list-or-grid — and `IconToggle` is the icon
 form. Unchecked is quiet; checked uses the colour pair. `CopyButton` copies and flashes a check;
-it uses `ClipboardManager.setText`, the portable API (`ClipEntry` is a native handle).
+it writes through `LocalClipboard.setClipEntry`. `ClipEntry` is still native per target, so a
+small `expect` builds the plain-text entry.
 `ConfirmButton` arms on the first click and fires on the second; wait three seconds and it
 disarms. A sentence of warning still belongs on `ConfirmDialog`. `BusyButton` swaps the label
 for a spinner. `MoreMenu` is the trailing more on a row. `OverflowBar` is M3's `AppBarRow`:
