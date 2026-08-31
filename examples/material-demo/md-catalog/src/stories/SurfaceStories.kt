@@ -28,7 +28,9 @@ import com.strange.material.surface.Accordion
 import com.strange.material.surface.AccordionItem
 import com.strange.material.surface.Carousel
 import com.strange.material.surface.ConfirmDialog
+import com.strange.material.surface.ContextMenu
 import com.strange.material.surface.Drawer
+import com.strange.material.surface.HoverCard
 import com.strange.material.surface.Menu
 import com.strange.material.surface.MenuItem
 import com.strange.material.surface.Sheet
@@ -149,6 +151,29 @@ val SurfaceStories =
                     Typography(text = "Card ${index + 1}")
                     Typography(text = "The next one peeks from the end.")
                 }
+            }
+        }
+
+        story("Hover card") { _ ->
+            HoverCard(
+                title = "Amara Diallo",
+                text = "Customer since 2024. Last order this morning.",
+                action = "Open",
+                onAction = {},
+            ) {
+                Button(text = "Amara Diallo", onClick = {}, variant = ButtonVariant.Ghost)
+            }
+        }
+
+        story("Context menu") { _ ->
+            ContextMenu(
+                items =
+                    listOf(
+                        MenuItem("Edit", onClick = {}, leading = StrangeIcons.Edit),
+                        MenuItem("Delete", onClick = {}, leading = StrangeIcons.Delete),
+                    ),
+            ) {
+                ListTile(title = "Right-click or long-press", supporting = "Opens the menu at the pointer")
             }
         }
 

@@ -35,6 +35,7 @@ class EveryStoryRendersTest :
                         "Display",
                         "Forms",
                         "Navigation",
+                        "Layout",
                         "Surfaces",
                         "Date and time",
                         "Data",

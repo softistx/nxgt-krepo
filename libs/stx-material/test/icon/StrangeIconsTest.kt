@@ -17,6 +17,7 @@ class StrangeIconsTest :
                 "Add" to StrangeIcons.Add,
                 "Check" to StrangeIcons.Check,
                 "Close" to StrangeIcons.Close,
+                "ChevronUp" to StrangeIcons.ChevronUp,
                 "ChevronLeft" to StrangeIcons.ChevronLeft,
                 "ChevronRight" to StrangeIcons.ChevronRight,
                 "ChevronDown" to StrangeIcons.ChevronDown,
