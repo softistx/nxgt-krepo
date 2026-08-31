@@ -228,6 +228,9 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       `PdfSurface` / `CameraSurface` as chrome slots. No decoder in the library.
 - [x] **8b — Actions et chrome.** `Fab` / `FabMenu` / `SplitButton`, `Stat`, `FilterBar` (chips),
       `Rating`, `LabeledDivider`, `UploadField` (host picks the file), `LoadingMark`.
+- [x] **8c — Toggles, tokens, présence.** `ToggleButton` / `IconToggle`, `ActionChip`, `TagField`,
+      `QuantityField`, `CopyButton`, `Kbd`, `StatusDot`, `AvatarGroup`, wavy `Progress`, range
+      `SliderField`.
 - [ ] **9 — Graphiques.** `Area`, `Bar`, `Line`, `Pie`, `Radar`, `Scatter`, `Funnel`, `Heatmap`
       au `Canvas`, thème dérivé des tokens
 - [ ] **10 — i18n et publication.** Catalogue de messages multiplateforme, locales `en`/`fr`,

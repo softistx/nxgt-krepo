@@ -17,10 +17,12 @@ import com.strange.material.form.Checkbox
 import com.strange.material.form.CheckboxGroup
 import com.strange.material.form.InputGroup
 import com.strange.material.form.OtpField
+import com.strange.material.form.QuantityField
 import com.strange.material.form.RadioGroup
 import com.strange.material.form.SelectField
 import com.strange.material.form.SliderField
 import com.strange.material.form.Switch
+import com.strange.material.form.TagField
 import com.strange.material.form.TextField
 import com.strange.material.form.TextareaField
 import com.strange.material.form.UploadField
@@ -159,6 +161,45 @@ val FormStories =
                     range = 0f..200f,
                     steps = 19,
                     format = { "€${it.toInt()}" },
+                )
+            }
+        }
+
+        story("Range slider") { _ ->
+            var prices by remember { mutableStateOf(20f..80f) }
+            Stack {
+                SliderField(
+                    value = prices,
+                    onValueChange = { prices = it },
+                    label = "Price",
+                    range = 0f..200f,
+                    format = { "€${it.toInt()}" },
+                )
+            }
+        }
+
+        story("Tags") { knobs ->
+            var tags by remember { mutableStateOf(listOf("urgent", "europe")) }
+            Stack {
+                TagField(
+                    tags = tags,
+                    onTagsChange = { tags = it },
+                    label = "Labels",
+                    placeholder = "Add a label",
+                    enabled = knobs.flag("Enabled", true),
+                )
+            }
+        }
+
+        story("Quantity") { knobs ->
+            var quantity by remember { mutableStateOf(2) }
+            Stack {
+                QuantityField(
+                    value = quantity,
+                    onValueChange = { quantity = it },
+                    label = "Seats",
+                    range = 0..12,
+                    enabled = knobs.flag("Enabled", true),
                 )
             }
         }
