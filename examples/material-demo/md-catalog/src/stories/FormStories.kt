@@ -15,8 +15,10 @@ import com.strange.material.demo.storyGroup
 import com.strange.material.form.Autocomplete
 import com.strange.material.form.Checkbox
 import com.strange.material.form.CheckboxGroup
+import com.strange.material.form.InlineEdit
 import com.strange.material.form.InputGroup
 import com.strange.material.form.OtpField
+import com.strange.material.form.PasswordMeter
 import com.strange.material.form.QuantityField
 import com.strange.material.form.RadioGroup
 import com.strange.material.form.SelectField
@@ -242,6 +244,31 @@ val FormStories =
                 label = knobs.text("Label", "Drop a file or browse"),
                 enabled = knobs.flag("Enabled", true),
             )
+        }
+
+        story("Inline edit") { knobs ->
+            var title by remember { mutableStateOf("Quarterly report") }
+            Stack {
+                InlineEdit(
+                    value = title,
+                    onValueChange = { title = it },
+                    placeholder = "Add a title",
+                    enabled = knobs.flag("Enabled", true),
+                )
+            }
+        }
+
+        story("Password meter") { _ ->
+            var secret by remember { mutableStateOf("") }
+            Stack {
+                TextField(
+                    value = secret,
+                    onValueChange = { secret = it },
+                    label = "Password",
+                    secret = true,
+                )
+                PasswordMeter(value = secret)
+            }
         }
     }
 
