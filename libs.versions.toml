@@ -19,6 +19,15 @@ kotlinx-serialization = "1.11.0"
 material3 = "1.4.0"
 datastore = "1.2.1"
 coil = "2.7.0"
+# Coil 3 is the Compose Multiplatform line (android, jvm, ios). The 2.7.0 alias above is
+# Android-only (`io.coil-kt:coil-compose`) and stays for Gradle consumers of the compose bundle.
+coil3 = "3.3.0"
+# Pinned to the Compose Multiplatform 1.11.1 pairing (What's new in CMP 1.11.1). Adaptive
+# sits on its own version line, like `$compose.material3`.
+compose-multiplatform-adaptive = "1.3.0-alpha07"
+# CMP 1.11.1's pairing table names 1.1.2; that version exists for androidx.navigation3, not for
+# org.jetbrains.androidx.navigation3 (Maven Central's latest stable is 1.1.1).
+compose-multiplatform-nav3 = "1.1.1"
 material-kolor = "4.1.1"
 compose-destinations = "2.3.0"
 
@@ -84,6 +93,16 @@ compose-material3-window-size = { module = "androidx.compose.material3:material3
 # this one publishes android, desktop(jvm), iosArm64 and iosSimulatorArm64. Its version tracks
 # $compose.material3, which sits on its own alpha line rather than on foundation/ui's 1.11.1.
 compose-multiplatform-window-size-class = { module = "org.jetbrains.compose.material3:material3-window-size-class", version = "1.11.0-alpha07" }
+# Material 3 adaptive, the CMP artifacts. `$compose.material3.adaptive` is not a toolchain catalog
+# key — naming it fails as "Compose is disabled". Same version as the 1.11.1 pairing.
+compose-multiplatform-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "compose-multiplatform-adaptive" }
+compose-multiplatform-adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "compose-multiplatform-adaptive" }
+compose-multiplatform-adaptive-navigation3 = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation3", version.ref = "compose-multiplatform-adaptive" }
+# NavigationSuiteScaffold lives next to material3, not under the `.adaptive` group — same alpha
+# line as `$compose.material3` / window-size-class.
+compose-multiplatform-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version = "1.11.0-alpha07" }
+# Navigation 3 UI, the CMP artifact. `navigation3-common` arrives transitively.
+jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "compose-multiplatform-nav3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version = "1.11.4" }
 compose-viewmodel-lifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version = "2.11.0" }
@@ -119,6 +138,9 @@ kodein-di-framework-compose = { module = "org.kodein.di:kodein-di-framework-comp
 faker = { module = "io.github.serpro69:kotlin-faker", version = "1.16.2" }
 konform = { module = "io.konform:konform", version = "0.11.1" }
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+coil3-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil3" }
+# CMP cannot use OkHttp on iOS; Ktor 3 is the network engine Coil documents for multiplatform.
+coil3-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil3" }
 
 apollo-api = { module = "com.apollographql.apollo:apollo-api", version.ref = "apollo" }
 apollo-compiler = { module = "com.apollographql.apollo:apollo-compiler", version.ref = "apollo" }
