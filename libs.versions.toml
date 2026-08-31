@@ -65,6 +65,7 @@ spring = "7.0.9"
 # classpath.
 javers = "7.11.8"
 jackson = "3.2.2"
+graphql-java = "25.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -109,6 +110,7 @@ accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-dra
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-jdk8 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.8.0" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 
@@ -151,6 +153,8 @@ slf4j-nop = { module = "org.slf4j:slf4j-nop", version = "2.0.18" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 
+graphql-java = { module = "com.graphql-java:graphql-java", version.ref = "graphql-java" }
+java-dataloader = { module = "com.graphql-java:java-dataloader", version = "6.0.0" }
 swagger-parser = { module = "io.swagger.parser.v3:swagger-parser", version.ref = "swagger-parser" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }

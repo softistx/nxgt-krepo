@@ -2,6 +2,7 @@ modules:
   - examples/*
   - examples/*/*
   - libs/*
+  - libs/*/*
   - plugins/*
 
 plugins:
