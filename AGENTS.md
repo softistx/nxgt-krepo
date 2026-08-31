@@ -33,7 +33,7 @@ What exists:
 | `examples/demo-client` | Generates a Ktorfit client from that spec and calls the server |
 | `examples/demo-spring-client` | Generates a Spring `@HttpExchange` client from the same spec |
 | `examples/jpa-shop` | A Ktor catalogue over Postgres showing `stx-jpa`'s CRUD extensions and audit layer |
-| `examples/graphix-shop` | A Ktor GraphQL catalogue showing `stx-graphix-ktor`: annotated queries and mutations over HTTP |
+| `examples/graphix-shop` | A Ktor GraphQL catalogue showing `stx-graphix-ktor`: split SDL under `resources/graphql/`, annotated DataFetchers, SSE subscriptions |
 | `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring-boot` with no configuration class: a spec-first REST API whose controllers implement the generated `@HttpExchange` interfaces, translated failures, keyset paging, an audit trail and two migrations |
 | `examples/material-demo` | The `stx-material` catalogue — one Compose Multiplatform app in three modules: `md-catalog` holds every story, `md-desktop` and `md-android` are launchers |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
@@ -793,9 +793,9 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
-  | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, what a resolver may see (instance, arguments, `@GraphQLContext`). **This is where a new annotation or scalar is documented** |
-  | `libs/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no scan in core |
-  | `libs/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, `injectable` |
+  | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, arguments, `@GraphQLContext`). **This is where a new annotation, scalar or directive is documented** |
+  | `libs/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no class scan in core |
+  | `libs/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, `injectable` |
   | `libs/stx-graphix/stx-graphix-spring/README.md` | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
@@ -809,6 +809,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
   | `libs/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
   | `examples/spring-orders/README.md` | What each file in the Spring demo is there to show, how to run it, and what it deliberately leaves out |
+  | `examples/graphix-shop/README.md` | What the GraphQL catalogue shows — split SDL, annotated DataFetchers, how to run it |
   | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
   | `libs/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
