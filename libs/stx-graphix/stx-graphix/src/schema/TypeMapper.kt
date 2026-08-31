@@ -54,11 +54,17 @@ internal class TypeMapper(
     private val implementors = linkedMapOf<String, MutableSet<String>>()
     private val building = mutableSetOf<String>()
 
-    /** GraphQL output type for [kType], including nullability. */
-    fun output(kType: KType): GraphQLOutputType = wrapOutput(mapOutput(kType), kType.isMarkedNullable)
+    /** GraphQL output type for [kType], including nullability. [id] makes a string type `ID`. */
+    fun output(
+        kType: KType,
+        id: Boolean = false,
+    ): GraphQLOutputType = wrapOutput(mapOutput(kType, id), kType.isMarkedNullable)
 
-    /** GraphQL input type for [kType], including nullability. */
-    fun input(kType: KType): GraphQLInputType = wrapInput(mapInput(kType), kType.isMarkedNullable)
+    /** GraphQL input type for [kType], including nullability. [id] makes a string type `ID`. */
+    fun input(
+        kType: KType,
+        id: Boolean = false,
+    ): GraphQLInputType = wrapInput(mapInput(kType, id), kType.isMarkedNullable)
 
     /** Every named type this mapper built — for `additionalTypes`. */
     fun additionalTypes(): Set<GraphQLNamedType> =
@@ -70,14 +76,22 @@ internal class TypeMapper(
     /** Object types implementing [name], for fanning an interface-level mapping onto its implementors. */
     fun implementorsOf(name: String): List<String> = implementors[name].orEmpty().toList()
 
-    private fun mapOutput(kType: KType): GraphQLOutputType {
+    private fun mapOutput(
+        kType: KType,
+        id: Boolean = false,
+    ): GraphQLOutputType {
+        if (id) idScalar(kType)?.let { return it }
         scalarFromClass(kType, kotlinScalars)?.let { return it }
         val descriptor = descriptorOf(kType)
         scalarOf(descriptor)?.let { return it }
         return when (descriptor.kind) {
             StructureKind.LIST -> {
                 GraphQLList.list(
-                    output(kType.arguments.single().type ?: throw GraphixException("a list GraphQL type needs an element type: $kType")),
+                    output(
+                        kType.arguments.single().type
+                            ?: throw GraphixException("a list GraphQL type needs an element type: $kType"),
+                        id,
+                    ),
                 )
             }
 
@@ -107,14 +121,22 @@ internal class TypeMapper(
         }
     }
 
-    private fun mapInput(kType: KType): GraphQLInputType {
+    private fun mapInput(
+        kType: KType,
+        id: Boolean = false,
+    ): GraphQLInputType {
+        if (id) idScalar(kType)?.let { return it }
         scalarFromClass(kType, kotlinScalars)?.let { return it }
         val descriptor = descriptorOf(kType)
         scalarOf(descriptor)?.let { return it }
         return when (descriptor.kind) {
             StructureKind.LIST -> {
                 GraphQLList.list(
-                    input(kType.arguments.single().type ?: throw GraphixException("a list GraphQL type needs an element type: $kType")),
+                    input(
+                        kType.arguments.single().type
+                            ?: throw GraphixException("a list GraphQL type needs an element type: $kType"),
+                        id,
+                    ),
                 )
             }
 
@@ -174,7 +196,7 @@ internal class TypeMapper(
                 field
                     .name(fieldName)
                     .description(property.graphQLDescription())
-                    .type(output(elementType))
+                    .type(output(elementType, property.isGraphQLId()))
                     .apply { property.graphQLDeprecation()?.let { deprecate(it) } }
             }
         }
@@ -188,7 +210,7 @@ internal class TypeMapper(
                 fieldDefinition(
                     extra.function,
                     extra.fieldName,
-                    output(extra.graphqlType),
+                    output(extra.graphqlType, extra.function.isGraphQLId()),
                     this,
                 ),
             )
@@ -232,12 +254,12 @@ internal class TypeMapper(
                 field
                     .name(property.graphQLPropertyName())
                     .description(property.graphQLDescription())
-                    .type(output(property.returnType))
+                    .type(output(property.returnType, property.isGraphQLId()))
                     .apply { property.graphQLDeprecation()?.let { deprecate(it) } }
             }
         }
         extraFields[name].orEmpty().forEach { extra ->
-            builder.field(fieldDefinition(extra.function, extra.fieldName, output(extra.graphqlType), this))
+            builder.field(fieldDefinition(extra.function, extra.fieldName, output(extra.graphqlType, extra.function.isGraphQLId()), this))
         }
         building.remove(name)
         val type = builder.build().also { interfaces[name] = it }
@@ -284,15 +306,22 @@ internal class TypeMapper(
         if (oneOf) builder.withDirective(Directives.OneOfDirective)
         properties(kClass, descriptor).forEach { (elementName, elementType, property) ->
             refuseArgumentOnInputField(kClass, property)
+            val fieldName = property.findAnnotationName() ?: elementName
+            val default = property.graphQLDefault("$name.$fieldName")
+            if (oneOf && default != null) {
+                throw GraphixException(
+                    "$name is @GraphQLOneOf, so '$fieldName' may not have a @GraphQLDefault",
+                )
+            }
             val argumentType =
-                input(elementType).let { type ->
-                    if (constructorOptional(kClass, property.name) && type is GraphQLNonNull) {
+                input(elementType, property.isGraphQLId()).let { type ->
+                    // A GraphQL default keeps the NonNull: `size: Int! = 1` is what a Kotlin default means.
+                    if (default == null && constructorOptional(kClass, property.name) && type is GraphQLNonNull) {
                         type.wrappedType as GraphQLInputType
                     } else {
                         type
                     }
                 }
-            val fieldName = property.findAnnotationName() ?: elementName
             if (oneOf && argumentType is GraphQLNonNull) {
                 throw GraphixException(
                     "$name is @GraphQLOneOf but '$fieldName' is not nullable — " +
@@ -305,6 +334,7 @@ internal class TypeMapper(
                     .name(fieldName)
                     .description(property.graphQLDescription())
                     .type(argumentType)
+                    .apply { if (default != null) defaultValueLiteral(default) }
             property.graphQLDeprecation()?.let { reason ->
                 refuseRequiredDeprecation("input field '$fieldName' of $name", argumentType)
                 field.deprecate(reason)
