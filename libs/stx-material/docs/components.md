@@ -13,8 +13,9 @@ has them.
 added is the default that was missing: the colour matrix resolved into M3's own `*Colors`, the
 padding and rhythm inside a card, a hover state M3's chip does not have, and a press that gives
 under the finger. Only `Alert`, `EmptyState`, `Skeleton`, `ResponsiveButton`, `Rating`, `Stat`,
-`LabeledDivider`, `FilterBar` and `UploadField` are built from primitives, because M3 has nothing
-to start from. AGENTS.md's *Building a component* is the rule.
+`LabeledDivider`, `FilterBar`, `UploadField`, `StatusDot`, `Kbd`, `QuantityField` and `AvatarGroup`
+are built from primitives, because M3 has nothing to start from. AGENTS.md's *Building a component*
+is the rule.
 
 ## Foundation
 
@@ -61,9 +62,10 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds twenty-one hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StrangeIcons` holds twenty-three hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
-`Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`. They are defined
+`Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`.
+They are defined
 in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
 has no key for the Material icons, `$compose.material` does not carry `material-icons-core` in
 Compose Multiplatform 1.11, and the AndroidX icon artifacts are Android-only. An application that
@@ -82,6 +84,9 @@ component here takes one.
 | `Fab` | `icon`, `description`, `onClick`, `text?`, `expanded = true`, `color = Primary` | `buttons/fab` |
 | `FabMenu` | `expanded`, `onExpandedChange`, `actions: List<FabAction>` | `buttons/fab-menu` |
 | `SplitButton` | `text`, `onClick`, `overflow: List<MenuItem>`, `enabled` | `buttons/split-button` |
+| `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled` | `buttons/toggle-button` |
+| `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color` | `buttons/icon-toggle` |
+| `CopyButton` | `text`, `description = "Copy"` | `buttons/copy-button` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonColor` — `Primary`, `Secondary`, `Success`, `Info`, `Warning`, `Danger`, `Neutral`.
@@ -107,6 +112,10 @@ the main button swaps Add for Close, and each `FabAction` is a menu item that cl
 click. `SplitButton` is M3's `SplitButtonLayout`: the leading half is the primary action, the
 trailing chevron opens a `Menu` of alternatives.
 
+`ToggleButton` is M3's `ToggleButton` — Follow, pin, list-or-grid — and `IconToggle` is the icon
+form. Unchecked is quiet; checked uses the colour pair. `CopyButton` copies and flashes a check;
+it uses `ClipboardManager.setText`, the portable API (`ClipEntry` is a native handle).
+
 **Collapsed, it is an `IconButton`** — round, 40 × 40, M3's own metrics — not a pill with the label
 taken out. The two forms are two components and `AnimatedContent` morphs between them.
 `ResponsiveButtonTest` renders it and measures the box: 40 × 40 collapsed, 130 × 40 expanded.
@@ -126,6 +135,9 @@ taken out. The two forms are two components and `AnimatedContent` morphs between
 | `FilterBar` | `options`, `selected`, `onChange` | `display/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `display/rating` |
 | `LabeledDivider` | `label` — no `style`: a divider is inert | `display/labeled-divider` |
+| `ActionChip` | `text`, `onClick`, `leading?`, `trailing?` | `display/action-chip` |
+| `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `display/status-dot` |
+| `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `display/keyboard-shortcut` |
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
@@ -154,6 +166,10 @@ floor.
 filter subsystem of phase 7, a selected subset of names. The empty set is "everything". `Rating`
 is a row of `IconButton`s; M3 has no rating control. `LabeledDivider` is M3's `HorizontalDivider`
 with a word in the gap.
+
+`Chip` is a filter (it stays selected). `ActionChip` is a verb — M3's `AssistChip` — so "Call" does
+not wear a tick. `StatusDot` is presence next to a name; an `Avatar` already has a tone ring for
+the same fact on a face. `Kbd` draws a shortcut as keycaps.
 
 ## Forms
 
@@ -200,7 +216,9 @@ adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.me
 | `Switch` | `field`, `label`, `description?` | `forms/checkbox-and-switch` |
 | `RadioGroup` | `field`, `options`, `label?`, `required`, `optionLabel` | `forms/choice-groups` |
 | `CheckboxGroup` | `field: FieldState<Set<T>>`, `options`, `label?` | `forms/choice-groups` |
-| `SliderField` | `field`, `label?`, `range`, `steps`, `format` | `forms/slider` |
+| `SliderField` | `value: Float` or `ClosedFloatingPointRange<Float>`, `label?`, `range`, `steps`, `format` | `forms/slider`, `forms/range-slider` |
+| `TagField` | `tags`, `onTagsChange`, `label?`, `placeholder` | `forms/tags` |
+| `QuantityField` | `value`, `onValueChange`, `range = 0..999`, `label?` | `forms/quantity` |
 | `OtpField` | `field`, `length = 6`, `label?`, `helper?` | `forms/one-time-code` |
 | `InputGroup` | `content: RowScope` | `forms/input-group` |
 | `UploadField` | `onClick`, `label`, `supporting?`, `enabled` | `forms/upload` |
@@ -222,6 +240,11 @@ works, autofill lands in one place, and a screen reader gets a single input.
 
 `UploadField` is chrome: a dashed well, a label and a hint. The host picks the file — there is no
 one picker on every platform — so `onClick` is the application's.
+
+`TagField` is M3's `InputChip` plus a draft field: confirm, a trailing comma or Enter adds, and
+backspace on an empty draft removes the last tag. Duplicates are ignored, case insensitive.
+`QuantityField` is plus and minus around a metric; M3 has no stepper. `SliderField` has a second
+overload for a `ClosedFloatingPointRange` — M3's `RangeSlider`, with both ends printed.
 
 `CheckboxGroup` holds the set of what is ticked rather than a list of booleans parallel to the
 options, so the field holds the answer and reordering the options cannot silently change it.
@@ -312,7 +335,7 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 | `HoverCard` | `title`, `text`, `action?`, `onAction?`, `content` | `surfaces/hover-card` |
 | `Menu` | `expanded`, `onDismiss`, `items` | `surfaces/menu` |
 | `ContextMenu` | `items`, `content` | `surfaces/context-menu` |
-| `Progress` | `progress: Float? = null`, `kind = Linear` | `surfaces/progress` |
+| `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `surfaces/progress` |
 | `LoadingMark` | `progress: Float? = null` | `surfaces/loading-mark` |
 | `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `surfaces/toast` |
 | `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |
@@ -323,7 +346,8 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 `Tone` — M3's host holds one, a dashboard often needs two. `Accordion` and `Carousel` are built
 here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
 `LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content;
-`Progress` is the spinner attached to a control.
+`Progress` is the spinner attached to a control. `Wavy` / `WavyCircular` are M3's expressive
+indicators; `Linear` / `Circular` stay the quiet ones.
 
 ## Date and time
 
@@ -357,12 +381,14 @@ measured on the offered width. `Pagination` is previous/next for a keyset page, 
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `Avatar` | `name`, `image?`, `tone?`, `size = 40.dp` | `media/avatar` |
+| `AvatarGroup` | `items: List<AvatarItem>`, `max = 4`, `size = 32.dp` | `media/avatar-group` |
 | `StrangeImage` | `model`, `description` | — |
 | `Gallery` | `images`, `onSelect?` | — |
 | `Lightbox` | `visible`, `model`, `onDismiss`, `onPrevious?`, `onNext?` | `media/lightbox` |
 | `VideoSurface` / `PdfSurface` / `CameraSurface` | `content` slot, `overlay`, `ratio` | `media/video-surface` |
 
-`Avatar` shows initials when there is no image, and an optional [Tone] ring. `StrangeImage` is Coil
+`Avatar` shows initials when there is no image, and an optional `Tone` ring. `AvatarGroup` stacks
+them with a `+N` overflow circle — not initials of `"+12"`, which would read `+1`. `StrangeImage` is Coil
 with this library's `Skeleton` / `EmptyState`. Video, PDF and camera are **chrome**: the host fills
 the slot with a renderer, so `Button` never pays for Media3, PdfRenderer or CameraX.
 

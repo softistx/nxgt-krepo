@@ -3,29 +3,34 @@ package com.strange.material.demo.stories
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonVariant
 import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
+import com.strange.material.display.ActionChip
 import com.strange.material.display.Alert
 import com.strange.material.display.Card
 import com.strange.material.display.CardVariant
 import com.strange.material.display.Chip
 import com.strange.material.display.EmptyState
 import com.strange.material.display.FilterBar
+import com.strange.material.display.Kbd
 import com.strange.material.display.LabeledDivider
 import com.strange.material.display.ListTile
 import com.strange.material.display.Rating
 import com.strange.material.display.Skeleton
 import com.strange.material.display.Stat
 import com.strange.material.display.StatusBadge
+import com.strange.material.display.StatusDot
 import com.strange.material.icon.Icon
 import com.strange.material.icon.IconSize
 import com.strange.material.icon.StrangeIcons
@@ -151,6 +156,39 @@ val DisplayStories =
                 Button(text = "Continue with email", onClick = {})
                 LabeledDivider(label = knobs.text("Label", "or"))
                 Button(text = "Continue as guest", onClick = {}, variant = ButtonVariant.Ghost)
+            }
+        }
+
+        story("Action chip") { _ ->
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                ActionChip(
+                    text = "Call",
+                    onClick = {},
+                    leading = { Icon(icon = StrangeIcons.Person, description = null) },
+                )
+                ActionChip(text = "Add to calendar", onClick = {})
+                ActionChip(text = "Open in maps", onClick = {})
+            }
+        }
+
+        story("Status dot") { _ ->
+            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                Tone.entries.forEach { tone ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        StatusDot(tone = tone)
+                        Typography(text = tone.name.lowercase())
+                    }
+                }
+            }
+        }
+
+        story("Keyboard shortcut") { _ ->
+            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                Kbd(keys = listOf("Ctrl", "K"))
+                Kbd(keys = listOf("⌘", "⇧", "P"))
             }
         }
     }

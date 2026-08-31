@@ -112,7 +112,7 @@ fun IconButton(
  */
 @Composable
 @ReadOnlyComposable
-private fun iconButtonTone(color: ButtonColor): ToneColors {
+internal fun iconButtonTone(color: ButtonColor): ToneColors {
     val scheme = MaterialTheme.colorScheme
     return when (color) {
         ButtonColor.Neutral -> {
