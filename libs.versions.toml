@@ -10,8 +10,8 @@ lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 androidx-biometric = "1.4.0-alpha07"
 androidx-test-junit = "1.3.0"
-kodein = "7.32.0"
-apollo = "5.0.1"
+kodein = "7.33.0"
+apollo = "5.1.0"
 room = "2.8.4"
 work = "2.11.2"
 accompanist = "0.37.3"
@@ -33,8 +33,8 @@ compose-destinations = "2.3.0"
 
 ktor = "3.5.2"
 kotlinx-rpc = "0.10.3"
-logback = "1.5.38"
-mongodb = "5.10.0"
+logback = "1.6.3"
+mongodb = "5.11.0"
 coroutines = "1.11.0"
 graalvm-native = "1.1.4"
 swagger-parser = "2.1.47"
@@ -42,12 +42,12 @@ kotlinpoet = "2.3.0"
 ktorfit = "2.7.5"
 koin = "4.2.2"
 koin-compiler = "1.0.1"
-kotest = "6.2.2"
+kotest = "6.2.4"
 testcontainers = "1.21.4"
 lettuce = "7.7.0.RELEASE"
 minio = "9.0.3"
 kafka = "4.3.1"
-amqp-client = "5.25.0"
+amqp-client = "5.35.0"
 confluent = "8.3.1"
 hibernate-reactive = "4.5.5.Final"
 # What hibernate-reactive-core 4.5.5.Final resolves for each of these. All three have to move with
@@ -62,7 +62,7 @@ hibernate-validator = "9.0.1.Final"
 jakarta-validation = "3.1.1"
 expressly = "6.0.0"
 # Classpath scanning, for `Jpa.scan`. The version kotest already resolves, so a test run carries one.
-classgraph = "4.8.184"
+classgraph = "4.8.194"
 # `@Language`, so the IDE injects HQL and SQL into the query strings. Pinned to the version already
 # resolved through kotlin-stdlib and kotlinx-coroutines — naming a newer one would upgrade the
 # annotations artifact for everything downstream of stx-jpa, for an annotation nobody runs.
@@ -75,7 +75,7 @@ spring = "7.0.9"
 javers = "7.11.8"
 jackson = "3.2.2"
 graphql-java = "25.0"
-dgs-codegen = "8.5.0"
+dgs-codegen = "8.6.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -104,11 +104,11 @@ compose-multiplatform-adaptive-navigation-suite = { module = "org.jetbrains.comp
 # Navigation 3 UI, the CMP artifact. `navigation3-common` arrives transitively.
 jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "compose-multiplatform-nav3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
-androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version = "1.11.4" }
+androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version = "1.12.0" }
 compose-viewmodel-lifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version = "2.11.0" }
 androidx-animation = { module = "androidx.compose.animation:animation" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.9.8" }
-androidx-paging = { module = "androidx.paging:paging-compose", version = "3.5.0" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.10.0" }
+androidx-paging = { module = "androidx.paging:paging-compose", version = "3.5.1" }
 graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0" }
 
 datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
@@ -148,8 +148,8 @@ apollo-runtime = { module = "com.apollographql.apollo:apollo-runtime", version.r
 apollo-idling-resource = { module = "com.apollographql.apollo:apollo-idling-resource", version.ref = "apollo" }
 apollo-http-cache = { module = "com.apollographql.apollo:apollo-http-cache", version.ref = "apollo" }
 apollo-normalized-cache-sqlite = { module = "com.apollographql.apollo:apollo-normalized-cache-sqlite", version.ref = "apollo" }
-apollo-adapters-core = { module = "com.apollographql.adapters:apollo-adapters-core", version = "0.7.0" }
-apollo-adapters-kotlinx-datetime = { module = "com.apollographql.adapters:apollo-adapters-kotlinx-datetime", version = "0.7.0" }
+apollo-adapters-core = { module = "com.apollographql.adapters:apollo-adapters-core", version = "0.8.0" }
+apollo-adapters-kotlinx-datetime = { module = "com.apollographql.adapters:apollo-adapters-kotlinx-datetime", version = "0.8.0" }
 apollo-compose-support = { module = "com.apollographql.compose:compose-support", version = "0.0.2" }
 apollo-compose-paging-support = { module = "com.apollographql.compose:compose-paging-support", version = "0.0.2" }
 
@@ -195,9 +195,9 @@ spring-webflux = { module = "org.springframework:spring-webflux", version.ref = 
 # com.fasterxml.jackson.core, per jackson-databind's own POM. The Kotlin module pulls databind.
 jackson-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 # DGS Kotlin types annotate properties with this; Jackson 3's databind still reads it.
-jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.20" }
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }
 
-kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css", version = "2026.7.1" }
+kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css", version = "2026.8.5" }
 
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "coroutines" }
 kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "coroutines" }
@@ -217,8 +217,8 @@ mongodb-bsonx = { module = "org.mongodb:bson-kotlinx" }
 mongodb-driver-reactivestreams = { module = "org.mongodb:mongodb-driver-reactivestreams" }
 rxrelay = { module = "com.jakewharton.rxrelay3:rxrelay", version = "3.0.1" }
 kasechange = { module = "net.pearx.kasechange:kasechange", version = "1.4.1" }
-mail = { module = "org.simplejavamail:simple-java-mail", version = "9.1.0" }
-spring-security-crypto = { module = "org.springframework.security:spring-security-crypto", version = "7.1.0" }
+mail = { module = "org.simplejavamail:simple-java-mail", version = "9.3.2" }
+spring-security-crypto = { module = "org.springframework.security:spring-security-crypto", version = "7.1.1" }
 javers-core = { module = "org.javers:javers-core", version.ref = "javers" }
 commons-logging = { module = "commons-logging:commons-logging", version = "1.4.0" }
 
@@ -321,7 +321,7 @@ compose-ksp = [
 ]
 
 ktor = [
-	"logback-classic", "nimbus-jose-jwt", "kotlin-css",
+"logback-classic", "nimbus-jose-jwt", "kotlin-css",
     "kotlinx-rpc-krpc-server", "kotlinx-rpc-krpc-ktor-server", "kotlinx-rpc-krpc-serialization-json"
 ]
 kotlinx = ["kotlinx-coroutines-core", "kotlinx-coroutines-reactive", "kotlinx-datetime"]
