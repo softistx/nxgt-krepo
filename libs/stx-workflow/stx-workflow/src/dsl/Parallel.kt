@@ -114,7 +114,7 @@ class ParallelBuilder<C> internal constructor(
  *
  * ```kotlin
  * parallel("provision") {
- *     branch(CHARGE) { payments.charge(context.card, key = "$instanceId:$stepName") }
+ *     branch(CHARGE) { payments.charge(context.card, key = idempotencyKey) }
  *         .compensate { id -> payments.refund(id) }
  *     branch(COURIER) { courier.book(context.items) }
  *         .compensate { booking -> courier.cancel(booking.id) }
