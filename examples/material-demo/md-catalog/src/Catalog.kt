@@ -7,6 +7,7 @@ import com.strange.material.demo.stories.FoundationStories
 import com.strange.material.demo.stories.MotionStories
 import com.strange.material.demo.stories.NavigationStories
 import com.strange.material.demo.stories.ScreenStories
+import com.strange.material.demo.stories.SurfaceStories
 
 /**
  * Every group the catalogue shows, in reading order: what the library is built from, then what it
@@ -23,5 +24,6 @@ val CatalogGroups: List<StoryGroup> =
         DisplayStories,
         FormStories,
         NavigationStories,
+        SurfaceStories,
         ScreenStories,
     )
