@@ -12,13 +12,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.strange.material.button.IconButton
 import com.strange.material.demo.storyGroup
 import com.strange.material.display.Card
 import com.strange.material.display.ListTile
+import com.strange.material.icon.StrangeIcons
 import com.strange.material.layout.LoadMoreButton
 import com.strange.material.layout.RefreshBox
 import com.strange.material.layout.ResponsiveGrid
 import com.strange.material.layout.ScrollToTop
+import com.strange.material.layout.SelectionBar
 import com.strange.material.text.Typography
 
 val LayoutStories =
@@ -51,6 +54,16 @@ val LayoutStories =
                 loading = knobs.flag("Loading", false),
                 onClick = {},
             )
+        }
+
+        story("Selection bar") { knobs ->
+            SelectionBar(
+                count = knobs.number("Count", 3f, 0f..12f, steps = 11).toInt(),
+                onClear = {},
+            ) {
+                IconButton(icon = StrangeIcons.Delete, description = "Delete", onClick = {})
+                IconButton(icon = StrangeIcons.Copy, description = "Export", onClick = {})
+            }
         }
 
         story("Refresh box") { _ ->

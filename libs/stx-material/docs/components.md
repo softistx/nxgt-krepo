@@ -14,9 +14,9 @@ added is the default that was missing: the colour matrix resolved into M3's own 
 padding and rhythm inside a card, a hover state M3's chip does not have, and a press that gives
 under the finger. Only `Alert`, `EmptyState`, `Skeleton`, `ResponsiveButton`, `Rating`, `Stat`,
 `LabeledDivider`, `FilterBar`, `UploadField`, `StatusDot`, `Kbd`, `QuantityField`, `AvatarGroup`,
-`InlineEdit`, `ExpandableText`, `CodeBlock`, `SectionHeader`, `RelativeTime`, `ConfirmButton` and
-`PasswordMeter` are built from primitives, because M3 has nothing to start from. AGENTS.md's
-*Building a component* is the rule.
+`InlineEdit`, `ExpandableText`, `CodeBlock`, `SectionHeader`, `RelativeTime`, `ConfirmButton`,
+`PasswordMeter`, `Disclosure` and `SelectionBar` are built from primitives, because M3 has nothing
+to start from. AGENTS.md's *Building a component* is the rule.
 
 ## Foundation
 
@@ -89,6 +89,9 @@ component here takes one.
 | `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color` | `buttons/icon-toggle` |
 | `CopyButton` | `text`, `description = "Copy"` | `buttons/copy-button` |
 | `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000` | `buttons/confirm-button` |
+| `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled` | `buttons/busy-button` |
+| `MoreMenu` | `items: List<MenuItem>`, `description = "More"` | `buttons/more-menu` |
+| `OverflowBar` | `actions: List<OverflowAction>`, `maxVisible` | `buttons/overflow-bar` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonColor` — `Primary`, `Secondary`, `Success`, `Info`, `Warning`, `Danger`, `Neutral`.
@@ -118,7 +121,9 @@ trailing chevron opens a `Menu` of alternatives.
 form. Unchecked is quiet; checked uses the colour pair. `CopyButton` copies and flashes a check;
 it uses `ClipboardManager.setText`, the portable API (`ClipEntry` is a native handle).
 `ConfirmButton` arms on the first click and fires on the second; wait three seconds and it
-disarms. A sentence of warning still belongs on `ConfirmDialog`.
+disarms. A sentence of warning still belongs on `ConfirmDialog`. `BusyButton` swaps the label
+for a spinner. `MoreMenu` is the trailing more on a row. `OverflowBar` is M3's `AppBarRow`:
+visible icons stay in the row, the rest land in the overflow menu.
 
 **Collapsed, it is an `IconButton`** — round, 40 × 40, M3's own metrics — not a pill with the label
 taken out. The two forms are two components and `AnimatedContent` morphs between them.
@@ -227,6 +232,7 @@ adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.me
 | `SelectField` | `field`, `options`, `label?`, `placeholder`, `optionLabel` | `forms/select` |
 | `Autocomplete` | `value`, `onValueChange`, `options`, `onSelect` | `forms/autocomplete` |
 | `Checkbox` | `field`, `label`, `helper?` | `forms/checkbox-and-switch` |
+| `TriStateCheckbox` | `state: CheckState`, `onClick`, `label` | `forms/tri-state-checkbox` |
 | `Switch` | `field`, `label`, `description?` | `forms/checkbox-and-switch` |
 | `RadioGroup` | `field`, `options`, `label?`, `required`, `optionLabel` | `forms/choice-groups` |
 | `CheckboxGroup` | `field: FieldState<Set<T>>`, `options`, `label?` | `forms/choice-groups` |
@@ -238,6 +244,7 @@ adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.me
 | `UploadField` | `onClick`, `label`, `supporting?`, `enabled` | `forms/upload` |
 | `InlineEdit` | `value`, `onValueChange`, `placeholder`, `enabled` | `forms/inline-edit` |
 | `PasswordMeter` | `value` | `forms/password-meter` |
+| `CopyField` | `value`, `label?`, `helper?` | `forms/copy-field` |
 | `ExtendedLabel` | `text`, `required`, `optional`, `trailing?` | used by the above |
 | `HelperText` | `helper?`, `error?` | used by the above |
 | `FieldScaffold` | `label?`, `required`, `helper?`, `error?`, `content` | used by the above |
@@ -264,7 +271,8 @@ overload for a `ClosedFloatingPointRange` — M3's `RangeSlider`, with both ends
 
 `InlineEdit` keeps a draft until it is committed, so Escape can put the previous value back.
 `PasswordMeter` is four segments graded locally (length, case, digit, symbol) — not a breach
-check.
+check. `CopyField` is a read-only field with a `CopyButton`. `TriStateCheckbox` is the parent of
+a group: Off, On, or Indeterminate; `cycleCheckState` is the usual next value.
 
 `CheckboxGroup` holds the set of what is ticked rather than a list of booleans parallel to the
 options, so the field holds the answer and reordering the options cannot silently change it.
@@ -321,11 +329,12 @@ below `collapseBelow` it stacks.
 | `ResponsiveGrid` | `items`, `minSize = 200.dp`, `item` | `layout/responsive-grid` |
 | `ScrollToTop` | `listState`, `after = 2` | `layout/scroll-to-top` |
 | `LoadMoreButton` | `hasMore`, `loading`, `onClick` | `layout/load-more` |
+| `SelectionBar` | `count`, `onClear`, `actions` | `layout/selection-bar` |
 | `RefreshBox` | `refreshing`, `onRefresh`, `content` | `layout/refresh-box` |
 
 `ResponsiveGrid` is `LazyVerticalGrid` with `GridCells.Adaptive`. `ScrollToTop` sits in a `Box`
 over a list and only appears once the reader has left the top. `RefreshBox` is M3's
-`PullToRefreshBox`.
+`PullToRefreshBox`. `SelectionBar` is hidden at count zero.
 
 ### Navigation 3 scenes
 
@@ -356,15 +365,19 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 | `Menu` | `expanded`, `onDismiss`, `items` | `surfaces/menu` |
 | `ContextMenu` | `items`, `content` | `surfaces/context-menu` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `surfaces/progress` |
+| `LabeledProgress` | `progress`, `caption?`, `kind` | `surfaces/labeled-progress` |
 | `LoadingMark` | `progress: Float? = null` | `surfaces/loading-mark` |
 | `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `surfaces/toast` |
 | `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |
+| `Disclosure` | `title`, `expanded`, `onExpandedChange`, `content` | `surfaces/disclosure` |
 | `Carousel` | `count`, `peek = 48.dp`, `page` | `surfaces/carousel` |
 | `SwipeActions` | `onDismiss`, `background`, `content` | `surfaces/swipe-actions` |
 
 `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of M3 `Snackbar`s painted with
 `Tone` — M3's host holds one, a dashboard often needs two. `Accordion` and `Carousel` are built
 here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
+`Disclosure` is one panel; `Accordion` is a list with at most one open. `LabeledProgress` prints
+the percentage M3's indicator does not.
 `LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content;
 `Progress` is the spinner attached to a control. `Wavy` / `WavyCircular` are M3's expressive
 indicators; `Linear` / `Circular` stay the quiet ones.

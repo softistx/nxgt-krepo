@@ -16,13 +16,13 @@ libs/stx-material/
   src/style/    StrangeStyles — every component default in one place
   src/text/     Typography and the variant scale
   src/icon/     Icon and the library's own icon set
-  src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton
+  src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar
   src/display/  Card, Chip, ActionChip, SuggestionChip, FileChip, StatusBadge, StatusDot, Kbd, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText
-  src/form/     the field/form state layer, the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter
+  src/form/     the field/form state layer, the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter, CopyField, TriStateCheckbox
   src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, Breadcrumb
-  src/layout/     ResponsiveGrid, ScrollToTop, LoadMoreButton, RefreshBox
-  src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, HoverCard, Menu, ContextMenu, Accordion, Carousel, SwipeActions
-  src/feedback/   Progress, LoadingMark, Toaster
+  src/layout/     ResponsiveGrid, ScrollToTop, LoadMoreButton, SelectionBar, RefreshBox
+  src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, HoverCard, Menu, ContextMenu, Accordion, Disclosure, Carousel, SwipeActions
+  src/feedback/   Progress, LabeledProgress, LoadingMark, Toaster
   src/datetime/   DateField, DateRangeField, TimeField, Calendar, RelativeTime
   src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline
   src/media/      Avatar, AvatarGroup, StrangeImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
@@ -69,9 +69,9 @@ to reproduce a container. What this library adds is the default that was missing
 resolved once, the padding and rhythm inside a card, the hover state M3's chip does not have.
 `Alert`, `EmptyState`, `Skeleton`, `ResponsiveButton`, `Rating`, `Stat`, `LabeledDivider`,
 `FilterBar`, `UploadField`, `StatusDot`, `Kbd`, `QuantityField`, `AvatarGroup`, `InlineEdit`,
-`ExpandableText`, `CodeBlock`, `SectionHeader`, `RelativeTime`, `ConfirmButton` and
-`PasswordMeter` are built from primitives because M3 has nothing to start from.
-AGENTS.md's *Building a component* is the rule.
+`ExpandableText`, `CodeBlock`, `SectionHeader`, `RelativeTime`, `ConfirmButton`,
+`PasswordMeter`, `Disclosure` and `SelectionBar` are built from primitives because M3 has nothing
+to start from. AGENTS.md's *Building a component* is the rule.
 
 **Colour, shape, border and padding go through M3's own `*Colors` and `*Defaults`.** A `Style` is
 for what M3 has no parameter for:

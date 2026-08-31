@@ -20,6 +20,7 @@ import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
 import com.strange.material.display.Card
 import com.strange.material.display.ListTile
+import com.strange.material.feedback.LabeledProgress
 import com.strange.material.feedback.LoadingMark
 import com.strange.material.feedback.Progress
 import com.strange.material.feedback.ProgressKind
@@ -31,6 +32,7 @@ import com.strange.material.surface.AccordionItem
 import com.strange.material.surface.Carousel
 import com.strange.material.surface.ConfirmDialog
 import com.strange.material.surface.ContextMenu
+import com.strange.material.surface.Disclosure
 import com.strange.material.surface.Drawer
 import com.strange.material.surface.HoverCard
 import com.strange.material.surface.Menu
@@ -117,6 +119,15 @@ val SurfaceStories =
             Progress(progress = if (determinate) 0.45f else null, kind = kind)
         }
 
+        story("Labeled progress") { knobs ->
+            val determinate = knobs.flag("Determinate", true)
+            LabeledProgress(
+                progress = if (determinate) 0.45f else null,
+                caption = "Uploading invoice.pdf",
+                kind = knobs.enumChoice("Kind", ProgressKind.Linear),
+            )
+        }
+
         story("Loading mark") { knobs ->
             val determinate = knobs.flag("Determinate", false)
             LoadingMark(progress = if (determinate) 0.45f else null)
@@ -133,6 +144,17 @@ val SurfaceStories =
                         onClick = { toaster.show("Could not reach the bank", Tone.Error) },
                     )
                 }
+            }
+        }
+
+        story("Disclosure") { _ ->
+            var open by remember { mutableStateOf(true) }
+            Disclosure(
+                title = "Payout schedule",
+                expanded = open,
+                onExpandedChange = { open = it },
+            ) {
+                Typography(text = "Payouts land the next working day, except on bank holidays.")
             }
         }
 
