@@ -28,6 +28,18 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
+/**
+ * The Apollo Sandbox page. A **sibling** of the GraphQL path, not a child, so it is its own
+ * registration: [graphqlRoute] nests everything inside one `route(path)` block and nothing under
+ * `/graphql` should answer HTML.
+ */
+internal fun Route.sandboxRoute(
+    sandboxPath: String,
+    html: String,
+) {
+    get(sandboxPath) { call.respondText(html, ContentType.Text.Html, HttpStatusCode.OK) }
+}
+
 /** POST and GET at [path]. Field errors stay HTTP 200; malformed JSON is 400. */
 internal fun Route.graphqlRoute(
     path: String,

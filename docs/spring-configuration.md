@@ -313,6 +313,10 @@ metadata lives in that module's `additional-spring-configuration-metadata.json`.
 | `subscriptions` | `sse` \| `graphql-ws` | `sse` | `sse` is `text/event-stream` on POST. `graphql-ws` is a WebSocket on [path] (`graphql-transport-ws`); HTTP POST of a subscription is then 400 |
 | `schema-locations` | list | `classpath:graphql/` | Directories of `.graphqls` / `.gqls` files, scanned recursively and merged. Empty scan keeps the annotated schema. Same default as Spring GraphQL |
 | `schema-file-extensions` | list | `.graphqls,.gqls` | File suffixes under [schema-locations] |
+| `introspection` | boolean | `true` | Whether `__schema` and `__type` answer. Off, a document selecting either comes back as a GraphQL error; `__typename` and every other field are unaffected, and the schema itself is unchanged. Ignored when the application supplies its own `Graphix` bean |
+| `sandbox` | boolean | `false` | Serves an Apollo Sandbox page at [sandbox-path]. Off by default: enabling GraphQL must not also open an HTML page that advertises the schema |
+| `sandbox-path` | string | `/sandbox` | Where that page is served — a sibling of [path], not a child |
+| `sandbox-endpoint` | string | *empty* | GraphQL URL the sandbox opens with. Empty resolves it in the browser from the page's own origin and [path], which is what survives a proxy, https and a republished port |
 
 A field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. The annotation vocabulary
 is [`docs/graphix.md`](graphix.md).

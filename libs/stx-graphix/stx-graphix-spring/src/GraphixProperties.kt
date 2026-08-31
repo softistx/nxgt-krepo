@@ -33,4 +33,16 @@ data class GraphixProperties(
      * them. Ignored when the application supplies its own `Graphix` bean.
      */
     val introspection: Boolean = true,
+    /**
+     * Serves an Apollo Sandbox at [sandboxPath]. Off by default: enabling GraphQL should not also
+     * open an HTML page that advertises the schema.
+     */
+    val sandbox: Boolean = false,
+    /** Where the sandbox page is served. Default `/sandbox`, a sibling of [path]. */
+    val sandboxPath: String = "/sandbox",
+    /**
+     * GraphQL URL the sandbox opens with. Empty — the default — resolves it in the browser from the
+     * page's own origin and [path], which is what survives a proxy, https and a republished port.
+     */
+    val sandboxEndpoint: String = "",
 )
