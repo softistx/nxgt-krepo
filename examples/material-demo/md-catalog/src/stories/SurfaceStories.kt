@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonColor
 import com.strange.material.button.ButtonVariant
+import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
 import com.strange.material.display.Card
 import com.strange.material.display.ListTile
@@ -112,10 +113,8 @@ val SurfaceStories =
 
         story("Progress") { knobs ->
             val determinate = knobs.flag("Determinate", false)
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
-                Progress(progress = if (determinate) 0.45f else null)
-                Progress(progress = if (determinate) 0.45f else null, kind = ProgressKind.Circular)
-            }
+            val kind = knobs.enumChoice("Kind", ProgressKind.Linear)
+            Progress(progress = if (determinate) 0.45f else null, kind = kind)
         }
 
         story("Loading mark") { knobs ->

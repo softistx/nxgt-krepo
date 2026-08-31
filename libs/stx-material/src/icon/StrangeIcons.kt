@@ -134,6 +134,15 @@ object StrangeIcons {
 
     val Warning: ImageVector =
         icon("Warning", "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z")
+
+    val Copy: ImageVector =
+        icon(
+            "Copy",
+            "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 " +
+                "2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z",
+        )
+
+    val Minus: ImageVector = icon("Minus", "M19 13H5v-2h14v2z")
 }
 
 /**

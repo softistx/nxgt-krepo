@@ -20,12 +20,15 @@ import com.strange.material.button.Button
 import com.strange.material.button.ButtonColor
 import com.strange.material.button.ButtonRow
 import com.strange.material.button.ButtonVariant
+import com.strange.material.button.CopyButton
 import com.strange.material.button.Fab
 import com.strange.material.button.FabAction
 import com.strange.material.button.FabMenu
 import com.strange.material.button.IconButton
+import com.strange.material.button.IconToggle
 import com.strange.material.button.ResponsiveButton
 import com.strange.material.button.SplitButton
+import com.strange.material.button.ToggleButton
 import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
 import com.strange.material.icon.IconSize
@@ -161,6 +164,39 @@ val ButtonStories =
                         MenuItem("Save as draft", onClick = {}),
                         MenuItem("Save and publish", onClick = {}),
                     ),
+                enabled = knobs.flag("Enabled", true),
+            )
+        }
+
+        story("Toggle button") { knobs ->
+            var following by remember { mutableStateOf(true) }
+            ToggleButton(
+                text = if (following) "Following" else "Follow",
+                checked = following,
+                onCheckedChange = { following = it },
+                variant = knobs.enumChoice("Variant", ButtonVariant.Tonal),
+                color = knobs.enumChoice("Color", ButtonColor.Primary),
+                icon = StrangeIcons.Person,
+                enabled = knobs.flag("Enabled", true),
+            )
+        }
+
+        story("Icon toggle") { knobs ->
+            var saved by remember { mutableStateOf(true) }
+            IconToggle(
+                icon = StrangeIcons.Star,
+                description = if (saved) "Unsave" else "Save",
+                checked = saved,
+                onCheckedChange = { saved = it },
+                variant = knobs.enumChoice("Variant", ButtonVariant.Ghost),
+                color = ButtonColor.Warning,
+                enabled = knobs.flag("Enabled", true),
+            )
+        }
+
+        story("Copy button") { knobs ->
+            CopyButton(
+                text = knobs.text("Value", "ord_9f3a"),
                 enabled = knobs.flag("Enabled", true),
             )
         }

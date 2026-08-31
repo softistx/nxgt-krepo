@@ -35,6 +35,8 @@ class StrangeIconsTest :
                 "Star" to StrangeIcons.Star,
                 "Search" to StrangeIcons.Search,
                 "Warning" to StrangeIcons.Warning,
+                "Copy" to StrangeIcons.Copy,
+                "Minus" to StrangeIcons.Minus,
             )
 
         feature("every icon in the set") {

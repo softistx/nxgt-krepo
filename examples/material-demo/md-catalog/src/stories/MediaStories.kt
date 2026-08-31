@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.strange.material.button.Button
 import com.strange.material.demo.storyGroup
 import com.strange.material.media.Avatar
+import com.strange.material.media.AvatarGroup
+import com.strange.material.media.AvatarItem
 import com.strange.material.media.CameraSurface
 import com.strange.material.media.Lightbox
 import com.strange.material.media.PdfSurface
@@ -33,6 +35,20 @@ val MediaStories =
                 Avatar(name = "Jonas Weber", tone = if (ring) Tone.Warning else null)
                 Avatar(name = "Priya", tone = if (ring) Tone.Info else null)
             }
+        }
+
+        story("Avatar group") { knobs ->
+            AvatarGroup(
+                items =
+                    listOf(
+                        AvatarItem("Amara Diallo", tone = Tone.Success),
+                        AvatarItem("Jonas Weber"),
+                        AvatarItem("Priya Raman", tone = Tone.Info),
+                        AvatarItem("Chen Wei"),
+                        AvatarItem("Léa Martin"),
+                    ),
+                max = knobs.number("Max faces", 3f, 1f..5f, steps = 3).toInt(),
+            )
         }
 
         story("Video surface") { _ ->

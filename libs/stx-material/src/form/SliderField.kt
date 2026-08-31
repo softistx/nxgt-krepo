@@ -3,6 +3,7 @@ package com.strange.material.form
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,6 +45,50 @@ fun SliderField(
             }
         }
         Slider(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
+            valueRange = range,
+            steps = steps,
+        )
+    }
+}
+
+/**
+ * Two numbers chosen by dragging. Material 3's `RangeSlider`, with both ends printed.
+ *
+ * The same reason as the single-thumb [SliderField]: M3 shows the values only while a thumb is
+ * held. A price filter that hides €20–€80 until the reader lets go is not a filter they can read.
+ */
+@Composable
+fun SliderField(
+    value: ClosedFloatingPointRange<Float>,
+    onValueChange: (ClosedFloatingPointRange<Float>) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    helper: String? = null,
+    supportingText: String? = null,
+    enabled: Boolean = true,
+    range: ClosedFloatingPointRange<Float> = 0f..100f,
+    steps: Int = 0,
+    format: (Float) -> String = { it.toInt().toString() },
+) {
+    FieldScaffold(modifier = modifier, helper = helper, error = supportingText) {
+        if (label != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ExtendedLabel(text = label)
+                Typography(
+                    text = "${format(value.start)} – ${format(value.endInclusive)}",
+                    variant = TypographyVariant.Metric,
+                )
+            }
+        }
+        RangeSlider(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
