@@ -35,3 +35,7 @@ settings:
         - jakarta.persistence.Entity
         - jakarta.persistence.MappedSuperclass
         - jakarta.persistence.Embeddable
+  jvm:
+    # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file
+    # named `main.kt`; this one is `ShopServer.kt`.
+    mainClass: com.strange.example.shop.ShopServerKt
