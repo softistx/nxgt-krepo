@@ -34,4 +34,5 @@ val CatalogIcons: List<Pair<String, ImageVector>> =
         "ViewList" to StrangeIcons.ViewList,
         "ViewGrid" to StrangeIcons.ViewGrid,
         "Send" to StrangeIcons.Send,
+        "Pin" to StrangeIcons.Pin,
     )
