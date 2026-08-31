@@ -196,3 +196,35 @@ annotation class GraphQLDeprecated(
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class GraphQLOneOf
+
+/**
+ * Maps a `String`, `Uuid` or `Long` to GraphQL's `ID` scalar rather than its own type.
+ *
+ * Kotlin has no `ID` type, and it is not one worth inventing: `ID` is a *serialisation hint* on a
+ * field that is already a string. On an SDL schema, write `ID` in the document instead —
+ * graphql-java coerces it to a `String` and the resolver never notices.
+ */
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.VALUE_PARAMETER,
+)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLId
+
+/**
+ * The GraphQL default value of an argument or input-object field, written as a GraphQL literal:
+ * `"10"`, `"\"stranger\""`, `"[1, 2]"`, `"{ size: L }"`.
+ *
+ * A Kotlin default alone only makes the argument *optional* — graphql-java has no notion of a
+ * Kotlin default, so nothing reaches the schema and a client reading introspection cannot see it.
+ * With this, the argument keeps its `NonNull` and advertises the default: `limit: Int! = 10`.
+ *
+ * graphql-java then supplies the value, so the Kotlin default never runs — the two must agree.
+ */
+@Target(AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLDefault(
+    /** A GraphQL value literal, parsed at schema build. */
+    val literal: String,
+)

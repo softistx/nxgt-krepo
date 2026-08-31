@@ -44,6 +44,7 @@ internal fun root(
                         RootKind.SUBSCRIPTION -> function.returnType.subscriptionElement()
                         else -> function.returnType.unwrapAsync()
                     },
+                    function.isGraphQLId(),
                 )
             function.requireArgumentAnnotations()
             fields +=
