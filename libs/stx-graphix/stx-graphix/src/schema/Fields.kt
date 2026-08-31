@@ -29,10 +29,12 @@ internal fun fieldDefinition(
             .type(output)
     function.graphQLDeprecation()?.let { builder.deprecate(it) }
     function.valueParameters.filter { it.isArgument() }.forEach { parameter ->
-        // A Kotlin default is still GraphQL NonNull unless unwrapped: graphql-java has no defaults.
+        val default = parameter.graphQLDefault("argument '${parameter.graphQLName()}' of $name")
+        // A Kotlin default alone only makes the argument optional — graphql-java has no Kotlin
+        // defaults. @GraphQLDefault puts the value in the schema and keeps the NonNull.
         val argumentType =
-            types.input(parameter.type).let { type ->
-                if (parameter.isOptional && type is GraphQLNonNull) {
+            types.input(parameter.type, parameter.isGraphQLId()).let { type ->
+                if (default == null && parameter.isOptional && type is GraphQLNonNull) {
                     type.wrappedType as GraphQLInputType
                 } else {
                     type
@@ -44,6 +46,7 @@ internal fun fieldDefinition(
                 .name(parameter.graphQLName())
                 .description(parameter.findAnnotation<GraphQLDescription>()?.value)
                 .type(argumentType)
+                .apply { if (default != null) defaultValueLiteral(default) }
         parameter.graphQLDeprecation()?.let { reason ->
             refuseRequiredDeprecation("argument '${parameter.graphQLName()}' of $name", argumentType)
             argument.deprecate(reason)

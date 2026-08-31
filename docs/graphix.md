@@ -39,6 +39,7 @@ ends in `Input` keeps it.
 | `Boolean` | `Boolean` |
 | `Float`, `Double` | `Float` |
 | `Long` | `Long` (custom scalar; GraphQL `Int` is 32-bit) |
+| `@GraphQLId String` / `Uuid` / `Long` | `ID` |
 | `kotlin.time.Instant` | `Instant` (ISO-8601 string) |
 | `kotlin.uuid.Uuid` | `Uuid` (canonical string) |
 | `List<T>` | `[T]` |
@@ -209,6 +210,22 @@ same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 | `@Directive("name")` | mapping function | wraps the field with the `fieldDirective("name")` registered on the builder |
 | `@GraphQLDeprecated("why")` | function, property, parameter | GraphQL `@deprecated`. Kotlin's own `@Deprecated` is `BINARY`-retained and unreadable by reflection, hence a second annotation |
 | `@GraphQLOneOf` | class used as an input | GraphQL `@oneOf`: exactly one field, and not null |
+| `@GraphQLId` | function, property, parameter | GraphQL `ID` instead of `String` / `Uuid` / `Long` |
+| `@GraphQLDefault("10")` | parameter, input-object property | the GraphQL default, as a literal |
+
+`@GraphQLId` is a serialisation hint, not a Kotlin type: the value stays a `String` on both sides,
+and on a `List<String>` the annotation carries down to the element (`[ID!]!`). Anything but
+`String`, `Uuid` or `Long` fails schema build naming the type. On an **SDL** schema write `ID` in
+the document instead — graphql-java coerces it to a `String` and the resolver never notices, so
+this annotation is for the annotation-derived schema only.
+
+`@GraphQLDefault` is what puts a default *in the schema*. A Kotlin default alone only makes the
+argument optional — graphql-java has no notion of one, so `@Argument limit: Int = 10` reaches a
+client as `limit: Int`, nullable and with nothing to read. With the annotation it is
+`limit: Int! = 10`: the non-null the Kotlin signature actually promises, and a value introspection
+can report. graphql-java then supplies it, so the Kotlin default never runs — **the two must
+agree**. A literal that does not parse fails schema build naming the argument, and a `@GraphQLOneOf`
+field may not carry one at all.
 
 A deprecated field stays in the schema and keeps resolving; introspection hides it unless the
 query asks (`fields(includeDeprecated: true)`). An **argument** or **input field** may only be
