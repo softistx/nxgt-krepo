@@ -5,6 +5,7 @@ import com.strange.graphix.fixture.BookQueries
 import com.strange.graphix.fixture.GreetingQueries
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -24,6 +25,18 @@ class SchemaSdlTest :
                 graphql.sdl() shouldContain "shout(name: String): String"
                 graphql.sdl() shouldContain "type Book"
                 graphql.sdl() shouldContain "type Author"
+            }
+
+            scenario("{ __schema } works on an SDL schema") {
+                val result =
+                    Graphix {
+                        schemaLocations("classpath:graphix-sdl/")
+                        query(GreetingQueries())
+                    }.execute(GraphixRequest("{ __schema { queryType { name } types { name } } }"))
+                result.isOk shouldBe true
+                val schema = result.data.shouldNotBeNull()["__schema"] as Map<*, *>
+                (schema["queryType"] as Map<*, *>)["name"] shouldBe "Query"
+                (schema["types"] as List<*>).map { (it as Map<*, *>)["name"] } shouldContain "Book"
             }
 
             scenario("annotated resolvers run against the SDL schema") {
