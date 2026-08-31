@@ -84,14 +84,42 @@ val NavigationStories =
                 listOf(
                     NavigationDestination("Home", StrangeIcons.Home),
                     NavigationDestination(
-                        "Inbox",
-                        StrangeIcons.Inbox,
+                        label = "Inbox",
+                        icon = StrangeIcons.Inbox,
+                        supporting = "Amara, Jonas",
                         badge = "3",
                         badgeTone = Tone.Info,
-                        chip = "Live",
                     ),
-                    NavigationDestination("People", StrangeIcons.Person),
-                    NavigationDestination("Search", StrangeIcons.Search),
+                    NavigationDestination(
+                        label = "Drafts",
+                        icon = StrangeIcons.Edit,
+                        unread = true,
+                    ),
+                    NavigationDestination(
+                        label = "Amara Diallo",
+                        icon = StrangeIcons.Person,
+                        avatar = true,
+                        supporting = "You",
+                    ),
+                    NavigationDestination(
+                        label = "Reports",
+                        icon = StrangeIcons.Search,
+                        chip = "Beta",
+                        shortcut = "⌘R",
+                        section = "Workspace",
+                    ),
+                    NavigationDestination(
+                        label = "Sync",
+                        icon = StrangeIcons.Schedule,
+                        busy = true,
+                        tone = Tone.Info,
+                    ),
+                    NavigationDestination(
+                        label = "Settings",
+                        icon = StrangeIcons.Menu,
+                        shortcut = "⌘,",
+                        section = "Account",
+                    ),
                 )
             NavigationSuite(
                 destinations = destinations,
