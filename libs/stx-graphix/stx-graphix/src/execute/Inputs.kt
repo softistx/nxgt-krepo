@@ -26,6 +26,7 @@ internal fun executionInput(
             .query(request.query)
             .variables(request.variables)
             .operationName(request.operationName)
+            .apply { if (request.extensions.isNotEmpty()) extensions(request.extensions) }
             .graphQLContext { graphQLContext ->
                 graphQLContext.put(OperationScope, scope)
                 graphQLContext.put(SubscriptionExecutionStrategy.KEEP_SUBSCRIPTION_EVENTS_ORDERED, true)
