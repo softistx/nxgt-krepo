@@ -1,6 +1,8 @@
 package com.strange.material.display
 
 import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.border
+import androidx.compose.foundation.style.contentPadding
 import androidx.compose.ui.unit.dp
 import com.strange.material.theme.Tone
 import com.strange.material.theme.colors

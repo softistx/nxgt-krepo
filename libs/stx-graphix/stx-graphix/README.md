@@ -1,6 +1,6 @@
 # stx-graphix
 
-GraphQL for a Kotlin coroutine service, over graphql-java 25. Annotated functions are the schema,
+GraphQL for a Kotlin coroutine service, over graphql-java 26. Annotated functions are the schema,
 `@Serializable` types are the GraphQL types, and a resolver is a suspend function.
 
 ```kotlin
@@ -24,6 +24,7 @@ schema may say — lives in [`docs/graphix.md`](../../../docs/graphix.md).
 
 ```
 com.strange.graphix            Graphix, GraphixRequest, GraphixResult, GraphixException
+com.strange.graphix.validation GraphixLimits and the `validation { }` builder
 com.strange.graphix.schema     @QueryMapping / @MutationMapping / @SubscriptionMapping and the SerialDescriptor walk
 com.strange.graphix.execute    the CompletableFuture bridge, argument binding, errors
 com.strange.graphix.scalar     Long, Instant, Uuid, and the `scalar { }` DSL

@@ -11,10 +11,10 @@ import graphql.schema.GraphQLInputObjectField
 import graphql.schema.GraphQLInputObjectType
 import graphql.schema.GraphQLInputType
 import graphql.schema.GraphQLList
+import graphql.schema.GraphQLNamedType
 import graphql.schema.GraphQLNonNull
 import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLOutputType
-import graphql.schema.GraphQLType
 import graphql.schema.GraphQLTypeReference
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.descriptors.PolymorphicKind
@@ -55,7 +55,7 @@ internal class TypeMapper(
     fun input(kType: KType): GraphQLInputType = wrapInput(mapInput(kType), kType.isMarkedNullable)
 
     /** Named object, input object and enum types this mapper built — for `additionalTypes`. */
-    fun additionalTypes(): Set<GraphQLType> = (outputs.values + inputs.values + enums.values).toSet()
+    fun additionalTypes(): Set<GraphQLNamedType> = (outputs.values + inputs.values + enums.values).toSet()
 
     private fun mapOutput(kType: KType): GraphQLOutputType {
         scalarFromClass(kType, kotlinScalars)?.let { return it }

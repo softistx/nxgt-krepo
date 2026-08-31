@@ -1,7 +1,9 @@
 package com.strange.material.display
 
 import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.animate
 import androidx.compose.foundation.style.pressed
+import androidx.compose.foundation.style.scale
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
