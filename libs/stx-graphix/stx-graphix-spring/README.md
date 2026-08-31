@@ -17,10 +17,10 @@ class OrderMutations(
     private val orders: OrderService,
 ) {
     @QueryMapping
-    suspend fun order(id: String): Order? = orders.find(id)
+    suspend fun order(@Argument id: String): Order? = orders.find(id)
 
     @MutationMapping
-    suspend fun placeOrder(input: PlaceOrderInput): Order = orders.place(input)
+    suspend fun placeOrder(@Argument input: PlaceOrderInput): Order = orders.place(input)
 
     @SubscriptionMapping
     fun orderPlaced(): Flow<Order> = orders.placed

@@ -798,7 +798,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
-  | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, arguments, `@GraphQLContext`). **This is where a new annotation, scalar or directive is documented** |
+  | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, `@Argument`, `@GraphQLContext`). **This is where a new annotation, scalar or directive is documented** |
   | `libs/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no class scan in core |
   | `libs/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, `injectable` |
   | `libs/stx-graphix/stx-graphix-spring/README.md` | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |

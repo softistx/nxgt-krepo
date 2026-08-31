@@ -3,6 +3,8 @@ package com.strange.graphix.execute
 import com.strange.graphix.GraphixException
 import com.strange.graphix.schema.GraphQLContext
 import com.strange.graphix.schema.graphQLName
+import com.strange.graphix.schema.isArgument
+import com.strange.graphix.schema.isDataFetchingEnvironment
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -32,10 +34,15 @@ internal fun bindArguments(
     val bound = LinkedHashMap<KParameter, Any?>()
     function.valueParameters.forEach { parameter ->
         if (parameter in skip) return@forEach
+        if (parameter.isDataFetchingEnvironment()) {
+            bound[parameter] = environment
+            return@forEach
+        }
         if (parameter.findAnnotation<GraphQLContext>() != null) {
             bound[parameter] = contextValue(parameter, environment)
             return@forEach
         }
+        if (!parameter.isArgument()) return@forEach
         val raw: Any? = environment.getArgument(parameter.graphQLName())
         if (raw == null && parameter.isOptional) return@forEach
         bound[parameter] = decode(raw, parameter, json)
@@ -43,7 +50,7 @@ internal fun bindArguments(
     return bound
 }
 
-private fun contextValue(
+internal fun contextValue(
     parameter: KParameter,
     environment: DataFetchingEnvironment,
 ): Any {
@@ -57,7 +64,7 @@ private fun contextValue(
         ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
 }
 
-private fun decode(
+internal fun decode(
     raw: Any?,
     parameter: KParameter,
     json: Json,

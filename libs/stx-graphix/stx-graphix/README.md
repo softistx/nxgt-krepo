@@ -91,8 +91,9 @@ of the engine.
 `@SchemaMapping` is a per-parent resolver. `@BatchMapping` is the same field behind a DataLoader
 (`List<Book>` → `Map<Book, Author>`) and registers the field — do not also put `@SchemaMapping`
 on it. To `load()` by key from a `@SchemaMapping` (arguments included), declare `dataLoader { }`
-on the mapping class. A field that needs this field's DFE takes
-`@GraphQLContext dfe: DataFetchingEnvironment`.
+on the mapping class. GraphQL arguments are `@Argument`. A field that needs this field's DFE
+takes `dfe: DataFetchingEnvironment` by type. `@BatchMapping` may take `@Argument` too — the
+DataLoader key is the parent plus those values.
 
 Per-request state is the other bag. `@GraphQLContext` reads `Graphix.execute(..., context)` by
 `KClass`. Mixing the two is the usual mistake: looking up `ApplicationContext` from a resolver
