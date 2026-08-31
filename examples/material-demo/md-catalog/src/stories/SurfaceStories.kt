@@ -34,6 +34,7 @@ import com.strange.material.surface.ConfirmDialog
 import com.strange.material.surface.ContextMenu
 import com.strange.material.surface.Disclosure
 import com.strange.material.surface.Drawer
+import com.strange.material.surface.HelpTip
 import com.strange.material.surface.HoverCard
 import com.strange.material.surface.Menu
 import com.strange.material.surface.MenuItem
@@ -95,6 +96,10 @@ val SurfaceStories =
             Tooltip(text = "Archive this order") {
                 Button(text = "Archive", onClick = {}, variant = ButtonVariant.Ghost)
             }
+        }
+
+        story("Help tip") { _ ->
+            HelpTip(text = "Payouts land the next working day, except on bank holidays.")
         }
 
         story("Menu") { _ ->

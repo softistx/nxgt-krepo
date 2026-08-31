@@ -38,6 +38,9 @@ class StrangeIconsTest :
                 "Copy" to StrangeIcons.Copy,
                 "Minus" to StrangeIcons.Minus,
                 "Attach" to StrangeIcons.Attach,
+                "Info" to StrangeIcons.Info,
+                "ViewList" to StrangeIcons.ViewList,
+                "ViewGrid" to StrangeIcons.ViewGrid,
             )
 
         feature("every icon in the set") {

@@ -17,6 +17,8 @@ import com.strange.material.data.Description
 import com.strange.material.data.DescriptionItem
 import com.strange.material.data.EntityHeader
 import com.strange.material.data.Pagination
+import com.strange.material.data.SortControl
+import com.strange.material.data.SortDirection
 import com.strange.material.data.TableColumn
 import com.strange.material.data.Timeline
 import com.strange.material.data.TimelineItem
@@ -100,6 +102,18 @@ val DataStories =
                 onPrevious = { page-- },
                 onNext = { page++ },
                 label = "Page $page",
+            )
+        }
+
+        story("Sort control") { _ ->
+            var selected by remember { mutableStateOf("Customer") }
+            var direction by remember { mutableStateOf(SortDirection.Asc) }
+            SortControl(
+                options = listOf("Customer", "Total", "Status"),
+                selected = selected,
+                direction = direction,
+                onSelectedChange = { selected = it },
+                onDirectionChange = { direction = it },
             )
         }
 

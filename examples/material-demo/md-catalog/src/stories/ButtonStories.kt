@@ -26,6 +26,7 @@ import com.strange.material.button.CopyButton
 import com.strange.material.button.Fab
 import com.strange.material.button.FabAction
 import com.strange.material.button.FabMenu
+import com.strange.material.button.IconBadge
 import com.strange.material.button.IconButton
 import com.strange.material.button.IconToggle
 import com.strange.material.button.MoreMenu
@@ -34,6 +35,8 @@ import com.strange.material.button.OverflowBar
 import com.strange.material.button.ResponsiveButton
 import com.strange.material.button.SplitButton
 import com.strange.material.button.ToggleButton
+import com.strange.material.button.ViewMode
+import com.strange.material.button.ViewToggle
 import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
 import com.strange.material.icon.IconSize
@@ -248,5 +251,19 @@ val ButtonStories =
                     maxVisible = max,
                 )
             }
+        }
+
+        story("Icon badge") { knobs ->
+            IconBadge(
+                icon = StrangeIcons.Inbox,
+                description = "Inbox",
+                onClick = {},
+                count = knobs.number("Count", 3f, 0f..120f, steps = 23).toInt(),
+            )
+        }
+
+        story("View toggle") { _ ->
+            var mode by remember { mutableStateOf(ViewMode.List) }
+            ViewToggle(value = mode, onChange = { mode = it })
         }
     }

@@ -152,6 +152,27 @@ object StrangeIcons {
                 "2.5-3V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 " +
                 "5.5-5.5V6h-1.5z",
         )
+
+    val Info: ImageVector =
+        icon(
+            "Info",
+            "M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 " +
+                "12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z",
+        )
+
+    val ViewList: ImageVector =
+        icon(
+            "ViewList",
+            "M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 " +
+                "7v2h14V7H7z",
+        )
+
+    val ViewGrid: ImageVector =
+        icon(
+            "ViewGrid",
+            "M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4z" +
+                "m-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z",
+        )
 }
 
 /**
