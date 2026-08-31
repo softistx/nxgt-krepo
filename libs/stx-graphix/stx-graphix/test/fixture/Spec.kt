@@ -63,3 +63,26 @@ class RequiredDeprecatedQueries {
         @GraphQLDeprecated("gone") @Argument id: String,
     ): String = id
 }
+
+@Serializable
+data class Ticketish(
+    val title: String,
+    val owner: String,
+)
+
+@Serializable
+data class Plain(
+    val title: String,
+)
+
+/** Roots for the SDL fixtures under `classpath:graphix-audit/`. */
+class AuditQueries {
+    @QueryMapping
+    fun ticket(): Ticketish = Ticketish("dune", "frank")
+
+    @QueryMapping
+    fun plain(): Plain = Plain("dune")
+
+    @QueryMapping
+    fun loud(): String = "quiet"
+}

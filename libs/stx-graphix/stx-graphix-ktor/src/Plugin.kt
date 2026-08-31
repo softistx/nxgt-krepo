@@ -40,6 +40,7 @@ val GraphQL =
                 ?: Graphix(pluginConfig.json) {
                     schemaLocations(pluginConfig.schemaLocations)
                     schemaFileExtensions(pluginConfig.schemaFileExtensions)
+                    introspection(pluginConfig.introspection)
                     val block = pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance")
                     block()
                     pluginConfig.customizeBlock?.invoke(this)
@@ -68,6 +69,12 @@ class GraphQLConfiguration {
      * on the same path; HTTP POST of a subscription is then 400.
      */
     var subscriptions: SubscriptionProtocol = SubscriptionProtocol.Sse
+
+    /**
+     * Whether `__schema` and `__type` answer. On by default — GraphiQL and Apollo Sandbox need
+     * them. Ignored when [instance] is set: that engine already decided.
+     */
+    var introspection: Boolean = true
 
     /**
      * An engine built elsewhere. When set, [schema] is ignored. Whoever created it owns it —

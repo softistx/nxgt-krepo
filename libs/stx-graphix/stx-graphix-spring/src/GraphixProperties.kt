@@ -28,4 +28,9 @@ data class GraphixProperties(
     val schemaLocations: List<String> = listOf("classpath:graphql/"),
     /** File suffixes under [schemaLocations]. Default `.graphqls` and `.gqls`. */
     val schemaFileExtensions: List<String> = listOf(".graphqls", ".gqls"),
+    /**
+     * Whether `__schema` and `__type` answer. On by default — GraphiQL and Apollo Sandbox need
+     * them. Ignored when the application supplies its own `Graphix` bean.
+     */
+    val introspection: Boolean = true,
 )
