@@ -5,6 +5,7 @@ import com.strange.graphix.schema.GraphQLName
 import com.strange.graphix.schema.GraphQLUnion
 import com.strange.graphix.schema.QueryMapping
 import com.strange.graphix.schema.SchemaMapping
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** Shared properties, so this is a GraphQL `interface`. */
@@ -205,4 +206,73 @@ data class Digital(
 class TicketedQueries {
     @QueryMapping
     fun ticketed(): List<Ticketed> = listOf(Boarding("b1", "12A"), Digital("d1", "https://example.test"))
+}
+
+/** `@GraphQLName` renames a property in the schema only — the Kotlin name and the JSON stay. */
+@Serializable
+data class Poster(
+    @GraphQLName("headline") val caption: String,
+)
+
+class PosterQueries {
+    @QueryMapping
+    fun poster(): Poster = Poster("Dune")
+}
+
+/** `@SerialName` renames the property on the wire, so the GraphQL field follows it. */
+@Serializable
+data class Track(
+    @SerialName("track_id") val id: String,
+    val title: String,
+)
+
+/** The input side of the same rule: the schema advertises the name the decoder reads. */
+@Serializable
+data class TrackFilter(
+    @SerialName("track_id") val id: String,
+)
+
+class TrackQueries {
+    @QueryMapping
+    fun track(): Track = Track("t1", "Ocean")
+
+    @QueryMapping
+    fun echo(
+        @Argument filter: TrackFilter,
+    ): String = filter.id
+}
+
+/** An interface whose shared property is renamed, and an implementor that keeps the name. */
+@Serializable
+sealed interface Stamped {
+    @SerialName("stamped_at")
+    val at: String
+}
+
+@Serializable
+data class Receipt(
+    @SerialName("stamped_at") override val at: String,
+    val total: Long,
+) : Stamped
+
+class StampedQueries {
+    @QueryMapping
+    fun stamped(): Stamped = Receipt("2026-08-31", 1200)
+}
+
+/** The same, but the implementor forgets the rename — GraphQL would not match the names. */
+@Serializable
+sealed interface Slipped {
+    @SerialName("slipped_at")
+    val at: String
+}
+
+@Serializable
+data class Missed(
+    override val at: String,
+) : Slipped
+
+class SlippedQueries {
+    @QueryMapping
+    fun slipped(): Slipped = Missed("2026-08-31")
 }
