@@ -223,8 +223,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
 - [x] **6 — Données.** `DataTable` (table / cartes selon la largeur), `Pagination` (keyset),
       `Description`, `EntityHeader`, `CommandPalette`, `Timeline`. Combobox is `SelectField`.
 - [ ] **7 — Filtres.** Le sous-système complet : schéma, chips, presets, persistance, validation
-- [ ] **8 — Médias et saisie riche.** `Avatar`, `Gallery`, `LightboxGallery`, `ImageField`,
-      `UploadField`, `QRCode`, `Barcode`, `Camera`, `RichTextEditor`
+- [x] **8 — Médias.** `Avatar`, `StrangeImage` (Coil), `Gallery`, `Lightbox`, `VideoSurface` /
+      `PdfSurface` / `CameraSurface` as chrome slots. No decoder in the library.
 - [ ] **9 — Graphiques.** `Area`, `Bar`, `Line`, `Pie`, `Radar`, `Scatter`, `Funnel`, `Heatmap`
       au `Canvas`, thème dérivé des tokens
 - [ ] **10 — i18n et publication.** Catalogue de messages multiplateforme, locales `en`/`fr`,
