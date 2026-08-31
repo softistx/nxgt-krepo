@@ -23,6 +23,7 @@ libs/stx-material/
   src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, Menu, Accordion, Carousel, SwipeActions
   src/feedback/   Progress, Toaster
   src/datetime/   DateField, DateRangeField, TimeField, Calendar
+  src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline
 ```
 
 ## The shape of it
