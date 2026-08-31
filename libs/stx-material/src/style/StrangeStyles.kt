@@ -7,6 +7,9 @@ import com.strange.material.display.cardStyle
 import com.strange.material.display.chipStyle
 import com.strange.material.display.listTileStyle
 import com.strange.material.form.fieldStyle
+import com.strange.material.navigation.breadcrumbStyle
+import com.strange.material.navigation.navigationItemStyle
+import com.strange.material.navigation.stepperStyle
 import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.Tone
 
@@ -33,6 +36,12 @@ object StrangeStyles {
     val field: Style get() = fieldStyle
 
     val listTile: Style get() = listTileStyle
+
+    val navigationItem: Style get() = navigationItemStyle
+
+    val breadcrumb: Style get() = breadcrumbStyle
+
+    val stepper: Style get() = stepperStyle
 
     fun alert(tone: Tone = Tone.Info): Style = alertStyle(tone)
 }
