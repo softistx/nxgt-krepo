@@ -17,8 +17,12 @@ import kotlin.uuid.ExperimentalUuidApi
 
 /** Spec and Kotlin scalars by `KClass`. `null` means keep walking the SerialDescriptor. */
 @OptIn(ExperimentalUuidApi::class)
-internal fun scalarFromClass(kType: KType): GraphQLScalarType? {
+internal fun scalarFromClass(
+    kType: KType,
+    extras: Map<KClass<*>, GraphQLScalarType> = emptyMap(),
+): GraphQLScalarType? {
     val classifier = kType.classifier as? KClass<*> ?: return null
+    extras[classifier]?.let { return it }
     return when (classifier) {
         String::class -> GraphQLString
         Int::class -> GraphQLInt

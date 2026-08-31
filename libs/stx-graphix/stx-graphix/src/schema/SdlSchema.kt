@@ -26,6 +26,8 @@ internal fun List<SchemaFile>.sdlSchema(
     subscriptions: List<Any>,
     typeInstances: List<Any>,
     json: Json,
+    customScalars: List<graphql.schema.GraphQLScalarType> = emptyList(),
+    fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     val registry = typeRegistry()
     val typeFields = if (typeInstances.isEmpty()) emptyList() else collectTypeFields(typeInstances)
@@ -39,16 +41,25 @@ internal fun List<SchemaFile>.sdlSchema(
         byType.getOrPut(parent) { TypeRuntimeWiring.newTypeWiring(parent) }.dataFetcher(field, fetcher)
     }
     queries.rootFunctions(RootKind.QUERY).forEach { (instance, function) ->
-        wire("Query", function.graphQLName(RootKind.QUERY), resolverFetcher(instance, function, json))
+        wire(
+            "Query",
+            function.graphQLName(RootKind.QUERY),
+            resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives),
+        )
     }
     mutations.rootFunctions(RootKind.MUTATION).forEach { (instance, function) ->
-        wire("Mutation", function.graphQLName(RootKind.MUTATION), resolverFetcher(instance, function, json))
+        wire(
+            "Mutation",
+            function.graphQLName(RootKind.MUTATION),
+            resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives),
+        )
     }
     subscriptions.rootFunctions(RootKind.SUBSCRIPTION).forEach { (instance, function) ->
         wire(
             "Subscription",
             function.graphQLName(RootKind.SUBSCRIPTION),
-            subscriptionFetcher(instance, function) { env -> bindArguments(function, env, json) },
+            subscriptionFetcher(instance, function) { env -> bindArguments(function, env, json) }
+                .withDirectives(function, fieldDirectives),
         )
     }
     typeFields.forEach { field ->
@@ -57,6 +68,7 @@ internal fun List<SchemaFile>.sdlSchema(
                 batchFieldFetcher(field.loaderName)
             } else {
                 resolverFetcher(field.instance, field.function, json, field.parentParameter)
+                    .withDirectives(field.function, fieldDirectives)
             }
         wire(field.parentName, field.fieldName, fetcher)
     }
@@ -66,6 +78,10 @@ internal fun List<SchemaFile>.sdlSchema(
             .scalar(Scalars.Long)
             .scalar(Scalars.Instant)
             .scalar(Scalars.Uuid)
+    customScalars.forEach { wiring.scalar(it) }
+    fieldDirectives.forEach { (name, wrap) ->
+        wiring.directive(name, GraphixDirective(name, wrap).toSchemaWiring())
+    }
     byType.values.forEach { wiring.type(it) }
     val schema =
         try {

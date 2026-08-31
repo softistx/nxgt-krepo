@@ -9,8 +9,10 @@ import com.strange.graphix.execute.subscriptionFetcher
 import com.strange.graphix.scalar.Scalars
 import graphql.schema.FieldCoordinates
 import graphql.schema.GraphQLCodeRegistry
+import graphql.schema.GraphQLScalarType
 import graphql.schema.GraphQLSchema
 import kotlinx.serialization.json.Json
+import kotlin.reflect.KClass
 
 /** Builds the graphql-java schema from named roots and type fields. Needs at least one `@QueryMapping`. */
 internal fun graphQLSchema(
@@ -20,23 +22,34 @@ internal fun graphQLSchema(
     typeInstances: List<Any>,
     json: Json,
     schemaFiles: List<SchemaFile> = emptyList(),
+    customScalars: List<GraphQLScalarType> = emptyList(),
+    kotlinScalars: Map<KClass<*>, GraphQLScalarType> = emptyMap(),
+    fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     if (queries.isEmpty()) throw GraphixException("Graphix needs at least one query root")
     if (schemaFiles.isNotEmpty()) {
-        return schemaFiles.sdlSchema(queries, mutations, subscriptions, typeInstances, json)
+        return schemaFiles.sdlSchema(
+            queries,
+            mutations,
+            subscriptions,
+            typeInstances,
+            json,
+            customScalars,
+            fieldDirectives,
+        )
     }
     val typeFields = collectTypeFields(typeInstances)
-    val types = TypeMapper(json.serializersModule, typeFields.groupBy { it.parentName })
+    val types = TypeMapper(json.serializersModule, typeFields.groupBy { it.parentName }, kotlinScalars)
     val query =
         root("Query", RootKind.QUERY, queries, types) { instance, function ->
-            resolverFetcher(instance, function, json)
+            resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives)
         } ?: throw GraphixException("Graphix needs at least one query root")
     val mutation =
         if (mutations.isEmpty()) {
             null
         } else {
             root("Mutation", RootKind.MUTATION, mutations, types) { instance, function ->
-                resolverFetcher(instance, function, json)
+                resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives)
             }
         }
     val subscription =
@@ -45,6 +58,7 @@ internal fun graphQLSchema(
         } else {
             root("Subscription", RootKind.SUBSCRIPTION, subscriptions, types) { instance, function ->
                 subscriptionFetcher(instance, function) { env -> bindArguments(function, env, json) }
+                    .withDirectives(function, fieldDirectives)
             }
         }
     typeFields.forEach { types.output(it.parentType) }
@@ -60,6 +74,7 @@ internal fun graphQLSchema(
                 batchFieldFetcher(field.loaderName)
             } else {
                 resolverFetcher(field.instance, field.function, json, field.parentParameter)
+                    .withDirectives(field.function, fieldDirectives)
             }
         registry.dataFetcher(FieldCoordinates.coordinates(field.parentName, field.fieldName), fetcher)
     }
@@ -73,6 +88,7 @@ internal fun graphQLSchema(
             .additionalType(Scalars.Long)
             .additionalType(Scalars.Instant)
             .additionalType(Scalars.Uuid)
+            .apply { customScalars.forEach { additionalType(it) } }
             .codeRegistry(registry.build())
             .build()
     val declared = collectDeclaredLoaders(queries + mutations + subscriptions + typeInstances)
