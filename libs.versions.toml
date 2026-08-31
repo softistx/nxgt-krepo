@@ -21,7 +21,7 @@ datastore = "1.2.1"
 coil = "2.7.0"
 # Coil 3 is the Compose Multiplatform line (android, jvm, ios). The 2.7.0 alias above is
 # Android-only (`io.coil-kt:coil-compose`) and stays for Gradle consumers of the compose bundle.
-coil3 = "3.3.0"
+coil3 = "3.6.0"
 # Pinned to the Compose Multiplatform 1.12.0 pairing (What's new in CMP 1.12.0). Adaptive
 # sits on its own version line, like `$compose.material3`.
 compose-multiplatform-adaptive = "1.3.0-beta02"
