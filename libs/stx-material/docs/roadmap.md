@@ -218,8 +218,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       `ScrollToTop`, `LoadMoreButton`
 - [x] **4 — Surfaces et retour.** `ConfirmDialog`, `Sheet`, `Drawer`, `Tooltip`, `Menu`,
       `Toast` + `Toaster`, `Progress`, `Accordion`, `Carousel`, `SwipeActions`
-- [ ] **5 — Date et heure.** `Calendar`, `CalendarYearView`, `DateField`, `DateRangeField`,
-      `TimeField`, `TimePicker`, sur kotlinx-datetime
+- [x] **5 — Date et heure.** `DateField`, `DateRangeField`, `TimeField`, `Calendar` on
+      kotlinx-datetime. The pickers stay in a dialog; the field is what a form writes.
 - [ ] **6 — Données.** `DataTable` (tri, sélection, colonnes, pagination), `Pagination`, `Table`,
       `SummaryData`, `Description`, `EntityHeader`, `Activity`, `Autocomplete`, `Combobox`, `Command`
 - [ ] **7 — Filtres.** Le sous-système complet : schéma, chips, presets, persistance, validation

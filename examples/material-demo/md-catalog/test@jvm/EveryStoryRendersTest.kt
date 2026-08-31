@@ -36,6 +36,7 @@ class EveryStoryRendersTest :
                         "Forms",
                         "Navigation",
                         "Surfaces",
+                        "Date and time",
                         "Screens",
                     )
                 CatalogGroups.forEach { it.stories.size shouldBeGreaterThan 0 }
