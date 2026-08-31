@@ -14,9 +14,12 @@ import com.strange.material.button.ButtonVariant
 import com.strange.material.button.ConfirmButton
 import com.strange.material.demo.storyGroup
 import com.strange.material.form.Autocomplete
+import com.strange.material.form.CheckItem
 import com.strange.material.form.CheckState
 import com.strange.material.form.Checkbox
 import com.strange.material.form.CheckboxGroup
+import com.strange.material.form.Checklist
+import com.strange.material.form.Composer
 import com.strange.material.form.CopyField
 import com.strange.material.form.DangerZone
 import com.strange.material.form.FormSection
@@ -36,6 +39,7 @@ import com.strange.material.form.ThemeToggle
 import com.strange.material.form.TriStateCheckbox
 import com.strange.material.form.UploadField
 import com.strange.material.form.cycleCheckState
+import com.strange.material.form.toggleCheckItem
 import com.strange.material.icon.Icon
 import com.strange.material.icon.StrangeIcons
 import com.strange.material.text.Typography
@@ -312,6 +316,43 @@ val FormStories =
             DangerZone(text = "The organisation and every order in it will be removed.") {
                 ConfirmButton(text = "Delete organisation", onConfirm = {})
             }
+        }
+
+        story("Composer") { knobs ->
+            var draft by remember { mutableStateOf("") }
+            var sent by remember { mutableStateOf<String?>(null) }
+            Stack {
+                Composer(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    onSend = {
+                        sent = draft
+                        draft = ""
+                    },
+                    enabled = knobs.flag("Enabled", true),
+                    onAttach = if (knobs.flag("Attach", true)) ({}) else null,
+                )
+                if (sent != null) {
+                    Typography(text = "Sent: $sent")
+                }
+            }
+        }
+
+        story("Checklist") { knobs ->
+            var items by remember {
+                mutableStateOf(
+                    listOf(
+                        CheckItem("Pack the order", checked = true),
+                        CheckItem("Print the label"),
+                        CheckItem("Hand to courier"),
+                    ),
+                )
+            }
+            Checklist(
+                items = items,
+                onToggle = { items = toggleCheckItem(items, it) },
+                enabled = knobs.flag("Enabled", true),
+            )
         }
     }
 

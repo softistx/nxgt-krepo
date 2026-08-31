@@ -63,10 +63,10 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds twenty-seven hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StrangeIcons` holds twenty-eight hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
 `Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`,
-`Attach`, `Info`, `ViewList`, `ViewGrid`. They are defined
+`Attach`, `Info`, `ViewList`, `ViewGrid`, `Send`. They are defined
 in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
 has no key for the Material icons, `$compose.material` does not carry `material-icons-core` in
 Compose Multiplatform 1.11, and the AndroidX icon artifacts are Android-only. An application that
@@ -155,6 +155,10 @@ taken out. The two forms are two components and `AnimatedContent` morphs between
 | `SectionHeader` | `title`, `supporting?`, `action?` | `display/section-header` |
 | `CodeBlock` | `text`, `copyable = true` | `display/code-block` |
 | `ExpandableText` | `text`, `collapsedLines = 3`, `more`, `less` | `display/expandable-text` |
+| `ReactionBar` | `reactions: List<Reaction>` | `display/reaction-bar` |
+| `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `action?` | `display/announcement-bar` |
+| `QuoteBlock` | `text`, `attribution?` | `display/quote-block` |
+| `LinkPreview` | `title`, `url`, `description?`, `onClick?`, `leading?` | `display/link-preview` |
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
@@ -192,6 +196,12 @@ the same fact on a face. `Kbd` draws a shortcut as keycaps.
 `UploadField`. `SectionHeader` titles a block (`EntityHeader` titles a page). `CodeBlock` is
 `TypographyVariant.Code` plus `CopyButton`. `ExpandableText` only grows a "Read more" when the
 paragraph actually overflows.
+
+`ReactionBar` is a row of `Chip`s; `toggleReaction` is the usual count arithmetic and never goes
+below zero. `AnnouncementBar` is the strip at the top of a page — `Alert` is a paragraph in the
+body; missing `onDismiss` means the bar cannot be put away. `QuoteBlock` is M3's `VerticalDivider`
+plus the words. `LinkPreview` is chrome around a URL: the library does not fetch Open Graph,
+`leading` is the thumbnail the host already has.
 
 ## Forms
 
@@ -251,6 +261,8 @@ adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.me
 | `ThemeToggle` | `value: ColorMode`, `onChange` | `forms/theme-toggle` |
 | `FormSection` | `title`, `supporting?`, `content` | `forms/form-section` |
 | `DangerZone` | `text`, `title = "Danger zone"`, `action` | `forms/danger-zone` |
+| `Composer` | `value`, `onValueChange`, `onSend`, `onAttach?`, `sendEnabled` | `forms/composer` |
+| `Checklist` | `items: List<CheckItem>`, `onToggle` | `forms/checklist` |
 | `ExtendedLabel` | `text`, `required`, `optional`, `trailing?` | used by the above |
 | `HelperText` | `helper?`, `error?` | used by the above |
 | `FieldScaffold` | `label?`, `required`, `helper?`, `error?`, `content` | used by the above |
@@ -282,6 +294,11 @@ a group: Off, On, or Indeterminate; `cycleCheckState` is the usual next value.
 `ThemeToggle` names Light / Dark / System; the host still installs the scheme. `FormSection` is a
 `SectionHeader` plus its fields. `DangerZone` is an outlined card with the error colour on the
 title, so a delete is not just another section.
+
+`Composer` is a `TextareaField` (1–4 lines) with send, and attach when `onAttach` is set. Return
+still inserts a newline; send is the button. `Checklist` is a column of `Checkbox` rows;
+`toggleCheckItem` flips one index. Both hold labelled items rather than a parallel `List<Boolean>`,
+the same rule as `CheckboxGroup`.
 
 `CheckboxGroup` holds the set of what is ticked rather than a list of booleans parallel to the
 options, so the field holds the answer and reordering the options cannot silently change it.
@@ -382,6 +399,7 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 | `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `surfaces/progress` |
 | `LabeledProgress` | `progress`, `caption?`, `kind` | `surfaces/labeled-progress` |
 | `LoadingMark` | `progress: Float? = null` | `surfaces/loading-mark` |
+| `TypingIndicator` | `label = "Someone is typing"` | `surfaces/typing-indicator` |
 | `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `surfaces/toast` |
 | `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |
 | `Disclosure` | `title`, `expanded`, `onExpandedChange`, `content` | `surfaces/disclosure` |
@@ -396,7 +414,8 @@ here: M3 has no accordion, and the pager is Foundation's with a peek so the next
 the percentage M3's indicator does not.
 `LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content;
 `Progress` is the spinner attached to a control. `Wavy` / `WavyCircular` are M3's expressive
-indicators; `Linear` / `Circular` stay the quiet ones.
+indicators; `Linear` / `Circular` stay the quiet ones. `TypingIndicator` is three dots that beat
+in turn on the effects axis; Material 3 has no typing mark.
 
 ## Date and time
 
@@ -437,13 +456,16 @@ value.
 | --- | --- | --- |
 | `Avatar` | `name`, `image?`, `tone?`, `size = 40.dp` | `media/avatar` |
 | `AvatarGroup` | `items: List<AvatarItem>`, `max = 4`, `size = 32.dp` | `media/avatar-group` |
+| `PersonCard` | `name`, `supporting?`, `image?`, `tone?`, `onClick?`, `action?` | `media/person-card` |
 | `StrangeImage` | `model`, `description` | — |
 | `Gallery` | `images`, `onSelect?` | — |
 | `Lightbox` | `visible`, `model`, `onDismiss`, `onPrevious?`, `onNext?` | `media/lightbox` |
 | `VideoSurface` / `PdfSurface` / `CameraSurface` | `content` slot, `overlay`, `ratio` | `media/video-surface` |
 
 `Avatar` shows initials when there is no image, and an optional `Tone` ring. `AvatarGroup` stacks
-them with a `+N` overflow circle — not initials of `"+12"`, which would read `+1`. `StrangeImage` is Coil
+them with a `+N` overflow circle — not initials of `"+12"`, which would read `+1`. `PersonCard` is
+the compact identity that sits in a grid, a mention, a search hit: a `ListTile` is a row in a list,
+`EntityHeader` is the top of a page. `StrangeImage` is Coil
 with this library's `Skeleton` / `EmptyState`. Video, PDF and camera are **chrome**: the host fills
 the slot with a renderer, so `Button` never pays for Media3, PdfRenderer or CameraX.
 

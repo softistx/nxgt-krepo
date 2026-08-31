@@ -237,6 +237,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       `CopyField`, `LabeledProgress`, `TriStateCheckbox`, `Disclosure`, `SelectionBar`.
 - [x] **8f — Réglages et chrome d’écran.** `ThemeToggle`, `SortControl`, `ViewToggle`,
       `BottomBar`, `IconBadge`, `HelpTip`, `FormSection`, `DangerZone`, `StepFooter`.
+- [x] **8g — Personnes, fil et messages.** `PersonCard`, `Composer`, `TypingIndicator`,
+      `ReactionBar`, `AnnouncementBar`, `QuoteBlock`, `LinkPreview`, `Checklist`.
 - [ ] **9 — Graphiques.** `Area`, `Bar`, `Line`, `Pie`, `Radar`, `Scatter`, `Funnel`, `Heatmap`
       au `Canvas`, thème dérivé des tokens
 - [ ] **10 — i18n et publication.** Catalogue de messages multiplateforme, locales `en`/`fr`,

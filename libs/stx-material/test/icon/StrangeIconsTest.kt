@@ -41,6 +41,7 @@ class StrangeIconsTest :
                 "Info" to StrangeIcons.Info,
                 "ViewList" to StrangeIcons.ViewList,
                 "ViewGrid" to StrangeIcons.ViewGrid,
+                "Send" to StrangeIcons.Send,
             )
 
         feature("every icon in the set") {
