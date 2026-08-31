@@ -161,7 +161,6 @@ internal class TypeMapper(
                     extra.fieldName,
                     output(extra.graphqlType),
                     this,
-                    skip = { it.isGraphQLContext() || it == extra.parentParameter },
                 ),
             )
         }
@@ -194,7 +193,7 @@ internal class TypeMapper(
             builder.field(
                 GraphQLInputObjectField
                     .newInputObjectField()
-                    .name(property.findAnnotationName() ?: elementName)
+                    .name(inputFieldName(kClass, property, elementName))
                     .description(property.graphQLDescription())
                     .type(argumentType)
                     .build(),
@@ -269,6 +268,24 @@ internal class TypeMapper(
     }
 
     private fun kotlin.reflect.KProperty<*>.findAnnotationName(): String? = findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }
+
+    /** GraphQL input fields are arguments: every property must be `@Argument` (or `@GraphQLIgnore`). */
+    private fun inputFieldName(
+        kClass: KClass<*>,
+        property: kotlin.reflect.KProperty<*>,
+        elementName: String,
+    ): String {
+        val parameter = kClass.primaryConstructor?.valueParameters?.find { it.name == property.name }
+        val argument =
+            parameter?.findAnnotation<Argument>()
+                ?: property.findAnnotation<Argument>()
+                ?: throw GraphixException(
+                    "${kClass.simpleName}.${property.name} must be @Argument — GraphQL input fields are arguments",
+                )
+        return argument.name.takeIf { it.isNotEmpty() }
+            ?: property.findAnnotationName()
+            ?: elementName
+    }
 
     /**
      * A Kotlin default on the primary constructor is still a GraphQL `NonNull` unless unwrapped.

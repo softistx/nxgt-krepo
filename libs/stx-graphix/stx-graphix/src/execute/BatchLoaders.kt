@@ -3,8 +3,14 @@ package com.strange.graphix.execute
 import com.strange.graphix.GraphixException
 import com.strange.graphix.schema.GraphQLContext
 import com.strange.graphix.schema.TypeFieldMeta
+import com.strange.graphix.schema.graphQLName
+import com.strange.graphix.schema.isArgument
+import com.strange.graphix.schema.isDataFetchingEnvironment
+import graphql.schema.DataFetchingEnvironment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.future.future
+import kotlinx.serialization.json.Json
+import org.dataloader.BatchLoaderEnvironment
 import org.dataloader.DataLoaderFactory
 import org.dataloader.DataLoaderRegistry
 import kotlin.reflect.KClass
@@ -15,7 +21,11 @@ import kotlin.reflect.full.valueParameters
 
 internal data class RegisteredLoader(
     val name: String,
-    val loadBatch: suspend (keys: Set<Any>, context: Map<KClass<*>, Any>) -> Map<Any, Any>,
+    val loadBatch: suspend (
+        keys: Set<Any>,
+        context: Map<KClass<*>, Any>,
+        environment: DataFetchingEnvironment?,
+    ) -> Map<Any, Any>,
 )
 
 internal fun dataLoaderRegistry(
@@ -27,18 +37,53 @@ internal fun dataLoaderRegistry(
     loaders.forEach { loader ->
         registry.register(
             loader.name,
-            DataLoaderFactory.newMappedDataLoader<Any, Any> { keys ->
-                scope.future { loader.loadBatch(keys, context) }
+            DataLoaderFactory.newMappedDataLoader<Any, Any> { keys, batchEnv ->
+                scope.future { loader.loadBatch(keys, context, batchEnv.representativeDfe(keys)) }
             },
         )
     }
     return registry
 }
 
+private fun BatchLoaderEnvironment.representativeDfe(keys: Set<Any>): DataFetchingEnvironment? {
+    keys.forEach { key ->
+        (keyContexts[key] as? DataFetchingEnvironment)?.let { return it }
+    }
+    return keyContexts.values.filterIsInstance<DataFetchingEnvironment>().firstOrNull()
+}
+
+/** Parent plus this field's `@Argument` values. One DataLoader per operation, keyed so aliases do not collide. */
+internal data class BatchKey(
+    val parent: Any,
+    val arguments: Map<String, Any?>,
+)
+
 internal suspend fun loadBatchMapping(
     field: TypeFieldMeta,
     keys: Set<Any>,
     context: Map<KClass<*>, Any>,
+    environment: DataFetchingEnvironment?,
+    json: Json,
+): Map<Any, Any> {
+    val batchKeys = keys.map { it as? BatchKey ?: BatchKey(it, emptyMap()) }
+    return buildMap {
+        batchKeys.groupBy { it.arguments }.forEach { (argumentValues, group) ->
+            val parents = group.map { it.parent }
+            val byParent = invokeBatchMapping(field, parents, argumentValues, context, environment, json)
+            group.forEach { key ->
+                byParent[key.parent]?.let { put(key, it) }
+            }
+        }
+    }
+}
+
+private suspend fun invokeBatchMapping(
+    field: TypeFieldMeta,
+    parents: List<Any>,
+    argumentValues: Map<String, Any?>,
+    context: Map<KClass<*>, Any>,
+    environment: DataFetchingEnvironment?,
+    json: Json,
 ): Map<Any, Any> {
     val function = field.function
     val arguments = LinkedHashMap<kotlin.reflect.KParameter, Any?>()
@@ -46,14 +91,31 @@ internal suspend fun loadBatchMapping(
         function.instanceParameter
             ?: error("${function.name} is not a member function")
     arguments[instanceParameter] = field.instance
-    arguments[field.parentParameter] = keys.toList()
+    arguments[field.parentParameter] = parents
     function.valueParameters.forEach { parameter ->
+        if (parameter == field.parentParameter) return@forEach
+        if (parameter.isDataFetchingEnvironment()) {
+            arguments[parameter] = environment
+                ?: throw GraphixException("@BatchMapping ${function.name} needs a DataFetchingEnvironment")
+            return@forEach
+        }
         if (parameter.findAnnotation<GraphQLContext>() != null) {
-            val classifier =
-                parameter.type.classifier as? KClass<*>
-                    ?: throw GraphixException("@GraphQLContext ${parameter.name} needs a class type")
-            arguments[parameter] = context[classifier]
-                ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
+            arguments[parameter] =
+                if (environment != null) {
+                    contextValue(parameter, environment)
+                } else {
+                    val classifier =
+                        parameter.type.classifier as? KClass<*>
+                            ?: throw GraphixException("@GraphQLContext ${parameter.name} needs a class type")
+                    context[classifier]
+                        ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
+                }
+            return@forEach
+        }
+        if (parameter.isArgument()) {
+            val raw = argumentValues[parameter.graphQLName()]
+            if (raw == null && parameter.isOptional) return@forEach
+            arguments[parameter] = decode(raw, parameter, json)
         }
     }
     val raw =
@@ -62,7 +124,7 @@ internal suspend fun loadBatchMapping(
         } else {
             function.callBy(arguments)
         }
-    return align(keys.toList(), raw)
+    return align(parents, raw)
 }
 
 private fun align(

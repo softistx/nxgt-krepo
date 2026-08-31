@@ -71,7 +71,7 @@ internal fun graphQLSchema(
     typeFields.forEach { field ->
         val fetcher =
             if (field.batched) {
-                batchFieldFetcher(field.loaderName)
+                batchFieldFetcher(field)
             } else {
                 resolverFetcher(field.instance, field.function, json, field.parentParameter)
                     .withDirectives(field.function, fieldDirectives)
@@ -92,7 +92,7 @@ internal fun graphQLSchema(
             .codeRegistry(registry.build())
             .build()
     val declared = collectDeclaredLoaders(queries + mutations + subscriptions + typeInstances)
-    val batched = typeFields.filter { it.batched }.map { it.toRegisteredLoader() }
+    val batched = typeFields.filter { it.batched }.map { it.toRegisteredLoader(json) }
     val names = mutableSetOf<String>()
     (declared + batched).forEach { loader ->
         if (!names.add(loader.name)) {

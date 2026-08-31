@@ -1,6 +1,7 @@
 package com.strange.graphix.fixture
 
 import com.strange.graphix.dataLoader
+import com.strange.graphix.schema.Argument
 import com.strange.graphix.schema.QueryMapping
 import com.strange.graphix.schema.SchemaMapping
 import kotlinx.coroutines.delay
@@ -60,7 +61,7 @@ class BookFields(
     @SchemaMapping
     suspend fun snippets(
         book: Book,
-        limit: Int = 2,
+        @Argument limit: Int = 2,
     ): List<String> = snippets.load(ReviewKey(book.id, limit)).orEmpty()
 }
 
@@ -70,6 +71,19 @@ class DuplicateNamedLoaders {
 
     @SchemaMapping
     fun extra(book: Book): String = "x"
+}
+
+class EnvBookFields(
+    val fieldNames: MutableList<String> = mutableListOf(),
+) {
+    val authorsById =
+        dataLoader<String, Author> { ids, env ->
+            fieldNames += env.field.name
+            ids.mapNotNull { id -> if (id == "a1") id to Author("a1", "Frank") else null }.toMap()
+        }
+
+    @SchemaMapping
+    suspend fun author(book: Book): Author? = authorsById.load(book.authorId)
 }
 
 class DelayedBookFields(

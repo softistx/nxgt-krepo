@@ -62,7 +62,7 @@ class TypeFieldTest :
                 failure.message shouldContain "cannot both sit"
             }
 
-            scenario("@BatchMapping cannot take GraphQL arguments") {
+            scenario("an unmarked parameter is not a GraphQL argument") {
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
@@ -70,7 +70,7 @@ class TypeFieldTest :
                             type(BadBatchFields())
                         }
                     }
-                failure.message shouldContain "cannot have GraphQL arguments"
+                failure.message shouldContain "must be @Argument"
             }
         }
 

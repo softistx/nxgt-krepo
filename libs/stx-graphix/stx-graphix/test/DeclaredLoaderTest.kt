@@ -4,6 +4,7 @@ import com.strange.graphix.fixture.BookFields
 import com.strange.graphix.fixture.BookQueries
 import com.strange.graphix.fixture.DelayedBookFields
 import com.strange.graphix.fixture.DuplicateNamedLoaders
+import com.strange.graphix.fixture.EnvBookFields
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -80,6 +81,20 @@ class DeclaredLoaderTest :
                 fields.reviewLoads.get() shouldBe 1
                 val first = (result.data.shouldNotBeNull()["books"] as List<*>)[0] as Map<*, *>
                 (first["snippets"] as List<*>).size shouldBe 3
+            }
+
+            scenario("the two-argument batch sees this field's DataFetchingEnvironment") {
+                val fields = EnvBookFields()
+                val graphql =
+                    Graphix {
+                        query(BookQueries())
+                        type(fields)
+                    }
+                val result = graphql.execute(GraphixRequest("{ books { author { name } } }"))
+                result.errors.shouldBeEmpty()
+                fields.fieldNames shouldBe listOf("author")
+                ((result.data.shouldNotBeNull()["books"] as List<*>)[0] as Map<*, *>)["author"]
+                    .let { (it as Map<*, *>)["name"] shouldBe "Frank" }
             }
 
             scenario("load() after other suspend work still completes") {
