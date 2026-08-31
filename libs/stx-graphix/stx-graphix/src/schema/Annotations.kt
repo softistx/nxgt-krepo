@@ -134,3 +134,13 @@ annotation class Argument(
     /** GraphQL argument name. Empty uses [GraphQLName] or the Kotlin parameter name. */
     val name: String = "",
 )
+
+/**
+ * Applies a named field directive registered with [com.strange.graphix.fieldDirective].
+ * On an SDL schema, `@name` on the field is enough — this is for the annotation-derived schema.
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Directive(
+    val name: String,
+)

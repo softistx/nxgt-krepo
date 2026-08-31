@@ -1,9 +1,15 @@
 package com.strange.graphix.spring
 
 import com.strange.graphix.Graphix
+import com.strange.graphix.GraphixCustomizer
+import com.strange.graphix.scalar.graphQLScalar
+import com.strange.graphix.schema.GraphixDirective
+import com.strange.graphix.schema.QueryMapping
 import com.strange.graphix.spring.fixture.GreetingQueries
+import graphql.schema.GraphQLScalarType
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ReactiveWebApplicationContextRunner
 import org.springframework.context.annotation.Bean
@@ -49,6 +55,17 @@ class GraphixAutoConfigurationTest :
                     }
             }
 
+            scenario("scalar, directive and customizer beans are applied") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true")
+                    .withUserConfiguration(WiringConfiguration::class.java)
+                    .run { context ->
+                        context.getBeansOfType(Graphix::class.java).size shouldBe 1
+                        val sdl = context.getBean(Graphix::class.java).sdl()
+                        sdl shouldContain "scalar Money"
+                    }
+            }
+
             scenario("an application's own Graphix bean wins") {
                 runner
                     .withPropertyValues("stx.graphix.enabled=true")
@@ -70,4 +87,29 @@ private class GreetingConfiguration {
 private class OwnEngineConfiguration {
     @Bean
     fun mine(): Graphix = Graphix { query(GreetingQueries()) }
+}
+
+@GraphQLController
+private class PriceQueries {
+    @QueryMapping
+    fun hello(): String = "world"
+}
+
+@Configuration
+private class WiringConfiguration {
+    @Bean
+    fun greetings() = PriceQueries()
+
+    @Bean
+    fun money(): GraphQLScalarType = graphQLScalar("Money") { serialize { value -> value.toString() } }
+
+    @Bean
+    fun uppercase(): GraphixDirective =
+        GraphixDirective("uppercase") {
+            val value = proceed()
+            (value as? String)?.uppercase() ?: value
+        }
+
+    @Bean
+    fun extra(): GraphixCustomizer = GraphixCustomizer { }
 }

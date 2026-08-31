@@ -41,6 +41,7 @@ import kotlin.uuid.ExperimentalUuidApi
 internal class TypeMapper(
     private val serializers: SerializersModule,
     private val extraFields: Map<String, List<TypeFieldMeta>> = emptyMap(),
+    private val kotlinScalars: Map<KClass<*>, graphql.schema.GraphQLScalarType> = emptyMap(),
 ) {
     private val outputs = linkedMapOf<String, GraphQLObjectType>()
     private val inputs = linkedMapOf<String, GraphQLInputObjectType>()
@@ -57,7 +58,7 @@ internal class TypeMapper(
     fun additionalTypes(): Set<GraphQLType> = (outputs.values + inputs.values + enums.values).toSet()
 
     private fun mapOutput(kType: KType): GraphQLOutputType {
-        scalarFromClass(kType)?.let { return it }
+        scalarFromClass(kType, kotlinScalars)?.let { return it }
         val descriptor = descriptorOf(kType)
         scalarOf(descriptor)?.let { return it }
         return when (descriptor.kind) {
@@ -94,7 +95,7 @@ internal class TypeMapper(
     }
 
     private fun mapInput(kType: KType): GraphQLInputType {
-        scalarFromClass(kType)?.let { return it }
+        scalarFromClass(kType, kotlinScalars)?.let { return it }
         val descriptor = descriptorOf(kType)
         scalarOf(descriptor)?.let { return it }
         return when (descriptor.kind) {

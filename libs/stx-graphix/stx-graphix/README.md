@@ -73,6 +73,11 @@ Schema **documents** are the other scan, and it is the Spring GraphQL one: `clas
 every `.graphqls` / `.gqls` file, merged. Present files are the schema; annotated functions
 are the DataFetchers. No files, the `@Serializable` types stay the schema.
 
+Custom scalars and field directives are declared on the builder (`scalar { }`,
+`fieldDirective { }`). The lambdas see the operation `GraphQLContext`. Spring collects
+`GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and `GraphQLEngineCustomizer`
+beans; Ktor's `customize { }` / `fromDi = true` is the same list from DI.
+
 ## The data fetcher is not yours
 
 graphql-java wants a `DataFetcher`. Graphix builds one per `@QueryMapping` / `@MutationMapping` / `@SubscriptionMapping` /

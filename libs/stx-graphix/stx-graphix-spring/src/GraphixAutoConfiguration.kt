@@ -1,7 +1,15 @@
 package com.strange.graphix.spring
 
 import com.strange.common.serialization.lenientJson
+import com.strange.graphix.GraphQLEngineCustomizer
 import com.strange.graphix.Graphix
+import com.strange.graphix.GraphixCustomizer
+import com.strange.graphix.customize
+import com.strange.graphix.engine
+import com.strange.graphix.scalar.scalar
+import com.strange.graphix.schema.GraphixDirective
+import com.strange.graphix.schema.fieldDirective
+import graphql.schema.GraphQLScalarType
 import org.springframework.beans.factory.getBeansWithAnnotation
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -36,10 +44,18 @@ class GraphixAutoConfiguration {
         properties: GraphixProperties,
     ): Graphix {
         val controllers = applicationContext.getBeansWithAnnotation<GraphQLController>().values
+        val scalars = applicationContext.getBeansOfType(GraphQLScalarType::class.java).values
+        val directives = applicationContext.getBeansOfType(GraphixDirective::class.java).values
+        val customizers = applicationContext.getBeansOfType(GraphixCustomizer::class.java).values
+        val engines = applicationContext.getBeansOfType(GraphQLEngineCustomizer::class.java).values
         return Graphix {
             schemaLocations(properties.schemaLocations)
             schemaFileExtensions(properties.schemaFileExtensions)
             controllers.forEach { addController(it) }
+            scalars.forEach { scalar(it) }
+            directives.forEach { fieldDirective(it) }
+            customizers.forEach { customize(it) }
+            engines.forEach { engine(it) }
         }
     }
 
