@@ -102,6 +102,21 @@ class GraphixHttpTest :
             }
         }
 
+        feature("introspection") {
+            scenario("POST { __schema } returns the query type") {
+                client(GreetingQueries())
+                    .post()
+                    .uri("/graphql")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue("""{"query":"{ __schema { queryType { name } } }"}""")
+                    .exchange()
+                    .expectStatus()
+                    .isOk
+                    .expectBody<String>()
+                    .value { it shouldContain """"name":"Query"""" }
+            }
+        }
+
         feature("GET /graphql") {
             scenario("the query parameter executes") {
                 client(GreetingQueries())
