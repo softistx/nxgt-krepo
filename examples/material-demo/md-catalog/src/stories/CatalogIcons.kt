@@ -12,6 +12,9 @@ val CatalogIcons: List<Pair<String, ImageVector>> =
         "ChevronUp" to StrangeIcons.ChevronUp,
         "ChevronLeft" to StrangeIcons.ChevronLeft,
         "ChevronRight" to StrangeIcons.ChevronRight,
+        "ChevronDown" to StrangeIcons.ChevronDown,
+        "Eye" to StrangeIcons.Eye,
+        "EyeOff" to StrangeIcons.EyeOff,
         "Home" to StrangeIcons.Home,
         "Menu" to StrangeIcons.Menu,
         "MoreHoriz" to StrangeIcons.MoreHoriz,
@@ -21,6 +24,7 @@ val CatalogIcons: List<Pair<String, ImageVector>> =
         "Person" to StrangeIcons.Person,
         "Calendar" to StrangeIcons.Calendar,
         "Schedule" to StrangeIcons.Schedule,
+        "Star" to StrangeIcons.Star,
         "Search" to StrangeIcons.Search,
         "Warning" to StrangeIcons.Warning,
     )

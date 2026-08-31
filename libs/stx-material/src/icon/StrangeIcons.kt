@@ -116,6 +116,13 @@ object StrangeIcons {
                 "3.15.75-1.23-4.5-2.67z",
         )
 
+    val Star: ImageVector =
+        icon(
+            "Star",
+            "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.28-.61L12 2 9.28 8.63 2 9.24l5.46 " +
+                "4.73L5.82 21z",
+        )
+
     val Search: ImageVector =
         icon(
             "Search",

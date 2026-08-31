@@ -5,20 +5,32 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonColor
 import com.strange.material.button.ButtonRow
 import com.strange.material.button.ButtonVariant
+import com.strange.material.button.Fab
+import com.strange.material.button.FabAction
+import com.strange.material.button.FabMenu
 import com.strange.material.button.IconButton
 import com.strange.material.button.ResponsiveButton
+import com.strange.material.button.SplitButton
 import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
 import com.strange.material.icon.IconSize
 import com.strange.material.icon.StrangeIcons
+import com.strange.material.surface.MenuItem
 import com.strange.material.text.Emphasis
 import com.strange.material.text.Typography
 import com.strange.material.text.TypographyVariant
@@ -111,5 +123,45 @@ val ButtonStories =
                     color = if (destructive) ButtonColor.Danger else ButtonColor.Primary,
                 )
             }
+        }
+
+        story("Fab") { knobs ->
+            Fab(
+                icon = StrangeIcons.Add,
+                description = "New order",
+                onClick = {},
+                text = knobs.text("Label", "New order").ifBlank { null },
+                expanded = knobs.flag("Expanded", true),
+                color = knobs.enumChoice("Color", ButtonColor.Primary),
+            )
+        }
+
+        story("Fab menu") { _ ->
+            var open by remember { mutableStateOf(false) }
+            Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.BottomEnd) {
+                FabMenu(
+                    expanded = open,
+                    onExpandedChange = { open = it },
+                    actions =
+                        listOf(
+                            FabAction("New order", StrangeIcons.Add, onClick = { open = false }),
+                            FabAction("Edit", StrangeIcons.Edit, onClick = { open = false }),
+                            FabAction("Delete", StrangeIcons.Delete, onClick = { open = false }),
+                        ),
+                )
+            }
+        }
+
+        story("Split button") { knobs ->
+            SplitButton(
+                text = knobs.text("Label", "Save"),
+                onClick = {},
+                overflow =
+                    listOf(
+                        MenuItem("Save as draft", onClick = {}),
+                        MenuItem("Save and publish", onClick = {}),
+                    ),
+                enabled = knobs.flag("Enabled", true),
+            )
         }
     }

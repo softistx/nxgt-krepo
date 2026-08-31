@@ -19,8 +19,12 @@ import com.strange.material.display.Card
 import com.strange.material.display.CardVariant
 import com.strange.material.display.Chip
 import com.strange.material.display.EmptyState
+import com.strange.material.display.FilterBar
+import com.strange.material.display.LabeledDivider
 import com.strange.material.display.ListTile
+import com.strange.material.display.Rating
 import com.strange.material.display.Skeleton
+import com.strange.material.display.Stat
 import com.strange.material.display.StatusBadge
 import com.strange.material.icon.Icon
 import com.strange.material.icon.IconSize
@@ -113,6 +117,40 @@ val DisplayStories =
             ) {
                 Skeleton(height = 24.dp, modifier = Modifier.fillMaxWidth(0.4f))
                 repeat(rows) { Skeleton() }
+            }
+        }
+
+        story("Stat") { _ ->
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
+                Stat(value = "128", label = "Orders", delta = "+12%", tone = Tone.Success)
+                Stat(value = "€4.2k", label = "Revenue", delta = "−3%", tone = Tone.Error)
+                Stat(value = "96%", label = "Fulfilled")
+            }
+        }
+
+        story("Filter bar") { _ ->
+            var selected by remember { mutableStateOf(setOf("Paid")) }
+            FilterBar(
+                options = listOf("Paid", "Pending", "Refunded", "Disputed"),
+                selected = selected,
+                onChange = { selected = it },
+            )
+        }
+
+        story("Rating") { knobs ->
+            var stars by remember { mutableStateOf(4) }
+            Rating(
+                value = stars,
+                onChange = { stars = it },
+                enabled = knobs.flag("Enabled", true),
+            )
+        }
+
+        story("Labeled divider") { knobs ->
+            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
+                Button(text = "Continue with email", onClick = {})
+                LabeledDivider(label = knobs.text("Label", "or"))
+                Button(text = "Continue as guest", onClick = {}, variant = ButtonVariant.Ghost)
             }
         }
     }
