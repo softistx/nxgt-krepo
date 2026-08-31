@@ -26,6 +26,8 @@ import com.strange.material.display.CodeBlock
 import com.strange.material.display.Comment
 import com.strange.material.display.EmptyState
 import com.strange.material.display.ExpandableText
+import com.strange.material.display.FeatureItem
+import com.strange.material.display.FeatureList
 import com.strange.material.display.FileChip
 import com.strange.material.display.FilterBar
 import com.strange.material.display.Kbd
@@ -35,6 +37,9 @@ import com.strange.material.display.ListTile
 import com.strange.material.display.MentionChip
 import com.strange.material.display.MessageBubble
 import com.strange.material.display.PinBar
+import com.strange.material.display.Price
+import com.strange.material.display.PricingCard
+import com.strange.material.display.PromoBanner
 import com.strange.material.display.QuoteBlock
 import com.strange.material.display.Rating
 import com.strange.material.display.Reaction
@@ -379,6 +384,59 @@ val DisplayStories =
                         onRemove = { people = people.filterNot { it == name } },
                     )
                 }
+            }
+        }
+
+        story("Price") { knobs ->
+            Price(
+                amount = knobs.text("Amount", "€12"),
+                compareAt = knobs.text("Compare at", "€18").ifBlank { null },
+                period = knobs.text("Period", "/mo").ifBlank { null },
+                tone = if (knobs.flag("Discount tone", true)) Tone.Success else null,
+            )
+        }
+
+        story("Feature list") { _ ->
+            FeatureList(
+                items =
+                    listOf(
+                        FeatureItem("Unlimited orders"),
+                        FeatureItem("Priority payouts"),
+                        FeatureItem("Audit trail"),
+                        FeatureItem("Dedicated account manager", included = false),
+                    ),
+            )
+        }
+
+        story("Pricing card") { knobs ->
+            PricingCard(
+                name = knobs.text("Name", "Studio"),
+                amount = "€29",
+                compareAt = "€39",
+                period = "/mo",
+                description = "For a team that ships every week.",
+                features =
+                    listOf(
+                        FeatureItem("Unlimited orders"),
+                        FeatureItem("Priority payouts"),
+                        FeatureItem("Dedicated account manager", included = false),
+                    ),
+                highlighted = knobs.flag("Highlighted", true),
+                badge = "Popular".takeIf { knobs.flag("Badge", true) },
+                action = { Button(text = "Start", onClick = {}) },
+            )
+        }
+
+        story("Promo banner") { knobs ->
+            var visible by remember { mutableStateOf(true) }
+            if (visible) {
+                PromoBanner(
+                    text = knobs.text("Text", "Spring sale — 20% off the first year."),
+                    code = knobs.text("Code", "SPRING20").ifBlank { null },
+                    onDismiss = { visible = false },
+                )
+            } else {
+                Button(text = "Show again", onClick = { visible = true }, variant = ButtonVariant.Ghost)
             }
         }
     }

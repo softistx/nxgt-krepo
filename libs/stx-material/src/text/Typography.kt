@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
@@ -28,6 +29,7 @@ fun Typography(
     emphasis: Emphasis = Emphasis.Full,
     color: Color = Color.Unspecified,
     align: TextAlign? = null,
+    decoration: TextDecoration? = null,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Ellipsis,
 ) {
@@ -42,6 +44,7 @@ fun Typography(
         style = variant.style(),
         color = resolved,
         textAlign = align,
+        textDecoration = decoration,
         maxLines = maxLines,
         overflow = overflow,
     )
