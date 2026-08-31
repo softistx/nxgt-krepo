@@ -48,6 +48,14 @@ type, not as a `Map` three layers down.
 Property getters are how nested objects are read at execute time — graphql-java's own
 `PropertyDataFetcher`. What is in memory is what the schema advertised.
 
+That is also why abstract types resolve on a **name**. A `sealed` hierarchy is a GraphQL
+`interface` when its subclasses share properties and a `union` when they do not — the shape of the
+Kotlin code, not a second annotation — and at execute time the value is the Kotlin instance, so the
+discriminator kotlinx.serialization would have written is not there to read. The runtime class's
+name is the answer, which is the same convention every other type here follows and is why an SDL
+`union` needs no wiring at all. `@GraphQLUnion` forces the union direction; `typeResolver(name) { }`
+replaces the naming rule.
+
 ## A resolver suspends
 
 graphql-java speaks `CompletableFuture`. `kotlinx.coroutines.future.future` is the bridge, the

@@ -1,5 +1,8 @@
 package com.strange.graphix.schema
 
+import com.strange.graphix.GraphixException
+import graphql.language.Value
+import graphql.parser.Parser
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -31,12 +34,39 @@ internal fun KParameter.graphQLName(): String {
 }
 
 /** GraphQL type name: `@GraphQLName`, then the Kotlin simple name. */
-internal fun KClass<*>.graphQLName(): String {
+internal fun KClass<*>.graphQLName(): String =
+    graphQLNameOrNull() ?: throw IllegalStateException("a GraphQL type has no name: $qualifiedName")
+
+/**
+ * Same as [graphQLName], but `null` for a type that has no name at all — an anonymous or local
+ * class. Type resolution runs per value at execute time, where a throw is a crashed operation
+ * rather than a schema-build failure.
+ */
+internal fun KClass<*>.graphQLNameOrNull(): String? {
     findAnnotation<GraphQLName>()?.value?.takeIf { it.isNotEmpty() }?.let { return it }
-    return simpleName ?: throw IllegalStateException("a GraphQL type has no name: $qualifiedName")
+    return simpleName
 }
 
 internal fun KAnnotatedElement.graphQLDescription(): String? = findAnnotation<GraphQLDescription>()?.value
+
+/** Deprecation reason, or `null` when the element is not deprecated. */
+internal fun KAnnotatedElement.graphQLDeprecation(): String? = findAnnotation<GraphQLDeprecated>()?.reason
+
+/** `true` when the element is annotated [GraphQLId], so its type is GraphQL's `ID`. */
+internal fun KAnnotatedElement.isGraphQLId(): Boolean = findAnnotation<GraphQLId>() != null
+
+/**
+ * The GraphQL default literal on the element, parsed. A literal that does not parse is a schema
+ * build failure naming [what].
+ */
+internal fun KAnnotatedElement.graphQLDefault(what: String): Value<*>? {
+    val literal = findAnnotation<GraphQLDefault>()?.literal ?: return null
+    return try {
+        Parser.parseValue(literal)
+    } catch (failure: Exception) {
+        throw GraphixException("@GraphQLDefault on $what is not a GraphQL literal: '$literal'", failure)
+    }
+}
 
 internal fun KProperty<*>.isGraphQLIgnored(): Boolean = findAnnotation<GraphQLIgnore>() != null
 

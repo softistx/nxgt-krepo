@@ -1,8 +1,10 @@
 package com.strange.graphix.schema
 
+import com.strange.graphix.GraphixException
 import com.strange.graphix.scalar.Scalars
 import graphql.Scalars.GraphQLBoolean
 import graphql.Scalars.GraphQLFloat
+import graphql.Scalars.GraphQLID
 import graphql.Scalars.GraphQLInt
 import graphql.Scalars.GraphQLString
 import graphql.schema.GraphQLInputType
@@ -32,6 +34,24 @@ internal fun scalarFromClass(
         kotlin.time.Instant::class -> Scalars.Instant
         kotlin.uuid.Uuid::class -> Scalars.Uuid
         else -> null
+    }
+}
+
+/**
+ * GraphQL's `ID` for a `@GraphQLId` element, or `null` when the type still needs walking — a
+ * `List<String>` carries the annotation down to its element. Anything else is a build failure.
+ */
+@OptIn(ExperimentalUuidApi::class)
+internal fun idScalar(kType: KType): GraphQLScalarType? {
+    val classifier = kType.classifier as? KClass<*> ?: return null
+    return when (classifier) {
+        String::class, kotlin.uuid.Uuid::class, Long::class -> GraphQLID
+
+        List::class -> null
+
+        else -> throw GraphixException(
+            "@GraphQLId is only for String, Uuid or Long, not ${classifier.qualifiedName}",
+        )
     }
 }
 

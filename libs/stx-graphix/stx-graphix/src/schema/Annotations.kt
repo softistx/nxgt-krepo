@@ -155,3 +155,76 @@ annotation class Argument(
 annotation class Directive(
     val name: String,
 )
+
+/**
+ * Forces a `sealed` type to become a GraphQL `union` rather than an `interface`.
+ *
+ * Without it, a sealed type that declares properties every subclass carries becomes an
+ * `interface`, and one that declares none becomes a `union`. There is no annotation for the
+ * other direction: a GraphQL interface needs at least one field, so a sealed type with no shared
+ * properties can only be a union.
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLUnion
+
+/**
+ * Marks a field, an argument or an input-object field `@deprecated` in the schema.
+ *
+ * Kotlin's own `@Deprecated` is `BINARY`-retained and cannot be read through reflection, so this
+ * is a separate annotation. A GraphQL argument or input field may only be deprecated when it is
+ * optional — the spec forbids deprecating one a caller has to send.
+ */
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.VALUE_PARAMETER,
+)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLDeprecated(
+    /** The reason clients see in introspection. */
+    val reason: String = "No longer supported",
+)
+
+/**
+ * Marks a `@Serializable` class used as an input as a GraphQL **`@oneOf` input object**: exactly
+ * one of its fields may be given, and it may not be null.
+ *
+ * This is GraphQL's answer to the input union a sealed hierarchy cannot be. Every field must be
+ * nullable, which is what lets a caller send only one.
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLOneOf
+
+/**
+ * Maps a `String`, `Uuid` or `Long` to GraphQL's `ID` scalar rather than its own type.
+ *
+ * Kotlin has no `ID` type, and it is not one worth inventing: `ID` is a *serialisation hint* on a
+ * field that is already a string. On an SDL schema, write `ID` in the document instead —
+ * graphql-java coerces it to a `String` and the resolver never notices.
+ */
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.VALUE_PARAMETER,
+)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLId
+
+/**
+ * The GraphQL default value of an argument or input-object field, written as a GraphQL literal:
+ * `"10"`, `"\"stranger\""`, `"[1, 2]"`, `"{ size: L }"`.
+ *
+ * A Kotlin default alone only makes the argument *optional* — graphql-java has no notion of a
+ * Kotlin default, so nothing reaches the schema and a client reading introspection cannot see it.
+ * With this, the argument keeps its `NonNull` and advertises the default: `limit: Int! = 10`.
+ *
+ * graphql-java then supplies the value, so the Kotlin default never runs — the two must agree.
+ */
+@Target(AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class GraphQLDefault(
+    /** A GraphQL value literal, parsed at schema build. */
+    val literal: String,
+)

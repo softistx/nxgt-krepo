@@ -5,7 +5,10 @@ import com.strange.graphix.execute.OperationScope
 import graphql.GraphQLContext
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import graphql.schema.FieldCoordinates
 import graphql.schema.GraphQLFieldDefinition
+import graphql.schema.GraphQLInterfaceType
+import graphql.schema.GraphQLObjectType
 import graphql.schema.idl.SchemaDirectiveWiring
 import graphql.schema.idl.SchemaDirectiveWiringEnvironment
 import kotlinx.coroutines.CoroutineScope
@@ -82,14 +85,43 @@ internal fun directiveFetcher(
         }
     }
 
+/**
+ * A field directive wraps a data fetcher, so the only honest meaning for the same directive on an
+ * OBJECT or an INTERFACE is "every field of it". `ARGUMENT_DEFINITION` and `INPUT_FIELD_DEFINITION`
+ * transform a value rather than wrap a fetcher and are not supported.
+ */
 internal fun GraphixDirective.toSchemaWiring(): SchemaDirectiveWiring =
     object : SchemaDirectiveWiring {
         override fun onField(environment: SchemaDirectiveWiringEnvironment<GraphQLFieldDefinition>): GraphQLFieldDefinition {
-            val args =
-                environment.appliedDirective.arguments.associate { argument ->
-                    argument.name to argument.argumentValue.value
-                }
-            environment.setFieldDataFetcher(directiveFetcher(environment.fieldDataFetcher, wrap, args))
+            environment.setFieldDataFetcher(
+                directiveFetcher(environment.fieldDataFetcher, wrap, environment.appliedArguments()),
+            )
             return environment.element
         }
+
+        override fun onObject(environment: SchemaDirectiveWiringEnvironment<GraphQLObjectType>): GraphQLObjectType {
+            environment.wrapEveryField(environment.element.name, environment.element.fieldDefinitions)
+            return environment.element
+        }
+
+        override fun onInterface(environment: SchemaDirectiveWiringEnvironment<GraphQLInterfaceType>): GraphQLInterfaceType {
+            environment.wrapEveryField(environment.element.name, environment.element.fieldDefinitions)
+            return environment.element
+        }
+
+        private fun SchemaDirectiveWiringEnvironment<*>.wrapEveryField(
+            typeName: String,
+            fields: List<GraphQLFieldDefinition>,
+        ) {
+            val args = appliedArguments()
+            val registry = codeRegistry
+            fields.forEach { field ->
+                val coordinates = FieldCoordinates.coordinates(typeName, field.name)
+                val original = registry.getDataFetcher(coordinates, field)
+                registry.dataFetcher(coordinates, directiveFetcher(original, wrap, args))
+            }
+        }
+
+        private fun SchemaDirectiveWiringEnvironment<*>.appliedArguments(): Map<String, Any?> =
+            appliedDirective.arguments.associate { argument -> argument.name to argument.argumentValue.value }
     }
