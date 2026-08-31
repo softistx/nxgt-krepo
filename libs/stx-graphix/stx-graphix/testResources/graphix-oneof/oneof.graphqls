@@ -1,0 +1,8 @@
+type Query {
+  pick(input: PickInput!): String!
+}
+
+input PickInput @oneOf {
+  byId: String
+  byName: String
+}
