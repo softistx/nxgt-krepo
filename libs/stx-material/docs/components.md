@@ -60,9 +60,9 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds nineteen hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StrangeIcons` holds twenty hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`, `Home`,
-`Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Search`, `Warning`. They are defined in code because **no icon pack is
+`Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Search`, `Warning`, `ChevronUp`. They are defined in code because **no icon pack is
 reachable from here**: the Kotlin Toolchain's `$compose` catalog has no key for the Material icons,
 `$compose.material` does not carry `material-icons-core` in Compose Multiplatform 1.11, and the
 AndroidX icon artifacts are Android-only. An application that wants a thousand glyphs should depend
@@ -175,6 +175,7 @@ adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.me
 | `TextField` | `field`, `label?`, `placeholder?`, `helper?`, `secret`, `keyboardType`, `leading?`, `trailing?` | `forms/text-field` |
 | `TextareaField` | `field`, `label?`, `minLines = 3`, `maxLines = 8`, `maxLength?` | `forms/textarea` |
 | `SelectField` | `field`, `options`, `label?`, `placeholder`, `optionLabel` | `forms/select` |
+| `Autocomplete` | `value`, `onValueChange`, `options`, `onSelect` | `forms/autocomplete` |
 | `Checkbox` | `field`, `label`, `helper?` | `forms/checkbox-and-switch` |
 | `Switch` | `field`, `label`, `description?` | `forms/checkbox-and-switch` |
 | `RadioGroup` | `field`, `options`, `label?`, `required`, `optionLabel` | `forms/choice-groups` |
@@ -246,6 +247,19 @@ A `Breadcrumb` of more than four items collapses the middle behind a menu. The l
 a control. A `Stepper` only lets a completed step be pressed, so it cannot skip ahead on a tap;
 below `collapseBelow` it stacks.
 
+### Layout
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `ResponsiveGrid` | `items`, `minSize = 200.dp`, `item` | `layout/responsive-grid` |
+| `ScrollToTop` | `listState`, `after = 2` | `layout/scroll-to-top` |
+| `LoadMoreButton` | `hasMore`, `loading`, `onClick` | `layout/load-more` |
+| `RefreshBox` | `refreshing`, `onRefresh`, `content` | `layout/refresh-box` |
+
+`ResponsiveGrid` is `LazyVerticalGrid` with `GridCells.Adaptive`. `ScrollToTop` sits in a `Box`
+over a list and only appears once the reader has left the top. `RefreshBox` is M3's
+`PullToRefreshBox`.
+
 ### Navigation 3 scenes
 
 | Component | Parameters | Story |
@@ -271,7 +285,9 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 | `Sheet` | `visible`, `onDismiss`, `content` | `surfaces/sheet` |
 | `Drawer` | `open`, `onDismiss`, `drawer`, `content` | `surfaces/drawer` |
 | `Tooltip` | `text`, `content` | `surfaces/tooltip` |
+| `HoverCard` | `title`, `text`, `action?`, `onAction?`, `content` | `surfaces/hover-card` |
 | `Menu` | `expanded`, `onDismiss`, `items` | `surfaces/menu` |
+| `ContextMenu` | `items`, `content` | `surfaces/context-menu` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` | `surfaces/progress` |
 | `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `surfaces/toast` |
 | `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |

@@ -214,8 +214,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
 - [x] **3b — Layouts Navigation 3.** `AdaptiveNavDisplay` (list-detail + supporting-pane scenes),
       `ListDetail` / `SupportingPane` metadata, destination badge *and* chip. The catalogue
       folds with `AdaptiveNavDisplay`.
-- [ ] **3c — Layouts restants.** `ListDetailsLayout` wrappers, `PaneLayout`, `ResponsiveGrid`,
-      `ScrollToTop`, `LoadMoreButton`
+- [x] **3c — Layouts restants.** `ResponsiveGrid`, `ScrollToTop`, `LoadMoreButton`, `RefreshBox`.
+      HoverCard, ContextMenu, Autocomplete. List-detail is `AdaptiveNavDisplay`.
 - [x] **4 — Surfaces et retour.** `ConfirmDialog`, `Sheet`, `Drawer`, `Tooltip`, `Menu`,
       `Toast` + `Toaster`, `Progress`, `Accordion`, `Carousel`, `SwipeActions`
 - [x] **5 — Date et heure.** `DateField`, `DateRangeField`, `TimeField`, `Calendar` on

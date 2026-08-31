@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonVariant
 import com.strange.material.demo.storyGroup
+import com.strange.material.form.Autocomplete
 import com.strange.material.form.Checkbox
 import com.strange.material.form.CheckboxGroup
 import com.strange.material.form.InputGroup
@@ -82,6 +83,20 @@ val FormStories =
                     label = "Country",
                     isError = complaining,
                     supportingText = "Choose one".takeIf { complaining },
+                )
+            }
+        }
+
+        story("Autocomplete") { _ ->
+            var query by remember { mutableStateOf("") }
+            Stack {
+                Autocomplete(
+                    value = query,
+                    onValueChange = { query = it },
+                    options = listOf("Amara Diallo", "Jonas Weber", "Priya Raman", "Chen Wei"),
+                    onSelect = { query = it },
+                    label = "Customer",
+                    placeholder = "Type a name",
                 )
             }
         }
