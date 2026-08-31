@@ -180,3 +180,29 @@ class SdlUnionFields {
     @SchemaMapping(typeName = "SearchResult", field = "slug")
     fun slug(media: Media): String = media.title.lowercase()
 }
+
+/** A nested sealed level under an interface: `Ticketed` is the GraphQL interface, `Paper` a member. */
+@Serializable
+sealed interface Ticketed {
+    val code: String
+}
+
+@Serializable
+sealed interface Paper : Ticketed
+
+@Serializable
+data class Boarding(
+    override val code: String,
+    val seat: String,
+) : Paper
+
+@Serializable
+data class Digital(
+    override val code: String,
+    val url: String,
+) : Ticketed
+
+class TicketedQueries {
+    @QueryMapping
+    fun ticketed(): List<Ticketed> = listOf(Boarding("b1", "12A"), Digital("d1", "https://example.test"))
+}
