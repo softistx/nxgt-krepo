@@ -28,6 +28,8 @@ data class GraphixHttpRequest(
     val operationName: String? = null,
     /** Still JSON. [toGraphixRequest] turns values into the `Map` graphql-java expects. */
     val variables: JsonObject? = null,
+    /** The spec's request extension point — passed through to the operation untouched. */
+    val extensions: JsonObject? = null,
 )
 
 /** `{ "data", "errors" }`. [errors] is omitted when empty, not an empty array. */
@@ -36,6 +38,8 @@ data class GraphixHttpResponse(
     val data: JsonElement? = null,
     /** Present only when there is at least one error — never an empty array. */
     val errors: List<GraphixHttpError>? = null,
+    /** Present only when the operation produced any. */
+    val extensions: JsonObject? = null,
 )
 
 /**
@@ -46,6 +50,16 @@ data class GraphixHttpResponse(
 data class GraphixHttpError(
     val message: String,
     val path: List<JsonElement> = emptyList(),
+    /** Omitted rather than sent empty, the way the spec's examples read. */
+    val locations: List<GraphixHttpErrorLocation>? = null,
+    val extensions: JsonObject? = null,
+)
+
+/** A position in the GraphQL document, 1-based. */
+@Serializable
+data class GraphixHttpErrorLocation(
+    val line: Int,
+    val column: Int,
 )
 
 /**
@@ -64,6 +78,7 @@ fun GraphixHttpRequest.toGraphixRequest(): GraphixRequest {
         query = query,
         operationName = operationName,
         variables = variables?.mapValues { it.value.toJava() } ?: emptyMap(),
+        extensions = extensions?.mapValues { it.value.toJava() } ?: emptyMap(),
     )
 }
 
@@ -72,6 +87,7 @@ fun GraphixResult.toHttp(): GraphixHttpResponse =
     GraphixHttpResponse(
         data = data?.toJsonElement(),
         errors = errors.takeIf { it.isNotEmpty() }?.map { it.toHttp() },
+        extensions = extensions.takeIf { it.isNotEmpty() }?.toJsonObject(),
     )
 
 /** One SSE `data:` frame. HTTP plugins stream these for subscription operations. */
@@ -81,7 +97,11 @@ private fun GraphixError.toHttp(): GraphixHttpError =
     GraphixHttpError(
         message = message,
         path = path.map { it.toJsonPrimitive() },
+        locations = locations.takeIf { it.isNotEmpty() }?.map { GraphixHttpErrorLocation(it.line, it.column) },
+        extensions = extensions.takeIf { it.isNotEmpty() }?.toJsonObject(),
     )
+
+private fun Map<String, Any?>.toJsonObject(): JsonObject = JsonObject(mapValues { it.value.toJsonElement() })
 
 private fun Any.toJsonPrimitive(): JsonElement =
     when (this) {
