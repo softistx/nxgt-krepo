@@ -239,6 +239,8 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       `BottomBar`, `IconBadge`, `HelpTip`, `FormSection`, `DangerZone`, `StepFooter`.
 - [x] **8g — Personnes, fil et messages.** `PersonCard`, `Composer`, `TypingIndicator`,
       `ReactionBar`, `AnnouncementBar`, `QuoteBlock`, `LinkPreview`, `Checklist`.
+- [x] **8h — Fil de discussion.** `MessageBubble`, `Comment`, `ReplyPreview`, `PinBar`,
+      `MentionChip`, `SeenBy`.
 - [ ] **9 — Graphiques.** `Area`, `Bar`, `Line`, `Pie`, `Radar`, `Scatter`, `Funnel`, `Heatmap`
       au `Canvas`, thème dérivé des tokens
 - [ ] **10 — i18n et publication.** Catalogue de messages multiplateforme, locales `en`/`fr`,
