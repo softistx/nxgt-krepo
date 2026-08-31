@@ -11,12 +11,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonVariant
+import com.strange.material.button.ConfirmButton
 import com.strange.material.demo.storyGroup
 import com.strange.material.form.Autocomplete
 import com.strange.material.form.CheckState
 import com.strange.material.form.Checkbox
 import com.strange.material.form.CheckboxGroup
 import com.strange.material.form.CopyField
+import com.strange.material.form.DangerZone
+import com.strange.material.form.FormSection
 import com.strange.material.form.InlineEdit
 import com.strange.material.form.InputGroup
 import com.strange.material.form.OtpField
@@ -29,12 +32,14 @@ import com.strange.material.form.Switch
 import com.strange.material.form.TagField
 import com.strange.material.form.TextField
 import com.strange.material.form.TextareaField
+import com.strange.material.form.ThemeToggle
 import com.strange.material.form.TriStateCheckbox
 import com.strange.material.form.UploadField
 import com.strange.material.form.cycleCheckState
 import com.strange.material.icon.Icon
 import com.strange.material.icon.StrangeIcons
 import com.strange.material.text.Typography
+import com.strange.material.theme.ColorMode
 import com.strange.material.theme.StrangeTheme
 
 /**
@@ -289,6 +294,23 @@ val FormStories =
                     helper = "On when every child is ticked",
                     enabled = knobs.flag("Enabled", true),
                 )
+            }
+        }
+
+        story("Theme toggle") { _ ->
+            var mode by remember { mutableStateOf(ColorMode.System) }
+            ThemeToggle(value = mode, onChange = { mode = it })
+        }
+
+        story("Form section") { _ ->
+            FormSection(title = "Account", supporting = "How we reach you") {
+                TextField(value = "ada@example.com", onValueChange = {}, label = "Email")
+            }
+        }
+
+        story("Danger zone") { _ ->
+            DangerZone(text = "The organisation and every order in it will be removed.") {
+                ConfirmButton(text = "Delete organisation", onConfirm = {})
             }
         }
     }
