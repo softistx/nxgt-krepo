@@ -10,7 +10,10 @@ import com.strange.graphix.schema.FieldDirectiveWrap
 import com.strange.graphix.schema.GraphixDirective
 import com.strange.graphix.schema.graphQLSchema
 import com.strange.graphix.schema.loadSchemaFiles
+import com.strange.graphix.validation.GraphixValidation
+import com.strange.graphix.validation.GraphixValidationBuilder
 import graphql.GraphQL
+import graphql.execution.instrumentation.fieldvalidation.FieldValidationInstrumentation
 import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.SchemaPrinter
 import kotlinx.coroutines.CoroutineName
@@ -48,6 +51,7 @@ import kotlin.reflect.KClass
 class Graphix internal constructor(
     internal val engine: GraphQL,
     internal val loaders: List<RegisteredLoader> = emptyList(),
+    internal val validation: GraphixValidation? = null,
 ) {
     /**
      * Runs one query or mutation. Field failures land in [GraphixResult.errors]; this call
@@ -72,8 +76,9 @@ class Graphix internal constructor(
         val job = SupervisorJob(currentCoroutineContext()[Job])
         val scope = CoroutineScope(currentCoroutineContext() + job + CoroutineName("graphql"))
         return try {
-            val result = engine.executeAsync(executionInput(request, context, scope, loaders)).await()
-            if (result.getData<Any?>() is Publisher<*>) {
+            val result =
+                engine.executeAsync(executionInput(request, context, scope, loaders, validation)).await()
+            if (result.getData<Any>() is Publisher<*>) {
                 throw GraphixException("this is a subscription — use Graphix.subscribe")
             }
             result.toGraphixResult()
@@ -104,6 +109,7 @@ class GraphixBuilder internal constructor(
     private val kotlinScalars = mutableMapOf<KClass<*>, GraphQLScalarType>()
     private val fieldDirectives = mutableMapOf<String, FieldDirectiveWrap>()
     private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
+    private var validation: GraphixValidation? = null
 
     /** Registers [instance]; every `@QueryMapping` function on it becomes a field on `Query`. */
     fun query(instance: Any) {
@@ -174,6 +180,19 @@ class GraphixBuilder internal constructor(
         engineCustomizers += customizer
     }
 
+    /**
+     * graphql-java 26 validation: complexity limits in the operation context, field rules as
+     * instrumentation. Declared here so a caller does not wire `QueryComplexityLimits` or
+     * `FieldValidationInstrumentation` by hand.
+     *
+     * Limits land in `GraphQLContext` next to the operation [CoroutineScope] — they are per
+     * operation, not a process-wide default. Field rules run before execution, on already-coerced
+     * arguments, and must not suspend (graphql-java's hook is not a coroutine).
+     */
+    fun validation(block: GraphixValidationBuilder.() -> Unit) {
+        validation = GraphixValidationBuilder().apply(block).build()
+    }
+
     internal fun build(): Graphix {
         val files = resourceLocations.loadSchemaFiles(resourceExtensions)
         val (schema, loaders) =
@@ -189,8 +208,9 @@ class GraphixBuilder internal constructor(
                 fieldDirectives,
             )
         val builder = GraphQL.newGraphQL(schema)
+        validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }
         engineCustomizers.forEach { with(it) { builder.customize() } }
-        return Graphix(builder.build(), loaders)
+        return Graphix(builder.build(), loaders, validation)
     }
 }
 

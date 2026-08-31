@@ -98,6 +98,37 @@ Spring collects `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and
 `GraphixCustomizer` is `fun GraphixBuilder.customize()`; `GraphQLEngineCustomizer` is
 `fun GraphQL.Builder.customize()` (instrumentation, execution strategy).
 
+## Validation
+
+graphql-java 26 enforces query complexity during validation (`maxDepth` 100, `maxFields` 100_000
+unless told otherwise). Graphix surfaces that as a builder block, and as a per-operation value
+in `execute`'s context map — the same bag the `CoroutineScope` already lives in, not a process-wide
+`setDefaultLimits`.
+
+```kotlin
+val graphql = Graphix {
+    query(ProductQueries(store))
+    validation {
+        maxDepth = 8
+        maxFields = 500
+        field("/createProduct") {
+            val name = argument("name") as? String
+            "name is too long".takeIf { name != null && name.length > 80 }
+        }
+    }
+}
+
+graphql.execute(
+    GraphixRequest("{ products { name } }"),
+    context = mapOf(GraphixLimits::class to GraphixLimits(maxDepth = 3)),
+)
+```
+
+`none()` turns complexity checking off. Field rules see already-coerced arguments and must not
+suspend: graphql-java's field-validation hook is not a coroutine. A returned string is the
+error; `null` passes. A `GraphixLimits` in the context map **replaces** the engine's limits (both
+axes), it does not patch one of them.
+
 Ktor: `customize { }` / `engine { }` on `install(GraphQL)`, and `fromDi = true` pulls the
 same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
 

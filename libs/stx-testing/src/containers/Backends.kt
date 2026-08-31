@@ -3,12 +3,12 @@ package com.strange.testing.containers
 import com.github.dockerjava.api.command.InspectContainerResponse
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.MinIOContainer
-import org.testcontainers.containers.MongoDBContainer
-import org.testcontainers.containers.MySQLContainer
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.containers.RabbitMQContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.kafka.ConfluentKafkaContainer
+import org.testcontainers.mongodb.MongoDBContainer
+import org.testcontainers.mysql.MySQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
+import org.testcontainers.rabbitmq.RabbitMQContainer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 
@@ -190,7 +190,7 @@ data class PostgresEndpoint(
  * `POSTGRES_TEST_PASSWORD` are set. A URI on its own would otherwise send a run at somebody's real
  * database with no way in — later and less clearly than falling through to a container.
  */
-fun postgresContainer(image: String = POSTGRES_IMAGE): ContainerService<PostgreSQLContainer<*>, PostgresEndpoint> =
+fun postgresContainer(image: String = POSTGRES_IMAGE): ContainerService<PostgreSQLContainer, PostgresEndpoint> =
     ContainerService.declare(
         name = "postgres",
         reusing = "POSTGRES_TEST_URI, POSTGRES_TEST_USER and POSTGRES_TEST_PASSWORD",
@@ -245,7 +245,7 @@ data class MysqlEndpoint(
  * account has to be able to `create database` for the same reason, and failing loudly when it cannot
  * is the right outcome.
  */
-fun mysqlContainer(image: String = MYSQL_IMAGE): ContainerService<MySQLContainer<*>, MysqlEndpoint> =
+fun mysqlContainer(image: String = MYSQL_IMAGE): ContainerService<MySQLContainer, MysqlEndpoint> =
     ContainerService.declare(
         name = "mysql",
         reusing = "MYSQL_TEST_URI, MYSQL_TEST_USER and MYSQL_TEST_PASSWORD",
@@ -287,7 +287,7 @@ private const val MYSQL_PORT = 3306
  */
 private class ReactiveMySQLContainer(
     image: DockerImageName,
-) : MySQLContainer<ReactiveMySQLContainer>(image) {
+) : MySQLContainer(image) {
     init {
         waitingFor(Wait.forLogMessage(".*ready for connections.*", 2))
         // MySQL initialises a data directory before it serves anything, and the default minute is

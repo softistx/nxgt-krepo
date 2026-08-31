@@ -1,6 +1,7 @@
 package com.strange.material.form
 
 import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.animate
 import androidx.compose.foundation.style.disabled
 import com.strange.material.motion.MotionSpeed
 import com.strange.material.theme.motion
