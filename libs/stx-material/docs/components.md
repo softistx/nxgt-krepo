@@ -280,6 +280,21 @@ here: M3 has no accordion, and the pager is Foundation's with a peek so the next
 The fields are how a form asks; the pickers stay in a dialog. `Calendar` is the same `DatePicker`
 inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate` / `LocalTime`.
 
+## Data
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `CommandPalette` | `visible`, `query`, `items`, `onDismiss` | `data/command-palette` |
+| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp` | `data/data-table` |
+| `Description` | `items: List<DescriptionItem>` | `data/description` |
+| `EntityHeader` | `title`, `supporting?`, `leading?`, `actions` | `data/entity-header` |
+| `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext` | `data/pagination` |
+| `Timeline` | `items: List<TimelineItem>` | `data/timeline` |
+
+`DataTable` is a table in expanded panes and a stack of `Description` cards below `collapseBelow`,
+measured on the offered width. `Pagination` is previous/next for a keyset page, not `page=3`.
+`CommandPalette` filters by a case-insensitive contains; the host opens it (typically ⌘K).
+
 ## Motion helpers
 
 | Helper | What it does | Story |
