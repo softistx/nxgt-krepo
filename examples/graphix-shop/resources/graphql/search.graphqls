@@ -1,0 +1,6 @@
+"A product or a review — whichever matched the term."
+union SearchResult = Product | Review
+
+extend type Query {
+  search(term: String!): [SearchResult!]!
+}
