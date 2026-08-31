@@ -19,7 +19,7 @@ libs/stx-material/
   src/button/   Button, IconButton, ResponsiveButton, ButtonRow
   src/display/  Card, Chip, StatusBadge, ListTile, Alert, EmptyState, Skeleton
   src/form/     the field/form state layer, the rules, and every input
-  src/navigation/ AppBar, NavigationSuite, Tabs, Search, SegmentedControl, Stepper, Breadcrumb
+  src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, Breadcrumb
 ```
 
 ## The shape of it

@@ -1,14 +1,19 @@
 package com.strange.material.navigation
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.strange.material.display.Chip
 import com.strange.material.display.StatusBadge
 import com.strange.material.icon.Icon
 import com.strange.material.text.Typography
+import com.strange.material.theme.StrangeTheme
 import com.strange.material.theme.Tone
 
 /**
@@ -25,6 +30,7 @@ data class NavigationDestination(
     val selectedIcon: ImageVector? = null,
     val badge: String? = null,
     val badgeTone: Tone = Tone.Info,
+    val chip: String? = null,
     val enabled: Boolean = true,
 )
 
@@ -65,7 +71,7 @@ fun NavigationSuite(
                             description = null,
                         )
                     },
-                    label = { Typography(text = destination.label) },
+                    label = { DestinationLabel(destination) },
                     enabled = destination.enabled,
                     badge =
                         destination.badge?.let { text ->
@@ -78,4 +84,19 @@ fun NavigationSuite(
         primaryActionContent = primaryAction ?: {},
         content = content,
     )
+}
+
+@Composable
+private fun DestinationLabel(destination: NavigationDestination) {
+    if (destination.chip == null) {
+        Typography(text = destination.label)
+        return
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+    ) {
+        Typography(text = destination.label)
+        Chip(text = destination.chip)
+    }
 }

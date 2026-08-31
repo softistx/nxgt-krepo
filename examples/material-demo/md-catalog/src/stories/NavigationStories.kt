@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.entryProvider
 import com.strange.material.button.Button
 import com.strange.material.button.ButtonVariant
 import com.strange.material.button.IconButton
@@ -21,11 +23,13 @@ import com.strange.material.demo.knobs.enumChoice
 import com.strange.material.demo.storyGroup
 import com.strange.material.display.ListTile
 import com.strange.material.icon.StrangeIcons
+import com.strange.material.navigation.AdaptiveNavDisplay
 import com.strange.material.navigation.AppBar
 import com.strange.material.navigation.AppBarSize
 import com.strange.material.navigation.Breadcrumb
 import com.strange.material.navigation.BreadcrumbItem
 import com.strange.material.navigation.FloatingToolbar
+import com.strange.material.navigation.ListDetail
 import com.strange.material.navigation.NavigationDestination
 import com.strange.material.navigation.NavigationSuite
 import com.strange.material.navigation.Search
@@ -79,7 +83,13 @@ val NavigationStories =
             val destinations =
                 listOf(
                     NavigationDestination("Home", StrangeIcons.Home),
-                    NavigationDestination("Inbox", StrangeIcons.Inbox, badge = "3", badgeTone = Tone.Info),
+                    NavigationDestination(
+                        "Inbox",
+                        StrangeIcons.Inbox,
+                        badge = "3",
+                        badgeTone = Tone.Info,
+                        chip = "Live",
+                    ),
                     NavigationDestination("People", StrangeIcons.Person),
                     NavigationDestination("Search", StrangeIcons.Search),
                 )
@@ -159,6 +169,36 @@ val NavigationStories =
             Breadcrumb(items = items)
         }
 
+        story("List detail") { _ ->
+            val backStack = remember { mutableStateListOf<MailKey>(MailInbox) }
+            AdaptiveNavDisplay(
+                backStack = backStack,
+                modifier = Modifier.height(420.dp),
+                onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) },
+                entryProvider =
+                    entryProvider {
+                        entry<MailInbox>(metadata = ListDetail.list("Pick a conversation")) {
+                            Column {
+                                SampleMail.forEach { mail ->
+                                    ListTile(
+                                        title = mail.from,
+                                        supporting = mail.subject,
+                                        onClick = { backStack.add(MailMessage(mail.id)) },
+                                    )
+                                }
+                            }
+                        }
+                        entry<MailMessage>(metadata = ListDetail.detail()) { key ->
+                            val mail = SampleMail.first { it.id == key.id }
+                            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                                Typography(text = mail.subject, variant = TypographyVariant.TitleMedium)
+                                Typography(text = mail.body)
+                            }
+                        }
+                    },
+            )
+        }
+
         story("Stepper") { knobs ->
             var current by remember { mutableIntStateOf(1) }
             Stepper(
@@ -175,3 +215,25 @@ val NavigationStories =
             )
         }
     }
+
+private sealed interface MailKey
+
+private data object MailInbox : MailKey
+
+private data class MailMessage(
+    val id: String,
+) : MailKey
+
+private data class Mail(
+    val id: String,
+    val from: String,
+    val subject: String,
+    val body: String,
+)
+
+private val SampleMail =
+    listOf(
+        Mail("1", "Amara Diallo", "Payout delayed", "The 14:00 batch is still with the bank."),
+        Mail("2", "Jonas Weber", "New supplier", "Northwind asked to be added to the roster."),
+        Mail("3", "Priya Raman", "Refund #4412", "Customer was charged twice for the same order."),
+    )
