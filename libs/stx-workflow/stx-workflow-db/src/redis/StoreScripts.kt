@@ -9,12 +9,19 @@ package com.strange.workflow.redis
  * connection of its own, because it blocks the multiplexed one every other command shares.
  */
 internal object StoreScripts {
-    /** Writes an instance that must not exist yet. 1 if it was written, 0 if the id was taken. */
+    /**
+     * Writes an instance that must not exist yet. 1 if it was written, 0 if the id was taken.
+     *
+     * `ARGV[3]` empty means the same thing it means in [SAVE] — nothing is due — and it is empty for
+     * the same three cases. An engine only ever creates a running instance, but the rule about what
+     * belongs in the index is the store's, not the engine's, and a store whose two write paths
+     * disagreed about it would be a bug waiting for the first caller who created one that was not.
+     */
     val CREATE =
         """
         if redis.call('EXISTS', KEYS[1]) == 1 then return 0 end
         redis.call('HSET', KEYS[1], 'record', ARGV[1], 'version', ARGV[2])
-        redis.call('ZADD', KEYS[2], ARGV[3], ARGV[4])
+        if ARGV[3] ~= '' then redis.call('ZADD', KEYS[2], ARGV[3], ARGV[4]) end
         return 1
         """.trimIndent()
 
