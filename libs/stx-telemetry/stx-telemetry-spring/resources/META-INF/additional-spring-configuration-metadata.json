@@ -11,6 +11,12 @@
       "type": "com.strange.telemetry.spring.TelemetryOtlpProperties",
       "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
       "description": "The OTLP/HTTP exporter, when stx-telemetry-otlp is on the classpath."
+    },
+    {
+      "name": "stx.telemetry.slf4j",
+      "type": "com.strange.telemetry.spring.TelemetrySlf4jProperties",
+      "sourceType": "com.strange.telemetry.spring.TelemetrySlf4jProperties",
+      "description": "Writes this application's signals to its own SLF4J, for a deployment that already has logback and a log pipeline it trusts. Needs stx-telemetry-slf4j on the classpath."
     }
   ],
   "properties": [
@@ -160,6 +166,27 @@
       "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
       "defaultValue": true,
       "description": "Compresses the body. Every OTLP/HTTP receiver is required to understand it."
+    },
+    {
+      "name": "stx.telemetry.slf4j.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetrySlf4jProperties",
+      "defaultValue": false,
+      "description": "Adds an Slf4jExporter, which writes every signal to the bound SLF4J with the trace and span ids in the MDC. It refuses to be built when SLF4J is bound to stx-telemetry's own provider, because the two directions together are a loop."
+    },
+    {
+      "name": "stx.telemetry.slf4j.spans",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetrySlf4jProperties",
+      "defaultValue": true,
+      "description": "Whether completed spans are logged too, one line each. False for an application that wants the logs and reads its traces somewhere else."
+    },
+    {
+      "name": "stx.telemetry.slf4j.span-severity",
+      "type": "com.strange.telemetry.model.Severity",
+      "sourceType": "com.strange.telemetry.spring.TelemetrySlf4jProperties",
+      "defaultValue": "info",
+      "description": "The level a span that succeeded is logged at. One that failed is always logged at error."
     }
   ]
 }
