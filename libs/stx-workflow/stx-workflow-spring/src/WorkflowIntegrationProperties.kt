@@ -47,6 +47,14 @@ data class WorkflowIntegrationProperties(
      * `JpaWorkflowStore.purge` on a schedule the application owns.
      */
     val retention: Duration? = null,
+    /**
+     * How often a parent parked on a `child` node looks at the child again.
+     *
+     * A safety net rather than the mechanism: a child resumes its parent the moment it finishes, and
+     * this only covers a process that died between those two writes. It needs the worker, or an
+     * application scheduler calling `resume` — nothing polls on its own.
+     */
+    val childPoll: Duration? = null,
 )
 
 /** Where `stx.workflow` puts instances. One per store in `stx-workflow-db`. */
