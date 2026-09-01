@@ -3,6 +3,7 @@ package com.strange.workflow.redis
 import com.strange.redis.Redis
 import com.strange.redis.RedisValueException
 import com.strange.redis.lock.RedisLock
+import com.strange.workflow.WorkflowStatus
 import com.strange.workflow.store.WorkflowRecord
 import com.strange.workflow.store.WorkflowStore
 import io.lettuce.core.Limit
@@ -62,6 +63,9 @@ class RedisWorkflowStore(
                 record.version.toString(),
                 due(record),
                 record.id,
+                record.status.name,
+                redis.statusPrefix(),
+                record.updatedAt.toEpochMilliseconds().toString(),
             )
         require(written == 1L) { "workflow instance '${record.id}' already exists" }
     }
@@ -93,6 +97,9 @@ class RedisWorkflowStore(
             due,
             record.id,
             ttl,
+            record.status.name,
+            redis.statusPrefix(),
+            record.updatedAt.toEpochMilliseconds().toString(),
         ) == 1L
     }
 
@@ -107,6 +114,34 @@ class RedisWorkflowStore(
                 Range.create(0, now.toEpochMilliseconds()),
                 Limit.create(0, limit.toLong()),
             ).toList()
+    }
+
+    /**
+     * A page of the instances in [status], newest first.
+     *
+     * `ZREVRANGEBYSCORE` gives the ids in one round trip; the records are then read one hash at a
+     * time, because a page is tens of instances and a pipeline for that is machinery without a
+     * reason.
+     *
+     * **It prunes as it reads.** A terminal instance's hash expires under the retention TTL, and
+     * nothing expires an entry in a sorted set — so an id whose hash is gone is an entry that
+     * outlived what it points at, and this removes it. `Failed` is exempt from the TTL, so the one
+     * index an operator actually reads never rots in the first place; this keeps the others honest.
+     */
+    override suspend fun find(
+        status: WorkflowStatus,
+        limit: Int,
+        offset: Int,
+    ): List<WorkflowRecord> {
+        if (limit <= 0) return emptyList()
+        val index = redis.statusPrefix() + status.name
+        val ids =
+            redis.commands
+                .zrevrangebyscore(index, Range.unbounded<Long>(), Limit.create(offset.toLong(), limit.toLong()))
+                .toList()
+        return ids.mapNotNull { id ->
+            load(id) ?: null.also { redis.commands.zrem(index, id) }
+        }
     }
 
     /**
@@ -150,7 +185,7 @@ class RedisWorkflowStore(
     private fun terminalTtl(record: WorkflowRecord): String =
         when {
             retention == null -> ""
-            record.status == com.strange.workflow.WorkflowStatus.Failed -> ""
+            record.status == WorkflowStatus.Failed -> ""
             else -> retention.inWholeMilliseconds.toString()
         }
 }

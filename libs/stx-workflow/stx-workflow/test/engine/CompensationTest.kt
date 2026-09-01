@@ -51,6 +51,28 @@ class CompensationTest :
                 calls.all() shouldBe listOf("undo:reserve")
             }
 
+            scenario("an instance left Failed is findable afterwards, which is the point of the status") {
+                // Failed is the one outcome this engine refuses to resolve on its own: a
+                // compensation that could not be made to work, waiting for a person. A status
+                // nobody can search for is a status that says nothing, so this is the half that
+                // makes it mean something.
+                val store = InMemoryStore()
+                val flow =
+                    workflow<Ledger>("inbox") {
+                        step("reserve") { context.copy(reservationId = "r-1") } compensate { throw Wobble("held") }
+                        step("charge") { throw Wobble("declined") }
+                    }
+                val engine = WorkflowEngine(store) { register(flow) }
+
+                engine.start(flow, Ledger(), "stuck-1").status shouldBe WorkflowStatus.Failed
+                engine.start(flow, Ledger(), "stuck-2").status shouldBe WorkflowStatus.Failed
+
+                val inbox = engine.find(WorkflowStatus.Failed)
+                inbox.map { it.id }.toSet() shouldBe setOf("stuck-1", "stuck-2")
+                inbox.all { it.error != null } shouldBe true
+                engine.find(WorkflowStatus.Completed) shouldBe emptyList()
+            }
+
             scenario("a compensation that fails stops the unwind and leaves the instance Failed") {
                 val calls = Calls()
                 val flow =

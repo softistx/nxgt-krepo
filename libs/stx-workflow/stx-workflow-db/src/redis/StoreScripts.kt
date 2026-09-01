@@ -20,22 +20,31 @@ internal object StoreScripts {
     val CREATE =
         """
         if redis.call('EXISTS', KEYS[1]) == 1 then return 0 end
-        redis.call('HSET', KEYS[1], 'record', ARGV[1], 'version', ARGV[2])
+        redis.call('HSET', KEYS[1], 'record', ARGV[1], 'version', ARGV[2], 'status', ARGV[5])
         if ARGV[3] ~= '' then redis.call('ZADD', KEYS[2], ARGV[3], ARGV[4]) end
+        redis.call('ZADD', ARGV[6] .. ARGV[5], ARGV[7], ARGV[4])
         return 1
         """.trimIndent()
 
     /**
      * Writes an instance if its stored version is still the expected one, and re-schedules it.
      *
-     * `ARGV[4]` empty means the instance is finished: it leaves the index, and takes the retention
-     * TTL in `ARGV[6]` if one was configured.
+     * `ARGV[4]` empty means the instance is finished: it leaves the due-time index, and takes the
+     * retention TTL in `ARGV[6]` if one was configured.
+     *
+     * The status index moves with it. The old status comes from the hash rather than from the
+     * caller, because the caller has the record it is *writing* and not the one that is stored —
+     * and an id left in the set of a status it no longer has is an operator's inbox showing work
+     * that is already done.
      */
     val SAVE =
         """
         local stored = redis.call('HGET', KEYS[1], 'version')
         if not stored or tonumber(stored) ~= tonumber(ARGV[2]) then return 0 end
-        redis.call('HSET', KEYS[1], 'record', ARGV[1], 'version', ARGV[3])
+        local was = redis.call('HGET', KEYS[1], 'status')
+        if was and was ~= ARGV[7] then redis.call('ZREM', ARGV[8] .. was, ARGV[5]) end
+        redis.call('ZADD', ARGV[8] .. ARGV[7], ARGV[9], ARGV[5])
+        redis.call('HSET', KEYS[1], 'record', ARGV[1], 'version', ARGV[3], 'status', ARGV[7])
         if ARGV[4] == '' then
           redis.call('ZREM', KEYS[2], ARGV[5])
           if ARGV[6] ~= '' then redis.call('PEXPIRE', KEYS[1], ARGV[6]) end

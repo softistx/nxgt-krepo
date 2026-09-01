@@ -584,11 +584,12 @@ interface WorkflowStore {
     suspend fun load(id: String): WorkflowRecord?
     suspend fun save(record: WorkflowRecord, expectedVersion: Long): Boolean
     suspend fun runnable(now: Instant, limit: Int): List<String>
+    suspend fun find(status: WorkflowStatus, limit: Int = 50, offset: Int = 0): List<WorkflowRecord>
     suspend fun <T> guarded(id: String, block: suspend () -> T): T?
 }
 ```
 
-Five methods, and that is the whole of what a new backing store has to answer for.
+Six methods, and that is the whole of what a new backing store has to answer for.
 
 - **`save` must be conditional.** Returning true when the stored version was not `expectedVersion`
   turns a lost race into a lost journal.
@@ -596,6 +597,9 @@ Five methods, and that is the whole of what a new backing store has to answer fo
   An implementation over a lock with a TTL has to renew it while the block runs.
 - **A parked instance is not runnable.** `record.isParked` — `Awaiting` with no `wakeAt` — means
   only a signal will move it, and a store that offered it would put a worker in a loop with itself.
+- **`find` is ordered newest first**, by `updatedAt`, and paged with an offset. It takes no filter by
+  workflow name: that is a `filter` on a page the caller already has, and indexing a second
+  dimension for it would be three different indexes for one convenience.
 
 What ships:
 
@@ -636,6 +640,26 @@ suspend fun MongoWorkflowStore(
 it has no `retention`: a table has no TTL, so retention is `purge(before)` on a schedule the
 application owns. `MongoWorkflowStore` suspends because it creates its two indexes before handing
 the store back.
+
+### The operator's inbox
+
+```kotlin
+val stuck = engine.find(WorkflowStatus.Failed)
+stuck.forEach { println("${it.id}: ${it.error?.node} — ${it.error?.message}") }
+engine.resume(checkout, stuck.first().id)      // after fixing whatever the compensation choked on
+```
+
+`Failed` is the one outcome the engine deliberately refuses to resolve on its own — a compensation
+that could not be made to work — and `find` is what makes the status mean something. Without it the
+only read is `record(id)`, and an operator does not have the id.
+
+Every store keeps an index for this: a sorted set per status in Redis, a `(status, updated_at)` index
+in SQL, a compound index in MongoDB. It is the second thing all three maintain on every write.
+
+**There is no ready-made HTTP endpoint for it, in either integration.** An admin route that lists
+instances and restarts them is exactly the route that must not be open, and who may call it is a
+question about your application rather than about this library. The four lines above are the route;
+put them behind whatever your other admin routes are behind.
 
 ## In a Ktor application
 

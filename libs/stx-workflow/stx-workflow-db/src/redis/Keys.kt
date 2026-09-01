@@ -30,5 +30,22 @@ internal fun Redis.instanceKey(id: String): String = key("wf", "instance", id)
  */
 internal fun Redis.runnableKey(): String = key("wf", "runnable")
 
+/**
+ * The prefix of the per-status indexes: one sorted set per [com.strange.workflow.WorkflowStatus],
+ * scored by the time the instance was last written.
+ *
+ * One set per status rather than one set for everything, because the query this exists for is
+ * "show me the ones that need a person" and `Failed` is meant to be rare. A single index would have
+ * buried it under every instance that ever completed.
+ *
+ * Scored by `updatedAt` so a page comes back newest first, which is the order an inbox is read in.
+ *
+ * The scripts build these keys **inside Lua**, from this prefix, because a write has to remove the
+ * id from its old status's set and the old status is not known until the hash is read. That is a key
+ * the script does not declare, so this store — like `scanKeys` in `stx-redis` — assumes a single
+ * logical Redis rather than a cluster.
+ */
+internal fun Redis.statusPrefix(): String = key("wf", "status", "")
+
 /** The name [com.strange.redis.lock.RedisLock] builds its own key from. */
 internal fun instanceLockName(id: String): String = "wf:$id"

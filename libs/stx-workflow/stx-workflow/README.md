@@ -184,6 +184,20 @@ The annotations cover the linear vocabulary — steps, compensations, retry, tim
 predicate and a merge is a function of several typed results, and neither survives being written as
 a string. A workflow that needs either is written with `workflow { }`.
 
+## Failed is an inbox, not a dead end
+
+`Failed` means a node failed *and* a compensation for it failed too — the one outcome no policy this
+library could invent would resolve, so it stops and waits for a person.
+
+That only works if the person can find it. `engine.find(WorkflowStatus.Failed)` is the read that
+makes the status mean something; without it the only way in is `record(id)`, and an operator has no
+id. Every store maintains an index for it on every write, and `Failed` is the one status exempt from
+retention everywhere — expiring it would delete the only description of what has to be fixed.
+
+Fix whatever the compensation was choking on, then `resume(workflow, id)`: the journal records which
+nodes were already compensated, so the unwind picks up where it stopped rather than undoing them
+twice.
+
 ## A node is matched by its name
 
 The journal and the declaration agree on one thing: the name of a node. `runStep` skips a node whose

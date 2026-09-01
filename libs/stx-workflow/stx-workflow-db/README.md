@@ -115,9 +115,24 @@ recovery is not a coffee break.
 two runners of one step. That is why every write is also conditional on the record's version, and
 why the core README's rule stands: step bodies must be idempotent.
 
+### The status index
+
+One sorted set per status, `wf:status:<STATUS>`, scored by `updatedAt`. One set per status rather
+than one for everything, because the query it exists for is *"show me the ones that need a person"*
+and a single index would have buried `Failed` under every instance that ever completed.
+
+The Lua builds these keys itself, from a prefix, because a write has to remove the id from its **old**
+status's set and the old status is only known once the hash is read. That is a key the script does
+not declare, so this store assumes a single logical Redis rather than a cluster — the same assumption
+`scanKeys` in `stx-redis` makes.
+
+`find` prunes as it reads: a terminal instance's hash expires under the retention TTL and nothing
+expires a sorted-set entry, so an id pointing at a hash that is gone is removed on sight. `Failed` is
+exempt from the TTL, so the one index an operator actually reads never rots to begin with.
+
 ### Retention
 
-A finished instance leaves the index and takes a TTL — `retention`, seven days by default, `null` to
+A finished instance leaves the due-time index and takes a TTL — `retention`, seven days by default, `null` to
 keep it forever. A completed run is the audit trail somebody will want afterwards, and an engine
 whose finished instances vanish is one that cannot be debugged; but Redis holds it in memory, so the
 default is a bound rather than nothing.
@@ -141,9 +156,11 @@ entities. Only Postgres is *verified* here; the other two are supported by const
 
 ### One row, and the columns a query needs
 
-`record` is the encoded `WorkflowRecord` and nothing reads inside it. `due_at`, the lease pair and
-`finished_at` exist because a query needs them; nothing else is copied out of the document, because
-two copies of a fact are one chance for them to disagree.
+`record` is the encoded `WorkflowRecord` and nothing reads inside it. `due_at`, the lease pair,
+`finished_at`, `status` and `updated_at` exist because a query needs them — a `where` cannot look
+inside a string. `status` and `updated_at` are the only two facts duplicated out of the document, and
+they cost nothing worse than a row that should not have been in a page: `find` returns the *decoded*
+record, so the columns filter and order and are never read as truth.
 
 `record` is `Length.LONG32`, not `@Lob`. That is `text` on Postgres and `clob` on DB2 — a column
 psql shows you. A `@Lob String` on Postgres has historically been a large-object `oid`, which
@@ -178,14 +195,16 @@ val store = MongoWorkflowStore(database)
 val engine = WorkflowEngine(store) { register(checkout) }
 ```
 
-**A suspending function, not a constructor.** It creates the two indexes the store needs before it
+**A suspending function, not a constructor.** It creates the three indexes the store needs before it
 hands one back: `dueAt`, which is what makes `runnable` a ranged read instead of a collection scan,
-and a TTL on `expiresAt`. Creating them lazily would leave the first `runnable` of a fresh deployment
+a TTL on `expiresAt`, and `(status, updatedAt)` for `find`. Creating them lazily would leave the first `runnable` of a fresh deployment
 scanning; leaving them to the caller would give a store that works and quietly degrades.
 
 `record` is the encoded `WorkflowRecord` as a **string**, not a nested document. The context inside
 it is already a `JsonElement` and no BSON codec maps one, so the choice was between a string the
-store never looks inside and a mapping that would have to.
+store never looks inside and a mapping that would have to. `status` and `updatedAt` sit beside it as
+their own fields, for the same reason the relational store has those two columns: `find` filters and
+orders on them, and a query cannot look inside a string.
 
 ### Retention is the server's job here
 
