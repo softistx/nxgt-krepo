@@ -63,7 +63,9 @@ internal fun ApiModel.requireEveryRefGenerated() {
             }
 
             // Neither declares a reference of its own: an enum's values and a value class's
-            // scalar are both types this generator already knows how to write.
+            // scalar are both types this generator already knows how to write. The branch stays
+            // because the `when` is exhaustive over a sealed type — a third kind of model should
+            // fail to compile here rather than be walked past.
             is EnumType, is ValueClassType -> {
                 Unit
             }
