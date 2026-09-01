@@ -12,8 +12,8 @@ import org.springframework.boot.runApplication
  *
  * There is no `@Configuration` class here and no wiring beyond this file, which is the point: the
  * error handler, the locale resolver, the CORS filter, the Mongo converters, the audit trail and the
- * migration runner are all auto-configurations that `resources/application.yaml` switches on. What
- * an application writes is its own routes and its own documents.
+ * migration gate are all auto-configurations that `resources/application.yaml` switches on. What an
+ * application writes is its own routes, its own documents and its own migrations.
  *
  * `@SpringBootApplication` and not `@ComponentScan` + `@ConfigurationPropertiesScan` + the rest:
  * `stx-spring-boot` registers itself through `AutoConfiguration.imports`, so nothing here has to
