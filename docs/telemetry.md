@@ -233,6 +233,11 @@ and may take as long as it needs without blocking anybody who writes a log. It s
 | `ConsoleExporter(out = System.out, stackTraces = true)` | One human-readable line per signal, trace ids abbreviated. For a terminal |
 | `JsonLinesExporter(out = System.out)` | One JSON object per line, discriminated by `"type": "log"` / `"span"`. For a collector |
 
+`stx-telemetry-spring` adds the `stx.telemetry.*` keys — see
+[`docs/spring-configuration.md`](spring-configuration.md) — which build and install a root for the
+application and add every `Exporter` bean to it, plus a `CoWebFilter` that makes each request a
+server span.
+
 `stx-telemetry-ktor` adds `install(Observability) { … }`, which builds or adopts a `Telemetry` for an
 application and opens a `SpanKind.Server` span per request — continuing an incoming `traceparent`,
 recording `http.request.method`, `url.path`, `http.route` and `http.response.status_code`, and

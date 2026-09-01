@@ -1,0 +1,35 @@
+product: jvm/lib
+description: "Spring Boot auto-configuration for stx-telemetry, opt-in behind stx.telemetry, with a CoWebFilter that makes each request a server span"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Telemetry is the bean this module registers, so it is in its API
+  - //libs/stx-telemetry/stx-telemetry: exported
+  # The exporter stx.telemetry.otlp builds. Compile-only for the same reason stx-workflow-spring's
+  # stores are: an application that turns it on already depends on the module, and one that does not
+  # loads a class from none of it — @ConditionalOnClass is what keeps the configuration readable.
+  - //libs/stx-telemetry/stx-telemetry-otlp: compile-only
+  # WebFilter and CoWebFilter — the server span lives in the reactive filter chain
+  - $spring.boot.starter.webflux: exported
+  # Spring binds Kotlin configuration properties through the primary constructor only when reflect
+  # is present — the same line every Spring module here carries
+  - $libs.kotlin.reflect
+  # `CoWebFilter` is implemented with `mono { }`, so it does not work without this — and the webflux
+  # starter does not bring it. Found by a spec that hung rather than by reading a manifest: every
+  # filter scenario, including the one that only calls `chain.filter`, timed out until this was here.
+  - $libs.kotlinx.coroutines.reactor
+
+test-dependencies:
+  - //libs/stx-telemetry/stx-telemetry-otlp
+  - $spring.boot.starter.test
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  springBoot: enabled
+  kotlin:
+    serialization: json

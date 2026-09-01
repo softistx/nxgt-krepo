@@ -354,6 +354,46 @@ torn down, on a scope of its own. A worker started in an `@PostConstruct` would 
 against half-built collaborators; one that outlived the context would resume them against closing
 ones.
 
+## `stx-telemetry-spring`
+
+Logs and traces. The vocabulary is [`docs/telemetry.md`](telemetry.md); the reasoning is
+[the library's README](../libs/stx-telemetry/stx-telemetry/README.md).
+
+### `stx.telemetry`
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Builds an stx-telemetry root, installs it so `logger<T>()` and `span { }` find it anywhere, and makes each request a server span. Every `Exporter` bean is added to it. An application's own `Telemetry` bean wins |
+| `service` | string | *spring.application.name* | The `service.name` every signal reports, falling back to `unknown-service` when there is neither. Worth setting: it is the attribute every backend groups by |
+| `version` | string | *empty* | `service.version` |
+| `environment` | string | *empty* | `deployment.environment.name` — `production`, `staging` |
+| `minimum` | `debug` \| `info` \| `warn` \| `error` | `info` | The lowest severity emitted at all. Spans are governed by [sample-ratio], not by this |
+| `sample-ratio` | double | `1.0` | The share of traces kept. Decided once at a trace's root, carried in the `traceparent`, and computed from the trace id rather than a coin toss — so two services at the same ratio keep the *same* traces. Logs are never sampled |
+| `stack-traces` | boolean | `true` | Whether a failure's stack trace is rendered into the signal |
+| `batch` | int | `512` | How many signals ship together at most |
+| `linger` | duration | `1s` | How long a partial batch waits for company |
+| `drain-timeout` | duration | `10s` | How long shutdown waits for the queue, so a collector that stopped answering does not stop the process exiting |
+| `console` | boolean | `false` | Adds a `ConsoleExporter` — one readable line per signal on stdout. For development |
+| `json-lines` | boolean | `false` | Adds a `JsonLinesExporter` — one JSON object per line, for a collector that reads the container's log |
+| `web-filter` | boolean | `true` | Whether each request becomes a server span. A `CoWebFilter`, so a suspending `@RestController` method is inside the span — which is what a `WebFilter` returning a `Mono` could not give it |
+| `ignore` | list | *empty* | Path prefixes that get no span. A health check answered every second by a load balancer is a trace nobody will read and most of the traces there are |
+
+### `stx.telemetry.otlp`
+
+Needs `stx-telemetry-otlp` on the classpath; the beans below are absent without it.
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Exports to an OTLP collector over HTTP in JSON, with no OpenTelemetry SDK |
+| `endpoint` | string | `http://localhost:4318` | The collector's base URL; `/v1/logs` and `/v1/traces` are appended |
+| `headers` | map | *empty* | Sent on every request — an API key, a tenant header |
+| `timeout` | duration | `10s` | Connect and request timeout |
+| `attempts` | int | `3` | How many times one document is sent. A 408, 429 or 5xx and a connection failure are retried; any other 4xx is not, because the same document would be wrong again. A `partialSuccess` is never retried — the accepted records would arrive twice |
+| `backoff` | duration | `500ms` | The first wait between attempts; it doubles each time |
+| `gzip` | boolean | `true` | Compresses the body. Every OTLP/HTTP receiver is required to understand it |
+
+---
+
 ## `stx-graphix-spring`
 
 Not this module — `com.strange:stx-graphix-spring`. The keys follow the same opt-in rule, and the
