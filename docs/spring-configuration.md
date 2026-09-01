@@ -354,6 +354,49 @@ torn down, on a scope of its own. A worker started in an `@PostConstruct` would 
 against half-built collaborators; one that outlived the context would resume them against closing
 ones.
 
+### `stx.migrations`
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Runs the migrations before the context finishes refreshing, and refuses to start if any fails |
+| `store` | `mongo` \| `sql` | — | Which ledger to build. Unset means the application declares its own `MigrationRunner` bean |
+| `name` | string | `stx_migrations` | The table or collection the ledger lives in; the lock is `<name>_lock` |
+| `lease` | duration | `5m` | How long the migration lock is good for before the process holding it is assumed gone |
+| `lock-timeout` | duration | `5m` | How long to wait for another instance to finish migrating before failing to start |
+| `lock-poll` | duration | `1s` | How long to wait between two attempts on the lock |
+| `stale-after` | duration | `15m` | How old a `RUNNING` record has to be before it is read as a process that died |
+
+**A migration is a `@Component` implementing `MongoMigration` or `SqlMigration`,** collected by type.
+By type rather than by annotation, which is a correction the runner this replaces already carried: the
+version before it filtered on an annotation and silently ignored anything without it — a migration
+that does not happen and does not say so.
+
+```kotlin
+@Component
+class V1Orders : SqlMigration {
+    override val version = 1L
+    override suspend fun migrate(context: SqlMigrationSession) {
+        context.execute("create table if not exists orders (id bigint primary key)")
+    }
+}
+```
+
+There is no `uri`. Each `store` value builds over the connection the matching `stx.*` group already
+opened — the `Jpa` bean, or the `MongoDatabase` bean, which `stx.data.mongo` will also bridge from
+Spring Data's own factory. **Nothing is inferred**: an application with both beans is not saying which
+schema it means to migrate. An application migrating both names one here and declares a
+`MigrationRunner` bean for the other — the gate runs every runner it finds.
+
+Naming a `store` whose connection bean does not exist **fails at startup**. A context that came up
+quietly with no migrations, against a schema nobody made, is the failure this library exists to
+prevent.
+
+The gate is an `InitializingBean`, and that is the whole design: `SuspendingListenerTest` pins that
+Spring does not wait for a suspending listener, so the `@EventListener(ApplicationReadyEvent)` this
+replaces let the port open while migrations were still running. A throw out of `afterPropertiesSet`
+aborts the refresh instead — no web server, no `ApplicationReadyEvent`, no requests. The vocabulary is
+[`docs/migrations.md`](migrations.md).
+
 ## `stx-telemetry-spring`
 
 Logs and traces. The vocabulary is [`docs/telemetry.md`](telemetry.md); the reasoning is
