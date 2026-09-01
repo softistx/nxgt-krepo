@@ -1,5 +1,6 @@
 package com.strange.workflow.annotation
 
+import com.strange.workflow.Workflow
 import com.strange.workflow.dsl.RetryBuilder
 import com.strange.workflow.dsl.RetryPolicy
 import com.strange.workflow.dsl.Signal
@@ -34,6 +35,7 @@ internal class Declaration(
         fun of(
             type: KClass<*>,
             context: KType,
+            children: List<Workflow<*>>,
         ): Declaration {
             val meta =
                 type.findAnnotation<WorkflowDefinition>()
@@ -42,18 +44,35 @@ internal class Declaration(
             val functions = type.memberExtensionFunctions.toList().onEach { it.isAccessible = true }
             val problems = mutableListOf<String>()
             val undo = compensations(functions, problems)
-            val nodes = nodes(functions, context, undo, problems)
+            val results = childResults(functions, problems)
+            val nodes = nodes(functions, context, undo, results, children.associateBy { it.name }, problems)
 
-            if (nodes.isEmpty()) problems += "it declares no @Step, @Await or @Sleep"
+            if (nodes.isEmpty()) problems += "it declares no @Step, @Await, @Sleep or @Child"
             undo.keys
                 .filterNot { step -> nodes.any { it is StepNode && it.name == step } }
                 .forEach { problems += "@Compensate(\"$it\") names no @Step" }
+            results.keys
+                .filterNot { node -> nodes.any { it is ChildNode && it.name == node } }
+                .forEach { problems += "@ChildResult(\"$it\") names no @Child" }
             duplicates(nodes.map { it.order }).forEach { problems += "two nodes claim order $it" }
 
             require(problems.isEmpty()) {
                 "${type.qualifiedName} is not a usable workflow:\n" + problems.joinToString("\n") { "  - $it" }
             }
             return Declaration(meta.name, nodes.sortedBy { it.order })
+        }
+
+        /** Every `@ChildResult`, by the child node it follows. A node's name, not a function's. */
+        private fun childResults(
+            functions: List<KFunction<*>>,
+            problems: MutableList<String>,
+        ): Map<String, KFunction<*>> {
+            val found = mutableMapOf<String, KFunction<*>>()
+            for (function in functions) {
+                val node = function.findAnnotation<ChildResult>()?.child ?: continue
+                if (found.put(node, function) != null) problems += "child '$node' has two @ChildResult functions"
+            }
+            return found
         }
 
         /** Every `@Compensate`, by the step it undoes. A step's name, not a function's. */
@@ -73,11 +92,18 @@ internal class Declaration(
             functions: List<KFunction<*>>,
             context: KType,
             undo: Map<String, KFunction<*>>,
+            results: Map<String, KFunction<*>>,
+            children: Map<String, Workflow<*>>,
             problems: MutableList<String>,
         ): List<AnnotatedNode> =
             functions.mapNotNull { function ->
                 val kinds =
-                    listOfNotNull(function.findAnnotation<Step>(), function.findAnnotation<Await>(), function.findAnnotation<Sleep>())
+                    listOfNotNull(
+                        function.findAnnotation<Step>(),
+                        function.findAnnotation<Await>(),
+                        function.findAnnotation<Sleep>(),
+                        function.findAnnotation<Child>(),
+                    )
                 when {
                     kinds.isEmpty() -> {
                         null
@@ -89,7 +115,7 @@ internal class Declaration(
                     }
 
                     else -> {
-                        node(function, kinds.single(), context, undo, problems)
+                        node(function, kinds.single(), context, undo, results, children, problems)
                     }
                 }
             }
@@ -99,6 +125,8 @@ internal class Declaration(
             kind: Annotation,
             context: KType,
             undo: Map<String, KFunction<*>>,
+            results: Map<String, KFunction<*>>,
+            children: Map<String, Workflow<*>>,
             problems: MutableList<String>,
         ): AnnotatedNode? {
             val before = problems.size
@@ -108,9 +136,76 @@ internal class Declaration(
                     is Step -> stepNode(function, kind, context, undo, problems)
                     is Await -> awaitNode(function, kind, context, problems)
                     is Sleep -> sleepNode(function, kind, problems)
+                    is Child -> childNode(function, kind, context, results, children, problems)
                     else -> null
                 }
             return node.takeIf { problems.size == before }
+        }
+
+        /**
+         * Reads a `@Child` and the `@ChildResult` that follows it.
+         *
+         * Everything checkable is checked here: that the named workflow was handed to `workflowOf`,
+         * that the starting context this function computes is the type that workflow reads, and
+         * that the result function is handed the same type back. All three are the mistakes that
+         * would otherwise surface as a decode failure on the first instance to reach the node.
+         */
+        private fun childNode(
+            function: KFunction<*>,
+            child: Child,
+            context: KType,
+            results: Map<String, KFunction<*>>,
+            children: Map<String, Workflow<*>>,
+            problems: MutableList<String>,
+        ): AnnotatedNode? {
+            val name = child.name.ifEmpty { function.name }
+            if (function.isSuspend) problems += "${function.name} is a @Child and must not suspend; it computes the child's context"
+            if (function.valueParameters.isNotEmpty()) problems += "${function.name} is a @Child and must take no parameters"
+            function.refuse<Retry>("a @Child retries nothing; the child has its own policies", problems)
+            function.refuse<Timeout>("a @Child waits without a clock unless withinMillis says otherwise", problems)
+
+            val declaration = children[child.workflow]
+            if (declaration == null) {
+                problems +=
+                    "${function.name} is a @Child of '${child.workflow}', which was not passed to workflowOf" +
+                    children.keys
+                        .sorted()
+                        .joinToString(prefix = " (given: ", postfix = ")")
+                        .takeIf { children.isNotEmpty() }
+                        .orEmpty()
+                return null
+            }
+            requireSerializesAs(
+                function.returnType,
+                declaration,
+                "${function.name} returns",
+                "the context of '${child.workflow}'",
+                problems,
+            )
+
+            val result = results[name]
+            if (result == null) {
+                problems += "@Child '$name' has no @ChildResult(\"$name\") to fold its result into the context"
+                return null
+            }
+            result.requireScopeOn(context, problems)
+            result.requireReturns(context, problems)
+            val payload = result.valueParameters.singleOrNull()
+            if (payload == null) {
+                problems += "${result.name} is a @ChildResult and must take exactly one parameter, the child's final context"
+                return null
+            }
+            requireSerializesAs(payload.type, declaration, "${result.name}'s parameter", "the context of '${child.workflow}'", problems)
+
+            @Suppress("UNCHECKED_CAST")
+            return ChildNode(
+                order = child.order,
+                name = name,
+                child = declaration as Workflow<Any?>,
+                start = function,
+                body = result,
+                deadline = child.withinMillis.takeIf { it > 0 }?.milliseconds,
+            )
         }
 
         private fun stepNode(
@@ -203,6 +298,30 @@ private fun KFunction<*>.requireScopeOn(
         receiver == null -> problems += "$name must be a member extension on StepScope<$context>"
         declared == null -> problems += "$name is an extension on $receiver, not on StepScope<$context>"
         declared != context -> problems += "$name is an extension on StepScope<$declared>, but this workflow's context is $context"
+    }
+}
+
+/**
+ * A type has to be the one the child workflow reads and writes.
+ *
+ * Compared by serial name rather than by `KType`, because that is what actually has to match: the
+ * child's context is stored encoded and read back with the child's own serializer, so two types that
+ * serialize identically are interchangeable here and two that do not are not — whatever their
+ * declarations look like. It is also the only handle a `Workflow<D>` offers on its `D` at runtime.
+ */
+private fun requireSerializesAs(
+    type: KType,
+    child: Workflow<*>,
+    what: String,
+    expected: String,
+    problems: MutableList<String>,
+) {
+    val actual = runCatching { serializer(type).descriptor.serialName }.getOrNull()
+    val wanted = child.serializer.descriptor.serialName
+    when (actual) {
+        null -> problems += "$what $type, which is not serializable, and $expected has to be"
+        wanted -> Unit
+        else -> problems += "$what $type, but $expected is $wanted"
     }
 }
 

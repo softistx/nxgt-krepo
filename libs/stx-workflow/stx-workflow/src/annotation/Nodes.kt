@@ -1,9 +1,11 @@
 package com.strange.workflow.annotation
 
+import com.strange.workflow.Workflow
 import com.strange.workflow.dsl.NodeSink
 import com.strange.workflow.dsl.RetryPolicy
 import com.strange.workflow.dsl.Signal
 import com.strange.workflow.dsl.await
+import com.strange.workflow.dsl.child
 import com.strange.workflow.dsl.compensate
 import com.strange.workflow.dsl.retry
 import com.strange.workflow.dsl.sleep
@@ -83,5 +85,28 @@ internal class SleepNode(
         // `call`, not `callSuspend`: the DSL's duration block does not suspend, and the reader
         // refuses a suspending @Sleep rather than blocking a thread to honour it here.
         sink.sleep(name) { body.call(instance, this) as Duration }
+    }
+}
+
+internal class ChildNode(
+    override val order: Int,
+    override val name: String,
+    private val child: Workflow<Any?>,
+    private val start: KFunction<*>,
+    private val body: KFunction<*>,
+    private val deadline: Duration?,
+) : AnnotatedNode() {
+    override fun declare(
+        sink: NodeSink<Any?>,
+        instance: Any,
+    ) {
+        // `call` for the starting context and `callSuspend` for the result: the first computes a
+        // value the way @Sleep computes a duration, the second is the parent carrying on and may do
+        // anything a step may do.
+        val node =
+            sink.child(name, child, with = { start.call(instance, this) }) { done ->
+                body.callSuspend(instance, this, done)
+            }
+        deadline?.let { node within it }
     }
 }

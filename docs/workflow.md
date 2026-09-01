@@ -510,10 +510,12 @@ engines cannot both append to one journal — the write is conditional on the re
 @Target(FUNCTION) annotation class Compensate(val step: String)
 @Target(FUNCTION) annotation class Await(val order: Int, val signal: String, val name: String = "", val withinMillis: Long = 0)
 @Target(FUNCTION) annotation class Sleep(val order: Int, val name: String = "")
+@Target(FUNCTION) annotation class Child(val order: Int, val workflow: String, val name: String = "", val withinMillis: Long = 0)
+@Target(FUNCTION) annotation class ChildResult(val child: String)
 @Target(FUNCTION) annotation class Retry(val times: Int, val delayMillis: Long = 100, val factor: Double = 1.0, val maxMillis: Long = 30_000)
 @Target(FUNCTION) annotation class Timeout(val millis: Long)
 
-inline fun <reified C> workflowOf(definition: Any): Workflow<C>
+inline fun <reified C> workflowOf(definition: Any, vararg children: Workflow<*>): Workflow<C>
 ```
 
 ```kotlin
@@ -539,9 +541,16 @@ class CheckoutWorkflow(private val stock: Stock, private val payments: Payments)
 
     @Sleep(4)
     fun StepScope<Checkout>.settlement(): Duration = 2.days
+
+    @Child(5, workflow = "fulfilment", withinMillis = 3 * 24 * 60 * 60 * 1000)
+    fun StepScope<Checkout>.fulfil(): Fulfilment = Fulfilment(items = context.items)
+
+    @ChildResult("fulfil")
+    suspend fun StepScope<Checkout>.fulfilled(done: Fulfilment): Checkout =
+        context.copy(trackingId = done.booking)
 }
 
-val checkout = workflowOf<Checkout>(CheckoutWorkflow(stock, payments))
+val checkout = workflowOf<Checkout>(CheckoutWorkflow(stock, payments), fulfilment)
 ```
 
 Every annotated function is a **member extension on `StepScope<C>`**, so its body is the same text a
@@ -564,9 +573,22 @@ so renaming the function renames the node and an in-flight instance will not rec
 name when that matters. The workflow's own name has no default at all, for the same reason and more
 so.
 
+**`@Child` is two functions**, for the same reason `@Step` and `@Compensate` are: they run at
+different moments — months apart, in the cases a child workflow exists for — and one of them is
+handed something the other has never seen. The first computes the child's starting context and does
+not suspend, as `@Sleep` computes a duration; the second is handed the child's **final** context and
+returns the parent's next one.
+
+It names the child by its **workflow name**, because an annotation cannot hold a `Workflow<D>`, so
+the declaration is passed alongside the definition: `workflowOf<Checkout>(CheckoutWorkflow(…),
+fulfilment)`. That string is checked against what was passed, and both context types are checked
+against the child's serializer — by serial name, which is what actually has to match, since the
+child's context is stored encoded and read back with the child's own serializer.
+
 **Everything a class can get wrong is checked when `workflowOf` runs, and reported together**: a
 compensation naming no step, two nodes claiming one order, an `@Await` with no payload parameter, a
-receiver on the wrong `StepScope<C>`. Fixing three mistakes should take one run, not three.
+`@Child` naming a workflow nobody passed, a `@ChildResult` naming no `@Child`, a receiver on the
+wrong `StepScope<C>`. Fixing three mistakes should take one run, not three.
 
 ### What annotations cannot say
 
@@ -579,9 +601,6 @@ written with `workflow { }` — which is the whole language, and is what `workfl
 An annotated step says "do not try this again" by throwing `NonRetryableException`, which is the half
 that knows.
 
-There is no `@Child` yet. Nothing stands in the way of one — a `child` node is built through the same
-`add` door every other verb uses — it simply has not been asked for. A class-declared workflow that
-needs one is written with `workflow { }`.
 
 ## Running one
 
