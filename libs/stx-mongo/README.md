@@ -18,7 +18,7 @@ val client = mongoClient(uri) { applyToSslSettings { … } }   // with a deploym
 val database = client.getDatabase("app")
 ```
 
-That factory is the reason the plugin in `stx-ktor` and the module in `stx-koin` are two lines
+That factory is the reason the plugin in `stx-ktor` is two lines
 each: the knowledge that a client needs `mongoCodecRegistry()` is a fact about the driver, not about
 a framework, so it lives here where a worker or a CLI can call it too.
 

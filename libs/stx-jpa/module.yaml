@@ -37,7 +37,7 @@ dependencies:
   # an application writes `@NotNull` and `@Size`, which are `jakarta.validation` types, not this
   # library. The implementation is `runtime-only` for the same reason `expressly` below is: Hibernate
   # finds it on the classpath rather than being handed it, and nothing in this repo — src, test,
-  # examples, stx-ktor or stx-koin — imports `org.hibernate.validator`. Exporting it put a
+  # examples or stx-ktor — imports `org.hibernate.validator`. Exporting it put a
   # Bean Validation implementation on every downstream consumer's compile classpath.
   - $libs.hibernate.validator: runtime-only
   - $libs.jakarta.validation: exported
