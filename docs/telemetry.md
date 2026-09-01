@@ -232,6 +232,12 @@ and may take as long as it needs without blocking anybody who writes a log. It s
 | `ConsoleExporter(out = System.out, stackTraces = true)` | One human-readable line per signal, trace ids abbreviated. For a terminal |
 | `JsonLinesExporter(out = System.out)` | One JSON object per line, discriminated by `"type": "log"` / `"span"`. For a collector |
 
+`stx-telemetry-slf4j` adds `Slf4jExporter(spans, spanSeverity, factory)`, which writes logs to a
+logger named after their source and spans to `com.strange.telemetry.span`, putting the trace id and
+the attributes in the MDC for the length of each call. The same module's `TelemetryServiceProvider`
+is the bridge pointed the other way — third-party SLF4J logs into this pipeline — and the two cannot
+both be used, which `Slf4jExporter` checks rather than looping.
+
 `stx-telemetry-otlp` adds `OtlpExporter(endpoint, headers, timeout, attempts, backoff, gzip, onPartialSuccess, client)`,
 which posts OTLP/HTTP+JSON to `<endpoint>/v1/logs` and `<endpoint>/v1/traces`. Its README has the
 retry table and what a `partialSuccess` means; a client passed in is used and not closed.
