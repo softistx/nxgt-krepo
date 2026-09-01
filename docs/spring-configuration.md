@@ -409,6 +409,26 @@ so this key and that provider together fail the context at startup rather than l
 | `spans` | boolean | `true` | Whether completed spans are logged too, one line each, under `com.strange.telemetry.span`. False for an application that wants the logs here and reads its traces somewhere else |
 | `span-severity` | `debug` \| `info` \| `warn` \| `error` | `info` | The level a span that succeeded is logged at. One that failed is always `error` |
 
+### `stx.telemetry.file`
+
+A rotating file on the local disk, in the format `stx.telemetry.json-lines` writes to stdout — for a
+deployment with no collector, or a container whose stdout is already crowded with somebody else's
+output. No extra module: `FileExporter` is in `stx-telemetry` itself.
+
+`max-size` and `every` are both on and answer different questions — one bounds the disk, the other
+bounds how old the newest closed file is. A service that logs a little would keep yesterday in the
+open file under a size limit alone; one that logs a lot would fill the disk before midnight under a
+period alone. `0` turns either off.
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Adds a `FileExporter`. The file is opened when the context starts, so a path that cannot be written fails there rather than on the export path |
+| `path` | string | `logs/telemetry.jsonl` | The active file. Parent directories are created if missing |
+| `max-size` | data size | `64MB` | The size at which the file is rolled aside. `0` for no size limit |
+| `every` | duration | `24h` | The period one file covers, **aligned to the epoch** — `24h` rolls at UTC midnight and `1h` at the top of the hour, not a day or an hour after this process started. `0` for no time limit |
+| `keep` | int | `7` | How many rolled files survive. `0` keeps only the file being written |
+| `compress` | boolean | `false` | Whether a rolled file is gzipped. Off by default: it happens on the pipeline's export path, and a 64 MB file is about a second of the consumer not draining |
+
 ---
 
 ## `stx-graphix-spring`

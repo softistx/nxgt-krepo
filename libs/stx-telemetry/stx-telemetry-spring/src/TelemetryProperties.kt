@@ -2,6 +2,7 @@ package com.strange.telemetry.spring
 
 import com.strange.telemetry.model.Severity
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.util.unit.DataSize
 import java.time.Duration
 
 /**
@@ -79,4 +80,32 @@ data class TelemetrySlf4jProperties(
     val spans: Boolean = true,
     /** The level a span that succeeded is logged at. One that failed is always logged at `error`. */
     val spanSeverity: Severity = Severity.Info,
+)
+
+/**
+ * `stx.telemetry.file` — a rotating file on the local disk.
+ *
+ * For a deployment with no collector — one VPS, an appliance, a job that has to leave evidence
+ * behind — and for a container whose stdout is already crowded with somebody else's output. The
+ * lines are the ones `stx.telemetry.json-lines` writes, so the same parser reads both.
+ *
+ * [maxSize] and [every] are both on by default and answer different questions: one bounds the disk,
+ * the other bounds how old the newest closed file is. `0` turns either off.
+ */
+@ConfigurationProperties(prefix = "stx.telemetry.file")
+data class TelemetryFileProperties(
+    val enabled: Boolean = false,
+    /** Where the active file is. Its parent directories are created if they are missing. */
+    val path: String = "logs/telemetry.jsonl",
+    /** The size at which the file is rolled — `64MB`, `512KB`. `0` for no size limit. */
+    val maxSize: DataSize = DataSize.ofMegabytes(64),
+    /**
+     * The period one file covers, aligned to the epoch: `24h` rolls at UTC midnight rather than a
+     * day after this process started. `0` for no time limit.
+     */
+    val every: Duration = Duration.ofHours(24),
+    /** How many rolled files survive. `0` keeps only the file being written. */
+    val keep: Int = 7,
+    /** Whether a rolled file is gzipped. Off by default: it happens on the export path. */
+    val compress: Boolean = false,
 )
