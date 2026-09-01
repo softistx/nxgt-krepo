@@ -30,8 +30,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * It knows nothing about any particular store. It asks the engine what is due and resumes it, which
  * is `WorkflowStore.runnable` and `WorkflowStore.guarded` and nothing else — so the same worker
- * drives instances in Redis, in memory, or in whatever store comes next. That is why it lives here
- * rather than beside the one store that exists today.
+ * drives instances in Redis, in Postgres, in MongoDB or in memory. That is why it lives here rather
+ * than beside a store.
  *
  * **There is no claim step.** The worker asks the store what is due and calls `resume` on each; the
  * engine takes the instance's lock itself and returns quietly when somebody else has it. Two workers
