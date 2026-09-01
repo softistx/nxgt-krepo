@@ -85,6 +85,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-material/README.md`](libs/stx-material/README.md) | The UI library — its shape, how `StrangeTheme` slots into an existing Material 3 application, and how a component is added |
 | [`libs/stx-material/docs/tokens.md`](libs/stx-material/docs/tokens.md) | What a token may say — colour roles, spacing, durations and easings, and why shapes and elevation stay M3's |
 | [`libs/stx-material/docs/components.md`](libs/stx-material/docs/components.md) | Every component, its parameters, and its story in the catalogue |
+| [`examples/workflow-checkout/README.md`](examples/workflow-checkout/README.md) | The checkout saga — compensation, a fan-out, and a process killed mid-charge to show what at-least-once buys and costs |
 | [`examples/material-demo/README.md`](examples/material-demo/README.md) | The catalogue — why it is three modules, how to run it, how a story is registered |
 | [`libs/stx-kafka/README.md`](libs/stx-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/stx-mongo/README.md`](libs/stx-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
