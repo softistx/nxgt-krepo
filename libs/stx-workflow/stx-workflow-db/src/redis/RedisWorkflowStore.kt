@@ -60,7 +60,7 @@ class RedisWorkflowStore(
                 arrayOf(redis.instanceKey(record.id), redis.runnableKey()),
                 encode(record),
                 record.version.toString(),
-                score(record).toString(),
+                due(record),
                 record.id,
             )
         require(written == 1L) { "workflow instance '${record.id}' already exists" }
@@ -81,10 +81,7 @@ class RedisWorkflowStore(
         record: WorkflowRecord,
         expectedVersion: Long,
     ): Boolean {
-        // Out of the index, and for two different reasons. A terminal instance is done and takes a
-        // retention TTL with it; a parked one is very much alive but nothing except a signal will
-        // move it, so polling for it would be a worker in a loop with itself. Neither gets a score.
-        val due = if (record.status.isTerminal || record.isParked) "" else score(record).toString()
+        val due = due(record)
         val ttl = if (record.status.isTerminal) terminalTtl(record) else ""
         return redis.commands.eval<Long>(
             StoreScripts.SAVE,
@@ -128,14 +125,27 @@ class RedisWorkflowStore(
     private fun encode(record: WorkflowRecord) = json.encodeToString(WorkflowRecord.serializer(), record)
 
     /**
-     * When this instance should next be looked at.
+     * When this instance should next be looked at, as a score — and the empty string when the answer
+     * is never.
      *
      * A running one is scored a lease into the future, so it is not offered while somebody is
      * plainly working on it; if that somebody dies, the score passes and it is offered again. One
      * waiting on a time — a `sleep`, or an `await` with a deadline — is scored at that time, which
      * is the same question asked of the same sorted set and is why it is a sorted set.
+     *
+     * Out of the index entirely, and for two different reasons. A terminal instance is done and
+     * takes a retention TTL with it; a parked one is very much alive but nothing except a signal
+     * will move it, so polling for it would be a worker in a loop with itself.
+     *
+     * Both write paths ask this one function, which the shared store contract is what caught: the
+     * two used to disagree, and only a caller that created a non-running instance would have found
+     * out. `JpaWorkflowStore.dueAt` is the same three cases in the relational store.
      */
-    private fun score(record: WorkflowRecord): Long = (record.wakeAt ?: (record.updatedAt + lease)).toEpochMilliseconds()
+    private fun due(record: WorkflowRecord): String =
+        when {
+            record.status.isTerminal || record.isParked -> ""
+            else -> (record.wakeAt ?: (record.updatedAt + lease)).toEpochMilliseconds().toString()
+        }
 
     private fun terminalTtl(record: WorkflowRecord): String =
         when {
