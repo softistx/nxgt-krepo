@@ -42,13 +42,27 @@ The clients underneath do not agree on this by themselves: Lettuce and the MinIO
 second close, the RabbitMQ client throws `AlreadyClosedException`, and none of them owes us that
 behaviour in the next version. The guard makes one contract out of three.
 
-It holds an `AtomicBoolean` rather than a `Mutex`, which is the same question the three concurrency
-types below answer: `close()` is an ordinary blocking function called from `use` blocks, shutdown
-hooks and container teardown, none of which is a coroutine.
+It holds an `AtomicBoolean` rather than a `Mutex`, which is the same question the concurrency types
+below answer: `close()` is an ordinary blocking function called from `use` blocks, shutdown hooks and
+container teardown, none of which is a coroutine.
 
-## Which of the three concurrency types
+## Which concurrency type
 
-They look interchangeable and are not. The question that separates them is **who is calling**.
+The types live in two packages, and **which package is the first question**: can the caller suspend?
+
+| | `coroutines/` — the caller is a coroutine | `concurrent/` — the caller cannot suspend |
+| --- | --- | --- |
+| A map every caller reads and writes | `CoroutineSafeMap` | a `ConcurrentMap` plus `getOrCompute` |
+| A value computed once per key | `KeyedMutex` when the loader suspends | `Memo` |
+| An object that is not thread-safe | a `Mutex` you take around it | `Guarded` |
+| Getting work across the boundary | `Mailbox`, from a thread that cannot suspend | — |
+| A queue somebody else owns | — | `consumeAsFlow` |
+
+`concurrent/` is not the fallback for code that has not been made suspending yet. It is for the
+callers that genuinely cannot be: a Hibernate binder, an SLF4J static initialiser, a driver's
+callback, a shutdown hook. Everything else belongs on the left-hand column, and reaching for
+`runBlocking` to move from the right column to the left is how a client deadlocks against its own
+I/O thread.
 
 ```kotlin
 // Every caller is a coroutine, and each operation stands alone.
@@ -59,6 +73,12 @@ private val loading = KeyedMutex<UserId>()
 
 // Some callers are not coroutines at all — a Java listener, a driver's callback.
 private val confirms = Mailbox<Confirm>()
+
+// The caller is Hibernate, and the value is expensive and derived.
+private val serializers = Memo<Type, KSerializer<Any>> { resolveReflectively(it) }
+
+// The value is ICU's MessageFormat, which its own documentation calls unsynchronized.
+private val format = Guarded(MessageFormat(pattern, locale))
 ```
 
 **`CoroutineSafeMap`** is a `Mutex` and a map. A mutex suspends where a `synchronized` block parks a
@@ -90,6 +110,49 @@ single owner and needs no synchronisation at all — plain `var`s, plain maps, n
 channel is FIFO, so two messages that must be applied in order *are*, which two guarded flags cannot
 promise however carefully each one is guarded. `AmqpPublisher` settles the broker's confirms this
 way, and `KafkaSubscriber` carries its handlers' completions the same way.
+
+## `getOrPut` on a `ConcurrentHashMap` is not atomic
+
+This is the reason `Memo` exists, and it was in this repository's own code before it was written
+down: `stx-jpa`'s serializer cache spelled it
+
+```kotlin
+cache.getOrPut(key) { expensive(key) }        // a get, a compute and a put — nothing holds them together
+cache.computeIfAbsent(key) { expensive(it) }  // one call, atomic
+```
+
+A `ConcurrentHashMap` looks like it makes a cache safe on its own, and the obvious Kotlin spelling
+quietly undoes it: `kotlin.collections.getOrPut` compiles happily against a concurrent map and is
+three separate operations. Two threads arriving at a cold key **both** run the loader.
+
+That is a wasted computation when the value is a plain result, and a bug when the value has
+identity — two loggers under one name, two parsed patterns, two connections, one of each silently
+dropped. It also fails at exactly the moment a cache is supposed to help, which is the cold start
+where everything asks at once.
+
+`MemoTest` pins the difference instead of asserting it: a loader that parks until a second caller
+joins it, which two threads reach through `getOrPut` and cannot both reach through `Memo`.
+
+`Memo` never evicts, on purpose, and that constrains its keys: a class, a `Type`, a logger name, a
+locale — a domain the program itself controls. A key that comes from **outside** turns it into a
+leak a caller can grow at will.
+
+## What is already in Kotlin, and is therefore not here
+
+Asked for a wrapper and answered with a pointer, because a thin wrapper over something the standard
+library already does well is a second name for one idea:
+
+| You want | Use | Not a wrapper here because |
+| --- | --- | --- |
+| `lock.lock()` / `unlock()` in a block | `kotlin.concurrent.withLock` | It is in the stdlib. `Guarded` is built on it; what `Guarded` adds is that the value cannot be reached *without* it |
+| A read/write lock in a block | `kotlin.concurrent.read` / `write` | Same |
+| A counter or a flag several threads touch | `java.util.concurrent.atomic` | `kotlin.concurrent.atomics` exists in the 2.4 stdlib but is still `@ExperimentalAtomicApi` and does not compile without an opt-in — checked, not assumed. `updateAndGet` and `accumulateAndGet` are already on the Java types |
+| One value computed lazily, once | `by lazy` | Thread-safe by default (`SYNCHRONIZED`). `Memo` is the *per-key* version of it, and `CloseGuard` the run-once-and-return-nothing version |
+| A queue you own both ends of | `Channel`, or `Mailbox` | Neither blocks a thread at all. `consumeAsFlow` is for the `BlockingQueue` a Java library handed you and will not take a `Channel` instead of |
+| A snapshot-read list of listeners | `CopyOnWriteArrayList` | Already the right shape; a wrapper would only rename it |
+| A concurrent set | `ConcurrentHashMap.newKeySet()` | Same |
+| A pool of threads | `Dispatchers`, or `Thread.ofVirtual()` | See AGENTS.md on why a shutdown hook takes `unstarted` and never `startVirtualThread` |
+| A request-scoped value | a `CoroutineContext.Element` | Never a `ThreadLocal`: `stx-telemetry`'s README has that argument at length |
 
 ## Serialization
 

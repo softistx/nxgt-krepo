@@ -1,6 +1,7 @@
 package com.strange.i18n
 
 import com.ibm.icu.text.MessageFormat
+import com.strange.common.concurrent.Guarded
 import java.util.Locale
 
 /**
@@ -169,10 +170,12 @@ internal sealed interface Message {
     /**
      * Has placeholders, so it holds a compiled ICU pattern.
      *
-     * Compiled once — parsing a pattern costs far more than formatting with it — and formatted
-     * under a lock, because ICU documents `MessageFormat` as unsynchronized and asks callers to do
-     * exactly this. The lock is uncontended in the normal case and is only ever taken for a message
-     * that actually has arguments.
+     * Compiled once — parsing a pattern costs far more than formatting with it — and held in a
+     * [Guarded], because ICU documents `MessageFormat` as unsynchronized and asks callers to do
+     * exactly this. `Guarded` rather than a `synchronized` block on the field so that there is no
+     * way to reach the format without the lock: the rule stops being one a future reader has to
+     * notice. The lock is uncontended in the normal case and only ever taken for a message that
+     * actually has arguments.
      */
     class Pattern(
         override val text: String,
@@ -180,11 +183,13 @@ internal sealed interface Message {
         val locale: Locale,
     ) : Message {
         private val format =
-            try {
-                MessageFormat(text, locale)
-            } catch (failure: IllegalArgumentException) {
-                throw MalformedMessageException(key, locale, "is not a valid ICU message pattern", failure)
-            }
+            Guarded(
+                try {
+                    MessageFormat(text, locale)
+                } catch (failure: IllegalArgumentException) {
+                    throw MalformedMessageException(key, locale, "is not a valid ICU message pattern", failure)
+                },
+            )
 
         /**
          * What this pattern needs supplied, read off it once.
@@ -193,11 +198,11 @@ internal sealed interface Message {
          * than complaining — which is the right default for a running server and useless to a test.
          * Knowing the names is what lets [MissingKey.Fail] tell the difference.
          */
-        val argumentNames: Set<String> = format.argumentNames
+        val argumentNames: Set<String> = format.withLock { it.argumentNames }
 
-        fun format(arguments: Array<out Any>): String = synchronized(format) { format.format(arguments) }
+        fun format(arguments: Array<out Any>): String = format.withLock { it.format(arguments) }
 
-        fun format(arguments: Map<String, Any>): String = synchronized(format) { format.format(arguments) }
+        fun format(arguments: Map<String, Any>): String = format.withLock { it.format(arguments) }
     }
 
     companion object {
