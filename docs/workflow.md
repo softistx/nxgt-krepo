@@ -594,6 +594,8 @@ class WorkflowEngineBuilder {
 }
 
 suspend fun <C> WorkflowEngine.start(workflow: Workflow<C>, context: C, id: String = …): WorkflowInstance<C>
+suspend fun <C> WorkflowEngine.startAt(workflow: Workflow<C>, context: C, at: Instant, id: String = …): WorkflowInstance<C>
+suspend fun <C> WorkflowEngine.startAfter(workflow: Workflow<C>, context: C, delay: Duration, id: String = …): WorkflowInstance<C>
 suspend fun WorkflowEngine.resume(id: String): WorkflowRecord
 suspend fun <C> WorkflowEngine.resume(workflow: Workflow<C>, id: String): WorkflowInstance<C>
 suspend fun <T> WorkflowEngine.signal(id: String, signal: Signal<T>, payload: T): WorkflowRecord
@@ -609,6 +611,27 @@ it up.
 
 A workflow must be `register`ed before `start` will run it: an instance the engine cannot look up
 again is an instance that cannot be resumed after a restart.
+
+### Booking a start for later
+
+`startAt(flow, context, at = booking.startsAt - 24.hours)` creates the instance and runs none of it.
+It has an id, a context and a record that `cancel` works on from that moment; what it has **not** got
+is a journal, and that is what says it has not begun — every node that runs writes an entry, so
+nothing else in this design is `Sleeping` with nothing recorded.
+
+It sits in the store's due-time index scored at `at`, so **something has to come back for it**: a
+`WorkflowWorker`, or an application scheduler calling `resume`. An engine with nobody polling has
+booked an instance that never starts — the same rule `sleep` lives under, for the same reason.
+Nothing here holds a timer.
+
+Resuming it early runs nothing and leaves it booked, because a store may offer an instance a little
+early and running it then would make `startAt` mean "about then". An `at` that has already passed is
+due, not deferred: it starts now.
+
+**There is no recurrence, and it is not an omission.** "Every night at three" is a schedule, and a
+schedule is not an instance: it outlives every run of it, it has to survive being paused and edited,
+and it wants a store and a vocabulary of its own. Built out of one instance re-booking the next, it
+would be a chain in which one lost link ends the series with nobody noticing.
 
 `signal(id, SIGNAL, payload)` delivers a payload to an instance and runs it on from there in the
 calling process. The instance does **not** have to be waiting yet — see [waiting for a
@@ -650,7 +673,7 @@ recovery, use [the worker](#the-worker).
 | --- | --- | --- |
 | `Running` | A node is running, or the next one is about to | |
 | `Awaiting` | Stopped until a named signal arrives, or until a [child workflow](#child-workflows) finishes — `awaiting` says which | |
-| `Sleeping` | Stopped until a point in time — see [waiting for a clock](#waiting-for-a-clock) | |
+| `Sleeping` | Stopped until a point in time — a [`sleep`](#waiting-for-a-clock), or a [start booked for later](#booking-a-start-for-later) that has not come round | |
 | `Compensating` | A node failed for good; the journal is being unwound | |
 | `Completed` | Every node succeeded | yes |
 | `Compensated` | A node failed, and every compensation owed for it succeeded | yes |
