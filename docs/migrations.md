@@ -10,6 +10,7 @@ the library is shaped this way; this file is what you may write.
 - [What the runner does, in order](#what-the-runner-does-in-order)
 - [What it throws](#what-it-throws)
 - [The ledger contract](#the-ledger-contract)
+- [The two stores](#the-two-stores)
 - [The lock](#the-lock)
 - [What a killed process leaves](#what-a-killed-process-leaves)
 - [A migration must be safe to attempt twice](#a-migration-must-be-safe-to-attempt-twice)
@@ -164,6 +165,64 @@ it never moves), `updatedAt` (every write), `appliedBy`, `failure` and `duration
 
 `InMemoryLedger` in the core module is the reference implementation. It is a fair choice for a
 single-process tool or a test double; anything with a second instance of the application wants a store.
+
+## The two stores
+
+Both live in `stx-migrations-db`, one package each, and both take a connection they did not open.
+
+```kotlin
+MongoMigrations(database, listOf(V1Seed(), V2Tags()))            // MongoDatabase
+SqlMigrations(jpa, listOf(V1Orders(), V2OrderIndex()))           // Jpa — PostgreSQL or MySQL
+```
+
+| | MongoDB | SQL |
+| --- | --- | --- |
+| the records | collection `stx_migrations`, `_id` is the version | table `stx_migrations`, `version bigint primary key` |
+| the lock | collection `stx_migrations_lock`, one document | table `stx_migrations_lock`, one row |
+| uniqueness | the `_id`, so there is **no secondary index** | the primary key |
+| the instants | BSON dates | `bigint` epoch milliseconds |
+| what a migration gets | the `MongoDatabase` itself | a `SqlMigrationSession` over a borrowed connection |
+| needs | no replica set — nothing opens a transaction | `poolSize >= 2`, refused at construction otherwise |
+
+**Why the instants differ.** Mongo has one unambiguous date type and the two SQL servers do not:
+MySQL's `timestamp` converts to UTC on the way in and back to the session's zone on the way out,
+`datetime` does not, and Postgres has no `datetime` at all. A `bigint` means one thing everywhere —
+`to_timestamp(started_at / 1000)` is the reading glasses.
+
+**Why SQL wants two connections.** A run holds one for the migration's own statements and needs a
+second for the lease watchdog renewing the lock underneath it. On a pool of one that is not an error,
+it is a hang, so `SqlMigrations` refuses to be built and names the deadlock.
+
+### SQL migrations write their own SQL
+
+```kotlin
+interface SqlMigrationSession {
+    suspend fun execute(@Language("SQL") sql: String)   // sent as written; DDL lives here
+    suspend fun update(@Language("SQL") sql: String): Int   // prepared; answers a row count
+}
+```
+
+`execute` goes out unprepared, which is what makes `create index`, two statements in one call and a
+literal `?` used as a Postgres `jsonb` operator reach the server unchanged. `stx-jpa`'s `NativeDdlTest`
+measures each of those, and measures the session's own native verbs refusing them.
+
+**Neither verb takes parameters.** Postgres spells a placeholder `$1` and MySQL spells it `?`, so a
+parameter list here would be a portability hole in the one API that is supposed to be portable. A
+migration is authored code: the values it needs are literals it writes itself, exactly as in a `.sql`
+migration file. **There is no `select`** either — a portable row type would have to be positional, and
+a read-modify-write loop inside a startup gate is the thing to avoid.
+
+**An unqualified name lands in the connection's own schema**, not in `JpaConfig.schema`: Hibernate
+applies that when it renders a statement from the mapping, and nothing renders these. The ledger
+qualifies its own two tables; a migration should say where its tables go.
+
+The whole dialect surface is that one placeholder. It used to be two things — the second was *insert
+unless it is already there* — and the contract took it away: MySQL's Vert.x client sets
+`CLIENT_FOUND_ROWS`, so an insert that hit an existing row reports one affected row exactly as a
+successful insert does, and the question cannot be answered from a row count at all. `claim` inserts
+plainly and, if the insert fails, asks the database whether the row is now there.
+
+**PostgreSQL and MySQL are verified; DB2 is out of scope** and refused by name at construction.
 
 ## The lock
 

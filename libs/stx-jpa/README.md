@@ -568,7 +568,8 @@ did not create.
 
 No migrations, no second-level cache, and one datasource. The schema question in particular deserves
 its own decision rather than a default chosen here: `SchemaMode` exists for tests and scratch
-databases, not as a migration story.
+databases, not as a migration story. That story is `stx-migrations`, which keeps a history and runs as
+a startup gate — it borrows this library's pool through `jpa.connection { }` and adds nothing to it.
 
 **No keyset pagination**, and that is the one that used to be here. Resuming from the previous page's
 sort key needs a query object that can be rebuilt per page and read those keys back off a row, which
