@@ -1,0 +1,165 @@
+{
+  "groups": [
+    {
+      "name": "stx.telemetry",
+      "type": "com.strange.telemetry.spring.TelemetryProperties",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "description": "Logs and traces for this application, through stx-telemetry."
+    },
+    {
+      "name": "stx.telemetry.otlp",
+      "type": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "description": "The OTLP/HTTP exporter, when stx-telemetry-otlp is on the classpath."
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.telemetry.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": false,
+      "description": "Build and install an stx-telemetry root for this application, and make each request a server span. Off by default."
+    },
+    {
+      "name": "stx.telemetry.service",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": null,
+      "description": "The service.name every signal reports. Falls back to spring.application.name, and to unknown-service when there is neither \u2014 a fleet of processes with the same name is a fleet with no telemetry, so this is worth setting."
+    },
+    {
+      "name": "stx.telemetry.version",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": null,
+      "description": "The service.version every signal reports."
+    },
+    {
+      "name": "stx.telemetry.environment",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": null,
+      "description": "The deployment.environment.name every signal reports: production, staging."
+    },
+    {
+      "name": "stx.telemetry.minimum",
+      "type": "com.strange.telemetry.model.Severity",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": "info",
+      "description": "The lowest severity emitted at all: debug, info, warn or error. Spans are governed by sample-ratio, not by this."
+    },
+    {
+      "name": "stx.telemetry.sample-ratio",
+      "type": "java.lang.Double",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": 1.0,
+      "description": "The share of traces kept, from 0.0 to 1.0. Decided once at a trace's root and carried in the traceparent, and by trace id rather than a coin toss, so two services at the same ratio keep the same traces. Logs are never sampled."
+    },
+    {
+      "name": "stx.telemetry.stack-traces",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": true,
+      "description": "Whether a failure's stack trace is rendered into the signal. Off for a deployment whose bill is per byte."
+    },
+    {
+      "name": "stx.telemetry.batch",
+      "type": "java.lang.Integer",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": 512,
+      "description": "How many signals ship to an exporter together at most."
+    },
+    {
+      "name": "stx.telemetry.linger",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": "1s",
+      "description": "How long a partial batch waits for company before shipping anyway."
+    },
+    {
+      "name": "stx.telemetry.drain-timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": "10s",
+      "description": "How long shutdown waits for the queue to drain before giving up on it, so a collector that stopped answering does not stop the process exiting."
+    },
+    {
+      "name": "stx.telemetry.console",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": false,
+      "description": "Adds a ConsoleExporter: one human-readable line per signal on stdout. For development."
+    },
+    {
+      "name": "stx.telemetry.json-lines",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": false,
+      "description": "Adds a JsonLinesExporter: one JSON object per line on stdout, for a collector that reads the container's log."
+    },
+    {
+      "name": "stx.telemetry.web-filter",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": true,
+      "description": "Whether each request becomes a server span, continuing an incoming traceparent and renamed to the matched route once WebFlux knows it."
+    },
+    {
+      "name": "stx.telemetry.ignore",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.strange.telemetry.spring.TelemetryProperties",
+      "defaultValue": null,
+      "description": "Path prefixes that get no span. A health check answered every second by a load balancer is a trace nobody will read and most of the traces there are."
+    },
+    {
+      "name": "stx.telemetry.otlp.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "defaultValue": false,
+      "description": "Export to an OTLP collector over HTTP in JSON. Needs stx-telemetry-otlp on the classpath."
+    },
+    {
+      "name": "stx.telemetry.otlp.endpoint",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "defaultValue": "http://localhost:4318",
+      "description": "The collector's base URL; /v1/logs and /v1/traces are appended."
+    },
+    {
+      "name": "stx.telemetry.otlp.headers",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "defaultValue": null,
+      "description": "Headers sent on every request \u2014 an API key, a tenant header."
+    },
+    {
+      "name": "stx.telemetry.otlp.timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "defaultValue": "10s",
+      "description": "Connect and request timeout."
+    },
+    {
+      "name": "stx.telemetry.otlp.attempts",
+      "type": "java.lang.Integer",
+      "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "defaultValue": 3,
+      "description": "How many times one document is sent before giving up. 1 disables retrying. A 408, 429 or 5xx and a connection failure are retried; any other 4xx is not, because the same document would be wrong again."
+    },
+    {
+      "name": "stx.telemetry.otlp.backoff",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "defaultValue": "500ms",
+      "description": "The first wait between attempts; it doubles each time."
+    },
+    {
+      "name": "stx.telemetry.otlp.gzip",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryOtlpProperties",
+      "defaultValue": true,
+      "description": "Compresses the body. Every OTLP/HTTP receiver is required to understand it."
+    }
+  ]
+}
