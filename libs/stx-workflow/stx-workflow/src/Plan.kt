@@ -2,8 +2,10 @@ package com.strange.workflow
 
 import com.strange.workflow.dsl.Await
 import com.strange.workflow.dsl.BranchNode
+import com.strange.workflow.dsl.Child
 import com.strange.workflow.dsl.Leg
 import com.strange.workflow.dsl.Parallel
+import com.strange.workflow.dsl.RetryPolicy
 import com.strange.workflow.dsl.Sleep
 import com.strange.workflow.dsl.Step
 import com.strange.workflow.dsl.WorkflowNode
@@ -31,6 +33,7 @@ internal fun <C> index(
     seen: MutableSet<String>,
     undo: MutableMap<String, Undo<C>>,
     signals: MutableSet<String>,
+    children: MutableMap<String, Workflow<*>>,
 ) {
     for (node in nodes) {
         val path = qualify(prefix, node.name)
@@ -52,6 +55,14 @@ internal fun <C> index(
                 signals += node.signal.name
             }
 
+            // A child node always has something to undo — the child instance — so it is always in
+            // the undo map. Its block is never called: the unwind finds the path in `children`
+            // first and undoes the instance instead, which is the only thing that knows how.
+            is Child<C, *> -> {
+                children[path] = node.workflow
+                undo[path] = Undo(RetryPolicy.once, timeout = null) { _, _ -> }
+            }
+
             is Sleep -> {
                 Unit
             }
@@ -60,7 +71,7 @@ internal fun <C> index(
                 for (arm in node.arms) {
                     val armPath = qualify(path, arm.name)
                     require(seen.add(armPath)) { "workflow '$workflow' declares '$armPath' twice" }
-                    index(workflow, armPath, arm.nodes, seen, undo, signals)
+                    index(workflow, armPath, arm.nodes, seen, undo, signals, children)
                 }
             }
         }

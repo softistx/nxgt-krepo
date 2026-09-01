@@ -28,7 +28,12 @@ data class WorkflowRecord(
     val status: WorkflowStatus,
     val context: JsonElement,
     val journal: List<JournalEntry> = emptyList(),
-    /** The name of the signal this instance is stopped on, when [status] is [WorkflowStatus.Awaiting]. */
+    /**
+     * What this instance is stopped on, when [status] is [WorkflowStatus.Awaiting].
+     *
+     * A signal's name, or a child instance's id — the two things an instance waits for, and both
+     * followable from here by whoever is reading the record.
+     */
     val awaiting: String? = null,
     /**
      * Delivered payloads no `await` has consumed yet, by the name of the signal each belongs to.
@@ -54,6 +59,16 @@ data class WorkflowRecord(
      * Null while awaiting means **never**: see [isParked].
      */
     val wakeAt: Instant? = null,
+    /**
+     * The instance that started this one with a `child` node, when something did.
+     *
+     * It is here rather than only on the parent because it is what makes the handoff prompt: an
+     * instance that reaches a terminal status looks at this and resumes whoever was waiting on it,
+     * instead of the parent discovering it on its next poll. The poll is still what makes it
+     * *correct* — the two records cannot be written atomically, so a process that dies in between
+     * leaves a parent that only a poll will free.
+     */
+    val parent: String? = null,
     val error: WorkflowError? = null,
     /**
      * True when the unwind was asked for rather than caused by a failure.

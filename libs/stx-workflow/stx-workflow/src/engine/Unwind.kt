@@ -36,8 +36,23 @@ internal suspend fun <C> Run<C>.unwind() {
 }
 
 private fun <C> Run<C>.nextUndo(): JournalEntry? =
-    record.journal.asReversed().firstOrNull { entry ->
-        workflow.undo.containsKey(entry.node) && record.succeeded(entry.node) != null
+    record.journal.asReversed().firstOrNull { entry -> workflow.undo.containsKey(entry.node) && owes(entry.node) }
+
+/**
+ * True when [node] still has something to take back.
+ *
+ * For an ordinary node that is "its last entry says it succeeded": one that failed did nothing that
+ * needs undoing. A `child` node reads the same rule differently because what it owes is not an
+ * effect but an **instance**, and that instance exists from the moment the node started it — whether
+ * the node then succeeded, failed because the child did, or was still waiting when its deadline ran
+ * out. Leaving that last one alone would be a workflow that quietly leaks a running instance every
+ * time a child is slow.
+ */
+private fun <C> Run<C>.owes(node: String): Boolean =
+    when (record.latest(node)?.outcome) {
+        NodeOutcome.Succeeded -> true
+        NodeOutcome.Paused, NodeOutcome.Failed -> node in workflow.children
+        else -> false
     }
 
 /**
@@ -50,8 +65,19 @@ private fun <C> Run<C>.nextUndo(): JournalEntry? =
 internal suspend fun <C> Run<C>.compensateNode(entry: JournalEntry): Boolean {
     val undo = workflow.undo[entry.node] ?: return true
     val startedAt = Clock.System.now()
+    // A child node's undo is not a block this declaration holds — it is the child instance running
+    // its own compensations, in its own reverse order, checkpointed in its own journal. Everything
+    // else about compensating it is the same, retry policy and journal entry included.
+    val child = workflow.children[entry.node]
     return try {
-        val outcome = attempt(undo.retry, undo.timeout) { n -> undo.block(scope(entry.node, n, startedAt), entry.value, json) }
+        val outcome =
+            attempt(undo.retry, undo.timeout) { n ->
+                if (child != null) {
+                    engine.undoChild("${record.id}/${entry.node}")
+                } else {
+                    undo.block(scope(entry.node, n, startedAt), entry.value, json)
+                }
+            }
         journal(entry.node, NodeOutcome.Compensated, outcome.attempts)
         true
     } catch (failure: NodeFailure) {
