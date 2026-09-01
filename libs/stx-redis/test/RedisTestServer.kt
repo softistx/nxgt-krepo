@@ -3,7 +3,6 @@ package com.strange.redis
 import com.strange.redis.codec.redisJson
 import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.redisContainer
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.seconds
@@ -62,8 +61,7 @@ internal object RedisTestServer {
             try {
                 block(redis)
             } finally {
-                val keys = redis.commands.keys("${redis.namespace}*").toList()
-                if (keys.isNotEmpty()) redis.commands.del(*keys.toTypedArray())
+                redis.deleteKeys()
             }
         }
     }

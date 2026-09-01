@@ -23,6 +23,13 @@ prefixed, and two applications, or an application and its own tests, can share a
 being able to delete each other's keys by accident. The database index belongs in the URI, where
 Lettuce reads it from.
 
+`scanKeys` and `deleteKeys` are the namespace made good on: their pattern is relative to it, so
+`redis.deleteKeys("*")` on a connection namespaced `billing` is every key `billing` owns and nothing
+else on the server. They used to take the pattern verbatim and leave the prefixing to the caller,
+which every caller then did by hand — a default in the wrong place, and one where forgetting it turned
+`"*"` into `FLUSHDB`. A genuinely global sweep is `redis.commands.scan(...)`, Lettuce's own, which
+says what it is doing.
+
 One connection is the right number: Lettuce multiplexes commands over it and is thread-safe, so a
 pool buys nothing until something *blocks* it. `pubSub()` and `dedicated()` are the two cases that
 do, and both hand back a connection the caller owns and closes.
