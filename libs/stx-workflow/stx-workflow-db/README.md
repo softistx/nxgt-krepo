@@ -120,6 +120,52 @@ default is a bound rather than nothing.
 `Failed` is exempt. It is waiting for a person, and expiring it would delete the only description of
 what has to be fixed.
 
+## Relational
+
+`JpaWorkflowStore(jpa)` needs one thing from the application: `WorkflowInstanceRow` among the
+entities it connects with.
+
+```kotlin
+val jpa = Jpa.connect(config, Order::class, WorkflowInstanceRow::class)
+val engine = WorkflowEngine(JpaWorkflowStore(jpa)) { register(checkout) }
+```
+
+**Postgres, DB2 and MySQL come out of the same code.** Nothing in the store is SQL — every statement
+is HQL, and Hibernate picks its dialect from the URI, exactly as it does for the application's own
+entities. Only Postgres is *verified* here; the other two are supported by construction and unrun.
+
+### One row, and the columns a query needs
+
+`record` is the encoded `WorkflowRecord` and nothing reads inside it. `due_at`, the lease pair and
+`finished_at` exist because a query needs them; nothing else is copied out of the document, because
+two copies of a fact are one chance for them to disagree.
+
+`record` is `Length.LONG32`, not `@Lob`. That is `text` on Postgres and `clob` on DB2 — a column
+psql shows you. A `@Lob String` on Postgres has historically been a large-object `oid`, which
+`select` shows as a number, and a journal an operator cannot read is not there when it is needed.
+
+### The conditional write is one statement, not `@Version`
+
+Hibernate's optimistic locking signals a lost race by *throwing* at flush. Honouring
+`save(record, expectedVersion): Boolean` with it would mean a select, a mutation, a rolled-back
+transaction and an exception caught across it — to answer a boolean. `where version = :expected` is
+the same guarantee in one `update`, with the row count as the answer.
+
+### A lease column, not `select … for update skip locked`
+
+A row lock lives inside a transaction, so holding one across a step means holding a database
+connection for as long as the step runs — and `skip locked` is spelled differently on every dialect.
+Two columns are a lease that outlives the process that took it, needs no open transaction, and reads
+the same everywhere. It renews while the work runs, for the reason `RedisLock` does: it says *this
+instance is being advanced right now*, not *this code is short*.
+
+### Retention is a job, not a TTL
+
+A table has no TTL, so `purge(before)` deletes finished instances and answers how many. Calling it is
+the application's business — a library that quietly deleted rows out of somebody's own schema on a
+timer would be a surprise nobody signed up for. `Failed` is exempt here too: it never gets a
+`finished_at`, so nothing takes it.
+
 ## The worker is not here
 
 `WorkflowWorker` lives in the core module. It asks the engine what is due and resumes it, which is
