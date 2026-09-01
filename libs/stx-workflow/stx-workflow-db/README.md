@@ -24,9 +24,11 @@ Redis never loads a class from Hibernate or the Mongo driver. Nothing is missing
 nobody carries three drivers to use one.
 
 What one module buys, beyond the arithmetic: the parts that are the *same* across stores are written
-once. The lease and its renewal, the rule that a parked instance leaves the due-time index, the
-encode/decode of a `WorkflowRecord` the store never looks inside — three sibling modules would have
-had three copies of each, and the copies would have drifted the first time one of them was fixed.
+once, and checked once. `Lease` is `guarded` for the two stores with no lock to borrow. `StoreContract`
+is the eleven scenarios all three answer — and it caught a real one on its first run, where
+`RedisWorkflowStore.create` put a parked instance in the due-time index that `save` kept out of it.
+Three sibling modules would have had three copies of each and would have drifted the first time one
+of them was fixed.
 
 ## Which one
 
@@ -34,7 +36,10 @@ had three copies of each, and the copies would have drifted the first time one o
 | --- | --- | --- |
 | `RedisWorkflowStore` | a `Redis` from `stx-redis` | The fastest, and the only one with a real TTL — a finished instance expires on its own |
 | `JpaWorkflowStore` | a `Jpa` from `stx-jpa` | Postgres, DB2, MySQL — whatever the URI's scheme picks. Instances land in the same transaction log as the application's own rows |
-| `MongoWorkflowStore` | a `MongoDatabase` from `stx-mongo` | One document per instance, and a TTL index for retention |
+| `MongoWorkflowStore` | a `MongoDatabase` from `stx-mongo` | One document per instance, and a TTL index the server enforces |
+
+Verified against Redis, Postgres and MongoDB. DB2 and MySQL come out of the relational store by
+construction — it writes no SQL — and are unrun here.
 
 ## Redis
 
@@ -165,6 +170,39 @@ A table has no TTL, so `purge(before)` deletes finished instances and answers ho
 the application's business — a library that quietly deleted rows out of somebody's own schema on a
 timer would be a surprise nobody signed up for. `Failed` is exempt here too: it never gets a
 `finished_at`, so nothing takes it.
+
+## MongoDB
+
+```kotlin
+val store = MongoWorkflowStore(database)
+val engine = WorkflowEngine(store) { register(checkout) }
+```
+
+**A suspending function, not a constructor.** It creates the two indexes the store needs before it
+hands one back: `dueAt`, which is what makes `runnable` a ranged read instead of a collection scan,
+and a TTL on `expiresAt`. Creating them lazily would leave the first `runnable` of a fresh deployment
+scanning; leaving them to the caller would give a store that works and quietly degrades.
+
+`record` is the encoded `WorkflowRecord` as a **string**, not a nested document. The context inside
+it is already a `JsonElement` and no BSON codec maps one, so the choice was between a string the
+store never looks inside and a mapping that would have to.
+
+### Retention is the server's job here
+
+`expireAfterSeconds: 0` on `expiresAt` means *delete when this date passes*. A finished instance gets
+one, `retention` from now — seven days by default, `null` to keep it forever. A document with no
+`expiresAt` is never taken, which is how everything still running stays put, and how `Failed` stays
+put: it is waiting for a person, and expiring it would delete the only description of what has to be
+fixed.
+
+This is the same rule all three stores follow, spelled three ways — a TTL on the key in Redis, a TTL
+index here, and `purge(before)` on a schedule where SQL has no TTL to lean on.
+
+### A lease pair, because there is no lock to borrow
+
+Two fields an `updateOne` sets and another clears, and the same `Lease` policy the relational store
+uses. A lock collection of its own would be these two fields in a second document, plus the problem
+of keeping the two documents in step.
 
 ## The worker is not here
 

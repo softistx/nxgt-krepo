@@ -4,15 +4,10 @@ import com.strange.jpa.Jpa
 import com.strange.jpa.query.find
 import com.strange.jpa.session.transaction
 import com.strange.workflow.WorkflowStatus
+import com.strange.workflow.db.Lease
 import com.strange.workflow.store.WorkflowRecord
 import com.strange.workflow.store.WorkflowStore
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.util.UUID
 import kotlin.time.Clock
@@ -55,6 +50,8 @@ class JpaWorkflowStore(
 ) : WorkflowStore {
     /** Who this process is, in `locked_by`. One per store, so a release can prove it holds the lease. */
     private val owner: String = UUID.randomUUID().toString()
+
+    private val guard = Lease(lease, ::take, ::renew, ::release)
 
     override suspend fun create(record: WorkflowRecord) {
         jpa.transaction { session ->
@@ -119,45 +116,19 @@ class JpaWorkflowStore(
     }
 
     /**
-     * Takes the row's lease, or answers null.
+     * A lease column pair rather than `select … for update`, and the choice is what keeps this store
+     * one implementation instead of two.
      *
-     * A lease column rather than `select … for update`, and the choice is what keeps this store one
-     * implementation instead of two. A row lock lives inside a transaction, so holding one across a
-     * step means holding a database connection for as long as the step runs — and `skip locked` is
-     * spelled differently on every dialect. A lease is a column two `update`s agree about: it
-     * survives the process that took it, it needs no open transaction, and it reads the same on
-     * Postgres and DB2.
-     *
-     * It renews while [block] runs, for the reason `RedisLock` does: the lease says "this instance
-     * is being advanced right now", not "this code is short".
+     * A row lock lives inside a transaction, so holding one across a step means holding a database
+     * connection for as long as the step runs — and `skip locked` is spelled differently on every
+     * dialect. A lease is two columns two `update`s agree about: it survives the process that took
+     * it, it needs no open transaction, and it reads the same on Postgres and DB2. [Lease] is the
+     * policy around those writes, shared with the Mongo store, which has no lock to borrow either.
      */
     override suspend fun <T> guarded(
         id: String,
         block: suspend () -> T,
-    ): T? {
-        if (!take(id)) return null
-        return try {
-            coroutineScope {
-                val watchdog =
-                    launch {
-                        while (isActive) {
-                            delay(lease / 3)
-                            if (!renew(id)) break
-                        }
-                    }
-                try {
-                    block()
-                } finally {
-                    watchdog.cancel()
-                }
-            }
-        } finally {
-            // Releasing is a suspending database call, and a cancelled coroutine cannot make one —
-            // without this, the scope dying mid-step, which is what a crash looks like, would throw
-            // out of the finally and leave the row leased until it expired on its own.
-            withContext(NonCancellable) { release(id) }
-        }
-    }
+    ): T? = guard.guard(id, block)
 
     /**
      * Deletes instances that finished before [before], and answers how many.
