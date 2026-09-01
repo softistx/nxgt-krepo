@@ -124,6 +124,20 @@ class WorkflowEngine internal constructor(
 
     suspend fun record(id: String): WorkflowRecord? = store.load(id)
 
+    /**
+     * The instances in [status], most recently updated first.
+     *
+     * `find(WorkflowStatus.Failed)` is the operator's inbox: every instance whose compensation could
+     * not be made to work, which is the one outcome this engine deliberately refuses to resolve on
+     * its own. Reading one and calling [resume] on it is what a person does after fixing whatever
+     * the compensation was failing on.
+     */
+    suspend fun find(
+        status: WorkflowStatus,
+        limit: Int = 50,
+        offset: Int = 0,
+    ): List<WorkflowRecord> = store.find(status, limit, offset)
+
     /** The instances the store says are due to be advanced. What a worker polls. */
     suspend fun runnable(
         now: Instant = Clock.System.now(),

@@ -1,6 +1,7 @@
 package com.strange.workflow.store
 
 import com.strange.common.coroutines.CoroutineSafeMap
+import com.strange.workflow.WorkflowStatus
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import kotlin.time.Instant
@@ -61,6 +62,21 @@ class InMemoryStore : WorkflowStore {
             .sortedBy { it.updatedAt }
             .take(limit)
             .map { it.id }
+            .toList()
+
+    override suspend fun find(
+        status: WorkflowStatus,
+        limit: Int,
+        offset: Int,
+    ): List<WorkflowRecord> =
+        records
+            .snapshot()
+            .values
+            .asSequence()
+            .filter { it.status == status }
+            .sortedByDescending { it.updatedAt }
+            .drop(offset)
+            .take(limit)
             .toList()
 
     override suspend fun <T> guarded(
