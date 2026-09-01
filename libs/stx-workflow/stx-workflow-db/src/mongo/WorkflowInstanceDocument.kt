@@ -1,6 +1,6 @@
-package com.strange.workflow.mongo
+package com.softistx.workflow.mongo
 
-import com.strange.mongo.codec.InstantAsBsonDateTime
+import com.softistx.mongo.codec.InstantAsBsonDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
@@ -8,7 +8,7 @@ import kotlin.time.Instant
 /**
  * One workflow instance, as a document.
  *
- * [record] is the encoded [com.strange.workflow.store.WorkflowRecord] and **a string, not a nested
+ * [record] is the encoded [com.softistx.workflow.store.WorkflowRecord] and **a string, not a nested
  * document**. A store does not know the workflow's context type — the context is already a
  * `JsonElement` by the time it gets here, and no BSON codec maps one — so the choice is between a
  * string the store never looks inside and a mapping that would have to. Every other field exists

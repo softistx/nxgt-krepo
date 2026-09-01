@@ -1,4 +1,4 @@
-package com.strange.workflow.dsl
+package com.softistx.workflow.dsl
 
 /**
  * One declared thing in a workflow: a step, a branch, or a fan-out.

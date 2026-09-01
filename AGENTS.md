@@ -81,7 +81,7 @@ plugins:
     enabled: true
     client: Ktorfit                       # or Spring, or None for models only
     specFile: ../demo-api/openapi.yaml
-    packageName: com.strange.demo.client.api
+    packageName: com.softistx.demo.client.api
 ```
 
 Nothing is written to `packageName` itself: interfaces go to `<packageName>.apis`, schemas to
@@ -301,7 +301,7 @@ The toolchain finds the project by walking up from the working directory, so the
 
 ## Publishing
 
-The `libs/*` modules publish as `com.strange:<module-name>:<version>` — `com.strange:stx-mongo:0.1.0`
+The `libs/*` modules publish as `com.softistx:<module-name>:<version>` — `com.softistx:stx-mongo:0.1.0`
 today. The configuration lives once in `publishing.module-template.yaml` at the repo root, which each
 library pulls in with `apply: [ //publishing.module-template.yaml ]`; nothing about publishing is
 written per module. `artifactId` is deliberately not set, because it defaults to the module's name —
@@ -565,7 +565,7 @@ databases from a concurrent run's and so had two suites deleting each other's da
 a sweep; name what cannot collide. `libs/stx-testing/README.md` has both.
 
 **A Spring application gets its MongoDB as a bean, not as a property.** `stx-spring-boot`'s
-`com.strange.spring.testing` ships `MongoSpec` — `@SpringBootTest` plus a `MongoConnectionDetails`
+`com.softistx.spring.testing` ships `MongoSpec` — `@SpringBootTest` plus a `MongoConnectionDetails`
 contributed over `stx-testing` — so no application writes a `@DynamicPropertySource` of its own. That
 is not only about repetition: a property name can be wrong and say nothing, and one was. Boot 4 moved
 the driver's settings from `spring.data.mongodb` to **`spring.mongodb`**, and `examples/spring-orders`
@@ -935,10 +935,10 @@ the same each time, and the mistakes are the same each time too.
   telling you the feature names are missing, not that grouping does not apply. Nest a `feature`
   inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
   to the other spec styles. One spec class per file, named after the file.
-- **Every module's packages start with `com.strange`.** The rest follows the module: `com.strange.openapi` for `libs/stx-openapi-generator`, `com.strange.openapi.plugin` for `plugins/openapi`, `com.strange.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
+- **Every module's packages start with `com.softistx`.** The rest follows the module: `com.softistx.openapi` for `libs/stx-openapi-generator`, `com.softistx.openapi.plugin` for `plugins/openapi`, `com.softistx.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
 - **Organise by package, not as a flat pile of files — `test/` exactly as much as `src/`.** A module
   with more than one concern gets a directory per concern, and the directory matches the package —
-  `src/parser/` is `com.strange.openapi.parser`. The root package holds only what every package
+  `src/parser/` is `com.softistx.openapi.parser`. The root package holds only what every package
   depends on: the shared contract, nothing else. When a file lands in the root because it did not
   obviously belong anywhere, that is the signal a package is missing.
 

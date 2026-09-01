@@ -1,4 +1,4 @@
-package com.strange.graphix.http
+package com.softistx.graphix.http
 
 /**
  * How Graphix serves `@SubscriptionMapping` over HTTP.

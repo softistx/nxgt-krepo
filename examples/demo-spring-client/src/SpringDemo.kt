@@ -1,15 +1,15 @@
-package com.strange.demo.spring
+package com.softistx.demo.spring
 
-import com.strange.demo.spring.api.apis.CategoriesApi
-import com.strange.demo.spring.api.apis.FailuresApi
-import com.strange.demo.spring.api.apis.NotificationsApi
-import com.strange.demo.spring.api.apis.SessionApi
-import com.strange.demo.spring.api.apis.TagsApi
-import com.strange.demo.spring.api.utils.ApiAuthConfig
-import com.strange.demo.spring.api.utils.apiAuthFilter
-import com.strange.demo.spring.api.utils.apiErrorFilter
-import com.strange.demo.spring.api.utils.apiOperationProcessor
-import com.strange.demo.spring.api.utils.registerApiEnumConverters
+import com.softistx.demo.spring.api.apis.CategoriesApi
+import com.softistx.demo.spring.api.apis.FailuresApi
+import com.softistx.demo.spring.api.apis.NotificationsApi
+import com.softistx.demo.spring.api.apis.SessionApi
+import com.softistx.demo.spring.api.apis.TagsApi
+import com.softistx.demo.spring.api.utils.ApiAuthConfig
+import com.softistx.demo.spring.api.utils.apiAuthFilter
+import com.softistx.demo.spring.api.utils.apiErrorFilter
+import com.softistx.demo.spring.api.utils.apiOperationProcessor
+import com.softistx.demo.spring.api.utils.registerApiEnumConverters
 import kotlinx.coroutines.runBlocking
 import org.springframework.format.support.DefaultFormattingConversionService
 import org.springframework.http.client.reactive.JdkClientHttpConnector
@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.client.support.WebClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory
 
 /**
- * Everything under `com.strange.demo.spring.api` is generated from `../demo-api/openapi.yaml` with
+ * Everything under `com.softistx.demo.spring.api` is generated from `../demo-api/openapi.yaml` with
  * `client: Spring`. Unlike the Ktorfit client there is no annotation processing step: the
  * interfaces are handed to [HttpServiceProxyFactory], which builds the implementation at runtime.
  *

@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -11,13 +11,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 
 /**
  * A presence mark. Material 3 has no equivalent.
  *
- * Eight dp, because it sits *next* to a name rather than on an [com.strange.material.media.Avatar]
+ * Eight dp, because it sits *next* to a name rather than on an [com.softistx.material.media.Avatar]
  * — the avatar already has a [Tone] ring for that. Online, busy, away, error: the [tone] is the
  * whole vocabulary.
  */

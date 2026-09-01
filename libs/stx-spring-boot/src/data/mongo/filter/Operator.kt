@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.filter
+package com.softistx.spring.data.mongo.filter
 
 /**
  * The comparisons a `?filter=` parameter may ask for.

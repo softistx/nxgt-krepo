@@ -1,4 +1,4 @@
-package com.strange.kafka.consumer
+package com.softistx.kafka.consumer
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly

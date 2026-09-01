@@ -1,8 +1,8 @@
-package com.strange.ktor.amqp
+package com.softistx.ktor.amqp
 
-import com.strange.amqp.Amqp
-import com.strange.amqp.AmqpConfig
-import com.strange.testing.containers.rabbitContainer
+import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpConfig
+import com.softistx.testing.containers.rabbitContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec

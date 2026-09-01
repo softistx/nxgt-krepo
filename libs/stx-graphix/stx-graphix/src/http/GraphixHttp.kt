@@ -1,8 +1,8 @@
-package com.strange.graphix.http
+package com.softistx.graphix.http
 
-import com.strange.graphix.GraphixError
-import com.strange.graphix.GraphixRequest
-import com.strange.graphix.GraphixResult
+import com.softistx.graphix.GraphixError
+import com.softistx.graphix.GraphixRequest
+import com.softistx.graphix.GraphixResult
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -44,7 +44,7 @@ data class GraphixHttpResponse(
 
 /**
  * One GraphQL error in the HTTP envelope. [path] is JSON primitives, not
- * [com.strange.graphix.GraphixError.path] — strings for fields, numbers for indices.
+ * [com.softistx.graphix.GraphixError.path] — strings for fields, numbers for indices.
  */
 @Serializable
 data class GraphixHttpError(

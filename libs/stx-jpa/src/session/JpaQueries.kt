@@ -1,11 +1,11 @@
-package com.strange.jpa.session
+package com.softistx.jpa.session
 
-import com.strange.jpa.query.JpaMutation
-import com.strange.jpa.query.JpaQuery
-import com.strange.jpa.query.criteria
-import com.strange.jpa.query.mutate
-import com.strange.jpa.query.nativeMutate
-import com.strange.jpa.query.query
+import com.softistx.jpa.query.JpaMutation
+import com.softistx.jpa.query.JpaQuery
+import com.softistx.jpa.query.criteria
+import com.softistx.jpa.query.mutate
+import com.softistx.jpa.query.nativeMutate
+import com.softistx.jpa.query.query
 import jakarta.persistence.criteria.CriteriaDelete
 import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.CriteriaUpdate
@@ -41,7 +41,7 @@ interface JpaQueries {
     /**
      * Hibernate's criteria builder, for a query written against the Criteria API directly.
      *
-     * `com.strange.jpa.criteria` names the pieces — `createQuery`, `[]`, `join`, `fetch`, `eq` and
+     * `com.softistx.jpa.criteria` names the pieces — `createQuery`, `[]`, `join`, `fetch`, `eq` and
      * the rest — but the statement is Criteria's own, so anything the API can express is reachable
      * from here: subqueries, set operations, window functions, `insert … select`. What comes back
      * runs through [query] or [mutate], so a criteria built by hand still ends in a suspending

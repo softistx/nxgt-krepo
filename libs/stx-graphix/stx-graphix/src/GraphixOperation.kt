@@ -1,4 +1,4 @@
-package com.strange.graphix
+package com.softistx.graphix
 
 import graphql.language.Definition
 import graphql.language.Document

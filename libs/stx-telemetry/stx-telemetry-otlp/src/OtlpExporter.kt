@@ -1,11 +1,11 @@
-package com.strange.telemetry.otlp
+package com.softistx.telemetry.otlp
 
-import com.strange.common.lifecycle.CloseGuard
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanRecord
+import com.softistx.common.lifecycle.CloseGuard
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanRecord
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.KSerializer

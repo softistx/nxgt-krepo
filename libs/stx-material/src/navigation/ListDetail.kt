@@ -1,7 +1,7 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
-import com.strange.material.display.EmptyState
+import com.softistx.material.display.EmptyState
 
 /**
  * Metadata for [AdaptiveNavDisplay] list-detail scenes.

@@ -1,4 +1,4 @@
-package com.strange.material.form.state
+package com.softistx.material.form.state
 
 import io.konform.validation.Validation
 import io.kotest.core.spec.style.FeatureSpec

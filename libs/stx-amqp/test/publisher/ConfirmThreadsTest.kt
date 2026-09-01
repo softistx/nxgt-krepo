@@ -1,8 +1,8 @@
-package com.strange.amqp.publisher
+package com.softistx.amqp.publisher
 
-import com.strange.amqp.AmqpTestBroker
-import com.strange.amqp.topology.declare
-import com.strange.amqp.topology.delete
+import com.softistx.amqp.AmqpTestBroker
+import com.softistx.amqp.topology.declare
+import com.softistx.amqp.topology.delete
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

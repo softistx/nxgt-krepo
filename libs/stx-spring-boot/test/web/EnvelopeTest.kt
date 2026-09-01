@@ -1,7 +1,7 @@
-package com.strange.spring.web
+package com.softistx.spring.web
 
-import com.strange.common.page.Page
-import com.strange.common.page.PageInfo
+import com.softistx.common.page.Page
+import com.softistx.common.page.PageInfo
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

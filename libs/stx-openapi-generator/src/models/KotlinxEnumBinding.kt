@@ -1,5 +1,7 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.EnumType
+import com.softistx.openapi.TypeRef
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
@@ -8,8 +10,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.EnumType
-import com.strange.openapi.TypeRef
 
 /**
  * kotlinx.serialization has no tolerant-enum mode of its own, so the enum gets a serializer.

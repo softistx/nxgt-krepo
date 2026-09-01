@@ -1,9 +1,9 @@
-package com.strange.ktor.kafka
+package com.softistx.ktor.kafka
 
-import com.strange.kafka.Kafka
-import com.strange.kafka.KafkaConfig
-import com.strange.kafka.admin.admin
-import com.strange.testing.containers.kafkaContainer
+import com.softistx.kafka.Kafka
+import com.softistx.kafka.KafkaConfig
+import com.softistx.kafka.admin.admin
+import com.softistx.testing.containers.kafkaContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec

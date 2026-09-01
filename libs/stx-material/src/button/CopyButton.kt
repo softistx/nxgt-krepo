@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
@@ -10,8 +10,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
-import com.strange.material.icon.IconSize
-import com.strange.material.icon.StrangeIcons
+import com.softistx.material.icon.IconSize
+import com.softistx.material.icon.StrangeIcons
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

@@ -1,7 +1,7 @@
-package com.strange.spring.testing
+package com.softistx.spring.testing
 
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.mongoContainer
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.mongoContainer
 
 /**
  * The MongoDB an application's specs talk to, declared once for the whole test run.

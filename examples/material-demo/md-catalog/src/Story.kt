@@ -1,8 +1,8 @@
-package com.strange.material.demo
+package com.softistx.material.demo
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import com.strange.material.demo.knobs.Knobs
+import com.softistx.material.demo.knobs.Knobs
 
 /**
  * One entry of the catalogue: a name, and a composable that renders the component with whatever

@@ -1,4 +1,4 @@
-package com.strange.redis
+package com.softistx.redis
 
 /**
  * `namespace:part:part`, skipping the empty ones.

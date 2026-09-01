@@ -1,6 +1,6 @@
-package com.strange.workflow
+package com.softistx.workflow
 
-import com.strange.workflow.store.WorkflowRecord
+import com.softistx.workflow.store.WorkflowRecord
 
 /** Everything this library throws on its own behalf. */
 sealed class WorkflowException(

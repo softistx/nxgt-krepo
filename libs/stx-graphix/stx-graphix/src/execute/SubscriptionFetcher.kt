@@ -1,4 +1,4 @@
-package com.strange.graphix.execute
+package com.softistx.graphix.execute
 
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
@@ -16,7 +16,7 @@ import java.util.concurrent.Flow as JdkFlow
 /**
  * graphql-java's subscription strategy wants a `Publisher` (or JDK `Flow.Publisher`).
  * A Kotlin `Flow` is converted with `asPublisher` on the operation scope so cancelling
- * [com.strange.graphix.Graphix.subscribe] cancels the upstream.
+ * [com.softistx.graphix.Graphix.subscribe] cancels the upstream.
  */
 internal fun subscriptionFetcher(
     instance: Any,

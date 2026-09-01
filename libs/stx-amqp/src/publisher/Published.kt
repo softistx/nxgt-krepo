@@ -1,4 +1,4 @@
-package com.strange.amqp.publisher
+package com.softistx.amqp.publisher
 
 /**
  * Where a message went, once the broker said it had it.

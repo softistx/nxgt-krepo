@@ -1,4 +1,4 @@
-package com.strange.graphix.http
+package com.softistx.graphix.http
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement

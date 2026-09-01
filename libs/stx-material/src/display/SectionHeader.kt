@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,16 +7,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * The title of a block of content, with an optional action on the trailing edge.
  *
  * "Recent orders" plus "See all" — a list without this reads as a pile. Material 3 has no
- * subheader of its own; [com.strange.material.data.EntityHeader] is the top of a *page*.
+ * subheader of its own; [com.softistx.material.data.EntityHeader] is the top of a *page*.
  */
 @Composable
 fun SectionHeader(

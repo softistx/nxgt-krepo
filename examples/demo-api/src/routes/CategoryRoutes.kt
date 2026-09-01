@@ -1,11 +1,11 @@
-package com.strange.demo.api.routes
+package com.softistx.demo.api.routes
 
-import com.strange.demo.api.model.Category
-import com.strange.demo.api.model.CategoryRequest
-import com.strange.demo.api.model.PaginatedCategory
-import com.strange.demo.api.model.SearchRequest
-import com.strange.demo.api.model.audit
-import com.strange.demo.api.model.touched
+import com.softistx.demo.api.model.Category
+import com.softistx.demo.api.model.CategoryRequest
+import com.softistx.demo.api.model.PaginatedCategory
+import com.softistx.demo.api.model.SearchRequest
+import com.softistx.demo.api.model.audit
+import com.softistx.demo.api.model.touched
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond

@@ -1,8 +1,8 @@
-package com.strange.ktor.i18n
+package com.softistx.ktor.i18n
 
-import com.strange.i18n.Messages
-import com.strange.i18n.Translator
-import com.strange.ktor.publish
+import com.softistx.i18n.Messages
+import com.softistx.i18n.Translator
+import com.softistx.ktor.publish
 import io.ktor.http.HttpHeaders
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.createApplicationPlugin
@@ -69,8 +69,8 @@ data class I18nConfiguration(
     var injectable: Boolean = false,
 )
 
-internal val TranslatorKey = AttributeKey<Translator>("com.strange.i18n.Translator")
-internal val MessagesKey = AttributeKey<Messages>("com.strange.i18n.Messages")
+internal val TranslatorKey = AttributeKey<Translator>("com.softistx.i18n.Translator")
+internal val MessagesKey = AttributeKey<Messages>("com.softistx.i18n.Messages")
 
 private fun Messages.forRequest(
     request: ApplicationRequest,

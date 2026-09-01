@@ -1,15 +1,15 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
-import com.strange.common.serialization.lenientJson
-import com.strange.graphix.GraphQLEngineCustomizer
-import com.strange.graphix.Graphix
-import com.strange.graphix.GraphixCustomizer
-import com.strange.graphix.customize
-import com.strange.graphix.engine
-import com.strange.graphix.http.apolloSandboxPage
-import com.strange.graphix.scalar.scalar
-import com.strange.graphix.schema.GraphixDirective
-import com.strange.graphix.schema.fieldDirective
+import com.softistx.common.serialization.lenientJson
+import com.softistx.graphix.GraphQLEngineCustomizer
+import com.softistx.graphix.Graphix
+import com.softistx.graphix.GraphixCustomizer
+import com.softistx.graphix.customize
+import com.softistx.graphix.engine
+import com.softistx.graphix.http.apolloSandboxPage
+import com.softistx.graphix.scalar.scalar
+import com.softistx.graphix.schema.GraphixDirective
+import com.softistx.graphix.schema.fieldDirective
 import graphql.schema.GraphQLScalarType
 import org.springframework.beans.factory.getBeansWithAnnotation
 import org.springframework.boot.autoconfigure.AutoConfiguration

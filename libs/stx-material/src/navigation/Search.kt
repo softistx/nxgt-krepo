@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ColumnScope
@@ -11,9 +11,9 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.strange.material.icon.Icon
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.text.Typography
+import com.softistx.material.icon.Icon
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.text.Typography
 
 /**
  * A search field that can expand into its results.

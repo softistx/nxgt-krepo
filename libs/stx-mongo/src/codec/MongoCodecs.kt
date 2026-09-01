@@ -1,4 +1,4 @@
-package com.strange.mongo.codec
+package com.softistx.mongo.codec
 
 import com.mongodb.MongoClientSettings
 import kotlinx.serialization.modules.SerializersModule

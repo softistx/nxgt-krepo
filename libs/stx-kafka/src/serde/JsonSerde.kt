@@ -1,8 +1,8 @@
-package com.strange.kafka.serde
+package com.softistx.kafka.serde
 
-import com.strange.common.serialization.decodeValue
-import com.strange.common.serialization.typeName
-import com.strange.kafka.KafkaValueException
+import com.softistx.common.serialization.decodeValue
+import com.softistx.common.serialization.typeName
+import com.softistx.kafka.KafkaValueException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer

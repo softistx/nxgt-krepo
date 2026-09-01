@@ -1,4 +1,4 @@
-package com.strange.common.serialization
+package com.softistx.common.serialization
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

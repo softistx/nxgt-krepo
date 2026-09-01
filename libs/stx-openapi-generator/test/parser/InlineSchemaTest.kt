@@ -1,8 +1,8 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.EnumType
-import com.strange.openapi.ObjectType
-import com.strange.openapi.TypeRef
+import com.softistx.openapi.EnumType
+import com.softistx.openapi.ObjectType
+import com.softistx.openapi.TypeRef
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -85,7 +85,7 @@ private fun objects() = PARSED.models.filterIsInstance<ObjectType>()
 
 private fun model(name: String) = objects().first { it.name == name }
 
-private fun com.strange.openapi.ApiModel.operation(name: String) = groups.flatMap { it.operations }.first { it.name == name }
+private fun com.softistx.openapi.ApiModel.operation(name: String) = groups.flatMap { it.operations }.first { it.name == name }
 
 private fun fieldType(
     model: String,

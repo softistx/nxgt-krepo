@@ -1,10 +1,10 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.workflow.AwaitTimeoutException
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.dsl.Await
-import com.strange.workflow.dsl.Sleep
-import com.strange.workflow.store.NodeOutcome
+import com.softistx.workflow.AwaitTimeoutException
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.dsl.Await
+import com.softistx.workflow.dsl.Sleep
+import com.softistx.workflow.store.NodeOutcome
 import kotlin.time.Clock
 
 /**

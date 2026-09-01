@@ -1,10 +1,10 @@
-package com.strange.example.shop.domain
+package com.softistx.example.shop.domain
 
-import com.strange.jpa.criteria.JpaSpec
-import com.strange.jpa.criteria.eq
-import com.strange.jpa.criteria.get
-import com.strange.jpa.criteria.ilike
-import com.strange.jpa.criteria.le
+import com.softistx.jpa.criteria.JpaSpec
+import com.softistx.jpa.criteria.eq
+import com.softistx.jpa.criteria.get
+import com.softistx.jpa.criteria.ilike
+import com.softistx.jpa.criteria.le
 
 /**
  * Restrictions worth a name, because more than one query asks for them.

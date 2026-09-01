@@ -1,13 +1,13 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.TypeRef
+import com.softistx.openapi.TypeRef
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 
-private fun com.strange.openapi.ApiModel.operation(name: String) = groups.flatMap { it.operations }.first { it.name == name }
+private fun com.softistx.openapi.ApiModel.operation(name: String) = groups.flatMap { it.operations }.first { it.name == name }
 
 private val INDIRECT =
     """

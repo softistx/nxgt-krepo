@@ -1,8 +1,8 @@
-package com.strange.material.theme
+package com.softistx.material.theme
 
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.strange.material.motion.StrangeMotion
+import com.softistx.material.motion.StrangeMotion
 
 /**
  * Where the tokens live during composition.

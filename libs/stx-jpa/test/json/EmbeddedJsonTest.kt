@@ -1,10 +1,10 @@
-package com.strange.jpa.json
+package com.softistx.jpa.json
 
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.entity.Coordinates
-import com.strange.jpa.entity.Place
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.entity.Coordinates
+import com.softistx.jpa.entity.Place
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 

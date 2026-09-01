@@ -1,4 +1,4 @@
-package com.strange.amqp.publisher
+package com.softistx.amqp.publisher
 
 /**
  * What a publish promises.

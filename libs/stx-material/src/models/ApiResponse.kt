@@ -1,4 +1,4 @@
-package com.strange.material.models
+package com.softistx.material.models
 
 /**
  * A request's outcome, as one value: the payload, the reason it failed, or the fact it is still in

@@ -1,7 +1,7 @@
-package com.strange.storage.presign
+package com.softistx.storage.presign
 
-import com.strange.storage.InvalidExpiryException
-import com.strange.storage.bucket.StorageBucket
+import com.softistx.storage.InvalidExpiryException
+import com.softistx.storage.bucket.StorageBucket
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.Http
 import kotlinx.coroutines.Dispatchers

@@ -1,6 +1,6 @@
-package com.strange.example.shop.model
+package com.softistx.example.shop.model
 
-import com.strange.example.shop.domain.Product
+import com.softistx.example.shop.domain.Product
 import kotlinx.serialization.Serializable
 
 /** What a create request carries. Not the entity: a client does not get to set an identifier. */

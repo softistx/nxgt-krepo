@@ -1,17 +1,17 @@
-package com.strange.material.demo
+package com.softistx.material.demo
 
-import com.strange.material.demo.stories.ButtonStories
-import com.strange.material.demo.stories.DataStories
-import com.strange.material.demo.stories.DateTimeStories
-import com.strange.material.demo.stories.DisplayStories
-import com.strange.material.demo.stories.FormStories
-import com.strange.material.demo.stories.FoundationStories
-import com.strange.material.demo.stories.LayoutStories
-import com.strange.material.demo.stories.MediaStories
-import com.strange.material.demo.stories.MotionStories
-import com.strange.material.demo.stories.NavigationStories
-import com.strange.material.demo.stories.ScreenStories
-import com.strange.material.demo.stories.SurfaceStories
+import com.softistx.material.demo.stories.ButtonStories
+import com.softistx.material.demo.stories.DataStories
+import com.softistx.material.demo.stories.DateTimeStories
+import com.softistx.material.demo.stories.DisplayStories
+import com.softistx.material.demo.stories.FormStories
+import com.softistx.material.demo.stories.FoundationStories
+import com.softistx.material.demo.stories.LayoutStories
+import com.softistx.material.demo.stories.MediaStories
+import com.softistx.material.demo.stories.MotionStories
+import com.softistx.material.demo.stories.NavigationStories
+import com.softistx.material.demo.stories.ScreenStories
+import com.softistx.material.demo.stories.SurfaceStories
 
 /**
  * Every group the catalogue shows, in reading order: what the library is built from, then what it

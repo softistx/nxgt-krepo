@@ -1,8 +1,8 @@
-package com.strange.redis.codec
+package com.softistx.redis.codec
 
-import com.strange.common.serialization.decodeValue
-import com.strange.common.serialization.typeName
-import com.strange.redis.RedisValueException
+import com.softistx.common.serialization.decodeValue
+import com.softistx.common.serialization.typeName
+import com.softistx.redis.RedisValueException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 

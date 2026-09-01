@@ -1,4 +1,4 @@
-package com.strange.material.motion
+package com.softistx.material.motion
 
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.snap

@@ -1,11 +1,11 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.Caller
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.scalar.scalar
-import com.strange.graphix.schema.Directive
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.schema.fieldDirective
+import com.softistx.graphix.fixture.Caller
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.scalar.scalar
+import com.softistx.graphix.schema.Directive
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.fieldDirective
 import graphql.language.StringValue
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

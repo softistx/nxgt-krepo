@@ -1,8 +1,8 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.BookFields
-import com.strange.graphix.fixture.BookQueries
-import com.strange.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.BookFields
+import com.softistx.graphix.fixture.BookQueries
+import com.softistx.graphix.fixture.GreetingQueries
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContain

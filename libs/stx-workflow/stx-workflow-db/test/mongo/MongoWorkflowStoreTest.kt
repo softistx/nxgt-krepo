@@ -1,10 +1,10 @@
-package com.strange.workflow.mongo
+package com.softistx.workflow.mongo
 
-import com.strange.mongo.collection
-import com.strange.mongo.query.findById
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.db.record
-import com.strange.workflow.db.storeContract
+import com.softistx.mongo.collection
+import com.softistx.mongo.query.findById
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.db.record
+import com.softistx.workflow.db.storeContract
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe

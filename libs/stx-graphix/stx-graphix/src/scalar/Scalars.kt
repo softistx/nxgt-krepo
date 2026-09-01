@@ -1,4 +1,4 @@
-package com.strange.graphix.scalar
+package com.softistx.graphix.scalar
 
 import graphql.schema.GraphQLScalarType
 

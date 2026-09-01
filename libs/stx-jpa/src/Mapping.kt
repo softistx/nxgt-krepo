@@ -1,6 +1,6 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.jpa.json.KotlinxJsonFormatMapper
+import com.softistx.jpa.json.KotlinxJsonFormatMapper
 import jakarta.persistence.Id
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.json.Json
@@ -53,7 +53,7 @@ internal fun rejectUuidIdentifiers(entities: List<KClass<*>>) {
  * The shape comes from the serializer rather than from the Kotlin type, because the serializer is
  * what decides it: a `@Serializable` class with a custom serializer writing an array is a list here
  * whatever its declaration looks like. A type with no serializer is left alone — that failure has its
- * own message, in [com.strange.jpa.json.KotlinxJsonFormatMapper].
+ * own message, in [com.softistx.jpa.json.KotlinxJsonFormatMapper].
  */
 internal fun rejectMismatchedJsonShapes(
     entities: List<KClass<*>>,

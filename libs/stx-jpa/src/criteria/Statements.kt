@@ -1,6 +1,6 @@
-package com.strange.jpa.criteria
+package com.softistx.jpa.criteria
 
-import com.strange.jpa.query.criteria
+import com.softistx.jpa.query.criteria
 import org.hibernate.query.criteria.JpaCriteriaDelete
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect
 import org.hibernate.query.criteria.JpaCriteriaInsertValues
@@ -28,12 +28,12 @@ import org.hibernate.reactive.stage.Stage
  * statement is not bound to the session that made it — [Stage.SessionFactory.createQuery] builds the
  * same thing without opening one, for a criteria assembled at startup and run on every request.
  *
- * Building it is not running it: [com.strange.jpa.query.query] and [com.strange.jpa.query.mutate]
+ * Building it is not running it: [com.softistx.jpa.query.query] and [com.softistx.jpa.query.mutate]
  * are what hand it to the session and give back this module's suspending terminals.
  */
 inline fun <reified R : Any> Stage.QueryProducer.createQuery(): JpaCriteriaQuery<R> = criteria.createQuery(R::class.java)
 
-/** A criteria `update` over [E]. Run it with [com.strange.jpa.query.mutate]. */
+/** A criteria `update` over [E]. Run it with [com.softistx.jpa.query.mutate]. */
 inline fun <reified E : Any> Stage.QueryProducer.createUpdate(): JpaCriteriaUpdate<E> = criteria.createCriteriaUpdate(E::class.java)
 
 /** A criteria `delete` over [E], the same way. */

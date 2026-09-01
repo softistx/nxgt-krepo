@@ -1,6 +1,6 @@
-package com.strange.jpa.session
+package com.softistx.jpa.session
 
-import com.strange.jpa.Jpa
+import com.softistx.jpa.Jpa
 import kotlinx.coroutines.future.await
 
 /**

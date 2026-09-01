@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

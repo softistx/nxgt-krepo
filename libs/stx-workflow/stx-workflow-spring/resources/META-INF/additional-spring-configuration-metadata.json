@@ -2,14 +2,14 @@
   "groups": [
     {
       "name": "stx.workflow",
-      "type": "com.strange.workflow.spring.WorkflowIntegrationProperties",
-      "sourceType": "com.strange.workflow.spring.WorkflowIntegrationProperties",
+      "type": "com.softistx.workflow.spring.WorkflowIntegrationProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowIntegrationProperties",
       "description": "The stx-workflow engine, over the WorkflowStore bean."
     },
     {
       "name": "stx.workflow.worker",
-      "type": "com.strange.workflow.spring.WorkflowWorkerProperties",
-      "sourceType": "com.strange.workflow.spring.WorkflowWorkerProperties",
+      "type": "com.softistx.workflow.spring.WorkflowWorkerProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowWorkerProperties",
       "description": "The worker that picks up instances nobody is advancing."
     }
   ],
@@ -17,63 +17,63 @@
     {
       "name": "stx.workflow.enabled",
       "type": "java.lang.Boolean",
-      "sourceType": "com.strange.workflow.spring.WorkflowIntegrationProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowIntegrationProperties",
       "defaultValue": false,
       "description": "Build an stx-workflow engine over the WorkflowStore bean, registering every Workflow bean with it. Off by default."
     },
     {
       "name": "stx.workflow.store",
-      "type": "com.strange.workflow.spring.WorkflowStoreKind",
-      "sourceType": "com.strange.workflow.spring.WorkflowIntegrationProperties",
+      "type": "com.softistx.workflow.spring.WorkflowStoreKind",
+      "sourceType": "com.softistx.workflow.spring.WorkflowIntegrationProperties",
       "defaultValue": null,
       "description": "Which store to build instances in: redis, jpa or mongo, each over the connection the matching stx.* group already opened. Unset means build none, because the application declares a WorkflowStore bean of its own. Nothing is inferred: an application with both a Redis and a Jpa bean is not saying where its instances belong."
     },
     {
       "name": "stx.workflow.lease",
       "type": "java.time.Duration",
-      "sourceType": "com.strange.workflow.spring.WorkflowIntegrationProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowIntegrationProperties",
       "defaultValue": null,
       "description": "How long an instance lock is good for before the instance is assumed abandoned. Default 30s. Not a deadline on a step: the lock renews while the work runs. Ignored when the application declares its own WorkflowStore."
     },
     {
       "name": "stx.workflow.retention",
       "type": "java.time.Duration",
-      "sourceType": "com.strange.workflow.spring.WorkflowIntegrationProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowIntegrationProperties",
       "defaultValue": null,
       "description": "How long a finished instance is kept before it is expired. Default 7d. A Failed instance is exempt whatever this says: it is waiting for a person, and expiring it would delete the only description of what needs fixing. Ignored by the jpa store, where a table has no TTL and retention is JpaWorkflowStore.purge on a schedule the application owns."
     },
     {
       "name": "stx.workflow.child-poll",
       "type": "java.time.Duration",
-      "sourceType": "com.strange.workflow.spring.WorkflowIntegrationProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowIntegrationProperties",
       "defaultValue": null,
       "description": "How often a parent parked on a child node looks at the child again. Default 1m. A safety net rather than the mechanism: a child resumes its parent the moment it finishes, and this only covers a process that died between those two writes. It needs stx.workflow.worker.enabled, or an application scheduler calling resume; nothing polls on its own."
     },
     {
       "name": "stx.workflow.worker.enabled",
       "type": "java.lang.Boolean",
-      "sourceType": "com.strange.workflow.spring.WorkflowWorkerProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowWorkerProperties",
       "defaultValue": false,
       "description": "Run a WorkflowWorker in this process, picking up instances nobody is advancing. Off by default: enabling stx.workflow gives an application a way to run workflows, and whether this process also recovers the fleet's abandoned ones is a separate decision."
     },
     {
       "name": "stx.workflow.worker.poll",
       "type": "java.time.Duration",
-      "sourceType": "com.strange.workflow.spring.WorkflowWorkerProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowWorkerProperties",
       "defaultValue": null,
       "description": "How long the worker waits between two looks at an empty index. Default 1s. A java.time.Duration (1s, PT1S): the binder has never heard of kotlin.time.Duration."
     },
     {
       "name": "stx.workflow.worker.batch",
       "type": "java.lang.Integer",
-      "sourceType": "com.strange.workflow.spring.WorkflowWorkerProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowWorkerProperties",
       "defaultValue": 32,
       "description": "How many due instances the worker takes at a time."
     },
     {
       "name": "stx.workflow.worker.concurrency",
       "type": "java.lang.Integer",
-      "sourceType": "com.strange.workflow.spring.WorkflowWorkerProperties",
+      "sourceType": "com.softistx.workflow.spring.WorkflowWorkerProperties",
       "defaultValue": 8,
       "description": "How many instances the worker advances at once."
     }

@@ -1,4 +1,4 @@
-package com.strange.redis
+package com.softistx.redis
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

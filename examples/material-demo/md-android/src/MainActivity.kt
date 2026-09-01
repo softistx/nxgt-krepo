@@ -1,9 +1,9 @@
-package com.strange.material.demo.android
+package com.softistx.material.demo.android
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.strange.material.demo.MaterialDemo
+import com.softistx.material.demo.MaterialDemo
 
 /**
  * The Android launcher: one activity around [MaterialDemo]. On a phone the catalogue folds to a

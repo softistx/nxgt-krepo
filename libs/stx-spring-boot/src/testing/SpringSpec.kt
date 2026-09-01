@@ -1,4 +1,4 @@
-package com.strange.spring.testing
+package com.softistx.spring.testing
 
 import io.kotest.core.spec.style.FeatureSpec
 import org.springframework.boot.test.context.SpringBootTest

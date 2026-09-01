@@ -1,4 +1,4 @@
-package com.strange.kafka
+package com.softistx.kafka
 
 import org.apache.kafka.clients.CommonClientConfigs
 

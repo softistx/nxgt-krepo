@@ -1,7 +1,7 @@
-package com.strange.workflow.store
+package com.softistx.workflow.store
 
-import com.strange.workflow.WorkflowError
-import com.strange.workflow.WorkflowStatus
+import com.softistx.workflow.WorkflowError
+import com.softistx.workflow.WorkflowStatus
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonElement
@@ -23,7 +23,7 @@ import kotlin.time.Instant
 @Serializable
 data class WorkflowRecord(
     val id: String,
-    /** The workflow's name, which is how [com.strange.workflow.WorkflowEngine] finds the definition again. */
+    /** The workflow's name, which is how [com.softistx.workflow.WorkflowEngine] finds the definition again. */
     val workflow: String,
     val status: WorkflowStatus,
     val context: JsonElement,

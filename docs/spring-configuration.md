@@ -100,7 +100,7 @@ the bean is built — turning a configuration mistake into an intermittent brows
 whoever is testing the front end. The policy refuses it while the context is starting and names
 `stx.cors.origin-patterns`, which is what actually does the job.
 
-These keys become a `com.strange.common.http.CorsPolicy`, which is also what `stx-ktor` installs
+These keys become a `com.softistx.common.http.CorsPolicy`, which is also what `stx-ktor` installs
 Ktor's plugin from — so an application moving between the two frameworks keeps its origins and their
 meaning.
 
@@ -320,7 +320,7 @@ where its workflow instances belong, and a library that guessed would put them s
 and wrong. Leave `store` unset and declare a `WorkflowStore` bean, and `@ConditionalOnMissingBean`
 steps aside for it.
 
-`store: jpa` needs `com.strange.workflow.jpa` in `stx.jpa.packages`, or the session factory has no
+`store: jpa` needs `com.softistx.workflow.jpa` in `stx.jpa.packages`, or the session factory has no
 `WorkflowInstanceRow` to map.
 
 `lease` is **not** a deadline on a step — the lock renews while the work runs. A `Failed` instance is
@@ -409,7 +409,7 @@ so this key and that provider together fail the context at startup rather than l
 | Key | Type | Default | |
 | --- | --- | --- | --- |
 | `enabled` | boolean | `false` | Adds an `Slf4jExporter`, which writes each signal to the bound SLF4J with `traceId` and `spanId` in the MDC — so a `%X{traceId}` pattern prints them. An `ILoggerFactory` bean, if the application has one, is where the lines go |
-| `spans` | boolean | `true` | Whether completed spans are logged too, one line each, under `com.strange.telemetry.span`. False for an application that wants the logs here and reads its traces somewhere else |
+| `spans` | boolean | `true` | Whether completed spans are logged too, one line each, under `com.softistx.telemetry.span`. False for an application that wants the logs here and reads its traces somewhere else |
 | `span-severity` | `debug` \| `info` \| `warn` \| `error` | `info` | The level a span that succeeded is logged at. One that failed is always `error` |
 
 ### `stx.telemetry.file`
@@ -456,7 +456,7 @@ observability problem into an outage, and this also works in an application that
 
 ## `stx-graphix-spring`
 
-Not this module — `com.strange:stx-graphix-spring`. The keys follow the same opt-in rule, and the
+Not this module — `com.softistx:stx-graphix-spring`. The keys follow the same opt-in rule, and the
 metadata lives in that module's `additional-spring-configuration-metadata.json`.
 
 ### `stx.graphix`

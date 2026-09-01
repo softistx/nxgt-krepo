@@ -1,11 +1,11 @@
-package com.strange.mongo
+package com.softistx.mongo
 
 import com.mongodb.MongoClientSettings
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.reactivestreams.client.MongoClients
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.mongoContainer
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.mongoContainer
 import kotlinx.coroutines.runBlocking
 import org.bson.BsonDocument
 import org.bson.BsonInt32

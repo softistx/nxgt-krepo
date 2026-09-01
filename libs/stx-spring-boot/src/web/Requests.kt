@@ -1,6 +1,6 @@
-package com.strange.spring.web
+package com.softistx.spring.web
 
-import com.strange.spring.error.ApiException
+import com.softistx.spring.error.ApiException
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.bodyToMono

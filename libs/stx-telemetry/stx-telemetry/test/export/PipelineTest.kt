@@ -1,13 +1,13 @@
-package com.strange.telemetry.export
+package com.softistx.telemetry.export
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.context.withTelemetry
-import com.strange.telemetry.fixture.Collector
-import com.strange.telemetry.logger
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.Signal
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.context.withTelemetry
+import com.softistx.telemetry.fixture.Collector
+import com.softistx.telemetry.logger
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.Signal
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay

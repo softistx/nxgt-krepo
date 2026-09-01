@@ -1,4 +1,4 @@
-package com.strange.jpa.session
+package com.softistx.jpa.session
 
 import io.vertx.core.Vertx
 import kotlinx.coroutines.CoroutineScope

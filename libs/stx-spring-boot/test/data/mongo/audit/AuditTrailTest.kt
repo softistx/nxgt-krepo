@@ -1,6 +1,6 @@
-package com.strange.spring.data.mongo.audit
+package com.softistx.spring.data.mongo.audit
 
-import com.strange.spring.data.mongo.template.SpringMongo
+import com.softistx.spring.data.mongo.template.SpringMongo
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

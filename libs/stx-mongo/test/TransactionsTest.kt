@@ -1,4 +1,4 @@
-package com.strange.mongo
+package com.softistx.mongo
 
 import com.mongodb.client.model.Filters
 import io.kotest.assertions.throwables.shouldThrow

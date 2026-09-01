@@ -1,6 +1,6 @@
-package com.strange.ktor.jpa
+package com.softistx.ktor.jpa
 
-import com.strange.jpa.Jpa
+import com.softistx.jpa.Jpa
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 

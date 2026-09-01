@@ -1,4 +1,4 @@
-package com.strange.storage
+package com.softistx.storage
 
 import kotlinx.coroutines.future.await
 import java.net.URI

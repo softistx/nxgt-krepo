@@ -1,4 +1,4 @@
-package com.strange.example.workflow
+package com.softistx.example.workflow
 
 import kotlinx.serialization.Serializable
 

@@ -1,7 +1,7 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.SecurityKind
-import com.strange.openapi.SecurityRequirement
+import com.softistx.openapi.SecurityKind
+import com.softistx.openapi.SecurityRequirement
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly

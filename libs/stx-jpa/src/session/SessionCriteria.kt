@@ -1,11 +1,11 @@
-package com.strange.jpa.session
+package com.softistx.jpa.session
 
-import com.strange.jpa.criteria.createDelete
-import com.strange.jpa.criteria.createInsert
-import com.strange.jpa.criteria.createInsertSelect
-import com.strange.jpa.criteria.createQuery
-import com.strange.jpa.criteria.createUpdate
-import com.strange.jpa.criteria.entityGraph
+import com.softistx.jpa.criteria.createDelete
+import com.softistx.jpa.criteria.createInsert
+import com.softistx.jpa.criteria.createInsertSelect
+import com.softistx.jpa.criteria.createQuery
+import com.softistx.jpa.criteria.createUpdate
+import com.softistx.jpa.criteria.entityGraph
 import jakarta.persistence.EntityGraph
 import org.hibernate.query.criteria.JpaCriteriaDelete
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect
@@ -46,7 +46,7 @@ inline fun <reified E : Any> JpaQueries.createInsert(): JpaCriteriaInsertValues<
 inline fun <reified E : Any> JpaQueries.createInsertSelect(): JpaCriteriaInsertSelect<E> = raw.createInsertSelect()
 
 /**
- * An empty fetch plan for [T] — see [com.strange.jpa.criteria.entityGraph] for what to fill it with.
+ * An empty fetch plan for [T] — see [com.softistx.jpa.criteria.entityGraph] for what to fill it with.
  *
  * A plan is a value and not a query, so the one built here can be handed to `find`, to a stateless
  * `get`, and to as many queries' `plan` as want it.

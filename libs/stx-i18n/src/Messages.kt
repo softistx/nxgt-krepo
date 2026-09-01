@@ -1,7 +1,7 @@
-package com.strange.i18n
+package com.softistx.i18n
 
 import com.ibm.icu.text.MessageFormat
-import com.strange.common.concurrent.Guarded
+import com.softistx.common.concurrent.Guarded
 import java.util.Locale
 
 /**

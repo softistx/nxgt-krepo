@@ -1,8 +1,8 @@
-package com.strange.telemetry.context
+package com.softistx.telemetry.context
 
-import com.strange.telemetry.fixture.Collector
-import com.strange.telemetry.fixture.collecting
-import com.strange.telemetry.span
+import com.softistx.telemetry.fixture.Collector
+import com.softistx.telemetry.fixture.collecting
+import com.softistx.telemetry.span
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull

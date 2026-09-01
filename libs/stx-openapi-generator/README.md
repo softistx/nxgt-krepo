@@ -7,7 +7,7 @@ is a plain `jvm/lib` you can call from anywhere and test without compiling anyth
 
 ```kotlin
 val model = OpenApiParser(Grouping.Tag, InterfaceNaming(suffix = "Api")).parse(Path("openapi.yaml"))
-val files = KtorfitEmitter().emit(model, EmitOptions("com.strange.demo.client.api"))
+val files = KtorfitEmitter().emit(model, EmitOptions("com.softistx.demo.client.api"))
 files.forEach { it.writeTo(outputDir) }
 ```
 
@@ -19,14 +19,14 @@ about the module: its shape, what each client emitter produces, and how to add o
 ## Shape
 
 ```
-com.strange.openapi            the shared contract: the IR every other package speaks
-com.strange.openapi.parser     reading a document — OpenApiParser, its options, OpenApiParseException
-com.strange.openapi.emit       what every emitter needs: SourceEmitter, EmitOptions, type mapping,
+com.softistx.openapi            the shared contract: the IR every other package speaks
+com.softistx.openapi.parser     reading a document — OpenApiParser, its options, OpenApiParseException
+com.softistx.openapi.emit       what every emitter needs: SourceEmitter, EmitOptions, type mapping,
                                interface files, the @ApiOperation seam and the exception hierarchy,
                                the error dispatch, writeAllTo, EmitException
-com.strange.openapi.models     model emission — shared by every client style
-com.strange.openapi.ktorfit    KtorfitEmitter — @GET/@POST interfaces
-com.strange.openapi.spring     SpringEmitter  — @HttpExchange interfaces
+com.softistx.openapi.models     model emission — shared by every client style
+com.softistx.openapi.ktorfit    KtorfitEmitter — @GET/@POST interfaces
+com.softistx.openapi.spring     SpringEmitter  — @HttpExchange interfaces
 ```
 
 The root package holds only the IR — `ApiModel`, `ApiGroup`, `Operation`, `Param`, `ModelType`,

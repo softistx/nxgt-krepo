@@ -1,6 +1,6 @@
-package com.strange.kafka.record
+package com.softistx.kafka.record
 
-import com.strange.kafka.KafkaValueException
+import com.softistx.kafka.KafkaValueException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

@@ -1,10 +1,10 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * Label above, control, message below — for the controls Material 3 does not decorate.

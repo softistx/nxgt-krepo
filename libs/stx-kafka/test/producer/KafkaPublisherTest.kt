@@ -1,6 +1,6 @@
-package com.strange.kafka.producer
+package com.softistx.kafka.producer
 
-import com.strange.kafka.record.headersOf
+import com.softistx.kafka.record.headersOf
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

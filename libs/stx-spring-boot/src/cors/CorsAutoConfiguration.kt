@@ -1,6 +1,6 @@
-package com.strange.spring.cors
+package com.softistx.spring.cors
 
-import com.strange.common.http.CorsPolicy
+import com.softistx.common.http.CorsPolicy
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty

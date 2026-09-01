@@ -1,9 +1,9 @@
-package com.strange.graphix.fixture
+package com.softistx.graphix.fixture
 
-import com.strange.graphix.schema.Argument
-import com.strange.graphix.schema.GraphQLDefault
-import com.strange.graphix.schema.GraphQLId
-import com.strange.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.GraphQLDefault
+import com.softistx.graphix.schema.GraphQLId
+import com.softistx.graphix.schema.QueryMapping
 import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

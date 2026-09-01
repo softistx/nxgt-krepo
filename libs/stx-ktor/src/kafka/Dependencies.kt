@@ -1,6 +1,6 @@
-package com.strange.ktor.kafka
+package com.softistx.ktor.kafka
 
-import com.strange.kafka.Kafka
+import com.softistx.kafka.Kafka
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 

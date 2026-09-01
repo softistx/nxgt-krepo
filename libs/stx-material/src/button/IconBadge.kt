@@ -1,13 +1,13 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.style.Style
 import androidx.compose.material3.BadgedBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.display.StatusBadge
-import com.strange.material.icon.IconSize
-import com.strange.material.theme.Tone
+import com.softistx.material.display.StatusBadge
+import com.softistx.material.icon.IconSize
+import com.softistx.material.theme.Tone
 
 /**
  * An [IconButton] wearing a count. Material 3's `BadgedBox`.

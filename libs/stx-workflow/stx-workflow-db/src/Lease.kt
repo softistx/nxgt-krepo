@@ -1,4 +1,4 @@
-package com.strange.workflow.db
+package com.softistx.workflow.db
 
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope

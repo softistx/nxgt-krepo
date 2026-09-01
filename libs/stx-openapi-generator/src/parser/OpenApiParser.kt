@@ -1,8 +1,8 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.ApiGroup
-import com.strange.openapi.ApiModel
-import com.strange.openapi.Operation
+import com.softistx.openapi.ApiGroup
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.Operation
 import io.swagger.parser.OpenAPIParser
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.core.models.ParseOptions

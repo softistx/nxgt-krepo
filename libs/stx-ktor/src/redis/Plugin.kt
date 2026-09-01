@@ -1,8 +1,8 @@
-package com.strange.ktor.redis
+package com.softistx.ktor.redis
 
-import com.strange.ktor.resource
-import com.strange.redis.Redis
-import com.strange.redis.RedisConfig
+import com.softistx.ktor.resource
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisConfig
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.util.AttributeKey
 
@@ -62,4 +62,4 @@ class RedisConnectionConfiguration {
     var injectable: Boolean = false
 }
 
-internal val RedisKey = AttributeKey<Redis>("com.strange.redis.Redis")
+internal val RedisKey = AttributeKey<Redis>("com.softistx.redis.Redis")

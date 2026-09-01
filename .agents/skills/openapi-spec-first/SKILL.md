@@ -84,7 +84,7 @@ a mapper, one role each — the layering `nxgt-ktor` and `nxgt-rest` use, minus 
 - **The envelope is part of the contract, so it goes in the document.** A controller returns a body,
   not a `ServerResponse`, so `Response<D, M>` and the `.ok()`/`.created()` chain have no place here.
   Declare `OrderPage { data: [Order], metadata: PageInfo }` — it matches `Page` field for field.
-- **`ErrorResponse` in the document must match `com.strange.spring.error.ErrorResponse`** —
+- **`ErrorResponse` in the document must match `com.softistx.spring.error.ErrorResponse`** —
   `message`, `status`, `code`, `timestamp`, `debugMessage`. Nothing checks it; a round-trip spec does.
 
 **`coRouter` is still right for what a proxy cannot express** — streaming, multipart, and any
@@ -96,7 +96,7 @@ signature needing `ServerWebExchange` or `FilePart`. The two styles coexist in o
 
 **A controller is tested end to end, through the interface it implements.** The generated `I*Service`
 is the client — reused, never re-declared — built with `stx-spring-boot`'s own extensions from
-`com.strange.spring.client` against the running application, so the spec speaks over the transport
+`com.softistx.spring.client` against the running application, so the spec speaks over the transport
 its callers use. A hand-written client or a mocked service proves neither the routing nor the
 contract. It is `nxgt-rest`'s convention; what differs here is that nobody writes the interface.
 

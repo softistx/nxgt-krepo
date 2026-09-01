@@ -1,4 +1,4 @@
-package com.strange.common.lifecycle
+package com.softistx.common.lifecycle
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

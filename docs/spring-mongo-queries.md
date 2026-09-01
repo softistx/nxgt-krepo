@@ -1,6 +1,6 @@
 # What a stx-spring-boot Mongo query may say
 
-The vocabulary `com.strange.spring.data.mongo` adds to Spring Data Reactive Mongo — a predicate, a
+The vocabulary `com.softistx.spring.data.mongo` adds to Spring Data Reactive Mongo — a predicate, a
 filter operator, a page. This is the half of `libs/stx-spring-boot` that gains an entry every phase,
 so it lives here rather than in the module README, which answers *why the integration is shaped this
 way* and stays roughly the size it is.

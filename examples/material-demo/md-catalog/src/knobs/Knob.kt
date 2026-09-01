@@ -1,4 +1,4 @@
-package com.strange.material.demo.knobs
+package com.softistx.material.demo.knobs
 
 /**
  * A control the panel knows how to draw. A story never constructs one — it asks [Knobs] for a

@@ -1,9 +1,9 @@
-package com.strange.material.theme
+package com.softistx.material.theme
 
 import androidx.compose.foundation.style.StyleScope
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Shapes
-import com.strange.material.motion.StrangeMotion
+import com.softistx.material.motion.StrangeMotion
 
 /**
  * The tokens, reachable from inside a `Style { }`.

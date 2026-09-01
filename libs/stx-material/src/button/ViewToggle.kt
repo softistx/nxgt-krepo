@@ -1,11 +1,11 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.theme.StrangeTheme
 
 enum class ViewMode {
     List,
@@ -15,7 +15,7 @@ enum class ViewMode {
 /**
  * List or grid. Two [IconToggle]s that exclude each other.
  *
- * Material 3 has no view switcher. A [com.strange.material.navigation.SegmentedControl] would
+ * Material 3 has no view switcher. A [com.softistx.material.navigation.SegmentedControl] would
  * also work, but an icon pair is the size this choice is: it sits in a toolbar, not in a form.
  */
 @Composable

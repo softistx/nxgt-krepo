@@ -1,8 +1,8 @@
-package com.strange.graphix.execute
+package com.softistx.graphix.execute
 
-import com.strange.graphix.GraphixError
-import com.strange.graphix.GraphixErrorLocation
-import com.strange.graphix.GraphixResult
+import com.softistx.graphix.GraphixError
+import com.softistx.graphix.GraphixErrorLocation
+import com.softistx.graphix.GraphixResult
 import graphql.ExceptionWhileDataFetching
 import graphql.ExecutionResult
 import java.util.concurrent.CompletionException

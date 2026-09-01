@@ -1,10 +1,10 @@
-package com.strange.telemetry.trace
+package com.softistx.telemetry.trace
 
-import com.strange.telemetry.context.currentTraceparent
-import com.strange.telemetry.context.withTelemetry
-import com.strange.telemetry.continuing
-import com.strange.telemetry.fixture.Collector
-import com.strange.telemetry.fixture.collecting
+import com.softistx.telemetry.context.currentTraceparent
+import com.softistx.telemetry.context.withTelemetry
+import com.softistx.telemetry.continuing
+import com.softistx.telemetry.fixture.Collector
+import com.softistx.telemetry.fixture.collecting
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull

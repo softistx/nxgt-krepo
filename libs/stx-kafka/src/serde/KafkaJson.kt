@@ -1,6 +1,6 @@
-package com.strange.kafka.serde
+package com.softistx.kafka.serde
 
-import com.strange.common.serialization.lenientJson
+import com.softistx.common.serialization.lenientJson
 import kotlinx.serialization.json.Json
 
 /**

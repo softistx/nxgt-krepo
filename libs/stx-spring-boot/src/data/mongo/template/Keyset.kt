@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.template
+package com.softistx.spring.data.mongo.template
 
 import org.bson.BsonNull
 import org.bson.Document

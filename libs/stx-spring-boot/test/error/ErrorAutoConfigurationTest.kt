@@ -1,6 +1,6 @@
-package com.strange.spring.error
+package com.softistx.spring.error
 
-import com.strange.i18n.Messages
+import com.softistx.i18n.Messages
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.boot.autoconfigure.AutoConfigurations

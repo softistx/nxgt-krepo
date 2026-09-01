@@ -1,6 +1,6 @@
-package com.strange.workflow.store
+package com.softistx.workflow.store
 
-import com.strange.workflow.WorkflowStatus
+import com.softistx.workflow.WorkflowStatus
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

@@ -1,12 +1,12 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.display.SectionHeader
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.display.SectionHeader
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * A titled group of fields.

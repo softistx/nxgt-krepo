@@ -1,6 +1,6 @@
-package com.strange.workflow.redis
+package com.softistx.workflow.redis
 
-import com.strange.redis.Redis
+import com.softistx.redis.Redis
 
 /**
  * Where an instance lives, and where the ones waiting to be advanced are listed.
@@ -31,7 +31,7 @@ internal fun Redis.instanceKey(id: String): String = key("wf", "instance", id)
 internal fun Redis.runnableKey(): String = key("wf", "runnable")
 
 /**
- * The prefix of the per-status indexes: one sorted set per [com.strange.workflow.WorkflowStatus],
+ * The prefix of the per-status indexes: one sorted set per [com.softistx.workflow.WorkflowStatus],
  * scored by the time the instance was last written.
  *
  * One set per status rather than one set for everything, because the query this exists for is
@@ -47,5 +47,5 @@ internal fun Redis.runnableKey(): String = key("wf", "runnable")
  */
 internal fun Redis.statusPrefix(): String = key("wf", "status", "")
 
-/** The name [com.strange.redis.lock.RedisLock] builds its own key from. */
+/** The name [com.softistx.redis.lock.RedisLock] builds its own key from. */
 internal fun instanceLockName(id: String): String = "wf:$id"

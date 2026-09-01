@@ -1,4 +1,4 @@
-package com.strange.common.page
+package com.softistx.common.page
 
 /**
  * What a caller asks for, minus the part that is the store's own: a direction, a size, and where to

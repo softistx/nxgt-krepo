@@ -1,6 +1,6 @@
-package com.strange.jpa.entity
+package com.softistx.jpa.entity
 
-import com.strange.jpa.audit.AuditedEntity
+import com.softistx.jpa.audit.AuditedEntity
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table

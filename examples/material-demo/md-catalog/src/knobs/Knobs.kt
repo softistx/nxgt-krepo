@@ -1,4 +1,4 @@
-package com.strange.material.demo.knobs
+package com.softistx.material.demo.knobs
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue

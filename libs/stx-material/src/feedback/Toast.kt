@@ -1,4 +1,4 @@
-package com.strange.material.feedback
+package com.softistx.material.feedback
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,9 +18,9 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.strange.material.text.Typography
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 import kotlinx.coroutines.delay
 
 /** One toast in a [ToasterState] stack. */

@@ -1,4 +1,4 @@
-package com.strange.workflow.dsl
+package com.softistx.workflow.dsl
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -61,7 +61,7 @@ class RetryPolicy internal constructor(
 /**
  * `retry { times = 3; backoff = exponential(100.milliseconds) }`.
  *
- * [unless] is the declared half of "do not try this again"; [com.strange.workflow.NonRetryableException]
+ * [unless] is the declared half of "do not try this again"; [com.softistx.workflow.NonRetryableException]
  * is the thrown half. Both exist because the two live in different places: whether a *policy*
  * considers a class of failure permanent is a property of the workflow, and whether *this* failure
  * is permanent is something only the code that hit it knows.

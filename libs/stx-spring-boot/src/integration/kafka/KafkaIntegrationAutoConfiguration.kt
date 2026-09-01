@@ -1,7 +1,7 @@
-package com.strange.spring.integration.kafka
+package com.softistx.spring.integration.kafka
 
-import com.strange.kafka.Kafka
-import com.strange.kafka.KafkaConfig
+import com.softistx.kafka.Kafka
+import com.softistx.kafka.KafkaConfig
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

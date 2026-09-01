@@ -1,4 +1,4 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.ui.state.ToggleableState
 import io.kotest.core.spec.style.FeatureSpec

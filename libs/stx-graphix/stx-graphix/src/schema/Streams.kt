@@ -1,6 +1,6 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixException
+import com.softistx.graphix.GraphixException
 import kotlinx.coroutines.flow.Flow
 import org.reactivestreams.Publisher
 import kotlin.reflect.KClass

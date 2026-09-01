@@ -1,4 +1,4 @@
-package com.strange.spring.json
+package com.softistx.spring.json
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

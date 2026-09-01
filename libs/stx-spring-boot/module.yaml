@@ -69,7 +69,7 @@ dependencies:
   - $libs.javers.core: compile-only
 
   # What `src/testing/` is built from, and every one of them compile-only for the same reason as the
-  # integrations above: `com.strange.spring.testing` is a package an *application's test* classpath
+  # integrations above: `com.softistx.spring.testing` is a package an *application's test* classpath
   # lights up. Nothing in `src/` refers to it and no auto-configuration imports it, so a production
   # consumer never loads a class it has no jar for. Verified with
   # `./kotlin show dependencies -m stx-spring-boot`: these sit in COMPILE and are absent from RUNTIME.

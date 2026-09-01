@@ -1,4 +1,4 @@
-package com.strange.kafka.producer
+package com.softistx.kafka.producer
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

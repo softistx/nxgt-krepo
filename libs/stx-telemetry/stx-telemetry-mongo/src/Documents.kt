@@ -1,9 +1,9 @@
-package com.strange.telemetry.mongo
+package com.softistx.telemetry.mongo
 
-import com.strange.telemetry.export.signalJson
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanRecord
+import com.softistx.telemetry.export.signalJson
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanRecord
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull

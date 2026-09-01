@@ -1,6 +1,6 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixException
+import com.softistx.graphix.GraphixException
 import graphql.language.Value
 import graphql.parser.Parser
 import kotlinx.serialization.SerialName

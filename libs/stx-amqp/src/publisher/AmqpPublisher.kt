@@ -1,15 +1,15 @@
-package com.strange.amqp.publisher
+package com.softistx.amqp.publisher
 
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
-import com.strange.amqp.Amqp
-import com.strange.amqp.AmqpClosedException
-import com.strange.amqp.AmqpNackException
-import com.strange.amqp.AmqpUnroutableException
-import com.strange.amqp.codec.AmqpCodec
-import com.strange.amqp.codec.jsonCodec
-import com.strange.amqp.message.MessageHeaders
-import com.strange.common.coroutines.Mailbox
+import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpClosedException
+import com.softistx.amqp.AmqpNackException
+import com.softistx.amqp.AmqpUnroutableException
+import com.softistx.amqp.codec.AmqpCodec
+import com.softistx.amqp.codec.jsonCodec
+import com.softistx.amqp.message.MessageHeaders
+import com.softistx.common.coroutines.Mailbox
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -1,6 +1,6 @@
 tasks:
   generate:
-    action: !com.strange.apollo.plugin.generateApollo
+    action: !com.softistx.apollo.plugin.generateApollo
       settings: ${pluginSettings}
       moduleRoot: ${module.rootDir}
       outputDir: ${taskOutputDir}

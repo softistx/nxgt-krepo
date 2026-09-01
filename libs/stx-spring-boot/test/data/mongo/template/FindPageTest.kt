@@ -1,7 +1,7 @@
-package com.strange.spring.data.mongo.template
+package com.softistx.spring.data.mongo.template
 
-import com.strange.spring.data.mongo.criteria.eq
-import com.strange.spring.data.mongo.criteria.query
+import com.softistx.spring.data.mongo.criteria.eq
+import com.softistx.spring.data.mongo.criteria.query
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.reactive.awaitFirstOrNull

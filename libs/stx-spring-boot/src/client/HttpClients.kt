@@ -1,6 +1,6 @@
-package com.strange.spring.client
+package com.softistx.spring.client
 
-import com.strange.spring.error.ApiException
+import com.softistx.spring.error.ApiException
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.reactor.mono
 import org.springframework.http.HttpHeaders

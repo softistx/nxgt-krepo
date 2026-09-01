@@ -1,15 +1,15 @@
-package com.strange.example.workflow
+package com.softistx.example.workflow
 
-import com.strange.workflow.Workflow
-import com.strange.workflow.dsl.branch
-import com.strange.workflow.dsl.compensate
-import com.strange.workflow.dsl.exponential
-import com.strange.workflow.dsl.outcome
-import com.strange.workflow.dsl.parallel
-import com.strange.workflow.dsl.retry
-import com.strange.workflow.dsl.step
-import com.strange.workflow.dsl.timeout
-import com.strange.workflow.workflow
+import com.softistx.workflow.Workflow
+import com.softistx.workflow.dsl.branch
+import com.softistx.workflow.dsl.compensate
+import com.softistx.workflow.dsl.exponential
+import com.softistx.workflow.dsl.outcome
+import com.softistx.workflow.dsl.parallel
+import com.softistx.workflow.dsl.retry
+import com.softistx.workflow.dsl.step
+import com.softistx.workflow.dsl.timeout
+import com.softistx.workflow.workflow
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 

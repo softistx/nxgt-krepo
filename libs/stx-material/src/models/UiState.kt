@@ -1,4 +1,4 @@
-package com.strange.material.models
+package com.softistx.material.models
 
 sealed interface UiState<out T> {
     data object Loading : UiState<Nothing>

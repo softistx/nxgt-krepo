@@ -1,6 +1,6 @@
-package com.strange.redis
+package com.softistx.redis
 
-import com.strange.redis.codec.redisJson
+import com.softistx.redis.codec.redisJson
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

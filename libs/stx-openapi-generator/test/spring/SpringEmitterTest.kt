@@ -1,7 +1,7 @@
-package com.strange.openapi.spring
+package com.softistx.openapi.spring
 
-import com.strange.openapi.models.ModelStyle
-import com.strange.openapi.render
+import com.softistx.openapi.models.ModelStyle
+import com.softistx.openapi.render
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain

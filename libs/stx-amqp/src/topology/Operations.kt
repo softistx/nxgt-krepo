@@ -1,6 +1,6 @@
-package com.strange.amqp.topology
+package com.softistx.amqp.topology
 
-import com.strange.amqp.Amqp
+import com.softistx.amqp.Amqp
 import java.io.IOException
 
 /**

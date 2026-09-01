@@ -1,4 +1,4 @@
-package com.strange.telemetry.slf4j
+package com.softistx.telemetry.slf4j
 
 import org.slf4j.ILoggerFactory
 import org.slf4j.IMarkerFactory
@@ -21,7 +21,7 @@ import org.slf4j.spi.SLF4JServiceProvider
  * present, SLF4J prints a warning and picks one — which one is not something to leave to chance:
  *
  * ```
- * -Dslf4j.provider=com.strange.telemetry.slf4j.TelemetryServiceProvider
+ * -Dslf4j.provider=com.softistx.telemetry.slf4j.TelemetryServiceProvider
  * ```
  *
  * An application that would rather keep logback should not depend on this module at all, and should

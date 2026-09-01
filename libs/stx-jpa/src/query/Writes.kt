@@ -1,7 +1,7 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
-import com.strange.jpa.JpaOutsideTransactionException
-import com.strange.jpa.session.JpaSession
+import com.softistx.jpa.JpaOutsideTransactionException
+import com.softistx.jpa.session.JpaSession
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 

@@ -1,12 +1,12 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.button.ButtonColor
-import com.strange.material.button.IconButton
-import com.strange.material.icon.IconSize
-import com.strange.material.icon.StrangeIcons
+import com.softistx.material.button.ButtonColor
+import com.softistx.material.button.IconButton
+import com.softistx.material.icon.IconSize
+import com.softistx.material.icon.StrangeIcons
 
 /**
  * A star rating. Material 3 has no rating control.

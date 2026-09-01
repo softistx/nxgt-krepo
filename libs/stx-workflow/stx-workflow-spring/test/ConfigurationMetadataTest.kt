@@ -1,4 +1,4 @@
-package com.strange.workflow.spring
+package com.softistx.workflow.spring
 
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec
@@ -84,5 +84,5 @@ private fun String.kebab(): String = replace(Regex("([a-z0-9])([A-Z])"), "$1-$2"
 private fun propertyClasses(): List<Class<*>> =
     ClassPathScanningCandidateComponentProvider(false)
         .apply { addIncludeFilter(AnnotationTypeFilter(ConfigurationProperties::class.java)) }
-        .findCandidateComponents("com.strange.workflow.spring")
+        .findCandidateComponents("com.softistx.workflow.spring")
         .map { Class.forName(checkNotNull(it.beanClassName)) }

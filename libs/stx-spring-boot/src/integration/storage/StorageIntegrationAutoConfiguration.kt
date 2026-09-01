@@ -1,7 +1,7 @@
-package com.strange.spring.integration.storage
+package com.softistx.spring.integration.storage
 
-import com.strange.storage.ObjectStorage
-import com.strange.storage.StorageConfig
+import com.softistx.storage.ObjectStorage
+import com.softistx.storage.StorageConfig
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

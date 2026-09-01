@@ -1,10 +1,10 @@
-package com.strange.telemetry.otlp
+package com.softistx.telemetry.otlp
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.context.withTelemetry
-import com.strange.telemetry.logger
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.span
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.context.withTelemetry
+import com.softistx.telemetry.logger
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.span
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.SerialName

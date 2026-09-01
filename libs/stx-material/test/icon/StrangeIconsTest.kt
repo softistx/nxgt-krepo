@@ -1,4 +1,4 @@
-package com.strange.material.icon
+package com.softistx.material.icon
 
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FeatureSpec

@@ -1,6 +1,6 @@
-package com.strange.mongo.page
+package com.softistx.mongo.page
 
-import com.strange.mongo.InvalidPaginationException
+import com.softistx.mongo.InvalidPaginationException
 import org.bson.BsonDocument
 import org.bson.BsonNull
 import org.bson.json.JsonMode

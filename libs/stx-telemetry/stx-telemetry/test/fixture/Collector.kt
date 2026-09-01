@@ -1,13 +1,13 @@
-package com.strange.telemetry.fixture
+package com.softistx.telemetry.fixture
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.trace.Sampler
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.trace.Sampler
 import kotlinx.coroutines.delay
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.time.Duration

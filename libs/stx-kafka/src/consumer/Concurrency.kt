@@ -1,4 +1,4 @@
-package com.strange.kafka.consumer
+package com.softistx.kafka.consumer
 
 /**
  * How many records a consumer handles at once.

@@ -1,4 +1,4 @@
-package com.strange.common.page
+package com.softistx.common.page
 
 import kotlinx.serialization.Serializable
 

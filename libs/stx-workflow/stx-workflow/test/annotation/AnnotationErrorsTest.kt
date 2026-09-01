@@ -1,8 +1,8 @@
-package com.strange.workflow.annotation
+package com.softistx.workflow.annotation
 
-import com.strange.workflow.dsl.StepScope
-import com.strange.workflow.fixture.Approval
-import com.strange.workflow.fixture.Ledger
+import com.softistx.workflow.dsl.StepScope
+import com.softistx.workflow.fixture.Approval
+import com.softistx.workflow.fixture.Ledger
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -83,7 +83,7 @@ class AnnotationErrorsTest :
                 val failure = shouldThrow<IllegalArgumentException> { workflowOf<Ledger>(WrongContext()) }
 
                 failure.message shouldContain "StepScope<kotlin.String>"
-                failure.message shouldContain "com.strange.workflow.fixture.Ledger"
+                failure.message shouldContain "com.softistx.workflow.fixture.Ledger"
             }
 
             scenario("a node of the wrong shape is named, whichever shape it got wrong") {

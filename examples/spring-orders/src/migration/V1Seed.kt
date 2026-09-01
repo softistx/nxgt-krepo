@@ -1,9 +1,9 @@
-package com.strange.example.orders.migration
+package com.softistx.example.orders.migration
 
-import com.strange.example.orders.model.Order
-import com.strange.example.orders.model.OrderStatus
-import com.strange.spring.data.mongo.migration.Migration
-import com.strange.spring.data.mongo.migration.MigrationUnit
+import com.softistx.example.orders.model.Order
+import com.softistx.example.orders.model.OrderStatus
+import com.softistx.spring.data.mongo.migration.Migration
+import com.softistx.spring.data.mongo.migration.MigrationUnit
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 

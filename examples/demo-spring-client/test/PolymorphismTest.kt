@@ -1,15 +1,15 @@
-package com.strange.demo.spring
+package com.softistx.demo.spring
 
-import com.strange.demo.api.DemoServer
-import com.strange.demo.api.startDemoServer
-import com.strange.demo.spring.api.apis.NotificationsApi
-import com.strange.demo.spring.api.models.EmailPayload
-import com.strange.demo.spring.api.models.GroupRecipient
-import com.strange.demo.spring.api.models.NotificationChannel
-import com.strange.demo.spring.api.models.NotificationRequest
-import com.strange.demo.spring.api.models.NotificationStatus
-import com.strange.demo.spring.api.models.SmsPayload
-import com.strange.demo.spring.api.models.UserRecipient
+import com.softistx.demo.api.DemoServer
+import com.softistx.demo.api.startDemoServer
+import com.softistx.demo.spring.api.apis.NotificationsApi
+import com.softistx.demo.spring.api.models.EmailPayload
+import com.softistx.demo.spring.api.models.GroupRecipient
+import com.softistx.demo.spring.api.models.NotificationChannel
+import com.softistx.demo.spring.api.models.NotificationRequest
+import com.softistx.demo.spring.api.models.NotificationStatus
+import com.softistx.demo.spring.api.models.SmsPayload
+import com.softistx.demo.spring.api.models.UserRecipient
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf

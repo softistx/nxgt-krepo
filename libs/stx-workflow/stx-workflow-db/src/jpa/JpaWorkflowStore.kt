@@ -1,14 +1,14 @@
-package com.strange.workflow.jpa
+package com.softistx.workflow.jpa
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.query.find
-import com.strange.jpa.query.query
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.db.Lease
-import com.strange.workflow.store.WorkflowRecord
-import com.strange.workflow.store.WorkflowStore
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.query.find
+import com.softistx.jpa.query.query
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.db.Lease
+import com.softistx.workflow.store.WorkflowRecord
+import com.softistx.workflow.store.WorkflowStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import java.util.UUID

@@ -22,4 +22,4 @@ settings:
   jvm:
     # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file
     # named `main.kt`; this one is `DemoServer.kt`.
-    mainClass: com.strange.demo.api.DemoServerKt
+    mainClass: com.softistx.demo.api.DemoServerKt

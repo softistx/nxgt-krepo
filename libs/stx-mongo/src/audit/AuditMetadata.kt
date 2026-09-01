@@ -1,7 +1,7 @@
-package com.strange.mongo.audit
+package com.softistx.mongo.audit
 
 import com.mongodb.client.model.Updates
-import com.strange.mongo.codec.InstantAsBsonDateTime
+import com.softistx.mongo.codec.InstantAsBsonDateTime
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
 import kotlin.time.Clock

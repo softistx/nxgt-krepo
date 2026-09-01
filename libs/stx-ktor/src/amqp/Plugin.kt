@@ -1,8 +1,8 @@
-package com.strange.ktor.amqp
+package com.softistx.ktor.amqp
 
-import com.strange.amqp.Amqp
-import com.strange.amqp.AmqpConfig
-import com.strange.ktor.resource
+import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpConfig
+import com.softistx.ktor.resource
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.util.AttributeKey
 import kotlinx.coroutines.runBlocking
@@ -67,4 +67,4 @@ class AmqpConnectionConfiguration {
     var injectable: Boolean = false
 }
 
-internal val AmqpKey = AttributeKey<Amqp>("com.strange.amqp.Amqp")
+internal val AmqpKey = AttributeKey<Amqp>("com.softistx.amqp.Amqp")

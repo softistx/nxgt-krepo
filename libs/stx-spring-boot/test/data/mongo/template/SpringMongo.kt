@@ -1,9 +1,9 @@
-package com.strange.spring.data.mongo.template
+package com.softistx.spring.data.mongo.template
 
 import com.mongodb.reactivestreams.client.MongoClients
-import com.strange.spring.data.mongo.convert.stxMongoConversions
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.mongoContainer
+import com.softistx.spring.data.mongo.convert.stxMongoConversions
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.mongoContainer
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory

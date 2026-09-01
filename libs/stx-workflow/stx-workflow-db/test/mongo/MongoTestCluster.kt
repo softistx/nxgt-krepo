@@ -1,10 +1,10 @@
-package com.strange.workflow.mongo
+package com.softistx.workflow.mongo
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.strange.mongo.mongoClient
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.mongoContainer
+import com.softistx.mongo.mongoClient
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.mongoContainer
 import kotlinx.coroutines.runBlocking
 import org.bson.BsonDocument
 import kotlin.time.Duration.Companion.seconds

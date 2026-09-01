@@ -1,10 +1,10 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.FilmOverrideFields
-import com.strange.graphix.fixture.MediaFields
-import com.strange.graphix.fixture.MediaQueries
-import com.strange.graphix.fixture.StrayQueries
-import com.strange.graphix.schema.typeResolver
+import com.softistx.graphix.fixture.FilmOverrideFields
+import com.softistx.graphix.fixture.MediaFields
+import com.softistx.graphix.fixture.MediaQueries
+import com.softistx.graphix.fixture.StrayQueries
+import com.softistx.graphix.schema.typeResolver
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

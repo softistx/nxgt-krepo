@@ -1,10 +1,10 @@
-package com.strange.telemetry
+package com.softistx.telemetry
 
-import com.strange.telemetry.context.TelemetryContext
-import com.strange.telemetry.model.*
-import com.strange.telemetry.trace.SpanContext
-import com.strange.telemetry.trace.SpanId
-import com.strange.telemetry.trace.TraceId
+import com.softistx.telemetry.context.TelemetryContext
+import com.softistx.telemetry.model.*
+import com.softistx.telemetry.trace.SpanContext
+import com.softistx.telemetry.trace.SpanId
+import com.softistx.telemetry.trace.TraceId
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
@@ -34,7 +34,7 @@ import kotlin.time.Clock
  * rather than a thread-local, and it is the behaviour an MDC gets wrong in both directions: it leaks
  * into whatever else runs on the thread, and it is missing after a suspension moves the work.
  *
- * [attributes] given here are inherited, exactly like [com.strange.telemetry.context.withAttributes]:
+ * [attributes] given here are inherited, exactly like [com.softistx.telemetry.context.withAttributes]:
  * a log written inside carries them too, and so does a nested span. Attributes set on the receiver
  * with [SpanScope.attribute] belong to this span alone.
  *

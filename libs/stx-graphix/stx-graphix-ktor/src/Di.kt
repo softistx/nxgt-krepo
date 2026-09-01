@@ -1,13 +1,13 @@
-package com.strange.graphix.ktor
+package com.softistx.graphix.ktor
 
-import com.strange.graphix.GraphQLEngineCustomizer
-import com.strange.graphix.GraphixBuilder
-import com.strange.graphix.GraphixCustomizer
-import com.strange.graphix.customize
-import com.strange.graphix.engine
-import com.strange.graphix.scalar.scalar
-import com.strange.graphix.schema.GraphixDirective
-import com.strange.graphix.schema.fieldDirective
+import com.softistx.graphix.GraphQLEngineCustomizer
+import com.softistx.graphix.GraphixBuilder
+import com.softistx.graphix.GraphixCustomizer
+import com.softistx.graphix.customize
+import com.softistx.graphix.engine
+import com.softistx.graphix.scalar.scalar
+import com.softistx.graphix.schema.GraphixDirective
+import com.softistx.graphix.schema.fieldDirective
 import graphql.schema.GraphQLScalarType
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.DependencyKey

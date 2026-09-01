@@ -1,7 +1,7 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.Field
-import com.strange.openapi.ObjectType
+import com.softistx.openapi.Field
+import com.softistx.openapi.ObjectType
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media.Schema
 
@@ -50,7 +50,7 @@ internal fun OpenAPI.objectTypeOf(
                 Field(
                     name = Naming.propertyName(union.discriminatorWireName!!),
                     wireName = union.discriminatorWireName,
-                    type = com.strange.openapi.TypeRef.StringRef,
+                    type = com.softistx.openapi.TypeRef.StringRef,
                     required = true,
                     overrides = true,
                     constant = union.wireValue,

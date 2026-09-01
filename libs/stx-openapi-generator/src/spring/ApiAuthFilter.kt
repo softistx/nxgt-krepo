@@ -1,5 +1,15 @@
-package com.strange.openapi.spring
+package com.softistx.openapi.spring
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.SecurityKind
+import com.softistx.openapi.SecurityScheme
+import com.softistx.openapi.emit.AUTH_CONFIG
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.GENERATED_COMMENT
+import com.softistx.openapi.emit.authConfigType
+import com.softistx.openapi.emit.basicCredentialsType
+import com.softistx.openapi.emit.credentialSchemes
+import com.softistx.openapi.emit.needsBasicCredentials
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -8,16 +18,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
-import com.strange.openapi.ApiModel
-import com.strange.openapi.SecurityKind
-import com.strange.openapi.SecurityScheme
-import com.strange.openapi.emit.AUTH_CONFIG
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.GENERATED_COMMENT
-import com.strange.openapi.emit.authConfigType
-import com.strange.openapi.emit.basicCredentialsType
-import com.strange.openapi.emit.credentialSchemes
-import com.strange.openapi.emit.needsBasicCredentials
 
 /**
  * `ApiAuth.kt`: the Spring filter that attaches the credential each operation asks for.

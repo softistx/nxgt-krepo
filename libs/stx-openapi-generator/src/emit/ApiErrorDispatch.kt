@@ -1,14 +1,14 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.Operation
+import com.softistx.openapi.TypeRef
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.STRING
-import com.strange.openapi.ApiModel
-import com.strange.openapi.Operation
-import com.strange.openapi.TypeRef
 
 internal const val API_ERROR_OF: String = "apiErrorOf"
 

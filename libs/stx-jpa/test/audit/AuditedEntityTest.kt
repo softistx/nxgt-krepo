@@ -1,11 +1,11 @@
-package com.strange.jpa.audit
+package com.softistx.jpa.audit
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.entity.Note
-import com.strange.jpa.query.insert
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.entity.Note
+import com.softistx.jpa.query.insert
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe

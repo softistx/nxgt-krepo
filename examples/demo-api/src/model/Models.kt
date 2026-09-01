@@ -1,4 +1,4 @@
-package com.strange.demo.api.model
+package com.softistx.demo.api.model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

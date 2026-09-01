@@ -1,8 +1,8 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.theme.Tone
+import com.softistx.material.theme.Tone
 
 /**
  * One destination in a [NavigationSuite].
@@ -12,7 +12,7 @@ import com.strange.material.theme.Tone
  * drops supporting text, chip, shortcut and section headers, which belong on a rail or a drawer.
  *
  * A [badge] wins over [unread]: a count is more specific than a dot. [avatar] replaces the vector
- * with this library's [com.strange.material.media.Avatar], initials from [label]. [busy] is a
+ * with this library's [com.softistx.material.media.Avatar], initials from [label]. [busy] is a
  * spinner over the leading, for a destination that is still catching up.
  */
 @Immutable

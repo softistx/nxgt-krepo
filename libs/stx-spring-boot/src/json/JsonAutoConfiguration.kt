@@ -1,6 +1,6 @@
-package com.strange.spring.json
+package com.softistx.spring.json
 
-import com.strange.common.serialization.lenientJson
+import com.softistx.common.serialization.lenientJson
 import kotlinx.serialization.json.Json
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

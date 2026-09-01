@@ -1,4 +1,4 @@
-package com.strange.jpa.entity
+package com.softistx.jpa.entity
 
 import jakarta.persistence.Embeddable
 import jakarta.persistence.Embedded

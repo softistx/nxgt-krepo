@@ -1,4 +1,4 @@
-package com.strange.mongo.codec
+package com.softistx.mongo.codec
 
 import org.bson.BsonReader
 import org.bson.BsonWriter

@@ -1,11 +1,11 @@
-package com.strange.telemetry.ktor
+package com.softistx.telemetry.ktor
 
-import com.strange.ktor.resource
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.context.withTelemetry
-import com.strange.telemetry.continuing
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanStatus
+import com.softistx.ktor.resource
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.context.withTelemetry
+import com.softistx.telemetry.continuing
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.model.SpanStatus
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.call
 import io.ktor.server.application.createApplicationPlugin
@@ -111,7 +111,7 @@ private const val TRACEPARENT = "traceparent"
 private fun RoutingCall.template(): String = route.parent?.toString() ?: route.toString()
 
 internal val TelemetryKey = AttributeKey<Telemetry>("stx.telemetry")
-internal val SpanKey = AttributeKey<com.strange.telemetry.trace.SpanContext>("stx.telemetry.span")
+internal val SpanKey = AttributeKey<com.softistx.telemetry.trace.SpanContext>("stx.telemetry.span")
 internal val RouteKey = AttributeKey<String>("stx.telemetry.route")
 
 internal fun ObservabilityConfiguration.build(service: String): Telemetry =

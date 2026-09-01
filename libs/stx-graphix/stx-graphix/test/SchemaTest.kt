@@ -1,8 +1,8 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.BadQueries
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.ProductQueries
+import com.softistx.graphix.fixture.BadQueries
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.ProductQueries
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContain
@@ -56,7 +56,7 @@ class SchemaTest :
                         Graphix {
                             query(
                                 object {
-                                    @com.strange.graphix.schema.QueryMapping
+                                    @com.softistx.graphix.schema.QueryMapping
                                     fun product(id: String): String = id
                                 },
                             )
@@ -70,7 +70,7 @@ class SchemaTest :
                     shouldThrow<GraphixException> {
                         Graphix {
                             query(
-                                com.strange.graphix.fixture
+                                com.softistx.graphix.fixture
                                     .BadInputQueries(),
                             )
                         }

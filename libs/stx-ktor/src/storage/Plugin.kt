@@ -1,8 +1,8 @@
-package com.strange.ktor.storage
+package com.softistx.ktor.storage
 
-import com.strange.ktor.resource
-import com.strange.storage.ObjectStorage
-import com.strange.storage.StorageConfig
+import com.softistx.ktor.resource
+import com.softistx.storage.ObjectStorage
+import com.softistx.storage.StorageConfig
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.util.AttributeKey
 
@@ -57,4 +57,4 @@ class StorageConfiguration {
     var injectable: Boolean = false
 }
 
-internal val StorageKey = AttributeKey<ObjectStorage>("com.strange.storage.ObjectStorage")
+internal val StorageKey = AttributeKey<ObjectStorage>("com.softistx.storage.ObjectStorage")

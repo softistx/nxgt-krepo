@@ -1,15 +1,15 @@
-package com.strange.jpa.criteria
+package com.softistx.jpa.criteria
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.entity.Buyer
-import com.strange.jpa.entity.Purchase
-import com.strange.jpa.entity.PurchaseLine
-import com.strange.jpa.session.JpaSession
-import com.strange.jpa.session.createQuery
-import com.strange.jpa.session.createUpdate
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.entity.Buyer
+import com.softistx.jpa.entity.Purchase
+import com.softistx.jpa.entity.PurchaseLine
+import com.softistx.jpa.session.JpaSession
+import com.softistx.jpa.session.createQuery
+import com.softistx.jpa.session.createUpdate
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
