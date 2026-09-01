@@ -1,5 +1,6 @@
 package com.strange.telemetry.export
 
+import com.strange.telemetry.model.Resource
 import com.strange.telemetry.model.Signal
 import kotlinx.serialization.json.Json
 import java.io.PrintStream
@@ -19,7 +20,10 @@ import java.io.PrintStream
 class JsonLinesExporter(
     private val out: PrintStream = System.out,
 ) : Exporter {
-    override suspend fun export(batch: List<Signal>) {
+    override suspend fun export(
+        resource: Resource,
+        batch: List<Signal>,
+    ) {
         for (signal in batch) out.println(json.encodeToString(Signal.serializer(), signal))
         out.flush()
     }
