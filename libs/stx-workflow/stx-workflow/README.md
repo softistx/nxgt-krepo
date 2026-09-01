@@ -250,10 +250,22 @@ take back when it fails, because it had no effect. A child node's effect is an i
 there running, and a `within` that expires is precisely the case where the node failed and the thing
 to undo very much exists.
 
-## What this slice does not do
+## A booked start is an instance with no journal
 
-**No scheduled starts.** A workflow starts because somebody calls `start`. It is not load-bearing for
-the shape here and would be additive.
+`startAt(flow, context, at)` creates the instance and runs none of it. It needs no field to say so:
+every node that runs writes a journal entry, so `Sleeping` with an empty journal already means "has
+not begun" and cannot mean anything else. A workflow whose first node is a `sleep` has journalled
+that node's pause, which is what keeps the two apart without a flag to get out of step.
+
+What it buys is that a booking is cancellable, findable and resumable from the moment it is made,
+rather than being a timer in somebody's process — and a timer in a process is precisely what this
+library exists not to be.
+
+There is no recurrence, deliberately. A schedule outlives every run of it, is paused and edited
+independently of them, and wants a store of its own; an instance that re-books the next one is a
+chain whose first lost link ends the series in silence.
+
+## What this slice does not do
 
 **No annotation for a child.** The annotation front end declares steps, retries, timeouts and waits;
 a `child` node is written in the DSL. It would be additive through the same `add` door the other

@@ -29,6 +29,15 @@ internal suspend fun <C> Run<C>.advance() {
         unwind()
         return
     }
+
+    // A start booked for later. Handing it back untouched costs one load and keeps the wake-up
+    // honest — a store may offer an instance a little early, and running it then would make
+    // `startAt` mean "about then", which is not what anybody schedules.
+    if (record.isScheduled) {
+        val at = record.wakeAt
+        if (at != null && Clock.System.now() < at) return
+        checkpoint { it.copy(status = WorkflowStatus.Running, wakeAt = null) }
+    }
     try {
         runNodes(prefix = "", nodes = workflow.nodes)
     } catch (_: Paused) {

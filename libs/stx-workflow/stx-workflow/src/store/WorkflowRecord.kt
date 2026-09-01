@@ -118,4 +118,14 @@ data class WorkflowRecord(
      * parking it again — a busy loop whose cost grows with how patient the business process is.
      */
     val isParked: Boolean get() = status == WorkflowStatus.Awaiting && wakeAt == null
+
+    /**
+     * True for an instance that exists but has not begun — a start booked for later.
+     *
+     * An empty journal is what says so, and it says it exactly: every node that runs writes an
+     * entry, so nothing else in this design can be [WorkflowStatus.Sleeping] with nothing recorded.
+     * A workflow whose *first* node is a `sleep` has already journalled that node's pause, which is
+     * why this needs no flag of its own to disagree with.
+     */
+    val isScheduled: Boolean get() = status == WorkflowStatus.Sleeping && journal.isEmpty()
 }
