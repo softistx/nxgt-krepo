@@ -401,11 +401,27 @@ a dependency, it brings that dependency to everything.
 group: `stx-workflow-ktor` and `stx-workflow-spring` beside `stx-workflow`, `stx-graphix-ktor` and
 `stx-graphix-spring` beside `stx-graphix`.
 
-Not *inside* the library, because `stx-i18n` and `stx-redis` have callers with no server in them — a
-worker, a CLI, a consumer — and a library whose manifest declared Ktor would carry a web framework to
-all of them. And not in the framework module, because that makes it know every library in the
-repository: `stx-ktor` held one package per integration, so **adding a library modified it**, and an
-application installing one plugin read seven others' dependencies to get it.
+Not in the framework module, because that makes it know every library in the repository: `stx-ktor`
+held one package per integration, so **adding a library modified it**, and an application installing
+one plugin read seven others' dependencies to get it.
+
+And not *inside* the library — but not for the reason it first looks like. `compile-only` would keep
+Ktor and Spring off a consumer's runtime classpath perfectly well, so a CLI taking `stx-jpa` would
+pay nothing at runtime for an `integration/ktor` package sitting unused in the jar. What it would pay
+is elsewhere, and the coupling does not disappear so much as **reverse direction**: instead of three
+seams knowing seven libraries, seven libraries would each know three frameworks. The same edges,
+now pointing from the things that must stay light to the heavy ones.
+
+- `stx-jpa` would compile against Spring Boot, Ktor and Koin, so a Ktor version bump recompiles all
+  seven libraries.
+- Its test module would carry a Ktor test host, a Spring context and Koin *beside* its Postgres
+  specs. Today those three fail independently; merged, a broken Spring wiring spec fails the JPA
+  library's build.
+- Its manifest would stop describing what it is.
+
+And the gain is smaller than it looks: a Ktor application using four of these libraries takes five
+dependencies today and would take four, because the seam already provides the "one dependency" on the
+framework side.
 
 `libs/stx-ktor` and `libs/stx-spring-boot` keep what belongs to no library and is the same for all of
 them — for Ktor, the resource-lifecycle idiom (`own`, `publish`, `resource`, `required`); for Spring,
