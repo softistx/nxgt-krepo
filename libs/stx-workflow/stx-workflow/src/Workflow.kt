@@ -26,6 +26,14 @@ class Workflow<C> internal constructor(
     internal val undo: Map<String, Undo<C>>,
     /** The names this declaration waits on, which is the whole of what it accepts a delivery for. */
     internal val signals: Set<String>,
+    /**
+     * The child workflow each `child` node runs, by qualified name.
+     *
+     * The unwind reads names out of the journal, and a child node's undo is not a block it could
+     * call — it is `undo` on another instance. This is how it tells the two apart without walking
+     * the declaration again.
+     */
+    internal val children: Map<String, Workflow<*>>,
 )
 
 /**
@@ -92,7 +100,8 @@ class WorkflowBuilder<C> internal constructor(
         require(nodes.isNotEmpty()) { "workflow '$name' declares no nodes" }
         val undo = mutableMapOf<String, Undo<C>>()
         val signals = mutableSetOf<String>()
-        index(name, prefix = "", nodes = nodes, seen = mutableSetOf(), undo = undo, signals = signals)
-        return Workflow(name, serializer, nodes, undo, signals)
+        val children = mutableMapOf<String, Workflow<*>>()
+        index(name, prefix = "", nodes = nodes, seen = mutableSetOf(), undo = undo, signals = signals, children = children)
+        return Workflow(name, serializer, nodes, undo, signals, children)
     }
 }

@@ -295,6 +295,89 @@ wrote rather than asking again — otherwise every restart would push the wake-u
 restart loop would produce an instance that never wakes. A duration of zero or less is a wake-up
 already due, which the engine treats as no pause at all rather than as an error.
 
+## Child workflows
+
+```kotlin
+fun <C, D> NodeSink<C>.child(
+    name: String,
+    workflow: Workflow<D>,
+    with: StepScope<C>.() -> D,
+    body: suspend StepScope<C>.(D) -> C,
+): Child<C, D>
+
+infix fun <C, D> Child<C, D>.within(deadline: Duration): Child<C, D>
+```
+
+```kotlin
+val fulfilment = workflow<Fulfilment>("fulfilment") {
+    step("book") { context.copy(booking = courier.book(context.items)) }
+        .compensate { courier.cancel(context.booking!!) }
+    await(COLLECTED) { collected -> context.copy(collectedAt = collected.at) } within 2.days
+}
+
+val ordering = workflow<Order>("ordering") {
+    step("reserve") { context.copy(reservationId = stock.reserve(context.items)) }
+        .compensate { stock.release(context.reservationId!!) }
+
+    child("fulfil", fulfilment, with = { Fulfilment(items = context.items) }) { fulfilled ->
+        context.copy(trackingId = fulfilled.booking)
+    } within 3.days
+
+    step("confirm") { orders.confirm(context.reservationId!!); context }
+}
+```
+
+Both must be registered with the same engine.
+
+**The child is an instance, not a subroutine.** Its own record, its own journal, its own
+compensations. That is the point: a fulfilment that parks two days on a courier's callback cannot be
+a function call inside the parent's step, because the parent's step would have to stay in memory for
+two days.
+
+`with` builds the child's starting context and runs once. `body` receives the child's **final
+context** and returns the parent's next one — the same shape as `await`, because a child that
+finished is a payload that arrived.
+
+**Only a `Completed` child feeds `body`.** One that compensated, failed or was cancelled fails this
+node with `ChildFailedException`, and the parent unwinds through everything before it — the honest
+reading of "the thing I delegated could not be done".
+
+### The id is derived
+
+`"<parent id>/<node path>"` — `order-9/fulfil`. That is what makes the node replayable: a parent that
+dies between starting the child and checkpointing that it did comes back, derives the same id, finds
+the instance already there and carries on with it rather than starting a second one. It is also what
+an operator follows from one record to the other, in either direction: the child's record carries
+`parent`.
+
+### Undoing the parent undoes the child
+
+The compensation is implicit and is not `body`'s business: it is `undo` on the child instance, which
+runs the child's own compensations in its own reverse order, checkpointed in its own journal.
+
+A child node **owes that compensation from the moment it started the instance**, not from the moment
+it succeeded — which is where it differs from every other node. A child still running when its
+`within` ran out has failed the parent's node *and* left a real instance behind, so the unwind takes
+it back too (`cancel` when it has not finished, `undo` when it has). Without that rule, a slow child
+would leak a running instance every time.
+
+A child that is no longer in the store cannot be taken back. That fails the parent's compensation and
+the parent lands `Failed`, which is the status that means a person should look.
+
+### Waiting is a park, and it is polled
+
+A parent waiting on a child is `Awaiting`, with `awaiting` holding the **child's id** rather than a
+signal name. Unlike a signal wait with no deadline, it is *not* out of the due-time index:
+
+| | Prompt | Correct |
+| --- | --- | --- |
+| How the parent finds out | The child resumes it the moment it reaches a terminal status | The parent polls the child every `childPoll` |
+
+The two records cannot be written together, so a process that dies between the child's terminal write
+and telling anybody about it would leave the parent parked forever on the wake-up alone. The poll is
+what covers that, and it needs somebody polling — a `WorkflowWorker`, or an application scheduler
+calling `resume`. `childPoll` defaults to one minute and is set on `WorkflowEngine { }`.
+
 ## Branches
 
 ```kotlin
@@ -496,6 +579,10 @@ written with `workflow { }` — which is the whole language, and is what `workfl
 An annotated step says "do not try this again" by throwing `NonRetryableException`, which is the half
 that knows.
 
+There is no `@Child` yet. Nothing stands in the way of one — a `child` node is built through the same
+`add` door every other verb uses — it simply has not been asked for. A class-declared workflow that
+needs one is written with `workflow { }`.
+
 ## Running one
 
 ```kotlin
@@ -511,6 +598,7 @@ suspend fun WorkflowEngine.resume(id: String): WorkflowRecord
 suspend fun <C> WorkflowEngine.resume(workflow: Workflow<C>, id: String): WorkflowInstance<C>
 suspend fun <T> WorkflowEngine.signal(id: String, signal: Signal<T>, payload: T): WorkflowRecord
 suspend fun WorkflowEngine.cancel(id: String): WorkflowRecord
+suspend fun WorkflowEngine.undo(id: String): WorkflowRecord
 suspend fun WorkflowEngine.record(id: String): WorkflowRecord?
 suspend fun WorkflowEngine.runnable(now: Instant = …, limit: Int = 32): List<String>
 ```
@@ -541,6 +629,15 @@ with something the caller will retry.
 `cancel` unwinds first and lands `Cancelled`. A cancelled checkout that leaves the stock reserved is
 not cancelled.
 
+`undo` is `cancel`'s counterpart across the finish line: it reverses an instance that already
+**succeeded**, landing it `Cancelled`. The two are kept apart on purpose. `cancel` is a safe no-op on
+anything terminal and every caller reaching for it defensively depends on that; folding them together
+would turn one of those calls into a refund nobody asked for. `undo` is the one you have to mean, and
+it refuses everything else — a running instance is `cancel`'s, a `Compensated` or `Cancelled` one has
+been unwound already and undoing it twice would take back a compensation, and a `Failed` one is
+waiting for a person by design. It is also what a [`child` node's](#child-workflows) compensation
+runs.
+
 Asking for an instance somebody else is advancing is **not an error**: the engine takes the
 instance's lock, and when it cannot it hands back what the store has rather than queueing.
 
@@ -552,7 +649,7 @@ recovery, use [the worker](#the-worker).
 | Status | Means | Terminal |
 | --- | --- | --- |
 | `Running` | A node is running, or the next one is about to | |
-| `Awaiting` | Stopped until a named signal arrives — see [waiting for a signal](#waiting-for-a-signal) | |
+| `Awaiting` | Stopped until a named signal arrives, or until a [child workflow](#child-workflows) finishes — `awaiting` says which | |
 | `Sleeping` | Stopped until a point in time — see [waiting for a clock](#waiting-for-a-clock) | |
 | `Compensating` | A node failed for good; the journal is being unwound | |
 | `Completed` | Every node succeeded | yes |
@@ -578,11 +675,12 @@ data class WorkflowRecord(
     val status: WorkflowStatus,
     val context: JsonElement,
     val journal: List<JournalEntry> = emptyList(),
-    val awaiting: String? = null,       // the signal name, while Awaiting
+    val awaiting: String? = null,       // the signal name, or a child's id, while Awaiting
     val signals: Map<String, JsonElement> = emptyMap(),  // delivered payloads no await has read yet
     val wakeAt: Instant? = null,        // a Sleeping instance's wake-up, or an Awaiting one's deadline
     val error: WorkflowError? = null,
     val cancelled: Boolean = false,
+    val parent: String? = null,         // the instance whose `child` node started this one
     val createdAt: Instant,
     val updatedAt: Instant,
     @Transient val version: Long = 0,

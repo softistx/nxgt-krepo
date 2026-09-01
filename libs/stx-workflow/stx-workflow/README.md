@@ -229,8 +229,32 @@ the new node beside the old one and let the old instances drain, or leave the na
 the body. `WorkflowStatus.Failed` is the other half of this — it is what an instance reaches when a
 compensation cannot be made to work, and it is meant to be looked at by a person.
 
+## A child is an instance, not a call
+
+`child("fulfil", fulfilment, with = { … }) { … }` runs another workflow and waits for it. What makes
+that worth a node rather than a step that calls `engine.start` is not convenience:
+
+- **A step cannot wait two days.** A child that parks on a courier's callback would hold the parent's
+  step — and so the parent's process — for as long as the child takes. The node parks the parent as a
+  record instead, exactly as `await` does.
+- **Undoing the parent has to undo the child.** The child ran its own effects and knows its own
+  compensations; the parent knows neither. The node's compensation is `undo` on the child instance,
+  which runs them in the child's own reverse order and journals them there. Written by hand in a
+  step's `compensate`, that is the version that forgets a case.
+- **The child's id is derived from the parent's**, so "did I already start it" is answered by looking
+  rather than by a flag a crash could have failed to write.
+
+The one rule that reads oddly until you have hit it: **a child node owes its compensation from the
+moment it started the instance, not from the moment it succeeded.** Every other node has nothing to
+take back when it fails, because it had no effect. A child node's effect is an instance that is out
+there running, and a `within` that expires is precisely the case where the node failed and the thing
+to undo very much exists.
+
 ## What this slice does not do
 
-**No sub-workflows and no scheduled starts.** A workflow starts because somebody calls `start`, and
-a step that wants another workflow calls the engine like any other collaborator. Neither is
-load-bearing for the shape here, and both would be additive.
+**No scheduled starts.** A workflow starts because somebody calls `start`. It is not load-bearing for
+the shape here and would be additive.
+
+**No annotation for a child.** The annotation front end declares steps, retries, timeouts and waits;
+a `child` node is written in the DSL. It would be additive through the same `add` door the other
+verbs use.

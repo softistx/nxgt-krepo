@@ -2,6 +2,7 @@ package com.strange.workflow.engine
 
 import com.strange.workflow.Workflow
 import com.strange.workflow.WorkflowConflictException
+import com.strange.workflow.WorkflowEngine
 import com.strange.workflow.WorkflowError
 import com.strange.workflow.dsl.StepScope
 import com.strange.workflow.store.JournalEntry
@@ -25,6 +26,15 @@ import kotlin.time.Instant
  * would make the context's serializer run once per node for nothing.
  */
 internal class Run<C>(
+    /**
+     * The engine advancing this run.
+     *
+     * A `child` node is the reason: starting another workflow, reading how it ended and undoing it
+     * are all engine operations, and a declaration cannot close over an engine that does not exist
+     * until every workflow in it is registered. It is not handed to step code — [StepScope] carries
+     * what a step may see, and this is not on it.
+     */
+    val engine: WorkflowEngine,
     val store: WorkflowStore,
     val json: Json,
     val workflow: Workflow<C>,
