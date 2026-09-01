@@ -22,7 +22,6 @@ dependencies:
   - //libs/stx-kafka: compile-only
   - //libs/stx-storage: compile-only
   - //libs/stx-jpa: compile-only
-  - //libs/stx-workflow/stx-workflow: compile-only
 
   # `CorsPolicy` is what `cors(policy)` takes, so a caller has to see it.
   - //libs/stx-common: exported
@@ -48,7 +47,6 @@ test-dependencies:
   - //libs/stx-kafka
   - //libs/stx-storage
   - //libs/stx-jpa
-  - //libs/stx-workflow/stx-workflow
   # and the servers they connect to, started for the run
   - //libs/stx-testing
 
@@ -66,10 +64,9 @@ test-dependencies:
 
 settings:
   kotlin:
-    # For the @Serializable workflow context the Workflows spec threads through its steps. Nothing
-    # in `src/` is @Serializable — as with noArg/allOpen below, this is the block an application
-    # installing that plugin needs in its own module.yaml, since a workflow context is @Serializable
-    # by definition.
+    # For the documents the Mongo spec round-trips. Nothing in `src/` is @Serializable — as with
+    # noArg/allOpen below, this is the block an application needs in its own module.yaml when the
+    # types it hands a plugin are serializable.
     serialization: json
     # For the entity the JpaConnection spec maps. Every module that *holds* entities needs these two
     # — this one holds exactly one, in its test sources, and an application installing the plugin
