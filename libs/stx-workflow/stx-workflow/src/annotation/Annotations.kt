@@ -160,3 +160,60 @@ annotation class Retry(
 annotation class Timeout(
     val millis: Long,
 )
+
+/**
+ * Runs another workflow and waits for it. The annotated function builds the child's starting context.
+ *
+ * ```kotlin
+ * @Child(3, workflow = "fulfilment", withinMillis = 3 * 24 * 60 * 60 * 1000)
+ * fun StepScope<Order>.fulfil(): Fulfilment = Fulfilment(items = context.items)
+ *
+ * @ChildResult("fulfil")
+ * suspend fun StepScope<Order>.fulfilled(done: Fulfilment): Order = context.copy(trackingId = done.booking)
+ * ```
+ *
+ * Two functions, for the same reason `@Step` and `@Compensate` are two: they run at different
+ * moments, months apart in the cases this exists for, and one of them is handed something the other
+ * has never seen.
+ *
+ * [workflow] names the child **by its workflow name**, because an annotation cannot hold a
+ * `Workflow<D>`. The declaration is passed to `workflowOf(definition, fulfilment)`, and a name that
+ * is not among them is refused when the parent is built — beside the mistake, rather than on the
+ * first instance that reaches the node.
+ *
+ * The function does not suspend: it computes the child's context and nothing else, exactly as
+ * `@Sleep` computes a duration. Its return type is checked against the named workflow's context.
+ *
+ * [withinMillis] of zero means no deadline. A deadline that passes **fails** the node and unwinds
+ * the parent — which still takes the child back, because a child node owes its compensation from the
+ * moment it started the instance rather than from the moment it succeeded.
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Child(
+    val order: Int,
+    val workflow: String,
+    val name: String = "",
+    val withinMillis: Long = 0,
+)
+
+/**
+ * What the child named [child] does to the parent's context when it finishes.
+ *
+ * ```kotlin
+ * @ChildResult("fulfil")
+ * suspend fun StepScope<Order>.fulfilled(done: Fulfilment): Order = context.copy(trackingId = done.booking)
+ * ```
+ *
+ * It names the **node**, not the function, for the same reason `@Compensate` does: that is the name
+ * the journal holds and the name an operator reads. The single parameter is the child's final
+ * context, and its type is checked against the child workflow's — so the two declarations agree by
+ * construction rather than by convention.
+ *
+ * It takes no order. It runs when its child finishes, and never in any other sequence.
+ */
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class ChildResult(
+    val child: String,
+)

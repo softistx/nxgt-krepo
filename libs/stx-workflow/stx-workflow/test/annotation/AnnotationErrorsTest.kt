@@ -67,7 +67,7 @@ class AnnotationErrorsTest :
             scenario("one with the annotation and no nodes is refused too") {
                 val failure = shouldThrow<IllegalArgumentException> { workflowOf<Ledger>(Empty()) }
 
-                failure.message shouldContain "it declares no @Step, @Await or @Sleep"
+                failure.message shouldContain "it declares no @Step, @Await, @Sleep or @Child"
             }
         }
 
