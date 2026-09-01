@@ -172,6 +172,7 @@ koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 # resolves to nothing — so it is named here like any other coordinate, on the `ktor` version.
 ktor-server-di = { module = "io.ktor:ktor-server-di", version.ref = "ktor" }
 
+slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.18" }
 slf4j-nop = { module = "org.slf4j:slf4j-nop", version = "2.0.18" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
