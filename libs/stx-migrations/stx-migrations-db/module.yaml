@@ -1,0 +1,44 @@
+product: jvm/lib
+description: "Where the stx-migrations ledger lives: MongoDB and SQL through stx-jpa, one package each"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Migration, MigrationLedger, MigrationRunner and MigrationRecord are all over this module's API.
+  - //libs/stx-migrations/stx-migrations: exported
+  # Lease — the policy around the three conditional writes each ledger spells differently.
+  - //libs/stx-common
+
+  # One entry per store, and both compile-only — the same rule and the same reason as
+  # stx-workflow-db. These types are in this module's API (`MongoMigrations(database, …)` takes a
+  # `MongoDatabase`) and they still do not belong on a consumer's runtime classpath: a ledger cannot
+  # be *constructed* without the library that provides its connection, so an application using one
+  # already depends on it, and an application migrating only MongoDB never loads a Hibernate class.
+  #
+  # Verified with `./kotlin show dependencies -m stx-migrations-db`: a compile-only entry is in the
+  # COMPILE scope and absent from RUNTIME.
+  - //libs/stx-mongo: compile-only
+  - //libs/stx-jpa: compile-only
+  # `@Language("SQL")`, which marks the migration-facing verbs so the IDE injects SQL into a caller's
+  # string. Compile-only: the annotation is CLASS-retained and read by tooling, never loaded at
+  # runtime. It arrives through kotlin-stdlib already, and is named here for the reason stx-jpa's
+  # manifest gives — an inherited edge is one the IDE does not follow.
+  - $libs.jetbrains.annotations: compile-only
+
+test-dependencies:
+  # the specs stand each store up for real, so here the libraries are on the runtime classpath too
+  - //libs/stx-mongo
+  - //libs/stx-jpa
+  # and the servers they talk to, started for the run when the workspace's own are not named
+  - //libs/stx-testing
+  # the SQL harness creates and drops each spec's schema with the drivers directly; stx-jpa keeps
+  # all three runtime-only, so nothing inherits a compile classpath for one
+  - $libs.vertx.pg.client
+  - $libs.vertx.mysql.client
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # Hibernate, Vert.x and the Mongo driver all log through SLF4J; a no-op provider keeps the output
+  # readable
+  - $libs.slf4j.nop
