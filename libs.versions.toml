@@ -22,8 +22,15 @@ coil = "2.7.0"
 # Coil 3 is the Compose Multiplatform line (android, jvm, ios). The 2.7.0 alias above is
 # Android-only (`io.coil-kt:coil-compose`) and stays for Gradle consumers of the compose bundle.
 coil3 = "3.6.0"
+# Material 3 for Compose Multiplatform. **Not `$compose.material3`**, which the toolchain cannot
+# resolve for Compose 1.12.0: it guesses 1.11.0-alpha07 and warns that it is guessing, and the build
+# only ends up on the right jar because window-size-class and adaptive-navigation-suite below are
+# pinned here and drag material3 up to meet them. Drop either of those and the guess would quietly
+# win — `./kotlin show dependencies -m stx-material` shows the upgrade arrow that says so. M3 has
+# its own alpha line and does not follow foundation/ui's 1.12.0, so it is named explicitly.
+compose-multiplatform-material3 = "1.12.0-alpha03"
 # Pinned to the Compose Multiplatform 1.12.0 pairing (What's new in CMP 1.12.0). Adaptive
-# sits on its own version line, like `$compose.material3`.
+# sits on its own version line, like material3 above.
 compose-multiplatform-adaptive = "1.3.0-beta02"
 # CMP 1.12.0 pairing table: org.jetbrains.androidx.navigation3 1.2.0-alpha02.
 compose-multiplatform-nav3 = "1.2.0-alpha02"
@@ -87,18 +94,21 @@ androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "a
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 compose-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3" }
 compose-material3-window-size = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "material3" }
+# Material 3 itself, the Compose Multiplatform build — what `$compose.material3` would have been if
+# the toolchain could resolve it for Compose 1.12.0. See the version's note above for why it cannot.
+compose-multiplatform-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform-material3" }
 # The Compose Multiplatform build of the same thing. The androidx alias above is Android-only;
-# this one publishes android, desktop(jvm), iosArm64 and iosSimulatorArm64. Its version tracks
-# $compose.material3, which sits on its own alpha line rather than on foundation/ui's 1.12.0.
-compose-multiplatform-window-size-class = { module = "org.jetbrains.compose.material3:material3-window-size-class", version = "1.12.0-alpha03" }
+# this one publishes android, desktop(jvm), iosArm64 and iosSimulatorArm64. Same alpha line as
+# material3, rather than foundation/ui's 1.12.0.
+compose-multiplatform-window-size-class = { module = "org.jetbrains.compose.material3:material3-window-size-class", version.ref = "compose-multiplatform-material3" }
 # Material 3 adaptive, the CMP artifacts. `$compose.material3.adaptive` is not a toolchain catalog
 # key — naming it fails as "Compose is disabled". Same version as the 1.12.0 pairing.
 compose-multiplatform-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "compose-multiplatform-adaptive" }
 compose-multiplatform-adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "compose-multiplatform-adaptive" }
 compose-multiplatform-adaptive-navigation3 = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation3", version.ref = "compose-multiplatform-adaptive" }
-# NavigationSuiteScaffold lives next to material3, not under the `.adaptive` group — same alpha
-# line as `$compose.material3` / window-size-class.
-compose-multiplatform-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version = "1.12.0-alpha03" }
+# NavigationSuiteScaffold lives next to material3, not under the `.adaptive` group — so it is on
+# material3's alpha line and not adaptive's.
+compose-multiplatform-adaptive-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "compose-multiplatform-material3" }
 # Navigation 3 UI, the CMP artifact. `navigation3-common` arrives transitively.
 jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "compose-multiplatform-nav3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
