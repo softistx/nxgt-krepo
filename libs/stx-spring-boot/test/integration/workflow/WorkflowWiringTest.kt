@@ -12,6 +12,7 @@ import com.strange.workflow.store.WorkflowStore
 import com.strange.workflow.workflow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import org.springframework.boot.autoconfigure.AutoConfigurations
@@ -62,9 +63,10 @@ class WorkflowWiringTest :
         }
 
         "enabled without a store builds nothing, and does not fail the context" {
-            // A store is a connection somebody opened. An application that turned the key on before
-            // declaring one should hear about it when it asks for the engine, not as a refresh
-            // failure listing a bean it has never seen.
+            // Enabling the engine and bringing no store is a half-finished configuration, not a
+            // mistake with a single reading: the application may declare its own bean in a module
+            // this runner has not loaded. It should hear about it when it asks for the engine, not
+            // as a refresh failure listing a bean it has never seen.
             runner()
                 .withPropertyValues("stx.workflow.enabled=true")
                 .run { context ->
@@ -115,13 +117,39 @@ class WorkflowWiringTest :
                 }
         }
 
-        "a Redis bean becomes the store, over the connection it already has".config(enabled = redisServer.available) {
+        "store: redis builds one over the connection that bean already has".config(enabled = redisServer.available) {
             runner()
-                .withPropertyValues("stx.workflow.enabled=true")
+                .withPropertyValues("stx.workflow.enabled=true", "stx.workflow.store=redis")
                 .withUserConfiguration(OwnRedisConfig::class.java)
                 .run { context ->
                     context.getBean(WorkflowStore::class.java)::class.simpleName shouldBe "RedisWorkflowStore"
                     context.getBeanNamesForType(WorkflowEngine::class.java).size shouldBe 1
+                }
+        }
+
+        "without the key, a Redis bean is just a Redis bean".config(enabled = redisServer.available) {
+            // The rule that earns `store` its existence. With three stores available, a Redis bean
+            // no longer means "put workflow instances in Redis" — an application may well have one
+            // for caching and a database for everything that has to survive. Guessing here would
+            // put instances somewhere plausible and wrong, and nobody would find out until the
+            // cache was flushed.
+            runner()
+                .withPropertyValues("stx.workflow.enabled=true")
+                .withUserConfiguration(OwnRedisConfig::class.java)
+                .run { context ->
+                    context.getBeanNamesForType(WorkflowStore::class.java).size shouldBe 0
+                    context.getBeanNamesForType(WorkflowEngine::class.java).size shouldBe 0
+                }
+        }
+
+        "asking for a store whose connection is not there fails the context, loudly" {
+            // Deliberately not the quiet path above. Leaving `store` unset says "I will bring my
+            // own"; naming one says "build it", and a context that came up without it would fail on
+            // the first workflow instead, a long way from the line that caused it.
+            runner()
+                .withPropertyValues("stx.workflow.enabled=true", "stx.workflow.store=mongo")
+                .run { context ->
+                    context.startupFailure shouldNotBe null
                 }
         }
     })

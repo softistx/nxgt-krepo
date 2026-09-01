@@ -22,8 +22,8 @@ dependencies:
   - //libs/stx-kafka: compile-only
   - //libs/stx-amqp: compile-only
   - //libs/stx-workflow/stx-workflow: compile-only
-  # The one store there is, for the WorkflowStore the workflow auto-configuration builds when it
-  # can do so for free — over the connection stx.redis already opened.
+  # The three stores, for the WorkflowStore the workflow auto-configuration builds over whichever
+  # connection stx.workflow.store names.
   - //libs/stx-workflow/stx-workflow-db: compile-only
 
   # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.
