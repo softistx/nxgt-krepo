@@ -14,6 +14,7 @@ way; this file is what you may write.
 - [Branches](#branches)
 - [Fan-out](#fan-out)
 - [The step scope](#the-step-scope)
+- [Annotations](#annotations)
 - [Running one](#running-one)
 - [Status](#status)
 - [The persisted record](#the-persisted-record)
@@ -357,6 +358,83 @@ Three things it does not do, and they are the author's:
 What the **engine** makes idempotent, by contrast, needs nothing from the caller: a node whose
 checkpoint landed is never run twice, a compensation already recorded is never repeated, and two
 engines cannot both append to one journal — the write is conditional on the record's version.
+
+## Annotations
+
+```kotlin
+@Target(CLASS)    annotation class WorkflowDefinition(val name: String)
+@Target(FUNCTION) annotation class Step(val order: Int, val name: String = "")
+@Target(FUNCTION) annotation class Compensate(val step: String)
+@Target(FUNCTION) annotation class Await(val order: Int, val signal: String, val name: String = "", val withinMillis: Long = 0)
+@Target(FUNCTION) annotation class Sleep(val order: Int, val name: String = "")
+@Target(FUNCTION) annotation class Retry(val times: Int, val delayMillis: Long = 100, val factor: Double = 1.0, val maxMillis: Long = 30_000)
+@Target(FUNCTION) annotation class Timeout(val millis: Long)
+
+inline fun <reified C> workflowOf(definition: Any): Workflow<C>
+```
+
+```kotlin
+@WorkflowDefinition("checkout")
+class CheckoutWorkflow(private val stock: Stock, private val payments: Payments) {
+
+    @Step(1)
+    suspend fun StepScope<Checkout>.reserve(): Checkout =
+        context.copy(reservationId = stock.reserve(context.items))
+
+    @Compensate("reserve")
+    suspend fun StepScope<Checkout>.releaseReservation() = stock.release(context.reservationId!!)
+
+    @Step(2)
+    @Retry(times = 3, delayMillis = 200, factor = 2.0, maxMillis = 5_000)
+    @Timeout(millis = 10_000)
+    suspend fun StepScope<Checkout>.charge(): Checkout =
+        context.copy(chargeId = payments.charge(context.card, key = idempotencyKey))
+
+    @Await(3, signal = "approval", withinMillis = 24 * 60 * 60 * 1000)
+    suspend fun StepScope<Checkout>.approved(approval: Approval): Checkout =
+        context.copy(approvedBy = approval.by)
+
+    @Sleep(4)
+    fun StepScope<Checkout>.settlement(): Duration = 2.days
+}
+
+val checkout = workflowOf<Checkout>(CheckoutWorkflow(stock, payments))
+```
+
+Every annotated function is a **member extension on `StepScope<C>`**, so its body is the same text a
+`step { }` block would hold — `context`, `attempt`, `idempotencyKey` all read as they do in the DSL.
+The collaborators are the class's constructor, and the instance is built once at startup and shared
+by every run, exactly as a `@QueryMapping` instance is in `stx-graphix`.
+
+`workflowOf` returns an ordinary `Workflow<C>`, built by the same builder through the same public
+verbs. There is no second engine: an annotated workflow and a written one are indistinguishable to
+everything downstream, so the two can coexist in one application and a workflow can move from one to
+the other without touching a stored instance.
+
+**`order` is required, and it is not bureaucracy.** `Class.getDeclaredMethods` is documented as
+returning methods "in no particular order", so a workflow that took its order from the source would
+be one a compiler upgrade could reorder — on a class whose entire contract is that things happen in
+sequence. The numbers need not be contiguous; only their relative order is read.
+
+`name` defaults to the function's, on both `@Step` and `@Await`. It is what appears in the journal,
+so renaming the function renames the node and an in-flight instance will not recognise it — pin the
+name when that matters. The workflow's own name has no default at all, for the same reason and more
+so.
+
+**Everything a class can get wrong is checked when `workflowOf` runs, and reported together**: a
+compensation naming no step, two nodes claiming one order, an `@Await` with no payload parameter, a
+receiver on the wrong `StepScope<C>`. Fixing three mistakes should take one run, not three.
+
+### What annotations cannot say
+
+There is no `@Branch` and no `@Parallel`. A branch's condition is a predicate and a fan-out's merge
+is a function of several typed results; both are ordinary Kotlin in the DSL, and as annotations they
+would be strings or magic method names checked at startup at best. A workflow that needs either is
+written with `workflow { }` — which is the whole language, and is what `workflowOf` produces anyway.
+
+`@Retry` has no `unless`, because `unless { }` takes a predicate and an annotation cannot hold one.
+An annotated step says "do not try this again" by throwing `NonRetryableException`, which is the half
+that knows.
 
 ## Running one
 
