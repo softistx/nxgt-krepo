@@ -605,7 +605,7 @@ instance is stored under its workflow's *name*, so an engine that cannot look th
 resume it after a restart, and a process that registered half the fleet's workflows fails on the
 other half. Collecting them as beans means a workflow is registered by existing.
 
-It opens nothing. A store is a connection somebody already made — with `stx-workflow-redis` on the
+It opens nothing. A store is a connection somebody already made — with `stx-workflow-db` on the
 classpath and `stx.redis` on, one is built over *that* connection rather than a second pool for the
 same server — and anything else is a `WorkflowStore` bean.
 

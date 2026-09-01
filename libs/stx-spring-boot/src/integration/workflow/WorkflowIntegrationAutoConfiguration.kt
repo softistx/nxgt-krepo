@@ -39,7 +39,7 @@ import kotlin.time.toKotlinDuration
  * workflows will fail on the other half. Collecting them as beans means a workflow is registered by
  * existing, rather than by also being remembered in a list somewhere.
  *
- * The store is not built here unless it can be for free: with `stx-workflow-redis` on the classpath
+ * The store is not built here unless it can be for free: with `stx-workflow-db` on the classpath
  * and a `Redis` bean present, one is made over that same connection. Anything else — a store of
  * your own, a second Redis, a Mongo store when there is one — is a `WorkflowStore` bean, and
  * `@ConditionalOnMissingBean` steps aside for it.
@@ -91,7 +91,7 @@ class WorkflowIntegrationAutoConfiguration {
      * A store over the connection `stx.redis` already opened.
      *
      * Nested and `@ConditionalOnClass` so the enclosing configuration can be read without
-     * `stx-workflow-redis` on the classpath: a method signature naming a missing class is a
+     * `stx-workflow-db` on the classpath: a method signature naming a missing class is a
      * `NoClassDefFoundError` at context refresh, and the condition on the outer class is evaluated
      * too late to prevent it.
      */

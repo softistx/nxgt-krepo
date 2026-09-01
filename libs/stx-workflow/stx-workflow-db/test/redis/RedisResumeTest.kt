@@ -21,9 +21,9 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class RedisResumeTest :
     FeatureSpec({
-        feature("an instance a process abandoned").config(enabled = WorkflowTestServer.available) {
+        feature("an instance a process abandoned").config(enabled = RedisTestServer.available) {
             scenario("a second engine picks it up where the first one stopped") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val calls = Calls()
                     val store = RedisWorkflowStore(redis, lease = 200.milliseconds)
                     val reached = CompletableDeferred<Unit>()
@@ -74,7 +74,7 @@ class RedisResumeTest :
             }
 
             scenario("a compensation half done is not done twice") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val calls = Calls()
                     val store = RedisWorkflowStore(redis, lease = 200.milliseconds)
                     val reached = CompletableDeferred<Unit>()
