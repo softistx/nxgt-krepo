@@ -3,6 +3,7 @@ package com.strange.workflow.engine
 import com.strange.workflow.WorkflowStatus
 import com.strange.workflow.dsl.Await
 import com.strange.workflow.dsl.BranchNode
+import com.strange.workflow.dsl.Child
 import com.strange.workflow.dsl.Sleep
 import com.strange.workflow.dsl.Step
 import com.strange.workflow.dsl.WorkflowNode
@@ -69,6 +70,7 @@ internal suspend fun <C> Run<C>.runNodes(
             is com.strange.workflow.dsl.Parallel -> runParallel(qualify(prefix, node.name), node)
             is Await<C, *> -> runAwait(qualify(prefix, node.name), node)
             is Sleep -> runSleep(qualify(prefix, node.name), node)
+            is Child<C, *> -> runChild(qualify(prefix, node.name), node)
         }
     }
 }
