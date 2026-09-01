@@ -24,22 +24,25 @@ class JsonLinesExporter(
         resource: Resource,
         batch: List<Signal>,
     ) {
-        for (signal in batch) out.println(json.encodeToString(Signal.serializer(), signal))
+        for (signal in batch) out.println(signalLines.encodeToString(Signal.serializer(), signal))
         out.flush()
     }
-
-    private companion object {
-        /**
-         * Defaults are written out, unlike everywhere else in this repository.
-         *
-         * A collector's schema is happier with a field that is always present, and "severity absent
-         * means Info" is a rule every consumer would have to be told about separately.
-         */
-        val json =
-            Json {
-                encodeDefaults = true
-                classDiscriminator = "type"
-                explicitNulls = false
-            }
-    }
 }
+
+/**
+ * The line format, shared with [FileExporter] rather than written twice.
+ *
+ * Defaults are written out, unlike everywhere else in this repository: a collector's schema is
+ * happier with a field that is always present, and "severity absent means Info" is a rule every
+ * consumer would otherwise have to be told about separately.
+ *
+ * Top-level and `internal` because two exporters produce this format and a consumer reading both
+ * must not be able to tell which one wrote a line. A copy in each would be one edit away from
+ * telling them apart.
+ */
+internal val signalLines =
+    Json {
+        encodeDefaults = true
+        classDiscriminator = "type"
+        explicitNulls = false
+    }

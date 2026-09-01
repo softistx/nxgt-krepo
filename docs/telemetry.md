@@ -232,6 +232,7 @@ and may take as long as it needs without blocking anybody who writes a log. It s
 | --- | --- |
 | `ConsoleExporter(out = System.out, stackTraces = true)` | One human-readable line per signal, trace ids abbreviated. For a terminal |
 | `JsonLinesExporter(out = System.out)` | One JSON object per line, discriminated by `"type": "log"` / `"span"`. For a collector |
+| `FileExporter(path, maxSize = 64MB, every = 24.hours, keep = 7, compress = false)` | The same JSON lines, to a file that is rolled on size *and* on a period, with the oldest pruned. For a deployment with no collector |
 
 `stx-telemetry-spring` adds the `stx.telemetry.*` keys — see
 [`docs/spring-configuration.md`](spring-configuration.md) — which build and install a root for the
@@ -256,6 +257,16 @@ retry table and what a `partialSuccess` means; a client passed in is used and no
 
 `ConsoleExporter` writes everything to one stream, errors included: a stream per severity interleaves
 unpredictably when both are a terminal, which reorders the very lines somebody is reading.
+
+`FileExporter` writes the lines `JsonLinesExporter` writes, so the same parser reads both. Its two
+limits are not alternatives: `maxSize` bounds the disk and `every` bounds how old the newest *closed*
+file is, and a deployment that sets only one gets either yesterday's telemetry still in the open file
+or a full disk before midnight. `every` is **aligned to the epoch** — `24.hours` rolls at UTC
+midnight, not a day after the process started, so two processes started at different times cut their
+files at the same moments. An empty file is never rolled, whatever the clock says: retention that
+counted empty files would prune the full ones out of existence behind them. Closing rolls nothing and
+the next start appends, so a service that restarts often keeps a week of files rather than a week of
+deploys.
 
 ## The signal model
 

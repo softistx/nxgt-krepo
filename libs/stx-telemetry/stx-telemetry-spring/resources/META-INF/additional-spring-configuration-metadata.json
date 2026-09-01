@@ -17,6 +17,12 @@
       "type": "com.strange.telemetry.spring.TelemetrySlf4jProperties",
       "sourceType": "com.strange.telemetry.spring.TelemetrySlf4jProperties",
       "description": "Writes this application's signals to its own SLF4J, for a deployment that already has logback and a log pipeline it trusts. Needs stx-telemetry-slf4j on the classpath."
+    },
+    {
+      "name": "stx.telemetry.file",
+      "type": "com.strange.telemetry.spring.TelemetryFileProperties",
+      "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
+      "description": "Writes the JSON-lines format to a rotating file on the local disk, for a deployment with no collector."
     }
   ],
   "properties": [
@@ -187,6 +193,48 @@
       "sourceType": "com.strange.telemetry.spring.TelemetrySlf4jProperties",
       "defaultValue": "info",
       "description": "The level a span that succeeded is logged at. One that failed is always logged at error."
+    },
+    {
+      "name": "stx.telemetry.file.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
+      "defaultValue": false,
+      "description": "Adds a FileExporter writing one JSON object per line, the same format stx.telemetry.json-lines writes to stdout."
+    },
+    {
+      "name": "stx.telemetry.file.path",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
+      "defaultValue": "logs/telemetry.jsonl",
+      "description": "Where the active file is. Its parent directories are created if they are missing, and it is opened when the context starts so a bad path fails there rather than on the export path."
+    },
+    {
+      "name": "stx.telemetry.file.max-size",
+      "type": "org.springframework.util.unit.DataSize",
+      "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
+      "defaultValue": "64MB",
+      "description": "The size at which the file is rolled aside. 0 for no size limit."
+    },
+    {
+      "name": "stx.telemetry.file.every",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
+      "defaultValue": "24h",
+      "description": "The period one file covers, aligned to the epoch \u2014 24h rolls at UTC midnight rather than a day after this process started. 0 for no time limit."
+    },
+    {
+      "name": "stx.telemetry.file.keep",
+      "type": "java.lang.Integer",
+      "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
+      "defaultValue": 7,
+      "description": "How many rolled files survive. 0 keeps only the file being written."
+    },
+    {
+      "name": "stx.telemetry.file.compress",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
+      "defaultValue": false,
+      "description": "Whether a rolled file is gzipped. Off by default because it happens on the pipeline's export path."
     }
   ]
 }
