@@ -21,7 +21,6 @@ What exists:
 | `libs/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StrangeTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
 | `libs/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/stx-ktor` | The Ktor seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the integrations that are that idiom applied — a connection per application opened and closed with it, and one negotiated locale per request. An integration with a design of its own is a module beside its library instead |
-| `libs/stx-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
 | `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
 | `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/stx-spring-boot` | Spring Boot integration for the libraries here, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, and every auto-configuration opt-in behind `stx.*` |
@@ -412,10 +411,9 @@ is elsewhere, and the coupling does not disappear so much as **reverse direction
 seams knowing seven libraries, seven libraries would each know three frameworks. The same edges,
 now pointing from the things that must stay light to the heavy ones.
 
-- `stx-jpa` would compile against Spring Boot, Ktor and Koin, so a Ktor version bump recompiles all
+- `stx-jpa` would compile against both Spring Boot and Ktor, so a Ktor version bump recompiles all
   seven libraries.
-- Its test module would carry a Ktor test host, a Spring context and Koin *beside* its Postgres
-  specs. Today those three fail independently; merged, a broken Spring wiring spec fails the JPA
+- Its test module would carry a Ktor test host and a Spring context *beside* its Postgres specs. Today those three fail independently; merged, a broken Spring wiring spec fails the JPA
   library's build.
 - Its manifest would stop describing what it is.
 
@@ -429,21 +427,13 @@ error handling, CORS, security, and the JSON and web conventions. They are the *
 switchboard. Those four Ktor verbs are public rather than internal for exactly this reason: they are
 the contract between the seam and every integration built on it, and a contract cannot be internal.
 
-`libs/stx-koin` is the same integrations as Koin modules, for the callers that have a container and
-no web framework; it knows the container, the framework modules know the framework, the libraries
-know the backends, and none of them knows two.
+The framework modules know the framework, the libraries know the backends, and neither knows two.
 
-**It does not fold into `stx-ktor`**, and the reason is measured rather than argued.
-`./kotlin show dependencies` puts three artifacts on a consumer's RUNTIME scope for `stx-koin` and
-thirty-three for `stx-ktor`, twenty-nine of them `io.ktor` — because `stx-ktor` exports
-`ktor-server-core`. Merging would hand a worker, a CLI or a Kafka consumer a web server to get
-`redisModule()`. Koin is a *container* and Ktor is a *web framework*: different axes, and the two are
-not even the same container, since `provideRedis()` in `stx-ktor` wires Ktor's own DI rather than
-Koin.
-
-What the two do share is a shape, not code — `Redis.connect(config)` plus "close it when the
-container closes", written once in each container's idiom. Abstracting over two DI containers costs
-more than the two one-liners it would replace.
+There is no Koin seam. `libs/stx-koin` existed and was removed: these libraries are server-side, so
+Ktor's own DI covers the callers that have a framework, and Koin interoperates with it for the ones
+that prefer it. What the module actually held was one line per backend —
+`single { Redis.connect(config) } onClose { it?.close() }` — which an application writes itself in
+less time than it takes to find the dependency.
 
 **Which side of the line an integration falls on is not its size — it is whether it has a design of
 its own.**
@@ -453,16 +443,14 @@ its own.**
   `stx-graphix-ktor` owns routes, a websocket protocol and a sandbox. Each needs a README to explain
   a decision, and that is the tell.
 - In the seam, when it is **the seam's idiom applied to one more type**: `stx-ktor/redis` is
-  `resource(RedisKey, instance) { Redis.connect(config) }` and an accessor;
-  `stx-koin/redis` is seven lines, one `single { } onClose { }`. Their README would read "the idiom,
-  applied". A published artifact each — manifest, README, coordinates for a consumer to discover —
-  costs more than it removes, and `stx-koin` in particular is a coherent thing with a name: *the stx
-  libraries, as Koin modules*.
+  `resource(RedisKey, instance) { Redis.connect(config) }` and an accessor. Its README would read
+  "the idiom, applied", and a published artifact each — manifest, README, coordinates for a consumer
+  to discover — costs more than it removes.
 
 So `workflow` and `graphix` are modules and the seven small ones stay where they are. The line was
 drawn after moving `workflow` and reading the others; the first version of this rule said every
-integration should move, which would have meant twenty-one modules across three seams for about two
-thousand lines that mostly restate one idiom.
+integration should move, which would have meant a module per library per seam for code that mostly
+restates one idiom once each.
 
 A *new* integration is written to this rule rather than added to a hub by default: ask which of the
 two it is first.
@@ -860,7 +848,6 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
   | `libs/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/stx-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
-  | `libs/stx-koin/README.md` | The Koin modules — which side creates the connection, which adopts it, and why two of them have no `onClose` |
   | `libs/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
@@ -938,7 +925,7 @@ the same each time, and the mistakes are the same each time too.
   anyone could state. **Test fixtures live in a package named for what they are, not for the spec that
   happened to need them first** — entities in `test/entity/`, and the same for any other family of
   fixture a module grows. A spec imports its fixtures; it does not host them. `stx-jpa`,
-  `stx-ktor` and `stx-koin` all keep their JPA entities in `…entity`.
+  `stx-ktor` keeps its JPA entities in `…entity`.
 
   One exception, and it has to be argued in the file: a spec that is *about* a package boundary owns
   the package it scans. `stx-jpa`'s `EntityScanTest` needs a package holding nothing but the
