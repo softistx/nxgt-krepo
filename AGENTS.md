@@ -39,6 +39,7 @@ What exists:
 | `examples/graphix-shop` | A Ktor GraphQL catalogue showing `stx-graphix-ktor`: split SDL under `resources/graphql/`, annotated DataFetchers, SSE subscriptions |
 | `examples/graphix-codegen` | Both GraphQL codegen plugins on one schema: DGS types and an Apollo `OPERATION_DOCUMENT` |
 | `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring-boot` with no configuration class: a spec-first REST API whose controllers implement the generated `@HttpExchange` interfaces, translated failures, keyset paging, an audit trail and two migrations |
+| `examples/workflow-checkout` | A checkout saga over `stx-workflow` and Redis: a step with its compensation, a fan-out whose legs are undone one by one, and a run whose process is killed between the charge and the checkpoint so the idempotency key has something to prove |
 | `examples/material-demo` | The `stx-material` catalogue — one Compose Multiplatform app in three modules: `md-catalog` holds every story, `md-desktop` and `md-android` are launchers |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
@@ -820,6 +821,7 @@ the same each time, and the mistakes are the same each time too.
   | `examples/spring-orders/README.md` | What each file in the Spring demo is there to show, how to run it, and what it deliberately leaves out |
   | `examples/graphix-shop/README.md` | What the GraphQL catalogue shows — split SDL, annotated DataFetchers, how to run it |
   | `examples/graphix-codegen/README.md` | The two GraphQL codegen plugins on one schema |
+  | `examples/workflow-checkout/README.md` | What the checkout saga shows — the journal each run leaves, and the window between an effect and its checkpoint that the idempotency key exists to cover |
   | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
   | `libs/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |

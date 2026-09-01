@@ -1,0 +1,25 @@
+product: jvm/app
+description: A checkout saga showing stx-workflow — compensation, a fan-out, and a run that survives the process that started it
+
+dependencies:
+  # The library this example is about: the DSL and the engine.
+  - //libs/stx-workflow/stx-workflow
+  # The store the instances live in, so the crash actually has something to be recovered from.
+  - //libs/stx-workflow/stx-workflow-redis
+  # Redis.connect — the example opens the connection and closes it, as a caller must.
+  - //libs/stx-redis
+  # Lettuce logs through SLF4J; a no-op provider keeps the narration readable
+  - $libs.slf4j.nop
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  kotlin:
+    serialization: json
+  jvm:
+    # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file named
+    # `main.kt`; this one is `Checkout.kt`, next to the workflow it runs.
+    mainClass: com.strange.example.workflow.CheckoutKt
