@@ -1,16 +1,17 @@
 package com.strange.workflow.store
 
+import com.strange.workflow.WorkflowStatus
 import kotlin.time.Instant
 
 /**
  * Where instances live between two steps.
  *
- * Five methods, and deliberately not six. This is the whole of what the engine asks of a store, so
+ * Six methods, and deliberately not seven. This is the whole of what the engine asks of a store, so
  * it is the whole of what a new backing store has to answer for — a Mongo or a Postgres
  * implementation is a document or a row per instance, a conditional write on [WorkflowRecord.version],
- * and an index on the due time. Nothing here mentions Redis, and the core module does not depend on
- * it: the implementations live in `stx-workflow-db`, a module of its own, so that the day a fourth
- * store arrives nothing here moves.
+ * an index on the due time and one on the status. Nothing here mentions Redis, and the core module
+ * does not depend on it: the implementations live in `stx-workflow-db`, a module of its own, so that
+ * the day a fourth store arrives nothing here moves.
  *
  * **Every implementation must make [save] conditional.** Returning true when the stored version was
  * not [expectedVersion] turns a lost race into a lost journal, which is the one failure this design
@@ -42,6 +43,28 @@ interface WorkflowStore {
         now: Instant,
         limit: Int,
     ): List<String>
+
+    /**
+     * The instances in [status], most recently updated first, at most [limit] of them.
+     *
+     * **This is what makes [com.strange.workflow.WorkflowStatus.Failed] mean something.** That status
+     * says a compensation could not be made to work and a person has to look — and until this method
+     * existed there was no way to find one, because every other read here needs an id the operator
+     * does not have. An engine that stops and makes a problem visible has to have somewhere the
+     * problem is visible.
+     *
+     * There is no filter by workflow name. A store would have to index a second dimension for it,
+     * differently in each implementation, to save a caller a `filter` over a page it already has.
+     *
+     * [offset] rather than a cursor, because the three stores order by the same thing and page it
+     * three different ways, and an offset means the same thing in all of them. This is an operator's
+     * inbox, not a feed: deep paging is not the shape of the problem.
+     */
+    suspend fun find(
+        status: WorkflowStatus,
+        limit: Int = 50,
+        offset: Int = 0,
+    ): List<WorkflowRecord>
 
     /**
      * Runs [block] while holding [id]'s lock, or returns null without running it when somebody else

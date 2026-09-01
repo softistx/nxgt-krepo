@@ -68,6 +68,13 @@ suspend fun MongoWorkflowStore(
         Indexes.ascending(WorkflowInstanceDocument::expiresAt.name),
         IndexOptions().expireAfter(0, TimeUnit.SECONDS),
     )
+    // What an operator's page reads: filtered by status, ordered by when it last moved.
+    instances.ensureIndex(
+        Indexes.compoundIndex(
+            Indexes.ascending(WorkflowInstanceDocument::status.name),
+            Indexes.descending(WorkflowInstanceDocument::updatedAt.name),
+        ),
+    )
     return MongoWorkflowStore(instances, lease, retention, json)
 }
 
@@ -124,6 +131,8 @@ class MongoWorkflowStore internal constructor(
                 Filters.and(byId(record.id), Filters.eq(WorkflowInstanceDocument::version.name, expectedVersion)),
                 Updates.combine(
                     Updates.set(WorkflowInstanceDocument::record.name, updated.record),
+                    Updates.set(WorkflowInstanceDocument::status.name, updated.status),
+                    Updates.set(WorkflowInstanceDocument::updatedAt.name, updated.updatedAt),
                     Updates.set(WorkflowInstanceDocument::version.name, updated.version),
                     Updates.set(WorkflowInstanceDocument::dueAt.name, updated.dueAt),
                     Updates.set(WorkflowInstanceDocument::expiresAt.name, updated.expiresAt),
@@ -150,6 +159,29 @@ class MongoWorkflowStore internal constructor(
     }
 
     /**
+     * A page of the instances in [status], newest first.
+     *
+     * One indexed `find`, and the documents come back decoded from the field that holds them. The
+     * [WorkflowInstanceDocument.status] field is a filter and nothing more — the caller gets the
+     * decoded record, so the field can only ever cost a document that should not have been in the
+     * page, never a wrong record.
+     */
+    override suspend fun find(
+        status: WorkflowStatus,
+        limit: Int,
+        offset: Int,
+    ): List<WorkflowRecord> {
+        if (limit <= 0) return emptyList()
+        return instances
+            .findAll(Filters.eq(WorkflowInstanceDocument::status.name, status.name))
+            .sort(Indexes.descending(WorkflowInstanceDocument::updatedAt.name))
+            .skip(offset)
+            .limit(limit)
+            .map { json.decodeFromString(WorkflowRecord.serializer(), it.record).copy(version = it.version) }
+            .toList()
+    }
+
+    /**
      * A lease pair, because MongoDB has no lock to borrow.
      *
      * Two fields an `updateOne` sets and another clears — the same two the relational store uses, and
@@ -169,6 +201,8 @@ class MongoWorkflowStore internal constructor(
         id = record.id,
         workflow = record.workflow,
         record = json.encodeToString(WorkflowRecord.serializer(), record),
+        status = record.status.name,
+        updatedAt = record.updatedAt,
         version = record.version,
         dueAt = dueAt(record, now),
         expiresAt = expiresAt(record, now),
