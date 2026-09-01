@@ -148,6 +148,64 @@ class WorkflowEngine internal constructor(
     }
 
     /**
+     * Books an instance to begin at [at], and returns without running any of it.
+     *
+     * ```kotlin
+     * engine.startAt(reminder, Reminder(bookingId), at = booking.startsAt - 24.hours)
+     * ```
+     *
+     * The instance exists from this call: it has an id, a context and a record, and `cancel` works
+     * on it like any other. What it does not have is a journal, which is exactly what tells the
+     * engine it has not begun — see [WorkflowRecord.isScheduled].
+     *
+     * **Something has to come back for it.** It sits in the store's due-time index scored at [at],
+     * where a `WorkflowWorker` or an application scheduler calling [resume] will find it. An engine
+     * with nobody polling has booked an instance that never starts, which is the same rule `sleep`
+     * already lives under and for the same reason: nothing here holds a timer.
+     *
+     * An [at] that has already passed is not an error and is not deferred — it starts now. A booking
+     * for a moment in the past is a booking that is due.
+     *
+     * There is no recurrence here, and it is not an omission. "Every night at three" is a schedule,
+     * and a schedule is not an instance: it outlives every run of it, it has to survive being paused
+     * and edited, and it needs a store and a vocabulary of its own. Building it out of one instance
+     * that re-books another would give a chain in which one lost link ends the series silently.
+     */
+    suspend fun <C> startAt(
+        workflow: Workflow<C>,
+        context: C,
+        at: Instant,
+        id: String = UUID.randomUUID().toString(),
+    ): WorkflowInstance<C> {
+        val now = Clock.System.now()
+        if (at <= now) return start(workflow, context, id)
+        require(definitions[workflow.name] === workflow) {
+            "workflow '${workflow.name}' is not registered with this engine — an instance it cannot look up again " +
+                "is an instance that cannot be resumed after a restart"
+        }
+        val record =
+            WorkflowRecord(
+                id = id,
+                workflow = workflow.name,
+                status = WorkflowStatus.Sleeping,
+                context = json.encodeToJsonElement(workflow.serializer, context),
+                wakeAt = at,
+                createdAt = now,
+                updatedAt = now,
+            )
+        store.create(record)
+        return instance(workflow, record)
+    }
+
+    /** [startAt], counted from now. */
+    suspend fun <C> startAfter(
+        workflow: Workflow<C>,
+        context: C,
+        delay: Duration,
+        id: String = UUID.randomUUID().toString(),
+    ): WorkflowInstance<C> = startAt(workflow, context, Clock.System.now() + delay, id)
+
+    /**
      * Reverses an instance that already **succeeded**, landing it [WorkflowStatus.Cancelled].
      *
      * ```kotlin

@@ -36,8 +36,9 @@ interface WorkflowStore {
      * The ids of instances that are due to be advanced, at most [limit] of them.
      *
      * "Due" is: not terminal, and either running with nobody advancing it — which is what a crashed
-     * process leaves behind — or, once phase two adds timers, past its `wakeAt`. Whoever asks is
-     * expected to try the lock and move on quietly when somebody else has it.
+     * process leaves behind — or past its `wakeAt`: a sleep that is over, a start booked for a
+     * moment that has come, a parent looking at its child again. Whoever asks is expected to try the
+     * lock and move on quietly when somebody else has it.
      */
     suspend fun runnable(
         now: Instant,
