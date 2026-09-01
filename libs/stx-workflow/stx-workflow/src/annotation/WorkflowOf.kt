@@ -31,6 +31,11 @@ import kotlin.reflect.typeOf
  * a compensation naming a step that does not exist, two nodes claiming one order, an `@Await` with
  * no payload parameter. Fixing three mistakes should take one run.
  *
+ * A class that delegates with `@Child` names the child **by workflow name**, because an annotation
+ * cannot hold a `Workflow<D>`. Pass the declaration alongside the definition —
+ * `workflowOf<Order>(OrderWorkflow(…), fulfilment)` — and a name that is not among them is refused
+ * here with the rest.
+ *
  * ## What annotations cannot say
  *
  * There is no `@Branch` and no `@Parallel`. A branch's condition is a predicate and a fan-out's
@@ -38,14 +43,18 @@ import kotlin.reflect.typeOf
  * strings or magic method names here, checked at startup at best. A workflow that needs either is
  * written with `workflow { }` — which is the whole language, and is what this produces anyway.
  */
-inline fun <reified C> workflowOf(definition: Any): Workflow<C> = workflowOf(definition, typeOf<C>())
+inline fun <reified C> workflowOf(
+    definition: Any,
+    vararg children: Workflow<*>,
+): Workflow<C> = workflowOf(definition, typeOf<C>(), children.toList())
 
 @PublishedApi
 internal fun <C> workflowOf(
     definition: Any,
     context: KType,
+    children: List<Workflow<*>> = emptyList(),
 ): Workflow<C> {
-    val declaration = Declaration.of(definition::class, context)
+    val declaration = Declaration.of(definition::class, context, children)
 
     @Suppress("UNCHECKED_CAST")
     val serializer = serializer(context) as KSerializer<C>

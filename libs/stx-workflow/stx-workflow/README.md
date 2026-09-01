@@ -184,10 +184,15 @@ for it: the DSL verbs are thin extensions over one `NodeSink.add`, so a reflecti
 another caller. Nothing downstream can tell the two apart, which means an application can use both,
 and a workflow can move from one to the other without touching a stored instance.
 
-The annotations cover the linear vocabulary — steps, compensations, retry, timeout, waits. They do
-**not** cover branches or fan-out, and that is deliberate rather than unfinished: a condition is a
-predicate and a merge is a function of several typed results, and neither survives being written as
-a string. A workflow that needs either is written with `workflow { }`.
+The annotations cover the linear vocabulary in full — steps, compensations, retry, timeout, waits,
+sleeps and children. A `@Child` is two functions, as `@Step` and `@Compensate` are two, and for the
+same reason: they run at moments that may be months apart, and one is handed something the other has
+never seen. It names the child by workflow name, because an annotation cannot hold a `Workflow<D>`,
+so the declaration is passed alongside the definition and the string is checked there.
+
+They do **not** cover branches or fan-out, and that is deliberate rather than unfinished: a condition
+is a predicate and a merge is a function of several typed results, and neither survives being written
+as a string. A workflow that needs either is written with `workflow { }`.
 
 ## Failed is an inbox, not a dead end
 
@@ -264,9 +269,3 @@ library exists not to be.
 There is no recurrence, deliberately. A schedule outlives every run of it, is paused and edited
 independently of them, and wants a store of its own; an instance that re-books the next one is a
 chain whose first lost link ends the series in silence.
-
-## What this slice does not do
-
-**No annotation for a child.** The annotation front end declares steps, retries, timeouts and waits;
-a `child` node is written in the DSL. It would be additive through the same `add` door the other
-verbs use.
