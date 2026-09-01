@@ -43,6 +43,13 @@
       "description": "How long a finished instance is kept before it is expired. Default 7d. A Failed instance is exempt whatever this says: it is waiting for a person, and expiring it would delete the only description of what needs fixing. Ignored by the jpa store, where a table has no TTL and retention is JpaWorkflowStore.purge on a schedule the application owns."
     },
     {
+      "name": "stx.workflow.child-poll",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.workflow.spring.WorkflowIntegrationProperties",
+      "defaultValue": null,
+      "description": "How often a parent parked on a child node looks at the child again. Default 1m. A safety net rather than the mechanism: a child resumes its parent the moment it finishes, and this only covers a process that died between those two writes. It needs stx.workflow.worker.enabled, or an application scheduler calling resume; nothing polls on its own."
+    },
+    {
       "name": "stx.workflow.worker.enabled",
       "type": "java.lang.Boolean",
       "sourceType": "com.strange.workflow.spring.WorkflowWorkerProperties",

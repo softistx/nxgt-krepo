@@ -64,7 +64,12 @@ class WorkflowIntegrationAutoConfiguration {
     fun stxWorkflowEngine(
         store: WorkflowStore,
         workflows: ObjectProvider<Workflow<*>>,
-    ): WorkflowEngine = WorkflowEngine(store) { workflows.orderedStream().forEach(::register) }
+        properties: WorkflowIntegrationProperties,
+    ): WorkflowEngine =
+        WorkflowEngine(store) {
+            childPoll = properties.childPoll?.toKotlinDuration() ?: CHILD_POLL
+            workflows.orderedStream().forEach(::register)
+        }
 
     /**
      * The worker, and the scope it runs on, as one `SmartLifecycle`.
