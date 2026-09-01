@@ -2,6 +2,7 @@ package com.strange.telemetry.export
 
 import com.strange.common.coroutines.Mailbox
 import com.strange.common.lifecycle.CloseGuard
+import com.strange.telemetry.model.Resource
 import com.strange.telemetry.model.Signal
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
@@ -34,6 +35,7 @@ import kotlin.time.Duration
  * would undo the paragraph above to save nothing.
  */
 internal class Pipeline(
+    private val resource: Resource,
     private val exporters: List<Exporter>,
     private val batch: Int,
     private val linger: Duration,
@@ -82,7 +84,7 @@ internal class Pipeline(
         buffer.clear()
         for (exporter in exporters) {
             try {
-                exporter.export(outgoing)
+                exporter.export(resource, outgoing)
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (failure: Throwable) {
