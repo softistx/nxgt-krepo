@@ -1,11 +1,7 @@
 package com.strange.telemetry
 
 import com.strange.telemetry.context.TelemetryContext
-import com.strange.telemetry.model.ErrorInfo
-import com.strange.telemetry.model.SpanEvent
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.model.SpanStatus
+import com.strange.telemetry.model.*
 import com.strange.telemetry.trace.SpanContext
 import com.strange.telemetry.trace.SpanId
 import com.strange.telemetry.trace.TraceId
@@ -143,8 +139,6 @@ suspend fun <T> continuing(
 class SpanScope internal constructor(
     /** This span's identity — what a `traceparent` for an outgoing call is built from. */
     val context: SpanContext,
-    name: String,
-) {
     /**
      * What the span is called, which the block may change.
      *
@@ -155,9 +149,8 @@ class SpanScope internal constructor(
      *
      * OpenTelemetry has the same operation for the same reason.
      */
-    @Volatile
-    var name: String = name
-
+    @Volatile var name: String,
+) {
     private val extra = ConcurrentHashMap<String, JsonElement>()
     private val moments = ConcurrentLinkedQueue<SpanEvent>()
 
