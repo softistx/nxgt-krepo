@@ -59,3 +59,24 @@ data class TelemetryOtlpProperties(
     val backoff: Duration = Duration.ofMillis(500),
     val gzip: Boolean = true,
 )
+
+/**
+ * `stx.telemetry.slf4j` — the signals written back out to the application's own logging.
+ *
+ * For an application that already has logback, an appender fleet and a log pipeline it trusts, and
+ * wants `span { }` and typed events without changing where anything ends up. It is the opposite
+ * direction from `stx-telemetry-slf4j`'s `SLF4JServiceProvider`, which is classpath-driven and has
+ * no key here because there is nothing to decide: a provider is bound or it is not.
+ *
+ * **The two directions at once are a loop**, and `Slf4jExporter` refuses to be built when it finds
+ * one — so turning this on with the provider also bound fails the context at startup rather than
+ * taking the process down later.
+ */
+@ConfigurationProperties(prefix = "stx.telemetry.slf4j")
+data class TelemetrySlf4jProperties(
+    val enabled: Boolean = false,
+    /** Whether completed spans are logged too, one line each. Off for an application that only wants logs. */
+    val spans: Boolean = true,
+    /** The level a span that succeeded is logged at. One that failed is always logged at `error`. */
+    val spanSeverity: Severity = Severity.Info,
+)
