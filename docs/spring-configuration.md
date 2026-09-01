@@ -299,6 +299,53 @@ consume nothing.
 
 ---
 
+### `stx.workflow`
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Builds an `stx-workflow` engine over the `WorkflowStore` bean |
+
+**Every `Workflow<*>` bean is registered with it.** An instance is stored under its workflow's *name*
+and an engine that cannot look that name up cannot resume it after a restart — so a workflow is
+registered by existing as a bean, rather than by also being remembered in a list somewhere.
+
+There is no `uri` and no `store` key. A store is a connection somebody already opened, and with
+`stx-workflow-redis` on the classpath and `stx.redis` on, one is built over *that* connection rather
+than a second pool for the same server. Anything else — your own store, a second Redis, a Mongo
+store when there is one — is a `WorkflowStore` bean, and `@ConditionalOnMissingBean` steps aside.
+
+### `stx.workflow.worker`
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Runs a `WorkflowWorker` in this process |
+| `poll` | duration | `1s` | How long it waits between two looks at an empty index |
+| `batch` | integer | `32` | How many due instances it takes at a time |
+| `concurrency` | integer | `8` | How many it advances at once |
+
+**Off by default, and that is a decision rather than caution.** Enabling `stx.workflow` gives an
+application a way to *run* workflows; enlisting it in recovering every abandoned instance in the
+fleet is a separate question, and one whose answer usually differs between the API pods and the two
+boxes that are supposed to do the recovering.
+
+The worker is a `SmartLifecycle`, so it starts after the context is refreshed and stops before it is
+torn down, on a scope of its own. A worker started in an `@PostConstruct` would resume instances
+against half-built collaborators; one that outlived the context would resume them against closing
+ones.
+
+### `stx.workflow.redis`
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `lease` | duration | `30s` | How long after a process dies before somebody else may pick up what it was doing |
+| `retention` | duration | `7d` | How long a finished instance is kept before Redis expires it |
+
+`lease` is **not** a deadline on a step — the lock renews while the work runs. A `Failed` instance is
+exempt from `retention` whatever it says: it is waiting for a person, and expiring it would delete
+the only description of what needs fixing.
+
+Both are ignored when the application declares its own `WorkflowStore`.
+
 ## `stx-graphix-spring`
 
 Not this module — `com.strange:stx-graphix-spring`. The keys follow the same opt-in rule, and the

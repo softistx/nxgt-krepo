@@ -20,6 +20,7 @@ way; this file is what you may write.
 - [The persisted record](#the-persisted-record)
 - [Stores](#stores)
 - [In a Ktor application](#in-a-ktor-application)
+- [In a Spring Boot application](#in-a-spring-boot-application)
 - [The worker](#the-worker)
 
 ## Declaring a workflow
@@ -616,6 +617,40 @@ the fleet is a separate question, answered by whoever is shaping the fleet. When
 runs on the application's own scope and is closed with it — which is the half an application writing
 `WorkflowWorker(engine).start(this)` by hand tends to forget, leaving a loop that outlives the
 redeploy it should have died with.
+
+## In a Spring Boot application
+
+```yaml
+stx:
+  redis:    { enabled: true, uri: redis://localhost:6379, namespace: orders }
+  workflow:
+    enabled: true
+    worker: { enabled: true }
+```
+
+```kotlin
+@Bean fun checkout(stock: Stock, payments: Payments): Workflow<Checkout> =
+    workflowOf(CheckoutWorkflow(stock, payments))
+
+@RestController
+class Checkouts(private val workflows: WorkflowEngine, private val checkout: Workflow<Checkout>) {
+    @PostMapping("/checkout")
+    suspend fun start(@RequestBody order: Checkout) = workflows.start(checkout, order)
+}
+```
+
+`com.strange.spring.integration.workflow` in `stx-spring-boot`, one of the `stx.*` auto-configurations.
+[`docs/spring-configuration.md`](spring-configuration.md) has every key.
+
+**Every `Workflow<*>` bean is registered with the engine.** That is the whole wiring and the part
+that had to be right: an instance is stored under its workflow's *name*, so an engine that cannot
+look that name up cannot resume it after a restart, and a process that registered half the fleet's
+workflows will fail on the other half. Registering by existing as a bean means there is no second
+list to keep in step.
+
+Like the Ktor plugin, it opens nothing: with `stx-workflow-redis` on the classpath and `stx.redis`
+on, the store is built over *that* connection. Anything else is a `WorkflowStore` bean, and
+`@ConditionalOnMissingBean` steps aside for it.
 
 ## The worker
 

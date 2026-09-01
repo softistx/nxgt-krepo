@@ -538,6 +538,9 @@ stx:
   kafka:   { enabled: true, bootstrap: "localhost:9092", client-id: orders }
   amqp:    { enabled: true, uri: "amqp://user:secret@rabbit:5672/billing" }
   i18n:    { enabled: true, languages: [ en, fr ], fallback: en }
+  workflow:
+    enabled: true
+    worker: { enabled: true }
 ```
 
 ```kotlin
@@ -595,6 +598,23 @@ supported set, it answers with the closest language actually loaded. It is also 
 seven without `@ConditionalOnClass` — `stx-i18n` is an `exported` dependency of this module, because
 the exception handler translates, so the class is always there and the condition could only ever be
 true.
+
+**`stx.workflow` is the one that wires beans rather than opening a connection.** Every
+`Workflow<*>` bean is registered with the engine it builds, and that is the load-bearing part: an
+instance is stored under its workflow's *name*, so an engine that cannot look that name up cannot
+resume it after a restart, and a process that registered half the fleet's workflows fails on the
+other half. Collecting them as beans means a workflow is registered by existing.
+
+It opens nothing. A store is a connection somebody already made — with `stx-workflow-redis` on the
+classpath and `stx.redis` on, one is built over *that* connection rather than a second pool for the
+same server — and anything else is a `WorkflowStore` bean.
+
+Its worker is a `SmartLifecycle`, and off by default. Off because enabling `stx.workflow` gives an
+application a way to *run* workflows, and whether this process also recovers the fleet's abandoned
+ones is a separate decision, usually answered differently by the API pods and by the two boxes meant
+to do the recovering. A lifecycle because the alternatives are both wrong: started in an
+`@PostConstruct` it would resume instances against half-built collaborators, and left to a plain
+`close()` it would never start at all.
 
 **Not every setting is a property, and that is the design.** A `Json`, a `ConnectionFactory` and a
 `MongoClientSettings.Builder` are not strings, and growing a key for each one turns a config class
