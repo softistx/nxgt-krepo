@@ -108,6 +108,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-workflow/stx-workflow-ktor/README.md`](libs/stx-workflow/stx-workflow-ktor/README.md) | The Ktor plugin — and why `own`/`publish`/`required` had to become public |
 | [`docs/migrations.md`](docs/migrations.md) | What a stx-migrations migration may say — the version, the statuses, the runner's order, the ledger contract, the lock, and what a killed process leaves |
 | [`libs/stx-migrations/stx-migrations/README.md`](libs/stx-migrations/stx-migrations/README.md) | The migration library — why the version is declared rather than parsed, why a gate throws where the prior art logged, and why neither Flyway nor Liquibase is underneath it |
+| [`libs/stx-migrations/stx-migrations-db/README.md`](libs/stx-migrations/stx-migrations-db/README.md) | Where the ledger lives — why one module and not two, and per store: the uniqueness, the lock, the instants, and how DDL reaches a database with no JDBC in front of it |
 | [`libs/stx-redis/README.md`](libs/stx-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
 | [`libs/stx-storage/README.md`](libs/stx-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
 | [`libs/stx-testing/README.md`](libs/stx-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |

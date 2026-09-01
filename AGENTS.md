@@ -883,6 +883,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-workflow/stx-workflow-db/README.md` | Where instances live — why one module and not three, and per store: the index, the conditional write, the lease and retention |
   | `docs/migrations.md` | What a stx-migrations migration may say — the version, the statuses and their transitions, the runner's order, the ledger contract, the lock, and what a killed process leaves per store. **This is where a new status, ledger method or store is documented** |
   | `libs/stx-migrations/stx-migrations/README.md` | How the migration library is shaped — why the version is declared and not parsed, why a gate throws where the prior art logged, and why neither Flyway nor Liquibase is underneath it |
+  | `libs/stx-migrations/stx-migrations-db/README.md` | Where the ledger lives — why one module and not two, and per store: the uniqueness, the lock, the instants, and how DDL reaches the database |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
