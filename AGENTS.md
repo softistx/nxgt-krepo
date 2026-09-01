@@ -14,7 +14,7 @@ What exists:
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/stx-openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
-| `libs/stx-common` | What more than one module needs and nothing else: `CoroutineSafeMap`, `KeyedMutex`, `Mailbox`, `CloseGuard`, the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
+| `libs/stx-common` | What more than one module needs and nothing else. Two concurrency packages, split by whether the caller can suspend: `coroutines/` has `CoroutineSafeMap`, `KeyedMutex` and `Mailbox`; `concurrent/` has `Memo`, `Guarded`, the `ConcurrentMap` extensions and the `BlockingQueue` bridge, for the Hibernate binders and SLF4J initialisers that cannot. Plus `CloseGuard`, the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
 | `libs/stx-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/stx-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
@@ -375,13 +375,22 @@ Look there before writing a helper, and move one there when a *second* caller ap
 anticipation of one. A helper with a single caller belongs next to it, where it can be read
 alongside the code that explains why it exists.
 
-The three concurrency types are not interchangeable, and the question that separates them is who is
-calling: `CoroutineSafeMap` when every caller is a coroutine and each operation stands alone,
-`KeyedMutex` when the work behind a key suspends and only callers wanting the *same* key should
-wait, and `Mailbox` when a caller is not a coroutine at all — a Java listener or a driver's callback,
-which cannot take a mutex and must not be made to block. `libs/stx-common/README.md` has the
-reasoning; the short version is that reaching for `runBlocking` to get out of the third case is how
-a client deadlocks against its own I/O thread.
+The concurrency types are not interchangeable, and the **first** question is which package: can the
+caller suspend? `coroutines/` is for the ones that can — `CoroutineSafeMap` when each operation
+stands alone, `KeyedMutex` when the work behind a key suspends and only callers wanting the *same*
+key should wait, `Mailbox` when a producer is not a coroutine at all and must not be made to block.
+`concurrent/` is for the callers that genuinely cannot suspend — a Hibernate binder, an SLF4J static
+initialiser, a shutdown hook — and holds `Memo` for a value computed once per key, `Guarded` for an
+object that is not thread-safe, and the `ConcurrentMap` and `BlockingQueue` extensions.
+`libs/stx-common/README.md` has the reasoning; the short version is that reaching for `runBlocking`
+to move from the second package to the first is how a client deadlocks against its own I/O thread.
+
+**`getOrPut` on a `ConcurrentHashMap` is not atomic**, and this repository shipped that mistake in
+`stx-jpa`'s serializer cache before it was written down. `kotlin.collections.getOrPut` compiles
+against a concurrent map and is a get, a compute and a put with nothing holding them together, so two
+threads at a cold key both run the loader — a wasted computation when the value is a plain result,
+and a bug the moment it has identity. Reach for `Memo`, or `getOrCompute` when the loader differs per
+call site. `MemoTest` pins the difference rather than asserting it.
 
 **A data-access library offers extensions, not a base class to inherit from.** Neither
 `stx-mongo` nor `stx-jpa` has a repository or a CRUD service class; the create/read/update/
@@ -849,7 +858,7 @@ the same each time, and the mistakes are the same each time too.
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
   | `plugins/dgs-codegen/README.md` | How do I generate DGS types from SDL in a toolchain module |
   | `plugins/apollo/README.md` | How do I generate Apollo models and `OPERATION_DOCUMENT` from schema + documents |
-  | `libs/stx-common/README.md` | What belongs in the shared module, and which of the three concurrency types a given caller wants |
+  | `libs/stx-common/README.md` | What belongs in the shared module, which concurrency type a given caller wants, the `getOrPut` trap, and the table of what the standard library already covers so nothing here wraps it twice |
   | `libs/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
   | `libs/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/stx-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
