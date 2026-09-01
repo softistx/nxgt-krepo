@@ -390,13 +390,15 @@ that already exists is a no-op in Mongo, so create-only is idempotent and safe o
 index no longer declared is left alone because deciding it is unused is a migration's job.
 
 Idempotent per feature is not the same as idempotent together, which is the one sharp edge here.
-`MigrationEntry.code` carries `@Indexed(unique = true)` *and* is indexed by `MigrationStore.prepare`
-before every run — two features that each create the same index. Mongo refuses a second `createIndex`
-over the same keys under a different name, and Spring Data names an `@Indexed` index after the
-property while an unnamed `Index()` gets Mongo's `code_1`. So `prepare` names its index `code`, and
-`MigrationIndexTest` pins the agreement in both orders. Left disagreeing, the two switches are safe
-alone and, together, abort the migration run into a warning nobody reads during a deploy — which is
-how `examples/spring-orders` found it, by turning both on.
+**Anything else that creates an index has to agree with this one about its name.** Mongo refuses a
+second `createIndex` over the same keys under a different name, and the two spellings do not match by
+accident: Spring Data names an `@Indexed` index after the property, while an unnamed `Index()` gets
+Mongo's own `code_1`. Two switches that are each safe on every boot then abort each other the first
+time both are on — which is how `examples/spring-orders` found it. A `createIndex` written by hand
+anywhere near a mapped type wants an explicit `named(…)`.
+
+That is also why `stx-migrations`' Mongo ledger has **no secondary index at all**: the version is the
+`_id`, so uniqueness is the primary key and there is nothing left for this to collide with.
 
 ## The audit trail
 
@@ -455,61 +457,42 @@ passes it to the template's `collectionName` overloads instead.
 `ReactiveAuditorAware` so `@CreatedBy` stamps *who* onto the document itself; this one keeps the
 document's whole history in a collection of its own.
 
-## Migrations
+## Migrations — see `libs/stx-migrations`
 
-```yaml
-stx:
-  data:
-    mongo:
-      migration:
-        enabled: true
-        prefix: V
-        collection: migrations
-```
+**They are not here any more, and the move was the point.** This module used to carry a MongoDB
+migration runner: a version parsed out of the class name, no lock, `PENDING`/`APPLIED`/`FAILED`, and
+a suspending `@EventListener(ApplicationReadyEvent)` — which, per `SuspendingListenerTest`, Spring
+does not wait for. The port opened while migrations were still being applied, and a process killed
+mid-migration was indistinguishable from one that never started, so the next boot re-applied it
+without a word.
+
+`stx-migrations` is the replacement, written for both stores and for both stacks:
+`stx.migrations.enabled` with `stx-migrations-spring` on the classpath, a version the class
+*declares*, a renewing lease, a `RUNNING` status that makes a killed process fail closed, and a gate
+that is an `InitializingBean` — a failure means no web server, not a log line.
+[`docs/migrations.md`](../../docs/migrations.md) is the vocabulary.
+
+What stays here is one bean, because it is Spring Data's half of the bridge and not the migration
+library's:
 
 ```kotlin
-@MigrationUnit("backfills every order's currency")
-class V3Currencies(private val template: ReactiveMongoTemplate) : Migration {
-    override suspend fun migrate() {
-        template.updateMulti(Query(), Update().set("currency", "EUR"), "orders").awaitSingle()
-    }
-}
+@Bean
+@ConditionalOnMissingBean
+fun stxCoroutineMongoDatabase(factory: ReactiveMongoDatabaseFactory): MongoDatabase =
+    MongoDatabase(runBlocking { factory.mongoDatabase.awaitSingle() })
 ```
 
-**The class name is the version.** `V3Currencies` is order 3, code `V3`. The name has to match
-`<prefix><digits><name>`, and `<name>` has to start with a letter or an underscore — otherwise `V102`
-could be read as order 102 or as order 10 followed by `2`, and a regex would pick one silently.
+`stx.migrations.store: mongo` asks the context for a coroutine `MongoDatabase`, and an application on
+Spring Data has a `ReactiveMongoDatabaseFactory` instead. **Turning on `stx.mongo` to get one is the
+wrong answer, not a longer one**: that opens a second pool against the same server, and in a suite it
+opens one that never saw the per-run database suffix `MongoTestConfiguration` splices into
+`MongoProperties` — so the migrations would run against a database nobody chose and every spec would
+still pass. Building it from the factory is what makes that suffix arrive.
 
-**A `Migration` bean whose name does not match is a loud warning at startup, not a shrug.** A
-migration that quietly does not run is the failure this whole mechanism exists to prevent.
-
-**Two units at the same order abort the whole run.** Their codes would collide, one would be
-recorded as the other and never run, and which one is arbitrary. An arbitrary migration order is
-worse than no migrations.
-
-**A failure stops everything after it, on this startup and every later one.** Migrations are written
-against the state the previous one left, so continuing past a failure applies a change to a database
-that is not in the shape it expects. The record stays `FAILED` until somebody deals with it.
-
-**Migrations should be idempotent.** The unique index on `code` stops two instances from both
-*recording* a migration, but nothing holds a lock while one *runs*, so two instances starting
-together can both execute the same `PENDING` unit. Making that impossible needs a lease with a
-timeout, and a lease that expires while a long migration is still running is a worse failure than
-the one it prevents.
-
-**The runner is a suspending `@EventListener` on `ApplicationReadyEvent`, and Spring does not wait
-for it.** `publishEvent` returns while the listener is still suspended, so the application is
-serving requests while migrations are being applied — a migration is not a startup gate, and an
-exception out of one goes to a reactive error handler nobody reads rather than to whoever published
-the event. That is why the runner catches its own failures. `SuspendingListenerTest` pins both
-halves; the first version of it asserted the result straight after `publishEvent`, passed on a
-`delay(1)` that happened to finish first, and failed on the next run.
-
-Three things here differ from the version this was extracted from, and each was a defect: `enabled`
-defaulted to `true`, so putting the library on a classpath was enough to write to the database;
-discovery filtered on the `@MigrationUnit` annotation, so a unit declared through an `@Bean` method
-was silently ignored; and `interface IMigration` declared a `rollback()` that nothing anywhere
-called, which reads as a promise that a failed migration is undone.
+It wraps the pool Spring Data opened and owns none of it: the coroutine `MongoDatabase` has no
+`close()`, so Spring infers no destroy method and the client stays Spring Data's to close. An
+application that turns on `stx.mongo` as well keeps *that* database — the ordering is explicit, and
+an explicit URI beats an inferred handle.
 
 ## The request's locale
 
@@ -679,7 +662,7 @@ cannot be misspelled; `MongoSpecTest` pins the prefix so the next rename fails l
 The suffix is the convention every harness here follows — a fixed name on a server
 `MONGO_TEST_URI` points at is shared with whatever else is running, and these specs empty
 collections, so two suites at once would clear each other's; a suite run twice would also find its
-migrations already recorded and never re-seed what the first run cleared. And the *post-processor*
+migrations already in the ledger and never re-seed what the first run cleared. And the *post-processor*
 rather than a name spliced into the URI alone, because
 `DataMongoReactiveAutoConfiguration.reactiveMongoDatabaseFactory` reads `MongoProperties.getDatabase()`
 first and only falls back to the connection string — so the URI-only version left the driver on one

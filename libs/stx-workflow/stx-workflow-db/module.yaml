@@ -8,6 +8,12 @@ dependencies:
   # WorkflowStore, WorkflowRecord and WorkflowEngine are all over this module's public API.
   - //libs/stx-workflow/stx-workflow: exported
 
+  # Lease, which is `guarded` for the two stores with no lock to borrow. It arrives through
+  # stx-workflow already; named here for the reason stx-jpa's manifest gives about inherited
+  # edges — this module imports it in its own source, and an edge the IDE does not follow is one
+  # a reader has to reconstruct.
+  - //libs/stx-common
+
   # One entry per store, and every one of them compile-only — the same rule and the same reason as
   # stx-ktor. These types are in this module's API (`RedisWorkflowStore(redis)` takes a `Redis`) and
   # they still do not belong on a consumer's runtime classpath: a store cannot be *constructed*

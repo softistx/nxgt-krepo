@@ -9,6 +9,7 @@ import com.mongodb.client.model.Projections
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import com.softistx.common.coroutines.Lease
 import com.softistx.common.serialization.lenientJson
 import com.softistx.mongo.collection
 import com.softistx.mongo.query.ID_FIELD
@@ -19,7 +20,6 @@ import com.softistx.mongo.query.findById
 import com.softistx.mongo.query.insert
 import com.softistx.mongo.query.update
 import com.softistx.workflow.WorkflowStatus
-import com.softistx.workflow.db.Lease
 import com.softistx.workflow.store.WorkflowRecord
 import com.softistx.workflow.store.WorkflowStore
 import kotlinx.coroutines.flow.map

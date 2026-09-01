@@ -1,12 +1,12 @@
 package com.softistx.workflow.jpa
 
+import com.softistx.common.coroutines.Lease
 import com.softistx.jpa.Jpa
 import com.softistx.jpa.query.find
 import com.softistx.jpa.query.query
 import com.softistx.jpa.session.session
 import com.softistx.jpa.session.transaction
 import com.softistx.workflow.WorkflowStatus
-import com.softistx.workflow.db.Lease
 import com.softistx.workflow.store.WorkflowRecord
 import com.softistx.workflow.store.WorkflowStore
 import kotlinx.coroutines.CancellationException

@@ -51,10 +51,19 @@ stx:
       audit:
         # Every save and delete of an `@Auditable` document appends a version to `audits`.
         enabled: true
-      migration:
-        # `V1Seed` and `V2Tags` run once each, in that order, and are recorded so they do not run again.
-        enabled: true
-        prefix: V
+
+  # `V1Seed` and `V2Tags` run once each, lowest version first, before this application serves
+  # anything — the gate is an `InitializingBean`, so a migration that throws is a context that does
+  # not refresh and a port that never opens. The ledger is `stx_migrations`, and `store: mongo` is
+  # what says which of the two it is: nothing is inferred from what happens to be on the classpath.
+  #
+  # No `stx.mongo` here, deliberately. The ledger needs the coroutine driver's `MongoDatabase`, and
+  # `stx-spring-boot` bridges one from the `ReactiveMongoDatabaseFactory` Spring Data already has —
+  # turning on `stx.mongo` would open a second pool against the same server and, under test, one
+  # pointed at a different database than the suite's.
+  migrations:
+    enabled: true
+    store: mongo
 
   telemetry:
     # A root, *installed* — which is what lets `logger<OrderService>()` and `span { }` in the service
@@ -86,4 +95,4 @@ stx:
 
 logging:
   level:
-    com.softistx.spring.data.mongo.migration: INFO
+    com.softistx.migrations: INFO

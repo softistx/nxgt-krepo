@@ -177,13 +177,11 @@ the same reason method security does.
 Not to be confused with `stx.data.mongo.auditor`, one letter away: that one stamps *who* onto the
 document, this one keeps the document's whole history in a collection of its own.
 
-### `stx.data.mongo.migration`
-
-| Key | Type | Default | |
-| --- | --- | --- | --- |
-| `enabled` | boolean | `false` | Runs pending migrations after the application is ready |
-| `prefix` | string | `"V"` | What a migration class name starts with. Matched literally — a `.` is a `.`, not a wildcard |
-| `collection` | string | `"migrations"` | What makes a migration run once. Pointing it at an empty collection runs every migration again |
+`stx.data.mongo` used to have a `migration` group. It is gone: migrations are
+[`stx.migrations`](#stxmigrations) now, in `stx-migrations-spring`, for both stores and both stacks.
+What `stx-spring-boot` still contributes is a coroutine `MongoDatabase` bean built from the
+`ReactiveMongoDatabaseFactory` — the bridge `stx.migrations.store: mongo` reads, and the reason an
+application on Spring Data does not have to turn on `stx.mongo` and open a second pool to get one.
 
 ---
 
@@ -353,6 +351,54 @@ The worker is a `SmartLifecycle`, so it starts after the context is refreshed an
 torn down, on a scope of its own. A worker started in an `@PostConstruct` would resume instances
 against half-built collaborators; one that outlived the context would resume them against closing
 ones.
+
+### `stx.migrations`
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Runs the migrations before the context finishes refreshing, and refuses to start if any fails |
+| `store` | `mongo` \| `sql` | — | Which ledger to build. Unset means the application declares its own `MigrationRunner` bean |
+| `name` | string | `stx_migrations` | The table or collection the ledger lives in; the lock is `<name>_lock` |
+| `lease` | duration | `5m` | How long the migration lock is good for before the process holding it is assumed gone |
+| `lock-timeout` | duration | `5m` | How long to wait for another instance to finish migrating before failing to start |
+| `lock-poll` | duration | `1s` | How long to wait between two attempts on the lock |
+| `stale-after` | duration | `15m` | How old a `RUNNING` record has to be before it is read as a process that died |
+
+**A migration is a `@Component` implementing `MongoMigration` or `SqlMigration`,** collected by type.
+By type rather than by annotation, which is a correction the runner this replaces already carried: the
+version before it filtered on an annotation and silently ignored anything without it — a migration
+that does not happen and does not say so.
+
+```kotlin
+@Component
+class V1Orders : SqlMigration {
+    override val version = 1L
+    override suspend fun migrate(context: SqlMigrationSession) {
+        context.execute("create table if not exists orders (id bigint primary key)")
+    }
+}
+```
+
+There is no `uri`. Each `store` value builds over the connection the matching `stx.*` group already
+opened — the `Jpa` bean, or the `MongoDatabase` bean, which `stx.data.mongo` will also bridge from
+Spring Data's own factory. **Nothing is inferred**: an application with both beans is not saying which
+schema it means to migrate. An application migrating both names one here and declares a
+`MigrationRunner` bean for the other — the gate runs every runner it finds.
+
+Naming a `store` whose connection bean does not exist **fails at startup**. A context that came up
+quietly with no migrations, against a schema nobody made, is the failure this library exists to
+prevent.
+
+The gate is an `InitializingBean`, and that is the whole design: `SuspendingListenerTest` pins that
+Spring does not wait for a suspending listener, so the `@EventListener(ApplicationReadyEvent)` this
+replaces let the port open while migrations were still running. A throw out of `afterPropertiesSet`
+aborts the refresh instead — no web server, no `ApplicationReadyEvent`, no requests. The vocabulary is
+[`docs/migrations.md`](migrations.md).
+
+`store: mongo` on an application using **Spring Data** needs no `stx.mongo`: `stx-spring-boot`
+contributes a coroutine `MongoDatabase` built from the `ReactiveMongoDatabaseFactory` already in the
+context. Turning on `stx.mongo` for it would open a second pool against the same server, and under
+test one that never saw the harness's per-run database suffix.
 
 ## `stx-telemetry-spring`
 

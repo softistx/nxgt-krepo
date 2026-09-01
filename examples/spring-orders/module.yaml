@@ -1,5 +1,5 @@
 product: jvm/app
-description: "A demo order book on stx-spring-boot: a spec-first REST API, keyset paging, an audit trail and two migrations"
+description: "A demo order book on stx-spring-boot: a spec-first REST API, keyset paging, an audit trail and two stx-migrations migrations"
 
 dependencies:
   # The library this example is about: the error handler, the web helpers, the Mongo criteria and
@@ -14,6 +14,19 @@ dependencies:
 
   # Object diffing, for the audit trail. Compile-only there for the same reason.
   - $libs.javers.core
+
+  # The migration gate `stx.migrations` turns on. It holds both ledgers `compile-only`, so the two
+  # lines below are this application choosing MongoDB — the same rule as every other entry here.
+  - //libs/stx-migrations/stx-migrations-spring
+
+  # The Mongo ledger itself, and `MongoMigration`, which is what `src/migration/` implements.
+  - //libs/stx-migrations/stx-migrations-db
+
+  # The coroutine driver's `MongoDatabase` — the type a MongoMigration is handed, and the bean
+  # `stx-spring-boot` bridges from Spring Data's `ReactiveMongoDatabaseFactory`. Compile-only in
+  # stx-migrations-db for the reason its manifest gives; this is the application adding it, which is
+  # also what puts the ledger's driver on the runtime classpath.
+  - //libs/stx-mongo
 
   # The telemetry root, the `CoWebFilter` that makes each request a server span, and the
   # `stx.telemetry.*` keys. Nothing starts because this is on the classpath — `stx.telemetry.enabled`
@@ -71,8 +84,8 @@ plugins:
         interfaceSuffix: Service
 
 settings:
-  # Applies the Spring Boot BOM (4.1.0), all-open with the `spring` preset — so `@Configuration` and
-  # `@MigrationUnit` classes need not be written `open` — and `-java-parameters`.
+  # Applies the Spring Boot BOM (4.1.0), all-open with the `spring` preset — so `@Configuration`
+  # and `@Component` classes need not be written `open` — and `-java-parameters`.
   springBoot: enabled
   kotlin:
     serialization: json
