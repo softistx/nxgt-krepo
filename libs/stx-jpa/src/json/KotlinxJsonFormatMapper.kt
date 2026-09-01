@@ -1,5 +1,6 @@
 package com.strange.jpa.json
 
+import com.strange.common.concurrent.Memo
 import com.strange.common.serialization.decodeValue
 import com.strange.jpa.JpaDocumentException
 import com.strange.jpa.JpaSerializerException
@@ -8,7 +9,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializerOrNull
 import org.hibernate.type.format.AbstractJsonFormatMapper
 import java.lang.reflect.Type
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Hibernate's JSON `FormatMapper`, implemented over kotlinx.serialization.
@@ -37,11 +37,15 @@ internal class KotlinxJsonFormatMapper(
      * Resolved serializers, kept because resolving one is reflective.
      *
      * `serializerOrNull(Type)` looks up a `serializer()` method by reflection and invokes it on every
-     * call, and this is called once per JSON column per row. A plain `ConcurrentHashMap` rather than
-     * one of `stx-common`'s concurrency types because Hibernate calls this from a binder that
-     * cannot suspend.
+     * call, and this is called once per JSON column per row. A [Memo] rather than one of
+     * `stx-common`'s coroutine types because Hibernate calls this from a binder that cannot suspend
+     * — and rather than the `ConcurrentHashMap` plus `getOrPut` this used to be, which let two
+     * threads resolve the same type at once. `Memo` has that argument at length.
      */
-    private val serializers = ConcurrentHashMap<Type, KSerializer<Any>>()
+    private val serializers =
+        Memo<Type, KSerializer<Any>> { type ->
+            json.serializersModule.serializerOrNull(type) ?: throw JpaSerializerException(type)
+        }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> toString(
@@ -79,8 +83,5 @@ internal class KotlinxJsonFormatMapper(
      * Internal rather than private because the spec that pins that message needs no database and
      * should not have to start one to ask this question.
      */
-    internal fun serializerFor(type: Type): KSerializer<Any> =
-        serializers.getOrPut(type) {
-            json.serializersModule.serializerOrNull(type) ?: throw JpaSerializerException(type)
-        }
+    internal fun serializerFor(type: Type): KSerializer<Any> = serializers[type]
 }

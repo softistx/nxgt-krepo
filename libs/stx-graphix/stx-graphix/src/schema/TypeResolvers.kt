@@ -1,11 +1,11 @@
 package com.strange.graphix.schema
 
+import com.strange.common.concurrent.Memo
 import graphql.TypeResolutionEnvironment
 import graphql.execution.UnresolvedTypeException
 import graphql.schema.GraphQLNamedOutputType
 import graphql.schema.GraphQLObjectType
 import graphql.schema.TypeResolver
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 /**
@@ -51,10 +51,15 @@ internal fun runtimeTypeName(value: Any?): String? =
     when (value) {
         null -> null
         is Map<*, *> -> value["__typename"] as? String
-        else -> typeNames.computeIfAbsent(value::class) { it.graphQLNameOrNull() ?: "" }
+        else -> typeNames[value::class]
     }
 
-/** Per-value reflection is not free — an abstract-typed list would pay it per row. */
-private val typeNames = ConcurrentHashMap<KClass<*>, String>()
+/**
+ * Per-value reflection is not free — an abstract-typed list would pay it per row.
+ *
+ * Keyed by `KClass`, which is a key domain the program itself controls: the classes it loaded. That
+ * is the only kind of key a [Memo] may have, since it never evicts.
+ */
+private val typeNames = Memo<KClass<*>, String> { it.graphQLNameOrNull() ?: "" }
 
 private fun describe(value: Any?): String = value?.let { it::class.qualifiedName ?: it::class.toString() } ?: "null"

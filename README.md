@@ -31,7 +31,7 @@ Alongside them are the shared service libraries, which have nothing to do with t
 
 | | |
 | --- | --- |
-| `libs/stx-common` | The coroutine primitives and the one lenient `Json` the libraries below share: a mutex-guarded map, a lock per key, and the mailbox that carries a Java callback's work into a coroutine |
+| `libs/stx-common` | What more than one library here needs and nothing else, in two concurrency packages split by whether the caller can suspend — `CoroutineSafeMap`, `KeyedMutex` and `Mailbox` for the ones that can, `Memo`, `Guarded` and the concurrent-collection extensions for the Hibernate binders and SLF4J initialisers that cannot — plus `CloseGuard`, the keyset pagination both stores share, and the one lenient `Json` |
 | `libs/stx-amqp` | An AMQP connection over the RabbitMQ client: topology declared in one block, publishes that wait for the broker's confirm, deliveries as a `Flow`, and retries that are delay queues rather than a loop |
 | `libs/stx-i18n` | Catalogs read strictly as UTF-8 and compiled at startup, a message resolved key by key down the locale chain, and `Accept-Language` negotiated against what is actually shipped |
 | `libs/stx-jpa` | Postgres over Hibernate Reactive: ordinary annotated Kotlin entities, every session pinned to the event loop that opened it so a handler can suspend mid-transaction, and HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
@@ -67,7 +67,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | --- | --- |
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |
 | [`libs/stx-openapi-generator/README.md`](libs/stx-openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
-| [`libs/stx-common/README.md`](libs/stx-common/README.md) | The shared module — what belongs in it, and which concurrency type a given caller wants |
+| [`libs/stx-common/README.md`](libs/stx-common/README.md) | The shared module — what belongs in it, which concurrency type a given caller wants, why `getOrPut` on a `ConcurrentHashMap` is not atomic, and what the standard library already covers |
 | [`libs/stx-amqp/README.md`](libs/stx-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
 | [`libs/stx-i18n/README.md`](libs/stx-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
 | [`libs/stx-ktor/README.md`](libs/stx-ktor/README.md) | The Ktor integrations — the seven plugins, what each owns, and how one module holds them without a fat dependency list |
