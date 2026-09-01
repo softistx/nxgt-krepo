@@ -3,6 +3,7 @@ package com.strange.telemetry.spring
 import com.strange.telemetry.Telemetry
 import com.strange.telemetry.export.ConsoleExporter
 import com.strange.telemetry.export.Exporter
+import com.strange.telemetry.export.FileExporter
 import com.strange.telemetry.export.JsonLinesExporter
 import com.strange.telemetry.otlp.OtlpExporter
 import com.strange.telemetry.slf4j.Slf4jExporter
@@ -18,6 +19,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
+import java.nio.file.Path
 import kotlin.time.toKotlinDuration
 
 /**
@@ -49,6 +51,7 @@ import kotlin.time.toKotlinDuration
     TelemetryProperties::class,
     TelemetryOtlpProperties::class,
     TelemetrySlf4jProperties::class,
+    TelemetryFileProperties::class,
 )
 @ConditionalOnClass(Telemetry::class)
 @ConditionalOnProperty(prefix = "stx.telemetry", name = ["enabled"], havingValue = "true")
@@ -143,6 +146,31 @@ class TelemetryAutoConfiguration {
                 spans = properties.spans,
                 spanSeverity = properties.spanSeverity,
                 factory = factory.getIfAvailable { LoggerFactory.getILoggerFactory() },
+            )
+    }
+
+    /**
+     * A rotating file on the local disk.
+     *
+     * The only one of the three nested configurations with no `@ConditionalOnClass`: `FileExporter`
+     * is in `stx-telemetry` itself, which this module depends on and re-exports, so an application
+     * that reached this class already has it. Guarding it on a class that cannot be absent would read
+     * as a warning about a risk that does not exist.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnProperty(prefix = "stx.telemetry.file", name = ["enabled"], havingValue = "true")
+    class File {
+        @Bean(destroyMethod = "close")
+        @ConditionalOnMissingBean(FileExporter::class)
+        fun stxFileExporter(properties: TelemetryFileProperties): FileExporter =
+            FileExporter(
+                path = Path.of(properties.path),
+                maxSize = properties.maxSize.toBytes(),
+                // Zero is how a duration says "never" here. `every: 0` in a yaml file is a limit
+                // turned off, where an empty value would be a limit somebody forgot to fill in.
+                every = properties.every.takeUnless { it.isZero }?.toKotlinDuration(),
+                keep = properties.keep,
+                compress = properties.compress,
             )
     }
 
