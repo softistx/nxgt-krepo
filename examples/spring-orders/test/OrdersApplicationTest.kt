@@ -1,11 +1,14 @@
 package com.softistx.example.orders
 
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.softistx.example.orders.api.Endpoints
 import com.softistx.example.orders.api.apis.IHealthService
 import com.softistx.example.orders.api.path
+import com.softistx.example.orders.migration.V1Seed
+import com.softistx.example.orders.model.Order
+import com.softistx.example.orders.model.OrderStatus
 import com.softistx.spring.client.withClient
 import com.softistx.spring.testing.MongoSpec
-import com.softistx.spring.testing.awaitMigrations
 import com.softistx.spring.testing.clear
 import com.softistx.spring.testing.mongoAvailable
 import com.softistx.spring.testing.webTestClient
@@ -13,6 +16,7 @@ import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.reactor.awaitSingle
@@ -36,6 +40,7 @@ private const val MISSING_ID = "000000000000000000000000"
  */
 class OrdersApplicationTest(
     template: ReactiveMongoTemplate,
+    database: MongoDatabase,
     json: Json,
 ) : MongoSpec({
 
@@ -44,7 +49,6 @@ class OrdersApplicationTest(
         // The second tag, off this spec's own factory.
         val health = apiFactory(json).withClient<IHealthService>()
 
-        beforeSpec { if (mongoAvailable) template.awaitMigrations(expected = 2) }
         beforeEach { if (mongoAvailable) template.clear("orders", "audits") }
 
         feature("the application boots into a working state").config(enabled = mongoAvailable) {
@@ -64,23 +68,72 @@ class OrdersApplicationTest(
                 health.health().data.status shouldBe "UP"
             }
 
-            scenario("both migrations ran, once, in order") {
-                // Settled by `awaitMigrations`, which is where the polling lives: `MigrationRunner`
-                // listens for `ApplicationReadyEvent` and suspends, and Spring does not wait for a
-                // suspending listener — so the records appear shortly after the port opens rather
-                // than with it. Worth knowing before making a migration a startup gate: it is not one.
+            scenario("both migrations ran, once, in order, before this spec could look") {
+                // **Nothing waits here, and that is the assertion.** The previous runner was a
+                // suspending `@EventListener(ApplicationReadyEvent)` and Spring does not wait for
+                // one, so the records appeared shortly *after* the port opened and every spec in
+                // this module had to poll for them first. `MigrationGate` is an `InitializingBean`:
+                // the context is not refreshed until the ledger says APPLIED, so by the time this
+                // spec has a `WebTestClient` at all the answer is already on disk.
                 val applied =
                     template
-                        .findAll(Document::class.java, "migrations")
+                        .findAll(Document::class.java, "stx_migrations")
                         .collectList()
                         .awaitSingle()
-                        .sortedBy { it.getInteger("order") }
+                        .sortedBy { it.getLong("_id") }
 
+                // The `_id` is the version the class declares, which is what makes a rename free.
+                applied.map { it.getLong("_id") } shouldContainExactly listOf(1L, 2L)
                 applied.map { it.getString("status") } shouldContainExactly listOf("APPLIED", "APPLIED")
-                // `code` is `<prefix><order>` — the identity of a migration, and what the unique
-                // index is on. The class name is where it comes from, not what is stored.
-                applied.map { it.getString("code") } shouldContainExactly listOf("V1", "V2")
                 applied.first().getString("description") shouldBe "seeds three demo orders"
+                // Who ran it — host, pid and a random suffix. The prior art recorded no such thing,
+                // which made a half-applied deploy impossible to attribute.
+                applied.forEach { it.getString("appliedBy").shouldNotBeNull() }
+            }
+
+            scenario("the seed migration's documents read back through the application's mapping") {
+                // Applied again, by hand, into the collection `beforeEach` has just emptied — which
+                // is both how this claim is made deterministic (the seed the gate wrote at startup
+                // belongs to whichever spec ran first) and a demonstration of what the library asks
+                // of every migration: running it twice is allowed to be boring.
+                //
+                // `database` is the bridge bean: a coroutine `MongoDatabase` over the pool Spring
+                // Data opened, pointed at this run's database. That it can be injected here at all
+                // is what `stx.migrations.store: mongo` depends on.
+                V1Seed().migrate(database)
+
+                val seeded =
+                    template
+                        .findAll(Order::class.java)
+                        .collectList()
+                        .awaitSingle()
+                        .sortedBy { it.reference }
+
+                // The migrations write raw documents and the application reads mapped ones, so this
+                // is what catches a field name, a BSON type or an `_id` written in a shape `Order`
+                // cannot be read back from. `V1Seed` writes `ref`, not `reference`, and a BSON date,
+                // not a string — a string would insert cleanly and fail exactly here.
+                seeded.map { it.reference } shouldContainExactly listOf("A-1001", "A-1002", "A-1003")
+                seeded.map { it.status } shouldContainExactly
+                    listOf(OrderStatus.PAID, OrderStatus.PENDING, OrderStatus.PAID)
+                seeded.map { it.total } shouldContainExactly listOf(24_990L, 4_500L, 132_000L)
+                seeded.forEach { it.tags shouldBe emptyList() }
+                seeded.forEach { it.placedAt.toEpochMilliseconds() shouldBeGreaterThan 0L }
+            }
+
+            scenario("the lock was taken in a collection of its own, and released") {
+                val locks =
+                    template
+                        .findAll(Document::class.java, "stx_migrations_lock")
+                        .collectList()
+                        .awaitSingle()
+
+                // A sentinel document beside the records would be one `find()` away from reading as
+                // a version that has run, which is why the lock is not in `stx_migrations`.
+                locks shouldHaveSize 1
+                // Released, because the run finished. A `lockedBy` still set here would be a
+                // watchdog that outlived its work and a second instance locked out for a lease.
+                locks.first().get("lockedBy") shouldBe null
             }
         }
 

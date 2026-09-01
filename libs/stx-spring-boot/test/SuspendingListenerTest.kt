@@ -13,13 +13,19 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * How Spring treats a `suspend fun` annotated `@EventListener`: it runs it, and does not wait for it.
  *
- * Load-bearing and easy to guess wrong in both directions. `IndexInitializer` and `MigrationRunner`
- * are both suspending listeners on `ApplicationReadyEvent`, so if Spring did not invoke them the
- * symptom would be a startup task that silently never ran. And the second half is why neither of
- * them may be treated as a startup gate: `publishEvent` returns while the listener is still
- * suspended, so the application is serving requests before the indexes exist and while migrations
- * are still being applied. Both handle their own failures for the same reason — an exception out of
- * one goes to a reactive error handler nobody is reading, not to whoever published the event.
+ * Load-bearing and easy to guess wrong in both directions. `IndexInitializer` is a suspending
+ * listener on `ApplicationReadyEvent`, so if Spring did not invoke them the symptom would be a
+ * startup task that silently never ran. And the second half is why such a listener may not be
+ * treated as a startup gate: `publishEvent` returns while the listener is still suspended, so the
+ * application is serving requests before the indexes exist. It handles its own failures for the same
+ * reason — an exception out of one goes to a reactive error handler nobody is reading, not to
+ * whoever published the event.
+ *
+ * **This is the spec `stx-migrations-spring` is built around.** The migration runner that used to
+ * live in this module was a suspending listener too, so the port opened while migrations were still
+ * being applied and `examples/spring-orders` polled the ledger from its own specs to work around it.
+ * `MigrationGate` is an `InitializingBean` instead: it runs during the refresh, and a throw out of it
+ * means no web server at all.
  *
  * The first version of this spec asserted the result straight after `publishEvent` and passed,
  * because a `delay(1)` happened to finish first. It failed on the next run.

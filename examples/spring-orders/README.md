@@ -54,13 +54,13 @@ implemented yet.
 | `rest/OrderController.kt` | A controller with no `@GetMapping` in it: the routing is inherited |
 | `rest/HealthController.kt` | The second tag, and why one endpoint gets no service |
 | `mapper/OrderMappers.kt` | The document's types on one side, the database's on the other |
-| `migration/V1Seed.kt`, `migration/V2Tags.kt` | Two migrations, and how the class name becomes the version |
+| `migration/V1Seed.kt`, `migration/V2Tags.kt` | Two `stx-migrations` migrations: a `@Component`, a declared version, and raw documents |
 | `resources/locales/` | Two catalogs. Every key a handler can raise has text in both |
 | `testResources/application-test.yaml` | The `test` profile, and the whole of the test bootstrap: a port and a database name |
 | `test/ProjectConfig.kt` | One line. The file that makes a Kotest spec a Spring test |
 | `test/TestHelper.kt` | What a *generated* client needs on top of `stx-spring-boot`'s factory — and nothing else |
 | `test/OrderControllerTest.kt` | The controller end to end, through the interface it implements — one feature per route |
-| `test/OrdersApplicationTest.kt` | What a typed client cannot say: the envelope, the translations, the migrations, the audit trail |
+| `test/OrdersApplicationTest.kt` | What a typed client cannot say: the envelope, the translations, the ledger, the audit trail |
 | `test/ErrorResponseShapeTest.kt` | That the document's `ErrorResponse` is the one the server actually writes |
 | `test/TelemetryCollector.kt` | An `Exporter` bean — the seam an application with a destination of its own uses |
 | `test/TelemetryTest.kt` | The spans and logs the application emits, asserted on the signals themselves |
@@ -98,7 +98,7 @@ by name, and an inbound `UNKNOWN` is a 400.
 **There is no configuration class.** No `@EnableWebFlux`, no `@ComponentScan` of somebody else's
 package, no `WebFluxConfigurer`, no `@RestControllerAdvice`, no `MongoCustomConversions` bean. The
 error handler, the locale resolver, the CORS filter, the kotlinx codecs, the `kotlin.time.Instant`
-converters, the index creation, the audit trail and the migration runner are auto-configurations that
+converters, the index creation, the audit trail and the migration gate are auto-configurations that
 `application.yaml` switches on. Delete a line from that file and exactly the feature it names goes
 away — nothing here starts because a jar is on the classpath.
 
@@ -126,14 +126,34 @@ The tempting spelling — `MongoPage.first(size, query = mongoQuery)` — puts t
 the rest of the collection is unreachable. `MongoPage` refuses it now.
 `OrdersApplicationTest` pages through all four orders one at a time and asserts every one is seen exactly once.
 
-**A migration is a class whose name is its version.** `V1Seed` is order 1, `V2Tags` is order 2, and
-the runner records each in `migrations` on success so it never runs again. Two things follow that are
-easy to get wrong: there is no `rollback` — a migration that needs undoing is undone by the next one,
-which is a thing somebody reviewed — and the runner is **not a startup gate**. It listens for
-`ApplicationReadyEvent` and suspends, and Spring does not wait for a suspending listener, so the
-records appear shortly after the port opens rather than before it. `awaitMigrations()` polls for them in
-`beforeSpec` for exactly that reason: the seed would otherwise land in the middle of whichever
-scenario went first.
+**A migration declares its version, and the run is a gate.** `V1Seed` says `override val version = 1L`
+— rename the class and nothing changes about what has run. `stx-migrations-spring` collects
+`MongoMigration` beans by type, so `@Component` is the whole registration, and the ledger in
+`stx_migrations` records each one as `APPLIED` so it never runs again.
+
+The gate is the part worth reading the diff for. This example used to carry a runner that listened for
+`ApplicationReadyEvent` and suspended — and Spring does not wait for a suspending listener, so the
+port opened while the seed was still being written and every spec here had to poll
+`awaitMigrations()` in `beforeSpec` before it could assert anything. `MigrationGate` is an
+`InitializingBean`: it runs during the refresh, a migration that throws is a context that does not
+start, and the polling is gone from all three specs.
+
+**The migrations write raw `Document`s, not `Order`s.** A migration writes what the database holds,
+not what the current mapping says it should hold — so `V1Seed` spells `ref`, which is what
+`@Field("ref")` stores `reference` as, and writes a BSON date rather than a string. That the two
+agree is a scenario: `OrdersApplicationTest` applies `V1Seed` again into an emptied collection and
+reads the result back as `Order`, which is both the round-trip check and a demonstration that running
+a migration twice is allowed to be boring.
+
+There is still no `rollback`, for the same reason as before: a migration that needs undoing is undone
+by the next one, which is a thing somebody reviewed. [`docs/migrations.md`](../../docs/migrations.md)
+is the rest.
+
+**No `stx.mongo` in the yaml, and that is deliberate.** The ledger wants the coroutine driver's
+`MongoDatabase`; `stx-spring-boot` bridges one from the `ReactiveMongoDatabaseFactory` Spring Data
+already has. Turning on `stx.mongo` would open a second pool against the same server — and, under
+test, one that never saw the per-run database suffix, so the migrations would run somewhere else
+entirely and every spec would still pass.
 
 **The audit trail is one annotation.** `@Auditable` on `Order` and `stx.data.mongo.audit.enabled` in
 the yaml; nothing in `OrderService` mentions it. Every save appends a version to `audits` carrying
