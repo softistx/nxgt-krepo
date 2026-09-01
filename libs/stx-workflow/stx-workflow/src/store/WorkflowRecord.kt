@@ -16,7 +16,7 @@ import kotlin.time.Instant
  * implementation has to thread a type parameter through. The engine encodes on the way in and
  * decodes on the way out, where the `KSerializer<C>` actually is.
  *
- * [awaiting], [signal] and [wakeAt] are what let an instance stop for something that is not a
+ * [awaiting], [signals] and [wakeAt] are what let an instance stop for something that is not a
  * failure — a person approving a refund, a cool-off period — and outlive every process that touches
  * it while it waits.
  */
@@ -31,14 +31,21 @@ data class WorkflowRecord(
     /** The name of the signal this instance is stopped on, when [status] is [WorkflowStatus.Awaiting]. */
     val awaiting: String? = null,
     /**
-     * A delivered payload the awaiting node has not consumed yet.
+     * Delivered payloads no `await` has consumed yet, by the name of the signal each belongs to.
      *
-     * One slot, not a queue, because an instance waits on at most one signal at a time and a
-     * delivery is only accepted while it is waiting on exactly that one. There is nothing for a
-     * stale payload to be mistaken for: it is written and consumed between two checkpoints of the
-     * same node, and cleared in the write that journals the wait as finished.
+     * Keyed by name rather than held in one slot because **a payload can arrive before the instance
+     * reaches the wait it answers**. A provider called back within milliseconds of the step that
+     * asked it to is not a mistake, and refusing that delivery would make correctness depend on the
+     * caller retrying until the instance happened to be parked. So a delivery is durable as soon as
+     * it is accepted, and the wait picks up whichever payload is addressed to it whenever it gets
+     * there.
+     *
+     * It is bounded by the number of distinct signals a definition declares, and only the last
+     * payload under a name survives — a second approval overwrites the first rather than queueing
+     * behind it, which is what "the approval" means. A payload delivered for a wait the run never
+     * reaches stays here unread; it is a few hundred bytes on a record that is about to be purged.
      */
-    val signal: JsonElement? = null,
+    val signals: Map<String, JsonElement> = emptyMap(),
     /**
      * When this instance is due to be looked at again — the end of a [WorkflowStatus.Sleeping]
      * pause, or the deadline on an [WorkflowStatus.Awaiting] one.

@@ -4,6 +4,7 @@ import com.strange.workflow.AwaitTimeoutException
 import com.strange.workflow.WorkflowEngine
 import com.strange.workflow.WorkflowNotAwaitingException
 import com.strange.workflow.WorkflowStatus
+import com.strange.workflow.WorkflowUnknownSignalException
 import com.strange.workflow.dsl.await
 import com.strange.workflow.dsl.compensate
 import com.strange.workflow.dsl.signal
@@ -111,7 +112,7 @@ class AwaitTest :
 
                 record.status shouldBe WorkflowStatus.Completed
                 record.awaiting shouldBe null
-                record.signal shouldBe null
+                record.signals shouldBe emptyMap()
                 calls.all() shouldBe listOf("reserve", "approved", "charge")
             }
 
@@ -136,13 +137,16 @@ class AwaitTest :
                 refused.status shouldBe WorkflowStatus.Completed
             }
 
-            scenario("a signal nobody is waiting for is refused") {
+            scenario("a name this workflow has no await for is refused, rather than kept for a wait that never comes") {
                 val other = signal<Approval>("rejection")
                 val flow = approving(Calls())
                 val engine = WorkflowEngine(InMemoryStore()) { register(flow) }
                 val id = engine.start(flow, Ledger()).id
 
-                shouldThrow<WorkflowNotAwaitingException> { engine.signal(id, other, Approval(by = "ops")) }
+                val refused = shouldThrow<WorkflowUnknownSignalException> { engine.signal(id, other, Approval(by = "ops")) }
+
+                refused.signal shouldBe "rejection"
+                engine.record(id)?.signals shouldBe emptyMap()
             }
         }
 
