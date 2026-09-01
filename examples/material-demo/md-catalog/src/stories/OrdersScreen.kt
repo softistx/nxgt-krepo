@@ -25,7 +25,7 @@ import com.softistx.material.display.StatusBadge
 import com.softistx.material.motion.animateStagger
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -46,7 +46,7 @@ fun OrdersScreen(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Typography(
@@ -65,7 +65,7 @@ fun OrdersScreen(
             action = { Button(text = "Review", onClick = {}, variant = ButtonVariant.Link) },
         )
 
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
             SampleFilters.forEach { name ->
                 Chip(text = name, selected = name == filter, onClick = { filter = name })
             }

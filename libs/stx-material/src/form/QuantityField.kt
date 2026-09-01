@@ -6,10 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /** Steps [value] by [delta] and keeps it inside [range]. */
 fun stepQuantity(
@@ -36,18 +36,18 @@ fun QuantityField(
 ) {
     FieldScaffold(modifier = modifier, label = label, helper = helper) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(
-                icon = StrangeIcons.Minus,
+                icon = StxIcons.Minus,
                 description = "Decrease",
                 onClick = { onValueChange(stepQuantity(value, -1, range)) },
                 enabled = enabled && value > range.first,
             )
             Typography(text = value.toString(), variant = TypographyVariant.Metric)
             IconButton(
-                icon = StrangeIcons.Add,
+                icon = StxIcons.Add,
                 description = "Increase",
                 onClick = { onValueChange(stepQuantity(value, 1, range)) },
                 enabled = enabled && value < range.last,

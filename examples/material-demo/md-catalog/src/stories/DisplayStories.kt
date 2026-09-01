@@ -54,11 +54,11 @@ import com.softistx.material.display.SuggestionChip
 import com.softistx.material.display.toggleReaction
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 val DisplayStories =
@@ -77,7 +77,7 @@ val DisplayStories =
         story("Chip") { knobs ->
             var selected by remember { mutableStateOf(setOf("Paid")) }
             val withIcon = knobs.flag("Leading icon", false)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 listOf("Paid", "Pending", "Refunded", "Disputed").forEach { label ->
                     Chip(
                         text = label,
@@ -87,7 +87,7 @@ val DisplayStories =
                         },
                         leading =
                             if (withIcon) {
-                                { Icon(icon = StrangeIcons.Person, description = null) }
+                                { Icon(icon = StxIcons.Person, description = null) }
                             } else {
                                 null
                             },
@@ -97,20 +97,20 @@ val DisplayStories =
         }
 
         story("Status badge") { _ ->
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 Tone.entries.forEach { StatusBadge(text = it.name.lowercase(), tone = it) }
             }
         }
 
         story("List tile") { knobs ->
             val supporting = knobs.flag("Supporting text", true)
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
                 listOf("Amara Diallo", "Jonas Weber", "Priya Raman").forEach { name ->
                     ListTile(
                         title = name,
                         supporting = if (supporting) "Last seen this morning" else null,
                         onClick = {},
-                        leading = { Icon(icon = StrangeIcons.Person, description = null) },
+                        leading = { Icon(icon = StxIcons.Person, description = null) },
                         trailing = { StatusBadge(text = "active", tone = Tone.Success) },
                     )
                 }
@@ -131,7 +131,7 @@ val DisplayStories =
             EmptyState(
                 title = knobs.text("Title", "No invoices yet"),
                 description = "Invoices appear here as soon as an order is settled.",
-                illustration = { Icon(icon = StrangeIcons.Inbox, description = null, size = IconSize.XLarge) },
+                illustration = { Icon(icon = StxIcons.Inbox, description = null, size = IconSize.XLarge) },
                 action = if (knobs.flag("Action", true)) ({ Button("New invoice", {}) }) else null,
             )
         }
@@ -140,7 +140,7 @@ val DisplayStories =
             val rows = knobs.number("Rows", 3f, 1f..6f, steps = 4).toInt()
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
             ) {
                 Skeleton(height = 24.dp, modifier = Modifier.fillMaxWidth(0.4f))
                 repeat(rows) { Skeleton() }
@@ -148,7 +148,7 @@ val DisplayStories =
         }
 
         story("Stat") { _ ->
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
                 Stat(value = "128", label = "Orders", delta = "+12%", tone = Tone.Success)
                 Stat(value = "€4.2k", label = "Revenue", delta = "−3%", tone = Tone.Error)
                 Stat(value = "96%", label = "Fulfilled")
@@ -174,7 +174,7 @@ val DisplayStories =
         }
 
         story("Labeled divider") { knobs ->
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
                 Button(text = "Continue with email", onClick = {})
                 LabeledDivider(label = knobs.text("Label", "or"))
                 Button(text = "Continue as guest", onClick = {}, variant = ButtonVariant.Ghost)
@@ -182,11 +182,11 @@ val DisplayStories =
         }
 
         story("Action chip") { _ ->
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 ActionChip(
                     text = "Call",
                     onClick = {},
-                    leading = { Icon(icon = StrangeIcons.Person, description = null) },
+                    leading = { Icon(icon = StxIcons.Person, description = null) },
                 )
                 ActionChip(text = "Add to calendar", onClick = {})
                 ActionChip(text = "Open in maps", onClick = {})
@@ -194,10 +194,10 @@ val DisplayStories =
         }
 
         story("Status dot") { _ ->
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 Tone.entries.forEach { tone ->
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+                        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         StatusDot(tone = tone)
@@ -208,7 +208,7 @@ val DisplayStories =
         }
 
         story("Keyboard shortcut") { _ ->
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 Kbd(keys = listOf("Ctrl", "K"))
                 Kbd(keys = listOf("⌘", "⇧", "P"))
             }
@@ -216,7 +216,7 @@ val DisplayStories =
 
         story("Suggestion chip") { _ ->
             var query by remember { mutableStateOf("") }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 listOf("Amara Diallo", "Jonas Weber", "Priya Raman").forEach { name ->
                     SuggestionChip(text = name, onClick = { query = name })
                 }
@@ -228,7 +228,7 @@ val DisplayStories =
 
         story("File chip") { _ ->
             var files by remember { mutableStateOf(listOf("invoice.pdf" to "240 KB", "brief.docx" to "1.2 MB")) }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 files.forEach { (name, size) ->
                     FileChip(
                         name = name,
@@ -248,7 +248,7 @@ val DisplayStories =
         }
 
         story("Code block") { _ ->
-            CodeBlock(text = "curl https://api.strange.dev/orders/ord_9f3a")
+            CodeBlock(text = "curl https://api.softistx.dev/orders/ord_9f3a")
         }
 
         story("Expandable text") { knobs ->
@@ -315,14 +315,14 @@ val DisplayStories =
         story("Link preview") { _ ->
             LinkPreview(
                 title = "Orders API",
-                url = "https://api.strange.dev/orders",
+                url = "https://api.softistx.dev/orders",
                 description = "Create, list and refund orders.",
                 onClick = {},
             )
         }
 
         story("Message bubble") { knobs ->
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 MessageBubble(
                     text = knobs.text("Incoming", "The payout landed this morning."),
                     name = "Amara Diallo",
@@ -376,7 +376,7 @@ val DisplayStories =
 
         story("Mention chip") { _ ->
             var people by remember { mutableStateOf(listOf("Amara Diallo", "Jonas Weber")) }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 people.forEach { name ->
                     MentionChip(
                         name = name,

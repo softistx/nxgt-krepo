@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -42,7 +42,7 @@ fun CopyButton(
         }
     }
     IconButton(
-        icon = if (copied) StrangeIcons.Check else StrangeIcons.Copy,
+        icon = if (copied) StxIcons.Check else StxIcons.Copy,
         description = if (copied) "Copied" else description,
         onClick = {
             scope.launch {

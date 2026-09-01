@@ -5,12 +5,12 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 
-class StrangeSpacingTest :
+class StxSpacingTest :
     FeatureSpec({
 
         feature("the spacing ladder") {
             scenario("increases at every step, so no two steps read as the same distance") {
-                val s = StrangeSpacing()
+                val s = StxSpacing()
                 val ladder = listOf(s.none, s.xxs, s.xs, s.sm, s.md, s.lg, s.xl, s.xxl)
 
                 ladder.zipWithNext().forEach { (smaller, larger) ->
@@ -21,7 +21,7 @@ class StrangeSpacingTest :
 
         feature("scaling for density") {
             scenario("scales every step, keeping the relationships between them") {
-                val dense = StrangeSpacing().scaledBy(0.5f)
+                val dense = StxSpacing().scaledBy(0.5f)
 
                 dense.md shouldBe 8.dp
                 dense.xxl shouldBe 24.dp
@@ -29,7 +29,7 @@ class StrangeSpacingTest :
             }
 
             scenario("leaves zero at zero however it is scaled") {
-                StrangeSpacing().scaledBy(3f).none shouldBe 0.dp
+                StxSpacing().scaledBy(3f).none shouldBe 0.dp
             }
         }
     })

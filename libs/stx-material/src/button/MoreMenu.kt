@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.surface.Menu
 import com.softistx.material.surface.MenuItem
 
@@ -33,7 +33,7 @@ fun MoreMenu(
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
         IconButton(
-            icon = StrangeIcons.MoreHoriz,
+            icon = StxIcons.MoreHoriz,
             description = description,
             onClick = { open = true },
             variant = variant,

@@ -9,7 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import androidx.compose.material3.Checkbox as MaterialCheckbox
 
 /**
@@ -30,7 +30,7 @@ fun Checkbox(
     supportingText: String? = null,
     enabled: Boolean = true,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
+    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
         Row(
             modifier =
                 modifier.toggleable(
@@ -39,7 +39,7 @@ fun Checkbox(
                     role = Role.Checkbox,
                     onValueChange = onValueChange,
                 ),
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             MaterialCheckbox(checked = value, onCheckedChange = null, enabled = enabled)

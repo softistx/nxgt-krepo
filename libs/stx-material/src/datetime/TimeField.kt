@@ -13,7 +13,7 @@ import com.softistx.material.button.Button
 import com.softistx.material.button.ButtonVariant
 import com.softistx.material.button.IconButton
 import com.softistx.material.form.TextField
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import kotlinx.datetime.LocalTime
 
 /**
@@ -45,7 +45,7 @@ fun TimeField(
         enabled = enabled,
         trailing = {
             IconButton(
-                icon = StrangeIcons.Schedule,
+                icon = StxIcons.Schedule,
                 description = "Pick a time",
                 onClick = { if (enabled) open = true },
             )

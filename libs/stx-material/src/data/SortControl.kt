@@ -7,8 +7,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.button.IconButton
 import com.softistx.material.form.SelectField
-import com.softistx.material.icon.StrangeIcons
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.icon.StxIcons
+import com.softistx.material.theme.StxTheme
 
 enum class SortDirection {
     Asc,
@@ -39,7 +39,7 @@ fun SortControl(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
     ) {
         SelectField(
             value = selected,
@@ -50,7 +50,7 @@ fun SortControl(
             enabled = enabled,
         )
         IconButton(
-            icon = if (direction == SortDirection.Asc) StrangeIcons.ChevronUp else StrangeIcons.ChevronDown,
+            icon = if (direction == SortDirection.Asc) StxIcons.ChevronUp else StxIcons.ChevronDown,
             description = if (direction == SortDirection.Asc) "Ascending" else "Descending",
             onClick = { onDirectionChange(cycleSortDirection(direction)) },
             enabled = enabled,

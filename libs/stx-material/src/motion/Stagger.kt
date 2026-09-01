@@ -12,7 +12,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import kotlinx.coroutines.delay
 
 /**
@@ -29,7 +29,7 @@ fun Modifier.animateStagger(
     rise: Dp = 12.dp,
 ): Modifier =
     composed {
-        val motion = StrangeTheme.motion
+        val motion = StxTheme.motion
         var shown by remember(index) { mutableStateOf(!motion.enabled) }
 
         if (motion.enabled) {
@@ -42,7 +42,7 @@ fun Modifier.animateStagger(
         // Two axes, and deliberately not one. A spatial spec is a spring damped below 1, so it
         // overshoots its target: it is the right curve for the rise, which reads as momentum, and
         // the wrong one for the fade, where past-1 alpha is at best clamped and at worst a flicker.
-        // Effects is critically damped and lands exactly on its target — see StrangeMotionTest.
+        // Effects is critically damped and lands exactly on its target — see StxMotionTest.
         val fade by animateFloatAsState(
             targetValue = if (shown) 1f else 0f,
             animationSpec = motion.effects(),

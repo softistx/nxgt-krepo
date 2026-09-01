@@ -19,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 import kotlinx.coroutines.delay
 
@@ -73,16 +73,16 @@ fun Toaster(
             modifier =
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(StrangeTheme.spacing.md)
+                    .padding(StxTheme.spacing.md)
                     .widthIn(max = 360.dp),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
             state.messages.forEach { message ->
                 LaunchedEffect(message.id) {
                     delay(4_000)
                     state.dismiss(message.id)
                 }
-                val role = StrangeTheme.colors.tone(message.tone)
+                val role = StxTheme.colors.tone(message.tone)
                 Snackbar(
                     action = null,
                     containerColor = role.container,

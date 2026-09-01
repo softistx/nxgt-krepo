@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
 
@@ -33,12 +33,12 @@ fun FileChip(
         label = { Typography(text = label, variant = TypographyVariant.LabelMedium) },
         modifier = modifier,
         enabled = enabled,
-        leadingIcon = { Icon(icon = StrangeIcons.Attach, description = null, size = IconSize.Small) },
+        leadingIcon = { Icon(icon = StxIcons.Attach, description = null, size = IconSize.Small) },
         trailingIcon =
             onRemove?.let { remove ->
                 {
                     Icon(
-                        icon = StrangeIcons.Close,
+                        icon = StxIcons.Close,
                         description = "Remove $name",
                         size = IconSize.Small,
                         modifier = Modifier.clickable(enabled = enabled, onClick = remove),

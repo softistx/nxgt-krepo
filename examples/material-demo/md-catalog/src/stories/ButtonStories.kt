@@ -40,12 +40,12 @@ import com.softistx.material.button.ViewToggle
 import com.softistx.material.demo.knobs.enumChoice
 import com.softistx.material.demo.storyGroup
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.surface.MenuItem
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 val ButtonStories =
     storyGroup("Buttons") {
@@ -61,17 +61,17 @@ val ButtonStories =
 
         story("Variant and colour matrix") { knobs ->
             val enabled = knobs.flag("Enabled", true)
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.lg)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.lg)) {
                 ButtonVariant.entries.forEach { variant ->
-                    Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs)) {
                         Typography(
                             text = variant.name,
                             variant = TypographyVariant.Overline,
                             emphasis = Emphasis.Subtle,
                         )
                         FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
-                            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+                            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
                         ) {
                             ButtonColor.entries.forEach { color ->
                                 Button(
@@ -93,11 +93,11 @@ val ButtonStories =
             val color = knobs.enumChoice("Color", ButtonColor.Neutral)
             val size = knobs.enumChoice("Size", IconSize.Medium)
             val enabled = knobs.flag("Enabled", true)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 listOf(
-                    StrangeIcons.Add to "Add",
-                    StrangeIcons.Edit to "Edit",
-                    StrangeIcons.Delete to "Delete",
+                    StxIcons.Add to "Add",
+                    StxIcons.Edit to "Edit",
+                    StxIcons.Delete to "Delete",
                 ).forEach { (icon, description) ->
                     IconButton(
                         icon = icon,
@@ -117,7 +117,7 @@ val ButtonStories =
             Box(modifier = Modifier.width(width.dp).border(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                 ResponsiveButton(
                     text = knobs.text("Label", "New order"),
-                    icon = StrangeIcons.Add,
+                    icon = StxIcons.Add,
                     onClick = {},
                     collapseBelow = knobs.number("Collapse below", 360f, 120f..640f).dp,
                 )
@@ -138,7 +138,7 @@ val ButtonStories =
 
         story("Fab") { knobs ->
             Fab(
-                icon = StrangeIcons.Add,
+                icon = StxIcons.Add,
                 description = "New order",
                 onClick = {},
                 text = knobs.text("Label", "New order").ifBlank { null },
@@ -155,9 +155,9 @@ val ButtonStories =
                     onExpandedChange = { open = it },
                     actions =
                         listOf(
-                            FabAction("New order", StrangeIcons.Add, onClick = { open = false }),
-                            FabAction("Edit", StrangeIcons.Edit, onClick = { open = false }),
-                            FabAction("Delete", StrangeIcons.Delete, onClick = { open = false }),
+                            FabAction("New order", StxIcons.Add, onClick = { open = false }),
+                            FabAction("Edit", StxIcons.Edit, onClick = { open = false }),
+                            FabAction("Delete", StxIcons.Delete, onClick = { open = false }),
                         ),
                 )
             }
@@ -184,7 +184,7 @@ val ButtonStories =
                 onCheckedChange = { following = it },
                 variant = knobs.enumChoice("Variant", ButtonVariant.Tonal),
                 color = knobs.enumChoice("Color", ButtonColor.Primary),
-                icon = StrangeIcons.Person,
+                icon = StxIcons.Person,
                 enabled = knobs.flag("Enabled", true),
             )
         }
@@ -192,7 +192,7 @@ val ButtonStories =
         story("Icon toggle") { knobs ->
             var saved by remember { mutableStateOf(true) }
             IconToggle(
-                icon = StrangeIcons.Star,
+                icon = StxIcons.Star,
                 description = if (saved) "Unsave" else "Save",
                 checked = saved,
                 onCheckedChange = { saved = it },
@@ -231,8 +231,8 @@ val ButtonStories =
             MoreMenu(
                 items =
                     listOf(
-                        MenuItem("Edit", onClick = {}, leading = StrangeIcons.Edit),
-                        MenuItem("Delete", onClick = {}, leading = StrangeIcons.Delete),
+                        MenuItem("Edit", onClick = {}, leading = StxIcons.Edit),
+                        MenuItem("Delete", onClick = {}, leading = StxIcons.Delete),
                     ),
             )
         }
@@ -243,10 +243,10 @@ val ButtonStories =
                 OverflowBar(
                     actions =
                         listOf(
-                            OverflowAction("Edit", StrangeIcons.Edit, onClick = {}),
-                            OverflowAction("Delete", StrangeIcons.Delete, onClick = {}),
-                            OverflowAction("Search", StrangeIcons.Search, onClick = {}),
-                            OverflowAction("Share", StrangeIcons.Copy, onClick = {}),
+                            OverflowAction("Edit", StxIcons.Edit, onClick = {}),
+                            OverflowAction("Delete", StxIcons.Delete, onClick = {}),
+                            OverflowAction("Search", StxIcons.Search, onClick = {}),
+                            OverflowAction("Share", StxIcons.Copy, onClick = {}),
                         ),
                     maxVisible = max,
                 )
@@ -255,7 +255,7 @@ val ButtonStories =
 
         story("Icon badge") { knobs ->
             IconBadge(
-                icon = StrangeIcons.Inbox,
+                icon = StxIcons.Inbox,
                 description = "Inbox",
                 onClick = {},
                 count = knobs.number("Count", 3f, 0f..120f, steps = 23).toInt(),

@@ -15,11 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The one-line quote sitting above a [com.softistx.material.form.Composer].
@@ -43,10 +43,10 @@ fun ReplyPreview(
         Row(
             modifier =
                 Modifier
-                    .padding(StrangeTheme.spacing.sm)
+                    .padding(StxTheme.spacing.sm)
                     .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
         ) {
             VerticalDivider(
                 modifier = Modifier.fillMaxHeight(),
@@ -63,7 +63,7 @@ fun ReplyPreview(
             }
             if (onDismiss != null) {
                 IconButton(
-                    icon = StrangeIcons.Close,
+                    icon = StxIcons.Close,
                     description = "Dismiss reply",
                     onClick = onDismiss,
                 )

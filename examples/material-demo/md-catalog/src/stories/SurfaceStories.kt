@@ -27,7 +27,7 @@ import com.softistx.material.feedback.ProgressKind
 import com.softistx.material.feedback.Toaster
 import com.softistx.material.feedback.TypingIndicator
 import com.softistx.material.feedback.rememberToasterState
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.surface.Accordion
 import com.softistx.material.surface.AccordionItem
 import com.softistx.material.surface.Carousel
@@ -43,7 +43,7 @@ import com.softistx.material.surface.Sheet
 import com.softistx.material.surface.SwipeActions
 import com.softistx.material.surface.Tooltip
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 val SurfaceStories =
@@ -66,8 +66,8 @@ val SurfaceStories =
             Button(text = "Filters", onClick = { visible = true })
             Sheet(visible = visible, onDismiss = { visible = false }) {
                 Column(
-                    modifier = Modifier.padding(StrangeTheme.spacing.md),
-                    verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+                    modifier = Modifier.padding(StxTheme.spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
                 ) {
                     Typography(text = "Status")
                     Button(text = "Paid", onClick = { visible = false }, variant = ButtonVariant.Ghost)
@@ -83,7 +83,7 @@ val SurfaceStories =
                 onDismiss = { open = false },
                 modifier = Modifier.height(360.dp),
                 drawer = {
-                    Column(Modifier.padding(StrangeTheme.spacing.md)) {
+                    Column(Modifier.padding(StxTheme.spacing.md)) {
                         ListTile(title = "Inbox", onClick = { open = false })
                         ListTile(title = "People", onClick = { open = false })
                     }
@@ -112,8 +112,8 @@ val SurfaceStories =
                     onDismiss = { open = false },
                     items =
                         listOf(
-                            MenuItem("Edit", onClick = {}, leading = StrangeIcons.Edit),
-                            MenuItem("Delete", onClick = {}, leading = StrangeIcons.Delete),
+                            MenuItem("Edit", onClick = {}, leading = StxIcons.Edit),
+                            MenuItem("Delete", onClick = {}, leading = StxIcons.Delete),
                         ),
                 )
             }
@@ -146,7 +146,7 @@ val SurfaceStories =
         story("Toast") { _ ->
             val toaster = rememberToasterState()
             Toaster(state = toaster, modifier = Modifier.height(280.dp)) {
-                Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                     Button(text = "Saved", onClick = { toaster.show("Order saved", Tone.Success) })
                     Button(text = "Warning", onClick = { toaster.show("Payout delayed", Tone.Warning) })
                     Button(
@@ -206,8 +206,8 @@ val SurfaceStories =
             ContextMenu(
                 items =
                     listOf(
-                        MenuItem("Edit", onClick = {}, leading = StrangeIcons.Edit),
-                        MenuItem("Delete", onClick = {}, leading = StrangeIcons.Delete),
+                        MenuItem("Edit", onClick = {}, leading = StxIcons.Edit),
+                        MenuItem("Delete", onClick = {}, leading = StxIcons.Delete),
                     ),
             ) {
                 ListTile(title = "Right-click or long-press", supporting = "Opens the menu at the pointer")
@@ -221,10 +221,10 @@ val SurfaceStories =
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .background(StrangeTheme.colors.tone(Tone.Error).main)
-                            .padding(StrangeTheme.spacing.md),
+                            .background(StxTheme.colors.tone(Tone.Error).main)
+                            .padding(StxTheme.spacing.md),
                     ) {
-                        Typography(text = "Delete", color = StrangeTheme.colors.tone(Tone.Error).onMain)
+                        Typography(text = "Delete", color = StxTheme.colors.tone(Tone.Error).onMain)
                     }
                 },
             ) {

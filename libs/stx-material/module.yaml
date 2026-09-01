@@ -11,7 +11,7 @@ apply:
   - //publishing.module-template.yaml
 
 dependencies:
-  # Material 3 is the foundation this library sits on rather than replaces: StrangeTheme installs
+  # Material 3 is the foundation this library sits on rather than replaces: StxTheme installs
   # a MaterialTheme underneath so ordinary M3 components keep working inside it. ColorScheme,
   # Shapes, Typography and every *Colors type are in this module's public API, hence exported.
   #
@@ -49,7 +49,7 @@ dependencies:
   - $libs.compose.multiplatform.adaptive.navigation.suite: exported
   # NavDisplay and the back stack. Scene keys are in this module's public API, hence exported.
   - $libs.jetbrains.navigation3.ui: exported
-  # Coil 3, the CMP line. AsyncImage types appear on StrangeImage, hence exported. Network is
+  # Coil 3, the CMP line. AsyncImage types appear on StxImage, hence exported. Network is
   # Ktor, not OkHttp — OkHttp has no Apple target.
   - $libs.coil3.compose: exported
   - $libs.coil3.network.ktor

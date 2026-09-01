@@ -16,7 +16,7 @@ import com.softistx.material.navigation.Search
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /** One command in a [CommandPalette]. [shortcut] is decoration ("⌘K"); the host wires the key. */
 @Immutable
@@ -65,7 +65,7 @@ fun CommandPalette(
                             .fillMaxWidth()
                             .heightIn(max = 360.dp)
                             .verticalScroll(rememberScrollState())
-                            .padding(top = StrangeTheme.spacing.sm),
+                            .padding(top = StxTheme.spacing.sm),
                 ) {
                     var lastGroup: String? = null
                     shown.forEach { item ->
@@ -74,7 +74,7 @@ fun CommandPalette(
                                 text = item.group,
                                 variant = TypographyVariant.Overline,
                                 emphasis = Emphasis.Subtle,
-                                modifier = Modifier.padding(vertical = StrangeTheme.spacing.xs),
+                                modifier = Modifier.padding(vertical = StxTheme.spacing.xs),
                             )
                             lastGroup = item.group
                         }
@@ -91,7 +91,7 @@ fun CommandPalette(
                         Typography(
                             text = "No matching commands",
                             emphasis = Emphasis.Medium,
-                            modifier = Modifier.padding(StrangeTheme.spacing.md),
+                            modifier = Modifier.padding(StxTheme.spacing.md),
                         )
                     }
                 }

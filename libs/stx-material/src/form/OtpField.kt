@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The code from the text message, as one box per digit.
@@ -59,7 +59,7 @@ fun OtpField(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             cursorBrush = SolidColor(scheme.primary),
             decorationBox = {
-                Row(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs)) {
                     repeat(length) { index ->
                         val digit = value.getOrNull(index)
                         val filled = digit != null

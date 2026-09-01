@@ -23,7 +23,7 @@ import com.softistx.material.button.IconButton
 import com.softistx.material.demo.knobs.enumChoice
 import com.softistx.material.demo.storyGroup
 import com.softistx.material.display.ListTile
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.navigation.AdaptiveNavDisplay
 import com.softistx.material.navigation.AppBar
 import com.softistx.material.navigation.AppBarSize
@@ -42,7 +42,7 @@ import com.softistx.material.navigation.Stepper
 import com.softistx.material.navigation.Tabs
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 val NavigationStories =
@@ -51,12 +51,12 @@ val NavigationStories =
             AppBar(
                 title = knobs.text("Title", "Orders"),
                 size = knobs.enumChoice("Size", AppBarSize.Small),
-                navigationIcon = StrangeIcons.Menu,
+                navigationIcon = StxIcons.Menu,
                 navigationDescription = "Open navigation",
                 onNavigation = {},
                 actions = {
                     IconButton(
-                        icon = StrangeIcons.Search,
+                        icon = StxIcons.Search,
                         description = "Search",
                         onClick = {},
                     )
@@ -85,41 +85,41 @@ val NavigationStories =
             var selected by remember { mutableIntStateOf(0) }
             val destinations =
                 listOf(
-                    NavigationDestination("Home", StrangeIcons.Home),
+                    NavigationDestination("Home", StxIcons.Home),
                     NavigationDestination(
                         label = "Inbox",
-                        icon = StrangeIcons.Inbox,
+                        icon = StxIcons.Inbox,
                         supporting = "Amara, Jonas",
                         badge = "3",
                         badgeTone = Tone.Info,
                     ),
                     NavigationDestination(
                         label = "Drafts",
-                        icon = StrangeIcons.Edit,
+                        icon = StxIcons.Edit,
                         unread = true,
                     ),
                     NavigationDestination(
                         label = "Amara Diallo",
-                        icon = StrangeIcons.Person,
+                        icon = StxIcons.Person,
                         avatar = true,
                         supporting = "You",
                     ),
                     NavigationDestination(
                         label = "Reports",
-                        icon = StrangeIcons.Search,
+                        icon = StxIcons.Search,
                         chip = "Beta",
                         shortcut = "⌘R",
                         section = "Workspace",
                     ),
                     NavigationDestination(
                         label = "Sync",
-                        icon = StrangeIcons.Schedule,
+                        icon = StxIcons.Schedule,
                         busy = true,
                         tone = Tone.Info,
                     ),
                     NavigationDestination(
                         label = "Settings",
-                        icon = StrangeIcons.Menu,
+                        icon = StxIcons.Menu,
                         shortcut = "⌘,",
                         section = "Account",
                     ),
@@ -148,7 +148,7 @@ val NavigationStories =
         story("Tabs") { knobs ->
             var selected by remember { mutableIntStateOf(0) }
             val labels = listOf("Paid", "Pending", "Refunded", "Disputed")
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
                 Tabs(
                     labels = labels,
                     selected = selected,
@@ -173,9 +173,9 @@ val NavigationStories =
         story("Floating toolbar") { knobs ->
             Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
                 FloatingToolbar(expanded = knobs.flag("Expanded", true)) {
-                    IconButton(icon = StrangeIcons.Edit, description = "Edit", onClick = {}, variant = ButtonVariant.Ghost)
-                    IconButton(icon = StrangeIcons.Delete, description = "Delete", onClick = {}, variant = ButtonVariant.Ghost)
-                    IconButton(icon = StrangeIcons.Add, description = "Add", onClick = {}, variant = ButtonVariant.Ghost)
+                    IconButton(icon = StxIcons.Edit, description = "Edit", onClick = {}, variant = ButtonVariant.Ghost)
+                    IconButton(icon = StxIcons.Delete, description = "Delete", onClick = {}, variant = ButtonVariant.Ghost)
+                    IconButton(icon = StxIcons.Add, description = "Add", onClick = {}, variant = ButtonVariant.Ghost)
                 }
             }
         }
@@ -221,7 +221,7 @@ val NavigationStories =
                         }
                         entry<MailMessage>(metadata = ListDetail.detail()) { key ->
                             val mail = SampleMail.first { it.id == key.id }
-                            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                                 Typography(text = mail.subject, variant = TypographyVariant.TitleMedium)
                                 Typography(text = mail.body)
                             }
@@ -248,11 +248,11 @@ val NavigationStories =
 
         story("Bottom bar") { _ ->
             BottomBar(
-                fab = { Fab(icon = StrangeIcons.Add, description = "New order", onClick = {}) },
+                fab = { Fab(icon = StxIcons.Add, description = "New order", onClick = {}) },
             ) {
-                IconButton(icon = StrangeIcons.Edit, description = "Edit", onClick = {})
-                IconButton(icon = StrangeIcons.Search, description = "Search", onClick = {})
-                IconButton(icon = StrangeIcons.Delete, description = "Delete", onClick = {})
+                IconButton(icon = StxIcons.Edit, description = "Edit", onClick = {})
+                IconButton(icon = StxIcons.Search, description = "Search", onClick = {})
+                IconButton(icon = StxIcons.Delete, description = "Delete", onClick = {})
             }
         }
 

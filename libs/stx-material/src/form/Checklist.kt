@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /** One row of a [Checklist]. */
 @Immutable
@@ -38,7 +38,7 @@ fun Checklist(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
     ) {
         items.forEachIndexed { index, item ->
             Checkbox(

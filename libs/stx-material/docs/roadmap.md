@@ -23,14 +23,14 @@ ligne de plomberie.
 ## Phase 1 — Le socle et le premier lot
 
 **Thème et tokens**
-- [x] `StrangeSpacing` — la seule échelle que M3 n'a pas ; formes et élévation restent celles de M3
-- [x] `StrangeColors` — `success` / `info` / `warning` dérivés par material-kolor, le reste délégué à M3
-- [x] `StrangeTheme` enveloppant `MaterialTheme`, tokens sur `CompositionLocal` statiques
+- [x] `StxSpacing` — la seule échelle que M3 n'a pas ; formes et élévation restent celles de M3
+- [x] `StxColors` — `success` / `info` / `warning` dérivés par material-kolor, le reste délégué à M3
+- [x] `StxTheme` enveloppant `MaterialTheme`, tokens sur `CompositionLocal` statiques
 - [x] `StyleScope.colors` / `.scheme` / `.shapes` / `.spacing` / `.motion` — les tokens dans un `Style`
-- [x] Un `StrangeStyles` accessible en `StrangeTheme.styles`, agrégeant les styles de composants
+- [x] Un `StxStyles` accessible en `StxTheme.styles`, agrégeant les styles de composants
 
 **Motion**
-- [x] `StrangeMotion` — durées nommées par rôle, easings M3, interrupteur `enabled`
+- [x] `StxMotion` — durées nommées par rôle, easings M3, interrupteur `enabled`
 - [x] `Transitions` — `fade`, `riseIn`, `popIn`, `expand` et leurs sorties
 - [x] `Modifier.shimmer()`, `Modifier.animateStagger(index)`
 
@@ -44,7 +44,7 @@ ligne de plomberie.
 - [x] `buttonStyle()` — un `Style` portant ses états `hovered` / `pressed` / `disabled` animés
 - [x] `Button(text, onClick)` et `ButtonSurface { }` avec `style: Style = Style`
 - [x] `IconButton`, `ButtonGroup`
-- [x] `StrangeIcons` — dix vecteurs tenus ici, faute de pack d'icônes atteignable
+- [x] `StxIcons` — dix vecteurs tenus ici, faute de pack d'icônes atteignable
 - [x] `ResponsiveButton`
 
 **Affichage**
@@ -60,26 +60,26 @@ ligne de plomberie.
 - [x] Dérivation des rayons et monotonie de l'échelle d'espacement
 - [x] Le jeu d'icônes : chaque tracé SVG écrit à la main est réellement analysable
 - [x] `Emphasis` : trois niveaux distincts, décroissants, aucun invisible
-- [x] `strangeColors` : même graine, même palette ; clair et sombre diffèrent
+- [x] `stxColors` : même graine, même palette ; clair et sombre diffèrent
 - [ ] ~~La matrice `variant × color` est totale~~ et ~~`TypographyVariant` → `TextStyle` est
       total~~ — **non écrits, et volontairement** : les deux sont des `when` exhaustifs sur une
       enum, donc déjà garantis à la compilation ; un spec ne pourrait pas échouer. Ce qui reste
       vraiment à vérifier — qu'aucune combinaison ne rende une couleur non spécifiée — demande
       un rendu — il y en a un depuis (voir *Révisions*), mais il sert aux affirmations sur les
       pixels, pas à retester un `when` exhaustif
-- [x] Les bornes de `StrangeMotion`, et `enabled = false` met les durées à zéro
+- [x] Les bornes de `StxMotion`, et `enabled = false` met les durées à zéro
 
 **Catalogue de démonstration**
 - [x] `examples/material-demo/md-catalog` — registre de `Story`, contrôles typés, disposition 3 volets
 - [x] `examples/material-demo/md-desktop` — fenêtre, hot reload
 - [x] `examples/material-demo/md-android` — activité, manifeste
-- [x] Bascule clair/sombre et sélecteur de graine pilotant `StrangeTheme` en direct
+- [x] Bascule clair/sombre et sélecteur de graine pilotant `StxTheme` en direct
 - [x] Une story par composant livré
 - [x] La story « écran complet »
 
 **Documentation**
 - [x] `docs/roadmap.md` (ce fichier)
-- [x] `README.md` — la forme de la librairie, comment `StrangeTheme` s'insère, comment ajouter un composant
+- [x] `README.md` — la forme de la librairie, comment `StxTheme` s'insère, comment ajouter un composant
 - [x] `docs/tokens.md` — le vocabulaire des tokens
 - [x] `docs/components.md` — un composant par ligne, ses paramètres, son id de story
 - [x] `examples/material-demo/README.md` — la forme de la démo, comment ajouter une story
@@ -94,20 +94,20 @@ touche une case déjà cochée se raconte ici plutôt que de la décocher.
 
 ### Le thème repose sur les entrées de Material 3
 
-Après la phase 1, `StrangeTheme` ne prenait qu'une graine et fabriquait tout le reste lui-même. Il
+Après la phase 1, `StxTheme` ne prenait qu'une graine et fabriquait tout le reste lui-même. Il
 prend maintenant les quatre entrées de `MaterialTheme` — `ColorScheme`, `Typography`, `Shapes`,
 `MotionScheme` — chacune avec un défaut, comme M3.
 
-- [x] `StrangeTheme(colorScheme, typography, shapes, motionScheme, …)` — un appelant qui calcule
+- [x] `StxTheme(colorScheme, typography, shapes, motionScheme, …)` — un appelant qui calcule
       déjà l'une des quatre la passe et garde les trois autres
 - [x] `MaterialExpressiveTheme` + `MotionScheme.expressive()` par défaut
 - [x] `expect`/`actual platformColorScheme` — palette du fond d'écran sur Android 12+, graine
       ailleurs ; `supportsDynamicColor` dit laquelle. **C'est la seule décision spécifique à une
-      plateforme de toute la librairie** ; `StrangeThemeProvider` et tout ce qui est au-dessus est
+      plateforme de toute la librairie** ; `StxThemeProvider` et tout ce qui est au-dessus est
       écrit une seule fois
-- [x] `strangeColors(scheme, isDark)` ajoute les rôles sémantiques au schéma *reçu*, quel qu'il
+- [x] `stxColors(scheme, isDark)` ajoute les rôles sémantiques au schéma *reçu*, quel qu'il
       soit — ils ne sont plus liés au chemin de la graine
-- [x] `StrangeMotion` reconstruit sur `MotionScheme` : `spatial` (ce qui bouge, peut dépasser) et
+- [x] `StxMotion` reconstruit sur `MotionScheme` : `spatial` (ce qui bouge, peut dépasser) et
       `effects` (couleur et alpha, doit atterrir juste) × `Fast`/`Default`/`Slow`. Les durées et
       easings écrits à la main ont disparu ; `enabled = false` rend `snap()`
 - [x] `Transitions` choisit son axe par moitié — un fondu est un `effects`, un glissement un
@@ -224,7 +224,7 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       `Description`, `EntityHeader`, `CommandPalette`, `Timeline`. Combobox is `SelectField`.
 - [ ] **7 — Filtres.** Le sous-système complet : schéma, chips, presets, persistance, validation.
       `FilterBar` (chips only) already shipped with the actions slice; this phase is the rest.
-- [x] **8 — Médias.** `Avatar`, `StrangeImage` (Coil), `Gallery`, `Lightbox`, `VideoSurface` /
+- [x] **8 — Médias.** `Avatar`, `StxImage` (Coil), `Gallery`, `Lightbox`, `VideoSurface` /
       `PdfSurface` / `CameraSurface` as chrome slots. No decoder in the library.
 - [x] **8b — Actions et chrome.** `Fab` / `FabMenu` / `SplitButton`, `Stat`, `FilterBar` (chips),
       `Rating`, `LabeledDivider`, `UploadField` (host picks the file), `LoadingMark`.

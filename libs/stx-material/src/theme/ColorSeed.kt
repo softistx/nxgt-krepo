@@ -17,11 +17,11 @@ val DefaultSeed: Color = Color(0xFF5B5BD6)
  * algorithm Android uses, so a caller names one brand colour and gets 48 roles that are correct in
  * both light and dark.
  *
- * This is the one place a seed becomes a scheme. It is separate from [strangeColors] on purpose:
+ * This is the one place a seed becomes a scheme. It is separate from [stxColors] on purpose:
  * where the scheme comes from is a platform decision — the wallpaper on Android, a seed everywhere
  * else — and the semantic roles have to be added to whichever one arrives.
  */
-fun strangeColorScheme(
+fun stxColorScheme(
     seed: Color,
     isDark: Boolean,
 ): ColorScheme = dynamicColorScheme(seedColor = seed, isDark = isDark)
@@ -35,20 +35,20 @@ fun strangeColorScheme(
  * algorithm that guarantees it for `primary` produced it. A hard-coded green would be right in
  * light mode and wrong in dark.
  *
- * `error` is not among them: it is delegated to [scheme] by [StrangeColors], because a design
+ * `error` is not among them: it is delegated to [scheme] by [StxColors], because a design
  * system does not want two reds.
  */
-fun strangeColors(
+fun stxColors(
     scheme: ColorScheme,
     isDark: Boolean,
     success: Color = SuccessSeed,
     info: Color = InfoSeed,
     warning: Color = WarningSeed,
-): StrangeColors {
+): StxColors {
     val successRole = roleFrom(success, isDark)
     val infoRole = roleFrom(info, isDark)
     val warningRole = roleFrom(warning, isDark)
-    return StrangeColors(
+    return StxColors(
         scheme = scheme,
         success = successRole.main,
         onSuccess = successRole.onMain,
@@ -66,10 +66,10 @@ fun strangeColors(
 }
 
 /** The seed path in one call, for a caller with a brand colour and no scheme of its own. */
-fun strangeColors(
+fun stxColors(
     seed: Color,
     isDark: Boolean,
-): StrangeColors = strangeColors(scheme = strangeColorScheme(seed, isDark), isDark = isDark)
+): StxColors = stxColors(scheme = stxColorScheme(seed, isDark), isDark = isDark)
 
 /** One semantic role, taken as the primary of a scheme grown from [hue]. */
 private fun roleFrom(

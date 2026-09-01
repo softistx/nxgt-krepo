@@ -12,8 +12,8 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softistx.material.icon.StrangeIcons
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.icon.StxIcons
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeLessThan
@@ -48,11 +48,11 @@ private fun aspectAt(width: Dp): Double {
     val scene = ImageComposeScene(width = 500, height = 160)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Box(Modifier.fillMaxSize().background(Color.White).padding(Inset)) {
                     ResponsiveButton(
                         text = "Add item",
-                        icon = StrangeIcons.Add,
+                        icon = StxIcons.Add,
                         onClick = {},
                         modifier = Modifier.width(width),
                     )

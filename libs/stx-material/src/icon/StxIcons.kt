@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
  * Every path is the 24×24 Material Symbols outline, so an application that later swaps in the real
  * pack gets the same shapes.
  */
-object StrangeIcons {
+object StxIcons {
     val Add: ImageVector = icon("Add", "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z")
 
     val Check: ImageVector = icon("Check", "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z")

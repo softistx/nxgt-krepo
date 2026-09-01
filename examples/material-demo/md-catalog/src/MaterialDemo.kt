@@ -5,8 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.softistx.material.motion.StrangeMotion
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.motion.StxMotion
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.platformColorScheme
 
 /**
@@ -24,10 +24,10 @@ fun MaterialDemo(groups: List<StoryGroup> = CatalogGroups) {
                     .first()
                     .id,
         )
-    // The catalogue calls StrangeTheme directly because it drives all four of Material 3's inputs
-    // from the header. An ordinary application writes `StrangeThemeProvider(seed = …)` instead —
+    // The catalogue calls StxTheme directly because it drives all four of Material 3's inputs
+    // from the header. An ordinary application writes `StxThemeProvider(seed = …)` instead —
     // one line, and the platform decides where the scheme comes from.
-    StrangeTheme(
+    StxTheme(
         isDark = state.isDark,
         colorScheme =
             platformColorScheme(
@@ -36,7 +36,7 @@ fun MaterialDemo(groups: List<StoryGroup> = CatalogGroups) {
                 dynamicColor = state.dynamicColor,
             ),
         motionScheme = state.motion.scheme,
-        motion = StrangeMotion(state.motion.scheme, enabled = state.motion.enabled),
+        motion = StxMotion(state.motion.scheme, enabled = state.motion.enabled),
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),

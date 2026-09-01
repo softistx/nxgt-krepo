@@ -16,7 +16,7 @@ import com.softistx.material.button.IconButton
 import com.softistx.material.demo.storyGroup
 import com.softistx.material.display.Card
 import com.softistx.material.display.ListTile
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.layout.LoadMoreButton
 import com.softistx.material.layout.RefreshBox
 import com.softistx.material.layout.ResponsiveGrid
@@ -61,8 +61,8 @@ val LayoutStories =
                 count = knobs.number("Count", 3f, 0f..12f, steps = 11).toInt(),
                 onClear = {},
             ) {
-                IconButton(icon = StrangeIcons.Delete, description = "Delete", onClick = {})
-                IconButton(icon = StrangeIcons.Copy, description = "Export", onClick = {})
+                IconButton(icon = StxIcons.Delete, description = "Delete", onClick = {})
+                IconButton(icon = StxIcons.Copy, description = "Export", onClick = {})
             }
         }
 

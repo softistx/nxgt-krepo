@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The chrome around an application: a bar, a rail or a drawer, from one list of destinations.
@@ -47,9 +47,9 @@ fun NavigationSuite(
                         emphasis = Emphasis.Subtle,
                         modifier =
                             Modifier.padding(
-                                start = StrangeTheme.spacing.md,
-                                top = StrangeTheme.spacing.md,
-                                bottom = StrangeTheme.spacing.xs,
+                                start = StxTheme.spacing.md,
+                                top = StxTheme.spacing.md,
+                                bottom = StxTheme.spacing.xs,
                             ),
                     )
                 }

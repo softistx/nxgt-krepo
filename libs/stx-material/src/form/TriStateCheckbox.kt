@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import androidx.compose.material3.TriStateCheckbox as MaterialTriStateCheckbox
 
 /** The three values a parent checkbox can take when its children disagree. */
@@ -55,7 +55,7 @@ fun TriStateCheckbox(
     enabled: Boolean = true,
 ) {
     val toggleable = state.toToggleableState()
-    Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
+    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
         Row(
             modifier =
                 modifier.triStateToggleable(
@@ -64,7 +64,7 @@ fun TriStateCheckbox(
                     role = Role.Checkbox,
                     onClick = onClick,
                 ),
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             MaterialTriStateCheckbox(

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /** Two letters from a name, for an [Avatar] that has no image. */
@@ -43,7 +43,7 @@ fun Avatar(
     tone: Tone? = null,
     description: String? = name,
 ) {
-    val ring = tone?.let { StrangeTheme.colors.tone(it).main }
+    val ring = tone?.let { StxTheme.colors.tone(it).main }
     val shape = CircleShape
     Box(
         modifier =
@@ -51,7 +51,7 @@ fun Avatar(
                 .size(size)
                 .then(if (ring != null) Modifier.border(2.dp, ring, shape) else Modifier)
                 .clip(shape)
-                .background(StrangeTheme.colors.scheme.surfaceContainerHigh),
+                .background(StxTheme.colors.scheme.surfaceContainerHigh),
         contentAlignment = Alignment.Center,
     ) {
         if (image != null) {

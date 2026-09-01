@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A quoted passage, with an optional attribution. Material 3's `VerticalDivider` plus the words.
@@ -29,13 +29,13 @@ fun QuoteBlock(
 ) {
     Row(
         modifier = modifier.height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         VerticalDivider(
             modifier = Modifier.fillMaxHeight(),
             color = MaterialTheme.colorScheme.primary,
         )
-        Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
+        Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
             Typography(text = text, variant = TypographyVariant.BodyLarge)
             if (attribution != null) {
                 Typography(

@@ -48,15 +48,15 @@ prevent. Four kinds: `flag`, `text`, `number`, `choice` (and `enumChoice` for an
 
 ## What an application writes instead
 
-The catalogue calls `StrangeTheme` directly because it drives all four of Material 3's inputs from
+The catalogue calls `StxTheme` directly because it drives all four of Material 3's inputs from
 its header. An ordinary application does not:
 
 ```kotlin
-StrangeThemeProvider(seed = Color(0xFF5B5BD6)) { App() }
+StxThemeProvider(seed = Color(0xFF5B5BD6)) { App() }
 ```
 
 That resolves the colour scheme through `platformColorScheme` — the wallpaper on Android 12+, the
-seed everywhere else — and hands the rest to `StrangeTheme` untouched.
+seed everywhere else — and hands the rest to `StxTheme` untouched.
 
 ## What the catalogue is for
 

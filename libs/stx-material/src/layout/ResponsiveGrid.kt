@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A grid whose column count follows the width it is offered, not the window.
@@ -27,8 +27,8 @@ fun <T> ResponsiveGrid(
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize),
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         items(items) { value -> item(value) }
     }

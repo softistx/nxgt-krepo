@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The title of a block of content, with an optional action on the trailing edge.
@@ -28,7 +28,7 @@ fun SectionHeader(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Typography(text = title, variant = TypographyVariant.TitleSmall)

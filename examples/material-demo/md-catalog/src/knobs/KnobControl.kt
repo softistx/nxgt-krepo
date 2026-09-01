@@ -15,7 +15,7 @@ import com.softistx.material.display.Chip
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * One row of the control panel. Material 3 supplies the switch, the slider and the text field:
@@ -30,7 +30,7 @@ fun KnobControl(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
     ) {
         when (knob) {
             is Knob.Flag -> {
@@ -50,8 +50,8 @@ fun KnobControl(
             is Knob.Choice -> {
                 Label(knob.label)
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
-                    verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+                    verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
                 ) {
                     knob.options.forEach { option ->
                         Chip(

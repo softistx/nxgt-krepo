@@ -19,12 +19,12 @@ import com.softistx.material.display.Chip
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.supportsDynamicColor
 
 /**
  * The header: the two dials that prove the theme is live. Changing either repaints every story
- * without a single component being told about it — which is the whole claim `StrangeTheme` makes.
+ * without a single component being told about it — which is the whole claim `StxTheme` makes.
  */
 @Composable
 fun CatalogTopBar(
@@ -32,13 +32,13 @@ fun CatalogTopBar(
     modifier: Modifier = Modifier,
 ) {
     FlowRow(
-        modifier = modifier.fillMaxWidth().padding(StrangeTheme.spacing.md),
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        modifier = modifier.fillMaxWidth().padding(StxTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         Typography(text = "stx-material", variant = TypographyVariant.TitleMedium)
         Row(
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CatalogSeeds.forEach { (name, color) ->
@@ -53,7 +53,7 @@ fun CatalogTopBar(
             }
         }
         Row(
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CatalogMotion.entries.forEach { option ->
@@ -65,7 +65,7 @@ fun CatalogTopBar(
             }
         }
         Row(
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Typography(
@@ -79,7 +79,7 @@ fun CatalogTopBar(
         // no switch, and `supportsDynamicColor` is exactly the question a settings screen asks.
         if (supportsDynamicColor) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Typography(

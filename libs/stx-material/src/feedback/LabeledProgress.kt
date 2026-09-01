@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * Progress with the amount written next to it.
@@ -26,7 +26,7 @@ fun LabeledProgress(
     caption: String? = null,
     kind: ProgressKind = ProgressKind.Linear,
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
         if (caption != null || progress != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

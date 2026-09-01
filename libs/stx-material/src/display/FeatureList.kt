@@ -10,10 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /** One row of a [FeatureList]. */
@@ -27,7 +27,7 @@ data class FeatureItem(
  * What a plan includes. Each row is a check or a close, not a [Checkbox] — this is a receipt,
  * not a form.
  *
- * Material 3 has no feature list. The tick is [StrangeIcons.Check] in the success tone; a row
+ * Material 3 has no feature list. The tick is [StxIcons.Check] in the success tone; a row
  * that is not included wears the close icon at medium emphasis so it recedes rather than shouts.
  */
 @Composable
@@ -37,20 +37,20 @@ fun FeatureList(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
     ) {
         items.forEach { item ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
             ) {
                 Icon(
-                    icon = if (item.included) StrangeIcons.Check else StrangeIcons.Close,
+                    icon = if (item.included) StxIcons.Check else StxIcons.Close,
                     description = null,
                     size = IconSize.Small,
                     tint =
                         if (item.included) {
-                            StrangeTheme.colors.tone(Tone.Success).main
+                            StxTheme.colors.tone(Tone.Success).main
                         } else {
                             LocalContentColor.current.copy(alpha = Emphasis.Medium.alpha)
                         },

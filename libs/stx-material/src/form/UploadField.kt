@@ -21,11 +21,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A drop zone. The library does not pick a file — there is no one picker on every platform — so
@@ -49,11 +49,11 @@ fun UploadField(
                 .clip(shape)
                 .dashedBorder(1.dp, outline, shape)
                 .clickable(enabled = enabled, onClick = onClick)
-                .padding(StrangeTheme.spacing.lg),
+                .padding(StxTheme.spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
-        Icon(icon = StrangeIcons.Add, description = null, size = IconSize.XLarge)
+        Icon(icon = StxIcons.Add, description = null, size = IconSize.XLarge)
         Typography(text = label, variant = TypographyVariant.TitleSmall)
         if (supporting != null) {
             Typography(text = supporting, emphasis = Emphasis.Medium)

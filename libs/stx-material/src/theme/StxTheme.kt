@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
-import com.softistx.material.motion.StrangeMotion
+import com.softistx.material.motion.StxMotion
 
 /**
  * The theme. It **wraps** Material 3 rather than replacing it, so a plain M3 component — or any
@@ -21,7 +21,7 @@ import com.softistx.material.motion.StrangeMotion
  * Its signature is Material 3's own: a [ColorScheme], a [Typography], [Shapes] and a
  * [MotionScheme], each with a default. A caller that already computes one of the four — from a
  * wallpaper, from a brand kit, from a designer's export — passes it and keeps everything else.
- * `StrangeThemeProvider` is the shorthand for the common case, and the only thing that knows the
+ * `StxThemeProvider` is the shorthand for the common case, and the only thing that knows the
  * scheme comes from the wallpaper on Android and from a seed everywhere else.
  *
  * **Nothing here re-describes what M3 already names.** Shapes are M3's [Shapes], with all eight
@@ -34,13 +34,13 @@ import com.softistx.material.motion.StrangeMotion
  * that off for the whole tree, and every animation here follows — nothing holds its own curve.
  */
 @Composable
-fun StrangeTheme(
+fun StxTheme(
     isDark: Boolean = isSystemInDarkTheme(),
-    colorScheme: ColorScheme = remember(isDark) { strangeColorScheme(DefaultSeed, isDark) },
-    colors: StrangeColors = remember(colorScheme, isDark) { strangeColors(colorScheme, isDark) },
-    spacing: StrangeSpacing = StrangeSpacing(),
+    colorScheme: ColorScheme = remember(isDark) { stxColorScheme(DefaultSeed, isDark) },
+    colors: StxColors = remember(colorScheme, isDark) { stxColors(colorScheme, isDark) },
+    spacing: StxSpacing = StxSpacing(),
     motionScheme: MotionScheme = MotionScheme.expressive(),
-    motion: StrangeMotion = remember(motionScheme) { StrangeMotion(motionScheme) },
+    motion: StxMotion = remember(motionScheme) { StxMotion(motionScheme) },
     typography: Typography = MaterialTheme.typography,
     shapes: Shapes = MaterialTheme.shapes,
     content: @Composable () -> Unit,
@@ -64,19 +64,19 @@ fun StrangeTheme(
 /**
  * The tokens Material 3 does not have, reached the way `MaterialTheme.colorScheme` is.
  *
- * There is deliberately no `StrangeTheme.typography`, `.shapes` or `.elevation` shadowing M3 —
+ * There is deliberately no `StxTheme.typography`, `.shapes` or `.elevation` shadowing M3 —
  * a component asks `MaterialTheme` for those, and there is only ever one answer.
  */
-object StrangeTheme {
-    val colors: StrangeColors
+object StxTheme {
+    val colors: StxColors
         @Composable @ReadOnlyComposable
         get() = LocalStrangeColors.current
 
-    val spacing: StrangeSpacing
+    val spacing: StxSpacing
         @Composable @ReadOnlyComposable
         get() = LocalStrangeSpacing.current
 
-    val motion: StrangeMotion
+    val motion: StxMotion
         @Composable @ReadOnlyComposable
         get() = LocalStrangeMotion.current
 }

@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * Chrome around a video, a PDF page or a camera preview.
@@ -60,7 +60,7 @@ private fun MediaFrame(
             modifier
                 .aspectRatio(ratio)
                 .clip(MaterialTheme.shapes.large)
-                .background(StrangeTheme.colors.scheme.surfaceContainerHighest),
+                .background(StxTheme.colors.scheme.surfaceContainerHighest),
         contentAlignment = Alignment.Center,
     ) {
         Box(Modifier.fillMaxSize(), content = content)

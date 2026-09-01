@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A snapping row of pages, with the next card peeking.
@@ -39,7 +39,7 @@ fun Carousel(
         HorizontalPager(
             state = state,
             contentPadding = PaddingValues(end = peek),
-            pageSpacing = StrangeTheme.spacing.sm,
+            pageSpacing = StxTheme.spacing.sm,
             modifier = Modifier.fillMaxWidth(),
         ) { index ->
             page(index)
@@ -52,7 +52,7 @@ fun Carousel(
                 val selected = index == state.currentPage
                 Box(
                     Modifier
-                        .padding(StrangeTheme.spacing.xxs)
+                        .padding(StxTheme.spacing.xxs)
                         .size(if (selected) 8.dp else 6.dp)
                         .clip(CircleShape)
                         .background(
