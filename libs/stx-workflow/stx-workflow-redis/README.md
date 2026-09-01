@@ -96,13 +96,11 @@ default is a bound rather than nothing.
 `Failed` is exempt. It is waiting for a person, and expiring it would delete the only description of
 what has to be fixed.
 
-## The worker
+## The worker is not here
 
-Opt-in by construction. Nothing here starts one, and putting this module on a classpath starts no
-background work — an application that drives `resume` from its own scheduler never constructs the
-class.
+`WorkflowWorker` lives in the core module. It asks the engine what is due and resumes it, which is
+two methods on `WorkflowStore` and no Redis at all — so putting it beside the one store that exists
+today would have meant moving it the day a second one arrived.
 
-There is no claim step: it asks for what is due and calls `resume` on each, and the engine takes the
-lock itself and returns quietly when somebody else has it. Two workers pulling the same id is the
-normal shape of this rather than a race to prevent. It runs on a `CoroutineScope` the caller owns and
-cancels, and `close()` stops it without touching the engine or the connection it did not open.
+What *is* here is the half that makes it work: a sorted set that answers "what is due" in one round
+trip, and a lock that lets several workers pull the same id without a claim protocol between them.

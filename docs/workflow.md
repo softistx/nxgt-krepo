@@ -19,6 +19,7 @@ way; this file is what you may write.
 - [Status](#status)
 - [The persisted record](#the-persisted-record)
 - [Stores](#stores)
+- [In a Ktor application](#in-a-ktor-application)
 - [The worker](#the-worker)
 
 ## Declaring a workflow
@@ -584,6 +585,38 @@ class RedisWorkflowStore(
 )
 ```
 
+## In a Ktor application
+
+```kotlin
+install(RedisConnection) { config = RedisConfig(uri = …, namespace = "orders") }
+install(Workflows) {
+    store = RedisWorkflowStore(application.redis)
+    register(checkout)
+    worker = true
+    injectable = true
+}
+
+post("/checkout") { call.respond(call.workflows.start(checkout, call.receive())) }
+post("/checkout/{id}/approve") { call.workflows.signal(call.parameters["id"]!!, APPROVAL, call.receive()) }
+```
+
+`com.strange.ktor.workflow` in `stx-ktor`, alongside the other integrations. `call.workflows` and
+`Application.workflows` reach the engine; `injectable = true` registers it with Ktor's DI so a class
+the container builds can take a `WorkflowEngine` in its constructor.
+
+The plugin **does not open a connection**. It takes a `WorkflowStore` that has one —
+`RedisWorkflowStore(application.redis)` shares what `install(RedisConnection)` opened — because a
+second pool for the same server is one nobody asked for. And nothing here is closed: an engine owns
+neither the store nor the connection beneath it, which is why this is the one plugin in that module
+with no `AutoCloseable` to hand over.
+
+**`worker = false` is the default, and it is a decision rather than caution.** Installing the plugin
+gives an application a way to *run* workflows; enlisting it in recovering every abandoned instance in
+the fleet is a separate question, answered by whoever is shaping the fleet. When it is on, the worker
+runs on the application's own scope and is closed with it — which is the half an application writing
+`WorkflowWorker(engine).start(this)` by hand tends to forget, leaving a loop that outlives the
+redeploy it should have died with.
+
 ## The worker
 
 ```kotlin
@@ -598,8 +631,12 @@ class WorkflowWorker(
 }
 ```
 
-Opt-in by construction: nothing starts one, and putting `stx-workflow-redis` on a classpath starts no
+Opt-in by construction: nothing starts one, and putting `stx-workflow` on a classpath starts no
 background work.
+
+It lives in the **core** module, not beside a store. It asks the engine what is due and resumes it —
+`WorkflowStore.runnable` and `WorkflowStore.guarded`, and nothing else — so the same worker drives
+instances in Redis, in memory, or in whatever store comes next.
 
 It asks the store what is due and calls `resume` on each. There is no claim step — the engine takes
 the instance's lock itself and returns quietly when somebody else has it, so two workers pulling the

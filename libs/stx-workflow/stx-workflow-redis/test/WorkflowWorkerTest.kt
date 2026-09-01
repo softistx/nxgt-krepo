@@ -2,6 +2,7 @@ package com.strange.workflow.redis
 
 import com.strange.workflow.WorkflowEngine
 import com.strange.workflow.WorkflowStatus
+import com.strange.workflow.WorkflowWorker
 import com.strange.workflow.dsl.step
 import com.strange.workflow.redis.fixture.Ledger
 import com.strange.workflow.workflow
