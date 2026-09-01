@@ -6,9 +6,11 @@ import com.strange.workflow.WorkflowStatus
 import com.strange.workflow.db.record
 import com.strange.workflow.db.storeContract
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.flow.toList
+import org.bson.Document
 import kotlin.time.Duration.Companion.minutes
 
 class MongoWorkflowStoreTest :
@@ -38,7 +40,7 @@ class MongoWorkflowStoreTest :
                 }
             }
 
-            scenario("the two indexes the store needs are created before it is handed back") {
+            scenario("the indexes the store needs are created before it is handed back") {
                 MongoTestCluster.withDatabase { database ->
                     MongoWorkflowStore(database)
 
@@ -47,11 +49,25 @@ class MongoWorkflowStoreTest :
                             .collection<WorkflowInstanceDocument>(WORKFLOW_INSTANCES)
                             .listIndexes()
                             .toList()
-                    // runnable() is a ranged read over dueAt, and retention is the server expiring
-                    // expiresAt. Both are a collection scan without these, which is the kind of
-                    // thing that works in a spec and does not work in a year.
-                    indexed.mapNotNull { it.getString("name") }.size shouldBe 3
-                    indexed.any { it.containsKey("expireAfterSeconds") } shouldBe true
+                    // Named rather than counted: a count says nothing about which index is missing,
+                    // and it fails for the wrong reason the moment a fourth one is added.
+                    // runnable() is a ranged read over dueAt, find() is a filter on status ordered
+                    // by updatedAt, and retention is the server expiring expiresAt. Each is a
+                    // collection scan without its index — the kind of thing that works in a spec and
+                    // does not work in a year.
+                    val keys = indexed.mapNotNull { it.get("key", Document::class.java)?.keys?.toList() }
+                    keys shouldContainExactlyInAnyOrder
+                        listOf(
+                            listOf("_id"),
+                            listOf("dueAt"),
+                            listOf("expiresAt"),
+                            listOf("status", "updatedAt"),
+                        )
+                    // The server stores it as an int32, so read it as a Number rather than guessing.
+                    indexed
+                        .single { it.containsKey("expireAfterSeconds") }
+                        .get("expireAfterSeconds", Number::class.java)
+                        .toLong() shouldBe 0L
                 }
             }
         }

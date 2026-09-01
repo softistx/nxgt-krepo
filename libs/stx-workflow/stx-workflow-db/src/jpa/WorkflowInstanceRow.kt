@@ -24,7 +24,10 @@ import kotlin.time.Instant
 @Entity
 @Table(
     name = "stx_workflow_instance",
-    indexes = [Index(name = "ix_stx_workflow_due", columnList = "due_at")],
+    indexes = [
+        Index(name = "ix_stx_workflow_due", columnList = "due_at"),
+        Index(name = "ix_stx_workflow_status", columnList = "status, updated_at"),
+    ],
 )
 class WorkflowInstanceRow(
     @Id
@@ -32,6 +35,18 @@ class WorkflowInstanceRow(
     var id: String = "",
     @Column(nullable = false, length = 200)
     var workflow: String = "",
+    /**
+     * The instance's status, as its enum name.
+     *
+     * Duplicated out of [record] — the one thing that is — because a query cannot look inside a
+     * string. `find` exists to answer "which instances need a person", and the alternative to a
+     * column is reading every row and decoding it.
+     */
+    @Column(nullable = false, length = 20)
+    var status: String = "",
+    /** When the instance was last written. What `find` orders an operator's page by. */
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: Instant = Instant.DISTANT_PAST,
     /**
      * `Length.LONG32` rather than `@Lob`, and the difference is not cosmetic.
      *

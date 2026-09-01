@@ -127,6 +127,62 @@ internal fun FeatureSpecRootScope.storeContract(
             }
         }
 
+        scenario("it finds the instances that need a person, newest first") {
+            store(30.seconds) { store ->
+                // Three finished instances and one still going. Written oldest-first so the order
+                // that comes back is the store's doing, not the insertion order's.
+                val now = Clock.System.now()
+                listOf("old" to 3, "middle" to 2, "new" to 1).forEach { (id, agoMinutes) ->
+                    store.create(record(id))
+                    val loaded = store.load(id)!!
+                    store.save(
+                        loaded.copy(status = WorkflowStatus.Failed, updatedAt = now - agoMinutes.minutes),
+                        loaded.version,
+                    ) shouldBe true
+                }
+                store.create(record("running"))
+
+                store.find(WorkflowStatus.Failed).map { it.id } shouldBe listOf("new", "middle", "old")
+                store.find(WorkflowStatus.Running).map { it.id } shouldBe listOf("running")
+                store.find(WorkflowStatus.Completed).shouldBeEmpty()
+            }
+        }
+
+        scenario("a page of them, and the page after it") {
+            store(30.seconds) { store ->
+                val now = Clock.System.now()
+                repeat(5) { i ->
+                    store.create(record("f$i"))
+                    val loaded = store.load("f$i")!!
+                    store.save(
+                        loaded.copy(status = WorkflowStatus.Failed, updatedAt = now - (5 - i).minutes),
+                        loaded.version,
+                    ) shouldBe true
+                }
+
+                store.find(WorkflowStatus.Failed, limit = 2).map { it.id } shouldBe listOf("f4", "f3")
+                store.find(WorkflowStatus.Failed, limit = 2, offset = 2).map { it.id } shouldBe listOf("f2", "f1")
+                store.find(WorkflowStatus.Failed, limit = 0).shouldBeEmpty()
+            }
+        }
+
+        scenario("an instance that moves on leaves the index it was in") {
+            store(30.seconds) { store ->
+                store.create(record("a"))
+                val failed = store.load("a")!!
+                store.save(failed.copy(status = WorkflowStatus.Failed), failed.version) shouldBe true
+                store.find(WorkflowStatus.Failed).map { it.id } shouldBe listOf("a")
+
+                // Somebody fixed it by hand and marked it done. An inbox that still showed it would
+                // be an inbox nobody trusts.
+                val fixed = store.load("a")!!
+                store.save(fixed.copy(status = WorkflowStatus.Compensated), fixed.version) shouldBe true
+
+                store.find(WorkflowStatus.Failed).shouldBeEmpty()
+                store.find(WorkflowStatus.Compensated).map { it.id } shouldBe listOf("a")
+            }
+        }
+
         scenario("a second holder of one instance is told no rather than made to wait") {
             store(30.seconds) { store ->
                 store.create(record("a"))

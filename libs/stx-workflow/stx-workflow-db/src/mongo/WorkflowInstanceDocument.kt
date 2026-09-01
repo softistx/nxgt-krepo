@@ -21,6 +21,15 @@ internal data class WorkflowInstanceDocument(
     @SerialName("_id") val id: String,
     val workflow: String,
     val record: String,
+    /**
+     * The instance's status, as its enum name.
+     *
+     * Duplicated out of [record] — the one thing that is — because a query cannot look inside a
+     * string, and `find` exists to answer "which instances need a person".
+     */
+    val status: String,
+    /** When the instance was last written. What `find` orders an operator's page by. */
+    @Serializable(with = InstantAsBsonDateTime::class) val updatedAt: Instant,
     val version: Long,
     /** When this instance is next due. **Null means nothing polls for it** — parked, or finished. */
     @Serializable(with = InstantAsBsonDateTime::class) val dueAt: Instant? = null,

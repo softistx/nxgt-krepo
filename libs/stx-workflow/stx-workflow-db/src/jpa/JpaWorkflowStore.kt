@@ -2,6 +2,8 @@ package com.strange.workflow.jpa
 
 import com.strange.jpa.Jpa
 import com.strange.jpa.query.find
+import com.strange.jpa.query.query
+import com.strange.jpa.session.session
 import com.strange.jpa.session.transaction
 import com.strange.workflow.WorkflowStatus
 import com.strange.workflow.db.Lease
@@ -86,11 +88,14 @@ class JpaWorkflowStore(
                 .mutate(
                     """
                     update WorkflowInstanceRow r
-                       set r.record = :record, r.version = :next, r.dueAt = :dueAt, r.finishedAt = :finishedAt
+                       set r.record = :record, r.status = :status, r.updatedAt = :updatedAt,
+                           r.version = :next, r.dueAt = :dueAt, r.finishedAt = :finishedAt
                      where r.id = :id and r.version = :expected
                     """.trimIndent(),
                 ).parameters(
                     "record" to encode(record),
+                    "status" to record.status.name,
+                    "updatedAt" to record.updatedAt,
                     "next" to expectedVersion + 1,
                     "dueAt" to dueAt(record, now),
                     "finishedAt" to finishedAt(record, now),
@@ -113,6 +118,32 @@ class JpaWorkflowStore(
                 .limit(limit)
                 .list()
         }
+    }
+
+    /**
+     * A page of the instances in [status], newest first.
+     *
+     * One indexed query on `(status, updated_at)`, and the records come back decoded from the column
+     * that holds them. Nothing here reads [WorkflowInstanceRow.status] as truth beyond the filter —
+     * the decoded record is what the caller gets, so the column can only ever cost a row that should
+     * not have been in the page, never a wrong record.
+     */
+    override suspend fun find(
+        status: WorkflowStatus,
+        limit: Int,
+        offset: Int,
+    ): List<WorkflowRecord> {
+        if (limit <= 0) return emptyList()
+        return jpa
+            .session { session ->
+                session
+                    .query<WorkflowInstanceRow>(
+                        "select r from WorkflowInstanceRow r where r.status = :status order by r.updatedAt desc",
+                    ).parameter("status", status.name)
+                    .offset(offset)
+                    .limit(limit)
+                    .list()
+            }.map { row -> json.decodeFromString(WorkflowRecord.serializer(), row.record).copy(version = row.version) }
     }
 
     /**
@@ -166,6 +197,8 @@ class JpaWorkflowStore(
             id = record.id,
             workflow = record.workflow,
             record = encode(record),
+            status = record.status.name,
+            updatedAt = record.updatedAt,
             version = record.version,
             dueAt = dueAt(record, record.updatedAt),
         )
