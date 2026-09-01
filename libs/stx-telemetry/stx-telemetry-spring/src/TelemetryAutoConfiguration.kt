@@ -5,6 +5,7 @@ import com.strange.telemetry.export.ConsoleExporter
 import com.strange.telemetry.export.Exporter
 import com.strange.telemetry.export.FileExporter
 import com.strange.telemetry.export.JsonLinesExporter
+import com.strange.telemetry.mongo.MongoExporter
 import com.strange.telemetry.otlp.OtlpExporter
 import com.strange.telemetry.slf4j.Slf4jExporter
 import com.strange.telemetry.trace.Sampler
@@ -52,6 +53,7 @@ import kotlin.time.toKotlinDuration
     TelemetryOtlpProperties::class,
     TelemetrySlf4jProperties::class,
     TelemetryFileProperties::class,
+    TelemetryMongoProperties::class,
 )
 @ConditionalOnClass(Telemetry::class)
 @ConditionalOnProperty(prefix = "stx.telemetry", name = ["enabled"], havingValue = "true")
@@ -171,6 +173,32 @@ class TelemetryAutoConfiguration {
                 every = properties.every.takeUnless { it.isZero }?.toKotlinDuration(),
                 keep = properties.keep,
                 compress = properties.compress,
+            )
+    }
+
+    /**
+     * A MongoDB collection, on a client of its own.
+     *
+     * `MongoExporter.connecting` rather than a `MongoDatabase` bean, and that is the whole design:
+     * telemetry gets its own pool, so a burst of it cannot exhaust the one the business requests are
+     * queueing for. It also means this works in an application that has no Mongo at all, which is the
+     * usual case for a service that only wants somewhere durable to put its logs.
+     *
+     * The bean closes the client, because this is what opened it.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(MongoExporter::class)
+    @ConditionalOnProperty(prefix = "stx.telemetry.mongo", name = ["enabled"], havingValue = "true")
+    class Mongo {
+        @Bean(destroyMethod = "close")
+        @ConditionalOnMissingBean(MongoExporter::class)
+        fun stxMongoExporter(properties: TelemetryMongoProperties): MongoExporter =
+            MongoExporter.connecting(
+                uri = properties.uri,
+                database = properties.database,
+                collection = properties.collection,
+                // Zero is how a duration says "no limit" throughout these keys — see stx.telemetry.file.
+                retention = properties.retention.takeUnless { it.isZero }?.toKotlinDuration(),
             )
     }
 

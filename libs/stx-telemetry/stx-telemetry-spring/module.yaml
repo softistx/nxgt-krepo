@@ -16,6 +16,10 @@ dependencies:
   # SLF4JServiceProvider that points the bridge the other way: adding it here would decide an
   # application's SLF4J binding for it, which is not this module's business.
   - //libs/stx-telemetry/stx-telemetry-slf4j: compile-only
+  # The exporter stx.telemetry.mongo builds, on the same rule. It brings the Mongo coroutine driver
+  # with it, which is the clearest case yet for compile-only: an application with no telemetry in a
+  # database must not carry a driver because this module knows how to use one.
+  - //libs/stx-telemetry/stx-telemetry-mongo: compile-only
   # WebFilter and CoWebFilter — the server span lives in the reactive filter chain
   - $spring.boot.starter.webflux: exported
   # Spring binds Kotlin configuration properties through the primary constructor only when reflect
@@ -33,6 +37,9 @@ test-dependencies:
   # two providers on one classpath is a binding decided by jar order, and the spec that checks the
   # loop is refused would then pass or fail by luck.
   - //libs/stx-telemetry/stx-telemetry-slf4j
+  # The wiring spec asks the context for a MongoExporter. It needs no server: the exporter opens its
+  # client lazily and touches it on the first batch, which this spec never sends.
+  - //libs/stx-telemetry/stx-telemetry-mongo
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
