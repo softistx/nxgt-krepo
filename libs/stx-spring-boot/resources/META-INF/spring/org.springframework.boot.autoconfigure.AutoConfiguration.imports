@@ -12,3 +12,4 @@ com.strange.spring.integration.redis.RedisIntegrationAutoConfiguration
 com.strange.spring.integration.kafka.KafkaIntegrationAutoConfiguration
 com.strange.spring.integration.amqp.AmqpIntegrationAutoConfiguration
 com.strange.spring.integration.i18n.I18nIntegrationAutoConfiguration
+com.strange.spring.integration.workflow.WorkflowIntegrationAutoConfiguration
