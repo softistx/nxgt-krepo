@@ -1,4 +1,4 @@
-package com.strange.spring.integration.workflow
+package com.strange.workflow.spring
 
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.strange.jpa.Jpa

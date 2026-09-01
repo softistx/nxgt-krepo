@@ -1,4 +1,4 @@
-package com.strange.spring.integration.workflow
+package com.strange.workflow.spring
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
