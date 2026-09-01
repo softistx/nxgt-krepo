@@ -7,12 +7,14 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.springframework.context.SmartLifecycle
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /** The defaults `stx-workflow` and `stx-workflow-db` carry, restated where the binder can reach them. */
 internal val WORKER_POLL = 1.seconds
 internal val LEASE = 30.seconds
 internal val RETENTION = 7.days
+internal val CHILD_POLL = 1.minutes
 
 /**
  * Runs a [WorkflowWorker] for as long as the application context is running.

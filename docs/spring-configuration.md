@@ -307,6 +307,7 @@ consume nothing.
 | `store` | `redis` \| `jpa` \| `mongo` | — | Which store to build. Unset means the application declares its own |
 | `lease` | duration | `30s` | How long after a process dies before somebody else may pick up what it was doing |
 | `retention` | duration | `7d` | How long a finished instance is kept before it is expired |
+| `child-poll` | duration | `1m` | How often a parent parked on a `child` node looks at the child again |
 
 **Every `Workflow<*>` bean is registered with it.** An instance is stored under its workflow's *name*
 and an engine that cannot look that name up cannot resume it after a restart — so a workflow is
@@ -327,6 +328,12 @@ exempt from `retention` whatever it says: it is waiting for a person, and expiri
 the only description of what needs fixing. `store: jpa` ignores `retention` — a table has no TTL, so
 retention there is `JpaWorkflowStore.purge` on a schedule the application owns. Both are ignored when
 the application declares its own store.
+
+`child-poll` is a safety net rather than the mechanism: a child workflow resumes its parent the
+moment it finishes, and the poll only covers a process that died between those two writes. It needs
+`stx.workflow.worker.enabled`, or an application scheduler calling `resume` — nothing here polls on
+its own. Unlike `lease` and `retention` it belongs to the engine, so it applies whichever store the
+application ends up with.
 
 ### `stx.workflow.worker`
 
