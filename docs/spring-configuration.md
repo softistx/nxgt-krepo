@@ -429,6 +429,26 @@ period alone. `0` turns either off.
 | `keep` | int | `7` | How many rolled files survive. `0` keeps only the file being written |
 | `compress` | boolean | `false` | Whether a rolled file is gzipped. Off by default: it happens on the pipeline's export path, and a 64 MB file is about a second of the consumer not draining |
 
+### `stx.telemetry.mongo`
+
+Needs `stx-telemetry-mongo` on the classpath; the bean below is absent without it.
+
+One document per signal, with the field names the JSON-lines format uses, so a query against the
+collection reads like a `jq` filter against a file. **Retention is a TTL index**, not a job: Mongo
+expires the documents itself, on the primary, whether or not this process is running.
+
+The client is **telemetry's own**, built from `uri` and closed with the context — not the
+application's. A burst of telemetry on the pool business requests are queueing for turns an
+observability problem into an outage, and this also works in an application that has no Mongo at all.
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Adds a `MongoExporter`. A batch is one unordered `insertMany`, so a document the server rejects costs its own record and not the five hundred behind it |
+| `uri` | string | `mongodb://localhost:27017` | The connection string for telemetry's own client |
+| `database` | string | `telemetry` | The database the collection lives in |
+| `collection` | string | `telemetry` | The collection documents are inserted into |
+| `retention` | duration | `30d` | How long a signal is kept, as a TTL index on `at`. Changing it rebuilds the index rather than leaving the old window in place. `0` keeps everything |
+
 ---
 
 ## `stx-graphix-spring`

@@ -81,7 +81,7 @@ class FileExporter(
         resource: Resource,
         batch: List<Signal>,
     ) {
-        val lines = batch.map { signalLines.encodeToString(Signal.serializer(), it).toByteArray() }
+        val lines = batch.map { signalJson.encodeToString(Signal.serializer(), it).toByteArray() }
         withContext(Dispatchers.IO) {
             sink.withLock { it.write(lines) }
         }

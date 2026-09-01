@@ -109,3 +109,21 @@ data class TelemetryFileProperties(
     /** Whether a rolled file is gzipped. Off by default: it happens on the export path. */
     val compress: Boolean = false,
 )
+
+/**
+ * `stx.telemetry.mongo` — signals into a MongoDB collection, with retention as a TTL index.
+ *
+ * The connection is **this exporter's own**, built from [uri] and closed with the context, rather
+ * than the application's. That is deliberate and not an oversight: a burst of telemetry on the pool
+ * the business requests are queueing for turns an observability problem into an outage.
+ */
+@ConfigurationProperties(prefix = "stx.telemetry.mongo")
+data class TelemetryMongoProperties(
+    val enabled: Boolean = false,
+    /** The connection string for telemetry's own client. */
+    val uri: String = "mongodb://localhost:27017",
+    val database: String = "telemetry",
+    val collection: String = "telemetry",
+    /** How long a signal is kept, as a TTL index Mongo enforces itself. `0` keeps everything. */
+    val retention: Duration = Duration.ofDays(30),
+)
