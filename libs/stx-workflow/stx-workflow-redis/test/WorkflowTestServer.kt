@@ -3,9 +3,9 @@ package com.strange.workflow.redis
 import com.strange.redis.Redis
 import com.strange.redis.RedisConfig
 import com.strange.redis.codec.redisJson
+import com.strange.redis.deleteKeys
 import com.strange.testing.containers.TestNames
 import com.strange.testing.containers.redisContainer
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.seconds
 
@@ -33,8 +33,7 @@ internal object WorkflowTestServer {
             try {
                 block(redis)
             } finally {
-                val keys = redis.commands.keys("${redis.namespace}*").toList()
-                if (keys.isNotEmpty()) redis.commands.del(*keys.toTypedArray())
+                redis.deleteKeys()
             }
         }
     }

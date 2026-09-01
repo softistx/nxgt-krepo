@@ -9,6 +9,8 @@ way; this file is what you may write.
 - [Compensation](#compensation)
 - [Retry](#retry)
 - [Timeout](#timeout)
+- [Waiting for a signal](#waiting-for-a-signal)
+- [Waiting for a clock](#waiting-for-a-clock)
 - [Branches](#branches)
 - [Fan-out](#fan-out)
 - [The step scope](#the-step-scope)
@@ -152,6 +154,86 @@ the least time.
 A timeout that fires is an ordinary node failure: it retries if the policy has attempts left, and
 otherwise starts the unwind.
 
+## Waiting for a signal
+
+```kotlin
+inline fun <reified T> signal(name: String): Signal<T>
+fun <T> signal(name: String, serializer: KSerializer<T>): Signal<T>
+
+fun <C, T> NodeSink<C>.await(
+    signal: Signal<T>,
+    name: String = signal.name,
+    body: suspend StepScope<C>.(T) -> C,
+): Await<C, T>
+
+infix fun <C, T> Await<C, T>.within(deadline: Duration): Await<C, T>
+```
+
+```kotlin
+private val APPROVAL = signal<Approval>("approval")
+
+workflow<Refund>("refund") {
+    step("hold") { context.copy(holdId = ledger.hold(context.amount)) }
+        .compensate { ledger.release(context.holdId!!) }
+
+    await(APPROVAL) { approval -> context.copy(approvedBy = approval.by) } within 24.hours
+
+    step("pay") { context.copy(paymentId = ledger.pay(context.holdId!!)) }
+}
+```
+
+An `await` stops the instance. Its status becomes `Awaiting`, `awaiting` holds the signal's name, and
+nothing after it runs until somebody calls `engine.signal(id, APPROVAL, payload)` — which may be days
+later, from a process that did not exist when the instance parked.
+
+The block runs **once**, when the payload arrives, in whichever process delivered it. It is handed
+the payload and returns the next context, exactly like a step.
+
+A `Signal<T>` is a key, not a name, for the same reason an `Outcome<T>` is: the payload is persisted
+before the workflow reads it, so something has to hold its serializer, and a bare string would leave
+every delivering call site guessing the type.
+
+**A deadline is a failure, not a branch.** `within 24.hours` means the wait fails with
+`AwaitTimeoutException` when it expires, and the workflow unwinds through everything before it. That
+is what the deadline is *for* — the hold this refund placed must be released if nobody ever approves
+it — and it is a rule an operator can read off the status without knowing the engine.
+
+**A wait with no deadline waits forever, and costs nothing while it does.** Such an instance leaves
+the due-time index entirely (`WorkflowRecord.isParked`), so no worker polls it. This is not an
+optimisation: a worker that polled it would spend its life offering the same instance to itself,
+finding the same signal still absent, and parking it again.
+
+An await declares no compensation. Un-approving something is not an effect this library performed;
+what the approval *caused* is the steps after it, and those compensate themselves.
+
+A workflow that waits on the same signal twice must name the two waits apart — `await(APPROVAL,
+name = "second-approval") { … }` — and the duplicate-name check says so when the workflow is built.
+
+## Waiting for a clock
+
+```kotlin
+fun <C> NodeSink<C>.sleep(name: String, duration: Duration): Sleep<C>
+fun <C> NodeSink<C>.sleep(name: String, duration: StepScope<C>.() -> Duration): Sleep<C>
+```
+
+```kotlin
+sleep("cool-off", 10.minutes)
+sleep("back-off") { context.retryAfter }
+```
+
+`sleep` is not `delay`. A `delay` holds a coroutine, and a coroutine lives in a process that will be
+redeployed on Thursday; a seven-day cool-off written that way is a seven-day uptime requirement.
+`sleep` writes the wake-up time to the store and lets the instance go — status `Sleeping`, `wakeAt`
+set — so the process it started in is free to die and whichever one finds it later finishes it.
+
+It follows that **a sleep needs somebody to come back for it**: a `WorkflowWorker`, or an application
+scheduler calling `resume`. Nothing wakes an instance nobody is polling for.
+
+The block form is evaluated **once**, when the instance parks. A resume reads back the `wakeAt` it
+wrote rather than asking again — otherwise every restart would push the wake-up further out, and a
+restart loop would produce an instance that never wakes. A duration of zero or less is a wake-up
+already due, which the engine treats as no pause at all rather than as an error.
+
 ## Branches
 
 ```kotlin
@@ -289,6 +371,7 @@ class WorkflowEngineBuilder {
 suspend fun <C> WorkflowEngine.start(workflow: Workflow<C>, context: C, id: String = …): WorkflowInstance<C>
 suspend fun WorkflowEngine.resume(id: String): WorkflowRecord
 suspend fun <C> WorkflowEngine.resume(workflow: Workflow<C>, id: String): WorkflowInstance<C>
+suspend fun <T> WorkflowEngine.signal(id: String, signal: Signal<T>, payload: T): WorkflowRecord
 suspend fun WorkflowEngine.cancel(id: String): WorkflowRecord
 suspend fun WorkflowEngine.record(id: String): WorkflowRecord?
 suspend fun WorkflowEngine.runnable(now: Instant = …, limit: Int = 32): List<String>
@@ -300,6 +383,12 @@ it up.
 
 A workflow must be `register`ed before `start` will run it: an instance the engine cannot look up
 again is an instance that cannot be resumed after a restart.
+
+`signal(id, SIGNAL, payload)` delivers to an instance that is waiting for exactly that signal, and
+runs it on from there in the calling process. It **refuses** an instance that is not — see
+`WorkflowNotAwaitingException` — because the interesting case is not the wrong id, it is the approval
+clicked twice, and the second one must not look like it landed. Delivery happens under the instance's
+lock, so two people approving at the same instant cannot both wake it.
 
 `cancel` unwinds first and lands `Cancelled`. A cancelled checkout that leaves the stock reserved is
 not cancelled.
@@ -315,8 +404,8 @@ recovery, use [the worker](#the-worker).
 | Status | Means | Terminal |
 | --- | --- | --- |
 | `Running` | A node is running, or the next one is about to | |
-| `Awaiting` | Stopped until a named signal arrives. **Not reachable in phase one** | |
-| `Sleeping` | Stopped until a point in time. **Not reachable in phase one** | |
+| `Awaiting` | Stopped until a named signal arrives — see [waiting for a signal](#waiting-for-a-signal) | |
+| `Sleeping` | Stopped until a point in time — see [waiting for a clock](#waiting-for-a-clock) | |
 | `Compensating` | A node failed for good; the journal is being unwound | |
 | `Completed` | Every node succeeded | yes |
 | `Compensated` | A node failed, and every compensation owed for it succeeded | yes |
@@ -326,9 +415,10 @@ recovery, use [the worker](#the-worker).
 `Compensated` is the ordinary outcome of a workflow that failed. `Failed` is the one that asks for a
 person, and it is the only status exempt from a store's retention.
 
-`Awaiting` and `Sleeping` have no writer yet. They are declared, and the engine's loop and the store's
-index are already shaped around them, so the phase that adds human approval adds a node type and a
-`signal` call rather than a migration of every record already written.
+`Awaiting` and `Sleeping` are neither progress nor failure: the workflow stopped on purpose, and it
+will stop for as long as that takes. An `Awaiting` instance with no deadline is out of the store's
+due-time index and moves only on `signal` or `cancel`; a `Sleeping` one is in the index, scored at
+its `wakeAt`.
 
 ## The persisted record
 
@@ -340,8 +430,9 @@ data class WorkflowRecord(
     val status: WorkflowStatus,
     val context: JsonElement,
     val journal: List<JournalEntry> = emptyList(),
-    val awaiting: String? = null,       // phase two
-    val wakeAt: Instant? = null,        // phase two
+    val awaiting: String? = null,       // the signal name, while Awaiting
+    val signal: JsonElement? = null,    // a delivered payload the await has not consumed yet
+    val wakeAt: Instant? = null,        // a Sleeping instance's wake-up, or an Awaiting one's deadline
     val error: WorkflowError? = null,
     val cancelled: Boolean = false,
     val createdAt: Instant,
@@ -360,9 +451,9 @@ it without decoding the document, and so there is only ever one copy of it to ke
 @Serializable
 data class JournalEntry(
     val node: String,                   // qualified — "provision/charge"
-    val outcome: NodeOutcome,           // Succeeded | Failed | Compensated | CompensationFailed
+    val outcome: NodeOutcome,           // Succeeded | Failed | Paused | Compensated | CompensationFailed
     val attempts: Int,
-    val value: JsonElement? = null,     // a leg's result, or the arm a branch took
+    val value: JsonElement? = null,     // a leg's result, the arm a branch took, a signal's payload
     val error: WorkflowError? = null,
     val at: Instant,
 )
@@ -370,7 +461,15 @@ data class JournalEntry(
 
 **The journal is the only record of progress** — there is no cursor. Entries are appended, never
 rewritten, so a node's **last** entry is its current state; everything that asks "has this run?" asks
-it that way. `record.latest(node)` and `record.succeeded(node)` are how.
+it that way. `record.latest(node)`, `record.succeeded(node)` and `record.paused(node)` are how.
+
+`Paused` is what an `await` or a `sleep` writes when it stops, and it is why "where is this instance
+parked" needs no field of its own to disagree with the journal. It is superseded by the `Succeeded`
+entry the same node writes when the wait ends.
+
+A signal's payload is kept in the entry that consumed it. A signal is the one input to a workflow
+that came from outside it, and an operator asking six months later why this instance paid out should
+not have to find the answer in another system's log.
 
 ## Stores
 

@@ -1,12 +1,14 @@
 package com.strange.workflow
 
 import com.strange.common.serialization.lenientJson
+import com.strange.workflow.dsl.Signal
 import com.strange.workflow.engine.Run
 import com.strange.workflow.engine.advance
 import com.strange.workflow.store.WorkflowRecord
 import com.strange.workflow.store.WorkflowStore
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -78,6 +80,37 @@ class WorkflowEngine internal constructor(
     }
 
     /**
+     * Delivers a signal an instance is waiting for, and runs it on from there.
+     *
+     * ```kotlin
+     * engine.signal(id, APPROVAL, Approval(by = "ops", note = "verified by phone"))
+     * ```
+     *
+     * This is the whole of the human-approval story from the outside: an HTTP handler, a message
+     * consumer or an operator's console calls this, and the workflow continues in *that* process,
+     * from where it stopped, with the payload folded into its context by the `await` block.
+     *
+     * It refuses an instance that is not waiting on exactly [signal] — see
+     * [WorkflowNotAwaitingException] — because the interesting case is not the wrong id, it is the
+     * approval clicked twice, and the second one must not look like it landed.
+     *
+     * Delivery and the run that follows happen under the instance's lock, in one conditional write,
+     * so two people approving at the same instant cannot both wake it.
+     */
+    suspend fun <T> signal(
+        id: String,
+        signal: Signal<T>,
+        payload: T,
+    ): WorkflowRecord {
+        val record = store.load(id) ?: throw WorkflowNotFoundException(id)
+        if (record.status != WorkflowStatus.Awaiting || record.awaiting != signal.name) {
+            throw WorkflowNotAwaitingException(id, signal.name, record.status)
+        }
+        val delivery = Delivery(signal.name, json.encodeToJsonElement(signal.serializer, payload))
+        return advance(definitionFor(record), record, delivery = delivery).record
+    }
+
+    /**
      * Stops an instance, undoing whatever it had already done.
      *
      * It unwinds first and lands [WorkflowStatus.Cancelled], rather than abandoning the effects
@@ -114,6 +147,7 @@ class WorkflowEngine internal constructor(
         workflow: Workflow<C>,
         record: WorkflowRecord,
         cancelling: Boolean = false,
+        delivery: Delivery? = null,
     ): WorkflowInstance<C> {
         if (record.status.isTerminal) return instance(workflow, record)
 
@@ -122,7 +156,18 @@ class WorkflowEngine internal constructor(
                 val fresh = store.load(record.id) ?: throw WorkflowNotFoundException(record.id)
                 if (fresh.status.isTerminal) return@guarded fresh
                 val run = runFor(workflow, fresh) ?: return@guarded store.load(record.id)!!
-                if (cancelling) run.checkpoint { it.copy(status = WorkflowStatus.Compensating, cancelled = true) }
+                delivery?.let { deliver(run, it) }
+                if (cancelling) {
+                    run.checkpoint {
+                        it.copy(
+                            status = WorkflowStatus.Compensating,
+                            cancelled = true,
+                            awaiting = null,
+                            signal = null,
+                            wakeAt = null,
+                        )
+                    }
+                }
                 run.advance()
                 run.record
             } ?: store.load(record.id) ?: record
@@ -157,11 +202,35 @@ class WorkflowEngine internal constructor(
             null
         }
 
+    /**
+     * Writes the payload into the record and wakes it, under the lock the caller already holds.
+     *
+     * The check is repeated here against the record just loaded inside the lock, and that is the one
+     * that counts: the check in [signal] read a copy from before the lock and is there to fail the
+     * ordinary double-click cheaply, not to decide anything.
+     */
+    private suspend fun <C> deliver(
+        run: Run<C>,
+        delivery: Delivery,
+    ) {
+        val record = run.record
+        if (record.status != WorkflowStatus.Awaiting || record.awaiting != delivery.signal) {
+            throw WorkflowNotAwaitingException(record.id, delivery.signal, record.status)
+        }
+        run.checkpoint { it.copy(status = WorkflowStatus.Running, signal = delivery.payload, awaiting = null, wakeAt = null) }
+    }
+
     private fun <C> instance(
         workflow: Workflow<C>,
         record: WorkflowRecord,
     ): WorkflowInstance<C> = WorkflowInstance(record, json.decodeFromJsonElement(workflow.serializer, record.context))
 }
+
+/** A signal on its way in: the name it must match, and its payload already encoded. */
+private class Delivery(
+    val signal: String,
+    val payload: JsonElement,
+)
 
 /**
  * Builds an engine.
