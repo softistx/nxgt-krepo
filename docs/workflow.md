@@ -579,9 +579,10 @@ What ships:
 | `InMemoryStore` | In the core module. The reference implementation of the contract — the conditional write really is conditional, `guarded` really excludes. What the engine's own specs run against |
 | `RedisWorkflowStore` | In `stx-workflow-db`. Key layout, Lua write, lease, TTL retention |
 | `JpaWorkflowStore` | In `stx-workflow-db`. One row per instance, over `stx-jpa`. Postgres, DB2 or MySQL — the URI's scheme picks |
+| `MongoWorkflowStore` | In `stx-workflow-db`. One document per instance, with a TTL index doing the retention |
 
-Both persistent stores are described in [the module's README](../libs/stx-workflow/stx-workflow-db/README.md),
-and both run the same shared contract spec, so the rules above are checked rather than intended.
+All three persistent stores are described in [the module's README](../libs/stx-workflow/stx-workflow-db/README.md),
+and all three run the same shared contract spec, so the rules above are checked rather than intended.
 
 ```kotlin
 class RedisWorkflowStore(
@@ -596,11 +597,20 @@ class JpaWorkflowStore(
     lease: Duration = 30.seconds,
     json: Json = jpa.config.json,
 )
+
+suspend fun MongoWorkflowStore(
+    database: MongoDatabase,
+    collection: String = WORKFLOW_INSTANCES,
+    lease: Duration = 30.seconds,
+    retention: Duration? = 7.days,
+    json: Json = lenientJson,
+): MongoWorkflowStore
 ```
 
 `JpaWorkflowStore` needs `WorkflowInstanceRow` among the entities the application connects with, and
 it has no `retention`: a table has no TTL, so retention is `purge(before)` on a schedule the
-application owns.
+application owns. `MongoWorkflowStore` suspends because it creates its two indexes before handing
+the store back.
 
 ## In a Ktor application
 
