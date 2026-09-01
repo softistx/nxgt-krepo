@@ -5,7 +5,10 @@ import com.strange.telemetry.export.ConsoleExporter
 import com.strange.telemetry.export.Exporter
 import com.strange.telemetry.export.JsonLinesExporter
 import com.strange.telemetry.otlp.OtlpExporter
+import com.strange.telemetry.slf4j.Slf4jExporter
 import com.strange.telemetry.trace.Sampler
+import org.slf4j.ILoggerFactory
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
@@ -35,14 +38,18 @@ import kotlin.time.toKotlinDuration
  * follows. Putting this library on a classpath must not change where an application's logs go.
  *
  * **Every `Exporter` bean is added**, alongside whatever the properties asked for. An application
- * with a destination of its own declares a bean and says nothing else; `stx.telemetry.otlp` is there
- * because the common case should not need a `@Bean` method.
+ * with a destination of its own declares a bean and says nothing else; `stx.telemetry.otlp` and
+ * `stx.telemetry.slf4j` are there because the two common cases should not need a `@Bean` method.
  *
  * The root is [Telemetry.install]ed, which is what makes `logger<T>()` and `span { }` work in a
  * service class with nothing injected — and it is closed by the context, which drains the queue.
  */
 @AutoConfiguration
-@EnableConfigurationProperties(TelemetryProperties::class, TelemetryOtlpProperties::class)
+@EnableConfigurationProperties(
+    TelemetryProperties::class,
+    TelemetryOtlpProperties::class,
+    TelemetrySlf4jProperties::class,
+)
 @ConditionalOnClass(Telemetry::class)
 @ConditionalOnProperty(prefix = "stx.telemetry", name = ["enabled"], havingValue = "true")
 class TelemetryAutoConfiguration {
@@ -106,6 +113,36 @@ class TelemetryAutoConfiguration {
                 attempts = properties.attempts,
                 backoff = properties.backoff.toKotlinDuration(),
                 gzip = properties.gzip,
+            )
+    }
+
+    /**
+     * The bridge pointed outward: this application's signals, written to its own SLF4J.
+     *
+     * The counterpart to `stx-telemetry-slf4j`'s `SLF4JServiceProvider`, which needs no key because a
+     * provider is bound by being on the classpath. **The two directions together are a loop**, and
+     * `Slf4jExporter`'s own constructor refuses it — so an application that turns this on with the
+     * provider also bound fails to start, with a message naming both ways out, rather than filling a
+     * queue with its own output at some later hour.
+     *
+     * An `ILoggerFactory` bean, if there is one, is where the lines go. That is how an application
+     * with two SLF4J contexts — a plugin host, an embedded server — says which one; without a bean
+     * it is the bound factory, which is the whole point of this exporter.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(Slf4jExporter::class)
+    @ConditionalOnProperty(prefix = "stx.telemetry.slf4j", name = ["enabled"], havingValue = "true")
+    class Slf4j {
+        @Bean
+        @ConditionalOnMissingBean(Slf4jExporter::class)
+        fun stxSlf4jExporter(
+            properties: TelemetrySlf4jProperties,
+            factory: ObjectProvider<ILoggerFactory>,
+        ): Slf4jExporter =
+            Slf4jExporter(
+                spans = properties.spans,
+                spanSeverity = properties.spanSeverity,
+                factory = factory.getIfAvailable { LoggerFactory.getILoggerFactory() },
             )
     }
 
