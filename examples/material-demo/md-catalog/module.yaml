@@ -10,8 +10,9 @@ dependencies:
   - //libs/stx-material: exported
   # The catalogue is itself a Compose UI, and it reaches for Material 3 directly wherever
   # stx-material has not reached yet — text fields and sliders arrive in phase 2, and the
-  # control panel needs them now.
-  - $compose.material3: exported
+  # control panel needs them now. From the catalog rather than `$compose.material3`, which the
+  # toolchain cannot resolve for Compose 1.12.0 — see the alias's note in libs.versions.toml.
+  - $libs.compose.multiplatform.material3: exported
   - $compose.foundation: exported
   - $compose.ui: exported
   - $compose.animation
