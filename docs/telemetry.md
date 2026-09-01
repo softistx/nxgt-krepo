@@ -251,6 +251,14 @@ the attributes in the MDC for the length of each call. The same module's `Teleme
 is the bridge pointed the other way — third-party SLF4J logs into this pipeline — and the two cannot
 both be used, which `Slf4jExporter` checks rather than looping.
 
+`stx-telemetry-mongo` adds `MongoExporter(database, collection, retention)` and
+`MongoExporter.connecting(uri, database, collection, retention)`, which writes one document per
+signal — the JSON-lines fields, plus the resource, with the instants as BSON dates so Mongo can index
+and expire them. Retention is a **TTL index**, so the deleting is Mongo's background task and not a
+job in this process; changing it rebuilds the index rather than leaving the old window in place. The
+`connecting` form opens a client of its own and closes it, which is what `stx.telemetry.mongo` uses:
+telemetry on its own pool means a burst of it cannot exhaust the one business requests queue for.
+
 `stx-telemetry-otlp` adds `OtlpExporter(endpoint, headers, timeout, attempts, backoff, gzip, onPartialSuccess, client)`,
 which posts OTLP/HTTP+JSON to `<endpoint>/v1/logs` and `<endpoint>/v1/traces`. Its README has the
 retry table and what a `partialSuccess` means; a client passed in is used and not closed.
