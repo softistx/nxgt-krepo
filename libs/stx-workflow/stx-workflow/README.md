@@ -36,6 +36,7 @@ val instance = engine.start(checkout, Checkout(items, card))
 ```
 com.strange.workflow          Workflow, WorkflowEngine, WorkflowInstance, WorkflowStatus, the exceptions
 com.strange.workflow.dsl      the verbs — step, branch, parallel, await, sleep, retry, timeout, compensate
+com.strange.workflow.annotation  the same declaration as annotations on a class, read by workflowOf
 com.strange.workflow.engine   the loop: one attempt, the walk, the unwind
 com.strange.workflow.store    WorkflowStore, the persisted record and journal, InMemoryStore
 ```
@@ -167,9 +168,24 @@ Two consequences worth stating:
   released when the approval never comes. An expiry that quietly took another path would be a
   workflow whose outcome depends on a timer nobody reads.
 
+## Two front ends, one workflow
+
+`workflowOf<C>(CheckoutWorkflow(stock, payments))` reads a class of annotated functions and returns
+the same `Workflow<C>` that `workflow<C>("checkout") { }` returns — built by the same builder,
+through the same public verbs, with the same checks.
+
+That is the whole design of the annotation front end, and the reason it needed no hook to be added
+for it: the DSL verbs are thin extensions over one `NodeSink.add`, so a reflective reader is just
+another caller. Nothing downstream can tell the two apart, which means an application can use both,
+and a workflow can move from one to the other without touching a stored instance.
+
+The annotations cover the linear vocabulary — steps, compensations, retry, timeout, waits. They do
+**not** cover branches or fan-out, and that is deliberate rather than unfinished: a condition is a
+predicate and a merge is a function of several typed results, and neither survives being written as
+a string. A workflow that needs either is written with `workflow { }`.
+
 ## What this slice does not do
 
-- **No annotations.** They will produce a `Workflow<C>` through this same builder — the DSL verbs are
-  already thin extensions over one `add`, so a reflective front end needs no new hook.
-- **No Ktor or Spring integration**, and no store but Redis and memory. All four are sibling modules
-  when they come, and none of them changes anything here.
+**No Ktor or Spring integration**, and no store but Redis and memory. All of them are sibling
+modules when they come, and none of them changes anything here — which is the same claim
+`stx-workflow-redis` already makes good on, and the reason `WorkflowStore` has five methods.
