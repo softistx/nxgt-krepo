@@ -14,6 +14,7 @@ the library is shaped this way; this file is what you may write.
 - [The lock](#the-lock)
 - [What a killed process leaves](#what-a-killed-process-leaves)
 - [In a Ktor application](#in-a-ktor-application)
+- [In a Spring Boot application](#in-a-spring-boot-application)
 - [A migration must be safe to attempt twice](#a-migration-must-be-safe-to-attempt-twice)
 - [Deliberately absent](#deliberately-absent)
 
@@ -280,6 +281,38 @@ stood at startup — a snapshot, because once the gate has passed only another p
 position: *"a list breaks the build when a class moves; a scan finds nothing and starts perfectly, and
 the first query is where you learn about it."* For migrations, that second failure is what the library
 exists to prevent.
+
+## In a Spring Boot application
+
+```yaml
+stx:
+  jpa: { enabled: true, uri: postgresql://localhost:5432/orders, username: …, password: … }
+  migrations: { enabled: true, store: sql }
+```
+
+```kotlin
+@Component
+class V1Orders : SqlMigration {
+    override val version = 1L
+    override suspend fun migrate(context: SqlMigrationSession) {
+        context.execute("create table if not exists orders (id bigint primary key)")
+    }
+}
+```
+
+**A migration is a bean, collected by type.** By type rather than by annotation, which is a correction
+the runner this replaces already carried: the version before it filtered on an annotation and silently
+ignored anything without it — a migration that does not happen and does not say so.
+
+The gate is an `InitializingBean`, and that is the design rather than a detail. `SuspendingListenerTest`
+pins that Spring does not wait for a suspending listener, so the `@EventListener(ApplicationReadyEvent)`
+this replaces let the port open while migrations were still running. A throw out of
+`afterPropertiesSet` aborts the refresh: no web server, no `ApplicationReadyEvent`, no requests.
+
+`stx.migrations.store` names one ledger and nothing is inferred; an application migrating both stores
+names one and declares a `MigrationRunner` bean for the other, because the gate runs every runner it
+finds. Naming a store whose connection bean does not exist **fails at startup**. Every key is in
+[`docs/spring-configuration.md`](spring-configuration.md).
 
 ## A migration must be safe to attempt twice
 
