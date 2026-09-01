@@ -39,8 +39,14 @@ something changes it — which is exactly what a sorted set holds and what a str
 - `ZRANGEBYSCORE <ns>:wf:runnable 0 <now>` answers the worker's whole question in one round trip.
 - Re-scoring an id updates it **in place**. A stream would have grown one entry per checkpoint, and
   left a pending list to reconcile against the record that already knows the answer.
-- It is the shape the next phase needs anyway: a timer and a wake-up from an approval are both
-  "due at T", which is a score.
+- A `sleep`'s wake-up and an `await`'s deadline are both "due at T", which is a score — the same
+  set answers all three questions with no second index.
+
+**An instance waiting on a signal with no deadline is not in the set at all.** It is alive and
+unfinished, and still nothing polls it: no amount of time will move it, so offering it to a worker
+would be offering work that cannot be done — a loop whose cost grows with how patient the business
+process is. `WorkflowRecord.isParked` is that rule, and the `SAVE` script takes such a record out of
+the index the same way it takes a finished one out, minus the retention TTL.
 
 **The score doubles as a visibility window.** A running instance is scored one lease into the
 future, so a worker leaves alone one somebody is plainly working on; when that somebody dies, the

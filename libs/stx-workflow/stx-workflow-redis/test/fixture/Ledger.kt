@@ -8,6 +8,13 @@ data class Ledger(
     val reservationId: String? = null,
     val chargeId: String? = null,
     val note: String = "",
+    val approvedBy: String? = null,
+)
+
+/** The payload of these specs' approval signal. */
+@Serializable
+data class Approval(
+    val by: String,
 )
 
 /** What actually ran, in order. */

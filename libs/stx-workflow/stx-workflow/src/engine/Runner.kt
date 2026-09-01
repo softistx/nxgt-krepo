@@ -1,7 +1,9 @@
 package com.strange.workflow.engine
 
 import com.strange.workflow.WorkflowStatus
+import com.strange.workflow.dsl.Await
 import com.strange.workflow.dsl.BranchNode
+import com.strange.workflow.dsl.Sleep
 import com.strange.workflow.dsl.Step
 import com.strange.workflow.dsl.WorkflowNode
 import com.strange.workflow.dsl.qualify
@@ -28,6 +30,10 @@ internal suspend fun <C> Run<C>.advance() {
     }
     try {
         runNodes(prefix = "", nodes = workflow.nodes)
+    } catch (_: Paused) {
+        // Stopped on purpose, and already checkpointed by whichever node stopped. Nothing to write
+        // and nothing to report: the instance is exactly as correct as a completed one.
+        return
     } catch (failure: NodeFailed) {
         journal(
             node = failure.node,
@@ -37,7 +43,15 @@ internal suspend fun <C> Run<C>.advance() {
                 com.strange.workflow.WorkflowError
                     .of(failure.node, failure.cause, failure.attempts),
         )
-        checkpoint { it.copy(status = WorkflowStatus.Compensating, error = it.journal.last().error) }
+        checkpoint {
+            it.copy(
+                status = WorkflowStatus.Compensating,
+                error = it.journal.last().error,
+                awaiting = null,
+                signal = null,
+                wakeAt = null,
+            )
+        }
         unwind()
         return
     }
@@ -53,6 +67,8 @@ internal suspend fun <C> Run<C>.runNodes(
             is Step -> runStep(qualify(prefix, node.name), node)
             is BranchNode -> runBranch(qualify(prefix, node.name), node)
             is com.strange.workflow.dsl.Parallel -> runParallel(qualify(prefix, node.name), node)
+            is Await<C, *> -> runAwait(qualify(prefix, node.name), node)
+            is Sleep -> runSleep(qualify(prefix, node.name), node)
         }
     }
 }

@@ -1,8 +1,10 @@
 package com.strange.workflow
 
+import com.strange.workflow.dsl.Await
 import com.strange.workflow.dsl.BranchNode
 import com.strange.workflow.dsl.Leg
 import com.strange.workflow.dsl.Parallel
+import com.strange.workflow.dsl.Sleep
 import com.strange.workflow.dsl.Step
 import com.strange.workflow.dsl.WorkflowNode
 import com.strange.workflow.dsl.qualify
@@ -37,6 +39,12 @@ internal fun <C> index(
             is Parallel -> {
                 @Suppress("UNCHECKED_CAST")
                 node.legs.forEach { leg -> indexLeg(workflow, path, leg as Leg<C, Any?>, seen, undo) }
+            }
+
+            // An await and a sleep are named — the journal is keyed on them, and a resume matches
+            // on them — but neither has an effect of its own, so neither has anything to undo.
+            is Await<C, *>, is Sleep -> {
+                Unit
             }
 
             is BranchNode -> {

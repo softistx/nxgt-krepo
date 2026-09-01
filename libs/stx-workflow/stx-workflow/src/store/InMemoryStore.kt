@@ -56,6 +56,7 @@ class InMemoryStore : WorkflowStore {
             .values
             .asSequence()
             .filter { !it.status.isTerminal }
+            .filter { !it.isParked }
             .filter { record -> record.wakeAt?.let { it <= now } != false }
             .sortedBy { it.updatedAt }
             .take(limit)
