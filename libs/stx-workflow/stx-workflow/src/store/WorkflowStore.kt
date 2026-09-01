@@ -9,8 +9,8 @@ import kotlin.time.Instant
  * it is the whole of what a new backing store has to answer for — a Mongo or a Postgres
  * implementation is a document or a row per instance, a conditional write on [WorkflowRecord.version],
  * and an index on the due time. Nothing here mentions Redis, and the core module does not depend on
- * it: `stx-workflow-redis` is a module of its own so that the day a second store arrives, the first
- * one does not have to move.
+ * it: the implementations live in `stx-workflow-db`, a module of its own, so that the day a fourth
+ * store arrives nothing here moves.
  *
  * **Every implementation must make [save] conditional.** Returning true when the stored version was
  * not [expectedVersion] turns a lost race into a lost journal, which is the one failure this design

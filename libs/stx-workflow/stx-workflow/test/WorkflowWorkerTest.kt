@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * It knows nothing about Redis — it asks the engine what is due and resumes it, which is two
  * methods on `WorkflowStore` — so the specs that need a real server to say something (a process
- * killed mid-step, two engines on one instance) live in `stx-workflow-redis`, and what belongs
+ * killed mid-step, two engines on one instance) live in `stx-workflow-db`, and what belongs
  * here is that the loop itself works and that closing it stops it.
  */
 class WorkflowWorkerTest :

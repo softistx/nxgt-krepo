@@ -1,20 +1,44 @@
-# stx-workflow-redis
+# stx-workflow-db
 
-The `WorkflowStore` of [`stx-workflow`](../stx-workflow/README.md) on Redis, and the worker that
-picks up instances nobody is advancing.
+Where [`stx-workflow`](../stx-workflow/README.md) instances live. One package per backing store,
+one module for all of them.
 
 ```kotlin
-val redis = Redis.connect(RedisConfig(uri, namespace = "billing"))
 val engine = WorkflowEngine(RedisWorkflowStore(redis)) { register(checkout) }
-
-// optional, and nothing starts it for you
-WorkflowWorker(engine).use { it.start(applicationScope) }
 ```
 
-It takes a connection it did not open and does not close — whoever created the `Redis` closes it,
-which is what lets one connection serve a cache, a lock and this at the same time.
+**Every store here takes a connection it did not open and does not close.** Whoever created the
+`Redis`, the `Jpa` or the `MongoDatabase` closes it, which is what lets one connection serve a
+cache, a lock and this at the same time — and is why none of these classes is `AutoCloseable`.
 
-## Keys
+## One module, and not three
+
+The same bargain `stx-ktor` makes for its seven integrations: **every backend is `compile-only`**,
+including the ones this module's API returns. `RedisWorkflowStore(redis)` names a `Redis` in its
+signature and Lettuce still stays off a consumer's runtime classpath.
+
+That works here for a reason worth stating rather than assuming. A store cannot be *constructed*
+without the library that provides its connection — there is no `uri` parameter anywhere in this
+module — so an application that uses one already depends on it, and an application that uses only
+Redis never loads a class from Hibernate or the Mongo driver. Nothing is missing at runtime and
+nobody carries three drivers to use one.
+
+What one module buys, beyond the arithmetic: the parts that are the *same* across stores are written
+once. The lease and its renewal, the rule that a parked instance leaves the due-time index, the
+encode/decode of a `WorkflowRecord` the store never looks inside — three sibling modules would have
+had three copies of each, and the copies would have drifted the first time one of them was fixed.
+
+## Which one
+
+| Store | Wants | Notes |
+| --- | --- | --- |
+| `RedisWorkflowStore` | a `Redis` from `stx-redis` | The fastest, and the only one with a real TTL — a finished instance expires on its own |
+| `JpaWorkflowStore` | a `Jpa` from `stx-jpa` | Postgres, DB2, MySQL — whatever the URI's scheme picks. Instances land in the same transaction log as the application's own rows |
+| `MongoWorkflowStore` | a `MongoDatabase` from `stx-mongo` | One document per instance, and a TTL index for retention |
+
+## Redis
+
+### Keys
 
 Everything goes through `redis.key(…)`, so a caller's `RedisConfig.namespace` prefixes all of it.
 
@@ -31,7 +55,7 @@ cannot build from an id alone is a key it cannot read.
 in Lua, and parsing the whole record to read one number would be both slower and a second copy of a
 value that has to stay true.
 
-## A sorted set, not a stream
+### A sorted set, not a stream
 
 An instance waiting to be advanced is not an event. It is a **state**, and it stays true until
 something changes it — which is exactly what a sorted set holds and what a stream does not.
@@ -53,7 +77,7 @@ future, so a worker leaves alone one somebody is plainly working on; when that s
 score passes and it is offered again. That is the whole recovery mechanism — there is no separate
 claim, no heartbeat, and nothing to reconcile.
 
-## The write is one Lua script
+### The write is one Lua script
 
 A `HSET` that landed without its `ZADD` would leave an instance nothing polls for — invisible until
 somebody resumed it by hand — and a `ZADD` without its `HSET` would send a worker after a record that
@@ -64,7 +88,7 @@ connection in one round trip.
 The same script does the version check, so "write if nobody else has" is one operation and not a
 read followed by a hopeful write.
 
-## The lock, and why it is held across the work
+### The lock, and why it is held across the work
 
 `guarded` is `RedisLock(redis, "wf:$id", lease).withLockOrNull { … }`, with `wait = ZERO` and the
 watchdog on.
@@ -86,7 +110,7 @@ recovery is not a coffee break.
 two runners of one step. That is why every write is also conditional on the record's version, and
 why the core README's rule stands: step bodies must be idempotent.
 
-## Retention
+### Retention
 
 A finished instance leaves the index and takes a TTL — `retention`, seven days by default, `null` to
 keep it forever. A completed run is the audit trail somebody will want afterwards, and an engine
@@ -99,8 +123,10 @@ what has to be fixed.
 ## The worker is not here
 
 `WorkflowWorker` lives in the core module. It asks the engine what is due and resumes it, which is
-two methods on `WorkflowStore` and no Redis at all — so putting it beside the one store that exists
-today would have meant moving it the day a second one arrived.
+two methods on `WorkflowStore` and nothing about any particular backend — so putting it beside the
+one store that existed at the time would have meant moving it the day the second one arrived. It
+did, and it was already gone.
 
-What *is* here is the half that makes it work: a sorted set that answers "what is due" in one round
-trip, and a lock that lets several workers pull the same id without a claim protocol between them.
+What *is* here is the half that makes it work, once per store: an index that answers "what is due"
+in one round trip, and a lease that lets several workers pull the same id without a claim protocol
+between them.

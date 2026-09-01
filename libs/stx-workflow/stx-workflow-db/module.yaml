@@ -1,0 +1,56 @@
+product: jvm/lib
+description: "Where stx-workflow instances live: the WorkflowStore on Redis, on SQL through stx-jpa, and on MongoDB — one package each"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # WorkflowStore, WorkflowRecord and WorkflowEngine are all over this module's public API.
+  - //libs/stx-workflow/stx-workflow: exported
+
+  # One entry per store, and every one of them compile-only — the same rule and the same reason as
+  # stx-ktor. These types are in this module's API (`RedisWorkflowStore(redis)` takes a `Redis`) and
+  # they still do not belong on a consumer's runtime classpath: a store cannot be *constructed*
+  # without the library that provides its connection, so an application using one already depends on
+  # it, and an application using only Redis never loads a class from Hibernate or the Mongo driver.
+  #
+  # That is what keeps one module from handing every consumer three drivers. Verified with
+  # `./kotlin show dependencies -m stx-workflow-db`: a compile-only entry is in the COMPILE scope
+  # and absent from RUNTIME.
+  - //libs/stx-redis: compile-only
+  - //libs/stx-jpa: compile-only
+  - //libs/stx-mongo: compile-only
+
+test-dependencies:
+  # the specs stand each store up for real, so here the libraries are on the runtime classpath too
+  - //libs/stx-redis
+  - //libs/stx-jpa
+  - //libs/stx-mongo
+  # and the servers they talk to, started for the run when the workspace's own are not named
+  - //libs/stx-testing
+  # the JPA harness creates and drops each spec's schema with the Postgres client directly;
+  # stx-jpa keeps its three drivers runtime-only, so nothing inherits a compile classpath for one
+  - $libs.vertx.pg.client
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # Lettuce, Hibernate and Vert.x all log through SLF4J; a no-op provider keeps the output readable
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    serialization: json
+    # The Redis package writes the runnable index through redis.commands directly.
+    optIns: [ io.lettuce.core.ExperimentalLettuceCoroutinesApi ]
+    # For the one @Entity in `jpa/`: Hibernate instantiates it through a constructor nobody writes,
+    # and subclasses it for lazy proxies, which a final Kotlin class refuses. Module settings cover
+    # every package here, and nothing outside `jpa/` carries a JPA annotation for them to act on.
+    noArg:
+      enabled: true
+      presets: [ jpa ]
+    allOpen:
+      enabled: true
+      annotations:
+        - jakarta.persistence.Entity
+        - jakarta.persistence.MappedSuperclass
+        - jakarta.persistence.Embeddable

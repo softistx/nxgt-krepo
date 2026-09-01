@@ -46,7 +46,7 @@ data class WorkflowWorkerProperties(
 )
 
 /**
- * The store built when `stx-workflow-redis` is on the classpath and a `Redis` bean exists.
+ * The store built when `stx-workflow-db` is on the classpath and a `Redis` bean exists.
  *
  * Ignored entirely when the application declares its own `WorkflowStore` — which is what a Mongo or
  * a Postgres store will be until one ships.

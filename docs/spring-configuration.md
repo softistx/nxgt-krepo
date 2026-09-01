@@ -310,7 +310,7 @@ and an engine that cannot look that name up cannot resume it after a restart —
 registered by existing as a bean, rather than by also being remembered in a list somewhere.
 
 There is no `uri` and no `store` key. A store is a connection somebody already opened, and with
-`stx-workflow-redis` on the classpath and `stx.redis` on, one is built over *that* connection rather
+`stx-workflow-db` on the classpath and `stx.redis` on, one is built over *that* connection rather
 than a second pool for the same server. Anything else — your own store, a second Redis, a Mongo
 store when there is one — is a `WorkflowStore` bean, and `@ConditionalOnMissingBean` steps aside.
 
