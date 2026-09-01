@@ -24,7 +24,8 @@ Redis never loads a class from Hibernate or the Mongo driver. Nothing is missing
 nobody carries three drivers to use one.
 
 What one module buys, beyond the arithmetic: the parts that are the *same* across stores are written
-once, and checked once. `Lease` is `guarded` for the two stores with no lock to borrow. `StoreContract`
+once, and checked once. `Lease` — in `stx-common`, since `stx-migrations-db` runs the same policy —
+is `guarded` for the two stores with no lock to borrow. `StoreContract`
 is the eleven scenarios all three answer — and it caught a real one on its first run, where
 `RedisWorkflowStore.create` put a parked instance in the due-time index that `save` kept out of it.
 Three sibling modules would have had three copies of each and would have drifted the first time one
