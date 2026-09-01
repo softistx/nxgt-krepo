@@ -314,6 +314,15 @@ names one and declares a `MigrationRunner` bean for the other, because the gate 
 finds. Naming a store whose connection bean does not exist **fails at startup**. Every key is in
 [`docs/spring-configuration.md`](spring-configuration.md).
 
+**`store: mongo` on Spring Data needs no `stx.mongo`.** The ledger wants the coroutine driver's
+`MongoDatabase`, and `stx-spring-boot` bridges one from the `ReactiveMongoDatabaseFactory` the
+application already has. Turning on `stx.mongo` to produce one instead opens a second pool against the
+same server — and under test a pool that never saw the harness's per-run database suffix, so the
+migrations would run against a database nobody chose and every spec would still pass.
+
+`examples/spring-orders` is the whole path run end to end: two `@Component` migrations over Spring
+Data's own pool, the ledger asserted in `OrdersApplicationTest`, and no spec polling for anything.
+
 ## A migration must be safe to attempt twice
 
 Not because the runner will — an `APPLIED` record is skipped — but because the row above says an
