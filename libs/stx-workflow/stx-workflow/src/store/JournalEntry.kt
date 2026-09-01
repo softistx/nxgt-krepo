@@ -11,6 +11,16 @@ enum class NodeOutcome {
     Succeeded,
     Failed,
 
+    /**
+     * Reached, and stopped there — on a signal or on a clock.
+     *
+     * It is what tells a resume "this instance is parked *here*" without a second field beside the
+     * journal to disagree with it. The entry is superseded by a `Succeeded` one when the wait ends,
+     * because [com.strange.workflow.store.WorkflowRecord.latest] reads the last entry for a node and
+     * not the first.
+     */
+    Paused,
+
     /** Succeeded, and has since been undone. */
     Compensated,
 

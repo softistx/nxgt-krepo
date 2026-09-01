@@ -56,7 +56,14 @@ internal class Run<C>(
         record = next.copy(version = expected + 1)
     }
 
-    /** Appends one line to the journal. */
+    /**
+     * Appends one line to the journal.
+     *
+     * [then] is for the writes that have to say two things at once — a node parked *and* the
+     * instance now `Awaiting` on a named signal. Splitting those into two checkpoints would leave a
+     * window in which a crash produced a record whose status and journal disagree, and every reader
+     * of the journal would then need a rule for which one to believe.
+     */
     suspend fun journal(
         node: String,
         outcome: NodeOutcome,
@@ -64,11 +71,14 @@ internal class Run<C>(
         value: JsonElement? = null,
         error: WorkflowError? = null,
         context: JsonElement? = null,
+        then: (WorkflowRecord) -> WorkflowRecord = { it },
     ) {
         checkpoint { record ->
-            record.copy(
-                context = context ?: record.context,
-                journal = record.journal + JournalEntry(node, outcome, attempts, value, error, Clock.System.now()),
+            then(
+                record.copy(
+                    context = context ?: record.context,
+                    journal = record.journal + JournalEntry(node, outcome, attempts, value, error, Clock.System.now()),
+                ),
             )
         }
     }

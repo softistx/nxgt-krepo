@@ -35,7 +35,7 @@ val instance = engine.start(checkout, Checkout(items, card))
 
 ```
 com.strange.workflow          Workflow, WorkflowEngine, WorkflowInstance, WorkflowStatus, the exceptions
-com.strange.workflow.dsl      the verbs — step, branch, parallel, retry, timeout, compensate
+com.strange.workflow.dsl      the verbs — step, branch, parallel, await, sleep, retry, timeout, compensate
 com.strange.workflow.engine   the loop: one attempt, the walk, the unwind
 com.strange.workflow.store    WorkflowStore, the persisted record and journal, InMemoryStore
 ```
@@ -145,13 +145,30 @@ somebody, and it is the only status exempt from the store's retention.
 Anybody who wants instances picked up automatically after a crash wants `WorkflowWorker` from
 `stx-workflow-redis`; `resume` in a `while (true)` loop is that class, written again and worse.
 
+## A wait is a record, not a coroutine
+
+`await(APPROVAL)` and `sleep("cool-off", 7.days)` both stop the instance by **writing it down** and
+letting go: status `Awaiting` or `Sleeping`, the signal's name or the wake-up time in the record, and
+the process free to exit.
+
+The alternative is what a suspending function does naturally — park a coroutine and hold it — and it
+is wrong here for a reason that has nothing to do with efficiency. A refund waiting four days for an
+operator to click approve is not a four-day computation. Written as a `delay` it becomes a four-day
+uptime requirement, and Thursday's deploy silently loses every instance mid-wait. Written down, the
+process that parked it and the process that finishes it need not overlap at all — which is exactly
+what `WorkflowPauseTest` demonstrates, with two engines and nothing between them but Redis.
+
+Two consequences worth stating:
+
+- **A wait with no deadline leaves the due-time index.** It is alive and unfinished and no worker
+  polls it, because nothing a worker can do would move it. Polling it would be a loop with itself.
+- **A wait with a deadline that passes is a failure.** The workflow unwinds, exactly as it would for
+  a step that threw. That is what the deadline is for: the hold placed before the approval must be
+  released when the approval never comes. An expiry that quietly took another path would be a
+  workflow whose outcome depends on a timer nobody reads.
+
 ## What this slice does not do
 
-- **No signals, so no human approval yet.** `WorkflowStatus.Awaiting` and `Sleeping` and the record's
-  `awaiting`/`wakeAt` fields exist and the engine's loop and the store's index are already shaped
-  around them, so the phase that adds `await(Approval)` adds a node type and a `signal` call rather
-  than a migration.
-- **No timers.** Same fields, same reason. A retry's backoff is held in the process today.
 - **No annotations.** They will produce a `Workflow<C>` through this same builder — the DSL verbs are
   already thin extensions over one `add`, so a reflective front end needs no new hook.
 - **No Ktor or Spring integration**, and no store but Redis and memory. All four are sibling modules

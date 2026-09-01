@@ -15,6 +15,15 @@ data class Ledger(
     val booking: String? = null,
     val express: Boolean = false,
     val note: String = "",
+    val approvedBy: String? = null,
+    val waits: Int = 0,
+)
+
+/** The payload of the specs' approval signal — a signal carries a type, not a bare name. */
+@Serializable
+data class Approval(
+    val by: String,
+    val note: String = "",
 )
 
 /** What actually ran, in order. Lives outside the context because it is an observation, not state. */

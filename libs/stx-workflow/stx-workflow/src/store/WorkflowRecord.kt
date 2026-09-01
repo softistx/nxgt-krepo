@@ -16,9 +16,9 @@ import kotlin.time.Instant
  * implementation has to thread a type parameter through. The engine encodes on the way in and
  * decodes on the way out, where the `KSerializer<C>` actually is.
  *
- * [awaiting] and [wakeAt] have no writer in phase one. They are here for the same reason
- * [WorkflowStatus.Awaiting] is: a record already written to Redis should not need rewriting when a
- * human-approval step arrives.
+ * [awaiting], [signal] and [wakeAt] are what let an instance stop for something that is not a
+ * failure — a person approving a refund, a cool-off period — and outlive every process that touches
+ * it while it waits.
  */
 @Serializable
 data class WorkflowRecord(
@@ -28,9 +28,24 @@ data class WorkflowRecord(
     val status: WorkflowStatus,
     val context: JsonElement,
     val journal: List<JournalEntry> = emptyList(),
-    /** The signal this instance is stopped on. Phase two. */
+    /** The name of the signal this instance is stopped on, when [status] is [WorkflowStatus.Awaiting]. */
     val awaiting: String? = null,
-    /** When this instance should be picked up again. Phase two. */
+    /**
+     * A delivered payload the awaiting node has not consumed yet.
+     *
+     * One slot, not a queue, because an instance waits on at most one signal at a time and a
+     * delivery is only accepted while it is waiting on exactly that one. There is nothing for a
+     * stale payload to be mistaken for: it is written and consumed between two checkpoints of the
+     * same node, and cleared in the write that journals the wait as finished.
+     */
+    val signal: JsonElement? = null,
+    /**
+     * When this instance is due to be looked at again — the end of a [WorkflowStatus.Sleeping]
+     * pause, or the deadline on an [WorkflowStatus.Awaiting] one.
+     *
+     * Null while running means "as soon as nobody is holding it", which is a store's business.
+     * Null while awaiting means **never**: see [isParked].
+     */
     val wakeAt: Instant? = null,
     val error: WorkflowError? = null,
     /**
@@ -69,4 +84,16 @@ data class WorkflowRecord(
 
     /** The entry for [node] if it has run and has not since been undone, else null. */
     fun succeeded(node: String): JournalEntry? = latest(node)?.takeIf { it.outcome == NodeOutcome.Succeeded }
+
+    /** True when this instance stopped at [node] and is still stopped there. */
+    fun paused(node: String): Boolean = latest(node)?.outcome == NodeOutcome.Paused
+
+    /**
+     * True when no amount of waiting will move this instance — only a signal or a cancel will.
+     *
+     * A store must keep these **out of its due-time index**. A worker that polled them would spend
+     * its life offering the same instance to itself, finding the same signal still absent, and
+     * parking it again — a busy loop whose cost grows with how patient the business process is.
+     */
+    val isParked: Boolean get() = status == WorkflowStatus.Awaiting && wakeAt == null
 }

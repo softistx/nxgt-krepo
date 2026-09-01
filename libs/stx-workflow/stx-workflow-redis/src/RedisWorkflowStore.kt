@@ -81,7 +81,10 @@ class RedisWorkflowStore(
         record: WorkflowRecord,
         expectedVersion: Long,
     ): Boolean {
-        val due = if (record.status.isTerminal) "" else score(record).toString()
+        // Out of the index, and for two different reasons. A terminal instance is done and takes a
+        // retention TTL with it; a parked one is very much alive but nothing except a signal will
+        // move it, so polling for it would be a worker in a loop with itself. Neither gets a score.
+        val due = if (record.status.isTerminal || record.isParked) "" else score(record).toString()
         val ttl = if (record.status.isTerminal) terminalTtl(record) else ""
         return redis.commands.eval<Long>(
             StoreScripts.SAVE,
@@ -129,8 +132,8 @@ class RedisWorkflowStore(
      *
      * A running one is scored a lease into the future, so it is not offered while somebody is
      * plainly working on it; if that somebody dies, the score passes and it is offered again. One
-     * waiting on a time is scored at that time — which is the phase-two case the index is already
-     * shaped for.
+     * waiting on a time — a `sleep`, or an `await` with a deadline — is scored at that time, which
+     * is the same question asked of the same sorted set and is why it is a sorted set.
      */
     private fun score(record: WorkflowRecord): Long = (record.wakeAt ?: (record.updatedAt + lease)).toEpochMilliseconds()
 

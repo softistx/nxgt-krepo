@@ -44,6 +44,32 @@ class WorkflowFailedException(
     )
 
 /**
+ * A signal was delivered to an instance that is not waiting for it.
+ *
+ * It is an error rather than a silent no-op because the two ways to get here are both worth
+ * hearing about: the instance already moved on — a second approval click, a redelivered message —
+ * or the caller has the wrong id. Swallowing it would turn the first into an approval that appears
+ * to have been recorded and was not.
+ */
+class WorkflowNotAwaitingException(
+    val id: String,
+    val signal: String,
+    val status: WorkflowStatus,
+) : WorkflowException("workflow instance '$id' is $status, not awaiting '$signal'")
+
+/**
+ * A wait reached its deadline with no signal.
+ *
+ * It surfaces as the failure of the `await` node, so the workflow unwinds through everything before
+ * it — which is the point: the deadline exists so that an approval nobody gives does not leave the
+ * effects before it stranded.
+ */
+class AwaitTimeoutException(
+    val signal: String,
+    val after: kotlin.time.Duration,
+) : WorkflowException("no '$signal' signal arrived within $after")
+
+/**
  * Thrown **by a step** to fail without another attempt.
  *
  * A retry policy decides whether a *class* of failure is worth trying again; this is for when only
