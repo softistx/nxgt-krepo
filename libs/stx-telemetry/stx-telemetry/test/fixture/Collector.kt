@@ -3,6 +3,7 @@ package com.strange.telemetry.fixture
 import com.strange.telemetry.Telemetry
 import com.strange.telemetry.export.Exporter
 import com.strange.telemetry.model.LogRecord
+import com.strange.telemetry.model.Resource
 import com.strange.telemetry.model.Severity
 import com.strange.telemetry.model.Signal
 import com.strange.telemetry.model.SpanRecord
@@ -21,7 +22,15 @@ class Collector(
     var closed = false
         private set
 
-    override suspend fun export(batch: List<Signal>) {
+    /** The resource the last batch was shipped for. */
+    var seen: Resource? = null
+        private set
+
+    override suspend fun export(
+        resource: Resource,
+        batch: List<Signal>,
+    ) {
+        seen = resource
         if (slow > Duration.ZERO) delay(slow)
         signals += batch
     }

@@ -1,6 +1,7 @@
 package com.strange.telemetry.export
 
 import com.strange.telemetry.model.LogRecord
+import com.strange.telemetry.model.Resource
 import com.strange.telemetry.model.Signal
 import com.strange.telemetry.model.SpanRecord
 import com.strange.telemetry.model.SpanStatus
@@ -30,7 +31,10 @@ class ConsoleExporter(
     /** Whether a failure's stack trace is printed under its line. Off makes a terminal readable. */
     private val stackTraces: Boolean = true,
 ) : Exporter {
-    override suspend fun export(batch: List<Signal>) {
+    override suspend fun export(
+        resource: Resource,
+        batch: List<Signal>,
+    ) {
         for (signal in batch) out.println(render(signal))
         out.flush()
     }

@@ -1,5 +1,6 @@
 package com.strange.telemetry.export
 
+import com.strange.telemetry.model.Resource
 import com.strange.telemetry.model.Signal
 
 /**
@@ -17,7 +18,18 @@ import com.strange.telemetry.model.Signal
  * that treats a failure as fatal to its own state will simply stop working after the first one.
  */
 interface Exporter : AutoCloseable {
-    suspend fun export(batch: List<Signal>)
+    /**
+     * Ships [batch], on behalf of [resource].
+     *
+     * The resource is passed on every call rather than handed over once at startup, because it is
+     * constant and small and because a hook that must be called before the first export is a hook
+     * somebody's implementation will forget. Every destination that leaves this process needs it —
+     * OTLP puts it at the root of its document — and an exporter that does not is free to ignore it.
+     */
+    suspend fun export(
+        resource: Resource,
+        batch: List<Signal>,
+    )
 
     /** Releases whatever this holds. Nothing by default, because most exporters hold nothing. */
     override fun close() {}

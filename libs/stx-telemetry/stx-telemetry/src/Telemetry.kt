@@ -134,12 +134,13 @@ class TelemetryBuilder internal constructor(
     internal fun build(): Telemetry {
         require(batch > 0) { "batch must be positive, was $batch" }
         require(linger.isPositive()) { "linger must be positive, was $linger" }
+        val resource = Resource(service, version, environment, attributes)
         return Telemetry(
-            resource = Resource(service, version, environment, attributes),
+            resource = resource,
             sampler = sampler,
             minimum = minimum,
             stackTraces = stackTraces,
-            pipeline = Pipeline(exporters.toList(), batch, linger, drainTimeout, onExportError),
+            pipeline = Pipeline(resource, exporters.toList(), batch, linger, drainTimeout, onExportError),
         )
     }
 }

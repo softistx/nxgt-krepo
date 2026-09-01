@@ -5,6 +5,7 @@ import com.strange.telemetry.context.withTelemetry
 import com.strange.telemetry.fixture.Collector
 import com.strange.telemetry.logger
 import com.strange.telemetry.model.LogRecord
+import com.strange.telemetry.model.Resource
 import com.strange.telemetry.model.Severity
 import com.strange.telemetry.model.Signal
 import io.kotest.core.spec.style.FeatureSpec
@@ -154,6 +155,7 @@ class PipelineTest :
             scenario("one object per signal, discriminated by type") {
                 val bytes = ByteArrayOutputStream()
                 JsonLinesExporter(PrintStream(bytes, true)).export(
+                    Resource("spec"),
                     listOf(
                         LogRecord(
                             at = Clock.System.now(),
@@ -175,5 +177,8 @@ class PipelineTest :
     })
 
 private object Broken : Exporter {
-    override suspend fun export(batch: List<Signal>) = throw IllegalStateException("collector down")
+    override suspend fun export(
+        resource: Resource,
+        batch: List<Signal>,
+    ) = throw IllegalStateException("collector down")
 }
