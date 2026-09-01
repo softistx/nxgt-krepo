@@ -23,6 +23,12 @@
       "type": "com.strange.telemetry.spring.TelemetryFileProperties",
       "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
       "description": "Writes the JSON-lines format to a rotating file on the local disk, for a deployment with no collector."
+    },
+    {
+      "name": "stx.telemetry.mongo",
+      "type": "com.strange.telemetry.spring.TelemetryMongoProperties",
+      "sourceType": "com.strange.telemetry.spring.TelemetryMongoProperties",
+      "description": "Writes signals into a MongoDB collection on a client of telemetry's own, with retention as a TTL index. Needs stx-telemetry-mongo on the classpath."
     }
   ],
   "properties": [
@@ -235,6 +241,41 @@
       "sourceType": "com.strange.telemetry.spring.TelemetryFileProperties",
       "defaultValue": false,
       "description": "Whether a rolled file is gzipped. Off by default because it happens on the pipeline's export path."
+    },
+    {
+      "name": "stx.telemetry.mongo.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.strange.telemetry.spring.TelemetryMongoProperties",
+      "defaultValue": false,
+      "description": "Adds a MongoExporter, which writes one document per signal with the field names the JSON-lines format uses."
+    },
+    {
+      "name": "stx.telemetry.mongo.uri",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.telemetry.spring.TelemetryMongoProperties",
+      "defaultValue": "mongodb://localhost:27017",
+      "description": "The connection string for telemetry's own client, separate from the application's so a burst of telemetry cannot exhaust the pool business requests queue for."
+    },
+    {
+      "name": "stx.telemetry.mongo.database",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.telemetry.spring.TelemetryMongoProperties",
+      "defaultValue": "telemetry",
+      "description": "The database the collection lives in."
+    },
+    {
+      "name": "stx.telemetry.mongo.collection",
+      "type": "java.lang.String",
+      "sourceType": "com.strange.telemetry.spring.TelemetryMongoProperties",
+      "defaultValue": "telemetry",
+      "description": "The collection documents are inserted into, one insertMany per batch."
+    },
+    {
+      "name": "stx.telemetry.mongo.retention",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.telemetry.spring.TelemetryMongoProperties",
+      "defaultValue": "30d",
+      "description": "How long a signal is kept, enforced by a TTL index Mongo expires itself rather than by a job in this process. 0 keeps everything."
     }
   ]
 }
