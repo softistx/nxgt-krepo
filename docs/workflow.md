@@ -676,7 +676,7 @@ post("/checkout") { call.respond(call.workflows.start(checkout, call.receive()))
 post("/checkout/{id}/approve") { call.workflows.signal(call.parameters["id"]!!, APPROVAL, call.receive()) }
 ```
 
-`com.strange.ktor.workflow` in `stx-ktor`, alongside the other integrations. `call.workflows` and
+`com.strange.workflow.ktor`, in `stx-workflow-ktor` — a module beside the library rather than a package in `stx-ktor`. `call.workflows` and
 `Application.workflows` reach the engine; `injectable = true` registers it with Ktor's DI so a class
 the container builds can take a `WorkflowEngine` in its constructor.
 
@@ -715,7 +715,7 @@ class Checkouts(private val workflows: WorkflowEngine, private val checkout: Wor
 }
 ```
 
-`com.strange.spring.integration.workflow` in `stx-spring-boot`, one of the `stx.*` auto-configurations.
+`com.strange.workflow.spring`, in `stx-workflow-spring` — a module beside the library rather than a package in `stx-spring-boot`.
 [`docs/spring-configuration.md`](spring-configuration.md) has every key.
 
 **Every `Workflow<*>` bean is registered with the engine.** That is the whole wiring and the part

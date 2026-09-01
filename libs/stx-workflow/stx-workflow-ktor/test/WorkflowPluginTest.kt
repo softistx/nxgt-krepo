@@ -1,4 +1,4 @@
-package com.strange.ktor.workflow
+package com.strange.workflow.ktor
 
 import com.strange.workflow.Workflow
 import com.strange.workflow.WorkflowEngine
