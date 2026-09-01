@@ -569,13 +569,19 @@ Five methods, and that is the whole of what a new backing store has to answer fo
   turns a lost race into a lost journal.
 - **`guarded` declines, it does not queue.** Null means somebody else holds it; the caller moves on.
   An implementation over a lock with a TTL has to renew it while the block runs.
+- **A parked instance is not runnable.** `record.isParked` — `Awaiting` with no `wakeAt` — means
+  only a signal will move it, and a store that offered it would put a worker in a loop with itself.
 
-Two ship:
+What ships:
 
 | | |
 | --- | --- |
 | `InMemoryStore` | In the core module. The reference implementation of the contract — the conditional write really is conditional, `guarded` really excludes. What the engine's own specs run against |
-| `RedisWorkflowStore` | In `stx-workflow-db`. See [its README](../libs/stx-workflow/stx-workflow-db/README.md) for the key layout, the lease and the retention |
+| `RedisWorkflowStore` | In `stx-workflow-db`. Key layout, Lua write, lease, TTL retention |
+| `JpaWorkflowStore` | In `stx-workflow-db`. One row per instance, over `stx-jpa`. Postgres, DB2 or MySQL — the URI's scheme picks |
+
+Both persistent stores are described in [the module's README](../libs/stx-workflow/stx-workflow-db/README.md),
+and both run the same shared contract spec, so the rules above are checked rather than intended.
 
 ```kotlin
 class RedisWorkflowStore(
@@ -584,7 +590,17 @@ class RedisWorkflowStore(
     retention: Duration? = 7.days,
     json: Json = redis.json,
 )
+
+class JpaWorkflowStore(
+    jpa: Jpa,
+    lease: Duration = 30.seconds,
+    json: Json = jpa.config.json,
+)
 ```
+
+`JpaWorkflowStore` needs `WorkflowInstanceRow` among the entities the application connects with, and
+it has no `retention`: a table has no TTL, so retention is `purge(before)` on a schedule the
+application owns.
 
 ## In a Ktor application
 
