@@ -417,6 +417,18 @@ the contract between the seam and every integration built on it, and a contract 
 no web framework; it knows the container, the framework modules know the framework, the libraries
 know the backends, and none of them knows two.
 
+**It does not fold into `stx-ktor`**, and the reason is measured rather than argued.
+`./kotlin show dependencies` puts three artifacts on a consumer's RUNTIME scope for `stx-koin` and
+thirty-three for `stx-ktor`, twenty-nine of them `io.ktor` — because `stx-ktor` exports
+`ktor-server-core`. Merging would hand a worker, a CLI or a Kafka consumer a web server to get
+`redisModule()`. Koin is a *container* and Ktor is a *web framework*: different axes, and the two are
+not even the same container, since `provideRedis()` in `stx-ktor` wires Ktor's own DI rather than
+Koin.
+
+What the two do share is a shape, not code — `Redis.connect(config)` plus "close it when the
+container closes", written once in each container's idiom. Abstracting over two DI containers costs
+more than the two one-liners it would replace.
+
 **Which side of the line an integration falls on is not its size — it is whether it has a design of
 its own.**
 
