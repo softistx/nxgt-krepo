@@ -81,10 +81,7 @@ real gateway does with it.
 The lock the dead process held is not released by a coroutine being cancelled. It is left to expire,
 which is what `RedisWorkflowStore`'s lease is for, and why the third run waits before resuming.
 
-## Two things worth copying
-
-`redis.deleteKeys(redis.key("*"))`, not `deleteKeys("*")`. The pattern is passed to `SCAN` as given
-and is **not** prefixed with the connection's namespace, so the bare one empties the whole database.
+## One thing worth copying
 
 The workflow is a function of its collaborators — `checkoutWorkflow(warehouse, payments, …)` — so the
 declaration is built once at startup and a step body closes over what it needs. Nothing in it belongs
