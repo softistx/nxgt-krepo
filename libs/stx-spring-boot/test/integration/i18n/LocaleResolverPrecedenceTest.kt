@@ -1,4 +1,4 @@
-package com.strange.spring.integration.i18n
+package com.softistx.spring.integration.i18n
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -92,7 +92,7 @@ class LocaleResolverPrecedenceTest :
 
         "the catalogs load either way — only the resolver stands down" {
             runner().withPropertyValues("spring.web.locale=de").run { context ->
-                context.getBeanNamesForType(com.strange.i18n.Messages::class.java).size shouldBe 1
+                context.getBeanNamesForType(com.softistx.i18n.Messages::class.java).size shouldBe 1
             }
         }
     })

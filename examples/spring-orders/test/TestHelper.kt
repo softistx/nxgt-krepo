@@ -1,10 +1,10 @@
-package com.strange.example.orders
+package com.softistx.example.orders
 
-import com.strange.example.orders.api.utils.apiErrorFilter
-import com.strange.example.orders.api.utils.apiOperationProcessor
-import com.strange.example.orders.api.utils.registerApiEnumConverters
-import com.strange.spring.client.generatedApiFactory
-import com.strange.spring.testing.TestServer
+import com.softistx.example.orders.api.utils.apiErrorFilter
+import com.softistx.example.orders.api.utils.apiOperationProcessor
+import com.softistx.example.orders.api.utils.registerApiEnumConverters
+import com.softistx.spring.client.generatedApiFactory
+import com.softistx.spring.testing.TestServer
 import kotlinx.serialization.json.Json
 import org.springframework.http.HttpHeaders
 import org.springframework.web.service.invoker.HttpServiceProxyFactory
@@ -13,7 +13,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory
  * The generated clients' factory — this module's four generated symbols, and nothing else.
  *
  * **The assembly is the library's; only the arguments are this module's.**
- * `com.strange.spring.client.generatedApiFactory` knows which four settings a generated interface
+ * `com.softistx.spring.client.generatedApiFactory` knows which four settings a generated interface
  * needs and what each one silently costs when it is left out; the generator emits the symbols
  * themselves into `<packageName>.utils`, so they are passed rather than named. What is left here is
  * a list of four, which is the point — a spec that spelled the assembly again would be a second copy

@@ -1,4 +1,4 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
 /**
  * A Spring bean whose `@QueryMapping` / `@MutationMapping` / `@SubscriptionMapping` /
@@ -8,8 +8,8 @@ package com.strange.graphix.spring
  * every bean that carries the annotation when `stx.graphix.enabled` is true.
  *
  * Constructor parameters are ordinary Spring injection — `OrderService`, a repository. That is
- * not [com.strange.graphix.schema.GraphQLContext]. Per-request values go on
- * [com.strange.graphix.Graphix.execute]'s context map.
+ * not [com.softistx.graphix.schema.GraphQLContext]. Per-request values go on
+ * [com.softistx.graphix.Graphix.execute]'s context map.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

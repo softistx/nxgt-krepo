@@ -1,4 +1,4 @@
-package com.strange.material.media
+package com.softistx.material.media
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -9,11 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import com.strange.material.button.ButtonColor
-import com.strange.material.button.ButtonVariant
-import com.strange.material.button.IconButton
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.button.ButtonColor
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.button.IconButton
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * One image, full frame, with a way out and a way to the neighbours.

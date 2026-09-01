@@ -1,6 +1,6 @@
-package com.strange.spring.cors
+package com.softistx.spring.cors
 
-import com.strange.common.http.CorsPolicy
+import com.softistx.common.http.CorsPolicy
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  *     origins: [ "http://localhost:5173" ]
  * ```
  *
- * The fields are `com.strange.common.http.CorsPolicy`'s, and [policy] is how they get there. Two
+ * The fields are `com.softistx.common.http.CorsPolicy`'s, and [policy] is how they get there. Two
  * types rather than one because they answer different questions: a `@ConfigurationProperties` class
  * has to carry `enabled`, which is a Spring Boot idea and means nothing to Ktor, and it has to be a
  * flat set of bindable keys so that `stx.cors.origins` is a key and not `stx.cors.policy.origins`.

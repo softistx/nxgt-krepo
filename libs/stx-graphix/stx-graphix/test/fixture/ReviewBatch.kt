@@ -1,8 +1,8 @@
-package com.strange.graphix.fixture
+package com.softistx.graphix.fixture
 
-import com.strange.graphix.schema.Argument
-import com.strange.graphix.schema.BatchMapping
-import com.strange.graphix.schema.SchemaMapping
+import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.BatchMapping
+import com.softistx.graphix.schema.SchemaMapping
 import graphql.schema.DataFetchingEnvironment
 import java.util.concurrent.atomic.AtomicInteger
 

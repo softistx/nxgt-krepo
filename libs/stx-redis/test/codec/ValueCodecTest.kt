@@ -1,6 +1,6 @@
-package com.strange.redis.codec
+package com.softistx.redis.codec
 
-import com.strange.redis.RedisValueException
+import com.softistx.redis.RedisValueException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

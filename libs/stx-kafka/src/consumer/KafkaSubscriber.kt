@@ -1,10 +1,10 @@
-package com.strange.kafka.consumer
+package com.softistx.kafka.consumer
 
-import com.strange.kafka.Kafka
-import com.strange.kafka.clientProperties
-import com.strange.kafka.record.KafkaRecord
-import com.strange.kafka.serde.KafkaSerde
-import com.strange.kafka.serde.jsonSerde
+import com.softistx.kafka.Kafka
+import com.softistx.kafka.clientProperties
+import com.softistx.kafka.record.KafkaRecord
+import com.softistx.kafka.serde.KafkaSerde
+import com.softistx.kafka.serde.jsonSerde
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

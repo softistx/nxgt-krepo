@@ -1,4 +1,4 @@
-package com.strange.workflow.jpa
+package com.softistx.workflow.jpa
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -16,7 +16,7 @@ import kotlin.time.Instant
  * comes from the URI's scheme, exactly as it does for every other entity in the application. That is
  * the whole reason Postgres and DB2 need no code between them here.
  *
- * **`record` is the encoded [com.strange.workflow.store.WorkflowRecord], and nothing here reads it.**
+ * **`record` is the encoded [com.softistx.workflow.store.WorkflowRecord], and nothing here reads it.**
  * Every other column exists because a *query* needs it — `due_at` to find what is due, the lease
  * pair to hold an instance, `finished_at` to purge. Nothing else is copied out of the document:
  * two copies of a fact are one chance for them to disagree.

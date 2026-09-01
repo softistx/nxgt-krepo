@@ -1,9 +1,9 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.UnionType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.UnionType
 
 /**
  * What a serialization library needs so a sealed hierarchy round-trips.

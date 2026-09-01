@@ -1,6 +1,6 @@
 tasks:
   generate:
-    action: !com.strange.dgs.plugin.generateDgs
+    action: !com.softistx.dgs.plugin.generateDgs
       settings: ${pluginSettings}
       moduleRoot: ${module.rootDir}
       outputDir: ${taskOutputDir}

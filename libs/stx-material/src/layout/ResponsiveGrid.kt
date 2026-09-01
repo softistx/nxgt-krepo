@@ -1,4 +1,4 @@
-package com.strange.material.layout
+package com.softistx.material.layout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * A grid whose column count follows the width it is offered, not the window.

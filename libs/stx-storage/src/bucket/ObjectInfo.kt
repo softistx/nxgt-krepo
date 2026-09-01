@@ -1,4 +1,4 @@
-package com.strange.storage.bucket
+package com.softistx.storage.bucket
 
 import kotlin.time.Instant
 

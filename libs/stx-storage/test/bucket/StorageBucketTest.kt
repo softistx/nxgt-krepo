@@ -1,7 +1,7 @@
-package com.strange.storage.bucket
+package com.softistx.storage.bucket
 
-import com.strange.storage.MinioTestServer
-import com.strange.storage.ObjectNotFoundException
+import com.softistx.storage.MinioTestServer
+import com.softistx.storage.ObjectNotFoundException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder

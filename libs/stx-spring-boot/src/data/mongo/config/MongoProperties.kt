@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.config
+package com.softistx.spring.data.mongo.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

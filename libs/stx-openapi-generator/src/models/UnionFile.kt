@@ -1,14 +1,14 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.UnionType
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.GENERATED_KDOC
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.UnionType
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.GENERATED_KDOC
 
 /**
  * A `oneOf`/`anyOf` as a sealed interface, with its members implementing it.

@@ -1,4 +1,4 @@
-package com.strange.spring.error
+package com.softistx.spring.error
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

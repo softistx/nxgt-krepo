@@ -1,8 +1,8 @@
-package com.strange.telemetry.model
+package com.softistx.telemetry.model
 
-import com.strange.telemetry.Attributes
-import com.strange.telemetry.trace.SpanContext
-import com.strange.telemetry.trace.SpanId
+import com.softistx.telemetry.Attributes
+import com.softistx.telemetry.trace.SpanContext
+import com.softistx.telemetry.trace.SpanId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant

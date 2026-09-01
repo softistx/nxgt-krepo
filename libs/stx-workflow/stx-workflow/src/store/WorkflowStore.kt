@@ -1,6 +1,6 @@
-package com.strange.workflow.store
+package com.softistx.workflow.store
 
-import com.strange.workflow.WorkflowStatus
+import com.softistx.workflow.WorkflowStatus
 import kotlin.time.Instant
 
 /**
@@ -48,7 +48,7 @@ interface WorkflowStore {
     /**
      * The instances in [status], most recently updated first, at most [limit] of them.
      *
-     * **This is what makes [com.strange.workflow.WorkflowStatus.Failed] mean something.** That status
+     * **This is what makes [com.softistx.workflow.WorkflowStatus.Failed] mean something.** That status
      * says a compensation could not be made to work and a person has to look — and until this method
      * existed there was no way to find one, because every other read here needs an id the operator
      * does not have. An engine that stops and makes a problem visible has to have somewhere the

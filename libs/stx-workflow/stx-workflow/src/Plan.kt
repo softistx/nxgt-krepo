@@ -1,15 +1,15 @@
-package com.strange.workflow
+package com.softistx.workflow
 
-import com.strange.workflow.dsl.Await
-import com.strange.workflow.dsl.BranchNode
-import com.strange.workflow.dsl.Child
-import com.strange.workflow.dsl.Leg
-import com.strange.workflow.dsl.Parallel
-import com.strange.workflow.dsl.RetryPolicy
-import com.strange.workflow.dsl.Sleep
-import com.strange.workflow.dsl.Step
-import com.strange.workflow.dsl.WorkflowNode
-import com.strange.workflow.dsl.qualify
+import com.softistx.workflow.dsl.Await
+import com.softistx.workflow.dsl.BranchNode
+import com.softistx.workflow.dsl.Child
+import com.softistx.workflow.dsl.Leg
+import com.softistx.workflow.dsl.Parallel
+import com.softistx.workflow.dsl.RetryPolicy
+import com.softistx.workflow.dsl.Sleep
+import com.softistx.workflow.dsl.Step
+import com.softistx.workflow.dsl.WorkflowNode
+import com.softistx.workflow.dsl.qualify
 
 /**
  * Walks a declaration once, when it is built, to do the two things that must not wait until it runs.

@@ -1,7 +1,7 @@
-package com.strange.redis.pubsub
+package com.softistx.redis.pubsub
 
-import com.strange.redis.RedisTestServer
-import com.strange.redis.codec.ValueCodec
+import com.softistx.redis.RedisTestServer
+import com.softistx.redis.codec.ValueCodec
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async

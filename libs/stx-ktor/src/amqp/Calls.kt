@@ -1,7 +1,7 @@
-package com.strange.ktor.amqp
+package com.softistx.ktor.amqp
 
-import com.strange.amqp.Amqp
-import com.strange.ktor.required
+import com.softistx.amqp.Amqp
+import com.softistx.ktor.required
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 

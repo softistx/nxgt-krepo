@@ -1,4 +1,4 @@
-package com.strange.kafka.record
+package com.softistx.kafka.record
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull

@@ -1,4 +1,4 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
 /** Name derivation shared by every emitter, so generated names stay stable across clients. */
 public object Naming {

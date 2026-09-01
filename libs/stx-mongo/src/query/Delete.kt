@@ -1,4 +1,4 @@
-package com.strange.mongo.query
+package com.softistx.mongo.query
 
 import com.mongodb.client.model.DeleteOptions
 import com.mongodb.client.model.FindOneAndDeleteOptions

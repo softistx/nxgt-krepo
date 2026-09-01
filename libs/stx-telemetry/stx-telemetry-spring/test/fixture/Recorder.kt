@@ -1,4 +1,4 @@
-package com.strange.telemetry.spring.fixture
+package com.softistx.telemetry.spring.fixture
 
 import org.slf4j.ILoggerFactory
 import org.slf4j.Logger

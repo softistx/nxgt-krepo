@@ -1,4 +1,4 @@
-package com.strange.material.datetime
+package com.softistx.material.datetime
 
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState

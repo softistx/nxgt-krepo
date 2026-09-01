@@ -1,4 +1,4 @@
-package com.strange.storage
+package com.softistx.storage
 
 import kotlin.time.Duration
 

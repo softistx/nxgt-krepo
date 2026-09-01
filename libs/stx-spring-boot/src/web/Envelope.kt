@@ -1,7 +1,7 @@
-package com.strange.spring.web
+package com.softistx.spring.web
 
-import com.strange.common.page.Page
-import com.strange.common.page.PageInfo
+import com.softistx.common.page.Page
+import com.softistx.common.page.PageInfo
 import kotlinx.serialization.Serializable
 
 /**
@@ -37,7 +37,7 @@ fun <D> D.response(links: Map<String, String>? = null): Response<D, Nothing> = R
  * A page as a body: the rows in `data`, the cursors in `metadata`.
  *
  * The two halves separate here rather than at the client, which is the whole reason
- * `com.strange.common.page.Page` exists — a list that has lost its cursors cannot ask for the next
+ * `com.softistx.common.page.Page` exists — a list that has lost its cursors cannot ask for the next
  * page.
  */
 fun <T> Page<T>.response(links: Map<String, String>? = null): Response<List<T>, PageInfo> = Response(data, metadata = info, links = links)

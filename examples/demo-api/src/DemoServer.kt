@@ -1,11 +1,11 @@
-package com.strange.demo.api
+package com.softistx.demo.api
 
-import com.strange.demo.api.routes.DemoData
-import com.strange.demo.api.routes.categoryRoutes
-import com.strange.demo.api.routes.failureRoutes
-import com.strange.demo.api.routes.notificationRoutes
-import com.strange.demo.api.routes.sessionRoutes
-import com.strange.demo.api.routes.tagRoutes
+import com.softistx.demo.api.routes.DemoData
+import com.softistx.demo.api.routes.categoryRoutes
+import com.softistx.demo.api.routes.failureRoutes
+import com.softistx.demo.api.routes.notificationRoutes
+import com.softistx.demo.api.routes.sessionRoutes
+import com.softistx.demo.api.routes.tagRoutes
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install

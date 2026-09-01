@@ -1,4 +1,4 @@
-package com.strange.common.page
+package com.softistx.common.page
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

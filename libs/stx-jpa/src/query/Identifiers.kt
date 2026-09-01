@@ -1,9 +1,9 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
-import com.strange.jpa.criteria.eq
-import com.strange.jpa.criteria.get
-import com.strange.jpa.criteria.oneOf
-import com.strange.jpa.session.JpaQueries
+import com.softistx.jpa.criteria.eq
+import com.softistx.jpa.criteria.get
+import com.softistx.jpa.criteria.oneOf
+import com.softistx.jpa.session.JpaQueries
 import kotlin.reflect.KProperty1
 
 /*

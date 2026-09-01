@@ -1,22 +1,22 @@
-package com.strange.example.shop.domain
+package com.softistx.example.shop.domain
 
-import com.strange.common.page.Page
-import com.strange.example.shop.model.EditProduct
-import com.strange.example.shop.model.NewProduct
-import com.strange.example.shop.model.ProductSummary
-import com.strange.jpa.audit.stampedBy
-import com.strange.jpa.audit.touchedBy
-import com.strange.jpa.criteria.JpaSpec
-import com.strange.jpa.criteria.and
-import com.strange.jpa.criteria.asc
-import com.strange.jpa.criteria.eq
-import com.strange.jpa.criteria.get
-import com.strange.jpa.query.delete
-import com.strange.jpa.query.findAll
-import com.strange.jpa.query.findOne
-import com.strange.jpa.query.findPage
-import com.strange.jpa.query.insert
-import com.strange.jpa.session.JpaSession
+import com.softistx.common.page.Page
+import com.softistx.example.shop.model.EditProduct
+import com.softistx.example.shop.model.NewProduct
+import com.softistx.example.shop.model.ProductSummary
+import com.softistx.jpa.audit.stampedBy
+import com.softistx.jpa.audit.touchedBy
+import com.softistx.jpa.criteria.JpaSpec
+import com.softistx.jpa.criteria.and
+import com.softistx.jpa.criteria.asc
+import com.softistx.jpa.criteria.eq
+import com.softistx.jpa.criteria.get
+import com.softistx.jpa.query.delete
+import com.softistx.jpa.query.findAll
+import com.softistx.jpa.query.findOne
+import com.softistx.jpa.query.findPage
+import com.softistx.jpa.query.insert
+import com.softistx.jpa.session.JpaSession
 
 /**
  * Everything the shop does with a product, in one class over the session.

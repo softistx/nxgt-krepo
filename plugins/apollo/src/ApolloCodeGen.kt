@@ -1,6 +1,6 @@
 @file:OptIn(ApolloExperimental::class)
 
-package com.strange.apollo.plugin
+package com.softistx.apollo.plugin
 
 import com.apollographql.apollo.annotations.ApolloExperimental
 import com.apollographql.apollo.compiler.ApolloCompiler

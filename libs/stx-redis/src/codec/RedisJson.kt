@@ -1,6 +1,6 @@
-package com.strange.redis.codec
+package com.softistx.redis.codec
 
-import com.strange.common.serialization.lenientJson
+import com.softistx.common.serialization.lenientJson
 import kotlinx.serialization.json.Json
 
 /**

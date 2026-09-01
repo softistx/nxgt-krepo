@@ -1,8 +1,8 @@
-package com.strange.amqp.codec
+package com.softistx.amqp.codec
 
-import com.strange.amqp.AmqpValueException
-import com.strange.common.serialization.decodeValue
-import com.strange.common.serialization.typeName
+import com.softistx.amqp.AmqpValueException
+import com.softistx.common.serialization.decodeValue
+import com.softistx.common.serialization.typeName
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer

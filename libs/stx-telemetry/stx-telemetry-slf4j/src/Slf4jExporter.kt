@@ -1,12 +1,12 @@
-package com.strange.telemetry.slf4j
+package com.softistx.telemetry.slf4j
 
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.model.SpanStatus
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.model.SpanStatus
 import kotlinx.serialization.json.JsonPrimitive
 import org.slf4j.ILoggerFactory
 import org.slf4j.LoggerFactory
@@ -126,7 +126,7 @@ class Slf4jExporter(
 
     private companion object {
         /** Where spans are logged, since a span has no source of its own. */
-        const val SPANS = "com.strange.telemetry.span"
+        const val SPANS = "com.softistx.telemetry.span"
 
         /**
          * The failure, rebuilt just enough for an appender to print it.
@@ -136,13 +136,13 @@ class Slf4jExporter(
          * carrier with the recorded message and the recorded trace, not a lie about where it was
          * thrown.
          */
-        fun com.strange.telemetry.model.ErrorInfo.text(): Throwable = RecordedFailure(this)
+        fun com.softistx.telemetry.model.ErrorInfo.text(): Throwable = RecordedFailure(this)
     }
 }
 
 /** A failure that already happened, carried to an appender. Its stack trace is the recorded text. */
 private class RecordedFailure(
-    private val info: com.strange.telemetry.model.ErrorInfo,
+    private val info: com.softistx.telemetry.model.ErrorInfo,
 ) : RuntimeException("${info.type}: ${info.message ?: ""}", null, false, false) {
     override fun toString(): String = message ?: info.type
 

@@ -1,4 +1,4 @@
-package com.strange.workflow.dsl
+package com.softistx.workflow.dsl
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
@@ -76,7 +76,7 @@ fun <C, T> NodeSink<C>.await(
  * How long to wait before giving up on the signal.
  *
  * Measured from the moment the instance parked, not from when the workflow started, and **an expiry
- * is a failure**: the node fails with [com.strange.workflow.AwaitTimeoutException] and the workflow
+ * is a failure**: the node fails with [com.softistx.workflow.AwaitTimeoutException] and the workflow
  * unwinds, exactly as it would for a step that threw. That is the honest default — a checkout whose
  * approval never came must release the stock it reserved — and it is the one an operator can reason
  * about without reading the engine.

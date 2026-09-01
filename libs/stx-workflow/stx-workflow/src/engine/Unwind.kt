@@ -1,9 +1,9 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.workflow.WorkflowError
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.store.JournalEntry
-import com.strange.workflow.store.NodeOutcome
+import com.softistx.workflow.WorkflowError
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.store.JournalEntry
+import com.softistx.workflow.store.NodeOutcome
 import kotlin.time.Clock
 
 /**

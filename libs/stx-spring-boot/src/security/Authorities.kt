@@ -1,4 +1,4 @@
-package com.strange.spring.security
+package com.softistx.spring.security
 
 /**
  * The prefixes Spring Security expects, written once.

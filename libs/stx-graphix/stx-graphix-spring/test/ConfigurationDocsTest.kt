@@ -1,4 +1,4 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec

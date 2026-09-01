@@ -1,6 +1,6 @@
-package com.strange.workflow.spring
+package com.softistx.workflow.spring
 
-import com.strange.workflow.WorkflowWorker
+import com.softistx.workflow.WorkflowWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

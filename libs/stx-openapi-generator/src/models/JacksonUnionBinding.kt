@@ -1,10 +1,10 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.UnionType
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.UnionType
 
 /**
  * Jackson is told the shape of the hierarchy and does the selecting itself.

@@ -1,8 +1,8 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.ApiGroup
-import com.strange.openapi.ModelType
-import com.strange.openapi.Operation
+import com.softistx.openapi.ApiGroup
+import com.softistx.openapi.ModelType
+import com.softistx.openapi.Operation
 
 /**
  * Guards against two generated declarations claiming one file.

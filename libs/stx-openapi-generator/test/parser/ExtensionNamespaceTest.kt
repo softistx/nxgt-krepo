@@ -1,4 +1,4 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow

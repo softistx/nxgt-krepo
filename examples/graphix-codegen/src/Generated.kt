@@ -1,7 +1,7 @@
-package com.strange.example.graphix.codegen
+package com.softistx.example.graphix.codegen
 
-import com.strange.example.graphix.codegen.apollo.ProductsQuery
-import com.strange.example.graphix.codegen.dgs.types.AddProductInput
+import com.softistx.example.graphix.codegen.apollo.ProductsQuery
+import com.softistx.example.graphix.codegen.dgs.types.AddProductInput
 
 /** Touches one type from each plugin so a missing generate fails the compile, not a later test. */
 fun addProduct(

@@ -1,4 +1,4 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,26 +9,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonRow
-import com.strange.material.button.ButtonVariant
-import com.strange.material.display.Alert
-import com.strange.material.form.Checkbox
-import com.strange.material.form.RadioGroup
-import com.strange.material.form.SelectField
-import com.strange.material.form.TextField
-import com.strange.material.form.state.FormState
-import com.strange.material.form.state.checked
-import com.strange.material.form.state.chosen
-import com.strange.material.form.state.email
-import com.strange.material.form.state.matching
-import com.strange.material.form.state.minLength
-import com.strange.material.form.state.rememberForm
-import com.strange.material.form.state.required
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonRow
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.display.Alert
+import com.softistx.material.form.Checkbox
+import com.softistx.material.form.RadioGroup
+import com.softistx.material.form.SelectField
+import com.softistx.material.form.TextField
+import com.softistx.material.form.state.FormState
+import com.softistx.material.form.state.checked
+import com.softistx.material.form.state.chosen
+import com.softistx.material.form.state.email
+import com.softistx.material.form.state.matching
+import com.softistx.material.form.state.minLength
+import com.softistx.material.form.state.rememberForm
+import com.softistx.material.form.state.required
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 import io.konform.validation.Validation
 
 /** What the screen is assembling. A form owns one of these; every field is a property of it. */

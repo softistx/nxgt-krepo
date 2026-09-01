@@ -1,4 +1,4 @@
-package com.strange.mongo.codec
+package com.softistx.mongo.codec
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -28,7 +28,7 @@ import kotlin.time.Instant
 @OptIn(ExperimentalSerializationApi::class)
 object InstantAsBsonDateTime : KSerializer<Instant> {
     override val descriptor: SerialDescriptor =
-        PrimitiveSerialDescriptor("com.strange.mongo.codec.InstantAsBsonDateTime", PrimitiveKind.STRING)
+        PrimitiveSerialDescriptor("com.softistx.mongo.codec.InstantAsBsonDateTime", PrimitiveKind.STRING)
 
     override fun serialize(
         encoder: Encoder,

@@ -249,7 +249,7 @@ renaming the span to the matched route once Ktor knows it. `call.telemetry`, `ca
 `call.traceparent` are what a handler reads.
 
 `stx-telemetry-slf4j` adds `Slf4jExporter(spans, spanSeverity, factory)`, which writes logs to a
-logger named after their source and spans to `com.strange.telemetry.span`, putting the trace id and
+logger named after their source and spans to `com.softistx.telemetry.span`, putting the trace id and
 the attributes in the MDC for the length of each call. The same module's `TelemetryServiceProvider`
 is the bridge pointed the other way — third-party SLF4J logs into this pipeline — and the two cannot
 both be used, which `Slf4jExporter` checks rather than looping.

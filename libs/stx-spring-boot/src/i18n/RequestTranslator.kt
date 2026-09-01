@@ -1,7 +1,7 @@
-package com.strange.spring.i18n
+package com.softistx.spring.i18n
 
-import com.strange.i18n.Messages
-import com.strange.i18n.Translator
+import com.softistx.i18n.Messages
+import com.softistx.i18n.Translator
 import org.springframework.web.server.ServerWebExchange
 
 /**

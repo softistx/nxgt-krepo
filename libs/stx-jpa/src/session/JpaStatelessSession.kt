@@ -1,9 +1,9 @@
-package com.strange.jpa.session
+package com.softistx.jpa.session
 
-import com.strange.jpa.JpaNotFoundException
-import com.strange.jpa.query.JpaQuery
-import com.strange.jpa.query.nativeQuery
-import com.strange.jpa.query.query
+import com.softistx.jpa.JpaNotFoundException
+import com.softistx.jpa.query.JpaQuery
+import com.softistx.jpa.query.nativeQuery
+import com.softistx.jpa.query.query
 import jakarta.persistence.EntityGraph
 import kotlinx.coroutines.future.await
 import org.hibernate.reactive.stage.Stage

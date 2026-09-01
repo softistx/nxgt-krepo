@@ -27,7 +27,7 @@ plugins:
     enabled: true
     specs:
       - spec: ../demo-api/openapi.yaml
-        packageName: com.strange.demo.client.api
+        packageName: com.softistx.demo.client.api
         client: Ktorfit                   # or Spring, or None for models only
 ```
 
@@ -37,10 +37,10 @@ APIs used to need three modules — a boundary drawn by the build rather than by
 ```yaml
     specs:
       - spec: ../demo-api/openapi.yaml
-        packageName: com.strange.demo.spring.api
+        packageName: com.softistx.demo.spring.api
         client: Spring
       - spec: ../spring-orders/openapi/api-docs.yaml
-        packageName: com.strange.demo.spring.orders
+        packageName: com.softistx.demo.spring.orders
         client: Spring
 ```
 
@@ -263,7 +263,7 @@ result:
 
 ```
 ERROR: Task ':demo-client:generate@openapi' failed:
-com.strange.openapi.parser.OpenApiParseException: could not parse /…/openapi.yaml:
+com.softistx.openapi.parser.OpenApiParseException: could not parse /…/openapi.yaml:
 malformed or unreadable swagger supplied
 ```
 

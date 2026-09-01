@@ -1,4 +1,4 @@
-package com.strange.spring
+package com.softistx.spring
 
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec

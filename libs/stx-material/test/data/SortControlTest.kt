@@ -1,4 +1,4 @@
-package com.strange.material.data
+package com.softistx.material.data
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

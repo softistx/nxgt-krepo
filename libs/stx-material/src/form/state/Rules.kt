@@ -1,4 +1,4 @@
-package com.strange.material.form.state
+package com.softistx.material.form.state
 
 import io.konform.validation.Constraint
 import io.konform.validation.ValidationBuilder

@@ -1,4 +1,4 @@
-package com.strange.spring.error
+package com.softistx.spring.error
 
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock

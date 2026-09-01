@@ -1,7 +1,7 @@
-package com.strange.telemetry.export
+package com.softistx.telemetry.export
 
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
 
 /**
  * Where signals go once they leave this process's memory.
@@ -13,7 +13,7 @@ import com.strange.telemetry.model.Signal
  *
  * It suspends, and it is called from a single coroutine that owns the queue — so an implementation
  * needs no synchronisation of its own, and may take as long as it needs without blocking anybody who
- * writes a log. What it must not do is throw: [com.strange.telemetry.Telemetry] catches and reports,
+ * writes a log. What it must not do is throw: [com.softistx.telemetry.Telemetry] catches and reports,
  * because **a destination being down is not a reason for the application to fail**, but an exporter
  * that treats a failure as fatal to its own state will simply stop working after the first one.
  */

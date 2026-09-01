@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.style.Style
@@ -13,11 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.strange.material.motion.MotionSpeed
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
-import com.strange.material.theme.ToneColors
-import com.strange.material.theme.motion
+import com.softistx.material.motion.MotionSpeed
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
+import com.softistx.material.theme.ToneColors
+import com.softistx.material.theme.motion
 
 /**
  * The 5 × 7 matrix, resolved once, as Material 3's own [ButtonColors].

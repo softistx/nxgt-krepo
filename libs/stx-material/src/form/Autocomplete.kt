@@ -1,4 +1,4 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DropdownMenuItem
@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.strange.material.text.Typography
+import com.softistx.material.text.Typography
 
 /**
  * A field that offers matches as you type. Material 3's `ExposedDropdownMenuBox`, editable.

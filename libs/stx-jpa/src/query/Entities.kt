@@ -1,9 +1,9 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.JpaNotFoundException
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.JpaNotFoundException
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 
 /**
  * One operation, one transaction.

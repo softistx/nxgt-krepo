@@ -1,4 +1,4 @@
-package com.strange.mongo.gridfs
+package com.softistx.mongo.gridfs
 
 import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadPublisher
 import kotlinx.coroutines.flow.collect

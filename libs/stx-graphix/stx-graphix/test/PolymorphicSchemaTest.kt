@@ -1,11 +1,11 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.ChoiceQueries
-import com.strange.graphix.fixture.EmptyQueries
-import com.strange.graphix.fixture.MediaFields
-import com.strange.graphix.fixture.MediaQueries
-import com.strange.graphix.fixture.RenamedQueries
-import com.strange.graphix.fixture.TicketedQueries
+import com.softistx.graphix.fixture.ChoiceQueries
+import com.softistx.graphix.fixture.EmptyQueries
+import com.softistx.graphix.fixture.MediaFields
+import com.softistx.graphix.fixture.MediaQueries
+import com.softistx.graphix.fixture.RenamedQueries
+import com.softistx.graphix.fixture.TicketedQueries
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

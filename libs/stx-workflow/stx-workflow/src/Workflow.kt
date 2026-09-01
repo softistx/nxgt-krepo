@@ -1,9 +1,9 @@
-package com.strange.workflow
+package com.softistx.workflow
 
-import com.strange.workflow.dsl.NodeSink
-import com.strange.workflow.dsl.RetryPolicy
-import com.strange.workflow.dsl.StepScope
-import com.strange.workflow.dsl.WorkflowNode
+import com.softistx.workflow.dsl.NodeSink
+import com.softistx.workflow.dsl.RetryPolicy
+import com.softistx.workflow.dsl.StepScope
+import com.softistx.workflow.dsl.WorkflowNode
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -87,7 +87,7 @@ fun <C> workflow(
  * Where a workflow's nodes are declared.
  *
  * It carries no verbs of its own. `step`, `branch` and `parallel` are extension functions on
- * [NodeSink] declared in `com.strange.workflow.dsl`, which is what lets each verb live in the file
+ * [NodeSink] declared in `com.softistx.workflow.dsl`, which is what lets each verb live in the file
  * that owns it, lets an arm of a branch accept the same vocabulary as the workflow itself, and will
  * let a later annotation front end declare through this same single door rather than growing an
  * entry point beside it.

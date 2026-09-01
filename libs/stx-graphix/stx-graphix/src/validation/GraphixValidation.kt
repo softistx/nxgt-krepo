@@ -1,4 +1,4 @@
-package com.strange.graphix.validation
+package com.softistx.graphix.validation
 
 import graphql.execution.ResultPath
 import graphql.execution.instrumentation.fieldvalidation.FieldAndArguments

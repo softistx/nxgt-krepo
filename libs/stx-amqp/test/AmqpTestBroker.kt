@@ -1,7 +1,7 @@
-package com.strange.amqp
+package com.softistx.amqp
 
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.rabbitContainer
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.rabbitContainer
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
 

@@ -1,4 +1,4 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
 /**
  * The `x-*` vocabulary this generator understands, and the typed reads of it.

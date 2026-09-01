@@ -1,9 +1,9 @@
-package com.strange.jpa.json
+package com.softistx.jpa.json
 
-import com.strange.common.concurrent.Memo
-import com.strange.common.serialization.decodeValue
-import com.strange.jpa.JpaDocumentException
-import com.strange.jpa.JpaSerializerException
+import com.softistx.common.concurrent.Memo
+import com.softistx.common.serialization.decodeValue
+import com.softistx.jpa.JpaDocumentException
+import com.softistx.jpa.JpaSerializerException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializerOrNull

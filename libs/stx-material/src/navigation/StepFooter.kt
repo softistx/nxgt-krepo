@@ -1,11 +1,11 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.button.BusyButton
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonRow
-import com.strange.material.button.ButtonVariant
+import com.softistx.material.button.BusyButton
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonRow
+import com.softistx.material.button.ButtonVariant
 
 /**
  * Back and Continue under a [Stepper].

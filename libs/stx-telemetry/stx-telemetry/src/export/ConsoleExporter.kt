@@ -1,10 +1,10 @@
-package com.strange.telemetry.export
+package com.softistx.telemetry.export
 
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.model.SpanStatus
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.model.SpanStatus
 import kotlinx.serialization.json.JsonPrimitive
 import java.io.PrintStream
 import kotlin.time.Instant

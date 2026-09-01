@@ -2,8 +2,8 @@
   "groups": [
     {
       "name": "stx.graphix",
-      "type": "com.strange.graphix.spring.GraphixProperties",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties"
+      "type": "com.softistx.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties"
     }
   ],
   "properties": [
@@ -11,63 +11,63 @@
       "name": "stx.graphix.enabled",
       "type": "java.lang.Boolean",
       "description": "Serve GraphQL at stx.graphix.path. Off unless set: putting this library on the classpath must not open an endpoint.",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": false
     },
     {
       "name": "stx.graphix.path",
       "type": "java.lang.String",
       "description": "HTTP path for POST and GET. Default /graphql.",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": "/graphql"
     },
     {
       "name": "stx.graphix.subscriptions",
-      "type": "com.strange.graphix.http.SubscriptionProtocol",
+      "type": "com.softistx.graphix.http.SubscriptionProtocol",
       "description": "How subscriptions are served: sse (text/event-stream on POST) or graphql-ws (WebSocket on the same path).",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": "sse"
     },
     {
       "name": "stx.graphix.schema-locations",
       "type": "java.util.List<java.lang.String>",
       "description": "Directories of GraphQL schema documents. Default classpath:graphql/, scanned recursively. Several files merge.",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": "classpath:graphql/"
     },
     {
       "name": "stx.graphix.introspection",
       "type": "java.lang.Boolean",
       "description": "Whether __schema and __type answer. On by default \u2014 GraphiQL and Apollo Sandbox need them.",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": true
     },
     {
       "name": "stx.graphix.sandbox",
       "type": "java.lang.Boolean",
       "description": "Serve an Apollo Sandbox page at sandbox-path. Off by default: enabling GraphQL must not also open an HTML page that advertises the schema.",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": false
     },
     {
       "name": "stx.graphix.sandbox-path",
       "type": "java.lang.String",
       "description": "Where the Apollo Sandbox page is served. Default /sandbox, a sibling of path.",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": "/sandbox"
     },
     {
       "name": "stx.graphix.sandbox-endpoint",
       "type": "java.lang.String",
       "description": "GraphQL URL the sandbox opens with. Empty \u2014 the default \u2014 resolves it in the browser from the page's own origin and path, which survives a proxy, https and a republished port.",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": ""
     },
     {
       "name": "stx.graphix.schema-file-extensions",
       "type": "java.util.List<java.lang.String>",
       "description": "File suffixes scanned under schema-locations. Default .graphqls and .gqls.",
-      "sourceType": "com.strange.graphix.spring.GraphixProperties",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": ".graphqls,.gqls"
     }
   ]

@@ -1,4 +1,4 @@
-package com.strange.material.motion
+package com.softistx.material.motion
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -12,7 +12,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 import kotlinx.coroutines.delay
 
 /**

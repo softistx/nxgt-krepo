@@ -1,9 +1,9 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.SdlNodeFields
-import com.strange.graphix.fixture.SdlPolyQueries
-import com.strange.graphix.fixture.SdlUnionFields
-import com.strange.graphix.schema.typeResolver
+import com.softistx.graphix.fixture.SdlNodeFields
+import com.softistx.graphix.fixture.SdlPolyQueries
+import com.softistx.graphix.fixture.SdlUnionFields
+import com.softistx.graphix.schema.typeResolver
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

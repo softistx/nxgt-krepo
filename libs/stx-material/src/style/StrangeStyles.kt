@@ -1,17 +1,17 @@
-package com.strange.material.style
+package com.softistx.material.style
 
 import androidx.compose.foundation.style.Style
-import com.strange.material.button.buttonStyle
-import com.strange.material.display.alertStyle
-import com.strange.material.display.cardStyle
-import com.strange.material.display.chipStyle
-import com.strange.material.display.listTileStyle
-import com.strange.material.form.fieldStyle
-import com.strange.material.navigation.breadcrumbStyle
-import com.strange.material.navigation.navigationItemStyle
-import com.strange.material.navigation.stepperStyle
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.button.buttonStyle
+import com.softistx.material.display.alertStyle
+import com.softistx.material.display.cardStyle
+import com.softistx.material.display.chipStyle
+import com.softistx.material.display.listTileStyle
+import com.softistx.material.form.fieldStyle
+import com.softistx.material.navigation.breadcrumbStyle
+import com.softistx.material.navigation.navigationItemStyle
+import com.softistx.material.navigation.stepperStyle
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 
 /**
  * Every style this library dresses a component with, in one place.

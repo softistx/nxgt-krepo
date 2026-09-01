@@ -1,4 +1,4 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
 /**
  * Raised for a document this generator cannot faithfully represent.

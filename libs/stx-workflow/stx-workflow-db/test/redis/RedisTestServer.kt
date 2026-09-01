@@ -1,11 +1,11 @@
-package com.strange.workflow.redis
+package com.softistx.workflow.redis
 
-import com.strange.redis.Redis
-import com.strange.redis.RedisConfig
-import com.strange.redis.codec.redisJson
-import com.strange.redis.deleteKeys
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.redisContainer
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisConfig
+import com.softistx.redis.codec.redisJson
+import com.softistx.redis.deleteKeys
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.redisContainer
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.seconds
 

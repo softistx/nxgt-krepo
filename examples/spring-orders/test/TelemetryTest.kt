@@ -1,21 +1,21 @@
-package com.strange.example.orders
+package com.softistx.example.orders
 
-import com.strange.example.orders.api.apis.IHealthService
-import com.strange.example.orders.api.apis.IOrdersService
-import com.strange.example.orders.api.models.ChangeStatusRequest
-import com.strange.example.orders.api.models.OrderStatus
-import com.strange.example.orders.api.models.PlaceOrderRequest
-import com.strange.example.orders.api.utils.ErrorResponseException
-import com.strange.spring.client.withClient
-import com.strange.spring.testing.MongoSpec
-import com.strange.spring.testing.awaitMigrations
-import com.strange.spring.testing.clear
-import com.strange.spring.testing.mongoAvailable
-import com.strange.telemetry.Attributes
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.model.SpanStatus
+import com.softistx.example.orders.api.apis.IHealthService
+import com.softistx.example.orders.api.apis.IOrdersService
+import com.softistx.example.orders.api.models.ChangeStatusRequest
+import com.softistx.example.orders.api.models.OrderStatus
+import com.softistx.example.orders.api.models.PlaceOrderRequest
+import com.softistx.example.orders.api.utils.ErrorResponseException
+import com.softistx.spring.client.withClient
+import com.softistx.spring.testing.MongoSpec
+import com.softistx.spring.testing.awaitMigrations
+import com.softistx.spring.testing.clear
+import com.softistx.spring.testing.mongoAvailable
+import com.softistx.telemetry.Attributes
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.model.SpanStatus
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -138,7 +138,7 @@ class TelemetryTest(
                     val placed = signals.log("orders.placed") { it.attributes.text("reference") == "T-4" }
                     placed.shouldNotBeNull()
                     placed.severity shouldBe Severity.Info
-                    placed.source shouldBe "com.strange.example.orders.service.OrderService"
+                    placed.source shouldBe "com.softistx.example.orders.service.OrderService"
                     placed.attributes.number("total") shouldBe 4_200
                 }
             }

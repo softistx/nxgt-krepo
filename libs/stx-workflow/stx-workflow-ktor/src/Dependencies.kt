@@ -1,6 +1,6 @@
-package com.strange.workflow.ktor
+package com.softistx.workflow.ktor
 
-import com.strange.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowEngine
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 

@@ -1,13 +1,13 @@
-package com.strange.amqp.retry
+package com.softistx.amqp.retry
 
-import com.strange.amqp.Amqp
-import com.strange.amqp.AmqpTestBroker
-import com.strange.amqp.consumer.consumer
-import com.strange.amqp.publisher.publisher
-import com.strange.amqp.topology.Topology
-import com.strange.amqp.topology.declare
-import com.strange.amqp.topology.delete
-import com.strange.amqp.topology.messageCount
+import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpTestBroker
+import com.softistx.amqp.consumer.consumer
+import com.softistx.amqp.publisher.publisher
+import com.softistx.amqp.topology.Topology
+import com.softistx.amqp.topology.declare
+import com.softistx.amqp.topology.delete
+import com.softistx.amqp.topology.messageCount
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

@@ -1,4 +1,4 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,20 +13,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonVariant
-import com.strange.material.display.Alert
-import com.strange.material.display.Card
-import com.strange.material.display.Chip
-import com.strange.material.display.EmptyState
-import com.strange.material.display.ListTile
-import com.strange.material.display.Skeleton
-import com.strange.material.display.StatusBadge
-import com.strange.material.motion.animateStagger
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.display.Alert
+import com.softistx.material.display.Card
+import com.softistx.material.display.Chip
+import com.softistx.material.display.EmptyState
+import com.softistx.material.display.ListTile
+import com.softistx.material.display.Skeleton
+import com.softistx.material.display.StatusBadge
+import com.softistx.material.motion.animateStagger
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 
 /**
  * The acceptance criterion of every phase, written as a screen.

@@ -1,4 +1,4 @@
-package com.strange.spring.cors
+package com.softistx.spring.cors
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

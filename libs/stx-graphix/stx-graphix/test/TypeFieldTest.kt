@@ -1,13 +1,13 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.BadBatchFields
-import com.strange.graphix.fixture.BothMappings
-import com.strange.graphix.fixture.DuplicateNameFields
-import com.strange.graphix.fixture.NamedSchemaFields
-import com.strange.graphix.fixture.Product
-import com.strange.graphix.fixture.ProductFields
-import com.strange.graphix.fixture.ProductQueries
-import com.strange.graphix.fixture.Review
+import com.softistx.graphix.fixture.BadBatchFields
+import com.softistx.graphix.fixture.BothMappings
+import com.softistx.graphix.fixture.DuplicateNameFields
+import com.softistx.graphix.fixture.NamedSchemaFields
+import com.softistx.graphix.fixture.Product
+import com.softistx.graphix.fixture.ProductFields
+import com.softistx.graphix.fixture.ProductQueries
+import com.softistx.graphix.fixture.Review
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull

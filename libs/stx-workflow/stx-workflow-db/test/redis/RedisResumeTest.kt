@@ -1,12 +1,12 @@
-package com.strange.workflow.redis
+package com.softistx.workflow.redis
 
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.dsl.compensate
-import com.strange.workflow.dsl.step
-import com.strange.workflow.redis.fixture.Calls
-import com.strange.workflow.redis.fixture.Ledger
-import com.strange.workflow.workflow
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.dsl.compensate
+import com.softistx.workflow.dsl.step
+import com.softistx.workflow.redis.fixture.Calls
+import com.softistx.workflow.redis.fixture.Ledger
+import com.softistx.workflow.workflow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred

@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.audit
+package com.softistx.spring.data.mongo.audit
 
 /**
  * A document whose every save and delete is recorded in the audit trail.

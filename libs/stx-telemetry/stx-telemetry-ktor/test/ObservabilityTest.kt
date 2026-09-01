@@ -1,16 +1,16 @@
-package com.strange.telemetry.ktor
+package com.softistx.telemetry.ktor
 
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.logger
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.model.SpanStatus
-import com.strange.telemetry.span
-import com.strange.telemetry.trace.Sampler
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.logger
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.model.SpanStatus
+import com.softistx.telemetry.span
+import com.softistx.telemetry.trace.Sampler
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -241,7 +241,7 @@ class ObservabilityTest :
             scenario("a telemetry built elsewhere is used and not closed") {
                 val collector = Collector()
                 val mine =
-                    com.strange.telemetry.Telemetry("mine") {
+                    com.softistx.telemetry.Telemetry("mine") {
                         linger = 1.milliseconds
                         export(collector)
                     }

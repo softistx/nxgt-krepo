@@ -1,4 +1,4 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
 import graphql.language.InterfaceTypeDefinition
 import graphql.language.UnionTypeDefinition

@@ -4,15 +4,15 @@ Spring Boot integration for the libraries here — the same job `stx-ktor` does 
 shape: one package per concern, one module for all of them.
 
 ```
-com.strange.spring.error    ApiException, ErrorResponse, the advices that connect them
-com.strange.spring.i18n     the request's locale, and the catalogs bound to it
-com.strange.spring.web      what a functional route reads off a request and answers with
-com.strange.spring.client   a typed HTTP client from an interface
-com.strange.spring.security who is calling, and the annotations that say who may
-com.strange.spring.cors     a browser policy read from configuration
-com.strange.spring.json     kotlinx-serialization as WebFlux's codec
-com.strange.spring.data     the Spring Data layer — Mongo's query vocabulary, paging and wiring
-com.strange.spring.integration  one auto-configuration per stx-* library
+com.softistx.spring.error    ApiException, ErrorResponse, the advices that connect them
+com.softistx.spring.i18n     the request's locale, and the catalogs bound to it
+com.softistx.spring.web      what a functional route reads off a request and answers with
+com.softistx.spring.client   a typed HTTP client from an interface
+com.softistx.spring.security who is calling, and the annotations that say who may
+com.softistx.spring.cors     a browser policy read from configuration
+com.softistx.spring.json     kotlinx-serialization as WebFlux's codec
+com.softistx.spring.data     the Spring Data layer — Mongo's query vocabulary, paging and wiring
+com.softistx.spring.integration  one auto-configuration per stx-* library
 ```
 
 `examples/spring-orders` is all of it running: a Spring Boot application with **no configuration
@@ -280,7 +280,7 @@ stx:
     origins: [ "http://localhost:5173" ]
 ```
 
-**The properties become a `com.strange.common.http.CorsPolicy`, and Spring's `CorsConfiguration`
+**The properties become a `com.softistx.common.http.CorsPolicy`, and Spring's `CorsConfiguration`
 after that.** `stx-ktor` installs Ktor's plugin from the same policy, so an application moving
 between the two frameworks keeps its origins, its methods and its keys — CORS is a browser policy,
 not a web-framework feature, and two configuration classes that agree today agree only for as long
@@ -627,7 +627,7 @@ somebody's object store out of a config file nobody reviewed as a schema.
 
 ## Testing an application built on this
 
-`com.strange.spring.testing` is in `src/`, not in a test tree, because it is *for consumers* — an
+`com.softistx.spring.testing` is in `src/`, not in a test tree, because it is *for consumers* — an
 application adds `//libs/stx-spring-boot` and `//libs/stx-testing` to its `test-dependencies` and
 writes four things:
 
@@ -703,7 +703,7 @@ adding a listener of its own, overriding `extensions` to say so, dropping `Sprin
 way, and watching every spec fail on a missing bean. Extras go to the constructor and keep it.
 
 Everything behind this — `stx-testing`, `spring-boot-starter-test`, Kotest — is `compile-only`, for
-the reason the next section gives. Nothing in `src/` refers to `com.strange.spring.testing` and no
+the reason the next section gives. Nothing in `src/` refers to `com.softistx.spring.testing` and no
 auto-configuration imports it, so an application that never writes a spec never loads any of it.
 
 ## Dependencies

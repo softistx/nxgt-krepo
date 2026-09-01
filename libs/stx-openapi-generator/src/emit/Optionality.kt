@@ -1,7 +1,7 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
-import com.strange.openapi.Param
-import com.strange.openapi.TypeRef
+import com.softistx.openapi.Param
+import com.softistx.openapi.TypeRef
 
 /** How a value that may be absent or null is written in Kotlin. */
 public data class Optionality(

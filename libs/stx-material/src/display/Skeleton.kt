@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,8 +10,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.strange.material.motion.shimmer
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.motion.shimmer
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * The shape a piece of content will occupy, while it is still loading.

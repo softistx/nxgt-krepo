@@ -1,6 +1,6 @@
 package io.kotest.provided
 
-import com.strange.spring.testing.SpringProjectConfig
+import com.softistx.spring.testing.SpringProjectConfig
 
 /**
  * The one line an application writes, written here too — because a spec of `SpringProjectConfig` that

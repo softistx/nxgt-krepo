@@ -1,9 +1,9 @@
-package com.strange.telemetry.export
+package com.softistx.telemetry.export
 
-import com.strange.common.concurrent.Guarded
-import com.strange.common.lifecycle.CloseGuard
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
+import com.softistx.common.concurrent.Guarded
+import com.softistx.common.lifecycle.CloseGuard
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedOutputStream

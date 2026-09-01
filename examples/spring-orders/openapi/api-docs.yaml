@@ -283,7 +283,7 @@ components:
       type: object
       description: |
         What a failure looks like on the wire — one shape for every error this service returns.
-        It mirrors `com.strange.spring.error.ErrorResponse` field for field; `ErrorResponseShapeTest`
+        It mirrors `com.softistx.spring.error.ErrorResponse` field for field; `ErrorResponseShapeTest`
         is what keeps the two from drifting.
       required:
         - message

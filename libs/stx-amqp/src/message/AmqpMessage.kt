@@ -1,8 +1,8 @@
-package com.strange.amqp.message
+package com.softistx.amqp.message
 
 import com.rabbitmq.client.AMQP.BasicProperties
 import com.rabbitmq.client.Delivery
-import com.strange.amqp.codec.AmqpCodec
+import com.softistx.amqp.codec.AmqpCodec
 import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
 

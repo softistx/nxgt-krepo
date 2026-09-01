@@ -1,4 +1,4 @@
-package com.strange.demo.api.model
+package com.softistx.demo.api.model
 
 import kotlin.time.Clock
 import kotlin.time.Instant

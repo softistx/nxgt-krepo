@@ -1,9 +1,9 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
-import com.strange.jpa.JpaNotFoundException
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.entity.Thing
-import com.strange.jpa.session.session
+import com.softistx.jpa.JpaNotFoundException
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.entity.Thing
+import com.softistx.jpa.session.session
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull

@@ -1,4 +1,4 @@
-package com.strange.mongo
+package com.softistx.mongo
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

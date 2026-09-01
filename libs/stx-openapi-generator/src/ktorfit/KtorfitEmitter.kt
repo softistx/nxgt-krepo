@@ -1,31 +1,31 @@
-package com.strange.openapi.ktorfit
+package com.softistx.openapi.ktorfit
 
+import com.softistx.openapi.ApiGroup
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.Operation
+import com.softistx.openapi.Param
+import com.softistx.openapi.ParamKind
+import com.softistx.openapi.emit.EmitException
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.Optionality
+import com.softistx.openapi.emit.SourceEmitter
+import com.softistx.openapi.emit.apiExceptionFile
+import com.softistx.openapi.emit.apiFile
+import com.softistx.openapi.emit.apiOperationFile
+import com.softistx.openapi.emit.endpointsFile
+import com.softistx.openapi.emit.optionalityOf
+import com.softistx.openapi.emit.requireEverySchemeSatisfiable
+import com.softistx.openapi.emit.requireExceptionNamesFree
+import com.softistx.openapi.emit.typeNameOf
+import com.softistx.openapi.models.ModelStyle
+import com.softistx.openapi.models.modelFiles
+import com.softistx.openapi.models.types
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
-import com.strange.openapi.ApiGroup
-import com.strange.openapi.ApiModel
-import com.strange.openapi.Operation
-import com.strange.openapi.Param
-import com.strange.openapi.ParamKind
-import com.strange.openapi.emit.EmitException
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.Optionality
-import com.strange.openapi.emit.SourceEmitter
-import com.strange.openapi.emit.apiExceptionFile
-import com.strange.openapi.emit.apiFile
-import com.strange.openapi.emit.apiOperationFile
-import com.strange.openapi.emit.endpointsFile
-import com.strange.openapi.emit.optionalityOf
-import com.strange.openapi.emit.requireEverySchemeSatisfiable
-import com.strange.openapi.emit.requireExceptionNamesFree
-import com.strange.openapi.emit.typeNameOf
-import com.strange.openapi.models.ModelStyle
-import com.strange.openapi.models.modelFiles
-import com.strange.openapi.models.types
 
 /**
  * Emits [Ktorfit](https://foso.github.io/Ktorfit/) interfaces plus `@Serializable` models.

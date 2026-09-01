@@ -1,10 +1,10 @@
-package com.strange.telemetry.spring
+package com.softistx.telemetry.spring
 
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanStatus
-import com.strange.telemetry.spring.fixture.Collector
-import com.strange.telemetry.spring.fixture.Orders
-import com.strange.telemetry.spring.fixture.collecting
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.model.SpanStatus
+import com.softistx.telemetry.spring.fixture.Collector
+import com.softistx.telemetry.spring.fixture.Orders
+import com.softistx.telemetry.spring.fixture.collecting
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull

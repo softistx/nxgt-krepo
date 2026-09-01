@@ -1,8 +1,8 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
-import com.strange.graphix.Graphix
-import com.strange.graphix.http.GRAPHQL_TRANSPORT_WS
-import com.strange.graphix.http.GraphqlWsSession
+import com.softistx.graphix.Graphix
+import com.softistx.graphix.http.GRAPHQL_TRANSPORT_WS
+import com.softistx.graphix.http.GraphqlWsSession
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingleOrNull

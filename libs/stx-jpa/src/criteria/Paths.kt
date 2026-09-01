@@ -1,4 +1,4 @@
-package com.strange.jpa.criteria
+package com.softistx.jpa.criteria
 
 import jakarta.persistence.criteria.From
 import jakarta.persistence.criteria.Join

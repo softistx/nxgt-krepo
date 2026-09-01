@@ -86,4 +86,4 @@ stx:
 
 logging:
   level:
-    com.strange.spring.data.mongo.migration: INFO
+    com.softistx.spring.data.mongo.migration: INFO

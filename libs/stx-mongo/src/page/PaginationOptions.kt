@@ -1,7 +1,7 @@
-package com.strange.mongo.page
+package com.softistx.mongo.page
 
-import com.strange.common.page.PageWindow
-import com.strange.mongo.InvalidPaginationException
+import com.softistx.common.page.PageWindow
+import com.softistx.mongo.InvalidPaginationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -19,7 +19,7 @@ import kotlinx.serialization.json.JsonObject
  *
  * Those three fields, [PageWindow.limit], [PageWindow.forward] and the rules are `stx-common`'s,
  * because `stx-jpa` asks for a page with the same three. What stays here is [sort], [filter],
- * the serialization, and the exception — a caller catching [com.strange.mongo.MongoDataException]
+ * the serialization, and the exception — a caller catching [com.softistx.mongo.MongoDataException]
  * should not have to also catch `stx-common`'s.
  */
 @Serializable

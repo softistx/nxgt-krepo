@@ -1,4 +1,4 @@
-package com.strange.material.media
+package com.softistx.material.media
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,10 +13,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 
 /** Two letters from a name, for an [Avatar] that has no image. */
 fun initials(name: String): String {

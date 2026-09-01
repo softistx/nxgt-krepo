@@ -1,4 +1,4 @@
-package com.strange.kafka.producer
+package com.softistx.kafka.producer
 
 /**
  * What the producer does to a batch before it goes over the wire.

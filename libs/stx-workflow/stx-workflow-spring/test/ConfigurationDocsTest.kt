@@ -1,4 +1,4 @@
-package com.strange.workflow.spring
+package com.softistx.workflow.spring
 
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec

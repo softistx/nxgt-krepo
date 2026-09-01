@@ -1,4 +1,4 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
 import jakarta.persistence.criteria.CommonAbstractCriteria
 import jakarta.persistence.criteria.CriteriaDelete
@@ -31,7 +31,7 @@ import org.hibernate.reactive.stage.Stage
  * `hibernate-jpamodelgen`, a *javac* annotation processor; this toolchain runs Java annotation
  * processing for Java and Android modules only, has no kapt, and jpamodelgen has no KSP build. So a
  * criteria written against the bare API names its attributes with strings, unchecked until the query
- * runs. `com.strange.jpa.criteria` is the answer to that and nothing more: extensions on Criteria's
+ * runs. `com.softistx.jpa.criteria` is the answer to that and nothing more: extensions on Criteria's
  * own types that take `Book::title` where a generated `Book_` would have been, and leave the shape
  * of a criteria exactly as JPA defines it.
  */
@@ -58,7 +58,7 @@ fun Stage.QueryProducer.mutate(criteria: CriteriaDelete<*>): JpaMutation = JpaMu
  *
  * Hibernate's, not JPA's: [JpaCriteriaInsert] comes off [criteria] as `createCriteriaInsertSelect`
  * or `createCriteriaInsertValues`, and there is no JPA equivalent to widen it to.
- * `com.strange.jpa.criteria.createInsert` and `createInsertSelect` are the reified spellings.
+ * `com.softistx.jpa.criteria.createInsert` and `createInsertSelect` are the reified spellings.
  */
 fun Stage.QueryProducer.mutate(criteria: JpaCriteriaInsert<*>): JpaMutation = JpaMutation(createMutationQuery(criteria))
 

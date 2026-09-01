@@ -1,8 +1,8 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.button.CopyButton
+import com.softistx.material.button.CopyButton
 
 /**
  * A value meant to be copied, not edited. A read-only [TextField] with a [CopyButton] in the

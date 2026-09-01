@@ -1,10 +1,10 @@
-package com.strange.telemetry
+package com.softistx.telemetry
 
-import com.strange.telemetry.context.withAttributes
-import com.strange.telemetry.context.withTelemetry
-import com.strange.telemetry.fixture.Collector
-import com.strange.telemetry.fixture.collecting
-import com.strange.telemetry.model.Severity
+import com.softistx.telemetry.context.withAttributes
+import com.softistx.telemetry.context.withTelemetry
+import com.softistx.telemetry.fixture.Collector
+import com.softistx.telemetry.fixture.collecting
+import com.softistx.telemetry.model.Severity
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -40,7 +40,7 @@ class LoggerTest :
                 val on = record.span.shouldNotBeNull()
                 on.traceId shouldBe span.context.traceId
                 on.spanId shouldBe span.context.spanId
-                record.source shouldBe "com.strange.telemetry.CheckoutService"
+                record.source shouldBe "com.softistx.telemetry.CheckoutService"
             }
 
             scenario("written outside one, it has no span and is still emitted") {

@@ -1,4 +1,4 @@
-package com.strange.mongo
+package com.softistx.mongo
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection

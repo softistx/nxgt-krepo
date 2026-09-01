@@ -1,4 +1,4 @@
-package com.strange.jpa.criteria
+package com.softistx.jpa.criteria
 
 import jakarta.persistence.criteria.Expression
 import org.hibernate.query.criteria.HibernateCriteriaBuilder

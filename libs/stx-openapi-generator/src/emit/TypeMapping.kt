@@ -1,5 +1,6 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
+import com.softistx.openapi.TypeRef
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.BYTE_ARRAY
 import com.squareup.kotlinpoet.ClassName
@@ -12,13 +13,12 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.UNIT
-import com.strange.openapi.TypeRef
 
 /**
  * The spec types with no single obvious Kotlin equivalent.
  *
  * Which pair applies follows the serialization library the output targets, so it comes from
- * `com.strange.openapi.models.ModelStyle` rather than from the client style.
+ * `com.softistx.openapi.models.ModelStyle` rather than from the client style.
  */
 public class TypeStyle(
     public val instant: TypeName,

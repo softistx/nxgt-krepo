@@ -1,9 +1,9 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.AuditQueries
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.ProductQueries
-import com.strange.graphix.schema.fieldDirective
+import com.softistx.graphix.fixture.AuditQueries
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.ProductQueries
+import com.softistx.graphix.schema.fieldDirective
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

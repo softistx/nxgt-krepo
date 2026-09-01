@@ -1,6 +1,6 @@
-package com.strange.spring.error
+package com.softistx.spring.error
 
-import com.strange.i18n.Messages
+import com.softistx.i18n.Messages
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

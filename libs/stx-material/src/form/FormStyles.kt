@@ -1,10 +1,10 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.animate
 import androidx.compose.foundation.style.disabled
-import com.strange.material.motion.MotionSpeed
-import com.strange.material.theme.motion
+import com.softistx.material.motion.MotionSpeed
+import com.softistx.material.theme.motion
 
 /**
  * What Material 3's inputs have no parameter for.

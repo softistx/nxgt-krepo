@@ -1,7 +1,7 @@
-package com.strange.spring.data.mongo.migration
+package com.softistx.spring.data.mongo.migration
 
-import com.strange.spring.data.mongo.criteria.eq
-import com.strange.spring.data.mongo.criteria.query
+import com.softistx.spring.data.mongo.criteria.eq
+import com.softistx.spring.data.mongo.criteria.query
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.dao.DuplicateKeyException

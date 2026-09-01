@@ -14,7 +14,7 @@ plugins:
     # into one directory and would overwrite each other.
     specs:
       - spec: openapi/api-docs.yaml
-        packageName: com.strange.example.orders.api
+        packageName: com.softistx.example.orders.api
         client: Spring
         # Not `Auto`, which would give Jackson: `stx.json.enabled` puts kotlinx codecs on WebFlux, so
         # a model that is not `@Serializable` fails to encode at the first response.
@@ -185,13 +185,13 @@ invented, and a sentinel is exactly what must never reach the database.
 
 ## test/ — e2e through the generated clients
 
-**The client assembly is the library's.** `com.strange.spring.client` has `httpServiceFactory`,
+**The client assembly is the library's.** `com.softistx.spring.client` has `httpServiceFactory`,
 `httpClient<T>()`, `withClient<T>()` and — for a *generated* interface — `generatedApiFactory`, which
 is the four settings such a client needs and nothing else. A spec that assembled its own `WebClient`
 would be asserting against a transport no caller uses.
 
 The application is Spring's to start, and **none of that bootstrap is written per application** —
-`stx-spring-boot`'s `com.strange.spring.testing` ships it. Add `//libs/stx-spring-boot` and
+`stx-spring-boot`'s `com.softistx.spring.testing` ships it. Add `//libs/stx-spring-boot` and
 `//libs/stx-testing` to `test-dependencies`, along with `$libs.kotest.extensions.spring`, and write
 these two files:
 

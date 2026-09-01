@@ -1,4 +1,4 @@
-package com.strange.jpa.convert
+package com.softistx.jpa.convert
 
 import jakarta.persistence.AttributeConverter
 import kotlin.reflect.KClass

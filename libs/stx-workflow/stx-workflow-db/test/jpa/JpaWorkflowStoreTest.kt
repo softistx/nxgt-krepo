@@ -1,10 +1,10 @@
-package com.strange.workflow.jpa
+package com.softistx.workflow.jpa
 
-import com.strange.jpa.query.query
-import com.strange.jpa.session.session
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.db.record
-import com.strange.workflow.db.storeContract
+import com.softistx.jpa.query.query
+import com.softistx.jpa.session.session
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.db.record
+import com.softistx.workflow.db.storeContract
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlin.time.Clock

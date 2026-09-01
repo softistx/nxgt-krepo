@@ -1,4 +1,4 @@
-package com.strange.jpa
+package com.softistx.jpa
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

@@ -1,12 +1,12 @@
-package com.strange.example.shop
+package com.softistx.example.shop
 
-import com.strange.example.shop.domain.Product
-import com.strange.example.shop.model.EditProduct
-import com.strange.example.shop.model.NewProduct
-import com.strange.example.shop.model.view
-import com.strange.jpa.audit.stampedBy
-import com.strange.jpa.audit.touchedBy
-import com.strange.jpa.scan.scanEntities
+import com.softistx.example.shop.domain.Product
+import com.softistx.example.shop.model.EditProduct
+import com.softistx.example.shop.model.NewProduct
+import com.softistx.example.shop.model.view
+import com.softistx.jpa.audit.stampedBy
+import com.softistx.jpa.audit.touchedBy
+import com.softistx.jpa.scan.scanEntities
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -29,7 +29,7 @@ class ShopTest :
                 // `ShopServer` installs the plugin with `packages(…)` and never mentions `Product`.
                 // The failure mode of a scan is finding nothing and starting perfectly, so the
                 // package name is worth an assertion rather than a comment.
-                scanEntities("com.strange.example.shop.domain") shouldContain Product::class
+                scanEntities("com.softistx.example.shop.domain") shouldContain Product::class
             }
         }
 

@@ -1,14 +1,14 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.workflow.Workflow
-import com.strange.workflow.WorkflowConflictException
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowError
-import com.strange.workflow.dsl.StepScope
-import com.strange.workflow.store.JournalEntry
-import com.strange.workflow.store.NodeOutcome
-import com.strange.workflow.store.WorkflowRecord
-import com.strange.workflow.store.WorkflowStore
+import com.softistx.workflow.Workflow
+import com.softistx.workflow.WorkflowConflictException
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowError
+import com.softistx.workflow.dsl.StepScope
+import com.softistx.workflow.store.JournalEntry
+import com.softistx.workflow.store.NodeOutcome
+import com.softistx.workflow.store.WorkflowRecord
+import com.softistx.workflow.store.WorkflowStore
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlin.time.Clock

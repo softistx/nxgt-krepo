@@ -1,4 +1,4 @@
-package com.strange.storage
+package com.softistx.storage
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContain

@@ -1,12 +1,12 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.jpa.entity.AutoId
-import com.strange.jpa.entity.IdentityId
-import com.strange.jpa.entity.JavaUuidId
-import com.strange.jpa.entity.SequenceId
-import com.strange.jpa.entity.UuidId
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.entity.AutoId
+import com.softistx.jpa.entity.IdentityId
+import com.softistx.jpa.entity.JavaUuidId
+import com.softistx.jpa.entity.SequenceId
+import com.softistx.jpa.entity.UuidId
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

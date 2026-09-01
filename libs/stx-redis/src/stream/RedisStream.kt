@@ -1,9 +1,9 @@
-package com.strange.redis.stream
+package com.softistx.redis.stream
 
-import com.strange.redis.Redis
-import com.strange.redis.RedisValueException
-import com.strange.redis.codec.JsonValueCodec
-import com.strange.redis.codec.ValueCodec
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisValueException
+import com.softistx.redis.codec.JsonValueCodec
+import com.softistx.redis.codec.ValueCodec
 import io.lettuce.core.Consumer
 import io.lettuce.core.Limit
 import io.lettuce.core.Range

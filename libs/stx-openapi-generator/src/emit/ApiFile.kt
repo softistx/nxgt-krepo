@@ -1,11 +1,11 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
+import com.softistx.openapi.ApiGroup
+import com.softistx.openapi.Operation
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.ApiGroup
-import com.strange.openapi.Operation
 
 /** Marks generated files, so nobody edits one by hand and loses the change on the next build. */
 public const val GENERATED_KDOC: String = "Generated from the OpenAPI document. Do not edit."

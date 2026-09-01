@@ -1,13 +1,13 @@
-package com.strange.material.demo
+package com.softistx.material.demo
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.motion.StrangeMotion
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.platformColorScheme
+import com.softistx.material.motion.StrangeMotion
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.platformColorScheme
 
 /**
  * The whole demo. Both launchers call this and nothing else, so the Android application and the

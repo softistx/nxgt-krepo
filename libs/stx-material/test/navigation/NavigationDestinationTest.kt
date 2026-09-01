@@ -1,7 +1,7 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.theme.Tone
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.theme.Tone
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf

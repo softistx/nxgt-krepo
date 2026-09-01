@@ -1,6 +1,6 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
-import com.strange.material.theme.Tone
+import com.softistx.material.theme.Tone
 
 /** The rows the full-screen story renders. Data only — kept out of the screen so the screen reads. */
 data class Order(

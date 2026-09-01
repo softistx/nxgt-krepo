@@ -1,7 +1,7 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
-import com.strange.material.demo.knobs.enumChoice
-import com.strange.material.demo.storyGroup
+import com.softistx.material.demo.knobs.enumChoice
+import com.softistx.material.demo.storyGroup
 
 val ScreenStories =
     storyGroup("Screens") {

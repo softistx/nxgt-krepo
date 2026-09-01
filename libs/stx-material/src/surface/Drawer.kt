@@ -1,4 +1,4 @@
-package com.strange.material.surface
+package com.softistx.material.surface
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.DrawerValue
@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 /**
  * A modal drawer. Material 3's `ModalNavigationDrawer`.
  *
- * The permanent rail is [com.strange.material.navigation.NavigationSuite]; this is the overlay that
+ * The permanent rail is [com.softistx.material.navigation.NavigationSuite]; this is the overlay that
  * a compact window opens from a menu icon. [open] is the caller's; the drawer animates itself.
  */
 @Composable

@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.animate
@@ -9,8 +9,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import com.strange.material.motion.MotionSpeed
-import com.strange.material.theme.motion
+import com.softistx.material.motion.MotionSpeed
+import com.softistx.material.theme.motion
 
 /** Which of Material 3's three cards this is. */
 enum class CardVariant {

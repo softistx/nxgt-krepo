@@ -1,13 +1,13 @@
-package com.strange.workflow.annotation
+package com.softistx.workflow.annotation
 
-import com.strange.workflow.Workflow
-import com.strange.workflow.dsl.RetryBuilder
-import com.strange.workflow.dsl.RetryPolicy
-import com.strange.workflow.dsl.Signal
-import com.strange.workflow.dsl.StepScope
-import com.strange.workflow.dsl.exponential
-import com.strange.workflow.dsl.fixed
-import com.strange.workflow.dsl.signal
+import com.softistx.workflow.Workflow
+import com.softistx.workflow.dsl.RetryBuilder
+import com.softistx.workflow.dsl.RetryPolicy
+import com.softistx.workflow.dsl.Signal
+import com.softistx.workflow.dsl.StepScope
+import com.softistx.workflow.dsl.exponential
+import com.softistx.workflow.dsl.fixed
+import com.softistx.workflow.dsl.signal
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction

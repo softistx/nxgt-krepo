@@ -1,15 +1,15 @@
-package com.strange.telemetry.spring.fixture
+package com.softistx.telemetry.spring.fixture
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.context.currentSpan
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.logger
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.trace.SpanContext
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.context.currentSpan
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.logger
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.trace.SpanContext
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController

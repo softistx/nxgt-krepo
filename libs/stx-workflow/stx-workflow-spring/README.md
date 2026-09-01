@@ -51,7 +51,7 @@ belong. Guessing would put them somewhere plausible and wrong, and nobody would 
 cache was flushed — so naming a store whose connection bean is absent fails the context at refresh
 rather than at the first workflow.
 
-`store: jpa` needs `com.strange.workflow.jpa` in `stx.jpa.packages`, or the session factory has no
+`store: jpa` needs `com.softistx.workflow.jpa` in `stx.jpa.packages`, or the session factory has no
 `WorkflowInstanceRow` to map. Nothing here can fix that: the factory is built before this
 configuration, from a list only the application has.
 

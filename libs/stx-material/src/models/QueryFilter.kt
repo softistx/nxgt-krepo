@@ -1,4 +1,4 @@
-package com.strange.material.models
+package com.softistx.material.models
 
 import kotlinx.serialization.json.JsonObject
 

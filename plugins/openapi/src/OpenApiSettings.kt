@@ -1,4 +1,4 @@
-package com.strange.openapi.plugin
+package com.softistx.openapi.plugin
 
 import org.jetbrains.amper.plugins.Configurable
 import java.nio.file.Path
@@ -42,7 +42,7 @@ public enum class ModelKind {
 /**
  * How operations are split into interfaces.
  *
- * Mirrors `com.strange.openapi.Grouping`: configurable types must be declared in the plugin's
+ * Mirrors `com.softistx.openapi.Grouping`: configurable types must be declared in the plugin's
  * own source directory, so an enum from a dependency module cannot be reused here.
  */
 public enum class GroupBy { Tag, Path, None }

@@ -1,6 +1,6 @@
-package com.strange.spring.data.mongo.migration
+package com.softistx.spring.data.mongo.migration
 
-import com.strange.spring.data.mongo.template.SpringMongo
+import com.softistx.spring.data.mongo.template.SpringMongo
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

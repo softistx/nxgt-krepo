@@ -1,16 +1,16 @@
-package com.strange.example.orders
+package com.softistx.example.orders
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
-import com.strange.example.orders.api.models.ErrorResponse as DocumentedError
-import com.strange.spring.error.ErrorResponse as ActualError
+import com.softistx.example.orders.api.models.ErrorResponse as DocumentedError
+import com.softistx.spring.error.ErrorResponse as ActualError
 
 /**
  * That the document's `ErrorResponse` and the one this service actually writes are the same shape.
  *
  * Nothing else checks it. Every error response here is built by `ApiExceptionHandler` from
- * `com.strange.spring.error.ErrorResponse`, which belongs to `stx-spring-boot` and knows nothing
+ * `com.softistx.spring.error.ErrorResponse`, which belongs to `stx-spring-boot` and knows nothing
  * about this application's document — so the document's account of a failure is a claim, and a
  * claim about a wire format is exactly the kind that is quietly wrong for a year.
  *

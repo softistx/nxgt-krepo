@@ -1,4 +1,4 @@
-package com.strange.mongo.audit
+package com.softistx.mongo.audit
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

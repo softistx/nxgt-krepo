@@ -1,4 +1,4 @@
-package com.strange.spring.security
+package com.softistx.spring.security
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

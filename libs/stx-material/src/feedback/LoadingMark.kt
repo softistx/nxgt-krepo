@@ -1,4 +1,4 @@
-package com.strange.material.feedback
+package com.softistx.material.feedback
 
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable

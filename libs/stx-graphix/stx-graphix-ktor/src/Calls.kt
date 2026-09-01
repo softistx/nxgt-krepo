@@ -1,6 +1,6 @@
-package com.strange.graphix.ktor
+package com.softistx.graphix.ktor
 
-import com.strange.graphix.Graphix
+import com.softistx.graphix.Graphix
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 

@@ -1,4 +1,4 @@
-package com.strange.mongo.gridfs
+package com.softistx.mongo.gridfs
 
 import com.mongodb.client.gridfs.model.GridFSDownloadOptions
 import com.mongodb.client.gridfs.model.GridFSFile
@@ -6,7 +6,7 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions
 import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.reactivestreams.client.MongoDatabase
 import com.mongodb.reactivestreams.client.gridfs.GridFSBuckets
-import com.strange.mongo.query.byId
+import com.softistx.mongo.query.byId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.reactive.asFlow

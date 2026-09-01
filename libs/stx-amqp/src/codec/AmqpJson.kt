@@ -1,6 +1,6 @@
-package com.strange.amqp.codec
+package com.softistx.amqp.codec
 
-import com.strange.common.serialization.lenientJson
+import com.softistx.common.serialization.lenientJson
 import kotlinx.serialization.json.Json
 
 /**

@@ -1,4 +1,4 @@
-package com.strange.apollo.plugin
+package com.softistx.apollo.plugin
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

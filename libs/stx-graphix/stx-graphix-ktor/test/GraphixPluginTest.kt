@@ -1,13 +1,13 @@
-package com.strange.graphix.ktor
+package com.softistx.graphix.ktor
 
-import com.strange.graphix.GraphixCustomizer
-import com.strange.graphix.http.GRAPHQL_TRANSPORT_WS
-import com.strange.graphix.http.SubscriptionProtocol
-import com.strange.graphix.ktor.fixture.BoomQueries
-import com.strange.graphix.ktor.fixture.GreetingQueries
-import com.strange.graphix.ktor.fixture.TickSubscriptions
-import com.strange.graphix.scalar.graphQLScalar
-import com.strange.graphix.scalar.scalar
+import com.softistx.graphix.GraphixCustomizer
+import com.softistx.graphix.http.GRAPHQL_TRANSPORT_WS
+import com.softistx.graphix.http.SubscriptionProtocol
+import com.softistx.graphix.ktor.fixture.BoomQueries
+import com.softistx.graphix.ktor.fixture.GreetingQueries
+import com.softistx.graphix.ktor.fixture.TickSubscriptions
+import com.softistx.graphix.scalar.graphQLScalar
+import com.softistx.graphix.scalar.scalar
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -242,7 +242,7 @@ class GraphixPluginTest :
         feature("instance") {
             scenario("an engine built elsewhere is the one the route uses") {
                 val engine =
-                    com.strange.graphix.Graphix {
+                    com.softistx.graphix.Graphix {
                         query(GreetingQueries())
                     }
                 testApplication {
@@ -318,7 +318,7 @@ class GraphixPluginTest :
 
             scenario("an adopted engine still gets the page: the plugin serves it, not the engine") {
                 testApplication {
-                    val engine = com.strange.graphix.Graphix { query(GreetingQueries()) }
+                    val engine = com.softistx.graphix.Graphix { query(GreetingQueries()) }
                     application {
                         install(GraphQL) {
                             instance = engine

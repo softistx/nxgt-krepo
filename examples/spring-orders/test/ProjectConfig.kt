@@ -1,6 +1,6 @@
 package io.kotest.provided
 
-import com.strange.spring.testing.SpringProjectConfig
+import com.softistx.spring.testing.SpringProjectConfig
 
 /**
  * What lets a Kotest spec here be a Spring test.

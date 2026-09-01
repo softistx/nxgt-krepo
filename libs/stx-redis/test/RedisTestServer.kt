@@ -1,8 +1,8 @@
-package com.strange.redis
+package com.softistx.redis
 
-import com.strange.redis.codec.redisJson
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.redisContainer
+import com.softistx.redis.codec.redisJson
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.redisContainer
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.seconds

@@ -1,4 +1,4 @@
-package com.strange.kafka.consumer
+package com.softistx.kafka.consumer
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds

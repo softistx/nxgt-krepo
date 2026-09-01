@@ -1,4 +1,4 @@
-package com.strange.spring.security
+package com.softistx.spring.security
 
 import org.springframework.security.access.prepost.PostAuthorize
 import org.springframework.security.access.prepost.PostFilter

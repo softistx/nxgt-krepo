@@ -1,6 +1,6 @@
-package com.strange.openapi
+package com.softistx.openapi
 
-import com.strange.openapi.parser.Naming
+import com.softistx.openapi.parser.Naming
 
 /**
  * Frontend-agnostic description of a client to generate.

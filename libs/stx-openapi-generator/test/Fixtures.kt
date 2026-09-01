@@ -1,7 +1,7 @@
-package com.strange.openapi
+package com.softistx.openapi
 
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.SourceEmitter
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.SourceEmitter
 
 /**
  * One model both emitter tests work from, so a difference between the two clients is visible

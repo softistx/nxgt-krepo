@@ -1,6 +1,6 @@
 # The `test` profile `SpringSpec` activates, for this module's own specs of `src/testing/`.
 #
-# It is short on purpose: what is being specced is that `com.strange.spring.testing` needs nothing
+# It is short on purpose: what is being specced is that `com.softistx.spring.testing` needs nothing
 # more than this one key from an application. Every stx integration auto-configuration is
 # `@ConditionalOnProperty(enabled = true)` and so stays off, which is why booting a whole application
 # here opens no socket to anything but the MongoDB the specs asked for.

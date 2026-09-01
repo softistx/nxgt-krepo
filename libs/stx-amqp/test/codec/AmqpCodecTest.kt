@@ -1,6 +1,6 @@
-package com.strange.amqp.codec
+package com.softistx.amqp.codec
 
-import com.strange.amqp.AmqpValueException
+import com.softistx.amqp.AmqpValueException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

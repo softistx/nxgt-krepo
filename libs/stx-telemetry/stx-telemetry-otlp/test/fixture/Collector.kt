@@ -1,4 +1,4 @@
-package com.strange.telemetry.otlp.fixture
+package com.softistx.telemetry.otlp.fixture
 
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer

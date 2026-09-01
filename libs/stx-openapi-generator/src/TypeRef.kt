@@ -1,4 +1,4 @@
-package com.strange.openapi
+package com.softistx.openapi
 
 /**
  * A schema reduced to the kind of Kotlin type it becomes.

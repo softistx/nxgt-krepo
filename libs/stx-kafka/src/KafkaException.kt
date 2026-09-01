@@ -1,4 +1,4 @@
-package com.strange.kafka
+package com.softistx.kafka
 
 /**
  * What this module throws. Kafka's own `org.apache.kafka.common.KafkaException` and its subclasses

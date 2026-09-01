@@ -1,5 +1,15 @@
-package com.strange.openapi.spring
+package com.softistx.openapi.spring
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.emit.API_ERROR_OF
+import com.softistx.openapi.emit.API_EXCEPTION
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.GENERATED_COMMENT
+import com.softistx.openapi.emit.apiErrorDispatch
+import com.softistx.openapi.emit.apiExceptionName
+import com.softistx.openapi.emit.errorSchemas
+import com.softistx.openapi.emit.exceptionNameFor
+import com.softistx.openapi.emit.parserNameFor
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -9,16 +19,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
-import com.strange.openapi.ApiModel
-import com.strange.openapi.emit.API_ERROR_OF
-import com.strange.openapi.emit.API_EXCEPTION
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.GENERATED_COMMENT
-import com.strange.openapi.emit.apiErrorDispatch
-import com.strange.openapi.emit.apiExceptionName
-import com.strange.openapi.emit.errorSchemas
-import com.strange.openapi.emit.exceptionNameFor
-import com.strange.openapi.emit.parserNameFor
 
 /**
  * `ApiErrors.kt`: the Spring filter that turns a documented failure into its exception.

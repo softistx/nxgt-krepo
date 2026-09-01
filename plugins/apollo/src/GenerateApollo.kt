@@ -1,4 +1,4 @@
-package com.strange.apollo.plugin
+package com.softistx.apollo.plugin
 
 import org.jetbrains.amper.plugins.Input
 import org.jetbrains.amper.plugins.Output

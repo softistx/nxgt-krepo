@@ -1,6 +1,6 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.ScalarQueries
+import com.softistx.graphix.fixture.ScalarQueries
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlin.uuid.ExperimentalUuidApi

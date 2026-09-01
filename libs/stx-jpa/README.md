@@ -4,15 +4,15 @@ Hibernate Reactive for a Kotlin coroutine service — JPA mapping over the Vert.
 with no thread parked on a query.
 
 ```
-com.strange.jpa            Jpa, JpaConfig, JpaException — connect, close, and what this module throws
-com.strange.jpa.session    session / transaction / stateless, and the confinement bridge underneath
-com.strange.jpa.query      HQL and SQL through one builder, the CRUD reads and writes, one-shot ops on Jpa
-com.strange.jpa.criteria   extensions on JPA's own Criteria types — properties instead of strings
-com.strange.jpa.convert    the converters JPA has no basic type for — kotlin.time.Instant, kotlin.uuid.Uuid
-com.strange.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
-com.strange.jpa.naming     what a column is called when the entity does not say
-com.strange.jpa.scan       reading entities and converters off the classpath
-com.strange.jpa.audit      AuditedEntity and its stamps — who wrote a row, and when
+com.softistx.jpa            Jpa, JpaConfig, JpaException — connect, close, and what this module throws
+com.softistx.jpa.session    session / transaction / stateless, and the confinement bridge underneath
+com.softistx.jpa.query      HQL and SQL through one builder, the CRUD reads and writes, one-shot ops on Jpa
+com.softistx.jpa.criteria   extensions on JPA's own Criteria types — properties instead of strings
+com.softistx.jpa.convert    the converters JPA has no basic type for — kotlin.time.Instant, kotlin.uuid.Uuid
+com.softistx.jpa.json       the kotlinx.serialization mapper behind a JSON column, and the Json it uses
+com.softistx.jpa.naming     what a column is called when the entity does not say
+com.softistx.jpa.scan       reading entities and converters off the classpath
+com.softistx.jpa.audit      AuditedEntity and its stamps — who wrote a row, and when
 ```
 
 ```kotlin
@@ -231,7 +231,7 @@ Two of these in a row are two transactions. Anything that touches the database t
 ## Criteria — see `docs/jpa-criteria.md`
 
 The other way in is JPA's own Criteria API, with the pieces named by properties instead of strings.
-`com.strange.jpa.criteria` adds nothing to the *shape* of a criteria — it is Criteria's statement,
+`com.softistx.jpa.criteria` adds nothing to the *shape* of a criteria — it is Criteria's statement,
 Criteria's `where`, Criteria's `Root` — and replaces only the parts that would otherwise be unchecked
 text:
 

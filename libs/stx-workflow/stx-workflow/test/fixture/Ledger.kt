@@ -1,4 +1,4 @@
-package com.strange.workflow.fixture
+package com.softistx.workflow.fixture
 
 import kotlinx.serialization.Serializable
 

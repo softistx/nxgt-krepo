@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.migration
+package com.softistx.spring.data.mongo.migration
 
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.TypeAlias

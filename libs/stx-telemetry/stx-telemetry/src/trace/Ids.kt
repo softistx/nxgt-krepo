@@ -1,4 +1,4 @@
-package com.strange.telemetry.trace
+package com.softistx.telemetry.trace
 
 import kotlinx.serialization.Serializable
 import kotlin.random.Random

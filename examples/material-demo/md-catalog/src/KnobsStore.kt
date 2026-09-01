@@ -1,9 +1,9 @@
-package com.strange.material.demo
+package com.softistx.material.demo
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
-import com.strange.material.demo.knobs.Knobs
+import com.softistx.material.demo.knobs.Knobs
 
 /**
  * One [Knobs] per story, kept for as long as the catalogue is open.

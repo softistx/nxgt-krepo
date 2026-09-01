@@ -1,8 +1,8 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.UnionDiscriminator
-import com.strange.openapi.UnionSubtype
-import com.strange.openapi.UnionType
+import com.softistx.openapi.UnionDiscriminator
+import com.softistx.openapi.UnionSubtype
+import com.softistx.openapi.UnionType
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media.Schema
 

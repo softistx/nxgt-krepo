@@ -1,4 +1,4 @@
-package com.strange.graphix
+package com.softistx.graphix
 
 /**
  * What graphql-java returned, without leaking `ExecutionResult`. A field error is in [errors]

@@ -1,4 +1,4 @@
-package com.strange.material.datetime
+package com.softistx.material.datetime
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime

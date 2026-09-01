@@ -1,6 +1,6 @@
-package com.strange.amqp.topology
+package com.softistx.amqp.topology
 
-import com.strange.amqp.AmqpTestBroker
+import com.softistx.amqp.AmqpTestBroker
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.seconds

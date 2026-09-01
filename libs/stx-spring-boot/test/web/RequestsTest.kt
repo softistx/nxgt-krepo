@@ -1,6 +1,6 @@
-package com.strange.spring.web
+package com.softistx.spring.web
 
-import com.strange.spring.error.ApiException
+import com.softistx.spring.error.ApiException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

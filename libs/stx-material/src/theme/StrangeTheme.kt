@@ -1,4 +1,4 @@
-package com.strange.material.theme
+package com.softistx.material.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
-import com.strange.material.motion.StrangeMotion
+import com.softistx.material.motion.StrangeMotion
 
 /**
  * The theme. It **wraps** Material 3 rather than replacing it, so a plain M3 component — or any

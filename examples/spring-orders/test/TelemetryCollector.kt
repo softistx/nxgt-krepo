@@ -1,10 +1,10 @@
-package com.strange.example.orders
+package com.softistx.example.orders
 
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanRecord
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanRecord
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -76,7 +76,7 @@ class TelemetryCollector : Exporter {
  * The one bean the test sources contribute.
  *
  * Found by the application's own component scan, because these specs live in
- * `com.strange.example.orders` — the package `@SpringBootApplication` scans — and the test output is
+ * `com.softistx.example.orders` — the package `@SpringBootApplication` scans — and the test output is
  * on the classpath it scans. That is why it is a plain `@Configuration` and not a `@TestConfiguration`
  * somebody has to `@Import`: an `@Import` on a spec class changes the test context's cache key, and
  * this module would start a second application to hold one bean.

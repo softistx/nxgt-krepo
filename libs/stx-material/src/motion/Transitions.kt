@@ -1,4 +1,4 @@
-package com.strange.material.motion
+package com.softistx.material.motion
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -14,7 +14,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * The enter and exit pairs the components are built from.

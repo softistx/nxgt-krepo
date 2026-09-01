@@ -1,12 +1,12 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.workflow.ChildFailedException
-import com.strange.workflow.ChildLostException
-import com.strange.workflow.ChildTimeoutException
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.dsl.Child
-import com.strange.workflow.store.JournalEntry
-import com.strange.workflow.store.NodeOutcome
+import com.softistx.workflow.ChildFailedException
+import com.softistx.workflow.ChildLostException
+import com.softistx.workflow.ChildTimeoutException
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.dsl.Child
+import com.softistx.workflow.store.JournalEntry
+import com.softistx.workflow.store.NodeOutcome
 import kotlin.time.Clock
 
 /**

@@ -1,15 +1,15 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.button.IconButton
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.button.IconButton
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
 
 /** Steps [value] by [delta] and keeps it inside [range]. */
 fun stepQuantity(

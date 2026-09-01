@@ -1,12 +1,12 @@
-package com.strange.telemetry.mongo
+package com.softistx.telemetry.mongo
 
 import com.mongodb.client.model.InsertManyOptions
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.strange.common.lifecycle.CloseGuard
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
+import com.softistx.common.lifecycle.CloseGuard
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
 import org.bson.Document
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.days
  * Telemetry("checkout") { export(MongoExporter(client.getDatabase("telemetry"))) }
  * ```
  *
- * The document is what [com.strange.telemetry.export.signalJson] produces, so the field names are the
+ * The document is what [com.softistx.telemetry.export.signalJson] produces, so the field names are the
  * ones the file and stdout exporters write, plus the resource and with the instants as BSON dates —
  * `Documents.kt` argues both. What that buys is that a query written against a collection reads the
  * same as a `jq` filter written against a file.

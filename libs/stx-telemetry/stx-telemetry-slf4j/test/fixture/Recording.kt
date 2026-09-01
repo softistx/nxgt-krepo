@@ -1,9 +1,9 @@
-package com.strange.telemetry.slf4j.fixture
+package com.softistx.telemetry.slf4j.fixture
 
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
 import org.slf4j.ILoggerFactory
 import org.slf4j.MDC
 import org.slf4j.Marker

@@ -1,4 +1,4 @@
-package com.strange.spring.web
+package com.softistx.spring.web
 
 import org.springframework.web.reactive.function.server.RouterFunction
 import org.springframework.web.reactive.function.server.ServerResponse

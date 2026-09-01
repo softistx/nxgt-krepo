@@ -29,12 +29,12 @@ dependencies:
   # ApplicationCall and the plugin API are all over this module's public surface
   - $ktor.server.core: exported
 
-  # Ktor's CORS plugin, for `com.strange.ktor.cors` alone and on the same terms as the libraries
+  # Ktor's CORS plugin, for `com.softistx.ktor.cors` alone and on the same terms as the libraries
   # above: an application that never calls `cors(policy)` never loads a class from it.
   - $ktor.server.cors: compile-only
 
 
-  # Ktor's DI, for the registrations in `com.strange.ktor.di`. Compile-only for the same reason:
+  # Ktor's DI, for the registrations in `com.softistx.ktor.di`. Compile-only for the same reason:
   # an application that never calls `provideRedis` never loads a class from it.
   - $libs.ktor.server.di: compile-only
 

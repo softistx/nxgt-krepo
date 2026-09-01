@@ -1,4 +1,4 @@
-package com.strange.material.datetime
+package com.softistx.material.datetime
 
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -9,11 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonVariant
-import com.strange.material.button.IconButton
-import com.strange.material.form.TextField
-import com.strange.material.icon.StrangeIcons
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.button.IconButton
+import com.softistx.material.form.TextField
+import com.softistx.material.icon.StrangeIcons
 import kotlinx.datetime.LocalDate
 
 /**

@@ -1,6 +1,6 @@
-package com.strange.spring.testing
+package com.softistx.spring.testing
 
-import com.strange.spring.data.mongo.migration.MigrationEntry
+import com.softistx.spring.data.mongo.migration.MigrationEntry
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.reactor.awaitSingle

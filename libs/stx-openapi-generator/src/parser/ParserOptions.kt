@@ -1,4 +1,4 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
 /** How operations are split into interfaces. */
 public enum class Grouping { Tag, Path, None }

@@ -1,7 +1,7 @@
-package com.strange.storage.presign
+package com.softistx.storage.presign
 
-import com.strange.storage.HttpProbe
-import com.strange.storage.MinioTestServer
+import com.softistx.storage.HttpProbe
+import com.softistx.storage.MinioTestServer
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.shouldBe

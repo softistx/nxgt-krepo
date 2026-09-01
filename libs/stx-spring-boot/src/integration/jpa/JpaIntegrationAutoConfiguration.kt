@@ -1,9 +1,9 @@
-package com.strange.spring.integration.jpa
+package com.softistx.spring.integration.jpa
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.JpaConfig
-import com.strange.jpa.SchemaMode
-import com.strange.jpa.naming.Naming
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.JpaConfig
+import com.softistx.jpa.SchemaMode
+import com.softistx.jpa.naming.Naming
 import kotlinx.coroutines.runBlocking
 import org.hibernate.reactive.stage.Stage
 import org.springframework.boot.autoconfigure.AutoConfiguration

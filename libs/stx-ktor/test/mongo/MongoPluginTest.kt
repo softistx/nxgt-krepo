@@ -1,10 +1,10 @@
-package com.strange.ktor.mongo
+package com.softistx.ktor.mongo
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
-import com.strange.mongo.collection
-import com.strange.mongo.mongoClient
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.mongoContainer
+import com.softistx.mongo.collection
+import com.softistx.mongo.mongoClient
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.mongoContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec

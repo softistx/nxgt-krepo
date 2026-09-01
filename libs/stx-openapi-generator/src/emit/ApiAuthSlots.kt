@@ -1,5 +1,8 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.SecurityKind
+import com.softistx.openapi.SecurityScheme
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -8,9 +11,6 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.ApiModel
-import com.strange.openapi.SecurityKind
-import com.strange.openapi.SecurityScheme
 
 internal const val AUTH_CONFIG: String = "ApiAuthConfig"
 

@@ -37,12 +37,12 @@ do, and both hand back a connection the caller owns and closes.
 ## Shape
 
 ```
-com.strange.redis          the connection and its lifecycle — Redis, RedisConfig, commands
-com.strange.redis.codec    the Json every layer serializes through, and the escape hatch under it
-com.strange.redis.cache    RedisCache<T> — get, put with a TTL, getOrLoad, invalidate
-com.strange.redis.lock     RedisLock — a lock only its holder can release
-com.strange.redis.pubsub   RedisTopic<T> — publish, and subscribe as a Flow
-com.strange.redis.stream   RedisStream<T> — append, and consume a group as a Flow
+com.softistx.redis          the connection and its lifecycle — Redis, RedisConfig, commands
+com.softistx.redis.codec    the Json every layer serializes through, and the escape hatch under it
+com.softistx.redis.cache    RedisCache<T> — get, put with a TTL, getOrLoad, invalidate
+com.softistx.redis.lock     RedisLock — a lock only its holder can release
+com.softistx.redis.pubsub   RedisTopic<T> — publish, and subscribe as a Flow
+com.softistx.redis.stream   RedisStream<T> — append, and consume a group as a Flow
 ```
 
 Lettuce's own `RedisCoroutinesCommands` stays reachable for everything these four do not cover:

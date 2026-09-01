@@ -1,11 +1,11 @@
-package com.strange.telemetry.slf4j
+package com.softistx.telemetry.slf4j
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.context.withAttributes
-import com.strange.telemetry.context.withTelemetry
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.slf4j.fixture.Collector
-import com.strange.telemetry.span
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.context.withAttributes
+import com.softistx.telemetry.context.withTelemetry
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.slf4j.fixture.Collector
+import com.softistx.telemetry.span
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull

@@ -1,4 +1,4 @@
-package com.strange.kafka.record
+package com.softistx.kafka.record
 
 import org.apache.kafka.common.header.Header
 import org.apache.kafka.common.header.internals.RecordHeader

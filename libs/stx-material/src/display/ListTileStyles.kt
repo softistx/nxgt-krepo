@@ -1,11 +1,11 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.animate
 import androidx.compose.foundation.style.pressed
 import androidx.compose.foundation.style.scale
-import com.strange.material.motion.MotionSpeed
-import com.strange.material.theme.motion
+import com.softistx.material.motion.MotionSpeed
+import com.softistx.material.theme.motion
 
 /**
  * The press. Height, padding and colours are `ListItem`'s — the 56 dp two-line height this file
