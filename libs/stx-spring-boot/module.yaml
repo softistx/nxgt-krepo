@@ -24,7 +24,7 @@ dependencies:
   - //libs/stx-workflow/stx-workflow: compile-only
   # The one store there is, for the WorkflowStore the workflow auto-configuration builds when it
   # can do so for free — over the connection stx.redis already opened.
-  - //libs/stx-workflow/stx-workflow-redis: compile-only
+  - //libs/stx-workflow/stx-workflow-db: compile-only
 
   # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.
   # The starter also brings spring-context and spring-boot-autoconfigure, which every package here
@@ -114,7 +114,7 @@ test-dependencies:
   - //libs/stx-storage
   - //libs/stx-redis
   - //libs/stx-workflow/stx-workflow
-  - //libs/stx-workflow/stx-workflow-redis
+  - //libs/stx-workflow/stx-workflow-db
   - //libs/stx-kafka
   - //libs/stx-amqp
   # ApplicationContextRunner, for asserting what does and does not appear in a context

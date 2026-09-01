@@ -23,9 +23,9 @@ private fun record(
 
 class RedisWorkflowStoreTest :
     FeatureSpec({
-        feature("the store contract, on Redis").config(enabled = WorkflowTestServer.available) {
+        feature("the store contract, on Redis").config(enabled = RedisTestServer.available) {
             scenario("a record goes in and comes back, with its version beside it rather than inside it") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis)
                     store.create(record("a"))
 
@@ -41,7 +41,7 @@ class RedisWorkflowStoreTest :
             }
 
             scenario("creating the same id twice is refused") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis)
                     store.create(record("a"))
                     shouldThrow<IllegalArgumentException> { store.create(record("a")) }
@@ -49,7 +49,7 @@ class RedisWorkflowStoreTest :
             }
 
             scenario("a write on a stale version is refused, and the stored record is untouched") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis)
                     store.create(record("a"))
                     val loaded = store.load("a")!!
@@ -64,9 +64,9 @@ class RedisWorkflowStoreTest :
             }
         }
 
-        feature("the runnable index").config(enabled = WorkflowTestServer.available) {
+        feature("the runnable index").config(enabled = RedisTestServer.available) {
             scenario("a running instance is offered again only once its lease has passed") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis, lease = 200.milliseconds)
                     store.create(record("a"))
 
@@ -77,7 +77,7 @@ class RedisWorkflowStoreTest :
             }
 
             scenario("a finished instance leaves the index") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis, lease = 1.milliseconds)
                     store.create(record("a"))
                     val loaded = store.load("a")!!
@@ -88,7 +88,7 @@ class RedisWorkflowStoreTest :
             }
 
             scenario("a finished instance is kept only as long as the retention says") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis, retention = 30.minutes)
                     store.create(record("done"))
                     store.create(record("stuck"))
@@ -107,9 +107,9 @@ class RedisWorkflowStoreTest :
             }
         }
 
-        feature("the instance lock").config(enabled = WorkflowTestServer.available) {
+        feature("the instance lock").config(enabled = RedisTestServer.available) {
             scenario("a second holder is told no rather than made to wait") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis)
                     val inside = CompletableDeferred<Unit>()
                     val release = CompletableDeferred<Unit>()

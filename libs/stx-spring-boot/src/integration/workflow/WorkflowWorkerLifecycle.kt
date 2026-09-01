@@ -9,7 +9,7 @@ import org.springframework.context.SmartLifecycle
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 
-/** The defaults `stx-workflow` and `stx-workflow-redis` carry, restated where the binder can reach them. */
+/** The defaults `stx-workflow` and `stx-workflow-db` carry, restated where the binder can reach them. */
 internal val WORKER_POLL = 1.seconds
 internal val LEASE = 30.seconds
 internal val RETENTION = 7.days

@@ -575,7 +575,7 @@ Two ship:
 | | |
 | --- | --- |
 | `InMemoryStore` | In the core module. The reference implementation of the contract — the conditional write really is conditional, `guarded` really excludes. What the engine's own specs run against |
-| `RedisWorkflowStore` | In `stx-workflow-redis`. See [its README](../libs/stx-workflow/stx-workflow-redis/README.md) for the key layout, the lease and the retention |
+| `RedisWorkflowStore` | In `stx-workflow-db`. See [its README](../libs/stx-workflow/stx-workflow-db/README.md) for the key layout, the lease and the retention |
 
 ```kotlin
 class RedisWorkflowStore(
@@ -648,7 +648,7 @@ look that name up cannot resume it after a restart, and a process that registere
 workflows will fail on the other half. Registering by existing as a bean means there is no second
 list to keep in step.
 
-Like the Ktor plugin, it opens nothing: with `stx-workflow-redis` on the classpath and `stx.redis`
+Like the Ktor plugin, it opens nothing: with `stx-workflow-db` on the classpath and `stx.redis`
 on, the store is built over *that* connection. Anything else is a `WorkflowStore` bean, and
 `@ConditionalOnMissingBean` steps aside for it.
 

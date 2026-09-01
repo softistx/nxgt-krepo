@@ -38,9 +38,9 @@ private val APPROVAL = signal<Approval>("approval")
  */
 class WorkflowPauseTest :
     FeatureSpec({
-        feature("an instance waiting for a person").config(enabled = WorkflowTestServer.available) {
+        feature("an instance waiting for a person").config(enabled = RedisTestServer.available) {
             scenario("it survives the process that parked it, and another one approves it") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis)
                     val calls = Calls()
                     val flow =
@@ -74,7 +74,7 @@ class WorkflowPauseTest :
             }
 
             scenario("it is not in the due-time index, so no worker ever offers it to itself") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis)
                     val flow =
                         workflow<Ledger>("open-ended") {
@@ -91,9 +91,9 @@ class WorkflowPauseTest :
             }
         }
 
-        feature("an instance waiting for a clock").config(enabled = WorkflowTestServer.available) {
+        feature("an instance waiting for a clock").config(enabled = RedisTestServer.available) {
             scenario("a worker wakes it when it is due, and not before") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis, lease = 200.milliseconds)
                     val calls = Calls()
                     val flow =

@@ -5,8 +5,7 @@ and state written down after each one so a process that dies mid-run can be pick
 stopped.
 
 It is a plain `jvm/lib` with no store in it. The engine talks to a `WorkflowStore`, and which one it
-is gets decided once, by the application — `stx-workflow-redis` is the one that ships with this
-phase, and `InMemoryStore` is here for tests and for a worker that has nothing to survive.
+is gets decided once, by the application — `stx-workflow-db` is where the real ones are, and `InMemoryStore` is here for tests and for a worker that has nothing to survive.
 
 ```kotlin
 @Serializable
@@ -189,4 +188,4 @@ a string. A workflow that needs either is written with `workflow { }`.
 
 **No Ktor or Spring integration**, and no store but Redis and memory. All of them are sibling
 modules when they come, and none of them changes anything here — which is the same claim
-`stx-workflow-redis` already makes good on, and the reason `WorkflowStore` has five methods.
+`stx-workflow-db` already makes good on three times over, and the reason `WorkflowStore` has five methods.

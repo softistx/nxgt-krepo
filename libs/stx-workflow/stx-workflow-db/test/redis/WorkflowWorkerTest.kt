@@ -24,9 +24,9 @@ import kotlin.time.Duration.Companion.seconds
 
 class WorkflowWorkerTest :
     FeatureSpec({
-        feature("the worker").config(enabled = WorkflowTestServer.available) {
+        feature("the worker").config(enabled = RedisTestServer.available) {
             scenario("it finishes an instance whose process died, without anybody asking") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis, lease = 200.milliseconds)
                     val reached = CompletableDeferred<Unit>()
                     val interrupted = AtomicBoolean(false)
@@ -65,7 +65,7 @@ class WorkflowWorkerTest :
             }
 
             scenario("it leaves alone an instance somebody is advancing right now") {
-                WorkflowTestServer.withRedis { redis ->
+                RedisTestServer.withRedis { redis ->
                     val store = RedisWorkflowStore(redis, lease = 30.seconds)
                     val inside = CompletableDeferred<Unit>()
                     val release = CompletableDeferred<Unit>()

@@ -5,7 +5,7 @@ dependencies:
   # The library this example is about: the DSL and the engine.
   - //libs/stx-workflow/stx-workflow
   # The store the instances live in, so the crash actually has something to be recovered from.
-  - //libs/stx-workflow/stx-workflow-redis
+  - //libs/stx-workflow/stx-workflow-db
   # Redis.connect — the example opens the connection and closes it, as a caller must.
   - //libs/stx-redis
   # Lettuce logs through SLF4J; a no-op provider keeps the narration readable

@@ -10,14 +10,14 @@ import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The Redis these specs talk to: the workspace's own when `REDIS_TEST_URI` names it, one started
+ * The Redis the Redis specs talk to: the workspace's own when `REDIS_TEST_URI` names it, one started
  * for the run otherwise.
  *
  * The two habits are `stx-redis`'s and they earn their keep here for the same reasons. Database 15,
  * so a run pointed at a real server writes nowhere near db 0; and a namespace per spec, deleted
  * afterwards, so two specs cannot see each other's instances. Nothing here calls `FLUSHDB`.
  */
-internal object WorkflowTestServer {
+internal object RedisTestServer {
     private val redis = redisContainer()
     private val namespaces = TestNames("stx-workflow-test", separator = ":")
 
