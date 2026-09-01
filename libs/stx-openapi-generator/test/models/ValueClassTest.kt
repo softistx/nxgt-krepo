@@ -1,11 +1,11 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
-import com.strange.openapi.ApiModel
-import com.strange.openapi.Field
-import com.strange.openapi.ObjectType
-import com.strange.openapi.TypeRef
-import com.strange.openapi.ValueClassType
-import com.strange.openapi.render
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.Field
+import com.softistx.openapi.ObjectType
+import com.softistx.openapi.TypeRef
+import com.softistx.openapi.ValueClassType
+import com.softistx.openapi.render
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

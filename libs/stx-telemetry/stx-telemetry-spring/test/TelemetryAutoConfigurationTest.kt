@@ -1,10 +1,10 @@
-package com.strange.telemetry.spring
+package com.softistx.telemetry.spring
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.otlp.OtlpExporter
-import com.strange.telemetry.spring.fixture.Collector
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.otlp.OtlpExporter
+import com.softistx.telemetry.spring.fixture.Collector
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe

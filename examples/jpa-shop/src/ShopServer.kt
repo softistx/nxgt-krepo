@@ -1,10 +1,10 @@
-package com.strange.example.shop
+package com.softistx.example.shop
 
-import com.strange.example.shop.routes.productRoutes
-import com.strange.jpa.JpaConfig
-import com.strange.jpa.JpaNotFoundException
-import com.strange.jpa.SchemaMode
-import com.strange.ktor.jpa.JpaConnection
+import com.softistx.example.shop.routes.productRoutes
+import com.softistx.jpa.JpaConfig
+import com.softistx.jpa.JpaNotFoundException
+import com.softistx.jpa.SchemaMode
+import com.softistx.ktor.jpa.JpaConnection
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -54,7 +54,7 @@ fun Application.shop() {
         // is the whole point, and also the cost: a class that moves out of the package stops being
         // mapped without anything failing to compile. A scan that finds no entity at all does fail
         // the install, so the empty case is not one of the silent ones.
-        packages("com.strange.example.shop.domain")
+        packages("com.softistx.example.shop.domain")
     }
 
     install(StatusPages) {

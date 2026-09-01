@@ -1,12 +1,12 @@
-package com.strange.mongo.query
+package com.softistx.mongo.query
 
 import com.mongodb.client.model.Filters
-import com.strange.mongo.DocumentNotFoundException
-import com.strange.mongo.MongoTestCluster
-import com.strange.mongo.Note
-import com.strange.mongo.withNotes
-import com.strange.mongo.withNotesAndClient
-import com.strange.mongo.withTransaction
+import com.softistx.mongo.DocumentNotFoundException
+import com.softistx.mongo.MongoTestCluster
+import com.softistx.mongo.Note
+import com.softistx.mongo.withNotes
+import com.softistx.mongo.withNotesAndClient
+import com.softistx.mongo.withTransaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder

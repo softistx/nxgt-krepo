@@ -1,15 +1,15 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.dsl.compensate
-import com.strange.workflow.dsl.step
-import com.strange.workflow.fixture.Calls
-import com.strange.workflow.fixture.Ledger
-import com.strange.workflow.fixture.Wobble
-import com.strange.workflow.store.InMemoryStore
-import com.strange.workflow.store.NodeOutcome
-import com.strange.workflow.workflow
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.dsl.compensate
+import com.softistx.workflow.dsl.step
+import com.softistx.workflow.fixture.Calls
+import com.softistx.workflow.fixture.Ledger
+import com.softistx.workflow.fixture.Wobble
+import com.softistx.workflow.store.InMemoryStore
+import com.softistx.workflow.store.NodeOutcome
+import com.softistx.workflow.workflow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 
@@ -34,7 +34,7 @@ class CompensationTest :
                 calls.all() shouldBe listOf("undo:charge:c-1", "undo:reserve:r-1")
                 instance.status shouldBe WorkflowStatus.Compensated
                 instance.error!!.node shouldBe "ship"
-                instance.error!!.type shouldBe "com.strange.workflow.fixture.Wobble"
+                instance.error!!.type shouldBe "com.softistx.workflow.fixture.Wobble"
             }
 
             scenario("a step that declared no compensation is simply skipped by the unwind") {

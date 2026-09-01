@@ -1,6 +1,6 @@
-package com.strange.spring.data.mongo.audit
+package com.softistx.spring.data.mongo.audit
 
-import com.strange.spring.security.currentUser
+import com.softistx.spring.security.currentUser
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

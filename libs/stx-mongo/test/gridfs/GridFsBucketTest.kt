@@ -1,7 +1,7 @@
-package com.strange.mongo.gridfs
+package com.softistx.mongo.gridfs
 
-import com.strange.mongo.MongoTestCluster
-import com.strange.mongo.withTransaction
+import com.softistx.mongo.MongoTestCluster
+import com.softistx.mongo.withTransaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

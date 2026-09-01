@@ -1,14 +1,14 @@
-package com.strange.telemetry.spring
+package com.softistx.telemetry.spring
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.export.ConsoleExporter
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.export.FileExporter
-import com.strange.telemetry.export.JsonLinesExporter
-import com.strange.telemetry.mongo.MongoExporter
-import com.strange.telemetry.otlp.OtlpExporter
-import com.strange.telemetry.slf4j.Slf4jExporter
-import com.strange.telemetry.trace.Sampler
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.export.ConsoleExporter
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.export.FileExporter
+import com.softistx.telemetry.export.JsonLinesExporter
+import com.softistx.telemetry.mongo.MongoExporter
+import com.softistx.telemetry.otlp.OtlpExporter
+import com.softistx.telemetry.slf4j.Slf4jExporter
+import com.softistx.telemetry.trace.Sampler
 import org.slf4j.ILoggerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider

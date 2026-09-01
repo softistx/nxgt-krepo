@@ -1,7 +1,7 @@
-package com.strange.kafka.admin
+package com.softistx.kafka.admin
 
-import com.strange.kafka.KafkaTestCluster
-import com.strange.kafka.TopicNotFoundException
+import com.softistx.kafka.KafkaTestCluster
+import com.softistx.kafka.TopicNotFoundException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContain

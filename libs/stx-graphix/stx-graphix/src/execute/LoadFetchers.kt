@@ -1,4 +1,4 @@
-package com.strange.graphix.execute
+package com.softistx.graphix.execute
 
 import graphql.schema.DataFetcher
 import kotlinx.serialization.json.Json

@@ -1,11 +1,11 @@
-package com.strange.workflow
+package com.softistx.workflow
 
-import com.strange.workflow.dsl.branch
-import com.strange.workflow.dsl.compensate
-import com.strange.workflow.dsl.outcome
-import com.strange.workflow.dsl.parallel
-import com.strange.workflow.dsl.step
-import com.strange.workflow.fixture.Ledger
+import com.softistx.workflow.dsl.branch
+import com.softistx.workflow.dsl.compensate
+import com.softistx.workflow.dsl.outcome
+import com.softistx.workflow.dsl.parallel
+import com.softistx.workflow.dsl.step
+import com.softistx.workflow.fixture.Ledger
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

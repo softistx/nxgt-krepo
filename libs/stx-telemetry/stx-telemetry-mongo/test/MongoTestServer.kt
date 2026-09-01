@@ -1,11 +1,11 @@
-package com.strange.telemetry.mongo
+package com.softistx.telemetry.mongo
 
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.mongoContainer
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.mongoContainer
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit

@@ -1,4 +1,4 @@
-package com.strange.material.demo
+package com.softistx.material.demo
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.VerticalScrollbar

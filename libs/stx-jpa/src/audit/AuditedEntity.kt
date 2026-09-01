@@ -1,4 +1,4 @@
-package com.strange.jpa.audit
+package com.softistx.jpa.audit
 
 import jakarta.persistence.MappedSuperclass
 import jakarta.persistence.PrePersist

@@ -1,4 +1,4 @@
-package com.strange.telemetry.mongo
+package com.softistx.telemetry.mongo
 
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes

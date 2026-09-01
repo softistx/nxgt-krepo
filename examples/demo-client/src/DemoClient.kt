@@ -1,19 +1,19 @@
-package com.strange.demo.client
+package com.softistx.demo.client
 
-import com.strange.demo.client.api.apis.CategoriesApi
-import com.strange.demo.client.api.apis.FailuresApi
-import com.strange.demo.client.api.apis.NotificationsApi
-import com.strange.demo.client.api.apis.SessionApi
-import com.strange.demo.client.api.apis.TagsApi
-import com.strange.demo.client.api.apis.createCategoriesApi
-import com.strange.demo.client.api.apis.createFailuresApi
-import com.strange.demo.client.api.apis.createNotificationsApi
-import com.strange.demo.client.api.apis.createSessionApi
-import com.strange.demo.client.api.apis.createTagsApi
-import com.strange.demo.client.api.models.CategoryRequest
-import com.strange.demo.client.api.models.SearchRequest
-import com.strange.demo.client.api.utils.ApiAuth
-import com.strange.demo.client.api.utils.ApiErrors
+import com.softistx.demo.client.api.apis.CategoriesApi
+import com.softistx.demo.client.api.apis.FailuresApi
+import com.softistx.demo.client.api.apis.NotificationsApi
+import com.softistx.demo.client.api.apis.SessionApi
+import com.softistx.demo.client.api.apis.TagsApi
+import com.softistx.demo.client.api.apis.createCategoriesApi
+import com.softistx.demo.client.api.apis.createFailuresApi
+import com.softistx.demo.client.api.apis.createNotificationsApi
+import com.softistx.demo.client.api.apis.createSessionApi
+import com.softistx.demo.client.api.apis.createTagsApi
+import com.softistx.demo.client.api.models.CategoryRequest
+import com.softistx.demo.client.api.models.SearchRequest
+import com.softistx.demo.client.api.utils.ApiAuth
+import com.softistx.demo.client.api.utils.ApiErrors
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -22,7 +22,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 
 /**
- * Everything under `com.strange.demo.client.api` is generated: the `openapi-client` plugin turns
+ * Everything under `com.softistx.demo.client.api` is generated: the `openapi-client` plugin turns
  * `../demo-api/openapi.yaml` into the annotated interfaces, and ktorfit-ksp then generates the
  * `createXxxApi()` builders below from those interfaces.
  */

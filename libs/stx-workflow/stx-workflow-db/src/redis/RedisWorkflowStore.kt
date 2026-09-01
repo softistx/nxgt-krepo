@@ -1,11 +1,11 @@
-package com.strange.workflow.redis
+package com.softistx.workflow.redis
 
-import com.strange.redis.Redis
-import com.strange.redis.RedisValueException
-import com.strange.redis.lock.RedisLock
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.store.WorkflowRecord
-import com.strange.workflow.store.WorkflowStore
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisValueException
+import com.softistx.redis.lock.RedisLock
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.store.WorkflowRecord
+import com.softistx.workflow.store.WorkflowStore
 import io.lettuce.core.Limit
 import io.lettuce.core.Range
 import io.lettuce.core.ScriptOutputType
@@ -47,7 +47,7 @@ class RedisWorkflowStore(
      * finished instances vanish is one that cannot be debugged — but Redis holds it in memory, so
      * the default is a bound rather than forever. `null` keeps them.
      *
-     * A [com.strange.workflow.WorkflowStatus.Failed] instance is exempt: it is waiting for a person,
+     * A [com.softistx.workflow.WorkflowStatus.Failed] instance is exempt: it is waiting for a person,
      * and expiring it would delete the only description of what needs fixing.
      */
     private val retention: Duration? = 7.days,

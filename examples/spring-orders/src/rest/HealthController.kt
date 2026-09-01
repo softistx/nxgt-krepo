@@ -1,8 +1,8 @@
-package com.strange.example.orders.rest
+package com.softistx.example.orders.rest
 
-import com.strange.example.orders.api.apis.IHealthService
-import com.strange.example.orders.api.models.Health
-import com.strange.example.orders.api.models.HealthResponse
+import com.softistx.example.orders.api.apis.IHealthService
+import com.softistx.example.orders.api.models.Health
+import com.softistx.example.orders.api.models.HealthResponse
 import org.springframework.web.bind.annotation.RestController
 
 /**

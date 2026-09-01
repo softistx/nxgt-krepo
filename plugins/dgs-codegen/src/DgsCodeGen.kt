@@ -1,4 +1,4 @@
-package com.strange.dgs.plugin
+package com.softistx.dgs.plugin
 
 import com.netflix.graphql.dgs.codegen.CodeGen
 import com.netflix.graphql.dgs.codegen.CodeGenConfig

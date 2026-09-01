@@ -1,7 +1,7 @@
-package com.strange.spring.data.mongo.config
+package com.softistx.spring.data.mongo.config
 
 import com.mongodb.reactivestreams.client.MongoClients
-import com.strange.spring.testing.UNREACHABLE_MONGO
+import com.softistx.spring.testing.UNREACHABLE_MONGO
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.beans.factory.ObjectProvider

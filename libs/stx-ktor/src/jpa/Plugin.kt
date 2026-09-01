@@ -1,8 +1,8 @@
-package com.strange.ktor.jpa
+package com.softistx.ktor.jpa
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.JpaConfig
-import com.strange.ktor.resource
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.JpaConfig
+import com.softistx.ktor.resource
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.util.AttributeKey
@@ -124,4 +124,4 @@ class JpaConnectionConfiguration {
     var injectable: Boolean = false
 }
 
-internal val JpaKey = AttributeKey<Jpa>("com.strange.jpa.Jpa")
+internal val JpaKey = AttributeKey<Jpa>("com.softistx.jpa.Jpa")

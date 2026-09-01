@@ -1,7 +1,7 @@
-package com.strange.spring.data.mongo.template
+package com.softistx.spring.data.mongo.template
 
-import com.strange.common.page.PageWindow
-import com.strange.spring.error.ApiException
+import com.softistx.common.page.PageWindow
+import com.softistx.spring.error.ApiException
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.query.Query
 

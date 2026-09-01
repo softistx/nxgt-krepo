@@ -1,8 +1,8 @@
-package com.strange.storage.presign
+package com.softistx.storage.presign
 
-import com.strange.storage.HttpProbe
-import com.strange.storage.InvalidExpiryException
-import com.strange.storage.MinioTestServer
+import com.softistx.storage.HttpProbe
+import com.softistx.storage.InvalidExpiryException
+import com.softistx.storage.MinioTestServer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

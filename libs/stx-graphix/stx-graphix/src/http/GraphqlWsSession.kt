@@ -1,10 +1,10 @@
-package com.strange.graphix.http
+package com.softistx.graphix.http
 
-import com.strange.graphix.Graphix
-import com.strange.graphix.GraphixException
-import com.strange.graphix.GraphixRequest
-import com.strange.graphix.isSubscription
-import com.strange.graphix.subscribe
+import com.softistx.graphix.Graphix
+import com.softistx.graphix.GraphixException
+import com.softistx.graphix.GraphixRequest
+import com.softistx.graphix.isSubscription
+import com.softistx.graphix.subscribe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

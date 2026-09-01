@@ -1,4 +1,4 @@
-package com.strange.common.http
+package com.softistx.common.http
 
 import kotlinx.serialization.Serializable
 

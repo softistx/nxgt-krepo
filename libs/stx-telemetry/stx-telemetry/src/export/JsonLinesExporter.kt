@@ -1,7 +1,7 @@
-package com.strange.telemetry.export
+package com.softistx.telemetry.export
 
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Signal
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Signal
 import kotlinx.serialization.json.Json
 import java.io.PrintStream
 
@@ -10,7 +10,7 @@ import java.io.PrintStream
  *
  * The signal's own `@Serializable` shape is the document — `{"type":"log","at":…,"severity":…}` —
  * so **this exporter has no format of its own to keep in step with the model.** A field added to
- * [com.strange.telemetry.model.LogRecord] appears here on the next build, without anybody
+ * [com.softistx.telemetry.model.LogRecord] appears here on the next build, without anybody
  * remembering to add it, which is the argument for kotlinx.serialization being the wire format
  * rather than a hand-written renderer.
  *

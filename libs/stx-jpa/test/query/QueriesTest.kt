@@ -1,12 +1,12 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
-import com.strange.jpa.JpaNoResultException
-import com.strange.jpa.JpaNonUniqueResultException
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.entity.Thing
-import com.strange.jpa.session.JpaSession
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.JpaNoResultException
+import com.softistx.jpa.JpaNonUniqueResultException
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.entity.Thing
+import com.softistx.jpa.session.JpaSession
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly

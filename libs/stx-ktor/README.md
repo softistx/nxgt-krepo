@@ -3,13 +3,13 @@
 Ktor integrations for the libraries here — one package per integration, one module for all of them.
 
 ```
-com.strange.ktor.i18n      I18n              a negotiated locale per request
-com.strange.ktor.redis     RedisConnection   one Redis connection
-com.strange.ktor.mongo     MongoDB           one client, and the database over it
-com.strange.ktor.amqp      AmqpConnection    one AMQP connection
-com.strange.ktor.kafka     KafkaCluster      the cluster configuration
-com.strange.ktor.storage   Storage           one object-storage client
-com.strange.ktor.jpa       JpaConnection     one Hibernate Reactive session factory
+com.softistx.ktor.i18n      I18n              a negotiated locale per request
+com.softistx.ktor.redis     RedisConnection   one Redis connection
+com.softistx.ktor.mongo     MongoDB           one client, and the database over it
+com.softistx.ktor.amqp      AmqpConnection    one AMQP connection
+com.softistx.ktor.kafka     KafkaCluster      the cluster configuration
+com.softistx.ktor.storage   Storage           one object-storage client
+com.softistx.ktor.jpa       JpaConnection     one Hibernate Reactive session factory
 ```
 
 ```kotlin

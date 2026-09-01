@@ -1,4 +1,4 @@
-package com.strange.material.media
+package com.softistx.material.media
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * A grid of images. Columns follow [GridCells.Adaptive], so a wide pane shows more without a

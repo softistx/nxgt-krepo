@@ -1,4 +1,4 @@
-package com.strange.workflow.dsl
+package com.softistx.workflow.dsl
 
 /** One arm of a [branch]: a name, the question that picks it, and what it declares. */
 internal class BranchArm<C>(

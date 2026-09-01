@@ -11,4 +11,4 @@ test-dependencies:
   - $libs.kotest.assertions.core
 
 pluginInfo:
-  settingsClass: com.strange.apollo.plugin.ApolloSettings
+  settingsClass: com.softistx.apollo.plugin.ApolloSettings

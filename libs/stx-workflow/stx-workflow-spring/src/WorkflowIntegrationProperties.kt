@@ -1,4 +1,4 @@
-package com.strange.workflow.spring
+package com.softistx.workflow.spring
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
@@ -62,7 +62,7 @@ enum class WorkflowStoreKind {
     /** Over the `Redis` bean `stx.redis` opened. */
     REDIS,
 
-    /** Over the `Jpa` bean `stx.jpa` opened — which must scan `com.strange.workflow.jpa` for its entity. */
+    /** Over the `Jpa` bean `stx.jpa` opened — which must scan `com.softistx.workflow.jpa` for its entity. */
     JPA,
 
     /** Over the `MongoDatabase` bean `stx.mongo` opened. */

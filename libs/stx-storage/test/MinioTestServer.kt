@@ -1,8 +1,8 @@
-package com.strange.storage
+package com.softistx.storage
 
-import com.strange.storage.bucket.StorageBucket
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.minioContainer
+import com.softistx.storage.bucket.StorageBucket
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.minioContainer
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking

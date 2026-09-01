@@ -1,14 +1,14 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.common.serialization.lenientJson
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.dsl.branch
-import com.strange.workflow.dsl.step
-import com.strange.workflow.fixture.Calls
-import com.strange.workflow.fixture.Ledger
-import com.strange.workflow.store.InMemoryStore
-import com.strange.workflow.workflow
+import com.softistx.common.serialization.lenientJson
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.dsl.branch
+import com.softistx.workflow.dsl.step
+import com.softistx.workflow.fixture.Calls
+import com.softistx.workflow.fixture.Ledger
+import com.softistx.workflow.store.InMemoryStore
+import com.softistx.workflow.workflow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred

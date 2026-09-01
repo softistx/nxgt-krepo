@@ -1,14 +1,14 @@
-package com.strange.material.data
+package com.softistx.material.data
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonVariant
-import com.strange.material.text.Typography
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * Previous / next, named for a keyset page.

@@ -1,6 +1,6 @@
 tasks:
   generate:
-    action: !com.strange.openapi.plugin.generateClient
+    action: !com.softistx.openapi.plugin.generateClient
       # The whole list, in one reference. `plugin.yaml` has no way to name a list element —
       # `${pluginSettings.specs.0.spec}` is not expressible — so per-spec interpolation is out and
       # the loop lives in Kotlin. `spec` is a `Path`, which the frontend has already resolved

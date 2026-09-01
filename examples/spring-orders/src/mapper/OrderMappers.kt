@@ -1,15 +1,15 @@
-package com.strange.example.orders.mapper
+package com.softistx.example.orders.mapper
 
-import com.strange.common.page.Page
-import com.strange.example.orders.api.models.OrderList
-import com.strange.example.orders.api.models.OrderPage
-import com.strange.example.orders.api.models.OrderResponse
-import com.strange.example.orders.api.models.PlaceOrderRequest
-import com.strange.example.orders.model.Order
-import com.strange.example.orders.model.OrderStatus
-import com.strange.example.orders.api.models.Order as ApiOrder
-import com.strange.example.orders.api.models.OrderStatus as ApiOrderStatus
-import com.strange.example.orders.api.models.PageInfo as ApiPageInfo
+import com.softistx.common.page.Page
+import com.softistx.example.orders.api.models.OrderList
+import com.softistx.example.orders.api.models.OrderPage
+import com.softistx.example.orders.api.models.OrderResponse
+import com.softistx.example.orders.api.models.PlaceOrderRequest
+import com.softistx.example.orders.model.Order
+import com.softistx.example.orders.model.OrderStatus
+import com.softistx.example.orders.api.models.Order as ApiOrder
+import com.softistx.example.orders.api.models.OrderStatus as ApiOrderStatus
+import com.softistx.example.orders.api.models.PageInfo as ApiPageInfo
 
 /**
  * The document's types on one side, the database's on the other.
@@ -43,7 +43,7 @@ fun List<Order>.list(): OrderList = OrderList(data = map { it.view() })
  * A page: the rows in `data`, the cursors in `metadata`.
  *
  * The two halves separate here rather than at the client, which is the whole reason
- * `com.strange.common.page.Page` exists — a list that has lost its cursors cannot ask for the
+ * `com.softistx.common.page.Page` exists — a list that has lost its cursors cannot ask for the
  * next page.
  */
 fun Page<Order>.page(): OrderPage =

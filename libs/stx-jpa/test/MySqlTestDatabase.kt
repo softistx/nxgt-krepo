@@ -1,9 +1,9 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.testing.containers.ContainerService
-import com.strange.testing.containers.MysqlEndpoint
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.mysqlContainer
+import com.softistx.testing.containers.ContainerService
+import com.softistx.testing.containers.MysqlEndpoint
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.mysqlContainer
 import io.vertx.core.Vertx
 import io.vertx.mysqlclient.MySQLBuilder
 import io.vertx.mysqlclient.MySQLConnectOptions

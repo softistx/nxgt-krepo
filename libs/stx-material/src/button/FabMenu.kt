@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
@@ -6,10 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.icon.Icon
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
+import com.softistx.material.icon.Icon
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
 
 @Immutable
 data class FabAction(

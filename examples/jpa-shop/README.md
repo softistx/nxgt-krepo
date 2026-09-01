@@ -42,7 +42,7 @@ columns only a caller knows.
 composes however many of them the query string asked for. One answering `null` restricts nothing,
 which is what an unrequested filter should mean.
 
-**The mapping is scanned, not listed.** `packages("com.strange.example.shop.domain")` maps every
+**The mapping is scanned, not listed.** `packages("com.softistx.example.shop.domain")` maps every
 annotated class in the package, so `ShopServer` never mentions `Product` and the next entity is mapped
 by having been written. The cost is the other direction: a class that moves out of the package stops
 being mapped and nothing fails to compile — which is why `ShopTest` asserts the package string finds

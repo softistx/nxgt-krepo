@@ -226,7 +226,7 @@ exhaust the pool the orders are queueing for.
 ```js
 db.telemetry.findOne({ name: "orders.placed" })
 { _id: …, type: "log", at: ISODate("2026-09-01T15:41:30.285Z"), severity: "Info",
-  name: "orders.placed", source: "com.strange.example.orders.service.OrderService",
+  name: "orders.placed", source: "com.softistx.example.orders.service.OrderService",
   attributes: { "url.path": "/orders", reference: "DEMO-1", total: Long("4200") },
   span: { traceId: "ee0577de…", spanId: "dba175f0…", sampled: true },
   service: "spring-orders", environment: "development" }
@@ -269,7 +269,7 @@ on another spec's 404. Every scenario there now places an order under its own re
 on it.
 
 **The specs start nothing themselves, and this module writes no bootstrap at all.** Each one extends
-`MongoSpec` from `stx-spring-boot`'s `com.strange.spring.testing`, which carries
+`MongoSpec` from `stx-spring-boot`'s `com.softistx.spring.testing`, which carries
 `@SpringBootTest(webEnvironment = DEFINED_PORT)`, `@ActiveProfiles("test")` and the test beans that
 say where MongoDB is; `ProjectConfig` is one line and registers the Kotest extension that makes those
 annotations mean something. Spring caches the context, so the application starts once for the module

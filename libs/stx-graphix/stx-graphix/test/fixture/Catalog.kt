@@ -1,14 +1,14 @@
-package com.strange.graphix.fixture
+package com.softistx.graphix.fixture
 
-import com.strange.graphix.schema.Argument
-import com.strange.graphix.schema.BatchMapping
-import com.strange.graphix.schema.GraphQLContext
-import com.strange.graphix.schema.GraphQLDescription
-import com.strange.graphix.schema.GraphQLIgnore
-import com.strange.graphix.schema.MutationMapping
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.schema.SchemaMapping
-import com.strange.graphix.schema.SubscriptionMapping
+import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.BatchMapping
+import com.softistx.graphix.schema.GraphQLContext
+import com.softistx.graphix.schema.GraphQLDescription
+import com.softistx.graphix.schema.GraphQLIgnore
+import com.softistx.graphix.schema.MutationMapping
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.SchemaMapping
+import com.softistx.graphix.schema.SubscriptionMapping
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

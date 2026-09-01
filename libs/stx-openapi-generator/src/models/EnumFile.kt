@@ -1,5 +1,11 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.EnumEntry
+import com.softistx.openapi.EnumType
+import com.softistx.openapi.TypeRef
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.GENERATED_KDOC
+import com.softistx.openapi.emit.typeNameOf
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -8,12 +14,6 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.EnumEntry
-import com.strange.openapi.EnumType
-import com.strange.openapi.TypeRef
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.GENERATED_KDOC
-import com.strange.openapi.emit.typeNameOf
 
 internal const val WIRE_VALUE = "wireValue"
 

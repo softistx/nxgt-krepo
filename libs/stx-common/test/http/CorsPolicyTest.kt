@@ -1,4 +1,4 @@
-package com.strange.common.http
+package com.softistx.common.http
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec

@@ -1,17 +1,17 @@
-package com.strange.telemetry.slf4j
+package com.softistx.telemetry.slf4j
 
-import com.strange.telemetry.attributesOf
-import com.strange.telemetry.model.ErrorInfo
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.model.SpanStatus
-import com.strange.telemetry.slf4j.fixture.RecordingLoggerFactory
-import com.strange.telemetry.trace.SpanContext
-import com.strange.telemetry.trace.SpanId
-import com.strange.telemetry.trace.TraceId
+import com.softistx.telemetry.attributesOf
+import com.softistx.telemetry.model.ErrorInfo
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.model.SpanStatus
+import com.softistx.telemetry.slf4j.fixture.RecordingLoggerFactory
+import com.softistx.telemetry.trace.SpanContext
+import com.softistx.telemetry.trace.SpanId
+import com.softistx.telemetry.trace.TraceId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -41,16 +41,16 @@ class Slf4jExporterTest :
                 Slf4jExporter(factory = bound).export(
                     RESOURCE,
                     listOf(
-                        LogRecord(AT, Severity.Debug, "fine", "com.strange.Checkout"),
-                        LogRecord(AT, Severity.Info, "ordinary", "com.strange.Checkout"),
-                        LogRecord(AT, Severity.Warn, "odd", "com.strange.Checkout"),
-                        LogRecord(AT, Severity.Error, "bad", "com.strange.Outbox"),
+                        LogRecord(AT, Severity.Debug, "fine", "com.softistx.Checkout"),
+                        LogRecord(AT, Severity.Info, "ordinary", "com.softistx.Checkout"),
+                        LogRecord(AT, Severity.Warn, "odd", "com.softistx.Checkout"),
+                        LogRecord(AT, Severity.Error, "bad", "com.softistx.Outbox"),
                     ),
                 )
 
-                bound.at("com.strange.Checkout").map { it.level } shouldBe
+                bound.at("com.softistx.Checkout").map { it.level } shouldBe
                     listOf(Level.DEBUG, Level.INFO, Level.WARN)
-                bound.at("com.strange.Outbox").single().level shouldBe Level.ERROR
+                bound.at("com.softistx.Outbox").single().level shouldBe Level.ERROR
                 bound.lines.map { it.message } shouldBe listOf("fine", "ordinary", "odd", "bad")
             }
 
@@ -63,7 +63,7 @@ class Slf4jExporterTest :
                             at = AT,
                             severity = Severity.Info,
                             name = "charging",
-                            source = "com.strange.Checkout",
+                            source = "com.softistx.Checkout",
                             attributes = attributesOf("orderId" to "A-91", "amount" to 4999),
                             span = CONTEXT,
                         ),
@@ -102,8 +102,8 @@ class Slf4jExporterTest :
                             at = AT,
                             severity = Severity.Error,
                             name = "charge failed",
-                            source = "com.strange.Checkout",
-                            error = ErrorInfo("java.io.IOException", "no route", "at com.strange.Checkout"),
+                            source = "com.softistx.Checkout",
+                            error = ErrorInfo("java.io.IOException", "no route", "at com.softistx.Checkout"),
                         ),
                     ),
                 )
@@ -123,7 +123,7 @@ class Slf4jExporterTest :
                 val bound = RecordingLoggerFactory()
                 Slf4jExporter(factory = bound).export(RESOURCE, listOf(span()))
 
-                val line = bound.at("com.strange.telemetry.span").single()
+                val line = bound.at("com.softistx.telemetry.span").single()
                 line.level shouldBe Level.INFO
                 line.message shouldContain "charge"
                 line.message shouldContain "500ms"

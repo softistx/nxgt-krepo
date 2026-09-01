@@ -1,6 +1,6 @@
-package com.strange.example.orders.model
+package com.softistx.example.orders.model
 
-import com.strange.spring.data.mongo.audit.Auditable
+import com.softistx.spring.data.mongo.audit.Auditable
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed

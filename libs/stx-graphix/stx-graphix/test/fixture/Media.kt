@@ -1,10 +1,10 @@
-package com.strange.graphix.fixture
+package com.softistx.graphix.fixture
 
-import com.strange.graphix.schema.Argument
-import com.strange.graphix.schema.GraphQLName
-import com.strange.graphix.schema.GraphQLUnion
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.schema.SchemaMapping
+import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.GraphQLName
+import com.softistx.graphix.schema.GraphQLUnion
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.SchemaMapping
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

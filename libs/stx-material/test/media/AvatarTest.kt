@@ -1,4 +1,4 @@
-package com.strange.material.media
+package com.softistx.material.media
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

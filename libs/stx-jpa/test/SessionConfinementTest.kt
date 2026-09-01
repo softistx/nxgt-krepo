@@ -1,7 +1,7 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.jpa.entity.Thing
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.entity.Thing
+import com.softistx.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

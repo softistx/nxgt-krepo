@@ -1,11 +1,11 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
-import com.strange.graphix.GraphixBuilder
-import com.strange.graphix.schema.BatchMapping
-import com.strange.graphix.schema.MutationMapping
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.schema.SchemaMapping
-import com.strange.graphix.schema.SubscriptionMapping
+import com.softistx.graphix.GraphixBuilder
+import com.softistx.graphix.schema.BatchMapping
+import com.softistx.graphix.schema.MutationMapping
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.SchemaMapping
+import com.softistx.graphix.schema.SubscriptionMapping
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.memberFunctions
 

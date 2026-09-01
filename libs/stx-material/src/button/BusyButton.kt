@@ -1,14 +1,14 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.strange.material.feedback.Progress
-import com.strange.material.feedback.ProgressKind
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
+import com.softistx.material.feedback.Progress
+import com.softistx.material.feedback.ProgressKind
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
 
 /**
  * A button that is in flight. Material 3's `Button`, with the label replaced by a spinner.

@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.icon.Icon
-import com.strange.material.icon.IconSize
+import com.softistx.material.icon.Icon
+import com.softistx.material.icon.IconSize
 import androidx.compose.material3.IconToggleButton as MaterialIconToggleButton
 
 /**

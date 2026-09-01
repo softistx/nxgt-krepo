@@ -1,4 +1,4 @@
-package com.strange.telemetry.export
+package com.softistx.telemetry.export
 
 import java.nio.file.Files
 import java.nio.file.Path

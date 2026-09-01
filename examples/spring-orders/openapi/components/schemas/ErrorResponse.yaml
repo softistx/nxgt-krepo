@@ -1,7 +1,7 @@
 type: object
 description: |
   What a failure looks like on the wire — one shape for every error this service returns.
-  It mirrors `com.strange.spring.error.ErrorResponse` field for field; `ErrorResponseShapeTest`
+  It mirrors `com.softistx.spring.error.ErrorResponse` field for field; `ErrorResponseShapeTest`
   is what keeps the two from drifting.
 required: [ message, status, timestamp ]
 properties:
@@ -16,7 +16,7 @@ properties:
     description: The untranslated message key. This is what a client branches on — text changes, keys do not.
   timestamp:
     # ISO-8601 text, and deliberately not `format: date-time`. Two reasons, and they agree: the
-    # field really is a `String` in `com.strange.spring.error.ErrorResponse`, and a `date-time` here
+    # field really is a `String` in `com.softistx.spring.error.ErrorResponse`, and a `date-time` here
     # would generate a `kotlin.time.Instant` that the generated `apiErrorFilter` — which parses an
     # error body with Jackson even in the kotlinx style — cannot bind, silently degrading every
     # typed failure to the untyped `ApiException`.

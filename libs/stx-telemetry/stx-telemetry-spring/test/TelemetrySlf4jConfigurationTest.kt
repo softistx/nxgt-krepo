@@ -1,10 +1,10 @@
-package com.strange.telemetry.spring
+package com.softistx.telemetry.spring
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.logger
-import com.strange.telemetry.slf4j.Slf4jExporter
-import com.strange.telemetry.span
-import com.strange.telemetry.spring.fixture.Recorder
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.logger
+import com.softistx.telemetry.slf4j.Slf4jExporter
+import com.softistx.telemetry.span
+import com.softistx.telemetry.spring.fixture.Recorder
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -83,7 +83,7 @@ class TelemetrySlf4jConfigurationTest :
                         runBlocking { span("charge") { } }
                         context.getBean(Telemetry::class.java).close()
 
-                        val span = recorder.lines.firstOrNull { it.logger == "com.strange.telemetry.span" }
+                        val span = recorder.lines.firstOrNull { it.logger == "com.softistx.telemetry.span" }
                         span.shouldNotBeNull().level shouldBe Level.DEBUG
                         span.message shouldContain "charge"
                     }
@@ -100,7 +100,7 @@ class TelemetrySlf4jConfigurationTest :
                         context.getBean(Telemetry::class.java).close()
 
                         recorder.line("charged").shouldNotBeNull()
-                        recorder.lines.count { it.logger == "com.strange.telemetry.span" } shouldBe 0
+                        recorder.lines.count { it.logger == "com.softistx.telemetry.span" } shouldBe 0
                     }
             }
         }

@@ -1,10 +1,10 @@
-package com.strange.graphix.fixture
+package com.softistx.graphix.fixture
 
-import com.strange.graphix.schema.Argument
-import com.strange.graphix.schema.GraphQLDefault
-import com.strange.graphix.schema.GraphQLDeprecated
-import com.strange.graphix.schema.GraphQLOneOf
-import com.strange.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.GraphQLDefault
+import com.softistx.graphix.schema.GraphQLDeprecated
+import com.softistx.graphix.schema.GraphQLOneOf
+import com.softistx.graphix.schema.QueryMapping
 import kotlinx.serialization.Serializable
 
 /** `@oneOf`: exactly one field, and it may not be null. Every field is therefore nullable. */

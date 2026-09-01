@@ -1,4 +1,4 @@
-package com.strange.material.feedback
+package com.softistx.material.feedback
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -21,10 +21,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.strange.material.motion.MotionSpeed
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.motion.MotionSpeed
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.StrangeTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 

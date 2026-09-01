@@ -1,4 +1,4 @@
-package com.strange.telemetry.spring
+package com.softistx.telemetry.spring
 
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec

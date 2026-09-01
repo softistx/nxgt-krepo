@@ -1,13 +1,13 @@
-package com.strange.amqp.publisher
+package com.softistx.amqp.publisher
 
-import com.strange.amqp.Amqp
-import com.strange.amqp.AmqpTestBroker
-import com.strange.amqp.AmqpUnroutableException
-import com.strange.amqp.message.headersOf
-import com.strange.amqp.topology.Topology
-import com.strange.amqp.topology.declare
-import com.strange.amqp.topology.delete
-import com.strange.amqp.topology.messageCount
+import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpTestBroker
+import com.softistx.amqp.AmqpUnroutableException
+import com.softistx.amqp.message.headersOf
+import com.softistx.amqp.topology.Topology
+import com.softistx.amqp.topology.declare
+import com.softistx.amqp.topology.delete
+import com.softistx.amqp.topology.messageCount
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.longs.shouldBeGreaterThan

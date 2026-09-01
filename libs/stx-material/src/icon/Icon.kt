@@ -1,4 +1,4 @@
-package com.strange.material.icon
+package com.softistx.material.icon
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalContentColor

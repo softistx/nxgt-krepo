@@ -1,7 +1,7 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.workflow.NonRetryableException
-import com.strange.workflow.dsl.RetryPolicy
+import com.softistx.workflow.NonRetryableException
+import com.softistx.workflow.dsl.RetryPolicy
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay

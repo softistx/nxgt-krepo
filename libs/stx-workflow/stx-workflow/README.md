@@ -33,11 +33,11 @@ val instance = engine.start(checkout, Checkout(items, card))
 ## Shape
 
 ```
-com.strange.workflow          Workflow, WorkflowEngine, WorkflowWorker, WorkflowInstance, WorkflowStatus
-com.strange.workflow.dsl      the verbs — step, branch, parallel, await, sleep, retry, timeout, compensate
-com.strange.workflow.annotation  the same declaration as annotations on a class, read by workflowOf
-com.strange.workflow.engine   the loop: one attempt, the walk, the unwind
-com.strange.workflow.store    WorkflowStore, the persisted record and journal, InMemoryStore
+com.softistx.workflow          Workflow, WorkflowEngine, WorkflowWorker, WorkflowInstance, WorkflowStatus
+com.softistx.workflow.dsl      the verbs — step, branch, parallel, await, sleep, retry, timeout, compensate
+com.softistx.workflow.annotation  the same declaration as annotations on a class, read by workflowOf
+com.softistx.workflow.engine   the loop: one attempt, the walk, the unwind
+com.softistx.workflow.store    WorkflowStore, the persisted record and journal, InMemoryStore
 ```
 
 ## Checkpointed, not replayed

@@ -1,4 +1,4 @@
-package com.strange.workflow.redis
+package com.softistx.workflow.redis
 
 /**
  * The record and the index move together or not at all.

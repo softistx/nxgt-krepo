@@ -11,12 +11,12 @@ waiting for its second commit.
 ## Shape
 
 ```
-com.strange.common.coroutines      CoroutineSafeMap, KeyedMutex, Mailbox
-com.strange.common.lifecycle       CloseGuard
-com.strange.common.serialization   lenientJson, decodeValue, typeName
-com.strange.common.page            Page, PageInfo, PageWindow and pageOf — the half of keyset
+com.softistx.common.coroutines      CoroutineSafeMap, KeyedMutex, Mailbox
+com.softistx.common.lifecycle       CloseGuard
+com.softistx.common.serialization   lenientJson, decodeValue, typeName
+com.softistx.common.page            Page, PageInfo, PageWindow and pageOf — the half of keyset
                                    pagination that is the same in both stores
-com.strange.common.http            CorsPolicy — which browsers may call this service, said once for
+com.softistx.common.http            CorsPolicy — which browsers may call this service, said once for
                                    every framework that has to enforce it
 ```
 

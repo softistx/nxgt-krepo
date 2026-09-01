@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,15 +14,15 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.button.IconButton
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.button.IconButton
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
 
 /**
- * The one-line quote sitting above a [com.strange.material.form.Composer].
+ * The one-line quote sitting above a [com.softistx.material.form.Composer].
  *
  * A [QuoteBlock] is a passage in a body of text. This is the chrome of "replying to": name, a
  * truncated line, and an optional dismiss. Material 3's `Surface` plus `VerticalDivider`.

@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,16 +13,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
-import com.strange.material.feedback.LabeledProgress
-import com.strange.material.form.CheckState
-import com.strange.material.form.CopyField
-import com.strange.material.form.TriStateCheckbox
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.layout.SelectionBar
-import com.strange.material.surface.Disclosure
-import com.strange.material.surface.MenuItem
-import com.strange.material.text.Typography
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.feedback.LabeledProgress
+import com.softistx.material.form.CheckState
+import com.softistx.material.form.CopyField
+import com.softistx.material.form.TriStateCheckbox
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.layout.SelectionBar
+import com.softistx.material.surface.Disclosure
+import com.softistx.material.surface.MenuItem
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.StrangeTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 

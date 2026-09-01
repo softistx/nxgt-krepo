@@ -1,15 +1,15 @@
-package com.strange.example.shop.routes
+package com.softistx.example.shop.routes
 
-import com.strange.example.shop.domain.ProductService
-import com.strange.example.shop.domain.ProductSpecs
-import com.strange.example.shop.model.EditProduct
-import com.strange.example.shop.model.NewProduct
-import com.strange.example.shop.model.ProductPage
-import com.strange.example.shop.model.view
-import com.strange.jpa.criteria.and
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
-import com.strange.ktor.jpa.jpa
+import com.softistx.example.shop.domain.ProductService
+import com.softistx.example.shop.domain.ProductSpecs
+import com.softistx.example.shop.model.EditProduct
+import com.softistx.example.shop.model.NewProduct
+import com.softistx.example.shop.model.ProductPage
+import com.softistx.example.shop.model.view
+import com.softistx.jpa.criteria.and
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
+import com.softistx.ktor.jpa.jpa
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond

@@ -1,14 +1,14 @@
-package com.strange.amqp.consumer
+package com.softistx.amqp.consumer
 
 import com.rabbitmq.client.CancelCallback
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DeliverCallback
 import com.rabbitmq.client.Delivery
-import com.strange.amqp.Amqp
-import com.strange.amqp.AmqpValueException
-import com.strange.amqp.codec.AmqpCodec
-import com.strange.amqp.codec.jsonCodec
-import com.strange.amqp.message.AmqpMessage
+import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpValueException
+import com.softistx.amqp.codec.AmqpCodec
+import com.softistx.amqp.codec.jsonCodec
+import com.softistx.amqp.message.AmqpMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose

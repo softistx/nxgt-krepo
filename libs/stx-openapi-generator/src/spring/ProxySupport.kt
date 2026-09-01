@@ -1,5 +1,8 @@
-package com.strange.openapi.spring
+package com.softistx.openapi.spring
 
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.GENERATED_COMMENT
+import com.softistx.openapi.emit.apiOperationName
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -7,9 +10,6 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.GENERATED_COMMENT
-import com.strange.openapi.emit.apiOperationName
 
 internal const val OPERATION_ATTRIBUTE: String = "OPERATION_ATTRIBUTE"
 

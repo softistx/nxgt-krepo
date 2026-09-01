@@ -1,6 +1,6 @@
-package com.strange.ktor.i18n
+package com.softistx.ktor.i18n
 
-import com.strange.i18n.Messages
+import com.softistx.i18n.Messages
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 

@@ -1,6 +1,6 @@
-package com.strange.ktor.storage
+package com.softistx.ktor.storage
 
-import com.strange.storage.ObjectStorage
+import com.softistx.storage.ObjectStorage
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 

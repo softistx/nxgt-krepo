@@ -1,11 +1,11 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
-import com.strange.graphix.Graphix
-import com.strange.graphix.GraphixCustomizer
-import com.strange.graphix.scalar.graphQLScalar
-import com.strange.graphix.schema.GraphixDirective
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.spring.fixture.GreetingQueries
+import com.softistx.graphix.Graphix
+import com.softistx.graphix.GraphixCustomizer
+import com.softistx.graphix.scalar.graphQLScalar
+import com.softistx.graphix.schema.GraphixDirective
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.spring.fixture.GreetingQueries
 import graphql.schema.GraphQLScalarType
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

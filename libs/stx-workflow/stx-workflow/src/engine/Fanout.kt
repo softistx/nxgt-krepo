@@ -1,12 +1,12 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.workflow.dsl.Leg
-import com.strange.workflow.dsl.Outcome
-import com.strange.workflow.dsl.Outcomes
-import com.strange.workflow.dsl.Parallel
-import com.strange.workflow.dsl.qualify
-import com.strange.workflow.store.JournalEntry
-import com.strange.workflow.store.NodeOutcome
+import com.softistx.workflow.dsl.Leg
+import com.softistx.workflow.dsl.Outcome
+import com.softistx.workflow.dsl.Outcomes
+import com.softistx.workflow.dsl.Parallel
+import com.softistx.workflow.dsl.qualify
+import com.softistx.workflow.store.JournalEntry
+import com.softistx.workflow.store.NodeOutcome
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll

@@ -1,7 +1,7 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.ObjectType
-import com.strange.openapi.TypeRef
+import com.softistx.openapi.ObjectType
+import com.softistx.openapi.TypeRef
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe

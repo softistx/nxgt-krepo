@@ -1,10 +1,10 @@
-package com.strange.graphix.execute
+package com.softistx.graphix.execute
 
-import com.strange.graphix.GraphixException
-import com.strange.graphix.schema.GraphQLContext
-import com.strange.graphix.schema.graphQLName
-import com.strange.graphix.schema.isArgument
-import com.strange.graphix.schema.isDataFetchingEnvironment
+import com.softistx.graphix.GraphixException
+import com.softistx.graphix.schema.GraphQLContext
+import com.softistx.graphix.schema.graphQLName
+import com.softistx.graphix.schema.isArgument
+import com.softistx.graphix.schema.isDataFetchingEnvironment
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray

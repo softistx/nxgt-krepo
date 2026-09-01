@@ -1,9 +1,9 @@
-package com.strange.mongo.page
+package com.softistx.mongo.page
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
-import com.strange.mongo.InvalidPaginationException
-import com.strange.mongo.query.ID_FIELD
+import com.softistx.mongo.InvalidPaginationException
+import com.softistx.mongo.query.ID_FIELD
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive

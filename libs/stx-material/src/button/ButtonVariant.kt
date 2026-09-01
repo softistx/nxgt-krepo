@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 /**
  * How much visual weight a button carries.

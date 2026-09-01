@@ -1,12 +1,12 @@
-package com.strange.mongo.page
+package com.softistx.mongo.page
 
 import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoCollection
-import com.strange.common.page.Page
-import com.strange.common.page.pageOf
-import com.strange.mongo.InvalidPaginationException
-import com.strange.mongo.query.findAll
+import com.softistx.common.page.Page
+import com.softistx.common.page.pageOf
+import com.softistx.mongo.InvalidPaginationException
+import com.softistx.mongo.query.findAll
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.json.JsonObject
 import org.bson.BsonDocument

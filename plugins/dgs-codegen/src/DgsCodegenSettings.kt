@@ -1,4 +1,4 @@
-package com.strange.dgs.plugin
+package com.softistx.dgs.plugin
 
 import org.jetbrains.amper.plugins.Configurable
 import java.nio.file.Path

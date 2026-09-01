@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.material3.adaptive.navigation3.SupportingPaneSceneStrategy
 

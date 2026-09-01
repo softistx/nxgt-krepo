@@ -1,7 +1,7 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.icon.StrangeIcons
+import com.softistx.material.icon.StrangeIcons
 
 /** The library's icon set, named, for the icons story to walk. */
 val CatalogIcons: List<Pair<String, ImageVector>> =

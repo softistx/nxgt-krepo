@@ -1,7 +1,7 @@
-package com.strange.spring.data.mongo.template
+package com.softistx.spring.data.mongo.template
 
-import com.strange.spring.data.mongo.filter.toSort
-import com.strange.spring.web.SortOrder
+import com.softistx.spring.data.mongo.filter.toSort
+import com.softistx.spring.web.SortOrder
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

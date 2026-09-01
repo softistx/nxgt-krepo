@@ -1,10 +1,10 @@
-package com.strange.material.theme
+package com.softistx.material.theme
 
 /**
  * How the screen should pick its scheme.
  *
  * [System] is "follow the platform". [Light] and [Dark] pin it. The catalogue's header already
- * has this switch; [com.strange.material.form.ThemeToggle] is the same choice on a settings
+ * has this switch; [com.softistx.material.form.ThemeToggle] is the same choice on a settings
  * screen.
  */
 enum class ColorMode {

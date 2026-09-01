@@ -1,4 +1,4 @@
-package com.strange.i18n
+package com.softistx.i18n
 
 import java.io.IOException
 import java.io.InputStreamReader

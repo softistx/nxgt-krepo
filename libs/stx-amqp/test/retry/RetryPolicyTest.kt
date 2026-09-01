@@ -1,4 +1,4 @@
-package com.strange.amqp.retry
+package com.softistx.amqp.retry
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

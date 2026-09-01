@@ -1,6 +1,6 @@
-package com.strange.ktor.cors
+package com.softistx.ktor.cors
 
-import com.strange.common.http.CorsPolicy
+import com.softistx.common.http.CorsPolicy
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
 import io.ktor.server.application.install

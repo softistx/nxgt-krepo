@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
@@ -10,12 +10,12 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.strange.material.text.Typography
+import com.softistx.material.text.Typography
 
 /**
  * A single choice among a short, closed set. Material 3's `SingleChoiceSegmentedButtonRow`.
  *
- * It is not a [com.strange.material.button.ButtonRow] (a layout) and not [Tabs] (a destination).
+ * It is not a [com.softistx.material.button.ButtonRow] (a layout) and not [Tabs] (a destination).
  * Three to five options that partition one view — "Day / Week / Month" — is the size it is for.
  */
 @Composable

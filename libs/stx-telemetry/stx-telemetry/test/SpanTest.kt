@@ -1,11 +1,11 @@
-package com.strange.telemetry
+package com.softistx.telemetry
 
-import com.strange.telemetry.context.withTelemetry
-import com.strange.telemetry.fixture.Collector
-import com.strange.telemetry.fixture.collecting
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanStatus
-import com.strange.telemetry.trace.Sampler
+import com.softistx.telemetry.context.withTelemetry
+import com.softistx.telemetry.fixture.Collector
+import com.softistx.telemetry.fixture.collecting
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.model.SpanStatus
+import com.softistx.telemetry.trace.Sampler
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -101,7 +101,7 @@ class SpanTest :
 
                 val events = collector.span("charge").shouldNotBeNull().events
                 events.map { it.name } shouldBe
-                    listOf("retrying", "com.strange.telemetry.Refused")
+                    listOf("retrying", "com.softistx.telemetry.Refused")
                 events[0].attributes.values["attempt"] shouldBe JsonPrimitive(2)
                 events[1].attributes.values["code"] shouldBe JsonPrimitive("insufficient_funds")
             }

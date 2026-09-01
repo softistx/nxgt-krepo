@@ -12,4 +12,4 @@ test-dependencies:
   - $libs.kotest.assertions.core
 
 pluginInfo:
-  settingsClass: com.strange.dgs.plugin.DgsCodegenSettings
+  settingsClass: com.softistx.dgs.plugin.DgsCodegenSettings

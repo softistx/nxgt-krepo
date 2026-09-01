@@ -1,4 +1,4 @@
-package com.strange.material.layout
+package com.softistx.material.layout
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.BoxScope
@@ -10,11 +10,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.button.ButtonColor
-import com.strange.material.button.ButtonVariant
-import com.strange.material.button.IconButton
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.motion.Transitions
+import com.softistx.material.button.ButtonColor
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.button.IconButton
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.motion.Transitions
 import kotlinx.coroutines.launch
 
 /**

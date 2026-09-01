@@ -1,10 +1,10 @@
-package com.strange.example.orders.migration
+package com.softistx.example.orders.migration
 
-import com.strange.spring.data.mongo.criteria.exists
-import com.strange.spring.data.mongo.criteria.query
-import com.strange.spring.data.mongo.migration.Migration
-import com.strange.spring.data.mongo.migration.MigrationUnit
-import com.strange.spring.data.mongo.template.updates
+import com.softistx.spring.data.mongo.criteria.exists
+import com.softistx.spring.data.mongo.criteria.query
+import com.softistx.spring.data.mongo.migration.Migration
+import com.softistx.spring.data.mongo.migration.MigrationUnit
+import com.softistx.spring.data.mongo.template.updates
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 

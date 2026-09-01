@@ -1,6 +1,6 @@
-package com.strange.redis.stream
+package com.softistx.redis.stream
 
-import com.strange.redis.RedisTestServer
+import com.softistx.redis.RedisTestServer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder

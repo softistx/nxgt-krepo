@@ -1,11 +1,11 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.BadPickQueries
-import com.strange.graphix.fixture.DefaultedDeprecatedQueries
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.RequiredDeprecatedQueries
-import com.strange.graphix.fixture.SpecQueries
-import com.strange.graphix.scalar.scalar
+import com.softistx.graphix.fixture.BadPickQueries
+import com.softistx.graphix.fixture.DefaultedDeprecatedQueries
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.RequiredDeprecatedQueries
+import com.softistx.graphix.fixture.SpecQueries
+import com.softistx.graphix.scalar.scalar
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalSerializationApi::class)
 
-package com.strange.demo.api.model
+package com.softistx.demo.api.model
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.DeserializationStrategy

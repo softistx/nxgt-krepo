@@ -1,6 +1,6 @@
-package com.strange.example.orders.service
+package com.softistx.example.orders.service
 
-import com.strange.example.orders.model.OrderStatus
+import com.softistx.example.orders.model.OrderStatus
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * has with sensitive data. An `Order` handed to a `toString()` logs whatever fields it happens to
  * have, including the one added next quarter, and nobody finds out.
  *
- * Which is why nothing here carries [com.strange.example.orders.model.Order.customer]. The customer
+ * Which is why nothing here carries [com.softistx.example.orders.model.Order.customer]. The customer
  * is in `orders` where it belongs; a telemetry collection with a seven-day TTL is not the place for
  * a second copy of it, and the way that decision is enforced is that this file does not mention it.
  *

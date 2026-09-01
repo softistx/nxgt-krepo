@@ -1,4 +1,4 @@
-package com.strange.openapi
+package com.softistx.openapi
 
 /**
  * A declaration to generate in the model package.

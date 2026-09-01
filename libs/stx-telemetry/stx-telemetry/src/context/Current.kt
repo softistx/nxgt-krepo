@@ -1,9 +1,9 @@
-package com.strange.telemetry.context
+package com.softistx.telemetry.context
 
-import com.strange.telemetry.Attributes
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.attributesOf
-import com.strange.telemetry.trace.SpanContext
+import com.softistx.telemetry.Attributes
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.attributesOf
+import com.softistx.telemetry.trace.SpanContext
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.AbstractCoroutineContextElement

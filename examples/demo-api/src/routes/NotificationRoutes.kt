@@ -1,13 +1,13 @@
-package com.strange.demo.api.routes
+package com.softistx.demo.api.routes
 
-import com.strange.demo.api.model.EmailPayload
-import com.strange.demo.api.model.Notification
-import com.strange.demo.api.model.NotificationChannel
-import com.strange.demo.api.model.NotificationDelivery
-import com.strange.demo.api.model.NotificationRequest
-import com.strange.demo.api.model.NotificationStatus
-import com.strange.demo.api.model.UserRecipient
-import com.strange.demo.api.model.audit
+import com.softistx.demo.api.model.EmailPayload
+import com.softistx.demo.api.model.Notification
+import com.softistx.demo.api.model.NotificationChannel
+import com.softistx.demo.api.model.NotificationDelivery
+import com.softistx.demo.api.model.NotificationRequest
+import com.softistx.demo.api.model.NotificationStatus
+import com.softistx.demo.api.model.UserRecipient
+import com.softistx.demo.api.model.audit
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond

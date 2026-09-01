@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.migration
+package com.softistx.spring.data.mongo.migration
 
 /**
  * One change to the database, run once and never again.

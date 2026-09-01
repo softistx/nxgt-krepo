@@ -1,13 +1,13 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.animate
 import androidx.compose.foundation.style.disabled
 import androidx.compose.foundation.style.pressed
 import androidx.compose.foundation.style.scale
-import com.strange.material.button.DISABLED_ALPHA
-import com.strange.material.motion.MotionSpeed
-import com.strange.material.theme.motion
+import com.softistx.material.button.DISABLED_ALPHA
+import com.softistx.material.motion.MotionSpeed
+import com.softistx.material.theme.motion
 
 /**
  * What Material 3 has no parameter for on the chrome we wrap: the press giving under the finger.

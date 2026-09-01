@@ -1,8 +1,8 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.SecurityKind
-import com.strange.openapi.SecurityRequirement
-import com.strange.openapi.TypeRef
+import com.softistx.openapi.SecurityKind
+import com.softistx.openapi.SecurityRequirement
+import com.softistx.openapi.TypeRef
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -108,4 +108,4 @@ class RealSpecTest :
         }
     })
 
-private fun operationsOf(model: com.strange.openapi.ApiModel) = model.groups.flatMap { it.operations }
+private fun operationsOf(model: com.softistx.openapi.ApiModel) = model.groups.flatMap { it.operations }

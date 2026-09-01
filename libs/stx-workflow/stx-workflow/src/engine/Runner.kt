@@ -1,14 +1,14 @@
-package com.strange.workflow.engine
+package com.softistx.workflow.engine
 
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.dsl.Await
-import com.strange.workflow.dsl.BranchNode
-import com.strange.workflow.dsl.Child
-import com.strange.workflow.dsl.Sleep
-import com.strange.workflow.dsl.Step
-import com.strange.workflow.dsl.WorkflowNode
-import com.strange.workflow.dsl.qualify
-import com.strange.workflow.store.NodeOutcome
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.dsl.Await
+import com.softistx.workflow.dsl.BranchNode
+import com.softistx.workflow.dsl.Child
+import com.softistx.workflow.dsl.Sleep
+import com.softistx.workflow.dsl.Step
+import com.softistx.workflow.dsl.WorkflowNode
+import com.softistx.workflow.dsl.qualify
+import com.softistx.workflow.store.NodeOutcome
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -50,7 +50,7 @@ internal suspend fun <C> Run<C>.advance() {
             outcome = NodeOutcome.Failed,
             attempts = failure.attempts,
             error =
-                com.strange.workflow.WorkflowError
+                com.softistx.workflow.WorkflowError
                     .of(failure.node, failure.cause, failure.attempts),
         )
         checkpoint {
@@ -76,7 +76,7 @@ internal suspend fun <C> Run<C>.runNodes(
         when (node) {
             is Step -> runStep(qualify(prefix, node.name), node)
             is BranchNode -> runBranch(qualify(prefix, node.name), node)
-            is com.strange.workflow.dsl.Parallel -> runParallel(qualify(prefix, node.name), node)
+            is com.softistx.workflow.dsl.Parallel -> runParallel(qualify(prefix, node.name), node)
             is Await<C, *> -> runAwait(qualify(prefix, node.name), node)
             is Sleep -> runSleep(qualify(prefix, node.name), node)
             is Child<C, *> -> runChild(qualify(prefix, node.name), node)

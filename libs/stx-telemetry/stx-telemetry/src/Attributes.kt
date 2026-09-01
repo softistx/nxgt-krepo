@@ -1,4 +1,4 @@
-package com.strange.telemetry
+package com.softistx.telemetry
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray

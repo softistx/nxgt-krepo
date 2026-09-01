@@ -1,4 +1,4 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
 import kotlinx.coroutines.reactor.mono
 import org.springframework.http.MediaType

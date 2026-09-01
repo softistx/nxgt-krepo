@@ -1,7 +1,7 @@
-package com.strange.demo.api.routes
+package com.softistx.demo.api.routes
 
-import com.strange.demo.api.model.ErrorResponse
-import com.strange.demo.api.model.SessionInfo
+import com.softistx.demo.api.model.ErrorResponse
+import com.softistx.demo.api.model.SessionInfo
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond

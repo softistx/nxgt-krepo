@@ -1,14 +1,14 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
-import com.strange.openapi.ApiGroup
-import com.strange.openapi.ApiModel
-import com.strange.openapi.Operation
-import com.strange.openapi.SAMPLE_MODEL
-import com.strange.openapi.TypeRef
-import com.strange.openapi.ktorfit.KtorfitEmitter
-import com.strange.openapi.models.ModelsOnlyEmitter
-import com.strange.openapi.render
-import com.strange.openapi.spring.SpringEmitter
+import com.softistx.openapi.ApiGroup
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.Operation
+import com.softistx.openapi.SAMPLE_MODEL
+import com.softistx.openapi.TypeRef
+import com.softistx.openapi.ktorfit.KtorfitEmitter
+import com.softistx.openapi.models.ModelsOnlyEmitter
+import com.softistx.openapi.render
+import com.softistx.openapi.spring.SpringEmitter
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.shouldBe

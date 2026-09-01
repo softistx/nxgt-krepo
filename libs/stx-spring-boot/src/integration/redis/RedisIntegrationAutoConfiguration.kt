@@ -1,7 +1,7 @@
-package com.strange.spring.integration.redis
+package com.softistx.spring.integration.redis
 
-import com.strange.redis.Redis
-import com.strange.redis.RedisConfig
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisConfig
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

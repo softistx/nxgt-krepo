@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,19 +12,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
-import com.strange.material.display.ActionChip
-import com.strange.material.display.Kbd
-import com.strange.material.display.StatusDot
-import com.strange.material.feedback.Progress
-import com.strange.material.feedback.ProgressKind
-import com.strange.material.form.QuantityField
-import com.strange.material.form.SliderField
-import com.strange.material.form.TagField
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.media.AvatarGroup
-import com.strange.material.media.AvatarItem
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.display.ActionChip
+import com.softistx.material.display.Kbd
+import com.softistx.material.display.StatusDot
+import com.softistx.material.feedback.Progress
+import com.softistx.material.feedback.ProgressKind
+import com.softistx.material.form.QuantityField
+import com.softistx.material.form.SliderField
+import com.softistx.material.form.TagField
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.media.AvatarGroup
+import com.softistx.material.media.AvatarItem
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 

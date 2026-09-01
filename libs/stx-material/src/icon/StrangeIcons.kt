@@ -1,4 +1,4 @@
-package com.strange.material.icon
+package com.softistx.material.icon
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor

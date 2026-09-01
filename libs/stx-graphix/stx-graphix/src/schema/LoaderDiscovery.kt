@@ -1,9 +1,9 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixException
-import com.strange.graphix.Loader
-import com.strange.graphix.execute.RegisteredLoader
-import com.strange.graphix.execute.loadBatchMapping
+import com.softistx.graphix.GraphixException
+import com.softistx.graphix.Loader
+import com.softistx.graphix.execute.RegisteredLoader
+import com.softistx.graphix.execute.loadBatchMapping
 import kotlinx.serialization.json.Json
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties

@@ -1,6 +1,6 @@
-package com.strange.openapi.ktorfit
+package com.softistx.openapi.ktorfit
 
-import com.strange.openapi.render
+import com.softistx.openapi.render
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain

@@ -1,10 +1,10 @@
-package com.strange.telemetry.ktor
+package com.softistx.telemetry.ktor
 
-import com.strange.telemetry.Attributes
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.trace.Sampler
+import com.softistx.telemetry.Attributes
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.trace.Sampler
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path

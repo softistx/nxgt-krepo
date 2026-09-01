@@ -1,9 +1,9 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
 /**
  * Marks a function as a field on the Query root.
  *
- * The function lives on an instance passed to [com.strange.graphix.GraphixBuilder.query]. A
+ * The function lives on an instance passed to [com.softistx.graphix.GraphixBuilder.query]. A
  * Spring bean, a store, a client: those are that instance's constructor, not [GraphQLContext].
  *
  * The GraphQL name is [name] if set, otherwise [GraphQLName] on the function, otherwise the
@@ -18,7 +18,7 @@ annotation class QueryMapping(
 
 /**
  * Marks a function as a field on the Mutation root. Naming follows [QueryMapping]. The instance
- * is the one passed to [com.strange.graphix.GraphixBuilder.mutation].
+ * is the one passed to [com.softistx.graphix.GraphixBuilder.mutation].
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
@@ -29,11 +29,11 @@ annotation class MutationMapping(
 
 /**
  * Marks a function as a field on the Subscription root. Naming follows [QueryMapping]. The
- * instance is the one passed to [com.strange.graphix.GraphixBuilder.subscription].
+ * instance is the one passed to [com.softistx.graphix.GraphixBuilder.subscription].
  *
  * The return type must be `Flow<T>` or a reactive-streams / JDK `Publisher<T>`. `T` is the
- * GraphQL field type. Collect with [com.strange.graphix.Graphix.subscribe], not
- * [com.strange.graphix.Graphix.execute].
+ * GraphQL field type. Collect with [com.softistx.graphix.Graphix.subscribe], not
+ * [com.softistx.graphix.Graphix.execute].
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
@@ -44,7 +44,7 @@ annotation class SubscriptionMapping(
 
 /**
  * Extra field on a `@Serializable` type, not a root. The instance is passed to
- * [com.strange.graphix.GraphixBuilder.type].
+ * [com.softistx.graphix.GraphixBuilder.type].
  *
  * [typeName] defaults to the simple name of the first argument's type. [field] defaults to
  * the Kotlin function name. The first parameter that is not DFE / `@GraphQLContext` is the
@@ -122,8 +122,8 @@ annotation class GraphQLIgnore
  * Injects a value into a resolver parameter by `KClass`.
  *
  * [graphql.schema.DataFetchingEnvironment] is recognized by type and does not need this
- * annotation. Other types are looked up in [com.strange.graphix.Graphix.execute]'s map.
- * Missing → [com.strange.graphix.GraphixException].
+ * annotation. Other types are looked up in [com.softistx.graphix.Graphix.execute]'s map.
+ * Missing → [com.softistx.graphix.GraphixException].
  *
  * Not a GraphQL argument, and not how a Spring bean is reached — those stay on the controller
  * constructor.
@@ -149,7 +149,7 @@ annotation class Argument(
 )
 
 /**
- * Applies a named field directive registered with [com.strange.graphix.fieldDirective].
+ * Applies a named field directive registered with [com.softistx.graphix.fieldDirective].
  * On an SDL schema, `@name` on the field is enough — this is for the annotation-derived schema.
  */
 @Target(AnnotationTarget.FUNCTION)

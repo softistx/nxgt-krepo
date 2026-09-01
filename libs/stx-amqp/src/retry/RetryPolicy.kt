@@ -1,4 +1,4 @@
-package com.strange.amqp.retry
+package com.softistx.amqp.retry
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours

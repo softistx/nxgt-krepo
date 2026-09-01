@@ -1,4 +1,4 @@
-package com.strange.mongo
+package com.softistx.mongo
 
 /**
  * What this module throws. Every failure here is about the *request*, not the connection — a
@@ -16,7 +16,7 @@ class DocumentNotFoundException(
     val id: String,
 ) : MongoDataException("No document '$id' in '$collection'")
 
-/** The pagination arguments cannot be honoured — see `com.strange.mongo.page`. */
+/** The pagination arguments cannot be honoured — see `com.softistx.mongo.page`. */
 class InvalidPaginationException(
     message: String,
 ) : MongoDataException(message)

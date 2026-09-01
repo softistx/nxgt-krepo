@@ -1,4 +1,4 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,8 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
-import com.strange.material.text.Typography
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.StrangeTheme
 import androidx.compose.material3.TriStateCheckbox as MaterialTriStateCheckbox
 
 /** The three values a parent checkbox can take when its children disagree. */

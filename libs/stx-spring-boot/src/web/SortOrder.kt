@@ -1,4 +1,4 @@
-package com.strange.spring.web
+package com.softistx.spring.web
 
 import kotlinx.serialization.Serializable
 import org.springframework.web.reactive.function.server.ServerRequest

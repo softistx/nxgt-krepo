@@ -1,9 +1,9 @@
-package com.strange.amqp
+package com.softistx.amqp
 
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
-import com.strange.common.lifecycle.CloseGuard
+import com.softistx.common.lifecycle.CloseGuard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json

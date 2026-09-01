@@ -1,10 +1,10 @@
-package com.strange.example.graphix.shop
+package com.softistx.example.graphix.shop
 
-import com.strange.graphix.schema.Argument
-import com.strange.graphix.schema.BatchMapping
-import com.strange.graphix.schema.MutationMapping
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.schema.SubscriptionMapping
+import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.BatchMapping
+import com.softistx.graphix.schema.MutationMapping
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.SubscriptionMapping
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.Serializable

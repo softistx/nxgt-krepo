@@ -1,9 +1,9 @@
-package com.strange.example.workflow
+package com.softistx.example.workflow
 
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.store.InMemoryStore
-import com.strange.workflow.store.NodeOutcome
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.store.InMemoryStore
+import com.softistx.workflow.store.NodeOutcome
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred

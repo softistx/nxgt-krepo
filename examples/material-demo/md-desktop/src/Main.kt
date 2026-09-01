@@ -1,11 +1,11 @@
-package com.strange.material.demo.desktop
+package com.softistx.material.demo.desktop
 
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.strange.material.demo.MaterialDemo
+import com.softistx.material.demo.MaterialDemo
 
 /**
  * The desktop launcher: a window around [MaterialDemo]. The initial size is wide enough for the

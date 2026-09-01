@@ -1,8 +1,8 @@
-package com.strange.demo.spring
+package com.softistx.demo.spring
 
-import com.strange.demo.api.DemoServer
-import com.strange.demo.api.startDemoServer
-import com.strange.demo.spring.api.utils.ErrorResponseException
+import com.softistx.demo.api.DemoServer
+import com.softistx.demo.api.startDemoServer
+import com.softistx.demo.spring.api.utils.ErrorResponseException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

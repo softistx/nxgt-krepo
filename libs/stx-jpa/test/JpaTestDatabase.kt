@@ -1,8 +1,8 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.testing.containers.PostgresEndpoint
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.postgresContainer
+import com.softistx.testing.containers.PostgresEndpoint
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.postgresContainer
 import io.vertx.core.Vertx
 import io.vertx.pgclient.PgBuilder
 import io.vertx.pgclient.PgConnectOptions

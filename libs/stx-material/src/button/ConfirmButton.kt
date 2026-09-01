@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
@@ -15,7 +15,7 @@ import kotlinx.coroutines.delay
  *
  * The first click changes the label to [confirmText]; the second click fires [onConfirm]. Wait
  * [holdMs] and it goes back to [text], so a missed click is not a delete. For a choice that needs
- * a sentence of warning, [com.strange.material.surface.ConfirmDialog] is the control.
+ * a sentence of warning, [com.softistx.material.surface.ConfirmDialog] is the control.
  */
 @Composable
 fun ConfirmButton(

@@ -1,5 +1,6 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
+import com.softistx.openapi.Operation
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -11,7 +12,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.Operation
 
 internal const val API_OPERATION: String = "ApiOperation"
 

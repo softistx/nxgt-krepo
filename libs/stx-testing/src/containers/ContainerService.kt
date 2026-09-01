@@ -1,4 +1,4 @@
-package com.strange.testing.containers
+package com.softistx.testing.containers
 
 import org.testcontainers.DockerClientFactory
 import org.testcontainers.containers.GenericContainer

@@ -1,11 +1,11 @@
-package com.strange.demo.api.routes
+package com.softistx.demo.api.routes
 
-import com.strange.demo.api.model.Category
-import com.strange.demo.api.model.ErrorResponse
-import com.strange.demo.api.model.Notification
-import com.strange.demo.api.model.Tag
-import com.strange.demo.api.store.Ids
-import com.strange.demo.api.store.Store
+import com.softistx.demo.api.model.Category
+import com.softistx.demo.api.model.ErrorResponse
+import com.softistx.demo.api.model.Notification
+import com.softistx.demo.api.model.Tag
+import com.softistx.demo.api.store.Ids
+import com.softistx.demo.api.store.Store
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond

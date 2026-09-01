@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.convert
+package com.softistx.spring.data.mongo.convert
 
 import org.springframework.core.convert.converter.Converter
 import org.springframework.data.convert.ReadingConverter

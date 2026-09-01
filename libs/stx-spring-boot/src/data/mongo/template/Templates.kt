@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.template
+package com.softistx.spring.data.mongo.template
 
 import com.mongodb.client.result.DeleteResult
 import kotlinx.coroutines.flow.Flow

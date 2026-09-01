@@ -1,13 +1,13 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
-import com.strange.openapi.ApiModel
-import com.strange.openapi.Field
-import com.strange.openapi.ObjectType
-import com.strange.openapi.TypeRef
-import com.strange.openapi.UnionDiscriminator
-import com.strange.openapi.UnionSubtype
-import com.strange.openapi.UnionType
-import com.strange.openapi.render
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.Field
+import com.softistx.openapi.ObjectType
+import com.softistx.openapi.TypeRef
+import com.softistx.openapi.UnionDiscriminator
+import com.softistx.openapi.UnionSubtype
+import com.softistx.openapi.UnionType
+import com.softistx.openapi.render
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain

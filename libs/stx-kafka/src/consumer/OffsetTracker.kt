@@ -1,4 +1,4 @@
-package com.strange.kafka.consumer
+package com.softistx.kafka.consumer
 
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition

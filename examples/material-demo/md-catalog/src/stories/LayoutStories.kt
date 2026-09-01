@@ -1,4 +1,4 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,17 +12,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.strange.material.button.IconButton
-import com.strange.material.demo.storyGroup
-import com.strange.material.display.Card
-import com.strange.material.display.ListTile
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.layout.LoadMoreButton
-import com.strange.material.layout.RefreshBox
-import com.strange.material.layout.ResponsiveGrid
-import com.strange.material.layout.ScrollToTop
-import com.strange.material.layout.SelectionBar
-import com.strange.material.text.Typography
+import com.softistx.material.button.IconButton
+import com.softistx.material.demo.storyGroup
+import com.softistx.material.display.Card
+import com.softistx.material.display.ListTile
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.layout.LoadMoreButton
+import com.softistx.material.layout.RefreshBox
+import com.softistx.material.layout.ResponsiveGrid
+import com.softistx.material.layout.ScrollToTop
+import com.softistx.material.layout.SelectionBar
+import com.softistx.material.text.Typography
 
 val LayoutStories =
     storyGroup("Layout") {

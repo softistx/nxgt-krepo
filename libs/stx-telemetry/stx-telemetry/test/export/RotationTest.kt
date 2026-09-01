@@ -1,4 +1,4 @@
-package com.strange.telemetry.export
+package com.softistx.telemetry.export
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldHaveSize

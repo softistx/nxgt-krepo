@@ -1,7 +1,7 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.TypeRef
-import com.strange.openapi.ValueClassType
+import com.softistx.openapi.TypeRef
+import com.softistx.openapi.ValueClassType
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media.Schema
 

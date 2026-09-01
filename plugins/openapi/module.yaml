@@ -11,4 +11,4 @@ test-dependencies:
   - $libs.kotest.assertions.core
 
 pluginInfo:
-  settingsClass: com.strange.openapi.plugin.OpenApiSettings
+  settingsClass: com.softistx.openapi.plugin.OpenApiSettings

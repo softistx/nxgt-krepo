@@ -1,4 +1,4 @@
-package com.strange.jpa.naming
+package com.softistx.jpa.naming
 
 import org.hibernate.boot.model.naming.Identifier
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl

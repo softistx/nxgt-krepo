@@ -1,4 +1,4 @@
-package com.strange.common.concurrent
+package com.softistx.common.concurrent
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

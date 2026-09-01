@@ -1,10 +1,10 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.SourceEmitter
+import com.softistx.openapi.emit.endpointsFile
 import com.squareup.kotlinpoet.FileSpec
-import com.strange.openapi.ApiModel
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.SourceEmitter
-import com.strange.openapi.emit.endpointsFile
 
 /**
  * Emits the spec's schemas and its endpoint constants — the `client: None` case.

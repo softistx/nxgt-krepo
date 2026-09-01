@@ -1,4 +1,4 @@
-package com.strange.graphix
+package com.softistx.graphix
 
 /**
  * One GraphQL operation. [variables] are already-decoded JSON values — maps, lists, numbers,

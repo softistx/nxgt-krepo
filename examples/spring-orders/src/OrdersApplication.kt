@@ -1,4 +1,4 @@
-package com.strange.example.orders
+package com.softistx.example.orders
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

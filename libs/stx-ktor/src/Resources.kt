@@ -1,4 +1,4 @@
-package com.strange.ktor
+package com.softistx.ktor
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped

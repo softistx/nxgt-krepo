@@ -1,15 +1,15 @@
-package com.strange.openapi.plugin
+package com.softistx.openapi.plugin
 
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.SourceEmitter
-import com.strange.openapi.emit.writeAllTo
-import com.strange.openapi.ktorfit.KtorfitEmitter
-import com.strange.openapi.models.ModelStyle
-import com.strange.openapi.models.ModelsOnlyEmitter
-import com.strange.openapi.parser.Grouping
-import com.strange.openapi.parser.InterfaceNaming
-import com.strange.openapi.parser.OpenApiParser
-import com.strange.openapi.spring.SpringEmitter
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.SourceEmitter
+import com.softistx.openapi.emit.writeAllTo
+import com.softistx.openapi.ktorfit.KtorfitEmitter
+import com.softistx.openapi.models.ModelStyle
+import com.softistx.openapi.models.ModelsOnlyEmitter
+import com.softistx.openapi.parser.Grouping
+import com.softistx.openapi.parser.InterfaceNaming
+import com.softistx.openapi.parser.OpenApiParser
+import com.softistx.openapi.spring.SpringEmitter
 import org.jetbrains.amper.plugins.Input
 import org.jetbrains.amper.plugins.Output
 import org.jetbrains.amper.plugins.TaskAction

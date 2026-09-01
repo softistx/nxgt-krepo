@@ -1,6 +1,6 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
-import com.strange.graphix.http.SubscriptionProtocol
+import com.softistx.graphix.http.SubscriptionProtocol
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "stx.graphix")
 data class GraphixProperties(
     /**
-     * Serves POST/GET at [path] and builds a [com.strange.graphix.Graphix] from
+     * Serves POST/GET at [path] and builds a [com.softistx.graphix.Graphix] from
      * `@GraphQLController` beans. Off unless set.
      */
     val enabled: Boolean = false,

@@ -1,4 +1,4 @@
-package com.strange.kafka.consumer
+package com.softistx.kafka.consumer
 
 /**
  * Where a group starts when it has no committed offset — a brand new group, or one whose offsets

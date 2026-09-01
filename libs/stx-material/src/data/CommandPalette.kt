@@ -1,4 +1,4 @@
-package com.strange.material.data
+package com.softistx.material.data
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,12 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.strange.material.display.ListTile
-import com.strange.material.navigation.Search
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.display.ListTile
+import com.softistx.material.navigation.Search
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
 
 /** One command in a [CommandPalette]. [shortcut] is decoration ("⌘K"); the host wires the key. */
 @Immutable

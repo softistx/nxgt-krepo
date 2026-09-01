@@ -1,6 +1,6 @@
-package com.strange.example.graphix.shop
+package com.softistx.example.graphix.shop
 
-import com.strange.graphix.ktor.GraphQL
+import com.softistx.graphix.ktor.GraphQL
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer

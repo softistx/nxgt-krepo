@@ -1,4 +1,4 @@
-package com.strange.kafka
+package com.softistx.kafka
 
 import kotlinx.serialization.json.Json
 

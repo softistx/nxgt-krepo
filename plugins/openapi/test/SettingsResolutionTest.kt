@@ -1,9 +1,9 @@
-package com.strange.openapi.plugin
+package com.softistx.openapi.plugin
 
-import com.strange.openapi.ktorfit.KtorfitEmitter
-import com.strange.openapi.models.ModelStyle
-import com.strange.openapi.models.ModelsOnlyEmitter
-import com.strange.openapi.spring.SpringEmitter
+import com.softistx.openapi.ktorfit.KtorfitEmitter
+import com.softistx.openapi.models.ModelStyle
+import com.softistx.openapi.models.ModelsOnlyEmitter
+import com.softistx.openapi.spring.SpringEmitter
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

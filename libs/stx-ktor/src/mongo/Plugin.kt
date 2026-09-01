@@ -1,11 +1,11 @@
-package com.strange.ktor.mongo
+package com.softistx.ktor.mongo
 
 import com.mongodb.MongoClientSettings
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.strange.ktor.publish
-import com.strange.ktor.resource
-import com.strange.mongo.mongoClient
+import com.softistx.ktor.publish
+import com.softistx.ktor.resource
+import com.softistx.mongo.mongoClient
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.util.AttributeKey
 

@@ -1,6 +1,6 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
-import com.strange.graphix.http.apolloSandboxPage
+import com.softistx.graphix.http.apolloSandboxPage
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.string.shouldContain
 import org.springframework.http.MediaType

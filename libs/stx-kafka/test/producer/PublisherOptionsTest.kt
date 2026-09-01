@@ -1,7 +1,7 @@
-package com.strange.kafka.producer
+package com.softistx.kafka.producer
 
-import com.strange.kafka.KafkaConfig
-import com.strange.kafka.clientProperties
+import com.softistx.kafka.KafkaConfig
+import com.softistx.kafka.clientProperties
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

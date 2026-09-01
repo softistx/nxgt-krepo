@@ -1,11 +1,11 @@
-package com.strange.workflow
+package com.softistx.workflow
 
-import com.strange.workflow.dsl.sleep
-import com.strange.workflow.dsl.step
-import com.strange.workflow.fixture.Calls
-import com.strange.workflow.fixture.Ledger
-import com.strange.workflow.store.InMemoryStore
-import com.strange.workflow.workflow
+import com.softistx.workflow.dsl.sleep
+import com.softistx.workflow.dsl.step
+import com.softistx.workflow.fixture.Calls
+import com.softistx.workflow.fixture.Ledger
+import com.softistx.workflow.store.InMemoryStore
+import com.softistx.workflow.workflow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CoroutineScope

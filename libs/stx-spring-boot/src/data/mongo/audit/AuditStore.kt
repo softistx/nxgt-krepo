@@ -1,8 +1,8 @@
-package com.strange.spring.data.mongo.audit
+package com.softistx.spring.data.mongo.audit
 
-import com.strange.spring.data.mongo.criteria.all
-import com.strange.spring.data.mongo.criteria.eq
-import com.strange.spring.data.mongo.criteria.query
+import com.softistx.spring.data.mongo.criteria.all
+import com.softistx.spring.data.mongo.criteria.eq
+import com.softistx.spring.data.mongo.criteria.query
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.data.domain.Sort

@@ -30,7 +30,7 @@ settings:
   jvm:
     # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file
     # named `main.kt`; this one is `DemoClient.kt`.
-    mainClass: com.strange.demo.client.DemoClientKt
+    mainClass: com.softistx.demo.client.DemoClientKt
 
 plugins:
   openapi:
@@ -39,4 +39,4 @@ plugins:
       # `spec` is a Path the frontend resolves against this module's root, so `..` reaches the
       # neighbouring module that owns the document.
       - spec: ../demo-api/openapi.yaml
-        packageName: com.strange.demo.client.api
+        packageName: com.softistx.demo.client.api

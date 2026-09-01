@@ -1,4 +1,4 @@
-package com.strange.telemetry.otlp
+package com.softistx.telemetry.otlp
 
 import java.net.URI
 

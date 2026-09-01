@@ -11,5 +11,5 @@ settings:
     enabled: true
     version: 1.12.0
   android:
-    namespace: com.strange.material.demo.android
-    applicationId: com.strange.material.demo
+    namespace: com.softistx.material.demo.android
+    applicationId: com.softistx.material.demo

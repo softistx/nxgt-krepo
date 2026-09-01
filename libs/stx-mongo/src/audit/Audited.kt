@@ -1,4 +1,4 @@
-package com.strange.mongo.audit
+package com.softistx.mongo.audit
 
 import org.bson.conversions.Bson
 

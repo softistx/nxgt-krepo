@@ -1,4 +1,4 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

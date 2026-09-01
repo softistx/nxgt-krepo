@@ -1,4 +1,4 @@
-package com.strange.material.datetime
+package com.softistx.material.datetime
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

@@ -1,8 +1,8 @@
-package com.strange.redis.pubsub
+package com.softistx.redis.pubsub
 
-import com.strange.redis.Redis
-import com.strange.redis.codec.JsonValueCodec
-import com.strange.redis.codec.ValueCodec
+import com.softistx.redis.Redis
+import com.softistx.redis.codec.JsonValueCodec
+import com.softistx.redis.codec.ValueCodec
 import io.lettuce.core.pubsub.RedisPubSubAdapter
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

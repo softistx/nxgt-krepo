@@ -1,4 +1,4 @@
-package com.strange.jpa.entity.scan
+package com.softistx.jpa.entity.scan
 
 import jakarta.persistence.Embeddable
 import jakarta.persistence.Embedded

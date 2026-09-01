@@ -1,8 +1,8 @@
-package com.strange.ktor.mongo
+package com.softistx.ktor.mongo
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.strange.ktor.required
+import com.softistx.ktor.required
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 

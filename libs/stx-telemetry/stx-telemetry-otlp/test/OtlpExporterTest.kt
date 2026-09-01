@@ -1,21 +1,21 @@
-package com.strange.telemetry.otlp
+package com.softistx.telemetry.otlp
 
-import com.strange.telemetry.Attributes
-import com.strange.telemetry.attributesOf
-import com.strange.telemetry.model.ErrorInfo
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.model.SpanEvent
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.model.SpanStatus
-import com.strange.telemetry.otlp.fixture.Answer
-import com.strange.telemetry.otlp.fixture.FakeCollector
-import com.strange.telemetry.trace.SpanContext
-import com.strange.telemetry.trace.SpanId
-import com.strange.telemetry.trace.TraceId
+import com.softistx.telemetry.Attributes
+import com.softistx.telemetry.attributesOf
+import com.softistx.telemetry.model.ErrorInfo
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.model.SpanEvent
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.model.SpanStatus
+import com.softistx.telemetry.otlp.fixture.Answer
+import com.softistx.telemetry.otlp.fixture.FakeCollector
+import com.softistx.telemetry.trace.SpanContext
+import com.softistx.telemetry.trace.SpanId
+import com.softistx.telemetry.trace.TraceId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -42,7 +42,7 @@ private val RESOURCE = Resource("checkout", "1.4.0", "production", attributesOf(
 
 private fun log(
     name: String = "charging",
-    source: String = "com.strange.CheckoutService",
+    source: String = "com.softistx.CheckoutService",
     attributes: Attributes = Attributes.EMPTY,
     error: ErrorInfo? = null,
 ) = LogRecord(AT, Severity.Warn, name, source, attributes, CONTEXT, error)
@@ -158,9 +158,9 @@ class OtlpExporterTest :
                         it.export(
                             RESOURCE,
                             listOf(
-                                log(source = "com.strange.Checkout"),
-                                log(source = "com.strange.Outbox"),
-                                log(source = "com.strange.Checkout"),
+                                log(source = "com.softistx.Checkout"),
+                                log(source = "com.softistx.Outbox"),
+                                log(source = "com.softistx.Checkout"),
                             ),
                         )
                     }
@@ -175,7 +175,7 @@ class OtlpExporterTest :
                             .jsonObject["name"]!!
                             .jsonPrimitive.content
                     } shouldBe
-                        listOf("com.strange.Checkout", "com.strange.Outbox")
+                        listOf("com.softistx.Checkout", "com.softistx.Outbox")
                     scopes[0].jsonObject["logRecords"]!!.jsonArray.size shouldBe 2
                 }
             }

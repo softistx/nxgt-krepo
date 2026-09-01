@@ -1,11 +1,11 @@
-package com.strange.mongo.query
+package com.softistx.mongo.query
 
 import com.mongodb.MongoWriteException
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
-import com.strange.mongo.MongoTestCluster
-import com.strange.mongo.Note
-import com.strange.mongo.withNotes
+import com.softistx.mongo.MongoTestCluster
+import com.softistx.mongo.Note
+import com.softistx.mongo.withNotes
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

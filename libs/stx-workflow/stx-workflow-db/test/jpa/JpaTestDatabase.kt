@@ -1,10 +1,10 @@
-package com.strange.workflow.jpa
+package com.softistx.workflow.jpa
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.JpaConfig
-import com.strange.jpa.SchemaMode
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.postgresContainer
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.JpaConfig
+import com.softistx.jpa.SchemaMode
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.postgresContainer
 import io.vertx.core.Vertx
 import io.vertx.pgclient.PgBuilder
 import io.vertx.pgclient.PgConnectOptions

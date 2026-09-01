@@ -1,6 +1,6 @@
-package com.strange.example.shop.domain
+package com.softistx.example.shop.domain
 
-import com.strange.jpa.audit.AuditedEntity
+import com.softistx.jpa.audit.AuditedEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue

@@ -1,4 +1,4 @@
-package com.strange.kafka.producer
+package com.softistx.kafka.producer
 
 import org.apache.kafka.clients.producer.RecordMetadata
 import kotlin.time.Instant

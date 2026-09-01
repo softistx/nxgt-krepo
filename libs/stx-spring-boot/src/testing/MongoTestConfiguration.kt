@@ -1,4 +1,4 @@
-package com.strange.spring.testing
+package com.softistx.spring.testing
 
 import com.mongodb.ConnectionString
 import org.springframework.beans.factory.config.BeanPostProcessor

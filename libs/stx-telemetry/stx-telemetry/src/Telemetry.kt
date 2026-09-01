@@ -1,11 +1,11 @@
-package com.strange.telemetry
+package com.softistx.telemetry
 
-import com.strange.telemetry.export.Exporter
-import com.strange.telemetry.export.Pipeline
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.Severity
-import com.strange.telemetry.model.Signal
-import com.strange.telemetry.trace.Sampler
+import com.softistx.telemetry.export.Exporter
+import com.softistx.telemetry.export.Pipeline
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.Severity
+import com.softistx.telemetry.model.Signal
+import com.softistx.telemetry.trace.Sampler
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
  * without being handed it. That global is the one concession to convenience in this library, and it
  * is a safe one for a reason worth being precise about: it is read only as a **fallback**, after the
  * coroutine context has been asked. A test — or an application that would rather pass its telemetry
- * around — uses [com.strange.telemetry.context.withTelemetry] and never touches the global at all.
+ * around — uses [com.softistx.telemetry.context.withTelemetry] and never touches the global at all.
  *
  * It is [AutoCloseable] and closing it drains: see [Pipeline.close].
  */
@@ -41,7 +41,7 @@ class Telemetry internal constructor(
         pipeline.post(signal)
     }
 
-    /** Makes this the telemetry that code outside any [com.strange.telemetry.context.withTelemetry] finds. */
+    /** Makes this the telemetry that code outside any [com.softistx.telemetry.context.withTelemetry] finds. */
     fun install(): Telemetry = apply { installed = this }
 
     /**

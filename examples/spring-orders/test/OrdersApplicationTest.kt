@@ -1,14 +1,14 @@
-package com.strange.example.orders
+package com.softistx.example.orders
 
-import com.strange.example.orders.api.Endpoints
-import com.strange.example.orders.api.apis.IHealthService
-import com.strange.example.orders.api.path
-import com.strange.spring.client.withClient
-import com.strange.spring.testing.MongoSpec
-import com.strange.spring.testing.awaitMigrations
-import com.strange.spring.testing.clear
-import com.strange.spring.testing.mongoAvailable
-import com.strange.spring.testing.webTestClient
+import com.softistx.example.orders.api.Endpoints
+import com.softistx.example.orders.api.apis.IHealthService
+import com.softistx.example.orders.api.path
+import com.softistx.spring.client.withClient
+import com.softistx.spring.testing.MongoSpec
+import com.softistx.spring.testing.awaitMigrations
+import com.softistx.spring.testing.clear
+import com.softistx.spring.testing.mongoAvailable
+import com.softistx.spring.testing.webTestClient
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize

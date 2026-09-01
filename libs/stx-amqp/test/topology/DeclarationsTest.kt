@@ -1,4 +1,4 @@
-package com.strange.amqp.topology
+package com.softistx.amqp.topology
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

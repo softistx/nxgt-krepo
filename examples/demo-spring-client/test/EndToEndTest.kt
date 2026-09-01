@@ -1,10 +1,10 @@
-package com.strange.demo.spring
+package com.softistx.demo.spring
 
-import com.strange.demo.api.DemoServer
-import com.strange.demo.api.startDemoServer
-import com.strange.demo.spring.api.models.CategoryRequest
-import com.strange.demo.spring.api.models.SearchRequest
-import com.strange.demo.spring.api.models.TagRequest
+import com.softistx.demo.api.DemoServer
+import com.softistx.demo.api.startDemoServer
+import com.softistx.demo.spring.api.models.CategoryRequest
+import com.softistx.demo.spring.api.models.SearchRequest
+import com.softistx.demo.spring.api.models.TagRequest
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe

@@ -1,12 +1,12 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.DfeBatch
-import com.strange.graphix.fixture.DfeFields
-import com.strange.graphix.fixture.LimitedSnippets
-import com.strange.graphix.fixture.Product
-import com.strange.graphix.fixture.ProductQueries
-import com.strange.graphix.fixture.ReviewBatch
-import com.strange.graphix.fixture.SingularBatch
+import com.softistx.graphix.fixture.DfeBatch
+import com.softistx.graphix.fixture.DfeFields
+import com.softistx.graphix.fixture.LimitedSnippets
+import com.softistx.graphix.fixture.Product
+import com.softistx.graphix.fixture.ProductQueries
+import com.softistx.graphix.fixture.ReviewBatch
+import com.softistx.graphix.fixture.SingularBatch
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull

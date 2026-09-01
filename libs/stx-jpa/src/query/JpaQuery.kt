@@ -1,7 +1,7 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
-import com.strange.jpa.JpaNoResultException
-import com.strange.jpa.JpaNonUniqueResultException
+import com.softistx.jpa.JpaNoResultException
+import com.softistx.jpa.JpaNonUniqueResultException
 import jakarta.persistence.EntityGraph
 import jakarta.persistence.NoResultException
 import jakarta.persistence.NonUniqueResultException
@@ -50,7 +50,7 @@ class JpaQuery<R>
         fun parameters(vararg values: Pair<String, Any?>): JpaQuery<R> =
             apply { values.forEach { (name, value) -> query.setParameter(name, value) } }
 
-        /** The fetch plan to load with — see [com.strange.jpa.criteria.entityGraph]. */
+        /** The fetch plan to load with — see [com.softistx.jpa.criteria.entityGraph]. */
         fun plan(graph: EntityGraph<R>): JpaQuery<R> = apply { query.setPlan(graph) }
 
         /** At most this many rows. */

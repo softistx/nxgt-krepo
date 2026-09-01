@@ -1,6 +1,6 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixException
+import com.softistx.graphix.GraphixException
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path

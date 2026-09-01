@@ -1,7 +1,7 @@
-package com.strange.spring.testing
+package com.softistx.spring.testing
 
 import com.mongodb.reactivestreams.client.MongoClients
-import com.strange.testing.containers.TestNames
+import com.softistx.testing.containers.TestNames
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
