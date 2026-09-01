@@ -38,7 +38,6 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/stx-material` | The one client-side library: Compose Multiplatform components over Material 3 — a whole palette derived from one colour seed, a component's look declared as a `Style` whose pressed and hovered states animate themselves, and motion as named durations instead of scattered `tween`s |
 | `libs/stx-kafka` | A cluster and the clients over it: sends that suspend until the broker acknowledges them, records as a `Flow` with the offsets looked after, and topics and group lag from an admin client |
 | `libs/stx-ktor` | Ktor integrations for the libraries here: `install(RedisConnection)`, then `call.redis` in a handler — one connection per application, opened with it and closed with it — and the same for Mongo, AMQP, Kafka, Postgres, object storage and i18n |
-| `libs/stx-koin` | The same seven backends as Koin modules, for a worker or a CLI with no web framework: `redisModule(config)`, and the container closes what it built |
 | `libs/stx-mongo` | Session-aware collection extensions covering CRUD, keyset pagination, an opt-in audit trail, and a coroutine GridFS bucket |
 | `libs/stx-redis` | A namespaced connection over Lettuce owning one `Json`, and the four kotlinx-serialized things built on one: a typed cache, a lock, topics, and streams with consumer groups |
 | `libs/stx-spring-boot` | Spring Boot integration for the libraries here: one auto-configuration per library, every bean off unless a `stx.*` property asks for it, plus the WebFlux helpers — a translated error body and the request's own locale, taken from the exchange rather than a `ThreadLocal` |
@@ -67,7 +66,6 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-amqp/README.md`](libs/stx-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
 | [`libs/stx-i18n/README.md`](libs/stx-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
 | [`libs/stx-ktor/README.md`](libs/stx-ktor/README.md) | The Ktor integrations — the seven plugins, what each owns, and how one module holds them without a fat dependency list |
-| [`libs/stx-koin/README.md`](libs/stx-koin/README.md) | The Koin modules — why the container creates the connection here and adopts it there, and what has no `onClose` |
 | [`libs/stx-spring-boot/README.md`](libs/stx-spring-boot/README.md) | The Spring integration — the opt-in `stx.*` model, why the IDE metadata is written by hand, and what `compile-only` buys a consumer |
 | [`docs/spring-mongo-queries.md`](docs/spring-mongo-queries.md) | What a stx-spring-boot Mongo query may say — the operators, the filter and sort grammars, and the keyset paging rules |
 | [`docs/spring-configuration.md`](docs/spring-configuration.md) | Every `stx.*` key an application may set, its default, and what switching it on costs |

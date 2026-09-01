@@ -104,7 +104,7 @@ settings:
 non-final so it can be subclassed for a lazy proxy — without it every `@ManyToOne(fetch = LAZY)`
 fails at startup. `allOpen` has no `jpa` preset (only spring, micronaut and quarkus), which is why
 the three annotations are listed. **Any module that holds entities needs this block**, not just this
-one; `stx-ktor` and `stx-koin` carry it for the single fixture entity in each of their test
+one; `stx-ktor` carries it for the single fixture entity in its test
 trees.
 
 **There is no static metamodel**, and there cannot be: `hibernate-jpamodelgen` is a javac annotation
@@ -137,8 +137,8 @@ and the entity does not.
 `@Converter` classes in those packages as well.
 
 Both forms take the other as an extra: `Jpa.scan(config, packages, entities = listOf(Legacy::class))`
-adds the class that lives somewhere the scan does not reach. `packages(…)` in the Ktor plugin and
-`jpaScanModule(config, …)` in Koin are the same thing at their own call sites.
+adds the class that lives somewhere the scan does not reach. `packages(…)` in the Ktor plugin is the
+same thing at its own call site.
 
 ## The session is ours, not Hibernate's
 
@@ -504,11 +504,10 @@ context a session was opened on.
 
 ## Integrations
 
-`install(JpaConnection) { … }` in `stx-ktor`, `jpaModule(config, Order::class)` in `stx-koin`,
-and `packages("com.acme.orders.domain")` / `jpaScanModule(config, "com.acme.orders.domain")` for the
-scanning form of each. Both build one factory for the application and close it with it, both take an `instance` something
-else built, and both block once at startup because `connect` suspends and neither an `install` block
-nor a Koin `single { }` does.
+`install(JpaConnection) { … }` in `stx-ktor`, and `packages("com.acme.orders.domain")` for the
+scanning form. It builds one factory for the application and closes it with it, takes an `instance`
+something else built, and blocks once at startup because `connect` suspends and an `install` block
+does not.
 
 ## Tests
 
