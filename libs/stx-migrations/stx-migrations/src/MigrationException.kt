@@ -64,12 +64,21 @@ class MigrationLockTimeoutException(
 ) : MigrationException("another process has held the migration lock for more than $waited")
 
 /**
- * A version was recorded by somebody else while this run held the lock.
+ * A version already had a record when this run, holding the lock, went to claim it.
  *
- * Which means the lock did not hold — two processes both believed they had it. Stopping is the only
- * safe answer: the other one is applying the same migration right now, and continuing would apply
- * the ones after it against a half-made change.
+ * Two things look like this and both stop the run. Either a previous process died between claiming
+ * the version and finishing it, and its `RUNNING` row is not yet old enough for `staleAfter` to call
+ * it abandoned — the ordinary case, and the same halt [MigrationHaltedException] gives once that
+ * timeout passes. Or the lock genuinely did not hold, because a lease expired under a process that
+ * was merely stalled, and two runs both believe they have it.
+ *
+ * Continuing is unsafe either way: whether the change landed is a question only the database can
+ * answer, and the migrations after this one are written against it having landed.
  */
 class MigrationConflictException(
     val version: Long,
-) : MigrationException("version $version was claimed by another process while this one held the lock")
+) : MigrationException(
+        "version $version already has a record, taken while this run held the lock — either a process " +
+            "died mid-migration and its RUNNING row is younger than staleAfter, or a lease expired " +
+            "under a process that is still alive",
+    )

@@ -12,6 +12,7 @@ the library is shaped this way; this file is what you may write.
 - [The ledger contract](#the-ledger-contract)
 - [The two stores](#the-two-stores)
 - [The lock](#the-lock)
+- [`prepare()` runs before the lock, and has to](#prepare-runs-before-the-lock-and-has-to)
 - [What a killed process leaves](#what-a-killed-process-leaves)
 - [In a Ktor application](#in-a-ktor-application)
 - [In a Spring Boot application](#in-a-spring-boot-application)
@@ -240,6 +241,22 @@ against a schema that does not exist yet.
 
 `staleAfter` is only consulted while this run holds the lock, which is what makes "stale" unambiguous —
 a process that were still alive would still be holding the lock.
+
+## `prepare()` runs before the lock, and has to
+
+The lock lives in a table the ledger creates, so the first thing every run does is create two tables
+outside any lock of its own. On MongoDB that is one `insertOne` whose duplicate key is caught. On SQL
+it is two `create table if not exists`, and **on PostgreSQL that clause is not atomic**: two sessions
+issuing the same one at the same moment can both pass its existence check, and the loser fails with
+`duplicate key value violates unique constraint "pg_type_pkey"` instead of doing nothing.
+
+A rolling deploy starting several instances together is exactly that moment. `SqlMigrationLedger`
+issues each statement twice if the first attempt fails — by the retry the winner has committed, the
+existence check sees the table, and the statement does nothing. A second failure is a real one and
+propagates: a bad `stx.jpa.schema`, a missing grant.
+
+MySQL needs none of this — its `create table` takes a metadata lock — but the retry costs nothing
+there, and a ledger that behaved differently per server is a ledger with a dialect in it.
 
 ## What a killed process leaves
 
