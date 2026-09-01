@@ -125,6 +125,7 @@ the header, or starts a fresh trace when the header is absent or malformed. `kin
 | `attributes(vararg pairs)` | Several |
 | `event(name, vararg pairs)` | A moment inside the span |
 | `event(typed)` | The same, named by the type's serial name, fields as attributes |
+| `name` | What the span is called. Settable, because a server span is `GET /orders/8d1f…` until routing has matched it and `GET /orders/{id}` after |
 | `status` | `Ok` by default. A thrown exception overrides whatever is set here |
 | `context` | This span's `SpanContext` |
 | `traceId` / `spanId` | Its parts |
@@ -231,6 +232,12 @@ and may take as long as it needs without blocking anybody who writes a log. It s
 | --- | --- |
 | `ConsoleExporter(out = System.out, stackTraces = true)` | One human-readable line per signal, trace ids abbreviated. For a terminal |
 | `JsonLinesExporter(out = System.out)` | One JSON object per line, discriminated by `"type": "log"` / `"span"`. For a collector |
+
+`stx-telemetry-ktor` adds `install(Observability) { … }`, which builds or adopts a `Telemetry` for an
+application and opens a `SpanKind.Server` span per request — continuing an incoming `traceparent`,
+recording `http.request.method`, `url.path`, `http.route` and `http.response.status_code`, and
+renaming the span to the matched route once Ktor knows it. `call.telemetry`, `call.span` and
+`call.traceparent` are what a handler reads.
 
 `stx-telemetry-slf4j` adds `Slf4jExporter(spans, spanSeverity, factory)`, which writes logs to a
 logger named after their source and spans to `com.strange.telemetry.span`, putting the trace id and

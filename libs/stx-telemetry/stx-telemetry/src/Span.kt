@@ -61,7 +61,7 @@ suspend fun <T> span(
     block: suspend SpanScope.() -> T,
 ): T {
     val parent = coroutineContext[TelemetryContext]
-    val telemetry = parent?.telemetry ?: Telemetry.installed ?: return SpanScope(DETACHED).block()
+    val telemetry = parent?.telemetry ?: Telemetry.installed ?: return SpanScope(DETACHED, name).block()
 
     val traceId = parent?.span?.traceId ?: TraceId.random()
     val sampled = parent?.span?.sampled ?: telemetry.sampler.sample(traceId)
@@ -71,7 +71,7 @@ suspend fun <T> span(
         parent?.with(span = context, attributes = inherited)
             ?: TelemetryContext(telemetry, context, inherited)
 
-    val scope = SpanScope(context)
+    val scope = SpanScope(context, name)
     val startedAt = Clock.System.now()
     var status = SpanStatus.Ok
     var error: ErrorInfo? = null
@@ -89,7 +89,7 @@ suspend fun <T> span(
         if (sampled) {
             telemetry.emit(
                 SpanRecord(
-                    name = name,
+                    name = scope.name,
                     context = context,
                     parent = parent?.span?.spanId,
                     kind = kind,
@@ -143,7 +143,21 @@ suspend fun <T> continuing(
 class SpanScope internal constructor(
     /** This span's identity — what a `traceparent` for an outgoing call is built from. */
     val context: SpanContext,
+    name: String,
 ) {
+    /**
+     * What the span is called, which the block may change.
+     *
+     * Set at the call site and settable afterwards, because **a server span's name is not known when
+     * it starts**: an HTTP request is `GET /orders/8d1f-…` until routing has matched it and
+     * `GET /orders/{id}` after, and only the second is a name a backend can group by. Renaming once
+     * the answer is known beats naming it wrong or naming it uselessly.
+     *
+     * OpenTelemetry has the same operation for the same reason.
+     */
+    @Volatile
+    var name: String = name
+
     private val extra = ConcurrentHashMap<String, JsonElement>()
     private val moments = ConcurrentLinkedQueue<SpanEvent>()
 
