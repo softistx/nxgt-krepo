@@ -184,8 +184,34 @@ The annotations cover the linear vocabulary — steps, compensations, retry, tim
 predicate and a merge is a function of several typed results, and neither survives being written as
 a string. A workflow that needs either is written with `workflow { }`.
 
+## A node is matched by its name
+
+The journal and the declaration agree on one thing: the name of a node. `runStep` skips a node whose
+last journal entry says it succeeded; the unwind compensates an entry only while the declaration
+still has a compensation under that name. There is no definition version, no hash of the
+declaration, and no refusal to resume an instance that older code started.
+
+That is deliberate — a workflow is code, and code is redeployed while instances are running — and it
+has two consequences worth knowing before a deploy rather than after one. Both are asserted in
+`DefinitionChangeTest`, against a real interrupted instance:
+
+- **Renaming a step replays it, and orphans what it already did.** The journal's `reserve` matches
+  nothing in the new declaration, so `hold` runs — a second reservation — and when the instance
+  later unwinds, `reserve` is not in `undo` and the first reservation is never released.
+- **Deleting a step leaves its effect with nothing to undo it.** Its `Succeeded` entry stays in the
+  journal and the unwind steps straight over it. The instance still finishes `Compensated`, which
+  means *every compensation this declaration owed has run* — not that the instance was fully undone.
+
+**Reordering is safe.** The unwind walks the journal in reverse, so it follows what actually
+happened, not what the declaration now lists.
+
+So: renaming or deleting a node with instances in flight is a data migration, not a refactor. Add
+the new node beside the old one and let the old instances drain, or leave the name alone and change
+the body. `WorkflowStatus.Failed` is the other half of this — it is what an instance reaches when a
+compensation cannot be made to work, and it is meant to be looked at by a person.
+
 ## What this slice does not do
 
-**No Ktor or Spring integration**, and no store but Redis and memory. All of them are sibling
-modules when they come, and none of them changes anything here — which is the same claim
-`stx-workflow-db` already makes good on three times over, and the reason `WorkflowStore` has five methods.
+**No sub-workflows and no scheduled starts.** A workflow starts because somebody calls `start`, and
+a step that wants another workflow calls the engine like any other collaborator. Neither is
+load-bearing for the shape here, and both would be additive.

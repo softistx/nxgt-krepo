@@ -18,6 +18,7 @@ way; this file is what you may write.
 - [Running one](#running-one)
 - [Status](#status)
 - [The persisted record](#the-persisted-record)
+- [Changing a declaration that has instances in flight](#changing-a-declaration-that-has-instances-in-flight)
 - [Stores](#stores)
 - [In a Ktor application](#in-a-ktor-application)
 - [In a Spring Boot application](#in-a-spring-boot-application)
@@ -550,6 +551,30 @@ entry the same node writes when the wait ends.
 A signal's payload is kept in the entry that consumed it. A signal is the one input to a workflow
 that came from outside it, and an operator asking six months later why this instance paid out should
 not have to find the answer in another system's log.
+
+## Changing a declaration that has instances in flight
+
+A node is matched to its journal entry **by name**, and by nothing else. There is no definition
+version and no refusal to resume an instance that older code started, so what a rename or a deletion
+does depends entirely on which names the two sides still share.
+
+| Change | What happens to an instance already running |
+| --- | --- |
+| The body of a step | Nothing. The name still matches, so a node that has run stays skipped and one that has not runs the new body |
+| Adding a step | It runs on resume, in its declared position, in the middle of an instance that started before it existed |
+| Renaming a step | It runs **again** under the new name, and what it did under the old one is never compensated — the old name is no longer in the declaration's compensations |
+| Deleting a step | Its `Succeeded` entry stays in the journal and the unwind steps over it. The effect is never undone |
+| Reordering steps | Nothing. The unwind walks the journal in reverse, so it follows what happened rather than what the declaration lists |
+
+The two dangerous rows are asserted in `DefinitionChangeTest`, against an instance interrupted
+mid-run and handed to an engine holding the changed declaration.
+
+**`Compensated` means every compensation this declaration owed has run.** After a deletion it does
+not mean the instance was fully undone, because the declaration no longer owes the deleted node's.
+
+So renaming or deleting a node while instances are in flight is a data migration, not a refactor.
+The two ways through it: keep the old node declared until the old instances have drained, or leave
+the name alone and change the body under it.
 
 ## Stores
 
