@@ -31,11 +31,6 @@
       "sourceType": "com.softistx.spring.data.mongo.audit.AuditProperties"
     },
     {
-      "name": "stx.data.mongo.migration",
-      "type": "com.softistx.spring.data.mongo.migration.MigrationProperties",
-      "sourceType": "com.softistx.spring.data.mongo.migration.MigrationProperties"
-    },
-    {
       "name": "stx.mongo",
       "type": "com.softistx.spring.integration.mongo.MongoIntegrationProperties",
       "sourceType": "com.softistx.spring.integration.mongo.MongoIntegrationProperties"
@@ -236,27 +231,6 @@
       "sourceType": "com.softistx.spring.data.mongo.audit.AuditProperties",
       "defaultValue": "audits",
       "description": "The collection audit entries are written to. Changing it after entries exist starts a new, empty history."
-    },
-    {
-      "name": "stx.data.mongo.migration.enabled",
-      "type": "java.lang.Boolean",
-      "sourceType": "com.softistx.spring.data.mongo.migration.MigrationProperties",
-      "defaultValue": false,
-      "description": "Run pending migrations after the application is ready. Off by default: the version this was extracted from defaulted to true, which meant putting the library on a classpath was enough to have it write to the database."
-    },
-    {
-      "name": "stx.data.mongo.migration.prefix",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.data.mongo.migration.MigrationProperties",
-      "defaultValue": "V",
-      "description": "What a migration class name starts with, before its order — V gives V3Currencies. Matched literally, so a prefix containing a . is a . and not a wildcard."
-    },
-    {
-      "name": "stx.data.mongo.migration.collection",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.data.mongo.migration.MigrationProperties",
-      "defaultValue": "migrations",
-      "description": "The collection migration records are written to. It is what makes a migration run once, so pointing it at an empty collection runs every migration again."
     },
     {
       "name": "stx.mongo.enabled",

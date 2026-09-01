@@ -8,7 +8,6 @@ import com.softistx.example.orders.api.models.PlaceOrderRequest
 import com.softistx.example.orders.api.utils.ErrorResponseException
 import com.softistx.spring.client.withClient
 import com.softistx.spring.testing.MongoSpec
-import com.softistx.spring.testing.awaitMigrations
 import com.softistx.spring.testing.clear
 import com.softistx.spring.testing.mongoAvailable
 import io.kotest.assertions.throwables.shouldThrow
@@ -49,7 +48,6 @@ class OrderControllerTest(
         // filter a generated client needs.
         val orders = apiFactory(json).withClient<IOrdersService>()
 
-        beforeSpec { if (mongoAvailable) template.awaitMigrations(expected = 2) }
         // Each scenario writes what it reads, so none of them depends on another having run.
         beforeEach { if (mongoAvailable) template.clear("orders", "audits") }
 

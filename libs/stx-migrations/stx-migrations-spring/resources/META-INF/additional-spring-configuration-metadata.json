@@ -1,0 +1,76 @@
+{
+  "groups": [
+    {
+      "name": "stx.migrations",
+      "type": "com.softistx.migrations.spring.MigrationProperties",
+      "sourceType": "com.softistx.migrations.spring.MigrationProperties",
+      "description": "Schema migrations run before the context finishes refreshing."
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.migrations.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.softistx.migrations.spring.MigrationProperties",
+      "defaultValue": false,
+      "description": "Run the migrations before the context finishes refreshing, and refuse to start if any of them fails. Off by default."
+    },
+    {
+      "name": "stx.migrations.store",
+      "type": "com.softistx.migrations.spring.MigrationStoreKind",
+      "sourceType": "com.softistx.migrations.spring.MigrationProperties",
+      "defaultValue": null,
+      "description": "Which ledger to build: mongo over the MongoDatabase bean, or sql over the Jpa bean. Unset means build none, because the application declares its own MigrationRunner bean. Nothing is inferred: an application with both beans is not saying which schema it means to migrate. An application migrating both names one here and declares a runner for the other."
+    },
+    {
+      "name": "stx.migrations.name",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.migrations.spring.MigrationProperties",
+      "defaultValue": "stx_migrations",
+      "description": "The table or collection the ledger lives in. The lock lives beside it, in <name>_lock. Worth changing only when something else already owns that name."
+    },
+    {
+      "name": "stx.migrations.lease",
+      "type": "java.time.Duration",
+      "sourceType": "com.softistx.migrations.spring.MigrationProperties",
+      "defaultValue": null,
+      "description": "How long the migration lock is good for before the process holding it is assumed gone. Default 5m. Not a deadline on a migration: the lock renews at a third of this while the work runs."
+    },
+    {
+      "name": "stx.migrations.lock-timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.softistx.migrations.spring.MigrationProperties",
+      "defaultValue": null,
+      "description": "How long to wait for another instance to finish migrating before giving up and failing to start. Default 5m. Generous on purpose: an instance that gave up and started serving would serve against a schema that does not exist yet."
+    },
+    {
+      "name": "stx.migrations.lock-poll",
+      "type": "java.time.Duration",
+      "sourceType": "com.softistx.migrations.spring.MigrationProperties",
+      "defaultValue": null,
+      "description": "How long to wait between two attempts on the migration lock. Default 1s."
+    },
+    {
+      "name": "stx.migrations.stale-after",
+      "type": "java.time.Duration",
+      "sourceType": "com.softistx.migrations.spring.MigrationProperties",
+      "defaultValue": null,
+      "description": "How old a RUNNING record has to be before it is read as a process that died rather than one that is slow. Default 15m. Only consulted while this instance holds the lock, so a live holder is never mistaken for a dead one."
+    }
+  ],
+  "hints": [
+    {
+      "name": "stx.migrations.store",
+      "values": [
+        {
+          "value": "mongo",
+          "description": "Over the MongoDatabase bean — stx.mongo's, or the one stx.data.mongo bridges from Spring Data."
+        },
+        {
+          "value": "sql",
+          "description": "Over the Jpa bean stx.jpa opened. PostgreSQL and MySQL; DB2 is refused by name."
+        }
+      ]
+    }
+  ]
+}
