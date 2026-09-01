@@ -651,6 +651,7 @@ stx:
   redis:    { enabled: true, uri: redis://localhost:6379, namespace: orders }
   workflow:
     enabled: true
+    store: redis          # or jpa, or mongo
     worker: { enabled: true }
 ```
 
@@ -674,8 +675,10 @@ look that name up cannot resume it after a restart, and a process that registere
 workflows will fail on the other half. Registering by existing as a bean means there is no second
 list to keep in step.
 
-Like the Ktor plugin, it opens nothing: with `stx-workflow-db` on the classpath and `stx.redis`
-on, the store is built over *that* connection. Anything else is a `WorkflowStore` bean, and
+Like the Ktor plugin, it opens nothing. `stx.workflow.store` names one of the three stores in
+`stx-workflow-db` and it is built over the connection the matching `stx.*` group already opened.
+**Nothing is inferred**: an application with both a `Redis` and a `Jpa` bean is not saying where its
+workflow instances belong. Leave the key unset and declare a `WorkflowStore` bean instead, and
 `@ConditionalOnMissingBean` steps aside for it.
 
 ## The worker
@@ -697,7 +700,7 @@ background work.
 
 It lives in the **core** module, not beside a store. It asks the engine what is due and resumes it —
 `WorkflowStore.runnable` and `WorkflowStore.guarded`, and nothing else — so the same worker drives
-instances in Redis, in memory, or in whatever store comes next.
+instances in Redis, in Postgres, in MongoDB, or in memory.
 
 It asks the store what is due and calls `resume` on each. There is no claim step — the engine takes
 the instance's lock itself and returns quietly when somebody else has it, so two workers pulling the

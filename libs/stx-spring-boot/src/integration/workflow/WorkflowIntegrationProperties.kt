@@ -6,11 +6,11 @@ import java.time.Duration
 /**
  * What `stx.workflow` runs with.
  *
- * There is no `uri` and no `store` key. Where instances live is a `WorkflowStore` bean, because a
- * store is a connection somebody already opened — `RedisWorkflowStore(redis)` shares the one
- * `stx.redis` made — and a second pool for the same server is one nobody asked for.
+ * There is no `uri`. A store is built over a connection somebody already opened — the `Redis`, the
+ * `Jpa` or the `MongoDatabase` bean the matching `stx.*` group made — because a second pool for the
+ * same server is one nobody asked for.
  *
- * The three groups here are separate classes rather than nested ones, which is the shape
+ * The two groups here are separate classes rather than nested ones, which is the shape
  * `stx.data.mongo` and its two sub-groups already use: Spring's binder handles either, but the
  * metadata this module maintains by hand is keyed on a prefix, and a nested object binds as one key
  * called `worker` rather than as the four an IDE should complete.
@@ -19,7 +19,47 @@ import java.time.Duration
 data class WorkflowIntegrationProperties(
     /** Builds the engine over the `WorkflowStore` bean, registering every `Workflow` bean with it. */
     val enabled: Boolean = false,
+    /**
+     * Which store to build, and **null means build none** — the application declares its own bean.
+     *
+     * There is no inference here on purpose. With one store this key would have been unnecessary;
+     * with three, an application that has both a `Redis` and a `Jpa` bean is not telling anybody
+     * where its workflow instances belong, and a library that guessed would put them somewhere
+     * plausible and wrong. Naming it is one line, and it is the line that says what an operator
+     * needs to know.
+     */
+    val store: WorkflowStoreKind? = null,
+    /**
+     * How long an instance lock is good for before the instance is assumed abandoned.
+     *
+     * It is not a deadline on a step: the lock renews while the work runs. It is how long after a
+     * process dies before somebody else may pick up what it was doing.
+     */
+    val lease: Duration? = null,
+    /**
+     * How long a finished instance is kept before it is expired.
+     *
+     * A completed run is the audit trail somebody will want afterwards. A `Failed` one is exempt
+     * whatever this says — it is waiting for a person, and expiring it would delete the only
+     * description of what needs fixing.
+     *
+     * [WorkflowStoreKind.JPA] ignores it: a table has no TTL, so retention there is
+     * `JpaWorkflowStore.purge` on a schedule the application owns.
+     */
+    val retention: Duration? = null,
 )
+
+/** Where `stx.workflow` puts instances. One per store in `stx-workflow-db`. */
+enum class WorkflowStoreKind {
+    /** Over the `Redis` bean `stx.redis` opened. */
+    REDIS,
+
+    /** Over the `Jpa` bean `stx.jpa` opened — which must scan `com.strange.workflow.jpa` for its entity. */
+    JPA,
+
+    /** Over the `MongoDatabase` bean `stx.mongo` opened. */
+    MONGO,
+}
 
 /**
  * Whether this process picks up instances nobody is advancing.
@@ -43,29 +83,4 @@ data class WorkflowWorkerProperties(
     val batch: Int = 32,
     /** How many instances it advances at once. */
     val concurrency: Int = 8,
-)
-
-/**
- * The store built when `stx-workflow-db` is on the classpath and a `Redis` bean exists.
- *
- * Ignored entirely when the application declares its own `WorkflowStore` — which is what a Mongo or
- * a Postgres store will be until one ships.
- */
-@ConfigurationProperties(prefix = "stx.workflow.redis")
-data class WorkflowRedisProperties(
-    /**
-     * How long an instance lock is good for before the instance is assumed abandoned.
-     *
-     * It is not a deadline on a step: the lock renews while the work runs. It is how long after a
-     * process dies before somebody else may pick up what it was doing.
-     */
-    val lease: Duration? = null,
-    /**
-     * How long a finished instance is kept before Redis expires it.
-     *
-     * A completed run is the audit trail somebody will want afterwards. A `Failed` one is exempt
-     * whatever this says — it is waiting for a person, and expiring it would delete the only
-     * description of what needs fixing.
-     */
-    val retention: Duration? = null,
 )

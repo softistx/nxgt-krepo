@@ -81,12 +81,6 @@
       "type": "com.strange.spring.integration.workflow.WorkflowWorkerProperties",
       "sourceType": "com.strange.spring.integration.workflow.WorkflowWorkerProperties",
       "description": "The worker that picks up instances nobody is advancing."
-    },
-    {
-      "name": "stx.workflow.redis",
-      "type": "com.strange.spring.integration.workflow.WorkflowRedisProperties",
-      "sourceType": "com.strange.spring.integration.workflow.WorkflowRedisProperties",
-      "description": "The Redis store built over the connection stx.redis opened."
     }
   ],
   "properties": [
@@ -107,7 +101,7 @@
     {
       "name": "stx.security.enabled",
       "type": "java.lang.Boolean",
-      "description": "Register the stx security beans: a BCrypt PasswordEncoder and the meta-annotation template support that @RequireRole needs. Not a filter chain \u2014 which paths are open stays the application's decision.",
+      "description": "Register the stx security beans: a BCrypt PasswordEncoder and the meta-annotation template support that @RequireRole needs. Not a filter chain — which paths are open stays the application's decision.",
       "sourceType": "com.strange.spring.security.SecurityProperties",
       "defaultValue": false
     },
@@ -167,7 +161,7 @@
     {
       "name": "stx.cors.allow-credentials",
       "type": "java.lang.Boolean",
-      "description": "Whether the browser may send cookies and Authorization. Cannot be combined with an origins list of \"*\" \u2014 use origin-patterns.",
+      "description": "Whether the browser may send cookies and Authorization. Cannot be combined with an origins list of \"*\" — use origin-patterns.",
       "sourceType": "com.strange.spring.cors.CorsProperties",
       "defaultValue": true
     },
@@ -223,7 +217,7 @@
     {
       "name": "stx.data.mongo.transactions",
       "type": "java.lang.Boolean",
-      "description": "Register a ReactiveMongoTransactionManager. Needs a replica set \u2014 a standalone mongod fails the first startTransaction rather than at startup.",
+      "description": "Register a ReactiveMongoTransactionManager. Needs a replica set — a standalone mongod fails the first startTransaction rather than at startup.",
       "sourceType": "com.strange.spring.data.mongo.config.MongoProperties",
       "defaultValue": false
     },
@@ -267,7 +261,7 @@
       "type": "java.lang.String",
       "sourceType": "com.strange.spring.data.mongo.migration.MigrationProperties",
       "defaultValue": "V",
-      "description": "What a migration class name starts with, before its order \u2014 V gives V3Currencies. Matched literally, so a prefix containing a . is a . and not a wildcard."
+      "description": "What a migration class name starts with, before its order — V gives V3Currencies. Matched literally, so a prefix containing a . is a . and not a wildcard."
     },
     {
       "name": "stx.data.mongo.migration.collection",
@@ -281,7 +275,7 @@
       "type": "java.lang.Boolean",
       "sourceType": "com.strange.spring.integration.mongo.MongoIntegrationProperties",
       "defaultValue": false,
-      "description": "Open an stx-mongo coroutine client. Off by default. Distinct from stx.data.mongo and from Spring Boot's spring.data.mongodb, which configure Spring Data's ReactiveMongoTemplate \u2014 a different API onto the same server, and a second pool if both are on."
+      "description": "Open an stx-mongo coroutine client. Off by default. Distinct from stx.data.mongo and from Spring Boot's spring.data.mongodb, which configure Spring Data's ReactiveMongoTemplate — a different API onto the same server, and a second pool if both are on."
     },
     {
       "name": "stx.mongo.uri",
@@ -309,7 +303,7 @@
       "type": "java.lang.String",
       "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
       "defaultValue": "postgresql://localhost:5432/postgres",
-      "description": "postgresql://host:port/database, the way a reactive driver spells it. Not a JDBC URL \u2014 a jdbc: prefix is the first thing to suspect when a connection fails for no visible reason."
+      "description": "postgresql://host:port/database, the way a reactive driver spells it. Not a JDBC URL — a jdbc: prefix is the first thing to suspect when a connection fails for no visible reason."
     },
     {
       "name": "stx.jpa.username",
@@ -358,7 +352,7 @@
       "type": "java.lang.Integer",
       "sourceType": "com.strange.spring.integration.jpa.JpaIntegrationProperties",
       "defaultValue": 10,
-      "description": "How many connections the pool holds. A reactive pool is not sized like a blocking one \u2014 a connection is held for the length of a statement, not of a request."
+      "description": "How many connections the pool holds. A reactive pool is not sized like a blocking one — a connection is held for the length of a statement, not of a request."
     },
     {
       "name": "stx.jpa.connect-timeout",
@@ -549,7 +543,7 @@
       "defaultValue": [
         "en"
       ],
-      "description": "The languages with catalogs \u2014 [en, fr], or [en, fr-CA] for a region. The version this replaces hardcoded en and fr in a @Configuration class."
+      "description": "The languages with catalogs — [en, fr], or [en, fr-CA] for a region. The version this replaces hardcoded en and fr in a @Configuration class."
     },
     {
       "name": "stx.i18n.fallback",
@@ -563,7 +557,7 @@
       "type": "java.lang.String",
       "sourceType": "com.strange.spring.integration.i18n.I18nIntegrationProperties",
       "defaultValue": "locales/messages",
-      "description": "Where the .properties catalogs are \u2014 locales/messages_fr.properties for fr."
+      "description": "Where the .properties catalogs are — locales/messages_fr.properties for fr."
     },
     {
       "name": "stx.i18n.fail-on-missing-key",
@@ -578,6 +572,27 @@
       "sourceType": "com.strange.spring.integration.workflow.WorkflowIntegrationProperties",
       "defaultValue": false,
       "description": "Build an stx-workflow engine over the WorkflowStore bean, registering every Workflow bean with it. Off by default."
+    },
+    {
+      "name": "stx.workflow.store",
+      "type": "com.strange.spring.integration.workflow.WorkflowStoreKind",
+      "sourceType": "com.strange.spring.integration.workflow.WorkflowIntegrationProperties",
+      "defaultValue": null,
+      "description": "Which store to build instances in: redis, jpa or mongo, each over the connection the matching stx.* group already opened. Unset means build none, because the application declares a WorkflowStore bean of its own. Nothing is inferred: an application with both a Redis and a Jpa bean is not saying where its instances belong."
+    },
+    {
+      "name": "stx.workflow.lease",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.spring.integration.workflow.WorkflowIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long an instance lock is good for before the instance is assumed abandoned. Default 30s. Not a deadline on a step: the lock renews while the work runs. Ignored when the application declares its own WorkflowStore."
+    },
+    {
+      "name": "stx.workflow.retention",
+      "type": "java.time.Duration",
+      "sourceType": "com.strange.spring.integration.workflow.WorkflowIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long a finished instance is kept before it is expired. Default 7d. A Failed instance is exempt whatever this says: it is waiting for a person, and expiring it would delete the only description of what needs fixing. Ignored by the jpa store, where a table has no TTL and retention is JpaWorkflowStore.purge on a schedule the application owns."
     },
     {
       "name": "stx.workflow.worker.enabled",
@@ -606,20 +621,6 @@
       "sourceType": "com.strange.spring.integration.workflow.WorkflowWorkerProperties",
       "defaultValue": 8,
       "description": "How many instances the worker advances at once."
-    },
-    {
-      "name": "stx.workflow.redis.lease",
-      "type": "java.time.Duration",
-      "sourceType": "com.strange.spring.integration.workflow.WorkflowRedisProperties",
-      "defaultValue": null,
-      "description": "How long an instance lock is good for before the instance is assumed abandoned. Default 30s. Not a deadline on a step: the lock renews while the work runs. Ignored when the application declares its own WorkflowStore."
-    },
-    {
-      "name": "stx.workflow.redis.retention",
-      "type": "java.time.Duration",
-      "sourceType": "com.strange.spring.integration.workflow.WorkflowRedisProperties",
-      "defaultValue": null,
-      "description": "How long a finished instance is kept before Redis expires it. Default 7d. A Failed instance is exempt whatever this says: it is waiting for a person, and expiring it would delete the only description of what needs fixing."
     }
   ]
 }
