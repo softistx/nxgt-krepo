@@ -193,6 +193,17 @@ later, from a process that did not exist when the instance parked.
 The block runs **once**, when the payload arrives, in whichever process delivered it. It is handed
 the payload and returns the next context, exactly like a step.
 
+**A payload may arrive before the wait does.** A provider handed a callback URL often calls back
+before the step that asked it to has returned, and a workflow that waits on two things in sequence
+hears about the second while it is still parked on the first. Both are accepted: a delivery is
+written to the record as soon as it is taken, filed under the name of the signal it belongs to, and
+the `await` reads whichever payload is addressed to it whenever it gets there. An early delivery does
+**not** wake an instance parked on a different signal — that would step over a wait that has not been
+answered.
+
+Only the last payload under a name survives, which is what "the approval" means: a second one
+overwrites the first rather than queueing behind it.
+
 A `Signal<T>` is a key, not a name, for the same reason an `Outcome<T>` is: the payload is persisted
 before the workflow reads it, so something has to hold its serializer, and a bare string would leave
 every delivering call site guessing the type.
@@ -212,6 +223,52 @@ what the approval *caused* is the steps after it, and those compensate themselve
 
 A workflow that waits on the same signal twice must name the two waits apart — `await(APPROVAL,
 name = "second-approval") { … }` — and the duplicate-name check says so when the workflow is built.
+
+### Webhooks and callbacks
+
+A callback has to find the instance it belongs to, and that needs **no code here**: `start` takes the
+id, so choose one the callback can reconstruct.
+
+```kotlin
+private val SETTLED = signal<Settlement>("settled")
+
+val payout = workflow<Payout>("payout") {
+    step("submit") {
+        // instanceId is on the step scope, which is what makes it available as the provider's own
+        // reference — and it is already the idempotency key this step needs.
+        provider.submit(context.amount, reference = instanceId, key = "$instanceId:$stepName")
+        context
+    }.compensate { provider.recall(instanceId) }
+
+    await(SETTLED) { settlement -> context.copy(settledAt = settlement.at) } within 3.days
+}
+
+// engine.start(payout, Payout(amount), id = "payout:${order.id}")
+```
+
+```kotlin
+post("/hooks/provider") {
+    val event = provider.verify(call.receiveText(), call.request.headers)   // authenticate first
+    engine.signal(event.reference, SETTLED, Settlement(event.at))
+    call.respond(HttpStatusCode.OK)
+}
+```
+
+The instance need not have parked on the `await` yet — providers routinely call back before `submit`
+returns — so nothing here has to order the two.
+
+What the handler answers matters, because it is what decides whether the provider tries again:
+
+| Outcome | Answer | Why |
+| --- | --- | --- |
+| `signal` returns | `200` | Delivered and checkpointed |
+| `WorkflowNotAwaitingException` | `200` | The instance finished; a retry would never land, and asking for one wastes both sides' time |
+| `WorkflowNotFoundException` | `404` | The id is wrong, or the instance was purged |
+| `WorkflowUnknownSignalException` | `400` | A name this workflow has no `await` for — a deploy mismatch, not something a retry fixes |
+| `WorkflowConflictException` | `409` or `503` | Nothing was written; this is the one the provider **should** retry |
+
+This library verifies nothing about the caller. A webhook route is a public endpoint and the
+signature check belongs in front of `signal`, not behind it.
 
 ## Waiting for a clock
 
@@ -465,11 +522,21 @@ it up.
 A workflow must be `register`ed before `start` will run it: an instance the engine cannot look up
 again is an instance that cannot be resumed after a restart.
 
-`signal(id, SIGNAL, payload)` delivers to an instance that is waiting for exactly that signal, and
-runs it on from there in the calling process. It **refuses** an instance that is not — see
-`WorkflowNotAwaitingException` — because the interesting case is not the wrong id, it is the approval
-clicked twice, and the second one must not look like it landed. Delivery happens under the instance's
-lock, so two people approving at the same instant cannot both wake it.
+`signal(id, SIGNAL, payload)` delivers a payload to an instance and runs it on from there in the
+calling process. The instance does **not** have to be waiting yet — see [waiting for a
+signal](#waiting-for-a-signal). Two deliveries are refused, both loudly:
+
+| Refusal | When | Why not just store it |
+| --- | --- | --- |
+| `WorkflowUnknownSignalException` | The workflow declares no `await` on that name | Storing it would tell the caller it landed when nothing will ever read it. A typo and a signal renamed on one side only both land here, at the first delivery rather than at the wait that never wakes |
+| `WorkflowNotAwaitingException` | The instance has already finished | This is the approval clicked twice, and the second one must not look like it was recorded |
+
+Delivery happens under the instance's lock, so two people approving at the same instant cannot both
+wake it. When another process holds that lock, `signal` **waits and tries again** for about four
+hundred milliseconds rather than handing back what the store has — a delivery dropped because the
+instance happened to be mid-step is the exact failure this is built to rule out. A lock still held
+after that throws `WorkflowConflictException`, and nothing was written: an HTTP handler should answer
+with something the caller will retry.
 
 `cancel` unwinds first and lands `Cancelled`. A cancelled checkout that leaves the stock reserved is
 not cancelled.
@@ -512,7 +579,7 @@ data class WorkflowRecord(
     val context: JsonElement,
     val journal: List<JournalEntry> = emptyList(),
     val awaiting: String? = null,       // the signal name, while Awaiting
-    val signal: JsonElement? = null,    // a delivered payload the await has not consumed yet
+    val signals: Map<String, JsonElement> = emptyMap(),  // delivered payloads no await has read yet
     val wakeAt: Instant? = null,        // a Sleeping instance's wake-up, or an Awaiting one's deadline
     val error: WorkflowError? = null,
     val cancelled: Boolean = false,

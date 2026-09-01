@@ -44,18 +44,31 @@ class WorkflowFailedException(
     )
 
 /**
- * A signal was delivered to an instance that is not waiting for it.
+ * A signal was delivered to an instance that has already finished.
  *
- * It is an error rather than a silent no-op because the two ways to get here are both worth
- * hearing about: the instance already moved on — a second approval click, a redelivered message —
- * or the caller has the wrong id. Swallowing it would turn the first into an approval that appears
- * to have been recorded and was not.
+ * This is the second approval click and the redelivered message, and it is an error rather than a
+ * silent no-op because swallowing it would make an approval that landed nowhere look like one that
+ * was recorded. Every other timing is accepted: an instance still running takes the payload and
+ * keeps it until the wait it belongs to reads it.
  */
 class WorkflowNotAwaitingException(
     val id: String,
     val signal: String,
     val status: WorkflowStatus,
-) : WorkflowException("workflow instance '$id' is $status, not awaiting '$signal'")
+) : WorkflowException("workflow instance '$id' is $status, so nothing will ever read '$signal'")
+
+/**
+ * A signal was delivered under a name the workflow has no `await` for.
+ *
+ * It is refused at the door rather than stored, because a delivery is durable here and a name
+ * nothing waits on would sit on the record until the instance was purged, having quietly told the
+ * caller it landed. The two ways to get here are a typo and a signal renamed on one side only, and
+ * both are worth hearing about at the first delivery rather than at the wait that never wakes.
+ */
+class WorkflowUnknownSignalException(
+    val workflow: String,
+    val signal: String,
+) : WorkflowException("workflow '$workflow' declares no await on '$signal'")
 
 /**
  * A wait reached its deadline with no signal.

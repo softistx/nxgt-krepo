@@ -16,6 +16,9 @@ import com.strange.workflow.dsl.qualify
  * called `charge` would make "has this already run" unanswerable, and the failure would show up as a
  * skipped step on some later resume rather than here, next to the mistake.
  *
+ * It **collects the signals the declaration waits on**, so that a delivery naming one the workflow
+ * has no `await` for is refused at the door rather than stored for a wait that will never come.
+ *
  * And it **flattens the compensations into one map**. The unwind reads names out of the journal and
  * has to find the matching block; without this it would walk the tree for each entry, and it would
  * have to know how a leg's recorded value is decoded — which is knowledge that belongs where the
@@ -27,6 +30,7 @@ internal fun <C> index(
     nodes: List<WorkflowNode<C>>,
     seen: MutableSet<String>,
     undo: MutableMap<String, Undo<C>>,
+    signals: MutableSet<String>,
 ) {
     for (node in nodes) {
         val path = qualify(prefix, node.name)
@@ -42,8 +46,13 @@ internal fun <C> index(
             }
 
             // An await and a sleep are named — the journal is keyed on them, and a resume matches
-            // on them — but neither has an effect of its own, so neither has anything to undo.
-            is Await<C, *>, is Sleep -> {
+            // on them — but neither has an effect of its own, so neither has anything to undo. An
+            // await does have a name the outside world delivers under, and that is collected here.
+            is Await<C, *> -> {
+                signals += node.signal.name
+            }
+
+            is Sleep -> {
                 Unit
             }
 
@@ -51,7 +60,7 @@ internal fun <C> index(
                 for (arm in node.arms) {
                     val armPath = qualify(path, arm.name)
                     require(seen.add(armPath)) { "workflow '$workflow' declares '$armPath' twice" }
-                    index(workflow, armPath, arm.nodes, seen, undo)
+                    index(workflow, armPath, arm.nodes, seen, undo, signals)
                 }
             }
         }
