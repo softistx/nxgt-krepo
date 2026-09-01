@@ -13,6 +13,7 @@ the library is shaped this way; this file is what you may write.
 - [The two stores](#the-two-stores)
 - [The lock](#the-lock)
 - [What a killed process leaves](#what-a-killed-process-leaves)
+- [In a Ktor application](#in-a-ktor-application)
 - [A migration must be safe to attempt twice](#a-migration-must-be-safe-to-attempt-twice)
 - [Deliberately absent](#deliberately-absent)
 
@@ -252,6 +253,33 @@ differs is the state of the data underneath.
 
 This is why a migration has to be re-attemptable: the cheapest repair is to make it safe to run again
 and clear the record.
+
+## In a Ktor application
+
+```kotlin
+install(JpaConnection) { config = JpaConfig(uri = …, username = …, password = …) }
+install(Migrations) {
+    gate(SqlMigrations(application.jpa, listOf(V1Orders(), V2OrderIndex())))
+    injectable = true          // optional: the ledger through Ktor's DI
+}
+
+get("/health/migrations") { call.respond(call.migrations.map { "${it.version} ${it.status}" }) }
+```
+
+`install(Migrations)` **goes after the connection plugin it reads from** — the runner is built from
+what `install(JpaConnection)` or `install(MongoConnection)` put on the application, and Ktor runs
+install blocks in order. More than one `gate(…)` is allowed and they run in the order added; they are
+separate ledgers with separate locks, so *in order* is a statement about this process rather than a
+transaction across two servers.
+
+The plugin blocks inside `install`, which is what makes it a gate: an exception leaves the install
+block, leaves `embeddedServer`, and the port is never opened. `call.migrations` is the ledger as it
+stood at startup — a snapshot, because once the gate has passed only another process can change it.
+
+**The list of migrations is explicit and there is no scan.** `stx-jpa`'s `scanEntities` states the
+position: *"a list breaks the build when a class moves; a scan finds nothing and starts perfectly, and
+the first query is where you learn about it."* For migrations, that second failure is what the library
+exists to prevent.
 
 ## A migration must be safe to attempt twice
 
