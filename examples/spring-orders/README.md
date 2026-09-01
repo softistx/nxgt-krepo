@@ -50,6 +50,7 @@ implemented yet.
 | `model/Order.kt` | An ordinary document. `@Auditable` is the entire opt-in for the history trail |
 | `repository/OrderRepository.kt` | Every Mongo call and nothing else: no base class, the reads and writes as extensions |
 | `service/OrderService.kt` | The rules and the `ApiException`s — and it implements the generated interface too |
+| `service/OrderEvents.kt` | What the service logs, declared as types — so what is logged is a decision somebody wrote down |
 | `rest/OrderController.kt` | A controller with no `@GetMapping` in it: the routing is inherited |
 | `rest/HealthController.kt` | The second tag, and why one endpoint gets no service |
 | `mapper/OrderMappers.kt` | The document's types on one side, the database's on the other |
@@ -61,6 +62,8 @@ implemented yet.
 | `test/OrderControllerTest.kt` | The controller end to end, through the interface it implements — one feature per route |
 | `test/OrdersApplicationTest.kt` | What a typed client cannot say: the envelope, the translations, the migrations, the audit trail |
 | `test/ErrorResponseShapeTest.kt` | That the document's `ErrorResponse` is the one the server actually writes |
+| `test/TelemetryCollector.kt` | An `Exporter` bean — the seam an application with a destination of its own uses |
+| `test/TelemetryTest.kt` | The spans and logs the application emits, asserted on the signals themselves |
 
 ## The things worth reading it for
 
@@ -171,6 +174,69 @@ needs the line in the yaml, and `OrdersApplicationTest` writes an order and read
 name, so sorting on a renamed property only works because the cursor is built from the mapping
 rather than from the property.
 
+**Telemetry is two lines of yaml and one import.** `stx.telemetry.enabled` builds a root and
+*installs* it, which is why `OrderService` has a top-level `logger<OrderService>()` and no injected
+bean: an installed root is found from anywhere — an `init` block, a `catch`, a class Spring never
+built — and with none installed every call is a silent no-op. `stx.telemetry.mongo.enabled` adds the
+exporter. Nothing else in this module knows telemetry exists.
+
+The output of the two requests below, from `console: true`:
+
+```
+INFO  OrderService  orders.placed  url.path=/orders reference=DEMO-1 total=4200                    [ee0577de/dba175f0]
+SPAN  place order  100.264837ms   url.path=/orders reference=DEMO-1 orderId=6a96f22a5c6a7d9ef8d48634 [ee0577de/dba175f0]
+SPAN  POST /orders  225.217144ms  http.route=/orders http.response.status_code=201                 [ee0577de/9f7c1517]
+WARN  OrderService  orders.reference-taken  url.path=/orders reference=DEMO-1                      [0fe07d1b/194d6c37]
+SPAN  place order  12.257243ms ERROR  url.path=/orders reference=DEMO-1                            [0fe07d1b/194d6c37]
+SPAN  POST /orders  40.313027ms   http.route=/orders http.response.status_code=409                 [0fe07d1b/100652e2]
+```
+
+Four things in it are worth the read.
+
+**The span nests with nothing passed to it.** `place order` and `POST /orders` share a trace id, and
+the service's span names the filter's as its parent — `[trace/span]` is the pair on each line. The
+span context is a `CoroutineContext.Element` and `stx.telemetry.web-filter` is a `CoWebFilter`, so a
+suspending handler is *already inside* the request's span. An MDC gets this wrong in both directions
+under WebFlux: it leaks onto whatever else runs on the thread and it is gone after a suspension.
+
+**The server span is named for the route, not the path.** `GET /orders/{id}`, never
+`GET /orders/6a96f2…`. The pattern is only known once routing has run, so the filter renames the
+span before writing it — one name a backend can group by instead of one per order ever placed. And
+the 409 line is not an error: 5xx is this service failing, 4xx is a caller being told no, and
+colouring both red makes a dashboard useless. The *inner* span the exception passed through is the
+one marked `ERROR`.
+
+**What is logged is a type.** `service/OrderEvents.kt` declares `OrderPlaced`, `OrderStatusChanged`
+and `ReferenceTaken`; the serial name becomes the event's name and the fields become the attributes.
+So none of those lines carries `customer`, and the reason is not a redaction list somebody has to
+keep up to date — it is that `OrderPlaced` does not mention it. `TelemetryTest` asserts that
+absence, which is the only way a claim like this stays true.
+
+**One span, deliberately.** Every request already has one; a span per method would time the same work
+twice under a second name. `placeOrder` gets one because it is two round trips to Mongo behind one
+route and the split between them is worth seeing. The rest of the file logs and does not span.
+
+Where the signals go is a separate decision from any of that. `stx.telemetry.mongo` writes them to a
+collection with the field names the JSON-lines format uses — so a Mongo query reads like a `jq`
+filter — and retention is a **TTL index**, not a job: Mongo expires the documents itself, on the
+primary, whether or not this process is up. The client is telemetry's own and not
+`spring.mongodb.uri`, which is the point rather than an oversight: a burst of telemetry must not
+exhaust the pool the orders are queueing for.
+
+```js
+db.telemetry.findOne({ name: "orders.placed" })
+{ _id: …, type: "log", at: ISODate("2026-09-01T15:41:30.285Z"), severity: "Info",
+  name: "orders.placed", source: "com.strange.example.orders.service.OrderService",
+  attributes: { "url.path": "/orders", reference: "DEMO-1", total: Long("4200") },
+  span: { traceId: "ee0577de…", spanId: "dba175f0…", sampled: true },
+  service: "spring-orders", environment: "development" }
+```
+
+`at` is a BSON date and not the ISO-8601 string JSON would have given it, because a string is not
+something Mongo will expire or index; `total` is a `Long` and not a `Double`, so an exact-match query
+on a status code is not a floating-point comparison; and `service` and `environment` are on every
+document because a file belongs to one service and a collection does not.
+
 ## Running it
 
 The application needs a MongoDB. The workspace's replica set answers on `localhost:27017`, which is
@@ -180,6 +246,27 @@ the default in `application.yaml`; `MONGO_URI` overrides it.
 ./kotlin run -m spring-orders
 ./kotlin test -m spring-orders
 ```
+
+Telemetry goes to a **second** connection, `TELEMETRY_MONGO_URI`, defaulting to the same server and a
+`spring_orders_telemetry` database of its own. Two clients on one server here because a demo has one
+server; the separation is what matters, and a deployment points the second somewhere else entirely.
+`db.telemetry.find().sort({ at: -1 })` is the whole reader — the documents expire themselves after
+seven days.
+
+**The suite runs with the exporter off.** `stx.telemetry` stays enabled under the `test` profile, so
+every request a spec makes goes through the same server span the demo runs with — but
+`stx.telemetry.mongo.enabled: false`, because that exporter's client is its own and no bean redirects
+it: it would write to the `localhost:27017` in `application.yaml` rather than to the container or
+`MONGO_TEST_URI` server `MongoTestConfiguration` resolves for everything else. `TelemetryCollector`
+takes its place, and is the same seam an application with a destination of its own would use — an
+`Exporter` bean, added by the auto-configuration with nothing else configured.
+
+One consequence of the cached context is worth knowing before writing a spec against it: the
+collector is *one bean for the whole module*, and a batch lingers up to `stx.telemetry.linger` before
+it ships, so signals from the spec that ran before can arrive after `clear()`. Looking one up by name
+alone finds whichever request got there first — which is how `TelemetryTest` briefly came to assert
+on another spec's 404. Every scenario there now places an order under its own reference and matches
+on it.
 
 **The specs start nothing themselves, and this module writes no bootstrap at all.** Each one extends
 `MongoSpec` from `stx-spring-boot`'s `com.strange.spring.testing`, which carries
@@ -219,6 +306,10 @@ is worse than the rule it silences. `stx.security` and the `@PostAuthorize` anno
 filter chain, a token format, a user store — and an example that invented one would be teaching that
 invention rather than this library. The audit trail records an author of `""` here for the same
 reason: nobody is signed in.
+
+No OTLP collector. `stx.telemetry.otlp` is one more key and one more module, and pointing it at a
+collector nobody here is running would be a line that looks configured and exports nothing. The Mongo
+exporter is the one whose destination this repository's workspace already has.
 
 No `stx-mongo`, `stx-jpa`, `stx-redis`, `stx-kafka`, `stx-amqp` or `stx-storage`. Those are the
 `integration/` package — one auto-configuration each, opt-in the same way — and each needs its own
