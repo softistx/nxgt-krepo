@@ -885,6 +885,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-migrations/stx-migrations/README.md` | How the migration library is shaped — why the version is declared and not parsed, why a gate throws where the prior art logged, and why neither Flyway nor Liquibase is underneath it |
   | `libs/stx-migrations/stx-migrations-db/README.md` | Where the ledger lives — why one module and not two, and per store: the uniqueness, the lock, the instants, and how DDL reaches the database |
   | `libs/stx-migrations/stx-migrations-ktor/README.md` | The Ktor plugin — why `runBlocking` in `install` is the gate, why it goes after the connection plugin, and why it owns and closes nothing |
+  | `libs/stx-migrations/stx-migrations-spring/README.md` | The Spring auto-configuration — `stx.migrations.*`, why an `InitializingBean` and not a suspending listener, and why nothing is inferred about where the ledger goes |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
