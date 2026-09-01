@@ -1,7 +1,6 @@
-package com.strange.workflow.redis
+package com.strange.workflow
 
 import com.strange.common.lifecycle.CloseGuard
-import com.strange.workflow.WorkflowEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -28,6 +27,11 @@ import kotlin.time.Duration.Companion.seconds
  * application that drives `resume` from a scheduler of its own never constructs this class. That is
  * the opposite of the usual "helpful" default, and it is deliberate: a worker that appeared on its
  * own would be a second thing advancing instances in a process that thought it had one.
+ *
+ * It knows nothing about any particular store. It asks the engine what is due and resumes it, which
+ * is `WorkflowStore.runnable` and `WorkflowStore.guarded` and nothing else — so the same worker
+ * drives instances in Redis, in memory, or in whatever store comes next. That is why it lives here
+ * rather than beside the one store that exists today.
  *
  * **There is no claim step.** The worker asks the store what is due and calls `resume` on each; the
  * engine takes the instance's lock itself and returns quietly when somebody else has it. Two workers

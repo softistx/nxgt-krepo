@@ -2,6 +2,7 @@ package com.strange.workflow.redis
 
 import com.strange.workflow.WorkflowEngine
 import com.strange.workflow.WorkflowStatus
+import com.strange.workflow.WorkflowWorker
 import com.strange.workflow.dsl.await
 import com.strange.workflow.dsl.compensate
 import com.strange.workflow.dsl.signal
