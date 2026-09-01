@@ -48,6 +48,7 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/stx-telemetry-otlp` | Ships those logs and traces to an OTLP collector over HTTP in JSON, with kotlinx.serialization and the JDK's own `HttpClient` — no OpenTelemetry SDK, and no dependency but the core module |
 | `libs/stx-telemetry-slf4j` | The SLF4J bridge, both ways: an SPI provider that puts every third-party library's logs into the pipeline carrying the current span, or an exporter that writes this library's signals out to a logback an application already has |
 | `libs/stx-telemetry-ktor` | The Ktor plugin: one telemetry per application and a server span per request, continuing an incoming `traceparent` and renamed to the matched route once Ktor knows it |
+| `libs/stx-telemetry-spring` | The Spring Boot auto-configuration: one telemetry behind `stx.telemetry.enabled`, every `Exporter` bean added to it, and a `CoWebFilter` — not a `WebFilter` — so a suspending `@RestController` method is inside the request's span |
 | `libs/stx-testing` | What the integration specs run against: a backing service reused from the environment when one is named, and started as a container for the run when it is not |
 
 ## Getting started
@@ -96,6 +97,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-telemetry/stx-telemetry-otlp/README.md`](libs/stx-telemetry/stx-telemetry-otlp/README.md) | The OTLP exporter — why not the Java SDK, the two encoding details that are easy to get wrong, and what is retried |
 | [`libs/stx-telemetry/stx-telemetry-slf4j/README.md`](libs/stx-telemetry/stx-telemetry-slf4j/README.md) | The SLF4J bridge — which direction to pick, why reading a third-party MDC is not a contradiction, and why both directions at once is refused |
 | [`libs/stx-telemetry/stx-telemetry-ktor/README.md`](libs/stx-telemetry/stx-telemetry-ktor/README.md) | The Ktor plugin — why the span wraps the pipeline instead of being two hooks, why it is renamed after routing, and what a thrown handler costs the span |
+| [`libs/stx-telemetry/stx-telemetry-spring/README.md`](libs/stx-telemetry/stx-telemetry-spring/README.md) | The Spring auto-configuration — why `CoWebFilter` and not `WebFilter`, the dependency the specs found by hanging, and the 200 nobody set |
 | [`docs/workflow.md`](docs/workflow.md) | What a stx-workflow declaration may say — the verbs, the step scope, the statuses, the record and the store contract |
 | [`libs/stx-workflow/stx-workflow/README.md`](libs/stx-workflow/stx-workflow/README.md) | The workflow engine — checkpointing rather than replay, what at-least-once asks of a step, why a fan-out merges explicitly, and why a child is an instance rather than a call |
 | [`libs/stx-workflow/stx-workflow-db/README.md`](libs/stx-workflow/stx-workflow-db/README.md) | Where instances live — why one module and not three, and what each store does with an index, a lease and retention |
