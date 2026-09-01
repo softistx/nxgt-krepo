@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.icon.StxIcons
+import com.softistx.material.theme.StxTheme
 
 /**
  * A message box with send, and optional attach. Material 3 has no composer.
@@ -31,11 +31,11 @@ fun Composer(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
     ) {
         if (onAttach != null) {
             IconButton(
-                icon = StrangeIcons.Attach,
+                icon = StxIcons.Attach,
                 description = "Attach a file",
                 onClick = onAttach,
                 enabled = enabled,
@@ -51,7 +51,7 @@ fun Composer(
             maxLines = 4,
         )
         IconButton(
-            icon = StrangeIcons.Send,
+            icon = StxIcons.Send,
             description = "Send",
             onClick = onSend,
             enabled = enabled && sendEnabled,

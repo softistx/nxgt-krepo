@@ -17,7 +17,7 @@ import com.softistx.material.button.ConfirmButton
 import com.softistx.material.datetime.RelativeTime
 import com.softistx.material.form.InlineEdit
 import com.softistx.material.form.PasswordMeter
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import kotlin.time.Instant
@@ -35,7 +35,7 @@ private fun render(content: @Composable () -> Unit): Int {
     val scene = ImageComposeScene(width = 480, height = 1400)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),

@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.unit.dp
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import kotlin.math.abs
@@ -58,7 +58,7 @@ private fun hoverShift(clickFirst: Boolean): Float {
     val scene = ImageComposeScene(width = 300, height = 120)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 var selected by remember { mutableStateOf(false) }
                 Box(Modifier.fillMaxSize().background(Color.White).padding(Inset)) {
                     Chip(text = "Paid", selected = selected, onClick = { selected = !selected })

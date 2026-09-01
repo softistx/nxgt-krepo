@@ -12,9 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -37,13 +37,13 @@ fun AnnouncementBar(
     Row(
         modifier = modifier.fillMaxWidth().styleable(styleState, alertStyle(tone), style),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         Typography(text = text, modifier = Modifier.weight(1f))
         action?.invoke()
         if (onDismiss != null) {
             IconButton(
-                icon = StrangeIcons.Close,
+                icon = StxIcons.Close,
                 description = "Dismiss",
                 onClick = onDismiss,
             )

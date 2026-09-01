@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /** One reaction in a [ReactionBar]. */
 @Immutable
@@ -40,8 +40,8 @@ fun ReactionBar(
 ) {
     FlowRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
     ) {
         reactions.forEach { reaction ->
             Chip(

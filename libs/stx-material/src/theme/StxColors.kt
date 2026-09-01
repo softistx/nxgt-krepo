@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
  * [scheme], because duplicating 48 values would give two places to disagree about `surface`.
  */
 @Immutable
-data class StrangeColors(
+data class StxColors(
     val scheme: ColorScheme,
     val success: Color,
     val onSuccess: Color,

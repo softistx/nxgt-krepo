@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
 import com.softistx.material.button.Button
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 
@@ -30,7 +30,7 @@ private fun render(content: @Composable () -> Unit): Int {
     val scene = ImageComposeScene(width = 480, height = 1600)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),

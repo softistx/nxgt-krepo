@@ -1,6 +1,6 @@
 package com.softistx.material.navigation
 
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.theme.Tone
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -19,7 +19,7 @@ class NavigationDestinationTest :
             picture: Any? = null,
         ) = NavigationDestination(
             label = "Inbox",
-            icon = StrangeIcons.Inbox,
+            icon = StxIcons.Inbox,
             supporting = supporting,
             badge = badge,
             unread = unread,
@@ -90,7 +90,7 @@ class NavigationDestinationTest :
                 val badge =
                     NavigationDestination(
                         label = "Inbox",
-                        icon = StrangeIcons.Inbox,
+                        icon = StxIcons.Inbox,
                         badge = "12",
                         badgeTone = Tone.Warning,
                     ).resolvedBadge()

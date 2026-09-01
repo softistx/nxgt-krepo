@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
  * layout stays coherent because everything in it snapped to the same ladder.
  */
 @Immutable
-data class StrangeSpacing(
+data class StxSpacing(
     val none: Dp = 0.dp,
     val xxs: Dp = 2.dp,
     val xs: Dp = 4.dp,
@@ -30,8 +30,8 @@ data class StrangeSpacing(
      * of having a scale — a density knob that only shrank the gaps a caller happened to notice
      * would leave the rest of the layout at the old rhythm.
      */
-    fun scaledBy(factor: Float): StrangeSpacing =
-        StrangeSpacing(
+    fun scaledBy(factor: Float): StxSpacing =
+        StxSpacing(
             none = none * factor,
             xxs = xxs * factor,
             xs = xs * factor,

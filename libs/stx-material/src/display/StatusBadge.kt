@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -25,7 +25,7 @@ fun StatusBadge(
     tone: Tone = Tone.Info,
     modifier: Modifier = Modifier,
 ) {
-    val role = StrangeTheme.colors.tone(tone)
+    val role = StxTheme.colors.tone(tone)
     Badge(
         modifier = modifier,
         containerColor = role.container,

@@ -13,7 +13,7 @@ import com.softistx.material.datetime.RelativeTime
 import com.softistx.material.datetime.TimeField
 import com.softistx.material.demo.storyGroup
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlin.time.Duration.Companion.days
@@ -44,14 +44,14 @@ val DateTimeStories =
 
         story("Calendar") { _ ->
             var date by remember { mutableStateOf<LocalDate?>(LocalDate(2026, 8, 31)) }
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
                 Calendar(value = date, onValueChange = { date = it })
             }
         }
 
         story("Relative time") { _ ->
             val now = Instant.fromEpochSeconds(1_777_766_400)
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 listOf(
                     30.minutes to "half an hour ago",
                     5.hours to "this morning",

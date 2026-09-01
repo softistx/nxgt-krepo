@@ -26,11 +26,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * One step in a [Stepper]. The stepper owns whether it is done, current or upcoming from
@@ -78,7 +78,7 @@ fun Stepper(
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val vertical = maxWidth < collapseBelow
         if (vertical) {
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 steps.forEachIndexed { index, step ->
                     StepRow(
                         index = index,
@@ -145,7 +145,7 @@ private fun StepRow(
         Row(
             modifier = modifier.then(body),
             verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
         ) {
             Marker(status = status, index = index, connector = !last, vertical = true)
             Labels(step = step, status = status)
@@ -191,7 +191,7 @@ private fun Marker(
             contentAlignment = Alignment.Center,
         ) {
             if (status == StepStatus.Done) {
-                Icon(icon = StrangeIcons.Check, description = null, size = IconSize.Small, tint = content)
+                Icon(icon = StxIcons.Check, description = null, size = IconSize.Small, tint = content)
             } else {
                 Typography(
                     text = (index + 1).toString(),
@@ -208,7 +208,7 @@ private fun Marker(
                 Box(
                     Modifier
                         .width(2.dp)
-                        .height(StrangeTheme.spacing.lg)
+                        .height(StxTheme.spacing.lg)
                         .background(scheme.outlineVariant),
                 )
             }

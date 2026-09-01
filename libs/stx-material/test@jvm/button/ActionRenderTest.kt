@@ -18,9 +18,9 @@ import com.softistx.material.display.Rating
 import com.softistx.material.display.Stat
 import com.softistx.material.feedback.LoadingMark
 import com.softistx.material.form.UploadField
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.surface.MenuItem
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -42,7 +42,7 @@ private fun render(content: @Composable () -> Unit): Int {
     val scene = ImageComposeScene(width = 480, height = 1100)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -71,9 +71,9 @@ private fun render(content: @Composable () -> Unit): Int {
 
 @Composable
 private fun paint() {
-    Fab(icon = StrangeIcons.Add, description = "New", onClick = {})
+    Fab(icon = StxIcons.Add, description = "New", onClick = {})
     Fab(
-        icon = StrangeIcons.Add,
+        icon = StxIcons.Add,
         description = "New order",
         onClick = {},
         text = "New order",
@@ -82,7 +82,7 @@ private fun paint() {
     FabMenu(
         expanded = false,
         onExpandedChange = {},
-        actions = listOf(FabAction("Edit", StrangeIcons.Edit, onClick = {})),
+        actions = listOf(FabAction("Edit", StxIcons.Edit, onClick = {})),
     )
     SplitButton(
         text = "Save",

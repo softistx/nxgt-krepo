@@ -16,7 +16,7 @@ import com.softistx.material.display.Skeleton
  * The application owns the `ImageLoader` (network, cache). This just paints.
  */
 @Composable
-fun StrangeImage(
+fun StxImage(
     model: Any?,
     description: String?,
     modifier: Modifier = Modifier,

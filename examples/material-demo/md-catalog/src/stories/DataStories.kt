@@ -25,8 +25,8 @@ import com.softistx.material.data.TimelineItem
 import com.softistx.material.demo.storyGroup
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.icon.StxIcons
+import com.softistx.material.theme.StxTheme
 
 private data class OrderRow(
     val id: String,
@@ -39,7 +39,7 @@ val DataStories =
         story("Command palette") { _ ->
             var open by remember { mutableStateOf(false) }
             var query by remember { mutableStateOf("") }
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 Button(text = "Open palette", onClick = { open = true })
                 CommandPalette(
                     visible = open,
@@ -89,7 +89,7 @@ val DataStories =
             EntityHeader(
                 title = "Amara Diallo",
                 supporting = "Customer since 2024",
-                leading = { Icon(icon = StrangeIcons.Person, description = null, size = IconSize.XLarge) },
+                leading = { Icon(icon = StxIcons.Person, description = null, size = IconSize.XLarge) },
                 actions = { Button(text = "Message", onClick = {}, variant = ButtonVariant.Ghost) },
             )
         }

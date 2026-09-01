@@ -15,7 +15,7 @@ import com.softistx.material.demo.PaneScrollbar
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The right pane. It draws whatever the story asked for, in the order it asked — no story
@@ -34,8 +34,8 @@ fun KnobsPanel(
                 Modifier
                     .fillMaxWidth()
                     .verticalScroll(scrollState)
-                    .padding(StrangeTheme.spacing.md),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.lg),
+                    .padding(StxTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.lg),
         ) {
             Typography(text = "Controls", variant = TypographyVariant.Overline, emphasis = Emphasis.Medium)
             if (controls.isEmpty()) {

@@ -12,7 +12,7 @@ import androidx.compose.ui.semantics.Role
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import androidx.compose.material3.Switch as MaterialSwitch
 
 /**
@@ -42,12 +42,12 @@ fun Switch(
                     role = Role.Switch,
                     onValueChange = onValueChange,
                 ),
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         ) {
             Typography(text = label)
             if (description != null) {

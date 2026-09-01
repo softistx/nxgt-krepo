@@ -21,17 +21,17 @@ import com.softistx.material.icon.IconSize
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 val FoundationStories =
     storyGroup("Foundation") {
         story("Typography") { knobs ->
             val emphasis = knobs.enumChoice("Emphasis", Emphasis.Full)
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 TypographyVariant.entries.forEach { variant ->
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+                        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
                         verticalAlignment = Alignment.Bottom,
                     ) {
                         Typography(
@@ -47,8 +47,8 @@ val FoundationStories =
         }
 
         story("Spacing") { _ ->
-            val spacing = StrangeTheme.spacing
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            val spacing = StxTheme.spacing
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 listOf(
                     "none" to spacing.none,
                     "xxs" to spacing.xxs,
@@ -65,8 +65,8 @@ val FoundationStories =
         story("Shapes") { _ ->
             val shapes = MaterialTheme.shapes
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
-                verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
+                verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
             ) {
                 // All eight of Material 3's slots, including the three that arrived with
                 // expressive — a hand-written Shapes(...) fills only five and quietly leaves
@@ -83,7 +83,7 @@ val FoundationStories =
                 ).forEach { (name, shape) ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
                     ) {
                         Box(
                             modifier =
@@ -101,13 +101,13 @@ val FoundationStories =
         story("Icons") { knobs ->
             val size = knobs.enumChoice("Size", IconSize.Large)
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
             ) {
                 CatalogIcons.forEach { (name, icon) ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
                     ) {
                         Icon(icon = icon, description = name, size = size)
                         Typography(text = name, variant = TypographyVariant.Caption)
@@ -118,12 +118,12 @@ val FoundationStories =
 
         story("Semantic colours") { _ ->
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
-                verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
+                verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
             ) {
                 Tone.entries.forEach { tone ->
-                    val role = StrangeTheme.colors.tone(tone)
-                    Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs)) {
+                    val role = StxTheme.colors.tone(tone)
+                    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs)) {
                         Typography(text = tone.name, variant = TypographyVariant.LabelLarge)
                         Swatch("main", role.main)
                         Swatch("container", role.container)

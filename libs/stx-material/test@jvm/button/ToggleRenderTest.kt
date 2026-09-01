@@ -20,10 +20,10 @@ import com.softistx.material.feedback.ProgressKind
 import com.softistx.material.form.QuantityField
 import com.softistx.material.form.SliderField
 import com.softistx.material.form.TagField
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.media.AvatarGroup
 import com.softistx.material.media.AvatarItem
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -45,7 +45,7 @@ private fun render(content: @Composable () -> Unit): Int {
     val scene = ImageComposeScene(width = 480, height = 1400)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -75,7 +75,7 @@ private fun render(content: @Composable () -> Unit): Int {
 @Composable
 private fun paint() {
     ToggleButton(text = "Follow", checked = true, onCheckedChange = {})
-    IconToggle(icon = StrangeIcons.Star, description = "Save", checked = true, onCheckedChange = {})
+    IconToggle(icon = StxIcons.Star, description = "Save", checked = true, onCheckedChange = {})
     CopyButton(text = "ord_9f3a")
     ActionChip(text = "Call", onClick = {})
     StatusDot(tone = Tone.Success)

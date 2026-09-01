@@ -12,7 +12,7 @@ import com.softistx.material.display.Card
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -35,7 +35,7 @@ fun PersonCard(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
         ) {
             Avatar(name = name, image = image, size = 48.dp, tone = tone)
             Column(modifier = Modifier.weight(1f)) {

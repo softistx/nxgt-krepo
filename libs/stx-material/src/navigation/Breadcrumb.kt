@@ -19,11 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * One crumb. The last item of a [Breadcrumb] is the current page: its [onClick] is ignored so a
@@ -68,12 +68,12 @@ fun Breadcrumb(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
     ) {
         visible.forEachIndexed { index, crumb ->
             if (index > 0) {
                 Icon(
-                    icon = StrangeIcons.ChevronRight,
+                    icon = StxIcons.ChevronRight,
                     description = null,
                     size = IconSize.Small,
                 )

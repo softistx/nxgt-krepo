@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 @Immutable
 data class TimelineItem(
@@ -37,9 +37,9 @@ fun Timeline(
     items: List<TimelineItem>,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
         items.forEachIndexed { index, item ->
-            Row(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         Modifier
@@ -51,7 +51,7 @@ fun Timeline(
                         Box(
                             Modifier
                                 .width(2.dp)
-                                .height(StrangeTheme.spacing.xl)
+                                .height(StxTheme.spacing.xl)
                                 .background(MaterialTheme.colorScheme.outlineVariant),
                         )
                     }

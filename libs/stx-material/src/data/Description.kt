@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 @Immutable
 data class DescriptionItem(
@@ -28,12 +28,12 @@ fun Description(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         items.forEach { item ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
             ) {
                 Typography(
                     text = item.term,

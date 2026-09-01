@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A [NavDisplay] already wired for Material 3 Adaptive's two canonical scenes.
@@ -34,7 +34,7 @@ fun <T : Any> AdaptiveNavDisplay(
 ) {
     val listDetail = rememberListDetailSceneStrategy<T>()
     val supporting = rememberSupportingPaneSceneStrategy<T>()
-    val fade = StrangeTheme.motion.effects<Float>()
+    val fade = StxTheme.motion.effects<Float>()
     NavDisplay(
         backStack = backStack,
         modifier = modifier,

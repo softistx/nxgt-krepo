@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
-import com.softistx.material.icon.StrangeIcons
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.icon.StxIcons
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 
@@ -34,7 +34,7 @@ private fun ink(): Int {
     val scene = ImageComposeScene(width = 720, height = 1100)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                 ) {
@@ -62,7 +62,7 @@ private fun ink(): Int {
 
 @Composable
 private fun chrome() {
-    AppBar(title = "Orders", navigationIcon = StrangeIcons.Menu, onNavigation = {})
+    AppBar(title = "Orders", navigationIcon = StxIcons.Menu, onNavigation = {})
     Search(query = "", onQueryChange = {})
     Tabs(labels = listOf("Paid", "Pending"), selected = 0, onSelect = {})
     SegmentedControl(options = listOf("Day", "Week"), selected = 0, onSelect = {})

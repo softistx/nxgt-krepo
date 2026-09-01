@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The top of a detail page: identity, a line of meta, and the actions that apply to it.
@@ -27,7 +27,7 @@ fun EntityHeader(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
     ) {
         leading?.invoke()
         Column(modifier = Modifier.weight(1f)) {
@@ -36,6 +36,6 @@ fun EntityHeader(
                 Typography(text = supporting, emphasis = Emphasis.Medium)
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs), content = actions)
+        Row(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs), content = actions)
     }
 }

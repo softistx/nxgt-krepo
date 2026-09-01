@@ -19,7 +19,7 @@ import com.softistx.material.media.Avatar
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 @Composable
 internal fun DestinationLeading(
@@ -46,7 +46,7 @@ internal fun DestinationLeading(
                 Icon(
                     icon = vector,
                     description = null,
-                    tint = StrangeTheme.colors.tone(tone).main,
+                    tint = StxTheme.colors.tone(tone).main,
                 )
             } else {
                 Icon(icon = vector, description = null)
@@ -81,7 +81,7 @@ internal fun DestinationLabel(
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
             Typography(text = destination.label)
             if (chip) Chip(text = destination.chip!!)

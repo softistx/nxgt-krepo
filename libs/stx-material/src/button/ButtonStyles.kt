@@ -14,7 +14,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.softistx.material.motion.MotionSpeed
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 import com.softistx.material.theme.ToneColors
 import com.softistx.material.theme.motion
@@ -107,7 +107,7 @@ const val DISABLED_ALPHA = 0.38f
 @Composable
 @ReadOnlyComposable
 fun buttonTone(color: ButtonColor): ToneColors {
-    val colors = StrangeTheme.colors
+    val colors = StxTheme.colors
     val scheme = colors.scheme
     return when (color) {
         ButtonColor.Primary -> {

@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.button.ButtonColor
 import com.softistx.material.button.IconButton
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 
 /**
  * A star rating. Material 3 has no rating control.
@@ -27,7 +27,7 @@ fun Rating(
         repeat(max) { index ->
             val star = index + 1
             IconButton(
-                icon = StrangeIcons.Star,
+                icon = StxIcons.Star,
                 description = "$star of $max",
                 onClick = { onChange(if (value == star) 0 else star) },
                 color = if (star <= value) ButtonColor.Warning else ButtonColor.Neutral,

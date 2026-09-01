@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A label sitting in a hairline. Material 3's divider does not take text.
@@ -26,7 +26,7 @@ fun LabeledDivider(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         HorizontalDivider(modifier = Modifier.weight(1f))
         Typography(

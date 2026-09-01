@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A keyboard shortcut, drawn as keys. Material 3 has no equivalent.
@@ -27,7 +27,7 @@ fun Kbd(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         keys.forEach { key ->
@@ -41,8 +41,8 @@ fun Kbd(
                             MaterialTheme.colorScheme.outlineVariant,
                             MaterialTheme.shapes.extraSmall,
                         ).padding(
-                            horizontal = StrangeTheme.spacing.xs,
-                            vertical = StrangeTheme.spacing.xxs,
+                            horizontal = StxTheme.spacing.xs,
+                            vertical = StxTheme.spacing.xxs,
                         ),
             )
         }

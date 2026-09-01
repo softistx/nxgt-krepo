@@ -33,7 +33,7 @@ enum class AppBarSize {
  * The bar at the top of a screen.
  *
  * ```kotlin
- * AppBar("Orders", navigationIcon = StrangeIcons.Menu, onNavigation = { /* open */ })
+ * AppBar("Orders", navigationIcon = StxIcons.Menu, onNavigation = { /* open */ })
  * ```
  *
  * [title] is a string because that is the common case; [actions] is a slot because a bar's trailing

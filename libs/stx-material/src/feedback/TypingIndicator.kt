@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.motion.MotionSpeed
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -49,12 +49,12 @@ fun TypingIndicator(
     Row(
         modifier = modifier.semantics { contentDescription = label },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
     ) {
         repeat(3) { index ->
             val alpha by animateFloatAsState(
                 targetValue = if (index == beat) 1f else 0.35f,
-                animationSpec = StrangeTheme.motion.effects(MotionSpeed.Fast),
+                animationSpec = StxTheme.motion.effects(MotionSpeed.Fast),
                 label = "typingDot$index",
             )
             Box(

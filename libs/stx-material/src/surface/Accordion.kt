@@ -16,12 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.icon.Icon
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.motion.Transitions
 import com.softistx.material.navigation.navigationItemStyle
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /** One section of an [Accordion]. */
 @Immutable
@@ -58,7 +58,7 @@ fun Accordion(
                             interactionSource = interactionSource,
                             indication = null,
                             onClick = { onExpandedChange(if (open) null else index) },
-                        ).padding(vertical = StrangeTheme.spacing.sm),
+                        ).padding(vertical = StxTheme.spacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Typography(
@@ -67,14 +67,14 @@ fun Accordion(
                     modifier = Modifier.weight(1f),
                 )
                 Icon(
-                    icon = if (open) StrangeIcons.ChevronDown else StrangeIcons.ChevronRight,
+                    icon = if (open) StxIcons.ChevronDown else StxIcons.ChevronRight,
                     description = null,
                 )
             }
             AnimatedVisibility(visible = open, enter = Transitions.expand, exit = Transitions.collapse) {
                 Typography(
                     text = item.body,
-                    modifier = Modifier.padding(bottom = StrangeTheme.spacing.md),
+                    modifier = Modifier.padding(bottom = StxTheme.spacing.md),
                 )
             }
         }

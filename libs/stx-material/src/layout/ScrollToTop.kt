@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.button.ButtonColor
 import com.softistx.material.button.ButtonVariant
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.motion.Transitions
 import kotlinx.coroutines.launch
 
@@ -40,7 +40,7 @@ fun BoxScope.ScrollToTop(
         exit = Transitions.fadeAway,
     ) {
         IconButton(
-            icon = StrangeIcons.ChevronUp,
+            icon = StxIcons.ChevronUp,
             description = "Back to top",
             onClick = { scope.launch { listState.animateScrollToItem(0) } },
             variant = ButtonVariant.Filled,

@@ -17,7 +17,7 @@ import com.softistx.material.motion.Transitions
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -50,12 +50,12 @@ fun Alert(
         val styleState = remember { MutableStyleState(MutableInteractionSource()) }
         Row(
             modifier = modifier.fillMaxWidth().styleable(styleState, alertStyle(tone), style),
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
             verticalAlignment = Alignment.Top,
         ) {
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+                verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
             ) {
                 if (title != null) {
                     Typography(text = title, variant = TypographyVariant.TitleSmall)

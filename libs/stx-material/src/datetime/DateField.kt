@@ -13,7 +13,7 @@ import com.softistx.material.button.Button
 import com.softistx.material.button.ButtonVariant
 import com.softistx.material.button.IconButton
 import com.softistx.material.form.TextField
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import kotlinx.datetime.LocalDate
 
 /**
@@ -41,7 +41,7 @@ fun DateField(
         enabled = enabled,
         trailing = {
             IconButton(
-                icon = StrangeIcons.Calendar,
+                icon = StxIcons.Calendar,
                 description = "Pick a date",
                 onClick = { if (enabled) open = true },
             )

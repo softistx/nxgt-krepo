@@ -28,7 +28,7 @@ actual fun platformColorScheme(
     val context = LocalContext.current
     return remember(seed, isDark, dynamicColor, context) {
         when {
-            !dynamicColor || !supportsDynamicColor -> strangeColorScheme(seed, isDark)
+            !dynamicColor || !supportsDynamicColor -> stxColorScheme(seed, isDark)
             isDark -> dynamicDarkColorScheme(context)
             else -> dynamicLightColorScheme(context)
         }
