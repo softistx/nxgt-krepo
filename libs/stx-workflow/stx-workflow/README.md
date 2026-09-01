@@ -159,7 +159,7 @@ uptime requirement, and Thursday's deploy silently loses every instance mid-wait
 process that parked it and the process that finishes it need not overlap at all — which is exactly
 what `WorkflowPauseTest` demonstrates, with two engines and nothing between them but Redis.
 
-Two consequences worth stating:
+Three consequences worth stating:
 
 - **A wait with no deadline leaves the due-time index.** It is alive and unfinished and no worker
   polls it, because nothing a worker can do would move it. Polling it would be a loop with itself.
@@ -167,6 +167,11 @@ Two consequences worth stating:
   a step that threw. That is what the deadline is for: the hold placed before the approval must be
   released when the approval never comes. An expiry that quietly took another path would be a
   workflow whose outcome depends on a timer nobody reads.
+- **A delivery does not have to find the wait already there.** A payload is written to the record
+  under the name of the signal it belongs to, and the `await` reads it whenever it arrives at it.
+  This is not a convenience: a payment provider handed a callback URL will often have called back
+  before the step that asked it to has returned, and the alternative — refuse the early delivery and
+  let the provider retry — makes correctness rest on a retry policy this library does not own.
 
 ## Two front ends, one workflow
 

@@ -24,6 +24,8 @@ class Workflow<C> internal constructor(
     internal val nodes: List<WorkflowNode<C>>,
     /** Every node that declared a compensation, by qualified name. */
     internal val undo: Map<String, Undo<C>>,
+    /** The names this declaration waits on, which is the whole of what it accepts a delivery for. */
+    internal val signals: Set<String>,
 )
 
 /**
@@ -89,7 +91,8 @@ class WorkflowBuilder<C> internal constructor(
     internal fun build(): Workflow<C> {
         require(nodes.isNotEmpty()) { "workflow '$name' declares no nodes" }
         val undo = mutableMapOf<String, Undo<C>>()
-        index(name, prefix = "", nodes = nodes, seen = mutableSetOf(), undo = undo)
-        return Workflow(name, serializer, nodes, undo)
+        val signals = mutableSetOf<String>()
+        index(name, prefix = "", nodes = nodes, seen = mutableSetOf(), undo = undo, signals = signals)
+        return Workflow(name, serializer, nodes, undo, signals)
     }
 }
