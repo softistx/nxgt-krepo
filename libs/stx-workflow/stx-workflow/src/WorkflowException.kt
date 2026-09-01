@@ -93,3 +93,46 @@ class NonRetryableException(
     message: String,
     cause: Throwable? = null,
 ) : WorkflowException(message, cause)
+
+/**
+ * A child workflow ended as something other than `Completed`.
+ *
+ * It surfaces as the failure of the `child` node, so the parent unwinds through everything before
+ * it. That is the honest reading of a delegated piece of work that could not be done, and it is the
+ * same shape as a step that threw — the parent does not get to inspect *how* the child failed and
+ * carry on regardless, because the child has already compensated whatever it did.
+ */
+class ChildFailedException(
+    val id: String,
+    val workflow: String,
+    val status: WorkflowStatus,
+) : WorkflowException("child instance '$id' of workflow '$workflow' ended as $status")
+
+/**
+ * A child workflow was not in the store when its parent came back for it.
+ *
+ * The ordinary cause is retention: the child finished long ago and was purged while the parent was
+ * still parked. There is no honest way to decide from here whether its work was done, so the node
+ * fails and a person gets an instance to look at.
+ */
+class ChildLostException(
+    val id: String,
+) : WorkflowException("child instance '$id' is no longer in the store")
+
+/** A child workflow was still running when its parent's `within` ran out. */
+class ChildTimeoutException(
+    val id: String,
+    val after: kotlin.time.Duration,
+) : WorkflowException("child instance '$id' had not finished within $after")
+
+/**
+ * `undo` was asked for an instance it has no honest answer for.
+ *
+ * `undo` reverses a workflow that **succeeded**. A instance still in flight is `cancel`'s business;
+ * one already `Compensated` or `Cancelled` has been unwound and undoing it twice would refund a
+ * refund; one that is `Failed` is waiting for a person by design, and this is not that person.
+ */
+class WorkflowNotUndoableException(
+    val id: String,
+    val status: WorkflowStatus,
+) : WorkflowException("workflow instance '$id' is $status; only a Completed instance can be undone")

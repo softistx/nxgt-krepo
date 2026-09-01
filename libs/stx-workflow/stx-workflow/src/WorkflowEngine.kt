@@ -12,7 +12,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import java.util.UUID
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 /**
@@ -34,6 +36,8 @@ class WorkflowEngine internal constructor(
     private val store: WorkflowStore,
     private val json: Json,
     private val definitions: Map<String, Workflow<*>>,
+    /** How often a parent parked on a `child` node looks again. See [com.strange.workflow.dsl.child]. */
+    internal val childPoll: Duration,
 ) {
     /**
      * Creates an instance and runs it as far as it goes.
@@ -143,6 +147,50 @@ class WorkflowEngine internal constructor(
         return advance(definitionFor(record), record, cancelling = true).record
     }
 
+    /**
+     * Reverses an instance that already **succeeded**, landing it [WorkflowStatus.Cancelled].
+     *
+     * ```kotlin
+     * engine.undo(orderId)     // the order shipped, and the customer sent it back
+     * ```
+     *
+     * This is [cancel]'s counterpart across the finish line, and they are kept apart on purpose.
+     * `cancel` stops something in flight and is a safe no-op on anything terminal — every caller
+     * that reaches for it defensively depends on that, and folding the two together would turn one
+     * of those calls into a refund nobody asked for. `undo` is the one you have to mean.
+     *
+     * Nothing else is undoable, and each refusal has a reason: an instance still running is
+     * [cancel]'s, one already `Compensated` or `Cancelled` has been unwound and undoing it twice
+     * would take back a compensation, and one that is `Failed` is waiting for a person by design.
+     *
+     * It is also what a `child` node's compensation runs. Undoing a parent means undoing the child
+     * it delegated to — its own compensations, in its own reverse order, checkpointed in its own
+     * journal — which is why this is a verb rather than something the engine only does internally.
+     */
+    suspend fun undo(id: String): WorkflowRecord {
+        val record = store.load(id) ?: throw WorkflowNotFoundException(id)
+        if (record.status != WorkflowStatus.Completed) throw WorkflowNotUndoableException(id, record.status)
+        return advance(definitionFor(record), record, cancelling = true, reopen = true).record
+    }
+
+    /**
+     * Takes back a child instance, whichever side of the finish line it is on.
+     *
+     * A parent unwinds for reasons that have nothing to do with the child, so it reaches this node
+     * with the child in any state: finished, and the answer is [undo]; still running or still
+     * waiting — a deadline that ran out is the usual way — and the answer is [cancel]. Both end with
+     * the child's own compensations having run, in its own journal, which is the only thing the
+     * parent actually wants.
+     *
+     * A child that is no longer in the store cannot be taken back, and saying so is the point: this
+     * fails the parent's compensation, the parent lands [WorkflowStatus.Failed], and a person gets
+     * an instance to look at. Pretending it was undone would be the version nobody finds out about.
+     */
+    internal suspend fun undoChild(id: String): WorkflowRecord {
+        val record = store.load(id) ?: throw ChildLostException(id)
+        return if (record.status == WorkflowStatus.Completed) undo(id) else cancel(id)
+    }
+
     suspend fun record(id: String): WorkflowRecord? = store.load(id)
 
     /**
@@ -182,10 +230,65 @@ class WorkflowEngine internal constructor(
         workflow: Workflow<C>,
         record: WorkflowRecord,
         cancelling: Boolean = false,
+        reopen: Boolean = false,
     ): WorkflowInstance<C> {
-        if (record.status.isTerminal) return instance(workflow, record)
-        val advanced = advanceOnce(workflow, record, cancelling) ?: store.load(record.id) ?: record
+        if (record.status.isTerminal && !reopen) return instance(workflow, record)
+        val advanced = advanceOnce(workflow, record, cancelling, reopen = reopen) ?: store.load(record.id) ?: record
         return instance(workflow, advanced)
+    }
+
+    /**
+     * Tells a parent its child has finished, best effort.
+     *
+     * Best effort is the whole design, not a shortcut. The child's terminal state and the parent's
+     * progress are two records and cannot be written together, so this is what makes the handoff
+     * *prompt* while the parent's poll is what makes it *correct*. It therefore must not be able to
+     * fail the child: the child did its job, and an exception thrown on the way to telling somebody
+     * would undo work that succeeded.
+     *
+     * Failing to take the parent's lock is the ordinary case, not an error — it is what happens when
+     * the parent is the very run that started this child, and that run reads the result itself
+     * rather than waiting to be told.
+     */
+    private suspend fun wake(parent: String) {
+        try {
+            resume(parent)
+        } catch (_: WorkflowException) {
+            // The parent's poll will come back for it.
+        }
+    }
+
+    /**
+     * Starts a child instance, or picks up the one a previous attempt already started.
+     *
+     * The id is derived from the parent's, so "did I already start it" is answered by looking rather
+     * than by a flag: a parent that died between the child's creation and its own checkpoint finds
+     * the child here and carries on with it instead of starting a second.
+     */
+    internal suspend fun <D> startChild(
+        workflow: Workflow<D>,
+        context: D,
+        id: String,
+        parent: String,
+    ): WorkflowRecord {
+        require(definitions[workflow.name] === workflow) {
+            "child workflow '${workflow.name}' is not registered with this engine — an instance it cannot " +
+                "look up again is an instance that cannot be resumed after a restart"
+        }
+        store.load(id)?.let { return advance(workflow, it).record }
+        val now = Clock.System.now()
+        val record =
+            WorkflowRecord(
+                id = id,
+                workflow = workflow.name,
+                status = WorkflowStatus.Running,
+                context = json.encodeToJsonElement(workflow.serializer, context),
+                parent = parent,
+                createdAt = now,
+                updatedAt = now,
+            )
+        store.create(record)
+        return advance(workflow, record).record
     }
 
     /**
@@ -200,10 +303,27 @@ class WorkflowEngine internal constructor(
         record: WorkflowRecord,
         cancelling: Boolean = false,
         delivery: Delivery? = null,
+        reopen: Boolean = false,
+    ): WorkflowRecord? {
+        val advanced = guardedAdvance(workflow, record, cancelling, delivery, reopen) ?: return null
+        // Outside the lock and after the write, so the parent that runs next reads a child that is
+        // durably finished and no longer held. Every way an instance can reach a terminal status
+        // comes through here — a run, a signal, a cancel, an undo — which is the only reason one
+        // line can be trusted to cover them all.
+        if (advanced.status.isTerminal) advanced.parent?.let { wake(it) }
+        return advanced
+    }
+
+    private suspend fun <C> guardedAdvance(
+        workflow: Workflow<C>,
+        record: WorkflowRecord,
+        cancelling: Boolean,
+        delivery: Delivery?,
+        reopen: Boolean,
     ): WorkflowRecord? =
         store.guarded(record.id) {
             val fresh = store.load(record.id) ?: throw WorkflowNotFoundException(record.id)
-            if (fresh.status.isTerminal) {
+            if (fresh.status.isTerminal && !reopen) {
                 if (delivery != null) throw WorkflowNotAwaitingException(fresh.id, delivery.signal, fresh.status)
                 return@guarded fresh
             }
@@ -238,7 +358,7 @@ class WorkflowEngine internal constructor(
         record: WorkflowRecord,
     ): Run<C>? =
         try {
-            Run(store, json, workflow, record)
+            Run(this, store, json, workflow, record)
         } catch (e: SerializationException) {
             store.save(
                 record.copy(
@@ -313,7 +433,7 @@ fun WorkflowEngine(
     block: WorkflowEngineBuilder.() -> Unit = {},
 ): WorkflowEngine {
     val builder = WorkflowEngineBuilder().apply(block)
-    return WorkflowEngine(store, builder.json, builder.definitions.toMap())
+    return WorkflowEngine(store, builder.json, builder.definitions.toMap(), builder.childPoll)
 }
 
 class WorkflowEngineBuilder internal constructor() {
@@ -328,6 +448,19 @@ class WorkflowEngineBuilder internal constructor() {
      * instances. Pass a strict `Json` when that skew should be loud instead.
      */
     var json: Json = lenientJson
+
+    /**
+     * How often a parent parked on a `child` node looks at the child again.
+     *
+     * It is a safety net, not the mechanism: a child resumes its parent the moment it finishes, so
+     * this only covers the process that died between those two writes. Shortening it makes recovery
+     * from that faster and costs one load per parked parent per interval; lengthening it costs
+     * nothing until something goes wrong.
+     *
+     * It also needs somebody polling — a `WorkflowWorker`, or an application scheduler calling
+     * `resume`. An engine with no poller relies entirely on the child's own wake-up.
+     */
+    var childPoll: Duration = 1.minutes
 
     fun register(workflow: Workflow<*>) {
         require(definitions.put(workflow.name, workflow) == null) { "two workflows are registered as '${workflow.name}'" }
