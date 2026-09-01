@@ -25,7 +25,7 @@ import kotlin.io.path.readText
  */
 class ConfigurationDocsTest :
     StringSpec({
-        val documented = documentedKeys()
+        val documented = documentedKeys(groups())
 
         "the reference page was found" {
             // Guards the specs below: a page this cannot locate would pass them both vacuously.
@@ -48,39 +48,51 @@ private const val PAGE = "docs/spring-configuration.md"
 private const val RESOURCE = "/META-INF/additional-spring-configuration-metadata.json"
 
 /** Every key the hand-written metadata declares. */
-private fun metadataKeys(): Set<String> {
+private fun metadataKeys(): Set<String> = metadataNames("properties")
+
+private fun metadataNames(section: String): Set<String> {
     val stream =
         checkNotNull(ConfigurationDocsTest::class.java.getResourceAsStream(RESOURCE)) {
             "$RESOURCE is not on the classpath"
         }
     return Json
         .parseToJsonElement(stream.use { it.readBytes() }.decodeToString())
-        .jsonObject["properties"]!!
+        .jsonObject[section]!!
         .jsonArray
         .map { it.jsonObject["name"]!!.jsonPrimitive.content }
         .toSet()
 }
 
 /**
- * Every key the page spells, read off its tables: a `### `stx.group`` heading, then one row per key.
+ * Every key the page spells **for this module**, read off its tables: a `### `stx.group`` heading,
+ * then one row per key.
  *
  * Parsed rather than listed, for the same reason `ConfigurationMetadataTest` scans for
  * `@ConfigurationProperties` classes rather than naming them — a list is the thing that goes stale, and
  * a staleness check that goes stale is worse than none.
+ *
+ * [owned] is what keeps this honest across modules. One page documents every `stx.*` key an
+ * application can set, and `stx-graphix-spring` declares some of them — so a spec here that read the
+ * whole page would report that module's keys as undocumented, which is how this one was red on
+ * `develop` from the moment the Graphix section was added. Each module checks the groups it declares,
+ * and a group nobody declares is on nobody's page.
  */
-private fun documentedKeys(): Set<String> {
+private fun documentedKeys(owned: Set<String>): Set<String> {
     val page = repositoryRoot()?.resolve(PAGE)?.takeIf { it.exists() } ?: return emptySet()
 
     var group: String? = null
     return buildSet {
         page.readText().lineSequence().forEach { line ->
             HEADING.matchEntire(line.trim())?.let { group = it.groupValues[1] }
-                ?: group?.let { prefix ->
+                ?: group?.takeIf { it in owned }?.let { prefix ->
                     ROW.find(line)?.let { add("$prefix.${it.groupValues[1]}") }
                 }
         }
     }
 }
+
+/** The groups this module's metadata declares — the half of the page it is answerable for. */
+private fun groups(): Set<String> = metadataNames("groups")
 
 private val HEADING = Regex("""### `(stx[a-z0-9.]*)`""")
 
