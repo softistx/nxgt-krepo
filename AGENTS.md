@@ -20,14 +20,14 @@ What exists:
 | `libs/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
 | `libs/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StrangeTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
 | `libs/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
-| `libs/stx-ktor` | Ktor integrations for the libraries here, a package per integration: a connection per application opened and closed with it, and one negotiated locale per request |
+| `libs/stx-ktor` | The Ktor seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), plus the integrations that have not yet moved beside their libraries — a connection per application opened and closed with it, and one negotiated locale per request |
 | `libs/stx-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
 | `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
 | `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/stx-spring-boot` | Spring Boot integration for the libraries here, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, and every auto-configuration opt-in behind `stx.*` |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `libs/stx-graphix` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphix-ktor` and `stx-graphix-spring` are the HTTP integrations |
-| `libs/stx-workflow` | Compensable workflows for a Kotlin coroutine service: a DSL of steps each with its own compensation, one `@Serializable` context threaded through them, and state checkpointed after every node so a process that dies mid-run is picked up where it stopped. `await` and `sleep` stop an instance for a signal or a deadline by writing it down rather than by holding a coroutine, and `workflowOf` reads the same declaration off an annotated class. `install(Workflows)` in `stx-ktor` and `stx.workflow` in `stx-spring-boot` are the two integrations. `stx-workflow-db` is where instances live — Redis, SQL through `stx-jpa`, or MongoDB, one package each |
+| `libs/stx-workflow` | Compensable workflows for a Kotlin coroutine service: a DSL of steps each with its own compensation, one `@Serializable` context threaded through them, and state checkpointed after every node so a process that dies mid-run is picked up where it stopped. `await` and `sleep` stop an instance for a signal or a deadline by writing it down rather than by holding a coroutine, and `workflowOf` reads the same declaration off an annotated class. `engine.find(Failed)` is the operator's inbox for the one outcome the engine refuses to resolve. Four modules in the group: the engine, `stx-workflow-db` for where instances live (Redis, SQL through `stx-jpa`, or MongoDB), and `stx-workflow-ktor` / `stx-workflow-spring` for the two framework integrations |
 | `libs/stx-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `plugins/dgs-codegen` | Toolchain adapter of Netflix DGS codegen — GraphQL schema to Kotlin types |
@@ -397,11 +397,29 @@ is kotlinx-and-nothing-else — putting message formatting in it would make `stx
 formatting library it will never call. The same test applies to the next candidate: if it brings
 a dependency, it brings that dependency to everything.
 
-Framework integrations go in `libs/stx-ktor`, **one package per integration** — i18n, Redis,
-Mongo, AMQP, Kafka and object storage. An application wires them together in one `install` block and
-should read them from one dependency. `libs/stx-koin` is the same seven as Koin modules, for the
-callers that have a container and no web framework; it knows the container, `stx-ktor` knows the
-framework, the libraries know the backends, and none of them knows two.
+**A framework integration is a sibling module of the library it integrates**, in that library's own
+group: `stx-workflow-ktor` and `stx-workflow-spring` beside `stx-workflow`, `stx-graphix-ktor` and
+`stx-graphix-spring` beside `stx-graphix`.
+
+Not *inside* the library, because `stx-i18n` and `stx-redis` have callers with no server in them — a
+worker, a CLI, a consumer — and a library whose manifest declared Ktor would carry a web framework to
+all of them. And not in the framework module, because that makes it know every library in the
+repository: `stx-ktor` held one package per integration, so **adding a library modified it**, and an
+application installing one plugin read seven others' dependencies to get it.
+
+`libs/stx-ktor` and `libs/stx-spring-boot` keep what belongs to no library and is the same for all of
+them — for Ktor, the resource-lifecycle idiom (`own`, `publish`, `resource`, `required`); for Spring,
+error handling, CORS, security, and the JSON and web conventions. They are the **seam**, not the
+switchboard. Those four Ktor verbs are public rather than internal for exactly this reason: they are
+the contract between the seam and every integration built on it, and a contract cannot be internal.
+
+`libs/stx-koin` is the same integrations as Koin modules, for the callers that have a container and
+no web framework; it knows the container, the framework modules know the framework, the libraries
+know the backends, and none of them knows two.
+
+**This is a migration in progress.** `workflow` moved first, as the pilot; the remaining integrations
+still live in `stx-ktor` and `stx-spring-boot`, one package each, and move a PR at a time. A *new*
+integration is written to the rule above rather than added to a hub.
 
 **Every backend is declared `compile-only`, including the ones this module's API returns.**
 `call.redis` hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath, which
@@ -417,9 +435,9 @@ carries each of them again at normal scope, plus `//libs/stx-testing` for the se
 Every plugin is specced against a real backend, because "one connection, closed on stop" is not
 observable from a mock.
 
-The plugins are not in the libraries they wrap because `stx-i18n` and `stx-redis` have callers
-with no server in them — a worker, a CLI, a consumer. The library knows the backend, `stx-ktor`
-knows the framework, and neither has to know both.
+The library knows the backend, the integration module knows the framework, and neither has to know
+both. That is the whole of the rule, and it is why an integration is a module beside its library
+rather than a package inside it.
 
 **A framework integration must assume the resource is not its own, and must not be the only way to
 reach it.** Three rules, and the next integration is built to them rather than retrofitted:

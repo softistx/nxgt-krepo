@@ -1,4 +1,4 @@
-package com.strange.spring.integration.workflow
+package com.strange.workflow.spring
 
 import com.strange.redis.Redis
 import com.strange.redis.RedisConfig
