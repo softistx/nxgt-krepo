@@ -48,7 +48,7 @@ internal suspend fun <C> Run<C>.advance() {
                 status = WorkflowStatus.Compensating,
                 error = it.journal.last().error,
                 awaiting = null,
-                signal = null,
+                signals = emptyMap(),
                 wakeAt = null,
             )
         }

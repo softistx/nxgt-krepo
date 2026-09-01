@@ -6,11 +6,13 @@ import com.strange.workflow.engine.Run
 import com.strange.workflow.engine.advance
 import com.strange.workflow.store.WorkflowRecord
 import com.strange.workflow.store.WorkflowStore
+import kotlinx.coroutines.delay
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import java.util.UUID
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
 /**
@@ -80,7 +82,7 @@ class WorkflowEngine internal constructor(
     }
 
     /**
-     * Delivers a signal an instance is waiting for, and runs it on from there.
+     * Delivers a signal to an instance, and runs it on from there.
      *
      * ```kotlin
      * engine.signal(id, APPROVAL, Approval(by = "ops", note = "verified by phone"))
@@ -90,24 +92,43 @@ class WorkflowEngine internal constructor(
      * consumer or an operator's console calls this, and the workflow continues in *that* process,
      * from where it stopped, with the payload folded into its context by the `await` block.
      *
-     * It refuses an instance that is not waiting on exactly [signal] — see
-     * [WorkflowNotAwaitingException] — because the interesting case is not the wrong id, it is the
-     * approval clicked twice, and the second one must not look like it landed.
+     * **The instance does not have to be waiting yet.** A payment provider that calls back before
+     * the step which asked it to has even returned is not a caller doing something wrong, and a
+     * delivery refused for arriving early would leave correctness resting on whether that provider
+     * retries. So a delivery is written to the record as soon as it is accepted, under the name of
+     * the signal it belongs to, and the `await` reads it whenever it gets there.
+     *
+     * Two deliveries are still refused, both loudly. One naming a signal the definition has no
+     * `await` for — [WorkflowUnknownSignalException] — because storing it would tell the caller it
+     * landed when nothing will ever read it. And one to an instance that has already finished —
+     * [WorkflowNotAwaitingException] — which is the approval clicked twice.
      *
      * Delivery and the run that follows happen under the instance's lock, in one conditional write,
-     * so two people approving at the same instant cannot both wake it.
+     * so two people approving at the same instant cannot both wake it. When another process holds
+     * that lock this **waits and tries again** rather than returning what the store has: a
+     * delivery quietly dropped because the instance happened to be mid-step is the exact failure
+     * this method exists to rule out. A lock still held after that throws
+     * [WorkflowConflictException], and the payload was not written — an HTTP handler should answer
+     * with something the caller will retry.
      */
     suspend fun <T> signal(
         id: String,
         signal: Signal<T>,
         payload: T,
     ): WorkflowRecord {
-        val record = store.load(id) ?: throw WorkflowNotFoundException(id)
-        if (record.status != WorkflowStatus.Awaiting || record.awaiting != signal.name) {
-            throw WorkflowNotAwaitingException(id, signal.name, record.status)
-        }
+        var record = store.load(id) ?: throw WorkflowNotFoundException(id)
+        val workflow = definitionFor(record)
+        if (signal.name !in workflow.signals) throw WorkflowUnknownSignalException(workflow.name, signal.name)
         val delivery = Delivery(signal.name, json.encodeToJsonElement(signal.serializer, payload))
-        return advance(definitionFor(record), record, delivery = delivery).record
+        repeat(DELIVERY_ATTEMPTS) { round ->
+            if (round > 0) {
+                delay(DELIVERY_RETRY)
+                record = store.load(id) ?: throw WorkflowNotFoundException(id)
+            }
+            if (record.status.isTerminal) throw WorkflowNotAwaitingException(id, signal.name, record.status)
+            advanceOnce(workflow, record, delivery = delivery)?.let { return it }
+        }
+        throw WorkflowConflictException(id)
     }
 
     /**
@@ -161,33 +182,47 @@ class WorkflowEngine internal constructor(
         workflow: Workflow<C>,
         record: WorkflowRecord,
         cancelling: Boolean = false,
-        delivery: Delivery? = null,
     ): WorkflowInstance<C> {
         if (record.status.isTerminal) return instance(workflow, record)
-
-        val advanced =
-            store.guarded(record.id) {
-                val fresh = store.load(record.id) ?: throw WorkflowNotFoundException(record.id)
-                if (fresh.status.isTerminal) return@guarded fresh
-                val run = runFor(workflow, fresh) ?: return@guarded store.load(record.id)!!
-                delivery?.let { deliver(run, it) }
-                if (cancelling) {
-                    run.checkpoint {
-                        it.copy(
-                            status = WorkflowStatus.Compensating,
-                            cancelled = true,
-                            awaiting = null,
-                            signal = null,
-                            wakeAt = null,
-                        )
-                    }
-                }
-                run.advance()
-                run.record
-            } ?: store.load(record.id) ?: record
-
+        val advanced = advanceOnce(workflow, record, cancelling) ?: store.load(record.id) ?: record
         return instance(workflow, advanced)
     }
+
+    /**
+     * One try at the lock: the record as it stands afterwards, or null when somebody else had it.
+     *
+     * The two callers want opposite things from that null, which is why it is returned rather than
+     * decided here. [advance] hands back what the store has, because a worker losing a claim is the
+     * protocol working. [signal] tries again, because it is holding a payload nobody else has.
+     */
+    private suspend fun <C> advanceOnce(
+        workflow: Workflow<C>,
+        record: WorkflowRecord,
+        cancelling: Boolean = false,
+        delivery: Delivery? = null,
+    ): WorkflowRecord? =
+        store.guarded(record.id) {
+            val fresh = store.load(record.id) ?: throw WorkflowNotFoundException(record.id)
+            if (fresh.status.isTerminal) {
+                if (delivery != null) throw WorkflowNotAwaitingException(fresh.id, delivery.signal, fresh.status)
+                return@guarded fresh
+            }
+            val run = runFor(workflow, fresh) ?: return@guarded store.load(record.id)!!
+            delivery?.let { deliver(run, it) }
+            if (cancelling) {
+                run.checkpoint {
+                    it.copy(
+                        status = WorkflowStatus.Compensating,
+                        cancelled = true,
+                        awaiting = null,
+                        signals = emptyMap(),
+                        wakeAt = null,
+                    )
+                }
+            }
+            run.advance()
+            run.record
+        }
 
     /**
      * Builds the run, or retires the instance when its context no longer decodes.
@@ -217,21 +252,27 @@ class WorkflowEngine internal constructor(
         }
 
     /**
-     * Writes the payload into the record and wakes it, under the lock the caller already holds.
+     * Writes the payload into the record, under the lock the caller already holds.
      *
-     * The check is repeated here against the record just loaded inside the lock, and that is the one
-     * that counts: the check in [signal] read a copy from before the lock and is there to fail the
-     * ordinary double-click cheaply, not to decide anything.
+     * It wakes the instance only when the instance was parked on *this* signal. A delivery that
+     * arrived early, or for a later wait, leaves the status alone: the run that follows walks the
+     * declaration as it would have anyway, and either reaches the wait and reads the payload or
+     * parks again where it was. Waking an instance parked on a different signal would step over
+     * that wait, which is the one thing an early delivery must not be allowed to do.
      */
     private suspend fun <C> deliver(
         run: Run<C>,
         delivery: Delivery,
     ) {
-        val record = run.record
-        if (record.status != WorkflowStatus.Awaiting || record.awaiting != delivery.signal) {
-            throw WorkflowNotAwaitingException(record.id, delivery.signal, record.status)
+        val awaited = run.record.status == WorkflowStatus.Awaiting && run.record.awaiting == delivery.signal
+        run.checkpoint {
+            it.copy(
+                status = if (awaited) WorkflowStatus.Running else it.status,
+                awaiting = if (awaited) null else it.awaiting,
+                wakeAt = if (awaited) null else it.wakeAt,
+                signals = it.signals + (delivery.signal to delivery.payload),
+            )
         }
-        run.checkpoint { it.copy(status = WorkflowStatus.Running, signal = delivery.payload, awaiting = null, wakeAt = null) }
     }
 
     private fun <C> instance(
@@ -240,7 +281,18 @@ class WorkflowEngine internal constructor(
     ): WorkflowInstance<C> = WorkflowInstance(record, json.decodeFromJsonElement(workflow.serializer, record.context))
 }
 
-/** A signal on its way in: the name it must match, and its payload already encoded. */
+/**
+ * How many times [WorkflowEngine.signal] tries for a lock somebody else is holding, and how long it
+ * waits between tries.
+ *
+ * The lock is held while an instance is being advanced, so the wait this covers is one step, not one
+ * approval. Four hundred milliseconds is long enough for the step that triggered the callback to
+ * finish and short enough to sit inside the request the callback arrived on.
+ */
+private const val DELIVERY_ATTEMPTS = 5
+private val DELIVERY_RETRY = 100.milliseconds
+
+/** A signal on its way in: the name it belongs to, and its payload already encoded. */
 private class Delivery(
     val signal: String,
     val payload: JsonElement,

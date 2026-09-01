@@ -24,10 +24,14 @@ internal class Paused : Exception(null, null, false, false)
  * Waits for a signal, or takes the one that arrived.
  *
  * Three states, in the order they are checked. The wait is **already over** — the node has a
- * `Succeeded` entry — and there is nothing to do. A payload is **sitting in the record**, delivered
- * by `WorkflowEngine.signal` in the write that woke this instance, and the node consumes it. Or
- * nothing has arrived, and the instance parks — or, if it was already parked and its deadline has
- * passed, fails.
+ * `Succeeded` entry — and there is nothing to do. A payload addressed to this node's signal is
+ * **sitting in the record**, and the node consumes it. Or nothing has arrived, and the instance
+ * parks — or, if it was already parked and its deadline has passed, fails.
+ *
+ * The payload is looked up by name, so it does not matter whether it was delivered to an instance
+ * already parked here or to one that had not got here yet: a provider that calls back before the
+ * step which asked it to has even returned is answered by the same line of code as an operator
+ * approving something tomorrow.
  *
  * The delivered payload is journalled beside the node it fed. A signal is the one input to a
  * workflow that came from outside it, so an operator asking six months later why this instance
@@ -39,12 +43,13 @@ internal suspend fun <C, T> Run<C>.runAwait(
 ) {
     if (record.succeeded(path) != null) return
 
-    val delivered = record.signal
+    val name = node.signal.name
+    val delivered = record.signals[name]
     if (delivered != null) {
         val payload = json.decodeFromJsonElement(node.signal.serializer, delivered)
         context = node.body(scope(path, attempt = 1, startedAt = Clock.System.now()), payload)
         journal(path, NodeOutcome.Succeeded, attempts = 1, value = delivered, context = encoded()) {
-            it.copy(status = WorkflowStatus.Running, awaiting = null, signal = null, wakeAt = null)
+            it.copy(status = WorkflowStatus.Running, awaiting = null, signals = it.signals - name, wakeAt = null)
         }
         return
     }
