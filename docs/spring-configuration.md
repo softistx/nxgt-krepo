@@ -304,15 +304,29 @@ consume nothing.
 | Key | Type | Default | |
 | --- | --- | --- | --- |
 | `enabled` | boolean | `false` | Builds an `stx-workflow` engine over the `WorkflowStore` bean |
+| `store` | `redis` \| `jpa` \| `mongo` | — | Which store to build. Unset means the application declares its own |
+| `lease` | duration | `30s` | How long after a process dies before somebody else may pick up what it was doing |
+| `retention` | duration | `7d` | How long a finished instance is kept before it is expired |
 
 **Every `Workflow<*>` bean is registered with it.** An instance is stored under its workflow's *name*
 and an engine that cannot look that name up cannot resume it after a restart — so a workflow is
 registered by existing as a bean, rather than by also being remembered in a list somewhere.
 
-There is no `uri` and no `store` key. A store is a connection somebody already opened, and with
-`stx-workflow-db` on the classpath and `stx.redis` on, one is built over *that* connection rather
-than a second pool for the same server. Anything else — your own store, a second Redis, a Mongo
-store when there is one — is a `WorkflowStore` bean, and `@ConditionalOnMissingBean` steps aside.
+There is no `uri`. Each `store` value builds over the connection the matching `stx.*` group already
+opened — the `Redis`, the `Jpa` or the `MongoDatabase` bean — rather than a second pool for the same
+server. **Nothing is inferred**: an application with both a `Redis` and a `Jpa` bean is not saying
+where its workflow instances belong, and a library that guessed would put them somewhere plausible
+and wrong. Leave `store` unset and declare a `WorkflowStore` bean, and `@ConditionalOnMissingBean`
+steps aside for it.
+
+`store: jpa` needs `com.strange.workflow.jpa` in `stx.jpa.packages`, or the session factory has no
+`WorkflowInstanceRow` to map.
+
+`lease` is **not** a deadline on a step — the lock renews while the work runs. A `Failed` instance is
+exempt from `retention` whatever it says: it is waiting for a person, and expiring it would delete
+the only description of what needs fixing. `store: jpa` ignores `retention` — a table has no TTL, so
+retention there is `JpaWorkflowStore.purge` on a schedule the application owns. Both are ignored when
+the application declares its own store.
 
 ### `stx.workflow.worker`
 
@@ -332,19 +346,6 @@ The worker is a `SmartLifecycle`, so it starts after the context is refreshed an
 torn down, on a scope of its own. A worker started in an `@PostConstruct` would resume instances
 against half-built collaborators; one that outlived the context would resume them against closing
 ones.
-
-### `stx.workflow.redis`
-
-| Key | Type | Default | |
-| --- | --- | --- | --- |
-| `lease` | duration | `30s` | How long after a process dies before somebody else may pick up what it was doing |
-| `retention` | duration | `7d` | How long a finished instance is kept before Redis expires it |
-
-`lease` is **not** a deadline on a step — the lock renews while the work runs. A `Failed` instance is
-exempt from `retention` whatever it says: it is waiting for a person, and expiring it would delete
-the only description of what needs fixing.
-
-Both are ignored when the application declares its own `WorkflowStore`.
 
 ## `stx-graphix-spring`
 
