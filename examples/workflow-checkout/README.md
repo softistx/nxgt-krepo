@@ -11,8 +11,10 @@ and a run that outlives the process that started it.
 It needs a Redis on `localhost:6379` — the workspace's own will do. It writes to **database 15**
 under its own namespace and deletes that namespace on the way out.
 
-There is no HTTP in here. `stx-workflow` has no Ktor or Spring integration yet, so the honest shape
-for a demo is a `main` that runs three checkouts and narrates them.
+There is no HTTP in here, though there could be — `install(Workflows)` in `stx-ktor` and
+`stx.workflow` in `stx-spring-boot` both exist. A `main` that runs three checkouts and narrates them
+shows the engine itself, which is what this example is for; wrapping it in a route would add a
+transport and hide the journal.
 
 ## The files
 
