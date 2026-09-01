@@ -392,6 +392,23 @@ Needs `stx-telemetry-otlp` on the classpath; the beans below are absent without 
 | `backoff` | duration | `500ms` | The first wait between attempts; it doubles each time |
 | `gzip` | boolean | `true` | Compresses the body. Every OTLP/HTTP receiver is required to understand it |
 
+### `stx.telemetry.slf4j`
+
+Needs `stx-telemetry-slf4j` on the classpath; the beans below are absent without it.
+
+The bridge pointed **outward** — `stx-telemetry`'s signals written to the application's own logging,
+for a deployment that already has logback and an appender fleet it trusts. The same module's
+`SLF4JServiceProvider` points it the other way, so that Hibernate, Lettuce and Kafka land in this
+pipeline; that direction has no key here because it is decided by the classpath, not by a property.
+**Both at once is a loop**, and the exporter refuses to be built when it finds the provider bound —
+so this key and that provider together fail the context at startup rather than later.
+
+| Key | Type | Default | |
+| --- | --- | --- | --- |
+| `enabled` | boolean | `false` | Adds an `Slf4jExporter`, which writes each signal to the bound SLF4J with `traceId` and `spanId` in the MDC — so a `%X{traceId}` pattern prints them. An `ILoggerFactory` bean, if the application has one, is where the lines go |
+| `spans` | boolean | `true` | Whether completed spans are logged too, one line each, under `com.strange.telemetry.span`. False for an application that wants the logs here and reads its traces somewhere else |
+| `span-severity` | `debug` \| `info` \| `warn` \| `error` | `info` | The level a span that succeeded is logged at. One that failed is always `error` |
+
 ---
 
 ## `stx-graphix-spring`
