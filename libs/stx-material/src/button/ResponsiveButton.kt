@@ -15,7 +15,7 @@ import com.softistx.material.icon.Icon
 import com.softistx.material.motion.Transitions
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A button that drops its label when the space it is given gets tight, and grows it back when the
@@ -51,7 +51,7 @@ fun ResponsiveButton(
         // safe where an overshooting padding is not: Compose constrains it before laying out.
         val enter = Transitions.fade
         val exit = Transitions.fadeAway
-        val sizeSpec = StrangeTheme.motion.spatial<IntSize>()
+        val sizeSpec = StxTheme.motion.spatial<IntSize>()
         AnimatedContent(
             targetState = expanded,
             transitionSpec = { enter togetherWith exit using SizeTransform { _, _ -> sizeSpec } },

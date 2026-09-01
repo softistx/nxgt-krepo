@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.Color
  * Where the Material 3 scheme comes from on this platform.
  *
  * Only this one decision is platform-specific — Android can read the user's wallpaper colours from
- * API 31, and nothing else can. [StrangeThemeProvider] and everything above it are written once.
+ * API 31, and nothing else can. [StxThemeProvider] and everything above it are written once.
  *
  * @param seed the brand colour, used whenever the platform has nothing better
  * @param dynamicColor whether to prefer the platform's own palette; ignored where there is none

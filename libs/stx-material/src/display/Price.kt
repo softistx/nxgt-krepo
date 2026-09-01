@@ -10,7 +10,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -31,7 +31,7 @@ fun Price(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
     ) {
         if (compareAt != null) {
             Typography(
@@ -44,7 +44,7 @@ fun Price(
         Typography(
             text = amount,
             variant = TypographyVariant.Metric,
-            color = tone?.let { StrangeTheme.colors.tone(it).main } ?: Color.Unspecified,
+            color = tone?.let { StxTheme.colors.tone(it).main } ?: Color.Unspecified,
         )
         if (period != null) {
             Typography(text = period, variant = TypographyVariant.LabelLarge, emphasis = Emphasis.Medium)

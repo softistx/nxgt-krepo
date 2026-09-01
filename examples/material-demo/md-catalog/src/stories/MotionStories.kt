@@ -24,14 +24,14 @@ import com.softistx.material.motion.MotionSpeed
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 val MotionStories =
     storyGroup("Motion") {
         story("Spatial and effects") { knobs ->
             val away = knobs.flag("Move", false)
             val speed = knobs.enumChoice("Speed", MotionSpeed.Default)
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.lg)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.lg)) {
                 Typography(
                     text =
                         "Material 3 splits motion in two. Spatial curves are springs and may " +
@@ -48,7 +48,7 @@ val MotionStories =
 
         story("Every speed at once") { knobs ->
             val away = knobs.flag("Move", false)
-            Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
                 MotionSpeed.entries.forEach { speed ->
                     MotionRow(label = "spatial — ${speed.name}", away = away, speed = speed)
                 }
@@ -64,10 +64,10 @@ private fun MotionRow(
 ) {
     val offset by animateDpAsState(
         targetValue = if (away) 220.dp else 0.dp,
-        animationSpec = StrangeTheme.motion.spatial(speed),
+        animationSpec = StxTheme.motion.spatial(speed),
         label = label,
     )
-    Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs)) {
+    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs)) {
         Typography(text = label, variant = TypographyVariant.Code, emphasis = Emphasis.Subtle)
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -94,10 +94,10 @@ private fun EffectsRow(
         if (away) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
     val color by animateColorAsState(
         targetValue = target,
-        animationSpec = StrangeTheme.motion.effects(speed),
+        animationSpec = StxTheme.motion.effects(speed),
         label = label,
     )
-    Column(verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs)) {
+    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs)) {
         Typography(text = label, variant = TypographyVariant.Code, emphasis = Emphasis.Subtle)
         Box(
             modifier =

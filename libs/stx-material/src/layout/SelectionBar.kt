@@ -10,10 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The bar that appears when a list has a selection. Hidden at count zero.
@@ -32,12 +32,12 @@ fun SelectionBar(
     if (count <= 0) return
     Surface(modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(horizontal = StrangeTheme.spacing.xs),
+            modifier = Modifier.padding(horizontal = StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
             IconButton(
-                icon = StrangeIcons.Close,
+                icon = StxIcons.Close,
                 description = "Clear selection",
                 onClick = onClear,
             )
@@ -47,7 +47,7 @@ fun SelectionBar(
                 modifier = Modifier.weight(1f),
             )
             Row(
-                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+                horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
                 content = actions,
             )
         }

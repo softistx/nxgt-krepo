@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.button.CopyButton
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -40,7 +40,7 @@ fun PromoBanner(
                 {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+                        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
                     ) {
                         Typography(text = code, variant = TypographyVariant.Code)
                         CopyButton(text = code, description = "Copy $code")

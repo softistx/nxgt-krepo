@@ -11,7 +11,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -33,7 +33,7 @@ fun StatusDot(
             modifier
                 .size(size)
                 .clip(CircleShape)
-                .background(StrangeTheme.colors.tone(tone).main)
+                .background(StxTheme.colors.tone(tone).main)
                 .then(
                     if (description != null) {
                         Modifier.semantics { contentDescription = description }

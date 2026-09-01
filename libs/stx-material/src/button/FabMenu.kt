@@ -7,7 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.icon.Icon
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
 
@@ -37,7 +37,7 @@ fun FabMenu(
         modifier = modifier,
         button = {
             Fab(
-                icon = if (expanded) StrangeIcons.Close else StrangeIcons.Add,
+                icon = if (expanded) StxIcons.Close else StxIcons.Add,
                 description = if (expanded) "Close actions" else description,
                 onClick = { onExpandedChange(!expanded) },
             )

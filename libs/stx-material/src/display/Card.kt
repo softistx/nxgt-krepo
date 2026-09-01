@@ -15,7 +15,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import androidx.compose.material3.Card as MaterialCard
 
 /**
@@ -45,8 +45,8 @@ fun Card(
     val border = CardDefaults.outlinedCardBorder(enabled)
     val padded: @Composable ColumnScope.() -> Unit = {
         Column(
-            modifier = Modifier.padding(StrangeTheme.spacing.md),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+            modifier = Modifier.padding(StxTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
             content = content,
         )
     }

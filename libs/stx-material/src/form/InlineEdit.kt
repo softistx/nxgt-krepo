@@ -18,11 +18,11 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.input.ImeAction
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * Text that becomes a field when asked. Material 3 has no inline editor.
@@ -57,7 +57,7 @@ fun InlineEdit(
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
             TextField(
                 value = draft,
@@ -79,13 +79,13 @@ fun InlineEdit(
                 keyboardActions = KeyboardActions(onDone = { commit() }),
             )
             IconButton(
-                icon = StrangeIcons.Check,
+                icon = StxIcons.Check,
                 description = "Save",
                 onClick = { commit() },
                 enabled = enabled,
             )
             IconButton(
-                icon = StrangeIcons.Close,
+                icon = StxIcons.Close,
                 description = "Cancel",
                 onClick = { cancel() },
             )
@@ -94,7 +94,7 @@ fun InlineEdit(
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
             Typography(
                 text = value.ifBlank { placeholder },
@@ -107,7 +107,7 @@ fun InlineEdit(
             )
             if (enabled) {
                 IconButton(
-                    icon = StrangeIcons.Edit,
+                    icon = StxIcons.Edit,
                     description = "Edit",
                     onClick = { editing = true },
                 )

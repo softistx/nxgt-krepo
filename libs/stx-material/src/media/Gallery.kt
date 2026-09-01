@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A grid of images. Columns follow [GridCells.Adaptive], so a wide pane shows more without a
@@ -27,11 +27,11 @@ fun Gallery(
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize),
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         itemsIndexed(images) { index, model ->
-            StrangeImage(
+            StxImage(
                 model = model,
                 description = null,
                 modifier =

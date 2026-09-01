@@ -21,7 +21,7 @@ import com.softistx.material.media.Avatar
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import androidx.compose.material3.Card as MaterialCard
 
 /**
@@ -58,8 +58,8 @@ fun MessageBubble(
     val elevation = cardElevation(CardVariant.Filled)
     val padded: @Composable () -> Unit = {
         Column(
-            modifier = Modifier.padding(StrangeTheme.spacing.sm),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+            modifier = Modifier.padding(StxTheme.spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         ) {
             if (!outgoing && name != null) {
                 Typography(text = name, variant = TypographyVariant.LabelSmall, emphasis = Emphasis.Medium)
@@ -78,7 +78,7 @@ fun MessageBubble(
         Row(
             modifier = Modifier.widthIn(max = 320.dp),
             verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
             if (!outgoing && name != null) {
                 Avatar(name = name, image = image, size = 32.dp)

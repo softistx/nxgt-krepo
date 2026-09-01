@@ -63,7 +63,7 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StrangeIcons` holds twenty-nine hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StxIcons` holds twenty-nine hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
 `Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`,
 `Attach`, `Info`, `ViewList`, `ViewGrid`, `Send`, `Pin`. They are defined
@@ -479,7 +479,7 @@ value.
 | `AvatarGroup` | `items: List<AvatarItem>`, `max = 4`, `size = 32.dp` | `media/avatar-group` |
 | `PersonCard` | `name`, `supporting?`, `image?`, `tone?`, `onClick?`, `action?` | `media/person-card` |
 | `SeenBy` | `items`, `max = 3`, `label?` | `media/seen-by` |
-| `StrangeImage` | `model`, `description` | — |
+| `StxImage` | `model`, `description` | — |
 | `Gallery` | `images`, `onSelect?` | — |
 | `Lightbox` | `visible`, `model`, `onDismiss`, `onPrevious?`, `onNext?` | `media/lightbox` |
 | `VideoSurface` / `PdfSurface` / `CameraSurface` | `content` slot, `overlay`, `ratio` | `media/video-surface` |
@@ -488,7 +488,7 @@ value.
 them with a `+N` overflow circle — not initials of `"+12"`, which would read `+1`. `PersonCard` is
 the compact identity that sits in a grid, a mention, a search hit: a `ListTile` is a row in a list,
 `EntityHeader` is the top of a page. `SeenBy` is an `AvatarGroup` plus `seenByLabel` — "Sent" when
-nobody has looked, "Seen by N" otherwise. `StrangeImage` is Coil
+nobody has looked, "Seen by N" otherwise. `StxImage` is Coil
 with this library's `Skeleton` / `EmptyState`. Video, PDF and camera are **chrome**: the host fills
 the slot with a renderer, so `Button` never pays for Media3, PdfRenderer or CameraX.
 

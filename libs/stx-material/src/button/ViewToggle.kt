@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.softistx.material.icon.StrangeIcons
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.icon.StxIcons
+import com.softistx.material.theme.StxTheme
 
 enum class ViewMode {
     List,
@@ -27,17 +27,17 @@ fun ViewToggle(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
     ) {
         IconToggle(
-            icon = StrangeIcons.ViewList,
+            icon = StxIcons.ViewList,
             description = "List",
             checked = value == ViewMode.List,
             onCheckedChange = { if (it) onChange(ViewMode.List) },
             enabled = enabled,
         )
         IconToggle(
-            icon = StrangeIcons.ViewGrid,
+            icon = StxIcons.ViewGrid,
             description = "Grid",
             checked = value == ViewMode.Grid,
             onCheckedChange = { if (it) onChange(ViewMode.Grid) },

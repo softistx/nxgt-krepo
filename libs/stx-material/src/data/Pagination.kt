@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.button.Button
 import com.softistx.material.button.ButtonVariant
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * Previous / next, named for a keyset page.
@@ -28,7 +28,7 @@ fun Pagination(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         Button(
             text = "Previous",

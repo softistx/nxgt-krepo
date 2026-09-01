@@ -23,11 +23,11 @@ import com.softistx.material.data.SortDirection
 import com.softistx.material.form.DangerZone
 import com.softistx.material.form.FormSection
 import com.softistx.material.form.ThemeToggle
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.surface.HelpTip
 import com.softistx.material.text.Typography
 import com.softistx.material.theme.ColorMode
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 
@@ -44,7 +44,7 @@ private fun render(content: @Composable () -> Unit): Int {
     val scene = ImageComposeScene(width = 480, height = 1400)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -82,8 +82,8 @@ private fun paint() {
         onDirectionChange = {},
     )
     ViewToggle(value = ViewMode.List, onChange = {})
-    BottomBar(fab = { Fab(icon = StrangeIcons.Add, description = "New", onClick = {}) }) {
-        IconBadge(icon = StrangeIcons.Inbox, description = "Inbox", onClick = {}, count = 3)
+    BottomBar(fab = { Fab(icon = StxIcons.Add, description = "New", onClick = {}) }) {
+        IconBadge(icon = StxIcons.Inbox, description = "Inbox", onClick = {}, count = 3)
     }
     HelpTip(text = "Payouts land the next working day.")
     FormSection(title = "Account") { Typography(text = "Email") }

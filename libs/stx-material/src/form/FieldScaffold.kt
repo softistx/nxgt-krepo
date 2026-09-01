@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * Label above, control, message below — for the controls Material 3 does not decorate.
@@ -26,7 +26,7 @@ fun FieldScaffold(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
     ) {
         if (label != null) {
             ExtendedLabel(text = label, required = required, optional = optional)

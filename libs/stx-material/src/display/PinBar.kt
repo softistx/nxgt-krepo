@@ -11,9 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.button.IconButton
 import com.softistx.material.icon.Icon
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The pinned message at the top of a thread. Material 3's `Surface`.
@@ -34,17 +34,17 @@ fun PinBar(
                 Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = StrangeTheme.spacing.sm,
-                        vertical = StrangeTheme.spacing.xs,
+                        horizontal = StxTheme.spacing.sm,
+                        vertical = StxTheme.spacing.xs,
                     ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
         ) {
-            Icon(icon = StrangeIcons.Pin, description = null)
+            Icon(icon = StxIcons.Pin, description = null)
             Typography(text = text, modifier = Modifier.weight(1f), maxLines = 1)
             if (onDismiss != null) {
                 IconButton(
-                    icon = StrangeIcons.Close,
+                    icon = StxIcons.Close,
                     description = "Unpin",
                     onClick = onDismiss,
                 )

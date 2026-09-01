@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /** How strong a password looks, from empty through four filled segments. */
@@ -63,14 +63,14 @@ fun PasswordMeter(
     val tone = grade.tone
     val color =
         if (tone == null) {
-            StrangeTheme.colors.scheme.outlineVariant
+            StxTheme.colors.scheme.outlineVariant
         } else {
-            StrangeTheme.colors.tone(tone).main
+            StxTheme.colors.tone(tone).main
         }
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         ) {
             repeat(4) { index ->
                 Box(
@@ -80,7 +80,7 @@ fun PasswordMeter(
                             .height(4.dp)
                             .clip(CircleShape)
                             .background(
-                                if (index < filled) color else StrangeTheme.colors.scheme.outlineVariant,
+                                if (index < filled) color else StxTheme.colors.scheme.outlineVariant,
                             ),
                 )
             }

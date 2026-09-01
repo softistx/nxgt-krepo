@@ -35,7 +35,7 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
   `$compose.material` does **not** carry `material-icons-core` in 1.11 — `androidx.compose.material.icons`
   is simply unresolved — and the AndroidX icon artifacts in `libs.versions.toml` are Android-only,
   so they cannot serve a `kmp/lib`. `libs/stx-material` defines its own vectors in
-  `icon/StrangeIcons.kt` from Material path data via `addPathNodes`; a caller that needs a full pack
+  `icon/StxIcons.kt` from Material path data via `addPathNodes`; a caller that needs a full pack
   passes its own `ImageVector` in.
 - **M3 1.11 has its own `MotionScheme`, and `MaterialTheme` takes it.** There is a
   `MaterialTheme(colorScheme, motionScheme, shapes, typography, content)` overload,

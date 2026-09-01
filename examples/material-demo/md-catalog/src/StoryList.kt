@@ -15,7 +15,7 @@ import com.softistx.material.display.StatusBadge
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /**
@@ -33,8 +33,8 @@ fun StoryList(
     Box(modifier = modifier) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().padding(vertical = StrangeTheme.spacing.sm),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+            modifier = Modifier.fillMaxSize().padding(vertical = StxTheme.spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         ) {
             groups.forEach { group ->
                 item(key = "group:${group.name}") {
@@ -44,9 +44,9 @@ fun StoryList(
                         emphasis = Emphasis.Subtle,
                         modifier =
                             Modifier.padding(
-                                start = StrangeTheme.spacing.md,
-                                top = StrangeTheme.spacing.md,
-                                bottom = StrangeTheme.spacing.xs,
+                                start = StxTheme.spacing.md,
+                                top = StxTheme.spacing.md,
+                                bottom = StxTheme.spacing.xs,
                             ),
                     )
                 }
@@ -55,7 +55,7 @@ fun StoryList(
                     ListTile(
                         title = story.name,
                         onClick = { onSelect(story) },
-                        modifier = Modifier.padding(horizontal = StrangeTheme.spacing.sm),
+                        modifier = Modifier.padding(horizontal = StxTheme.spacing.sm),
                         trailing = {
                             if (story.id == selectedId) StatusBadge(text = "open", tone = Tone.Info)
                         },

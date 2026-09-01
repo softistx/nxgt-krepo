@@ -25,14 +25,14 @@ import com.softistx.material.media.SeenBy
 import com.softistx.material.media.VideoSurface
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 val MediaStories =
     storyGroup("Media") {
         story("Avatar") { knobs ->
             val ring = knobs.flag("Status ring", true)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
                 Avatar(name = "Amara Diallo", tone = if (ring) Tone.Success else null)
                 Avatar(name = "Jonas Weber", tone = if (ring) Tone.Warning else null)
                 Avatar(name = "Priya", tone = if (ring) Tone.Info else null)

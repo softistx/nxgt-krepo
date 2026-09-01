@@ -21,10 +21,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.IconSize
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /** Adds [raw] if it is not blank and not already present, ignoring case. */
 fun addTag(
@@ -70,8 +70,8 @@ fun TagField(
 
     FieldScaffold(modifier = modifier, label = label, helper = helper) {
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
             tags.forEach { tag ->
                 InputChip(
@@ -81,7 +81,7 @@ fun TagField(
                     enabled = enabled,
                     trailingIcon = {
                         Icon(
-                            icon = StrangeIcons.Close,
+                            icon = StxIcons.Close,
                             description = "Remove $tag",
                             size = IconSize.Small,
                             modifier =

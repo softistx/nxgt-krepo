@@ -10,7 +10,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A control's label, with the two things a label usually has to say beside it.
@@ -33,7 +33,7 @@ fun ExtendedLabel(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Typography(text = text, variant = TypographyVariant.LabelMedium)

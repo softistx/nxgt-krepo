@@ -8,12 +8,12 @@ first `android` target. `examples/material-demo` is its catalogue and its test b
 
 ```
 libs/stx-material/
-  src/theme/          tokens, StrangeTheme, and the platform scheme's expect
+  src/theme/          tokens, StxTheme, and the platform scheme's expect
   src@android/theme/  the wallpaper palette          ┐ the only platform-specific
   src@jvm/theme/      the seed                       │ decision in the library
   src@ios/theme/      the seed                       ┘
   src/motion/   the M3 MotionScheme, transitions, shimmer, stagger
-  src/style/    StrangeStyles — every component default in one place
+  src/style/    StxStyles — every component default in one place
   src/text/     Typography and the variant scale
   src/icon/     Icon and the library's own icon set
   src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar, IconBadge, ViewToggle
@@ -25,12 +25,12 @@ libs/stx-material/
   src/feedback/   Progress, LabeledProgress, LoadingMark, TypingIndicator, Toaster
   src/datetime/   DateField, DateRangeField, TimeField, Calendar, RelativeTime
   src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline, SortControl
-  src/media/      Avatar, AvatarGroup, PersonCard, SeenBy, StrangeImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
+  src/media/      Avatar, AvatarGroup, PersonCard, SeenBy, StxImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
 ```
 
 ## The shape of it
 
-**`StrangeTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes` and a
+**`StxTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes` and a
 `MotionScheme`, each with a default — the same four `MaterialTheme` takes. It wraps M3 rather than
 replacing it, so a plain M3 component, or any third-party M3 library, keeps working inside it. That
 is what makes this adoptable in an application that already exists, and a caller that already
@@ -42,12 +42,12 @@ animation follows — nothing here holds its own curve.
 
 ```kotlin
 // An application: one line, and the platform decides where the scheme comes from.
-StrangeThemeProvider(seed = Color(0xFF5B5BD6)) {
+StxThemeProvider(seed = Color(0xFF5B5BD6)) {
     Button("Save changes", onClick = ::save)
 }
 
-// Anything more specific goes straight to StrangeTheme.
-StrangeTheme(colorScheme = brandScheme, motionScheme = MotionScheme.standard()) { … }
+// Anything more specific goes straight to StxTheme.
+StxTheme(colorScheme = brandScheme, motionScheme = MotionScheme.standard()) { … }
 ```
 
 **Only one decision is platform-specific**, and it is behind `expect`/`actual`:
@@ -97,7 +97,7 @@ Because interaction states are declared rather than remembered, a caller never h
 default. The component applies its own base first, so `style` is an override layered on top:
 
 ```kotlin
-Card(style = StrangeTheme.styles.card then { alpha(0.6f) })
+Card(style = StxTheme.styles.card then { alpha(0.6f) })
 ```
 
 ## Adding a component

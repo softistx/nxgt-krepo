@@ -14,7 +14,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The travelling highlight that says "this is loading", as one modifier.
@@ -23,12 +23,12 @@ import com.softistx.material.theme.StrangeTheme
  * slow sweep across it reads as work in progress. Callers get it by applying the modifier — there
  * is no animation to wire up, which is the whole point.
  *
- * When [StrangeTheme.motion] has motion disabled the sweep stops and the surface stays flat, so a
+ * When [StxTheme.motion] has motion disabled the sweep stops and the surface stays flat, so a
  * screenshot test is stable without the caller doing anything.
  */
 fun Modifier.shimmer(): Modifier =
     composed {
-        val motion = StrangeTheme.motion
+        val motion = StxTheme.motion
         val base = MaterialTheme.colorScheme.surfaceContainerHighest
         val highlight = MaterialTheme.colorScheme.surfaceContainerLow
 

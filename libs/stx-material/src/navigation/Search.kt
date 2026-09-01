@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.softistx.material.icon.Icon
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
 
 /**
@@ -49,7 +49,7 @@ fun Search(
                 onExpandedChange = onActiveChange,
                 enabled = enabled,
                 placeholder = { Typography(text = placeholder) },
-                leadingIcon = { Icon(icon = StrangeIcons.Search, description = null) },
+                leadingIcon = { Icon(icon = StxIcons.Search, description = null) },
                 trailingIcon = trailing,
                 interactionSource = interactionSource,
             )

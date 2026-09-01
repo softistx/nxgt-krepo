@@ -18,7 +18,7 @@ What exists:
 | `libs/stx-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/stx-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
-| `libs/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StrangeTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
+| `libs/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StxTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
 | `libs/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/stx-ktor` | The Ktor seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the integrations that are that idiom applied — a connection per application opened and closed with it, and one negotiated locale per request. An integration with a design of its own is a module beside its library instead |
 | `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
@@ -230,14 +230,14 @@ The shape a component takes:
 - **Presentation state belongs to the component.** `rememberUpdatedStyleState(interactionSource) {
   it.isEnabled = enabled }` gives pressed, hovered and focused for nothing; the caller passes
   business state and never remembers a boolean for a visual.
-- **Every curve comes from Material 3's `MotionScheme`.** `StrangeMotion` holds the scheme
-  `StrangeTheme` installed, and offers M3's two axes — `spatial(speed)` for anything that moves,
+- **Every curve comes from Material 3's `MotionScheme`.** `StxMotion` holds the scheme
+  `StxTheme` installed, and offers M3's two axes — `spatial(speed)` for anything that moves,
   which is a spring and may overshoot, and `effects(speed)` for colour and alpha, which must land
   exactly. Nothing writes `tween(300)` or names an easing. Giving a fade and a slide one curve is
   the mistake this replaced: the combined transition finishes in two stages. It is *held* rather
   than read from the composition because a `Style` block runs at apply time, not in a composable
   scope.
-- **Every default has a name in `StrangeStyles`**, reached as `StrangeTheme.styles.card(variant)`.
+- **Every default has a name in `StxStyles`**, reached as `StxTheme.styles.card(variant)`.
   It is a plain `object` behind an extension property, not a `CompositionLocal` — a `Style` reads
   its tokens when it is applied, not when it is written — and it lives in `src/style/` so `theme`
   keeps knowing nothing about the components. Restating a default before editing it is what stops a
@@ -887,7 +887,7 @@ the same each time, and the mistakes are the same each time too.
   | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
   | `libs/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
-  | `libs/stx-material/README.md` | How is the UI library shaped, how does `StrangeTheme` slot into an application that already uses Material 3, and how do I add a component? |
+  | `libs/stx-material/README.md` | How is the UI library shaped, how does `StxTheme` slot into an application that already uses Material 3, and how do I add a component? |
   | `libs/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
   | `libs/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
   | `libs/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
