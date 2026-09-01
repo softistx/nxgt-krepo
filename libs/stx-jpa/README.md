@@ -177,6 +177,9 @@ there is a transaction, so a `persist` or a change to a loaded entity inside a p
 discarded without a word: no error, no warning, no row. It is Hibernate's rule and it is quiet enough
 that `SessionsTest` pins both halves of it. Read in `session`, write in `transaction`.
 
+There is a fifth, below all four: `jpa.connection { }` borrows a raw connection for the statements a
+session cannot send at all. See *Below the session*.
+
 ## Queries
 
 `query<R>(hql)` and `nativeQuery<R>(sql)` return the same builder, on a session or a stateless one.
@@ -214,6 +217,46 @@ naturally, which is exactly why `parameter(name, value)` is the only way values 
 
 **`JpaConfig.schema` does not reach a native statement.** Hibernate qualifies the table it renders
 from HQL and sends SQL as written, so a deployment on a non-default schema qualifies it itself.
+
+## Below the session — `jpa.connection { }`
+
+Two things a session has no verb for: DDL, and a statement Hibernate's parameter recogniser would
+refuse. `nativeMutate` is documented for *update, insert or delete*, prepares everything it is given,
+and reads a literal `?` as an ordinal parameter — so `create index`, a body with two statements in it
+and Postgres's `jsonb ? 'key'` are all outside it. `jpa.connection { }` borrows a connection from the
+pool Hibernate is already using and hands it straight back:
+
+```kotlin
+jpa.connection { connection ->
+    connection.executeUnprepared("create table if not exists ledger (version bigint primary key)").await()
+    connection.update("insert into ledger (version) values ($1)", arrayOf<Any?>(1L)).await()
+}
+```
+
+**It is not a second pool.** `Implementor` is Hibernate Reactive's own integrator SPI, and the
+`ReactiveConnectionPool` behind it is the one every session takes its connection from. A
+`PgBuilder.pool()` beside the factory would be a second set of connections nobody is sizing and
+nobody is closing.
+
+`NativeDdlTest` measures each of the following rather than asserting it from the documentation:
+
+| | through `jpa.connection` | through `nativeMutate` |
+| --- | --- | --- |
+| `create table` / `create index` | yes | refused |
+| two statements in one call | yes | refused |
+| a literal `?` as an operator | yes | read as a parameter, refused |
+| positional parameters | `update(sql, arrayOf(…))` → row count | `:name` only |
+| `JpaConfig.schema` applied | **no** | no |
+
+That last row is the one to write a caller around. An unqualified name lands in the connection's own
+`search_path`, which on a schema-per-tenant or schema-per-test deployment is not the schema the
+factory was configured with — qualify the table, or issue `set search_path to …` first and keep it
+for the rest of the block.
+
+**There is no transaction unless the block opens one.** Each statement commits on its own; a caller
+that wants schema work to be all-or-nothing calls `beginTransaction` and `rollbackTransaction`
+itself, which on Postgres does undo a `create table` and on MySQL does not, because MySQL's DDL is
+not transactional. The connection is closed however the block ends, including on cancellation.
 
 The one-shot operations on `Jpa` are for the call that has nothing else to do — **one operation, one
 transaction**:
