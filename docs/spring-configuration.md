@@ -177,13 +177,11 @@ the same reason method security does.
 Not to be confused with `stx.data.mongo.auditor`, one letter away: that one stamps *who* onto the
 document, this one keeps the document's whole history in a collection of its own.
 
-### `stx.data.mongo.migration`
-
-| Key | Type | Default | |
-| --- | --- | --- | --- |
-| `enabled` | boolean | `false` | Runs pending migrations after the application is ready |
-| `prefix` | string | `"V"` | What a migration class name starts with. Matched literally — a `.` is a `.`, not a wildcard |
-| `collection` | string | `"migrations"` | What makes a migration run once. Pointing it at an empty collection runs every migration again |
+`stx.data.mongo` used to have a `migration` group. It is gone: migrations are
+[`stx.migrations`](#stxmigrations) now, in `stx-migrations-spring`, for both stores and both stacks.
+What `stx-spring-boot` still contributes is a coroutine `MongoDatabase` bean built from the
+`ReactiveMongoDatabaseFactory` — the bridge `stx.migrations.store: mongo` reads, and the reason an
+application on Spring Data does not have to turn on `stx.mongo` and open a second pool to get one.
 
 ---
 
@@ -396,6 +394,11 @@ Spring does not wait for a suspending listener, so the `@EventListener(Applicati
 replaces let the port open while migrations were still running. A throw out of `afterPropertiesSet`
 aborts the refresh instead — no web server, no `ApplicationReadyEvent`, no requests. The vocabulary is
 [`docs/migrations.md`](migrations.md).
+
+`store: mongo` on an application using **Spring Data** needs no `stx.mongo`: `stx-spring-boot`
+contributes a coroutine `MongoDatabase` built from the `ReactiveMongoDatabaseFactory` already in the
+context. Turning on `stx.mongo` for it would open a second pool against the same server, and under
+test one that never saw the harness's per-run database suffix.
 
 ## `stx-telemetry-spring`
 

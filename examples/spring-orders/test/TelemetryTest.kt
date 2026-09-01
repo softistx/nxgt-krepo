@@ -8,7 +8,6 @@ import com.softistx.example.orders.api.models.PlaceOrderRequest
 import com.softistx.example.orders.api.utils.ErrorResponseException
 import com.softistx.spring.client.withClient
 import com.softistx.spring.testing.MongoSpec
-import com.softistx.spring.testing.awaitMigrations
 import com.softistx.spring.testing.clear
 import com.softistx.spring.testing.mongoAvailable
 import com.softistx.telemetry.Attributes
@@ -59,7 +58,6 @@ class TelemetryTest(
         /** The `place order` span for one reference — this spec's handle on its own request. */
         fun placing(reference: String) = { span: SpanRecord -> span.attributes.text("reference") == reference }
 
-        beforeSpec { if (mongoAvailable) template.awaitMigrations(expected = 2) }
         beforeEach {
             if (mongoAvailable) template.clear("orders", "audits")
             signals.clear()

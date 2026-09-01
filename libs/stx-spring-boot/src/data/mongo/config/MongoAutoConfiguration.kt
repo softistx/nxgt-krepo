@@ -1,7 +1,11 @@
 package com.softistx.spring.data.mongo.config
 
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.softistx.spring.data.mongo.convert.stxMongoConverters
+import com.softistx.spring.integration.mongo.MongoIntegrationAutoConfiguration
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
+import kotlinx.coroutines.runBlocking
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -26,8 +30,19 @@ import org.springframework.data.mongodb.gridfs.ReactiveGridFsTemplate
  * it never applies, and one contributing it *without* ordering replaces Boot's — quietly dropping
  * `spring.data.mongodb.representation`. Registering first and carrying that property across is the
  * only arrangement where both the `kotlin.time.Instant` converters and Boot's own setting survive.
+ *
+ * The `after` is a second ordering question, and it decides a winner rather than a moment.
+ * [MongoIntegrationAutoConfiguration] contributes a coroutine `MongoDatabase` too, from a client
+ * `stx.mongo` opened itself; so does [CoroutineDatabaseConfiguration] below, from the pool Spring
+ * Data already has. Both are `@ConditionalOnMissingBean`, so without an order the winner in an
+ * application that turned on both would be whichever configuration Boot happened to read first —
+ * and the loser is a migration run against a database nobody chose. Ordered, an explicit `stx.mongo`
+ * wins: it names a URI and a database out loud, and this one only ever infers.
  */
-@AutoConfiguration(before = [DataMongoAutoConfiguration::class])
+@AutoConfiguration(
+    before = [DataMongoAutoConfiguration::class],
+    after = [MongoIntegrationAutoConfiguration::class],
+)
 @EnableConfigurationProperties(MongoProperties::class, DataMongoProperties::class)
 @ConditionalOnClass(ReactiveMongoTemplate::class)
 @ConditionalOnProperty(prefix = "stx.data.mongo", name = ["enabled"], havingValue = "true")
@@ -79,6 +94,43 @@ class MongoAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "stx.data.mongo", name = ["create-indexes"], havingValue = "true")
     fun stxIndexInitializer(template: ReactiveMongoTemplate): IndexInitializer = IndexInitializer(template)
+
+    /**
+     * Spring Data's database, handed over as the coroutine driver's [MongoDatabase].
+     *
+     * The bridge `stx-migrations-spring` needs and that neither library should have to know about:
+     * `stx.migrations.store: mongo` asks the context for a `MongoDatabase` bean, and an application
+     * on Spring Data has a `ReactiveMongoDatabaseFactory` instead.
+     *
+     * **Turning on `stx.mongo` to get one is the wrong answer, not a longer one.** That opens a
+     * second pool against the same server, and in a suite it opens one that never saw the per-run
+     * database suffix `MongoTestConfiguration` splices into `MongoProperties` — so the migrations
+     * would run against a database nobody chose, and every spec would still pass. Building this from
+     * the *factory* is what makes the suffix arrive: the factory is the bean that post-processor has
+     * already been through.
+     *
+     * It wraps the pool Spring Data opened and owns none of it. The coroutine `MongoDatabase` has no
+     * `close()`, so there is nothing for Spring to infer a destroy method from and the client stays
+     * Spring Data's to close — the same rule as every `stx-ktor` integration: close only what you
+     * opened.
+     *
+     * `runBlocking` because a `@Bean` method cannot suspend. What it waits for is a handle and not a
+     * round trip: `getMongoDatabase()` returns a `Mono` the factory completes from what it is
+     * already holding.
+     *
+     * Nested so `@ConditionalOnClass` applies to this bean alone — the coroutine driver arrives with
+     * `stx-mongo`, which is `compile-only` here, and a method signature naming a class that is not
+     * on the classpath is a `NoClassDefFoundError` at refresh, too early for a condition on the
+     * enclosing class to prevent.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(MongoDatabase::class)
+    class CoroutineDatabaseConfiguration {
+        @Bean
+        @ConditionalOnMissingBean
+        fun stxCoroutineMongoDatabase(factory: ReactiveMongoDatabaseFactory): MongoDatabase =
+            MongoDatabase(runBlocking { factory.mongoDatabase.awaitSingle() })
+    }
 
     /**
      * Nested so `@ConditionalOnClass` applies to this bean alone. Spring Security is `compile-only`
