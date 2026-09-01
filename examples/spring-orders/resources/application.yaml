@@ -56,6 +56,34 @@ stx:
         enabled: true
         prefix: V
 
+  telemetry:
+    # A root, *installed* — which is what lets `logger<OrderService>()` and `span { }` in the service
+    # find it with nothing injected and nothing passed down — plus a `CoWebFilter` that makes each
+    # request a server span. `service` is deliberately absent: it falls back to
+    # `spring.application.name`, which this file already answers with `spring-orders`.
+    enabled: true
+    environment: development
+    # One readable line per signal on stdout, so `./kotlin run` shows the spans closing as requests
+    # arrive. Development only — a deployment wants `json-lines`, or a real destination.
+    console: true
+    # `/health` is what a load balancer asks every second. A trace nobody will ever read is otherwise
+    # most of the traces there are.
+    ignore: [ /health ]
+
+    mongo:
+      # Signals into a collection, one unordered `insertMany` per batch, with retention as a TTL
+      # index Mongo enforces itself rather than a job this process has to run.
+      enabled: true
+      # **Telemetry's own client**, which is why this key exists next to `spring.mongodb.uri` instead
+      # of reusing it: a burst of telemetry must not exhaust the pool the orders are queueing for.
+      # The same server here because a demo has one; a deployment points this somewhere else.
+      uri: ${TELEMETRY_MONGO_URI:mongodb://localhost:27017}
+      # Its own database too, so a shared server does not mix this demo's signals with another's.
+      database: spring_orders_telemetry
+      # A demo's signals are not worth the default month. Changing this drops and rebuilds the index
+      # rather than leaving the old window quietly in place.
+      retention: 7d
+
 logging:
   level:
     com.strange.spring.data.mongo.migration: INFO

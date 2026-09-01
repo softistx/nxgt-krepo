@@ -357,7 +357,10 @@ ones.
 ## `stx-telemetry-spring`
 
 Logs and traces. The vocabulary is [`docs/telemetry.md`](telemetry.md); the reasoning is
-[the library's README](../libs/stx-telemetry/stx-telemetry/README.md).
+[the library's README](../libs/stx-telemetry/stx-telemetry/README.md);
+[`examples/spring-orders`](../examples/spring-orders/README.md) is these keys running — the yaml, a
+`span { }` in the service, typed events in `service/OrderEvents.kt`, and a spec that asserts on the
+signals rather than on the configuration.
 
 ### `stx.telemetry`
 

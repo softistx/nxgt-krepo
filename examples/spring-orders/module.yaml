@@ -15,6 +15,17 @@ dependencies:
   # Object diffing, for the audit trail. Compile-only there for the same reason.
   - $libs.javers.core
 
+  # The telemetry root, the `CoWebFilter` that makes each request a server span, and the
+  # `stx.telemetry.*` keys. Nothing starts because this is on the classpath — `stx.telemetry.enabled`
+  # in `application.yaml` is what turns it on, the same opt-in rule as every other line here.
+  - //libs/stx-telemetry/stx-telemetry-spring
+
+  # The exporter `stx.telemetry.mongo` builds. `compile-only` in stx-telemetry-spring, and of the
+  # three lines in this file that follow that rule it is the one with the sharpest reason: it carries
+  # the Mongo coroutine driver, so an application that wants no telemetry in a database must not ship
+  # one merely because the auto-configuration knows how to use it. This is the application adding it.
+  - //libs/stx-telemetry/stx-telemetry-mongo
+
 test-dependencies:
   # The MongoDB the specs drive the whole application against: `MONGO_TEST_URI` when the workspace's
   # replica set is already up, a container started once for the run otherwise, and every feature

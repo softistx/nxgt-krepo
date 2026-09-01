@@ -22,3 +22,17 @@ stx:
   i18n:
     # A test suite should not pass over a translation nobody wrote.
     fail-on-missing-key: true
+
+  telemetry:
+    # Left enabled, so every request a spec makes goes through the same server span the demo runs
+    # with — the filter and the root are part of the configuration under test, not scenery.
+    console: false
+    mongo:
+      # The exporter, though, is off. Its client is **its own**, and no bean redirects it: the URI
+      # would be the `localhost:27017` in `application.yaml` — a developer's real server — and not
+      # the container or `MONGO_TEST_URI` server `MongoTestConfiguration` resolves for everything
+      # else here. A suite must not write to an address nobody chose for it.
+      #
+      # What the signals go to instead is `TelemetryCollector`, an `Exporter` bean, which is also the
+      # seam an application with a destination of its own uses: declare the bean, say nothing else.
+      enabled: false
