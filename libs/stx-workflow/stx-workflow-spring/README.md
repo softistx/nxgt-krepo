@@ -21,9 +21,10 @@ stx:
 
 ## Why this is a module and not a package in stx-spring-boot
 
-Because the alternative makes `stx-spring-boot` know about every library in the repository. It held
-one package per integration, so adding a library *modified* it — and an application using only Redis
-still got auto-configurations for seven things it does not have.
+Because this integration has a design of its own: it chooses between three stores, runs a
+`SmartLifecycle`, and owns a configuration group. That is the line — not size. An integration that is
+only the seam's idiom applied to one more type stays in the seam, which is why `stx.redis` is still a
+package in `stx-spring-boot` and this is not.
 
 Beside the library instead, and not *inside* it: `stx-workflow` has callers with no web framework at
 all — a worker, a consumer, a CLI — and a library that declared Spring in its manifest would carry a

@@ -20,7 +20,7 @@ What exists:
 | `libs/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
 | `libs/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StrangeTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
 | `libs/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
-| `libs/stx-ktor` | The Ktor seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), plus the integrations that have not yet moved beside their libraries — a connection per application opened and closed with it, and one negotiated locale per request |
+| `libs/stx-ktor` | The Ktor seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the integrations that are that idiom applied — a connection per application opened and closed with it, and one negotiated locale per request. An integration with a design of its own is a module beside its library instead |
 | `libs/stx-koin` | The same seven backends as Koin modules, a package per integration, for callers with no web framework: the container creates the connection and closes it |
 | `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
 | `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
@@ -417,9 +417,27 @@ the contract between the seam and every integration built on it, and a contract 
 no web framework; it knows the container, the framework modules know the framework, the libraries
 know the backends, and none of them knows two.
 
-**This is a migration in progress.** `workflow` moved first, as the pilot; the remaining integrations
-still live in `stx-ktor` and `stx-spring-boot`, one package each, and move a PR at a time. A *new*
-integration is written to the rule above rather than added to a hub.
+**Which side of the line an integration falls on is not its size — it is whether it has a design of
+its own.**
+
+- A module, when it brings its own lifecycle, its own configuration surface, its own decisions:
+  `stx-workflow-spring` chooses between three stores and runs a `SmartLifecycle`;
+  `stx-graphix-ktor` owns routes, a websocket protocol and a sandbox. Each needs a README to explain
+  a decision, and that is the tell.
+- In the seam, when it is **the seam's idiom applied to one more type**: `stx-ktor/redis` is
+  `resource(RedisKey, instance) { Redis.connect(config) }` and an accessor;
+  `stx-koin/redis` is seven lines, one `single { } onClose { }`. Their README would read "the idiom,
+  applied". A published artifact each — manifest, README, coordinates for a consumer to discover —
+  costs more than it removes, and `stx-koin` in particular is a coherent thing with a name: *the stx
+  libraries, as Koin modules*.
+
+So `workflow` and `graphix` are modules and the seven small ones stay where they are. The line was
+drawn after moving `workflow` and reading the others; the first version of this rule said every
+integration should move, which would have meant twenty-one modules across three seams for about two
+thousand lines that mostly restate one idiom.
+
+A *new* integration is written to this rule rather than added to a hub by default: ask which of the
+two it is first.
 
 **Every backend is declared `compile-only`, including the ones this module's API returns.**
 `call.redis` hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath, which

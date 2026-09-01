@@ -19,8 +19,10 @@ Ktor's DI so a class the container builds can take a `WorkflowEngine` in its con
 
 ## Why this is a module and not a package in stx-ktor
 
-Because the alternative makes `stx-ktor` know about every library in the repository — it held one
-package per integration, so adding a library *modified* it.
+Because this plugin has a design of its own: an engine to publish, a worker whose lifetime is the
+application's, and a store somebody else opened. That is the line — not size. An integration that is
+only the seam's idiom applied to one more type stays in the seam, which is why `install(RedisConnection)`
+is still a package in `stx-ktor` and this is not.
 
 Beside the library instead, and not *inside* it: `stx-workflow` has callers with no web framework at
 all, and a library that declared Ktor in its manifest would carry one to all of them.
