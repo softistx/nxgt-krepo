@@ -1,0 +1,34 @@
+product: jvm/lib
+description: "Ktor plugin for stx-migrations: install(Migrations) is a gate, and the server does not bind until it passes"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # MigrationRunner is what the configuration takes and MigrationRecord is what call.migrations
+  # answers with. The core only: this module names no store, exactly as stx-workflow-ktor names no
+  # Redis — an application hands it a runner it has already built.
+  - //libs/stx-migrations/stx-migrations: exported
+  - $ktor.server.core: exported
+  # `publish` and `required` — the resource-lifecycle idiom every plugin in this repo shares. It
+  # stays in stx-ktor because it belongs to no integration; this module is a caller of it.
+  - //libs/stx-ktor
+  # Ktor DI, for `injectable = true`. Compile-only so an application that never sets it never loads
+  # a class from it — the same rule as stx-ktor and stx-workflow-ktor.
+  - $libs.ktor.server.di: compile-only
+
+test-dependencies:
+  # No container anywhere in this module's specs: what is being tested is the gate, and InMemoryLedger
+  # from the core is a real ledger with a real conditional claim and a real lock. Which store is
+  # underneath it is stx-migrations-db's question, asked there against three of them.
+  - $libs.ktor.server.di
+  - $ktor.server.testHost
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  ktor:
+    enabled: true
+    version: 3.5.2
