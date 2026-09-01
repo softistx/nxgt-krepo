@@ -19,7 +19,19 @@ import com.strange.spring.data.mongo.template.MongoPage
 import com.strange.spring.error.ApiException
 import com.strange.spring.web.DEFAULT_PAGE_SIZE
 import com.strange.spring.web.parseSort
+import com.strange.telemetry.logger
+import com.strange.telemetry.span
 import org.springframework.stereotype.Service
+
+/**
+ * Where this file's logs say they came from.
+ *
+ * A top-level `val` and not an injected bean, because there is nothing to inject: `stx.telemetry.enabled`
+ * *installs* the root, so `logger<T>()` finds it from anywhere — an `init` block, a `catch`, a class
+ * Spring never built. With no telemetry installed at all every call here is a silent no-op, which is
+ * what lets a library log without insisting the application configure one.
+ */
+private val log = logger<OrderService>()
 
 /** What a caller is told when an order is not there. Also a key in `resources/locales/`. */
 const val KEY_ORDER_NOT_FOUND = "orders.not-found"
@@ -91,15 +103,37 @@ class OrderService(
      * being honest about: two requests racing can both pass it, and the unique index on `ref` is
      * what actually decides. The check is here so the ordinary case gets a translated 409 instead of
      * a driver exception, not because it is a lock.
+     *
+     * **The only [span] in this application, and that is the lesson.** Every request already has a
+     * server span — `stx.telemetry.web-filter` opens one in a `CoWebFilter`, and this one nests
+     * inside it automatically, because the span context is a `CoroutineContext.Element` and a
+     * suspending handler is inside the filter's coroutine. So a span per method would time the same
+     * work twice under a second name. One is here because *placing* an order is two round trips to
+     * Mongo behind one route, and the split between them is a thing somebody will want to see.
+     *
+     * The rest of the file logs and does not span, which is the ordinary case.
      */
-    override suspend fun placeOrder(body: PlaceOrderRequest): OrderResponse {
-        if (orders.existsByReference(body.reference)) {
-            throw ApiException.conflict(KEY_REFERENCE_TAKEN, mapOf("reference" to body.reference))
+    override suspend fun placeOrder(body: PlaceOrderRequest): OrderResponse =
+        span("place order", "reference" to body.reference) {
+            if (orders.existsByReference(body.reference)) {
+                log.warn(ReferenceTaken(body.reference))
+                throw ApiException.conflict(KEY_REFERENCE_TAKEN, mapOf("reference" to body.reference))
+            }
+            val order = orders.insert(body.toEntity())
+            // On this span alone. The `reference` passed above is inherited by the log written below
+            // and by anything nested; an attribute set on the receiver is not.
+            attribute("orderId", order.id)
+            log.info(OrderPlaced(order.reference, order.total))
+            order.response()
         }
-        return orders.insert(body.toEntity()).response()
-    }
 
-    /** `PATCH /orders/{id}/status` — a save, so the audit trail records the transition. */
+    /**
+     * `PATCH /orders/{id}/status` — a save, so the audit trail records the transition.
+     *
+     * The order is read into a local rather than saved in one expression, because the log wants the
+     * status it *had*. That is the shape a typed event tends to force, and it is the right one: a
+     * record of `PAID` with nothing to compare it to answers half the question.
+     */
     override suspend fun changeStatus(
         id: String,
         body: ChangeStatusRequest,
@@ -107,7 +141,10 @@ class OrderService(
         val status =
             body.status.toDomain()
                 ?: throw ApiException.badRequest(KEY_UNKNOWN_STATUS)
-        return orders.save(get(id).copy(status = status)).response()
+        val order = get(id)
+        val changed = orders.save(order.copy(status = status))
+        log.info(OrderStatusChanged(changed.reference, order.status, status))
+        return changed.response()
     }
 
     /** `DELETE /orders/{id}` — 204, and a `TERMINAL` entry in the trail. */
