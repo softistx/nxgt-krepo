@@ -12,6 +12,10 @@ dependencies:
   - $libs.kotlinx.serialization: exported
   # a step suspends; withTimeout, coroutineScope and Deferred are in the engine and in its API
   - $libs.kotlinx.coroutines.core: exported
+  # An annotated class is read reflectively when `workflowOf` turns it into a Workflow. Not
+  # exported: an application writes the annotations this module defines and never touches a
+  # KFunction, exactly as in stx-graphix.
+  - $libs.kotlin.reflect
 
 test-dependencies:
   - $libs.kotest.runner.junit5
