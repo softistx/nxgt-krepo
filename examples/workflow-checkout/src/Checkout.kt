@@ -43,10 +43,9 @@ fun main() =
                 somethingGoesWrong(redis)
                 theProcessDies(redis)
             } finally {
-                // `redis.key("*")`, not `"*"`. `deleteKeys` takes the pattern it is given and does not
-                // prefix it, so the bare one would empty the whole database — including whatever the
-                // repo's own test harnesses have on db 15 at the time.
-                redis.deleteKeys(redis.key("*"))
+                // Relative to this connection's namespace, so it takes out this demo's keys and
+                // nothing else on database 15.
+                redis.deleteKeys()
             }
         }
     }

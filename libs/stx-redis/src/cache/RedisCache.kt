@@ -118,7 +118,7 @@ class RedisCache<T>(
     suspend fun invalidate(id: String): Boolean = (redis.commands.del(key(id)) ?: 0L) > 0
 
     /** Everything under this cache's prefix, and how many that was. */
-    suspend fun invalidateAll(): Long = redis.deleteKeys("${redis.key(name)}:*")
+    suspend fun invalidateAll(): Long = redis.deleteKeys("$name:*")
 }
 
 /**
