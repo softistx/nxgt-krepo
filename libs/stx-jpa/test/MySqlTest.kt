@@ -1,11 +1,11 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.jpa.entity.Address
-import com.strange.jpa.entity.Customer
-import com.strange.jpa.entity.Thing
-import com.strange.jpa.query.query
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.entity.Address
+import com.softistx.jpa.entity.Customer
+import com.softistx.jpa.entity.Thing
+import com.softistx.jpa.query.query
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

@@ -1,10 +1,10 @@
-package com.strange.telemetry
+package com.softistx.telemetry
 
-import com.strange.telemetry.context.TelemetryContext
-import com.strange.telemetry.context.threadContext
-import com.strange.telemetry.model.ErrorInfo
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Severity
+import com.softistx.telemetry.context.TelemetryContext
+import com.softistx.telemetry.context.threadContext
+import com.softistx.telemetry.model.ErrorInfo
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Severity
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json

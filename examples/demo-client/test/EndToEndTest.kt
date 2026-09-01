@@ -1,11 +1,11 @@
-package com.strange.demo.client
+package com.softistx.demo.client
 
-import com.strange.demo.api.startDemoServer
-import com.strange.demo.client.api.models.CategoryRequest
-import com.strange.demo.client.api.models.PatchTagRequest
-import com.strange.demo.client.api.models.SearchRequest
-import com.strange.demo.client.api.models.TagRequest
-import com.strange.demo.client.api.utils.ErrorResponseException
+import com.softistx.demo.api.startDemoServer
+import com.softistx.demo.client.api.models.CategoryRequest
+import com.softistx.demo.client.api.models.PatchTagRequest
+import com.softistx.demo.client.api.models.SearchRequest
+import com.softistx.demo.client.api.models.TagRequest
+import com.softistx.demo.client.api.utils.ErrorResponseException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly

@@ -1,7 +1,7 @@
-package com.strange.mongo.page
+package com.softistx.mongo.page
 
 import com.mongodb.MongoClientSettings
-import com.strange.mongo.InvalidPaginationException
+import com.softistx.mongo.InvalidPaginationException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

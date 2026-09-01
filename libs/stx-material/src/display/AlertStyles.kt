@@ -1,13 +1,13 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.border
 import androidx.compose.foundation.style.contentPadding
 import androidx.compose.ui.unit.dp
-import com.strange.material.theme.Tone
-import com.strange.material.theme.colors
-import com.strange.material.theme.shapes
-import com.strange.material.theme.spacing
+import com.softistx.material.theme.Tone
+import com.softistx.material.theme.colors
+import com.softistx.material.theme.shapes
+import com.softistx.material.theme.spacing
 
 /**
  * Material 3 has no alert or banner, so this one is built from primitives — see AGENTS.md's

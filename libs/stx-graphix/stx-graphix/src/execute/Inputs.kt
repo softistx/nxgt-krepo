@@ -1,8 +1,8 @@
-package com.strange.graphix.execute
+package com.softistx.graphix.execute
 
-import com.strange.graphix.GraphixRequest
-import com.strange.graphix.validation.GraphixLimits
-import com.strange.graphix.validation.GraphixValidation
+import com.softistx.graphix.GraphixRequest
+import com.softistx.graphix.validation.GraphixLimits
+import com.softistx.graphix.validation.GraphixValidation
 import graphql.ExecutionInput
 import graphql.GraphQL
 import graphql.execution.SubscriptionExecutionStrategy

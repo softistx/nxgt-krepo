@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -9,11 +9,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.button.ButtonColor
-import com.strange.material.button.ButtonVariant
-import com.strange.material.button.IconButton
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
+import com.softistx.material.button.ButtonColor
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.button.IconButton
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
 
 /**
  * How tall the bar is, mapped onto Material 3's four top app bars.

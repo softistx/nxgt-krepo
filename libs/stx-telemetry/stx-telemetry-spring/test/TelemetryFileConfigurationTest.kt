@@ -1,8 +1,8 @@
-package com.strange.telemetry.spring
+package com.softistx.telemetry.spring
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.export.FileExporter
-import com.strange.telemetry.logger
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.export.FileExporter
+import com.softistx.telemetry.logger
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe

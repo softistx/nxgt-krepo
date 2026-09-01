@@ -1,7 +1,7 @@
-package com.strange.redis.lock
+package com.softistx.redis.lock
 
-import com.strange.redis.RedisLockException
-import com.strange.redis.RedisTestServer
+import com.softistx.redis.RedisLockException
+import com.softistx.redis.RedisTestServer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

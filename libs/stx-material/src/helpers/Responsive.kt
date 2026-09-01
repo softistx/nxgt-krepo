@@ -1,4 +1,4 @@
-package com.strange.material.helpers
+package com.softistx.material.helpers
 
 import androidx.compose.material3.windowsizeclass.*
 import androidx.compose.runtime.compositionLocalOf

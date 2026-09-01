@@ -16,13 +16,13 @@ pipeline as `logger<T>()`.
 
 That is the point of it. A driver's *connection reset* and the request it happened under are worth
 very little to each other in two different files, and a bridged log picks up the current span for
-free, because `com.strange.telemetry.Logger` is what it delegates to.
+free, because `com.softistx.telemetry.Logger` is what it delegates to.
 
 **This takes over SLF4J.** SLF4J binds one provider; if logback is also on the classpath it prints a
 warning and picks one. Which one is not a thing to leave to the classpath order:
 
 ```
--Dslf4j.provider=com.strange.telemetry.slf4j.TelemetryServiceProvider
+-Dslf4j.provider=com.softistx.telemetry.slf4j.TelemetryServiceProvider
 ```
 
 An application that wants to keep logback should not depend on this module for the inbound half at
@@ -52,7 +52,7 @@ Telemetry("checkout") { export(Slf4jExporter()) }.install()
 
 For an application with logback, an appender fleet and a log pipeline it trusts, that wants `span { }`
 and typed events without changing where anything ends up. Logs go to a logger named after their
-source; completed spans go to `com.strange.telemetry.span`, one line each, and can be turned off.
+source; completed spans go to `com.softistx.telemetry.span`, one line each, and can be turned off.
 
 The trace id and the attributes go in the **MDC** for the length of one call, because `%X{traceId}`
 is where a logback pattern reads them. Same mechanism, used the one way it is safe: the exporter runs

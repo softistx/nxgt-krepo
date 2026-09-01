@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,15 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.strange.material.display.Chip
-import com.strange.material.display.StatusBadge
-import com.strange.material.icon.Icon
-import com.strange.material.icon.IconSize
-import com.strange.material.media.Avatar
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.display.Chip
+import com.softistx.material.display.StatusBadge
+import com.softistx.material.icon.Icon
+import com.softistx.material.icon.IconSize
+import com.softistx.material.media.Avatar
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
 
 @Composable
 internal fun DestinationLeading(

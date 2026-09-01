@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +15,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 import androidx.compose.material3.Card as MaterialCard
 
 /**

@@ -13,9 +13,9 @@ test-dependencies:
 plugins:
   dgs-codegen:
     enabled: true
-    packageName: com.strange.example.graphix.codegen.dgs
+    packageName: com.softistx.example.graphix.codegen.dgs
   apollo:
     enabled: true
-    packageName: com.strange.example.graphix.codegen.apollo
+    packageName: com.softistx.example.graphix.codegen.apollo
     generateOptionalOperationVariables: false
     generateDataBuilders: true

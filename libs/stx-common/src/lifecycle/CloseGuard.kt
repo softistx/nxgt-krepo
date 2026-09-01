@@ -1,4 +1,4 @@
-package com.strange.common.lifecycle
+package com.softistx.common.lifecycle
 
 import java.util.concurrent.atomic.AtomicBoolean
 

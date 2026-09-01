@@ -1,4 +1,4 @@
-package com.strange.amqp
+package com.softistx.amqp
 
 /** What this module throws that the client does not. */
 sealed class AmqpException(

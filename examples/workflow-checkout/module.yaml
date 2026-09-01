@@ -22,4 +22,4 @@ settings:
   jvm:
     # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file named
     # `main.kt`; this one is `Checkout.kt`, next to the workflow it runs.
-    mainClass: com.strange.example.workflow.CheckoutKt
+    mainClass: com.softistx.example.workflow.CheckoutKt

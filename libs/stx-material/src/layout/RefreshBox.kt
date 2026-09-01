@@ -1,4 +1,4 @@
-package com.strange.material.layout
+package com.softistx.material.layout
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox

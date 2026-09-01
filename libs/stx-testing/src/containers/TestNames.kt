@@ -1,4 +1,4 @@
-package com.strange.testing.containers
+package com.softistx.testing.containers
 
 import java.util.concurrent.atomic.AtomicInteger
 

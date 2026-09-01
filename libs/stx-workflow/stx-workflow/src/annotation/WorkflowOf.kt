@@ -1,8 +1,8 @@
-package com.strange.workflow.annotation
+package com.softistx.workflow.annotation
 
-import com.strange.workflow.Workflow
-import com.strange.workflow.dsl.NodeSink
-import com.strange.workflow.workflow
+import com.softistx.workflow.Workflow
+import com.softistx.workflow.dsl.NodeSink
+import com.softistx.workflow.workflow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import kotlin.reflect.KType

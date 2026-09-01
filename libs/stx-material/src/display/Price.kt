@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -7,11 +7,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 
 /**
  * An amount, already formatted, with an optional compare-at and period.

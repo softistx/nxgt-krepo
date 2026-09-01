@@ -1,10 +1,10 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 
 /** Adds [option] if it was off, removes it if it was on. The empty set is "everything". */
 fun toggleFilter(

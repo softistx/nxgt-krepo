@@ -1,6 +1,6 @@
-package com.strange.workflow
+package com.softistx.workflow
 
-import com.strange.common.lifecycle.CloseGuard
+import com.softistx.common.lifecycle.CloseGuard
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext

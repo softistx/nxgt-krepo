@@ -1,9 +1,9 @@
-package com.strange.mongo.query
+package com.softistx.mongo.query
 
 import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.FindFlow
 import com.mongodb.kotlin.client.coroutine.MongoCollection
-import com.strange.mongo.DocumentNotFoundException
+import com.softistx.mongo.DocumentNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import org.bson.BsonDocument
 import org.bson.conversions.Bson

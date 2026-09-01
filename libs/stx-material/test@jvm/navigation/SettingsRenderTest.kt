@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,22 +12,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonColor
-import com.strange.material.button.Fab
-import com.strange.material.button.IconBadge
-import com.strange.material.button.ViewMode
-import com.strange.material.button.ViewToggle
-import com.strange.material.data.SortControl
-import com.strange.material.data.SortDirection
-import com.strange.material.form.DangerZone
-import com.strange.material.form.FormSection
-import com.strange.material.form.ThemeToggle
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.surface.HelpTip
-import com.strange.material.text.Typography
-import com.strange.material.theme.ColorMode
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonColor
+import com.softistx.material.button.Fab
+import com.softistx.material.button.IconBadge
+import com.softistx.material.button.ViewMode
+import com.softistx.material.button.ViewToggle
+import com.softistx.material.data.SortControl
+import com.softistx.material.data.SortDirection
+import com.softistx.material.form.DangerZone
+import com.softistx.material.form.FormSection
+import com.softistx.material.form.ThemeToggle
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.surface.HelpTip
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.ColorMode
+import com.softistx.material.theme.StrangeTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 

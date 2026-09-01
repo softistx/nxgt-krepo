@@ -1,4 +1,4 @@
-package com.strange.redis.codec
+package com.softistx.redis.codec
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json

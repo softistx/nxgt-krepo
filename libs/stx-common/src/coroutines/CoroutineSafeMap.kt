@@ -1,4 +1,4 @@
-package com.strange.common.coroutines
+package com.softistx.common.coroutines
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

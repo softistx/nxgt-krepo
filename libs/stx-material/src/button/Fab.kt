@@ -1,13 +1,13 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.icon.Icon
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
+import com.softistx.material.icon.Icon
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
 
 /**
  * The one action that floats over the content. Material 3's FAB.

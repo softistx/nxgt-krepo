@@ -1,7 +1,7 @@
-package com.strange.graphix.execute
+package com.softistx.graphix.execute
 
-import com.strange.graphix.schema.TypeFieldMeta
-import com.strange.graphix.schema.graphQLName
+import com.softistx.graphix.schema.TypeFieldMeta
+import com.softistx.graphix.schema.graphQLName
 import graphql.schema.DataFetcher
 
 /**

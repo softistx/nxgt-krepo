@@ -23,4 +23,4 @@ settings:
   jvm:
     # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file named
     # `main.kt`; this one is `Shop.kt`, next to the `Catalog` it serves.
-    mainClass: com.strange.example.graphix.shop.ShopKt
+    mainClass: com.softistx.example.graphix.shop.ShopKt

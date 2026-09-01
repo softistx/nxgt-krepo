@@ -1,4 +1,4 @@
-package com.strange.common.serialization
+package com.softistx.common.serialization
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException

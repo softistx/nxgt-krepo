@@ -1,10 +1,10 @@
-package com.strange.telemetry.otlp
+package com.softistx.telemetry.otlp
 
-import com.strange.telemetry.Attributes
-import com.strange.telemetry.model.LogRecord
-import com.strange.telemetry.model.Resource
-import com.strange.telemetry.model.SpanRecord
-import com.strange.telemetry.model.SpanStatus
+import com.softistx.telemetry.Attributes
+import com.softistx.telemetry.model.LogRecord
+import com.softistx.telemetry.model.Resource
+import com.softistx.telemetry.model.SpanRecord
+import com.softistx.telemetry.model.SpanStatus
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -111,7 +111,7 @@ private fun SpanRecord.toOtlp(): OtlpSpan =
  * These are attributes rather than a field of their own because that is where OTLP puts them, and
  * because it means a backend's existing "show me the errors" query finds ours without being told.
  */
-private fun com.strange.telemetry.model.ErrorInfo.toOtlp(): List<KeyValue> =
+private fun com.softistx.telemetry.model.ErrorInfo.toOtlp(): List<KeyValue> =
     buildList {
         add(KeyValue("exception.type", AnyValue(stringValue = type)))
         message?.let { add(KeyValue("exception.message", AnyValue(stringValue = it))) }

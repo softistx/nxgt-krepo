@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.audit
+package com.softistx.spring.data.mongo.audit
 
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.CreatedDate

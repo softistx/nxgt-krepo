@@ -1,4 +1,4 @@
-package com.strange.material.motion
+package com.softistx.material.motion
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -14,7 +14,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * The travelling highlight that says "this is loading", as one modifier.

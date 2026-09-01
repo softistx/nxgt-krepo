@@ -1,6 +1,6 @@
-package com.strange.jpa.scan
+package com.softistx.jpa.scan
 
-import com.strange.jpa.JpaMappingException
+import com.softistx.jpa.JpaMappingException
 import io.github.classgraph.ClassGraph
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter

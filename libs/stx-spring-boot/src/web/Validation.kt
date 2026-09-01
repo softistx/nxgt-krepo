@@ -1,4 +1,4 @@
-package com.strange.spring.web
+package com.softistx.spring.web
 
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validator

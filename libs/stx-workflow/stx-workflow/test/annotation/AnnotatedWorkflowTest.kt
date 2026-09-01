@@ -1,14 +1,14 @@
-package com.strange.workflow.annotation
+package com.softistx.workflow.annotation
 
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.dsl.StepScope
-import com.strange.workflow.dsl.signal
-import com.strange.workflow.fixture.Approval
-import com.strange.workflow.fixture.Calls
-import com.strange.workflow.fixture.Ledger
-import com.strange.workflow.fixture.Wobble
-import com.strange.workflow.store.InMemoryStore
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.dsl.StepScope
+import com.softistx.workflow.dsl.signal
+import com.softistx.workflow.fixture.Approval
+import com.softistx.workflow.fixture.Calls
+import com.softistx.workflow.fixture.Ledger
+import com.softistx.workflow.fixture.Wobble
+import com.softistx.workflow.store.InMemoryStore
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlin.time.Duration

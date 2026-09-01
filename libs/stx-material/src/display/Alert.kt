@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,12 +13,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.motion.Transitions
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.motion.Transitions
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 
 /**
  * A message about what just happened, or about what is about to.

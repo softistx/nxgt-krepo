@@ -1,11 +1,11 @@
-package com.strange.graphix.spring
+package com.softistx.graphix.spring
 
-import com.strange.common.serialization.lenientJson
-import com.strange.graphix.Graphix
-import com.strange.graphix.http.SubscriptionProtocol
-import com.strange.graphix.spring.fixture.BoomQueries
-import com.strange.graphix.spring.fixture.GreetingQueries
-import com.strange.graphix.spring.fixture.TickSubscriptions
+import com.softistx.common.serialization.lenientJson
+import com.softistx.graphix.Graphix
+import com.softistx.graphix.http.SubscriptionProtocol
+import com.softistx.graphix.spring.fixture.BoomQueries
+import com.softistx.graphix.spring.fixture.GreetingQueries
+import com.softistx.graphix.spring.fixture.TickSubscriptions
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.string.shouldContain
 import org.springframework.http.MediaType

@@ -1,7 +1,7 @@
-package com.strange.telemetry.slf4j
+package com.softistx.telemetry.slf4j
 
-import com.strange.telemetry.logger
-import com.strange.telemetry.model.Severity
+import com.softistx.telemetry.logger
+import com.softistx.telemetry.model.Severity
 import org.slf4j.Marker
 import org.slf4j.event.Level
 import org.slf4j.helpers.LegacyAbstractLogger

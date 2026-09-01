@@ -46,13 +46,13 @@ a *value* — `Filters.gt("createdAt", now)`, an `Updates.set`, an audit stamp.
 ## Shape
 
 ```
-com.strange.mongo            client, database and session helpers — collection(), withTransaction()
-com.strange.mongo.codec      codecs the driver has no built-in for, and the registry that carries them
-com.strange.mongo.query      what a collection is asked to do — filters, indexes, find/insert/update/delete
-com.strange.mongo.page       PaginationOptions and the cursor-paginated find
+com.softistx.mongo            client, database and session helpers — collection(), withTransaction()
+com.softistx.mongo.codec      codecs the driver has no built-in for, and the registry that carries them
+com.softistx.mongo.query      what a collection is asked to do — filters, indexes, find/insert/update/delete
+com.softistx.mongo.page       PaginationOptions and the cursor-paginated find
                              (Page and PageInfo are stx-common's — stx-jpa answers with the same two)
-com.strange.mongo.audit      AuditMetadata and Audited — who wrote a document, and when
-com.strange.mongo.gridfs     a coroutine GridFS bucket over the Reactive Streams driver
+com.softistx.mongo.audit      AuditMetadata and Audited — who wrote a document, and when
+com.softistx.mongo.gridfs     a coroutine GridFS bucket over the Reactive Streams driver
 ```
 
 Every extension that touches the database takes an optional `session: ClientSession?` in its last
@@ -61,7 +61,7 @@ transaction by threading one value through instead of switching to a different A
 
 ## Queries
 
-`com.strange.mongo.query` is the collection surface: `findById`, `requireById`, `findOne`,
+`com.softistx.mongo.query` is the collection surface: `findById`, `requireById`, `findOne`,
 `findAll`, `findByIds`, `exists`, `existsById`, `existingIds`, `insert`, `insertAll`, `update`,
 `updateById`, `updateAll`, `findAndUpdate`, `findByIdAndUpdate`, `delete`, `deleteById`,
 `deleteByIds`, `deleteAll`, `findAndDelete`, `findByIdAndDelete`, plus `ensureIndex` /

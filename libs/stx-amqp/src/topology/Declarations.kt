@@ -1,4 +1,4 @@
-package com.strange.amqp.topology
+package com.softistx.amqp.topology
 
 import kotlin.time.Duration
 

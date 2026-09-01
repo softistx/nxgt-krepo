@@ -1,7 +1,7 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixException
-import com.strange.graphix.scalar.Scalars
+import com.softistx.graphix.GraphixException
+import com.softistx.graphix.scalar.Scalars
 import graphql.Scalars.GraphQLBoolean
 import graphql.Scalars.GraphQLFloat
 import graphql.Scalars.GraphQLID

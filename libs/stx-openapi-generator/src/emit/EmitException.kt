@@ -1,4 +1,4 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
 /**
  * Raised when a document is readable but a particular client cannot express part of it.

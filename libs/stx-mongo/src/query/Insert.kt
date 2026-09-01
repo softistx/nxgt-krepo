@@ -1,4 +1,4 @@
-package com.strange.mongo.query
+package com.softistx.mongo.query
 
 import com.mongodb.client.model.InsertManyOptions
 import com.mongodb.client.model.InsertOneOptions
@@ -6,7 +6,7 @@ import com.mongodb.client.result.InsertManyResult
 import com.mongodb.client.result.InsertOneResult
 import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoCollection
-import com.strange.mongo.DocumentNotFoundException
+import com.softistx.mongo.DocumentNotFoundException
 
 suspend fun <T : Any> MongoCollection<T>.insert(
     document: T,

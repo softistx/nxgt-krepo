@@ -1,7 +1,7 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixBuilder
-import com.strange.graphix.execute.OperationScope
+import com.softistx.graphix.GraphixBuilder
+import com.softistx.graphix.execute.OperationScope
 import graphql.GraphQLContext
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment

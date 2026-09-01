@@ -1,4 +1,4 @@
-package com.strange.example.graphix.shop
+package com.softistx.example.graphix.shop
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

@@ -1,4 +1,4 @@
-package com.strange.graphix
+package com.softistx.graphix
 
 import graphql.GraphQL
 import graphql.schema.StaticDataFetcher

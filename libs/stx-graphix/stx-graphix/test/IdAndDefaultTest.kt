@@ -1,9 +1,9 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.BadDefaultQueries
-import com.strange.graphix.fixture.BadIdQueries
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.TicketQueries
+import com.softistx.graphix.fixture.BadDefaultQueries
+import com.softistx.graphix.fixture.BadIdQueries
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.TicketQueries
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

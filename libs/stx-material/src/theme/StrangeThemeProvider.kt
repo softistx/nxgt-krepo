@@ -1,4 +1,4 @@
-package com.strange.material.theme
+package com.softistx.material.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MotionScheme

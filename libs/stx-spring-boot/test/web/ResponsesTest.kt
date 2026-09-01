@@ -1,4 +1,4 @@
-package com.strange.spring.web
+package com.softistx.spring.web
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

@@ -1,11 +1,11 @@
-package com.strange.jpa.naming
+package com.softistx.jpa.naming
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.JpaConfig
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.SchemaMode
-import com.strange.jpa.entity.Audited
-import com.strange.jpa.entity.AuditedEvent
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.JpaConfig
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.SchemaMode
+import com.softistx.jpa.entity.Audited
+import com.softistx.jpa.entity.AuditedEvent
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

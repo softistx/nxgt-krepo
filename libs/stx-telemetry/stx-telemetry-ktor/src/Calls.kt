@@ -1,8 +1,8 @@
-package com.strange.telemetry.ktor
+package com.softistx.telemetry.ktor
 
-import com.strange.ktor.required
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.trace.SpanContext
+import com.softistx.ktor.required
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.trace.SpanContext
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 

@@ -1,7 +1,7 @@
-package com.strange.kafka
+package com.softistx.kafka
 
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.kafkaContainer
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.kafkaContainer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext

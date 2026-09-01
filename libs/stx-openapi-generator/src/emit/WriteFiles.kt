@@ -1,4 +1,4 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
 import com.squareup.kotlinpoet.FileSpec
 import java.nio.file.Path

@@ -1,8 +1,8 @@
-package com.strange.spring.integration.i18n
+package com.softistx.spring.integration.i18n
 
-import com.strange.i18n.Messages
-import com.strange.i18n.MissingKey
-import com.strange.i18n.PropertiesSource
+import com.softistx.i18n.Messages
+import com.softistx.i18n.MissingKey
+import com.softistx.i18n.PropertiesSource
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty

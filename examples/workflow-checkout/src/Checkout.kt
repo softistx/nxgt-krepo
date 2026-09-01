@@ -1,11 +1,11 @@
-package com.strange.example.workflow
+package com.softistx.example.workflow
 
-import com.strange.redis.Redis
-import com.strange.redis.RedisConfig
-import com.strange.redis.deleteKeys
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.redis.RedisWorkflowStore
-import com.strange.workflow.store.WorkflowRecord
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisConfig
+import com.softistx.redis.deleteKeys
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.redis.RedisWorkflowStore
+import com.softistx.workflow.store.WorkflowRecord
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

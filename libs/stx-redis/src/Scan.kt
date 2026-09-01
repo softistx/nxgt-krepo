@@ -1,4 +1,4 @@
-package com.strange.redis
+package com.softistx.redis
 
 import io.lettuce.core.ScanArgs
 import io.lettuce.core.ScanCursor

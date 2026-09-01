@@ -1,6 +1,6 @@
-package com.strange.kafka.record
+package com.softistx.kafka.record
 
-import com.strange.kafka.KafkaValueException
+import com.softistx.kafka.KafkaValueException
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import kotlin.time.Instant
 

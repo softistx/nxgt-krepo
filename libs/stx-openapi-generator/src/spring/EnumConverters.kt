@@ -1,13 +1,13 @@
-package com.strange.openapi.spring
+package com.softistx.openapi.spring
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.EnumType
+import com.softistx.openapi.emit.EmitOptions
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.STRING
-import com.strange.openapi.ApiModel
-import com.strange.openapi.EnumType
-import com.strange.openapi.emit.EmitOptions
 
 /**
  * The one piece of wiring a Spring client cannot do for itself.

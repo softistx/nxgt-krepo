@@ -1,11 +1,11 @@
-package com.strange.workflow
+package com.softistx.workflow
 
-import com.strange.common.serialization.lenientJson
-import com.strange.workflow.dsl.Signal
-import com.strange.workflow.engine.Run
-import com.strange.workflow.engine.advance
-import com.strange.workflow.store.WorkflowRecord
-import com.strange.workflow.store.WorkflowStore
+import com.softistx.common.serialization.lenientJson
+import com.softistx.workflow.dsl.Signal
+import com.softistx.workflow.engine.Run
+import com.softistx.workflow.engine.advance
+import com.softistx.workflow.store.WorkflowRecord
+import com.softistx.workflow.store.WorkflowStore
 import kotlinx.coroutines.delay
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -36,7 +36,7 @@ class WorkflowEngine internal constructor(
     private val store: WorkflowStore,
     private val json: Json,
     private val definitions: Map<String, Workflow<*>>,
-    /** How often a parent parked on a `child` node looks again. See [com.strange.workflow.dsl.child]. */
+    /** How often a parent parked on a `child` node looks again. See [com.softistx.workflow.dsl.child]. */
     internal val childPoll: Duration,
 ) {
     /**

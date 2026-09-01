@@ -1,6 +1,6 @@
-package com.strange.workflow
+package com.softistx.workflow
 
-import com.strange.workflow.store.WorkflowRecord
+import com.softistx.workflow.store.WorkflowRecord
 
 /**
  * One run, as its caller sees it: the stored record, and its context decoded back into `C`.

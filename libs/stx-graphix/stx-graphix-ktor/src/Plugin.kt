@@ -1,13 +1,13 @@
-package com.strange.graphix.ktor
+package com.softistx.graphix.ktor
 
-import com.strange.common.serialization.lenientJson
-import com.strange.graphix.GraphQLEngineCustomizer
-import com.strange.graphix.Graphix
-import com.strange.graphix.GraphixBuilder
-import com.strange.graphix.GraphixCustomizer
-import com.strange.graphix.engine
-import com.strange.graphix.http.SubscriptionProtocol
-import com.strange.graphix.http.apolloSandboxPage
+import com.softistx.common.serialization.lenientJson
+import com.softistx.graphix.GraphQLEngineCustomizer
+import com.softistx.graphix.Graphix
+import com.softistx.graphix.GraphixBuilder
+import com.softistx.graphix.GraphixCustomizer
+import com.softistx.graphix.engine
+import com.softistx.graphix.http.SubscriptionProtocol
+import com.softistx.graphix.http.apolloSandboxPage
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
 import io.ktor.server.application.pluginOrNull
@@ -154,4 +154,4 @@ class GraphQLConfiguration {
 }
 
 /** Application attribute the [GraphQL] plugin writes. */
-internal val GraphixKey = AttributeKey<Graphix>("com.strange.graphix.Graphix")
+internal val GraphixKey = AttributeKey<Graphix>("com.softistx.graphix.Graphix")

@@ -1,4 +1,4 @@
-package com.strange.common.concurrent
+package com.softistx.common.concurrent
 
 import java.util.concurrent.ConcurrentMap
 

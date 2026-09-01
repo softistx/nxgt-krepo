@@ -1,5 +1,16 @@
-package com.strange.openapi.ktorfit
+package com.softistx.openapi.ktorfit
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.emit.API_ERROR_OF
+import com.softistx.openapi.emit.API_EXCEPTION
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.GENERATED_COMMENT
+import com.softistx.openapi.emit.apiErrorDispatch
+import com.softistx.openapi.emit.apiExceptionName
+import com.softistx.openapi.emit.apiOperationName
+import com.softistx.openapi.emit.errorSchemas
+import com.softistx.openapi.emit.exceptionNameFor
+import com.softistx.openapi.emit.parserNameFor
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -12,17 +23,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.ApiModel
-import com.strange.openapi.emit.API_ERROR_OF
-import com.strange.openapi.emit.API_EXCEPTION
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.GENERATED_COMMENT
-import com.strange.openapi.emit.apiErrorDispatch
-import com.strange.openapi.emit.apiExceptionName
-import com.strange.openapi.emit.apiOperationName
-import com.strange.openapi.emit.errorSchemas
-import com.strange.openapi.emit.exceptionNameFor
-import com.strange.openapi.emit.parserNameFor
 
 private const val CONFIG = "ApiErrorsConfig"
 
@@ -106,7 +106,7 @@ internal fun apiErrorsFile(
                 IS_SUCCESS,
                 ANNOTATIONS,
                 apiOperationName(options),
-                com.strange.openapi.emit.API_ERROR_OF,
+                com.softistx.openapi.emit.API_ERROR_OF,
                 BODY_AS_TEXT,
             ).build()
 

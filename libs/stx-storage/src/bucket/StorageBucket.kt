@@ -1,8 +1,8 @@
-package com.strange.storage.bucket
+package com.softistx.storage.bucket
 
-import com.strange.storage.NO_SUCH_KEY
-import com.strange.storage.ObjectNotFoundException
-import com.strange.storage.absentAsNull
+import com.softistx.storage.NO_SUCH_KEY
+import com.softistx.storage.ObjectNotFoundException
+import com.softistx.storage.absentAsNull
 import io.minio.CopyObjectArgs
 import io.minio.GetObjectArgs
 import io.minio.ListObjectsArgs

@@ -1,4 +1,4 @@
-package com.strange.common.coroutines
+package com.softistx.common.coroutines
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly

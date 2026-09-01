@@ -1,11 +1,11 @@
-package com.strange.mongo.page
+package com.softistx.mongo.page
 
-import com.strange.common.page.PageInfo
-import com.strange.mongo.InvalidPaginationException
-import com.strange.mongo.MongoTestCluster
-import com.strange.mongo.Note
-import com.strange.mongo.query.insertAll
-import com.strange.mongo.withNotes
+import com.softistx.common.page.PageInfo
+import com.softistx.mongo.InvalidPaginationException
+import com.softistx.mongo.MongoTestCluster
+import com.softistx.mongo.Note
+import com.softistx.mongo.query.insertAll
+import com.softistx.mongo.withNotes
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

@@ -28,12 +28,12 @@ and talks to those from then on. Listing more than one is how a start survives a
 ## Shape
 
 ```
-com.strange.kafka           the cluster and its configuration — Kafka, KafkaConfig, properties
-com.strange.kafka.serde     the Json every typed client serializes through, and the serde under it
-com.strange.kafka.record    KafkaRecord<K, V> and its headers — what a subscriber hands a handler
-com.strange.kafka.producer  KafkaPublisher<K, V> — send, sendAll, and the options that shape them
-com.strange.kafka.consumer  KafkaSubscriber<K, V> — records as a Flow, or process with commits
-com.strange.kafka.admin     KafkaAdmin — topics, partitions, consumer groups and their lag
+com.softistx.kafka           the cluster and its configuration — Kafka, KafkaConfig, properties
+com.softistx.kafka.serde     the Json every typed client serializes through, and the serde under it
+com.softistx.kafka.record    KafkaRecord<K, V> and its headers — what a subscriber hands a handler
+com.softistx.kafka.producer  KafkaPublisher<K, V> — send, sendAll, and the options that shape them
+com.softistx.kafka.consumer  KafkaSubscriber<K, V> — records as a Flow, or process with commits
+com.softistx.kafka.admin     KafkaAdmin — topics, partitions, consumer groups and their lag
 ```
 
 ## Serialization

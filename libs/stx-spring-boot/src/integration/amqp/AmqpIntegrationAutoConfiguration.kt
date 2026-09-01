@@ -1,7 +1,7 @@
-package com.strange.spring.integration.amqp
+package com.softistx.spring.integration.amqp
 
-import com.strange.amqp.Amqp
-import com.strange.amqp.AmqpConfig
+import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpConfig
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass

@@ -1,10 +1,10 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
-import com.strange.common.page.Page
-import com.strange.common.page.PageInfo
-import com.strange.jpa.criteria.JpaSpec
-import com.strange.jpa.session.JpaQueries
-import com.strange.jpa.session.createQuery
+import com.softistx.common.page.Page
+import com.softistx.common.page.PageInfo
+import com.softistx.jpa.criteria.JpaSpec
+import com.softistx.jpa.session.JpaQueries
+import com.softistx.jpa.session.createQuery
 import jakarta.persistence.criteria.CriteriaQuery
 import jakarta.persistence.criteria.Root
 

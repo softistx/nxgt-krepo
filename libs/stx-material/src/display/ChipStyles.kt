@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.style.Style
@@ -12,9 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
-import com.strange.material.motion.MotionSpeed
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.motion
+import com.softistx.material.motion.MotionSpeed
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.motion
 
 /**
  * The hover state Material 3's chip does not have.

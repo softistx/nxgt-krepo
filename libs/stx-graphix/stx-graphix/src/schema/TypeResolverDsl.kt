@@ -1,6 +1,6 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixBuilder
+import com.softistx.graphix.GraphixBuilder
 import graphql.TypeResolutionEnvironment
 
 /**

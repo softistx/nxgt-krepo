@@ -138,7 +138,7 @@ does here.
 
 ## Publishing
 
-`com.strange:stx-material:0.1.0`, like every other `libs/*` module — but a `kmp/lib` publishes one
+`com.softistx:stx-material:0.1.0`, like every other `libs/*` module — but a `kmp/lib` publishes one
 artifact per platform beside the root one: `stx-material-jvm`, `stx-material-android`,
 `stx-material-iosarm64`, `stx-material-iossimulatorarm64`. A consumer depends on the root artifact
 and the platform one is selected for it.

@@ -1,6 +1,6 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.execute.DataFetchingEnvironmentElement
+import com.softistx.graphix.execute.DataFetchingEnvironmentElement
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.future.await

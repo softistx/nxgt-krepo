@@ -1,4 +1,4 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.theme.StrangeTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe

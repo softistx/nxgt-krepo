@@ -1,7 +1,7 @@
-package com.strange.storage
+package com.softistx.storage
 
-import com.strange.common.lifecycle.CloseGuard
-import com.strange.storage.bucket.StorageBucket
+import com.softistx.common.lifecycle.CloseGuard
+import com.softistx.storage.bucket.StorageBucket
 import io.minio.BucketExistsArgs
 import io.minio.CreateBucketArgs
 import io.minio.MinioAsyncClient

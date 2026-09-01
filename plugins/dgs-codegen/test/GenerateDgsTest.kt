@@ -1,4 +1,4 @@
-package com.strange.dgs.plugin
+package com.softistx.dgs.plugin
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

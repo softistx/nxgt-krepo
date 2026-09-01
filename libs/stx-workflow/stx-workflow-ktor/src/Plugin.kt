@@ -1,12 +1,12 @@
-package com.strange.workflow.ktor
+package com.softistx.workflow.ktor
 
-import com.strange.ktor.own
-import com.strange.ktor.publish
-import com.strange.workflow.Workflow
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowEngineBuilder
-import com.strange.workflow.WorkflowWorker
-import com.strange.workflow.store.WorkflowStore
+import com.softistx.ktor.own
+import com.softistx.ktor.publish
+import com.softistx.workflow.Workflow
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowEngineBuilder
+import com.softistx.workflow.WorkflowWorker
+import com.softistx.workflow.store.WorkflowStore
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.util.AttributeKey
 import kotlin.time.Duration
@@ -130,5 +130,5 @@ class WorkflowsConfiguration {
     internal var engineBlock: (WorkflowEngineBuilder.() -> Unit)? = null
 }
 
-internal val EngineKey = AttributeKey<WorkflowEngine>("com.strange.workflow.WorkflowEngine")
-internal val WorkerKey = AttributeKey<WorkflowWorker>("com.strange.workflow.WorkflowWorker")
+internal val EngineKey = AttributeKey<WorkflowEngine>("com.softistx.workflow.WorkflowEngine")
+internal val WorkerKey = AttributeKey<WorkflowWorker>("com.softistx.workflow.WorkflowWorker")

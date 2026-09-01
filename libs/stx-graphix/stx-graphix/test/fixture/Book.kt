@@ -1,9 +1,9 @@
-package com.strange.graphix.fixture
+package com.softistx.graphix.fixture
 
-import com.strange.graphix.dataLoader
-import com.strange.graphix.schema.Argument
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.schema.SchemaMapping
+import com.softistx.graphix.dataLoader
+import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.SchemaMapping
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import java.util.concurrent.atomic.AtomicInteger

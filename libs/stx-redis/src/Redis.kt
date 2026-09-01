@@ -1,6 +1,6 @@
-package com.strange.redis
+package com.softistx.redis
 
-import com.strange.common.lifecycle.CloseGuard
+import com.softistx.common.lifecycle.CloseGuard
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulRedisConnection

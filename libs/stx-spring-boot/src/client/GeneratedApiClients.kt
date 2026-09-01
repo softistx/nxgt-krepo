@@ -1,4 +1,4 @@
-package com.strange.spring.client
+package com.softistx.spring.client
 
 import kotlinx.serialization.json.Json
 import org.springframework.core.convert.converter.ConverterRegistry

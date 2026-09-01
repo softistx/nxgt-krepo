@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.theme.StrangeTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 

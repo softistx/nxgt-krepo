@@ -1,4 +1,4 @@
-package com.strange.material.text
+package com.softistx.material.text
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.floats.shouldBeGreaterThan

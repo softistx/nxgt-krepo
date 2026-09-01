@@ -1,6 +1,6 @@
-package com.strange.telemetry.ktor
+package com.softistx.telemetry.ktor
 
-import com.strange.telemetry.Telemetry
+import com.softistx.telemetry.Telemetry
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 

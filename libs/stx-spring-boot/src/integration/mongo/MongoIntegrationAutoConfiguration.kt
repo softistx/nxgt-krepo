@@ -1,8 +1,8 @@
-package com.strange.spring.integration.mongo
+package com.softistx.spring.integration.mongo
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.strange.mongo.mongoClient
+import com.softistx.mongo.mongoClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean

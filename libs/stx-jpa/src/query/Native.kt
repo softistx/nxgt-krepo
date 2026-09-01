@@ -1,4 +1,4 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
 import org.hibernate.reactive.stage.Stage
 import org.intellij.lang.annotations.Language

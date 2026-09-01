@@ -1,4 +1,4 @@
-package com.strange.material.navigation
+package com.softistx.material.navigation
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
@@ -11,8 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.icon.Icon
-import com.strange.material.text.Typography
+import com.softistx.material.icon.Icon
+import com.softistx.material.text.Typography
 
 /**
  * A row of tabs. Material 3's `PrimaryTabRow` (or the scrollable one), which already owns the

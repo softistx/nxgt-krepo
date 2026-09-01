@@ -1,8 +1,8 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.ProductQueries
-import com.strange.graphix.validation.GraphixLimits
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.ProductQueries
+import com.softistx.graphix.validation.GraphixLimits
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

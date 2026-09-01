@@ -1,4 +1,4 @@
-package com.strange.material.theme
+package com.softistx.material.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp

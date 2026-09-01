@@ -1,8 +1,8 @@
-package com.strange.graphix.spring.fixture
+package com.softistx.graphix.spring.fixture
 
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.schema.SubscriptionMapping
-import com.strange.graphix.spring.GraphQLController
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.SubscriptionMapping
+import com.softistx.graphix.spring.GraphQLController
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 

@@ -1,12 +1,12 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.BoomQueries
-import com.strange.graphix.fixture.Caller
-import com.strange.graphix.fixture.ContextQueries
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.Product
-import com.strange.graphix.fixture.ProductMutations
-import com.strange.graphix.fixture.ProductQueries
+import com.softistx.graphix.fixture.BoomQueries
+import com.softistx.graphix.fixture.Caller
+import com.softistx.graphix.fixture.ContextQueries
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.Product
+import com.softistx.graphix.fixture.ProductMutations
+import com.softistx.graphix.fixture.ProductQueries
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -63,7 +63,7 @@ class ExecuteTest :
                     Graphix {
                         query(
                             object {
-                                @com.strange.graphix.schema.QueryMapping
+                                @com.softistx.graphix.schema.QueryMapping
                                 suspend fun later(): String {
                                     delay(10)
                                     return "ok"

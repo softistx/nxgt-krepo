@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.ClipEntry

@@ -1,4 +1,4 @@
-package com.strange.jpa.entity
+package com.softistx.jpa.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

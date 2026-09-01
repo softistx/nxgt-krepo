@@ -1,4 +1,4 @@
-package com.strange.testing.containers
+package com.softistx.testing.containers
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldHaveSize

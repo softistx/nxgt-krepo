@@ -1,8 +1,8 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.SecurityKind
-import com.strange.openapi.SecurityRequirement
-import com.strange.openapi.SecurityScheme
+import com.softistx.openapi.SecurityKind
+import com.softistx.openapi.SecurityRequirement
+import com.softistx.openapi.SecurityScheme
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation as SwaggerOperation
 import io.swagger.v3.oas.models.security.SecurityScheme as SwaggerSecurityScheme

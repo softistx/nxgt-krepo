@@ -1,8 +1,8 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.jpa.entity.Validated
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.entity.Validated
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldBeNull

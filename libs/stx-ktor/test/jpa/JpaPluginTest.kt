@@ -1,13 +1,13 @@
-package com.strange.ktor.jpa
+package com.softistx.ktor.jpa
 
-import com.strange.jpa.Jpa
-import com.strange.jpa.JpaConfig
-import com.strange.jpa.JpaMappingException
-import com.strange.jpa.SchemaMode
-import com.strange.jpa.session.transaction
-import com.strange.ktor.jpa.entity.Note
-import com.strange.testing.containers.TestNames
-import com.strange.testing.containers.postgresContainer
+import com.softistx.jpa.Jpa
+import com.softistx.jpa.JpaConfig
+import com.softistx.jpa.JpaMappingException
+import com.softistx.jpa.SchemaMode
+import com.softistx.jpa.session.transaction
+import com.softistx.ktor.jpa.entity.Note
+import com.softistx.testing.containers.TestNames
+import com.softistx.testing.containers.postgresContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -138,7 +138,7 @@ class JpaPluginTest :
                     application {
                         install(JpaConnection) {
                             config = config()
-                            packages("com.strange.ktor.jpa.entity")
+                            packages("com.softistx.ktor.jpa.entity")
                         }
                         routing {
                             get("/") {
@@ -162,14 +162,14 @@ class JpaPluginTest :
                             application {
                                 install(JpaConnection) {
                                     config = config()
-                                    packages("com.strange.ktor.redis")
+                                    packages("com.softistx.ktor.redis")
                                 }
                             }
                             startApplication()
                         }
                     }
 
-                failure.message shouldContain "com.strange.ktor.redis"
+                failure.message shouldContain "com.softistx.ktor.redis"
             }
         }
 

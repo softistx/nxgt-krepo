@@ -1,4 +1,4 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
@@ -6,10 +6,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.strange.material.motion.Transitions
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
+import com.softistx.material.motion.Transitions
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
 
 /**
  * The line under a control: its hint, or its complaint when it has one.

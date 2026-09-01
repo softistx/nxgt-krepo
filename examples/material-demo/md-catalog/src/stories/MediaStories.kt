@@ -1,4 +1,4 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,21 +12,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.strange.material.button.Button
-import com.strange.material.demo.storyGroup
-import com.strange.material.media.Avatar
-import com.strange.material.media.AvatarGroup
-import com.strange.material.media.AvatarItem
-import com.strange.material.media.CameraSurface
-import com.strange.material.media.Lightbox
-import com.strange.material.media.PdfSurface
-import com.strange.material.media.PersonCard
-import com.strange.material.media.SeenBy
-import com.strange.material.media.VideoSurface
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.button.Button
+import com.softistx.material.demo.storyGroup
+import com.softistx.material.media.Avatar
+import com.softistx.material.media.AvatarGroup
+import com.softistx.material.media.AvatarItem
+import com.softistx.material.media.CameraSurface
+import com.softistx.material.media.Lightbox
+import com.softistx.material.media.PdfSurface
+import com.softistx.material.media.PersonCard
+import com.softistx.material.media.SeenBy
+import com.softistx.material.media.VideoSurface
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 
 val MediaStories =
     storyGroup("Media") {

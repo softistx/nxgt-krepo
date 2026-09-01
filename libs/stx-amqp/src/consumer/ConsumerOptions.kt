@@ -1,4 +1,4 @@
-package com.strange.amqp.consumer
+package com.softistx.amqp.consumer
 
 /**
  * When a message is taken off the queue for good.

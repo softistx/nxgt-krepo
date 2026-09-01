@@ -1,4 +1,4 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName

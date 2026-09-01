@@ -1,6 +1,6 @@
-package com.strange.workflow.store
+package com.softistx.workflow.store
 
-import com.strange.workflow.WorkflowError
+import com.softistx.workflow.WorkflowError
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlin.time.Instant
@@ -16,7 +16,7 @@ enum class NodeOutcome {
      *
      * It is what tells a resume "this instance is parked *here*" without a second field beside the
      * journal to disagree with it. The entry is superseded by a `Succeeded` one when the wait ends,
-     * because [com.strange.workflow.store.WorkflowRecord.latest] reads the last entry for a node and
+     * because [com.softistx.workflow.store.WorkflowRecord.latest] reads the last entry for a node and
      * not the first.
      */
     Paused,
@@ -38,7 +38,7 @@ enum class NodeOutcome {
  * skipping the ones that already have a [NodeOutcome.Succeeded] entry here, at every level.
  *
  * That is also why [node] is a **qualified** name — `"provision/charge"` for a branch of the
- * `provision` fan-out — and why node names have to be unique, which [com.strange.workflow.workflow]
+ * `provision` fan-out — and why node names have to be unique, which [com.softistx.workflow.workflow]
  * checks when the workflow is built rather than when it first runs.
  */
 @Serializable

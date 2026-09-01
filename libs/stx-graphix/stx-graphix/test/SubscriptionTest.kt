@@ -1,11 +1,11 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.BadSubscriptions
-import com.strange.graphix.fixture.Caller
-import com.strange.graphix.fixture.ContextSubscriptions
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.TickPublisherSubscriptions
-import com.strange.graphix.fixture.TickSubscriptions
+import com.softistx.graphix.fixture.BadSubscriptions
+import com.softistx.graphix.fixture.Caller
+import com.softistx.graphix.fixture.ContextSubscriptions
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.TickPublisherSubscriptions
+import com.softistx.graphix.fixture.TickSubscriptions
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

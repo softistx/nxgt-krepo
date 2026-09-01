@@ -1,7 +1,7 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.execute.executionInput
-import com.strange.graphix.execute.toGraphixResult
+import com.softistx.graphix.execute.executionInput
+import com.softistx.graphix.execute.toGraphixResult
 import graphql.ExecutionResult
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope

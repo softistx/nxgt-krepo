@@ -1,4 +1,4 @@
-package com.strange.amqp
+package com.softistx.amqp
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

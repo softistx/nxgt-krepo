@@ -1,6 +1,6 @@
-package com.strange.spring.data.mongo.config
+package com.softistx.spring.data.mongo.config
 
-import com.strange.spring.data.mongo.convert.stxMongoConverters
+import com.softistx.spring.data.mongo.convert.stxMongoConverters
 import kotlinx.coroutines.reactor.mono
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
@@ -104,7 +104,7 @@ class MongoAutoConfiguration {
         fun stxAuditorAware(): org.springframework.data.domain.ReactiveAuditorAware<String> =
             org.springframework.data.domain.ReactiveAuditorAware {
                 mono {
-                    com.strange.spring.security
+                    com.softistx.spring.security
                         .currentUser()
                         ?.username
                 }

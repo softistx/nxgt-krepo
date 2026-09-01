@@ -1,4 +1,4 @@
-package com.strange.common.concurrent
+package com.softistx.common.concurrent
 
 import java.util.concurrent.ConcurrentHashMap
 
@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * This one is for a caller that **cannot suspend**: a Hibernate binder, an SLF4J static initialiser,
  * a driver's callback. When every caller is a coroutine, the types in
- * `com.strange.common.coroutines` are the ones that fit — `CoroutineSafeMap` when each operation
+ * `com.softistx.common.coroutines` are the ones that fit — `CoroutineSafeMap` when each operation
  * stands alone, `KeyedMutex` when the loader itself suspends.
  */
 class Memo<K : Any, V : Any>(

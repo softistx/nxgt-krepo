@@ -1,7 +1,7 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.ProductQueries
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.ProductQueries
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain

@@ -1,4 +1,4 @@
-package com.strange.material.surface
+package com.softistx.material.surface
 
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.TooltipAnchorPosition
@@ -7,8 +7,8 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
 
 /**
  * A short label on hover or long-press. Material 3's `TooltipBox` + `PlainTooltip`.

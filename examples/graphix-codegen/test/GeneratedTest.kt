@@ -1,6 +1,6 @@
-package com.strange.example.graphix.codegen
+package com.softistx.example.graphix.codegen
 
-import com.strange.example.graphix.codegen.apollo.ProductsQuery
+import com.softistx.example.graphix.codegen.apollo.ProductsQuery
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

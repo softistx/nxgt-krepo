@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,13 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.icon.Icon
-import com.strange.material.icon.IconSize
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.theme.StrangeTheme
-import com.strange.material.theme.Tone
+import com.softistx.material.icon.Icon
+import com.softistx.material.icon.IconSize
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.Tone
 
 /** One row of a [FeatureList]. */
 @Immutable

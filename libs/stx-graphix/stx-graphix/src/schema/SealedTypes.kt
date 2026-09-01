@@ -1,6 +1,6 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixException
+import com.softistx.graphix.GraphixException
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1

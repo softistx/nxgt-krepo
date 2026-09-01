@@ -1,6 +1,6 @@
 # What a stx-jpa query may say
 
-The vocabulary `com.strange.jpa.criteria` adds to JPA's Criteria API — an operator, a function, an
+The vocabulary `com.softistx.jpa.criteria` adds to JPA's Criteria API — an operator, a function, an
 escape. This is the half of `libs/stx-jpa` that gains an entry every phase, so it lives here
 rather than in the module README, which answers *why the library is shaped this way* and stays
 roughly the size it is.

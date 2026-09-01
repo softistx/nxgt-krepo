@@ -1,4 +1,4 @@
-package com.strange.graphix
+package com.softistx.graphix
 
 /**
  * A schema that cannot be built, or an execute call that cannot even be submitted.

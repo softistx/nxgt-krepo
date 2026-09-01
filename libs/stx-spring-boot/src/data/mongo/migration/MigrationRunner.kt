@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.migration
+package com.softistx.spring.data.mongo.migration
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationReadyEvent

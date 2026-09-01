@@ -1,4 +1,4 @@
-package com.strange.workflow.dsl
+package com.softistx.workflow.dsl
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer

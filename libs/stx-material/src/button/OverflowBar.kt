@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.material3.AppBarOverflowIndicator
 import androidx.compose.material3.AppBarRow
@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.strange.material.icon.Icon
+import com.softistx.material.icon.Icon
 
 /** One action in an [OverflowBar]. */
 @Immutable

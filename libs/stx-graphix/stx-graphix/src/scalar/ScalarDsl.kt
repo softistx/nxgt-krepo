@@ -1,6 +1,6 @@
-package com.strange.graphix.scalar
+package com.softistx.graphix.scalar
 
-import com.strange.graphix.GraphixBuilder
+import com.softistx.graphix.GraphixBuilder
 import graphql.GraphQLContext
 import graphql.execution.CoercedVariables
 import graphql.language.Value

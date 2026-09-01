@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -11,11 +11,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.strange.material.icon.Icon
-import com.strange.material.motion.Transitions
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.icon.Icon
+import com.softistx.material.motion.Transitions
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * A button that drops its label when the space it is given gets tight, and grows it back when the

@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.SplitButtonDefaults
@@ -9,11 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.strange.material.icon.Icon
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.surface.Menu
-import com.strange.material.surface.MenuItem
-import com.strange.material.text.Typography
+import com.softistx.material.icon.Icon
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.surface.Menu
+import com.softistx.material.surface.MenuItem
+import com.softistx.material.text.Typography
 
 /**
  * A primary action with a sibling that opens alternatives. Material 3's `SplitButtonLayout`.

@@ -1,6 +1,6 @@
-package com.strange.spring.security
+package com.softistx.spring.security
 
-import com.strange.spring.error.ApiException
+import com.softistx.spring.error.ApiException
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails

@@ -1,7 +1,7 @@
-package com.strange.spring.data.mongo.template
+package com.softistx.spring.data.mongo.template
 
-import com.strange.common.page.Page
-import com.strange.common.page.pageOf
+import com.softistx.common.page.Page
+import com.softistx.common.page.pageOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import org.bson.Document

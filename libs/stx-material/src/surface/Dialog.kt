@@ -1,13 +1,13 @@
-package com.strange.material.surface
+package com.softistx.material.surface
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonColor
-import com.strange.material.button.ButtonVariant
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonColor
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
 
 /**
  * A two-action confirmation. Material 3's `AlertDialog`.

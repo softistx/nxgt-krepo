@@ -1,4 +1,4 @@
-package com.strange.workflow.dsl
+package com.softistx.workflow.dsl
 
 import kotlin.time.Instant
 

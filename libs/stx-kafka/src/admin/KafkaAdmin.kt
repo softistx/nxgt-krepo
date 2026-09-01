@@ -1,8 +1,8 @@
-package com.strange.kafka.admin
+package com.softistx.kafka.admin
 
-import com.strange.kafka.Kafka
-import com.strange.kafka.TopicNotFoundException
-import com.strange.kafka.clientProperties
+import com.softistx.kafka.Kafka
+import com.softistx.kafka.TopicNotFoundException
+import com.softistx.kafka.clientProperties
 import kotlinx.coroutines.future.await
 import org.apache.kafka.clients.admin.Admin
 import org.apache.kafka.clients.admin.NewTopic

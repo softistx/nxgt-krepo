@@ -1,4 +1,4 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,25 +8,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonVariant
-import com.strange.material.data.CommandItem
-import com.strange.material.data.CommandPalette
-import com.strange.material.data.DataTable
-import com.strange.material.data.Description
-import com.strange.material.data.DescriptionItem
-import com.strange.material.data.EntityHeader
-import com.strange.material.data.Pagination
-import com.strange.material.data.SortControl
-import com.strange.material.data.SortDirection
-import com.strange.material.data.TableColumn
-import com.strange.material.data.Timeline
-import com.strange.material.data.TimelineItem
-import com.strange.material.demo.storyGroup
-import com.strange.material.icon.Icon
-import com.strange.material.icon.IconSize
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.data.CommandItem
+import com.softistx.material.data.CommandPalette
+import com.softistx.material.data.DataTable
+import com.softistx.material.data.Description
+import com.softistx.material.data.DescriptionItem
+import com.softistx.material.data.EntityHeader
+import com.softistx.material.data.Pagination
+import com.softistx.material.data.SortControl
+import com.softistx.material.data.SortDirection
+import com.softistx.material.data.TableColumn
+import com.softistx.material.data.Timeline
+import com.softistx.material.data.TimelineItem
+import com.softistx.material.demo.storyGroup
+import com.softistx.material.icon.Icon
+import com.softistx.material.icon.IconSize
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.theme.StrangeTheme
 
 private data class OrderRow(
     val id: String,

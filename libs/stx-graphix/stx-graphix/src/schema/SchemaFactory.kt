@@ -1,12 +1,12 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.graphix.GraphixException
-import com.strange.graphix.execute.RegisteredLoader
-import com.strange.graphix.execute.batchFieldFetcher
-import com.strange.graphix.execute.bindArguments
-import com.strange.graphix.execute.resolverFetcher
-import com.strange.graphix.execute.subscriptionFetcher
-import com.strange.graphix.scalar.Scalars
+import com.softistx.graphix.GraphixException
+import com.softistx.graphix.execute.RegisteredLoader
+import com.softistx.graphix.execute.batchFieldFetcher
+import com.softistx.graphix.execute.bindArguments
+import com.softistx.graphix.execute.resolverFetcher
+import com.softistx.graphix.execute.subscriptionFetcher
+import com.softistx.graphix.scalar.Scalars
 import graphql.schema.FieldCoordinates
 import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLInterfaceType

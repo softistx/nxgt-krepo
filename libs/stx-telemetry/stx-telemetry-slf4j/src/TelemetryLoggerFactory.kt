@@ -1,6 +1,6 @@
-package com.strange.telemetry.slf4j
+package com.softistx.telemetry.slf4j
 
-import com.strange.common.concurrent.Memo
+import com.softistx.common.concurrent.Memo
 import org.slf4j.ILoggerFactory
 import org.slf4j.Logger
 

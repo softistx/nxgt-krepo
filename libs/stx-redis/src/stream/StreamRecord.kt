@@ -1,4 +1,4 @@
-package com.strange.redis.stream
+package com.softistx.redis.stream
 
 /**
  * One entry, and the id the stream gave it.

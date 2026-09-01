@@ -1,4 +1,4 @@
-package com.strange.jpa.query
+package com.softistx.jpa.query
 
 import kotlinx.coroutines.future.await
 import org.hibernate.reactive.stage.Stage

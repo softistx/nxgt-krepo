@@ -140,7 +140,7 @@ assumed: `stx-mongo`'s transaction specs pass against the container with `MONGO_
 
 ## Using one from a Spring application
 
-Not directly. `stx-spring-boot`'s `com.strange.spring.testing` wraps `mongoContainer()` in a
+Not directly. `stx-spring-boot`'s `com.softistx.spring.testing` wraps `mongoContainer()` in a
 `MongoConnectionDetails` bean and a `MongoSpec` base class, so an application's specs never name a
 container or a property — they extend `MongoSpec` and say which database they want in
 `application-test.yaml`. That is the same three-way resolution as everything here; what it adds is

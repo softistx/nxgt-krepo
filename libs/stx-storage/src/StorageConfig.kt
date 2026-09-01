@@ -1,4 +1,4 @@
-package com.strange.storage
+package com.softistx.storage
 
 /**
  * Where the object store is, and who this application is on it.

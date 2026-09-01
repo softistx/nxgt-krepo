@@ -1,5 +1,10 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.ObjectType
+import com.softistx.openapi.emit.EmitOptions
+import com.softistx.openapi.emit.GENERATED_KDOC
+import com.softistx.openapi.emit.optionalityOf
+import com.softistx.openapi.emit.typeNameOf
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -8,11 +13,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.ObjectType
-import com.strange.openapi.emit.EmitOptions
-import com.strange.openapi.emit.GENERATED_KDOC
-import com.strange.openapi.emit.optionalityOf
-import com.strange.openapi.emit.typeNameOf
 
 /** A schema with declared properties, as a data class. */
 internal fun objectFile(

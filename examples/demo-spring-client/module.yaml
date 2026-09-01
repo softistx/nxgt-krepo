@@ -29,18 +29,18 @@ plugins:
     enabled: true
     specs:
       - spec: ../demo-api/openapi.yaml
-        packageName: com.strange.demo.spring.api
+        packageName: com.softistx.demo.spring.api
         client: Spring
 
       # The orders API, from the bundle `redocly` writes. Nothing here calls it; it is generated to
       # prove that a second document lands beside the first with its own models, its own interfaces
       # and its own `Endpoints`, and that the two do not tread on each other.
       - spec: ../spring-orders/openapi/api-docs.yaml
-        packageName: com.strange.demo.spring.orders
+        packageName: com.softistx.demo.spring.orders
         client: Spring
 
 settings:
   jvm:
     # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file
     # named `main.kt`; this one is `SpringDemo.kt`.
-    mainClass: com.strange.demo.spring.SpringDemoKt
+    mainClass: com.softistx.demo.spring.SpringDemoKt

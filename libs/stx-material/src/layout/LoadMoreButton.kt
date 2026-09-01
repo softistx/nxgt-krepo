@@ -1,11 +1,11 @@
-package com.strange.material.layout
+package com.softistx.material.layout
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.button.Button
-import com.strange.material.button.ButtonVariant
-import com.strange.material.feedback.Progress
-import com.strange.material.feedback.ProgressKind
+import com.softistx.material.button.Button
+import com.softistx.material.button.ButtonVariant
+import com.softistx.material.feedback.Progress
+import com.softistx.material.feedback.ProgressKind
 
 /**
  * The next page of a keyset, as a control rather than an infinite scroll.

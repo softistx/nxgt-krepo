@@ -1,4 +1,4 @@
-package com.strange.spring.testing
+package com.softistx.spring.testing
 
 import com.mongodb.reactivestreams.client.MongoClients
 import kotlinx.coroutines.reactive.awaitFirstOrNull

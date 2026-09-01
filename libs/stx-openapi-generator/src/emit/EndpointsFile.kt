@@ -1,5 +1,7 @@
-package com.strange.openapi.emit
+package com.softistx.openapi.emit
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.Operation
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -10,8 +12,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeSpec
-import com.strange.openapi.ApiModel
-import com.strange.openapi.Operation
 
 internal const val ENDPOINT: String = "Endpoint"
 internal const val ENDPOINTS: String = "Endpoints"

@@ -1,9 +1,9 @@
-package com.strange.example.orders.rest
+package com.softistx.example.orders.rest
 
-import com.strange.example.orders.api.apis.IOrdersService
-import com.strange.example.orders.api.models.ChangeStatusRequest
-import com.strange.example.orders.api.models.PlaceOrderRequest
-import com.strange.example.orders.service.OrderService
+import com.softistx.example.orders.api.apis.IOrdersService
+import com.softistx.example.orders.api.models.ChangeStatusRequest
+import com.softistx.example.orders.api.models.PlaceOrderRequest
+import com.softistx.example.orders.service.OrderService
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody

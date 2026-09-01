@@ -16,9 +16,9 @@ route, a background worker or a CLI.
 ## Shape
 
 ```
-com.strange.storage         ObjectStorage — the client, its lifecycle, and the buckets on it
-com.strange.storage.bucket  StorageBucket — one bucket's objects: put, get, stat, list, copy, delete
-com.strange.storage.presign URLs and forms that carry their own authorisation, for browsers
+com.softistx.storage         ObjectStorage — the client, its lifecycle, and the buckets on it
+com.softistx.storage.bucket  StorageBucket — one bucket's objects: put, get, stat, list, copy, delete
+com.softistx.storage.presign URLs and forms that carry their own authorisation, for browsers
 ```
 
 ## Getting a client

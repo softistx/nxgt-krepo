@@ -1,4 +1,4 @@
-package com.strange.i18n
+package com.softistx.i18n
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec

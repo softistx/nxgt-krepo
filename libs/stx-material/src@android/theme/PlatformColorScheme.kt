@@ -1,4 +1,4 @@
-package com.strange.material.theme
+package com.softistx.material.theme
 
 import android.os.Build
 import androidx.compose.material3.ColorScheme

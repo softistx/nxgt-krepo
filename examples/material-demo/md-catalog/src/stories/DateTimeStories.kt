@@ -1,4 +1,4 @@
-package com.strange.material.demo.stories
+package com.softistx.material.demo.stories
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -6,14 +6,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.strange.material.datetime.Calendar
-import com.strange.material.datetime.DateField
-import com.strange.material.datetime.DateRangeField
-import com.strange.material.datetime.RelativeTime
-import com.strange.material.datetime.TimeField
-import com.strange.material.demo.storyGroup
-import com.strange.material.text.Typography
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.datetime.Calendar
+import com.softistx.material.datetime.DateField
+import com.softistx.material.datetime.DateRangeField
+import com.softistx.material.datetime.RelativeTime
+import com.softistx.material.datetime.TimeField
+import com.softistx.material.demo.storyGroup
+import com.softistx.material.text.Typography
+import com.softistx.material.theme.StrangeTheme
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlin.time.Duration.Companion.days

@@ -33,13 +33,13 @@ or escape it as `amqp://host:5672/%2F`.
 ## Shape
 
 ```
-com.strange.amqp            the connection and its configuration — Amqp, AmqpConfig, channels
-com.strange.amqp.codec      the Json every body serializes through, and the codec seam under it
-com.strange.amqp.message    AmqpMessage<T> and its headers — what a consumer hands a handler
-com.strange.amqp.topology   exchanges, queues, bindings, and the operations a queue is asked about
-com.strange.amqp.publisher  AmqpPublisher<T> — publish, publishAll, and what a confirm means
-com.strange.amqp.consumer   AmqpConsumer<T> — deliveries as a Flow, or process with acknowledgements
-com.strange.amqp.retry      RetryQueue<T> — delay queues, an attempt count, and a parking queue
+com.softistx.amqp            the connection and its configuration — Amqp, AmqpConfig, channels
+com.softistx.amqp.codec      the Json every body serializes through, and the codec seam under it
+com.softistx.amqp.message    AmqpMessage<T> and its headers — what a consumer hands a handler
+com.softistx.amqp.topology   exchanges, queues, bindings, and the operations a queue is asked about
+com.softistx.amqp.publisher  AmqpPublisher<T> — publish, publishAll, and what a confirm means
+com.softistx.amqp.consumer   AmqpConsumer<T> — deliveries as a Flow, or process with acknowledgements
+com.softistx.amqp.retry      RetryQueue<T> — delay queues, an attempt count, and a parking queue
 ```
 
 ## Serialization

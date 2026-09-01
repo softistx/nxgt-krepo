@@ -1,6 +1,6 @@
-package com.strange.demo.api.store
+package com.softistx.demo.api.store
 
-import com.strange.demo.api.model.PageInfo
+import com.softistx.demo.api.model.PageInfo
 import java.util.concurrent.atomic.AtomicLong
 
 /**

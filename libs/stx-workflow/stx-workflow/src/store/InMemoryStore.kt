@@ -1,7 +1,7 @@
-package com.strange.workflow.store
+package com.softistx.workflow.store
 
-import com.strange.common.coroutines.CoroutineSafeMap
-import com.strange.workflow.WorkflowStatus
+import com.softistx.common.coroutines.CoroutineSafeMap
+import com.softistx.workflow.WorkflowStatus
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import kotlin.time.Instant

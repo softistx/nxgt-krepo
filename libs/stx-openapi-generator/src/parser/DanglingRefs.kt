@@ -1,6 +1,6 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.*
+import com.softistx.openapi.*
 
 /**
  * Every [TypeRef.ModelRef] must name a declaration this run actually generates.

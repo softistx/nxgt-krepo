@@ -1,4 +1,4 @@
-package com.strange.kafka.producer
+package com.softistx.kafka.producer
 
 /**
  * How much of the cluster has to have a record before the broker says it has it.

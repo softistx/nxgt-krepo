@@ -1,15 +1,15 @@
-package com.strange.workflow.spring
+package com.softistx.workflow.spring
 
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.strange.jpa.Jpa
-import com.strange.redis.Redis
-import com.strange.workflow.Workflow
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowWorker
-import com.strange.workflow.jpa.JpaWorkflowStore
-import com.strange.workflow.mongo.MongoWorkflowStore
-import com.strange.workflow.redis.RedisWorkflowStore
-import com.strange.workflow.store.WorkflowStore
+import com.softistx.jpa.Jpa
+import com.softistx.redis.Redis
+import com.softistx.workflow.Workflow
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowWorker
+import com.softistx.workflow.jpa.JpaWorkflowStore
+import com.softistx.workflow.mongo.MongoWorkflowStore
+import com.softistx.workflow.redis.RedisWorkflowStore
+import com.softistx.workflow.store.WorkflowStore
 import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -131,7 +131,7 @@ class WorkflowIntegrationAutoConfiguration {
     @ConditionalOnProperty(prefix = "stx.workflow", name = ["store"], havingValue = "jpa")
     class JpaStore {
         /**
-         * `stx.jpa.packages` has to include `com.strange.workflow.jpa`, or the session factory has
+         * `stx.jpa.packages` has to include `com.softistx.workflow.jpa`, or the session factory has
          * no `WorkflowInstanceRow` and every call here fails on an unmapped entity. There is nothing
          * this configuration can do about that: the factory is built before it, from a list only the
          * application has.

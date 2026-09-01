@@ -1,4 +1,4 @@
-package com.strange.mongo.query
+package com.softistx.mongo.query
 
 import com.mongodb.MongoCommandException
 import com.mongodb.client.model.IndexOptions

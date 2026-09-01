@@ -1,4 +1,4 @@
-package com.strange.material.demo.knobs
+package com.softistx.material.demo.knobs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,11 +11,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.demo.PaneScrollbar
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.demo.PaneScrollbar
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
 
 /**
  * The right pane. It draws whatever the story asked for, in the order it asked — no story

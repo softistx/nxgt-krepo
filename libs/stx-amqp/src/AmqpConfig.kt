@@ -1,7 +1,7 @@
-package com.strange.amqp
+package com.softistx.amqp
 
 import com.rabbitmq.client.ConnectionFactory
-import com.strange.amqp.codec.amqpJson
+import com.softistx.amqp.codec.amqpJson
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

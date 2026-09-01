@@ -1,5 +1,6 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.emit.TypeStyle
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -7,7 +8,6 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
-import com.strange.openapi.emit.TypeStyle
 
 /**
  * Which serialization library the generated models target.

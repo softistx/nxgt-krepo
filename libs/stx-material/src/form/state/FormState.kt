@@ -1,4 +1,4 @@
-package com.strange.material.form.state
+package com.softistx.material.form.state
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable

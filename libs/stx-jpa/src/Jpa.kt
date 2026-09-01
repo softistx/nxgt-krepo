@@ -1,10 +1,10 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.common.lifecycle.CloseGuard
-import com.strange.jpa.convert.kotlinConverters
-import com.strange.jpa.json.KotlinxJsonFormatMapper
-import com.strange.jpa.scan.scanConverters
-import com.strange.jpa.scan.scanEntities
+import com.softistx.common.lifecycle.CloseGuard
+import com.softistx.jpa.convert.kotlinConverters
+import com.softistx.jpa.json.KotlinxJsonFormatMapper
+import com.softistx.jpa.scan.scanConverters
+import com.softistx.jpa.scan.scanEntities
 import io.vertx.core.Vertx
 import jakarta.persistence.AttributeConverter
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +32,7 @@ import kotlin.reflect.KClass
  *
  * **The Vert.x instance is ours unless one is handed in.** Hibernate would happily create its own,
  * and then nothing else could reach it — and reaching it is the whole point, because the coroutine
- * bridge in `com.strange.jpa.session` needs the context a session was opened on.
+ * bridge in `com.softistx.jpa.session` needs the context a session was opened on.
  */
 class Jpa internal constructor(
     /** The factory itself, for everything this module has not wrapped. */

@@ -1,8 +1,8 @@
-package com.strange.ktor.storage
+package com.softistx.ktor.storage
 
-import com.strange.storage.ObjectStorage
-import com.strange.storage.StorageConfig
-import com.strange.testing.containers.minioContainer
+import com.softistx.storage.ObjectStorage
+import com.softistx.storage.StorageConfig
+import com.softistx.testing.containers.minioContainer
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

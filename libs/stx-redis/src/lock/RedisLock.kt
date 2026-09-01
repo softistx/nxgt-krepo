@@ -1,7 +1,7 @@
-package com.strange.redis.lock
+package com.softistx.redis.lock
 
-import com.strange.redis.Redis
-import com.strange.redis.RedisLockException
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisLockException
 import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.SetArgs
 import kotlinx.coroutines.coroutineScope

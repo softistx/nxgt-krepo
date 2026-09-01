@@ -1,6 +1,6 @@
-package com.strange.spring.data.mongo.filter
+package com.softistx.spring.data.mongo.filter
 
-import com.strange.spring.web.SortOrder
+import com.softistx.spring.web.SortOrder
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

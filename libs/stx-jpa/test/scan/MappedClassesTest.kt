@@ -1,11 +1,11 @@
-package com.strange.jpa.scan
+package com.softistx.jpa.scan
 
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.entity.scan.Auditable
-import com.strange.jpa.entity.scan.Invoice
-import com.strange.jpa.entity.scan.Money
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.entity.scan.Auditable
+import com.softistx.jpa.entity.scan.Invoice
+import com.softistx.jpa.entity.scan.Money
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

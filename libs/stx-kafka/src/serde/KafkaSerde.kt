@@ -1,4 +1,4 @@
-package com.strange.kafka.serde
+package com.softistx.kafka.serde
 
 import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serdes

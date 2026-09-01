@@ -1,9 +1,9 @@
-package com.strange.material.surface
+package com.softistx.material.surface
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.button.IconButton
-import com.strange.material.icon.StrangeIcons
+import com.softistx.material.button.IconButton
+import com.softistx.material.icon.StrangeIcons
 
 /**
  * A question mark next to a label. [Tooltip] wrapping an [IconButton].

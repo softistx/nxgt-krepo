@@ -1,7 +1,7 @@
-package com.strange.kafka.producer
+package com.softistx.kafka.producer
 
-import com.strange.kafka.KafkaTestCluster
-import com.strange.kafka.admin.admin
+import com.softistx.kafka.KafkaTestCluster
+import com.softistx.kafka.admin.admin
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

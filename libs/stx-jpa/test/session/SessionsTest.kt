@@ -1,10 +1,10 @@
-package com.strange.jpa.session
+package com.softistx.jpa.session
 
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.convert.InstantConverter
-import com.strange.jpa.convert.UuidConverter
-import com.strange.jpa.convert.kotlinConverters
-import com.strange.jpa.entity.Thing
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.convert.InstantConverter
+import com.softistx.jpa.convert.UuidConverter
+import com.softistx.jpa.convert.kotlinConverters
+import com.softistx.jpa.entity.Thing
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly

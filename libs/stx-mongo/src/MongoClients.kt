@@ -1,9 +1,9 @@
-package com.strange.mongo
+package com.softistx.mongo
 
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.kotlin.client.coroutine.MongoClient
-import com.strange.mongo.codec.mongoCodecRegistry
+import com.softistx.mongo.codec.mongoCodecRegistry
 
 /**
  * A client built the way this library needs one.

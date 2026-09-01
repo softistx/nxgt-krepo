@@ -1,4 +1,4 @@
-package com.strange.spring.security
+package com.softistx.spring.security
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

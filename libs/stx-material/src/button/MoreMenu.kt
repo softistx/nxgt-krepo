@@ -1,4 +1,4 @@
-package com.strange.material.button
+package com.softistx.material.button
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.style.Style
@@ -8,10 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.strange.material.icon.IconSize
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.surface.Menu
-import com.strange.material.surface.MenuItem
+import com.softistx.material.icon.IconSize
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.surface.Menu
+import com.softistx.material.surface.MenuItem
 
 /**
  * The trailing "more" on a row. An [IconButton] that opens a [Menu].

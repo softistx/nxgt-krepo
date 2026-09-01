@@ -1,7 +1,7 @@
-package com.strange.graphix.ktor.fixture
+package com.softistx.graphix.ktor.fixture
 
-import com.strange.graphix.schema.QueryMapping
-import com.strange.graphix.schema.SubscriptionMapping
+import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.SubscriptionMapping
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 

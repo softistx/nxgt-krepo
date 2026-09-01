@@ -1,10 +1,10 @@
-package com.strange.material.datetime
+package com.softistx.material.datetime
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.text.Emphasis
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
+import com.softistx.material.text.Emphasis
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime

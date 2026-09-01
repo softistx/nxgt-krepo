@@ -1,4 +1,4 @@
-package com.strange.material.display
+package com.softistx.material.display
 
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

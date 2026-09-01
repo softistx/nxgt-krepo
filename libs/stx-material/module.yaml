@@ -98,4 +98,4 @@ settings:
     # it: a toolchain upgrade should move this line visibly rather than silently.
     version: 1.12.0
   android:
-    namespace: com.strange.material
+    namespace: com.softistx.material

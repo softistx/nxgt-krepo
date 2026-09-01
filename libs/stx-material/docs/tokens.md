@@ -137,7 +137,7 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 
 ## Styles
 
-`StrangeTheme.styles` (from `com.strange.material.style`) is every component default in one place —
+`StrangeTheme.styles` (from `com.softistx.material.style`) is every component default in one place —
 `button`, `card`, `chip`, `listTile`, `field`, `alert(tone)`.
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and

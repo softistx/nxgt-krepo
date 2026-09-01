@@ -61,7 +61,7 @@ plugins:
     enabled: true
     specs:
       - spec: openapi/api-docs.yaml
-        packageName: com.strange.example.orders.api
+        packageName: com.softistx.example.orders.api
         client: Spring
         # Not `Auto`, which would give Jackson: `stx.json.enabled` puts kotlinx codecs on WebFlux, so
         # a model that is not `@Serializable` fails to encode at the first response.
@@ -81,4 +81,4 @@ settings:
     # `main.kt`; this one is `OrdersApplication.kt`, because a Spring Boot application is named after
     # its `@SpringBootApplication` class and hiding that in `main.kt` to satisfy a build is the tail
     # wagging the dog.
-    mainClass: com.strange.example.orders.OrdersApplicationKt
+    mainClass: com.softistx.example.orders.OrdersApplicationKt

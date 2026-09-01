@@ -1,6 +1,6 @@
-package com.strange.workflow.dsl
+package com.softistx.workflow.dsl
 
-import com.strange.workflow.Workflow
+import com.softistx.workflow.Workflow
 import kotlin.time.Duration
 
 /**

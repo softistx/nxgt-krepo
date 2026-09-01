@@ -1,4 +1,4 @@
-package com.strange.redis
+package com.softistx.redis
 
 /**
  * What this module throws. A Lettuce `RedisException` still comes through untouched — a caller that
@@ -15,7 +15,7 @@ class RedisValueException(
     cause: Throwable? = null,
 ) : RedisDataException(message, cause)
 
-/** A lock could not be taken within the time allowed — see `com.strange.redis.lock`. */
+/** A lock could not be taken within the time allowed — see `com.softistx.redis.lock`. */
 class RedisLockException(
     message: String,
 ) : RedisDataException(message)

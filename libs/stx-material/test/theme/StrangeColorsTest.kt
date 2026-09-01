@@ -1,4 +1,4 @@
-package com.strange.material.theme
+package com.softistx.material.theme
 
 import androidx.compose.ui.graphics.Color
 import io.kotest.core.spec.style.FeatureSpec

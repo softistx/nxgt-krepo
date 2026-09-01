@@ -1,7 +1,7 @@
-package com.strange.ktor.redis
+package com.softistx.ktor.redis
 
-import com.strange.ktor.required
-import com.strange.redis.Redis
+import com.softistx.ktor.required
+import com.softistx.redis.Redis
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 

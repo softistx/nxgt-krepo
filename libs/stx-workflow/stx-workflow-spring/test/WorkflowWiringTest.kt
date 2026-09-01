@@ -1,15 +1,15 @@
-package com.strange.workflow.spring
+package com.softistx.workflow.spring
 
-import com.strange.redis.Redis
-import com.strange.redis.RedisConfig
-import com.strange.testing.containers.redisContainer
-import com.strange.workflow.Workflow
-import com.strange.workflow.WorkflowEngine
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.dsl.step
-import com.strange.workflow.store.InMemoryStore
-import com.strange.workflow.store.WorkflowStore
-import com.strange.workflow.workflow
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisConfig
+import com.softistx.testing.containers.redisContainer
+import com.softistx.workflow.Workflow
+import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.dsl.step
+import com.softistx.workflow.store.InMemoryStore
+import com.softistx.workflow.store.WorkflowStore
+import com.softistx.workflow.workflow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

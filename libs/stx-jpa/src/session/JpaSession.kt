@@ -1,9 +1,9 @@
-package com.strange.jpa.session
+package com.softistx.jpa.session
 
-import com.strange.jpa.JpaNotFoundException
-import com.strange.jpa.query.JpaQuery
-import com.strange.jpa.query.nativeQuery
-import com.strange.jpa.query.query
+import com.softistx.jpa.JpaNotFoundException
+import com.softistx.jpa.query.JpaQuery
+import com.softistx.jpa.query.nativeQuery
+import com.softistx.jpa.query.query
 import jakarta.persistence.EntityGraph
 import jakarta.persistence.LockModeType
 import kotlinx.coroutines.future.await
@@ -53,7 +53,7 @@ class JpaSession internal constructor(
     /**
      * By id, loading what [graph] plans in the same statement.
      *
-     * The graph is a value built with [com.strange.jpa.criteria.entityGraph] — the same plan can be
+     * The graph is a value built with [com.softistx.jpa.criteria.entityGraph] — the same plan can be
      * handed to a `find` here, to a stateless session's `get`, and to any query's `plan`.
      *
      * There is no lazy loading to fall back on: Hibernate Reactive refuses an uninitialised

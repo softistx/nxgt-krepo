@@ -1,10 +1,10 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
-import com.strange.openapi.ApiModel
-import com.strange.openapi.EnumEntry
-import com.strange.openapi.EnumType
-import com.strange.openapi.TypeRef
-import com.strange.openapi.render
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.EnumEntry
+import com.softistx.openapi.EnumType
+import com.softistx.openapi.TypeRef
+import com.softistx.openapi.render
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain

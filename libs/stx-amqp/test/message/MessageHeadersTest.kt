@@ -1,4 +1,4 @@
-package com.strange.amqp.message
+package com.softistx.amqp.message
 
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.impl.LongStringHelper

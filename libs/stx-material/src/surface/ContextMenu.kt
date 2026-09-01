@@ -1,4 +1,4 @@
-package com.strange.material.surface
+package com.softistx.material.surface
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box

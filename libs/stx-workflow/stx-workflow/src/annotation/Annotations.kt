@@ -1,4 +1,4 @@
-package com.strange.workflow.annotation
+package com.softistx.workflow.annotation
 
 /**
  * Marks a class as a workflow declaration, to be turned into a `Workflow<C>` by `workflowOf`.

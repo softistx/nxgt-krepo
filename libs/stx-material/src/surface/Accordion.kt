@@ -1,4 +1,4 @@
-package com.strange.material.surface
+package com.softistx.material.surface
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -15,13 +15,13 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.icon.Icon
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.motion.Transitions
-import com.strange.material.navigation.navigationItemStyle
-import com.strange.material.text.Typography
-import com.strange.material.text.TypographyVariant
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.icon.Icon
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.motion.Transitions
+import com.softistx.material.navigation.navigationItemStyle
+import com.softistx.material.text.Typography
+import com.softistx.material.text.TypographyVariant
+import com.softistx.material.theme.StrangeTheme
 
 /** One section of an [Accordion]. */
 @Immutable

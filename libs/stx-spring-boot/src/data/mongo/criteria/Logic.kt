@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.criteria
+package com.softistx.spring.data.mongo.criteria
 
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query

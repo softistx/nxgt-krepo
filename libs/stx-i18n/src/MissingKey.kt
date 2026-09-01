@@ -1,4 +1,4 @@
-package com.strange.i18n
+package com.softistx.i18n
 
 /**
  * How strict a catalog is about what it cannot answer.

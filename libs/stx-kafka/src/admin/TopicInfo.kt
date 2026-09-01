@@ -1,4 +1,4 @@
-package com.strange.kafka.admin
+package com.softistx.kafka.admin
 
 /**
  * What a topic actually is on this cluster, as opposed to what it was asked to be.

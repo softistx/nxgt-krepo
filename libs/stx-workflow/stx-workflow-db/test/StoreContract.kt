@@ -1,8 +1,8 @@
-package com.strange.workflow.db
+package com.softistx.workflow.db
 
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.store.WorkflowRecord
-import com.strange.workflow.store.WorkflowStore
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.store.WorkflowRecord
+import com.softistx.workflow.store.WorkflowStore
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.scopes.FeatureSpecRootScope
 import io.kotest.matchers.collections.shouldBeEmpty

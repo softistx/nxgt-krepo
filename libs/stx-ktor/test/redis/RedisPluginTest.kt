@@ -1,8 +1,8 @@
-package com.strange.ktor.redis
+package com.softistx.ktor.redis
 
-import com.strange.redis.Redis
-import com.strange.redis.RedisConfig
-import com.strange.testing.containers.redisContainer
+import com.softistx.redis.Redis
+import com.softistx.redis.RedisConfig
+import com.softistx.testing.containers.redisContainer
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec

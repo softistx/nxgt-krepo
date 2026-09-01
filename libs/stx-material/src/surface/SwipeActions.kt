@@ -1,4 +1,4 @@
-package com.strange.material.surface
+package com.softistx.material.surface
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.SwipeToDismissBox

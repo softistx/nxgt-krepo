@@ -1,4 +1,4 @@
-package com.strange.jpa.criteria
+package com.softistx.jpa.criteria
 
 import jakarta.persistence.EntityGraph
 import jakarta.persistence.Graph
@@ -21,7 +21,7 @@ import kotlin.reflect.KProperty1
  * A graph and a fetch join answer the same question — *load this association with its owner, in one
  * statement* — from opposite ends. A fetch join belongs to the query that wrote it; a graph is a
  * value, built once and applied to a `find`, a `get` or any number of queries. Reach for the graph
- * when the same plan is wanted in more than one place, and for [com.strange.jpa.criteria.fetch] when
+ * when the same plan is wanted in more than one place, and for [com.softistx.jpa.criteria.fetch] when
  * it is one query's business.
  *
  * The reified form is the whole point: JPA spells this `createEntityGraph(Purchase::class.java)`,
@@ -60,7 +60,7 @@ fun <T : Any, V : Any, G : Graph<T>> G.subgraphOf(property: KProperty1<T, V?>): 
  *
  * **A graph naming a collection truncates under a row limit**, exactly as a collection fetch join
  * does: the limit applies to the joined rows, so an owner comes back holding some of its elements.
- * [com.strange.jpa.criteria.fetchEach] has the measurement.
+ * [com.softistx.jpa.criteria.fetchEach] has the measurement.
  */
 fun <T : Any, E : Any, G : Graph<T>> G.subgraphEachOf(property: KProperty1<T, Collection<E>>): Nested<E, G> =
     Nested(addElementSubgraph<E>(property.name), this)

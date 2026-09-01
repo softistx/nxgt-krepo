@@ -1,9 +1,9 @@
-package com.strange.redis.cache
+package com.softistx.redis.cache
 
-import com.strange.redis.Redis
-import com.strange.redis.codec.JsonValueCodec
-import com.strange.redis.codec.ValueCodec
-import com.strange.redis.deleteKeys
+import com.softistx.redis.Redis
+import com.softistx.redis.codec.JsonValueCodec
+import com.softistx.redis.codec.ValueCodec
+import com.softistx.redis.deleteKeys
 import io.lettuce.core.SetArgs
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

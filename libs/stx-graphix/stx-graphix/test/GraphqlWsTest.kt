@@ -1,12 +1,12 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.common.serialization.lenientJson
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.fixture.HangSubscriptions
-import com.strange.graphix.fixture.TickSubscriptions
-import com.strange.graphix.http.GRAPHQL_TRANSPORT_WS
-import com.strange.graphix.http.GraphqlWsClose
-import com.strange.graphix.http.GraphqlWsSession
+import com.softistx.common.serialization.lenientJson
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.HangSubscriptions
+import com.softistx.graphix.fixture.TickSubscriptions
+import com.softistx.graphix.http.GRAPHQL_TRANSPORT_WS
+import com.softistx.graphix.http.GraphqlWsClose
+import com.softistx.graphix.http.GraphqlWsSession
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe

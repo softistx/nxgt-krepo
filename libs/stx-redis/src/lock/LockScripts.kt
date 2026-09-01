@@ -1,4 +1,4 @@
-package com.strange.redis.lock
+package com.softistx.redis.lock
 
 /**
  * Release and extend, as Lua, because both are read-then-write and Redis only guarantees a script

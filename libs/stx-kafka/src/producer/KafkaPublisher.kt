@@ -1,10 +1,10 @@
-package com.strange.kafka.producer
+package com.softistx.kafka.producer
 
-import com.strange.kafka.Kafka
-import com.strange.kafka.clientProperties
-import com.strange.kafka.record.RecordHeaders
-import com.strange.kafka.serde.KafkaSerde
-import com.strange.kafka.serde.jsonSerde
+import com.softistx.kafka.Kafka
+import com.softistx.kafka.clientProperties
+import com.softistx.kafka.record.RecordHeaders
+import com.softistx.kafka.serde.KafkaSerde
+import com.softistx.kafka.serde.jsonSerde
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitAll

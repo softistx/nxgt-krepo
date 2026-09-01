@@ -1,4 +1,4 @@
-package com.strange.spring.testing
+package com.softistx.spring.testing
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.web.server.context.WebServerInitializedEvent

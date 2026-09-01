@@ -1,8 +1,8 @@
-package com.strange.openapi.parser
+package com.softistx.openapi.parser
 
-import com.strange.openapi.EnumEntry
-import com.strange.openapi.EnumType
-import com.strange.openapi.TypeRef
+import com.softistx.openapi.EnumEntry
+import com.softistx.openapi.EnumType
+import com.softistx.openapi.TypeRef
 import io.swagger.v3.oas.models.media.Schema
 
 /**

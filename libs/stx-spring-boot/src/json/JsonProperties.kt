@@ -1,4 +1,4 @@
-package com.strange.spring.json
+package com.softistx.spring.json
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

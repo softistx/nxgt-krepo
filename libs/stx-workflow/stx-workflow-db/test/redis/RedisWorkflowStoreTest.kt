@@ -1,8 +1,8 @@
-package com.strange.workflow.redis
+package com.softistx.workflow.redis
 
-import com.strange.workflow.WorkflowStatus
-import com.strange.workflow.db.record
-import com.strange.workflow.db.storeContract
+import com.softistx.workflow.WorkflowStatus
+import com.softistx.workflow.db.record
+import com.softistx.workflow.db.storeContract
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.minutes

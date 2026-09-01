@@ -1,7 +1,7 @@
-package com.strange.graphix.ktor
+package com.softistx.graphix.ktor
 
-import com.strange.graphix.Graphix
-import com.strange.graphix.http.GraphqlWsSession
+import com.softistx.graphix.Graphix
+import com.softistx.graphix.http.GraphqlWsSession
 import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame

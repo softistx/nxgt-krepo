@@ -1,10 +1,10 @@
-package com.strange.telemetry.spring
+package com.softistx.telemetry.spring
 
-import com.strange.telemetry.Telemetry
-import com.strange.telemetry.context.withTelemetry
-import com.strange.telemetry.continuing
-import com.strange.telemetry.model.SpanKind
-import com.strange.telemetry.model.SpanStatus
+import com.softistx.telemetry.Telemetry
+import com.softistx.telemetry.context.withTelemetry
+import com.softistx.telemetry.continuing
+import com.softistx.telemetry.model.SpanKind
+import com.softistx.telemetry.model.SpanStatus
 import org.springframework.web.reactive.function.server.RouterFunctions
 import org.springframework.web.server.CoWebFilter
 import org.springframework.web.server.CoWebFilterChain

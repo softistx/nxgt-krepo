@@ -1,4 +1,4 @@
-package com.strange.common.page
+package com.softistx.common.page
 
 /**
  * Turns the rows a keyset query returned into a [Page].

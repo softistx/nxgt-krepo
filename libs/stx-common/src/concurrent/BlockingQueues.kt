@@ -1,4 +1,4 @@
-package com.strange.common.concurrent
+package com.softistx.common.concurrent
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +17,7 @@ import java.util.concurrent.BlockingQueue
  * ## Read this before using it
  *
  * **If you own both ends of the queue, this is the wrong tool.** A `Channel` is the coroutine
- * primitive for that, and `com.strange.common.coroutines.Mailbox` is the one for a producer that
+ * primitive for that, and `com.softistx.common.coroutines.Mailbox` is the one for a producer that
  * cannot suspend — a Java callback, a driver's thread. Neither blocks a thread at all, and the
  * argument for them is in `Mailbox`'s own documentation.
  *

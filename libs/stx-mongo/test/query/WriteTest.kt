@@ -1,11 +1,11 @@
-package com.strange.mongo.query
+package com.softistx.mongo.query
 
 import com.mongodb.client.model.Updates
-import com.strange.mongo.Draft
-import com.strange.mongo.MongoTestCluster
-import com.strange.mongo.Note
-import com.strange.mongo.withDrafts
-import com.strange.mongo.withNotes
+import com.softistx.mongo.Draft
+import com.softistx.mongo.MongoTestCluster
+import com.softistx.mongo.Note
+import com.softistx.mongo.withDrafts
+import com.softistx.mongo.withNotes
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe

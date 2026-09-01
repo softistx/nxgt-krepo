@@ -1,6 +1,6 @@
-package com.strange.graphix.schema
+package com.softistx.graphix.schema
 
-import com.strange.common.concurrent.Memo
+import com.softistx.common.concurrent.Memo
 import graphql.TypeResolutionEnvironment
 import graphql.execution.UnresolvedTypeException
 import graphql.schema.GraphQLNamedOutputType

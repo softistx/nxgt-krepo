@@ -1,10 +1,10 @@
-package com.strange.spring.data.mongo.filter
+package com.softistx.spring.data.mongo.filter
 
-import com.strange.spring.data.mongo.template.MongoPage
-import com.strange.spring.web.SortOrder
-import com.strange.spring.web.cursor
-import com.strange.spring.web.size
-import com.strange.spring.web.sort
+import com.softistx.spring.data.mongo.template.MongoPage
+import com.softistx.spring.web.SortOrder
+import com.softistx.spring.web.cursor
+import com.softistx.spring.web.size
+import com.softistx.spring.web.sort
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.web.reactive.function.server.ServerRequest

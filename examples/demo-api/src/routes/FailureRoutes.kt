@@ -1,6 +1,6 @@
-package com.strange.demo.api.routes
+package com.softistx.demo.api.routes
 
-import com.strange.demo.api.model.ErrorResponse
+import com.softistx.demo.api.model.ErrorResponse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond

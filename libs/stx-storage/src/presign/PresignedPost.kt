@@ -1,6 +1,6 @@
-package com.strange.storage.presign
+package com.softistx.storage.presign
 
-import com.strange.storage.bucket.StorageBucket
+import com.softistx.storage.bucket.StorageBucket
 import io.minio.PostPolicy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

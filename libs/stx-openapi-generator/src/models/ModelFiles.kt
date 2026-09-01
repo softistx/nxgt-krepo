@@ -1,13 +1,13 @@
-package com.strange.openapi.models
+package com.softistx.openapi.models
 
+import com.softistx.openapi.ApiModel
+import com.softistx.openapi.EnumType
+import com.softistx.openapi.ModelType
+import com.softistx.openapi.ObjectType
+import com.softistx.openapi.UnionType
+import com.softistx.openapi.ValueClassType
+import com.softistx.openapi.emit.EmitOptions
 import com.squareup.kotlinpoet.FileSpec
-import com.strange.openapi.ApiModel
-import com.strange.openapi.EnumType
-import com.strange.openapi.ModelType
-import com.strange.openapi.ObjectType
-import com.strange.openapi.UnionType
-import com.strange.openapi.ValueClassType
-import com.strange.openapi.emit.EmitOptions
 
 /**
  * One file per model declaration, in the style the caller's serializer needs.

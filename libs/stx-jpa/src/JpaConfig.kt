@@ -1,7 +1,7 @@
-package com.strange.jpa
+package com.softistx.jpa
 
-import com.strange.jpa.json.jpaJson
-import com.strange.jpa.naming.Naming
+import com.softistx.jpa.json.jpaJson
+import com.softistx.jpa.naming.Naming
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 

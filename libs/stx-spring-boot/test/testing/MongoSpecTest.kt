@@ -1,4 +1,4 @@
-package com.strange.spring.testing
+package com.softistx.spring.testing
 
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe

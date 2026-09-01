@@ -1,4 +1,4 @@
-package com.strange.spring.data.mongo.audit
+package com.softistx.spring.data.mongo.audit
 
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope

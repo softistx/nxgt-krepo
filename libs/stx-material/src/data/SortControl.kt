@@ -1,14 +1,14 @@
-package com.strange.material.data
+package com.softistx.material.data
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.strange.material.button.IconButton
-import com.strange.material.form.SelectField
-import com.strange.material.icon.StrangeIcons
-import com.strange.material.theme.StrangeTheme
+import com.softistx.material.button.IconButton
+import com.softistx.material.form.SelectField
+import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.theme.StrangeTheme
 
 enum class SortDirection {
     Asc,

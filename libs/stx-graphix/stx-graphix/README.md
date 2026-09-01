@@ -23,11 +23,11 @@ schema may say — lives in [`docs/graphix.md`](../../../docs/graphix.md).
 ## Shape
 
 ```
-com.strange.graphix            Graphix, GraphixRequest, GraphixResult, GraphixException
-com.strange.graphix.validation GraphixLimits and the `validation { }` builder
-com.strange.graphix.schema     @QueryMapping / @MutationMapping / @SubscriptionMapping and the SerialDescriptor walk
-com.strange.graphix.execute    the CompletableFuture bridge, argument binding, errors
-com.strange.graphix.scalar     Long, Instant, Uuid, and the `scalar { }` DSL
+com.softistx.graphix            Graphix, GraphixRequest, GraphixResult, GraphixException
+com.softistx.graphix.validation GraphixLimits and the `validation { }` builder
+com.softistx.graphix.schema     @QueryMapping / @MutationMapping / @SubscriptionMapping and the SerialDescriptor walk
+com.softistx.graphix.execute    the CompletableFuture bridge, argument binding, errors
+com.softistx.graphix.scalar     Long, Instant, Uuid, and the `scalar { }` DSL
 ```
 
 ## Why not graphql-kotlin

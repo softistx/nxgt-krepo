@@ -1,6 +1,6 @@
-package com.strange.ktor.cors
+package com.softistx.ktor.cors
 
-import com.strange.common.http.CorsPolicy
+import com.softistx.common.http.CorsPolicy
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

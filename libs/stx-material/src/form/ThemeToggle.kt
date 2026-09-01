@@ -1,9 +1,9 @@
-package com.strange.material.form
+package com.softistx.material.form
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.strange.material.navigation.SegmentedControl
-import com.strange.material.theme.ColorMode
+import com.softistx.material.navigation.SegmentedControl
+import com.softistx.material.theme.ColorMode
 
 /**
  * Light, dark or the platform. Material 3's `SingleChoiceSegmentedButtonRow` via

@@ -1,4 +1,4 @@
-package com.strange.spring.integration.i18n
+package com.softistx.spring.integration.i18n
 
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition

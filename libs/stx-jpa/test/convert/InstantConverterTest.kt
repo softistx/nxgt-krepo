@@ -1,9 +1,9 @@
-package com.strange.jpa.convert
+package com.softistx.jpa.convert
 
-import com.strange.jpa.JpaTestDatabase
-import com.strange.jpa.entity.Stamped
-import com.strange.jpa.session.session
-import com.strange.jpa.session.transaction
+import com.softistx.jpa.JpaTestDatabase
+import com.softistx.jpa.entity.Stamped
+import com.softistx.jpa.session.session
+import com.softistx.jpa.session.transaction
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlin.time.Instant

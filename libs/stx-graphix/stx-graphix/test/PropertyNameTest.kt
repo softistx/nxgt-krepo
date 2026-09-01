@@ -1,9 +1,9 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.RecordQueries
-import com.strange.graphix.fixture.SlippedQueries
-import com.strange.graphix.fixture.StampedQueries
-import com.strange.graphix.fixture.TrackQueries
+import com.softistx.graphix.fixture.RecordQueries
+import com.softistx.graphix.fixture.SlippedQueries
+import com.softistx.graphix.fixture.StampedQueries
+import com.softistx.graphix.fixture.TrackQueries
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe

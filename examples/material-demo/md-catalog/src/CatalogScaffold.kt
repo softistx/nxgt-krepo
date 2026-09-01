@@ -1,4 +1,4 @@
-package com.strange.material.demo
+package com.softistx.material.demo
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,9 +11,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
-import com.strange.material.demo.knobs.KnobsPanel
-import com.strange.material.navigation.AdaptiveNavDisplay
-import com.strange.material.navigation.ListDetail
+import com.softistx.material.demo.knobs.KnobsPanel
+import com.softistx.material.navigation.AdaptiveNavDisplay
+import com.softistx.material.navigation.ListDetail
 
 private sealed interface CatalogRoute
 

@@ -1,8 +1,8 @@
-package com.strange.ktor.kafka
+package com.softistx.ktor.kafka
 
-import com.strange.kafka.Kafka
-import com.strange.kafka.KafkaConfig
-import com.strange.ktor.publish
+import com.softistx.kafka.Kafka
+import com.softistx.kafka.KafkaConfig
+import com.softistx.ktor.publish
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.util.AttributeKey
 
@@ -62,4 +62,4 @@ class KafkaClusterConfiguration {
     var injectable: Boolean = false
 }
 
-internal val KafkaKey = AttributeKey<Kafka>("com.strange.kafka.Kafka")
+internal val KafkaKey = AttributeKey<Kafka>("com.softistx.kafka.Kafka")

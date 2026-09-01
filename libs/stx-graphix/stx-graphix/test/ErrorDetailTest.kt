@@ -1,10 +1,10 @@
-package com.strange.graphix
+package com.softistx.graphix
 
-import com.strange.graphix.fixture.BoomQueries
-import com.strange.graphix.fixture.GreetingQueries
-import com.strange.graphix.http.GraphixHttpRequest
-import com.strange.graphix.http.toGraphixRequest
-import com.strange.graphix.http.toHttp
+import com.softistx.graphix.fixture.BoomQueries
+import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.http.GraphixHttpRequest
+import com.softistx.graphix.http.toGraphixRequest
+import com.softistx.graphix.http.toHttp
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
