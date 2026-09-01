@@ -5,7 +5,7 @@ description: The Material 3 API surface that actually compiles here — colour r
 
 # Material 3 (Compose Multiplatform)
 
-`libs/stx-material` builds *on top of* Material 3: `StrangeTheme` installs a `MaterialTheme`
+`libs/stx-material` builds *on top of* Material 3: `StxTheme` installs a `MaterialTheme`
 underneath so ordinary M3 components and third-party M3 libraries keep working inside it.
 
 ## Why this skill has no fetched documentation
@@ -28,7 +28,7 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
 ## What the extraction settles
 
 - **48 colour roles**, and none of them is `success`, `info` or `warning`. M3 has `error` and
-  nothing else semantic. That absence is the reason `StrangeColors` exists — it adds those three
+  nothing else semantic. That absence is the reason `StxColors` exists — it adds those three
   with their `on*` and `*Container` pairs and delegates every other role to the M3 `ColorScheme`
   rather than duplicating it.
 - **8 shape slots**, including the expressive `largeIncreased`, `extraLargeIncreased` and

@@ -41,10 +41,10 @@ import com.softistx.material.form.UploadField
 import com.softistx.material.form.cycleCheckState
 import com.softistx.material.form.toggleCheckItem
 import com.softistx.material.icon.Icon
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
 import com.softistx.material.theme.ColorMode
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The controls on their own.
@@ -70,7 +70,7 @@ val FormStories =
                     isError = complaining,
                     supportingText = "Enter a valid email address".takeIf { complaining },
                     secret = secret,
-                    leading = { Icon(icon = StrangeIcons.Person, description = null) },
+                    leading = { Icon(icon = StxIcons.Person, description = null) },
                 )
                 Typography(text = "A complaint takes the hint's place rather than sitting beside it.")
             }
@@ -361,7 +361,7 @@ val FormStories =
 private fun Stack(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
     ) {
         content()
     }

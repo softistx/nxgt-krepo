@@ -12,7 +12,7 @@ import com.softistx.material.theme.DefaultSeed
 
 /**
  * What the reader has chosen: the story on screen, and the two theme dials the catalogue drives
- * `StrangeTheme` with. Nothing here is per-component — a story that needs its own state keeps it
+ * `StxTheme` with. Nothing here is per-component — a story that needs its own state keeps it
  * in its own `remember`.
  */
 @Stable
@@ -51,7 +51,7 @@ enum class CatalogMotion(
 }
 
 /**
- * The seeds the picker offers. `StrangeTheme` accepts any [Color]; these are the ones worth one
+ * The seeds the picker offers. `StxTheme` accepts any [Color]; these are the ones worth one
  * click, chosen to show that every component repaints from the seed rather than from a constant.
  */
 val CatalogSeeds: List<Pair<String, Color>> =

@@ -13,7 +13,7 @@ import com.softistx.material.motion.Transitions
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * What a screen shows when there is nothing to show.
@@ -41,11 +41,11 @@ fun EmptyState(
                     .fillMaxWidth()
                     // Generous room, so an empty state reads as deliberate rather than broken.
                     .padding(
-                        horizontal = StrangeTheme.spacing.lg,
-                        vertical = StrangeTheme.spacing.xxl,
+                        horizontal = StxTheme.spacing.lg,
+                        vertical = StxTheme.spacing.xxl,
                     ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
         ) {
             illustration?.invoke()
             Typography(

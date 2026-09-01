@@ -16,7 +16,7 @@ import com.softistx.material.navigation.Step
 import com.softistx.material.navigation.Stepper
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import kotlinx.datetime.LocalDate
 
 /**
@@ -30,7 +30,7 @@ fun CheckoutScreen(modifier: Modifier = Modifier) {
     var date by remember { mutableStateOf<LocalDate?>(LocalDate(2026, 9, 1)) }
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
     ) {
         Typography(text = "Checkout", variant = TypographyVariant.HeadlineSmall)
         Stepper(

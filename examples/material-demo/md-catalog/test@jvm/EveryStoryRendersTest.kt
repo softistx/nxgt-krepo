@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -64,7 +64,7 @@ private fun ink(story: Story): Int {
     val scene = ImageComposeScene(width = 760, height = 900)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 val knobs = rememberKnobsStore()
                 Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
                     StoryStage(story = story, knobs = knobs)

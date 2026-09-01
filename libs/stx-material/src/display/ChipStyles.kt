@@ -13,7 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import com.softistx.material.motion.MotionSpeed
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.motion
 
 /**
@@ -33,7 +33,7 @@ import com.softistx.material.theme.motion
 @Composable
 fun chipColors(hovered: Boolean): SelectableChipColors {
     val scheme = MaterialTheme.colorScheme
-    val motion = StrangeTheme.motion
+    val motion = StxTheme.motion
     val tint = scheme.onSurface.copy(alpha = HOVER_STATE_LAYER_ALPHA)
     val selectedTint = scheme.onSecondaryContainer.copy(alpha = HOVER_ON_FILL_ALPHA)
     val container by animateColorAsState(

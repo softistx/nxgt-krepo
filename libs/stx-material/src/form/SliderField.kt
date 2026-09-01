@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A number chosen by dragging, with the number visible.

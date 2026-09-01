@@ -12,7 +12,7 @@ private val ExpressiveScheme: MotionScheme = MotionScheme.expressive()
  * How fast, along whichever of the two axes was asked for.
  *
  * There is no `instant`: a change that should not be seen is not an animation, and
- * `StrangeMotion(enabled = false)` is how a caller turns the clock off.
+ * `StxMotion(enabled = false)` is how a caller turns the clock off.
  */
 enum class MotionSpeed { Fast, Default, Slow }
 
@@ -26,7 +26,7 @@ enum class MotionSpeed { Fast, Default, Slow }
  * the same curve, and this is what says so.
  *
  * The scheme is *held*, not read from the composition, because a `Style` block is not a composable
- * scope: `pressed { animate(motion.spatial(Fast)) { … } }` runs at apply time. [StrangeTheme]
+ * scope: `pressed { animate(motion.spatial(Fast)) { … } }` runs at apply time. [StxTheme]
  * installs the same scheme it hands `MaterialExpressiveTheme`, so a plain M3 component and one of
  * ours animate identically.
  *
@@ -35,7 +35,7 @@ enum class MotionSpeed { Fast, Default, Slow }
  * in each component.
  */
 @Immutable
-data class StrangeMotion(
+data class StxMotion(
     val scheme: MotionScheme = ExpressiveScheme,
     val enabled: Boolean = true,
 ) {

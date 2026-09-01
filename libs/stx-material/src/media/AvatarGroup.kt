@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 
 /** One face in an [AvatarGroup]. */
@@ -77,7 +77,7 @@ private fun OverflowMark(
             modifier
                 .size(size)
                 .clip(CircleShape)
-                .background(StrangeTheme.colors.scheme.surfaceContainerHigh),
+                .background(StxTheme.colors.scheme.surfaceContainerHigh),
         contentAlignment = Alignment.Center,
     ) {
         Typography(text = "+$count", variant = TypographyVariant.LabelSmall)

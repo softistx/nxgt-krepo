@@ -12,8 +12,8 @@ import androidx.compose.ui.layout.ContentScale
 import com.softistx.material.button.ButtonColor
 import com.softistx.material.button.ButtonVariant
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.icon.StxIcons
+import com.softistx.material.theme.StxTheme
 
 /**
  * One image, full frame, with a way out and a way to the neighbours.
@@ -34,38 +34,38 @@ fun Lightbox(
     Box(
         modifier = modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.92f)),
     ) {
-        StrangeImage(
+        StxImage(
             model = model,
             description = description,
-            modifier = Modifier.fillMaxSize().padding(StrangeTheme.spacing.xl),
+            modifier = Modifier.fillMaxSize().padding(StxTheme.spacing.xl),
             contentScale = ContentScale.Fit,
         )
         IconButton(
-            icon = StrangeIcons.Close,
+            icon = StxIcons.Close,
             description = "Close",
             onClick = onDismiss,
             variant = ButtonVariant.Filled,
             color = ButtonColor.Neutral,
-            modifier = Modifier.align(Alignment.TopEnd).padding(StrangeTheme.spacing.md),
+            modifier = Modifier.align(Alignment.TopEnd).padding(StxTheme.spacing.md),
         )
         if (onPrevious != null) {
             IconButton(
-                icon = StrangeIcons.ChevronLeft,
+                icon = StxIcons.ChevronLeft,
                 description = "Previous",
                 onClick = onPrevious,
                 variant = ButtonVariant.Filled,
                 color = ButtonColor.Neutral,
-                modifier = Modifier.align(Alignment.CenterStart).padding(StrangeTheme.spacing.md),
+                modifier = Modifier.align(Alignment.CenterStart).padding(StxTheme.spacing.md),
             )
         }
         if (onNext != null) {
             IconButton(
-                icon = StrangeIcons.ChevronRight,
+                icon = StxIcons.ChevronRight,
                 description = "Next",
                 onClick = onNext,
                 variant = ButtonVariant.Filled,
                 color = ButtonColor.Neutral,
-                modifier = Modifier.align(Alignment.CenterEnd).padding(StrangeTheme.spacing.md),
+                modifier = Modifier.align(Alignment.CenterEnd).padding(StxTheme.spacing.md),
             )
         }
     }

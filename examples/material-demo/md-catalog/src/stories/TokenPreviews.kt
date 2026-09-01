@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The two swatch shapes the foundation stories draw their tokens with. They are here rather than
@@ -32,7 +32,7 @@ internal fun TokenBar(
     size: Dp,
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Typography(
@@ -58,7 +58,7 @@ internal fun Swatch(
     color: Color,
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(

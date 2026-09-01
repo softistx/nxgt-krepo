@@ -27,7 +27,7 @@ import com.softistx.material.form.state.rememberForm
 import com.softistx.material.form.state.required
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import com.softistx.material.theme.Tone
 import io.konform.validation.Validation
 
@@ -96,7 +96,7 @@ fun SignUpScreen(modifier: Modifier = Modifier) {
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
     ) {
         Typography(text = "Create an account", variant = TypographyVariant.HeadlineSmall)
 

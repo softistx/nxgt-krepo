@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /** Adds [option] if it was off, removes it if it was on. The empty set is "everything". */
 fun toggleFilter(
@@ -27,8 +27,8 @@ fun FilterBar(
 ) {
     FlowRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
     ) {
         options.forEach { option ->
             val on = option in selected

@@ -15,7 +15,7 @@ import com.softistx.material.display.Card
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 @Immutable
 data class TableColumn<T>(
@@ -43,7 +43,7 @@ fun <T> DataTable(
                 rows.forEach { row ->
                     Card(
                         onClick = onRowClick?.let { handler -> { handler(row) } },
-                        modifier = Modifier.padding(bottom = StrangeTheme.spacing.sm),
+                        modifier = Modifier.padding(bottom = StxTheme.spacing.sm),
                     ) {
                         Description(items = columns.map { DescriptionItem(it.header, it.value(row)) })
                     }
@@ -51,7 +51,7 @@ fun <T> DataTable(
             }
         } else {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = StrangeTheme.spacing.xs)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = StxTheme.spacing.xs)) {
                     columns.forEach { column ->
                         Typography(
                             text = column.header,
@@ -64,7 +64,7 @@ fun <T> DataTable(
                 HorizontalDivider()
                 rows.forEach { row ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = StrangeTheme.spacing.sm),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = StxTheme.spacing.sm),
                     ) {
                         columns.forEach { column ->
                             Typography(

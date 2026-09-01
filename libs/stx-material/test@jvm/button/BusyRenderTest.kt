@@ -17,12 +17,12 @@ import com.softistx.material.feedback.LabeledProgress
 import com.softistx.material.form.CheckState
 import com.softistx.material.form.CopyField
 import com.softistx.material.form.TriStateCheckbox
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.layout.SelectionBar
 import com.softistx.material.surface.Disclosure
 import com.softistx.material.surface.MenuItem
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 
@@ -39,7 +39,7 @@ private fun render(content: @Composable () -> Unit): Int {
     val scene = ImageComposeScene(width = 480, height = 1200)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -73,8 +73,8 @@ private fun paint() {
     OverflowBar(
         actions =
             listOf(
-                OverflowAction("Edit", StrangeIcons.Edit, onClick = {}),
-                OverflowAction("Delete", StrangeIcons.Delete, onClick = {}),
+                OverflowAction("Edit", StxIcons.Edit, onClick = {}),
+                OverflowAction("Delete", StxIcons.Delete, onClick = {}),
             ),
         modifier = Modifier.width(200.dp),
         maxVisible = 1,

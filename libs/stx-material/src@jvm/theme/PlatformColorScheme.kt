@@ -14,4 +14,4 @@ actual fun platformColorScheme(
     seed: Color,
     isDark: Boolean,
     dynamicColor: Boolean,
-): ColorScheme = remember(seed, isDark) { strangeColorScheme(seed, isDark) }
+): ColorScheme = remember(seed, isDark) { stxColorScheme(seed, isDark) }

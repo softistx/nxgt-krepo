@@ -16,17 +16,17 @@ import io.kotest.matchers.types.shouldNotBeInstanceOf
  * the wiring: that the two axes stay distinct, that the three speeds stay distinct, that turning
  * motion off really stops the clock, and that two default themes compare equal.
  */
-class StrangeMotionTest :
+class StxMotionTest :
     FeatureSpec({
         feature("the two axes Material 3 separates") {
             scenario("do not collapse into one — a fade and a slide are not the same curve") {
-                val motion = StrangeMotion()
+                val motion = StxMotion()
 
                 motion.spatial<Float>() shouldNotBe motion.effects<Float>()
             }
 
             scenario("each answer differently at each of the three speeds") {
-                val motion = StrangeMotion()
+                val motion = StxMotion()
 
                 setOf(
                     motion.spatial<Float>(MotionSpeed.Fast),
@@ -43,7 +43,7 @@ class StrangeMotionTest :
 
         feature("the shape of the two axes") {
             scenario("spatial overshoots — so it may only drive a value that tolerates leaving its range") {
-                val motion = StrangeMotion()
+                val motion = StxMotion()
 
                 MotionSpeed.entries.forEach { speed ->
                     motion
@@ -54,7 +54,7 @@ class StrangeMotionTest :
             }
 
             scenario("effects does not — so colour and alpha land exactly where they were sent") {
-                val motion = StrangeMotion()
+                val motion = StxMotion()
 
                 MotionSpeed.entries.forEach { speed ->
                     motion
@@ -67,7 +67,7 @@ class StrangeMotionTest :
 
         feature("turning motion off") {
             scenario("collapses every spec to a snap rather than merely shortening it") {
-                val still = StrangeMotion(enabled = false)
+                val still = StxMotion(enabled = false)
 
                 MotionSpeed.entries.forEach { speed ->
                     still.spatial<Float>(speed).shouldBeInstanceOf<SnapSpec<Float>>()
@@ -76,16 +76,16 @@ class StrangeMotionTest :
             }
 
             scenario("leaves the scheme itself untouched, so turning it back on restores the curves") {
-                val still = StrangeMotion(enabled = false)
+                val still = StxMotion(enabled = false)
 
-                still.scheme shouldBe StrangeMotion().scheme
-                still.copy(enabled = true).spatial<Float>() shouldBe StrangeMotion().spatial<Float>()
+                still.scheme shouldBe StxMotion().scheme
+                still.copy(enabled = true).spatial<Float>() shouldBe StxMotion().spatial<Float>()
             }
         }
 
         feature("motion that is on") {
             scenario("never answers with a snap") {
-                val motion = StrangeMotion()
+                val motion = StxMotion()
 
                 motion.spatial<Float>().shouldNotBeInstanceOf<SnapSpec<Float>>()
                 motion.effects<Float>().shouldNotBeInstanceOf<SnapSpec<Float>>()
@@ -94,14 +94,14 @@ class StrangeMotionTest :
 
         feature("the scheme it is given") {
             scenario("actually drives the curves — standard and expressive are not the same") {
-                val expressive = StrangeMotion(MotionScheme.expressive())
-                val standard = StrangeMotion(MotionScheme.standard())
+                val expressive = StxMotion(MotionScheme.expressive())
+                val standard = StxMotion(MotionScheme.standard())
 
                 expressive.spatial<Float>() shouldNotBe standard.spatial<Float>()
             }
 
             scenario("makes two default themes compare equal, so installing one is not a recomposition") {
-                StrangeMotion() shouldBe StrangeMotion()
+                StxMotion() shouldBe StxMotion()
             }
         }
     })

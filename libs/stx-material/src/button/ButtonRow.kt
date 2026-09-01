@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A row of actions — the bottom of a dialog, the end of a form.
@@ -25,7 +25,7 @@ fun ButtonRow(
 ) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm, align),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm, align),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )

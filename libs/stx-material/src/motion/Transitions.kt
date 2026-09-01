@@ -14,7 +14,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The enter and exit pairs the components are built from.
@@ -30,61 +30,61 @@ import com.softistx.material.theme.StrangeTheme
 object Transitions {
     val fade: EnterTransition
         @Composable @ReadOnlyComposable
-        get() = fadeIn(StrangeTheme.motion.effects())
+        get() = fadeIn(StxTheme.motion.effects())
 
     val fadeAway: ExitTransition
         @Composable @ReadOnlyComposable
-        get() = fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast))
+        get() = fadeOut(StxTheme.motion.effects(MotionSpeed.Fast))
 
     /** Content arriving from below — a card, an alert, a newly opened story. */
     val riseIn: EnterTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeIn(StrangeTheme.motion.effects()) +
-                slideInVertically(StrangeTheme.motion.spatial()) { it / 6 }
+            fadeIn(StxTheme.motion.effects()) +
+                slideInVertically(StxTheme.motion.spatial()) { it / 6 }
 
     val sinkOut: ExitTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
-                slideOutVertically(StrangeTheme.motion.spatial(MotionSpeed.Fast)) { it / 6 }
+            fadeOut(StxTheme.motion.effects(MotionSpeed.Fast)) +
+                slideOutVertically(StxTheme.motion.spatial(MotionSpeed.Fast)) { it / 6 }
 
     /** Something that belongs to the point it appeared from — a menu, a popover, a badge. */
     val popIn: EnterTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeIn(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
-                scaleIn(StrangeTheme.motion.spatial(MotionSpeed.Fast), initialScale = 0.92f)
+            fadeIn(StxTheme.motion.effects(MotionSpeed.Fast)) +
+                scaleIn(StxTheme.motion.spatial(MotionSpeed.Fast), initialScale = 0.92f)
 
     val popOut: ExitTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
-                scaleOut(StrangeTheme.motion.spatial(MotionSpeed.Fast), targetScale = 0.92f)
+            fadeOut(StxTheme.motion.effects(MotionSpeed.Fast)) +
+                scaleOut(StxTheme.motion.spatial(MotionSpeed.Fast), targetScale = 0.92f)
 
     // A label appearing beside something already on screen — a button's text next to its icon.
     val widen: EnterTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeIn(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
-                expandHorizontally(StrangeTheme.motion.spatial())
+            fadeIn(StxTheme.motion.effects(MotionSpeed.Fast)) +
+                expandHorizontally(StxTheme.motion.spatial())
 
     val narrow: ExitTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
-                shrinkHorizontally(StrangeTheme.motion.spatial(MotionSpeed.Fast))
+            fadeOut(StxTheme.motion.effects(MotionSpeed.Fast)) +
+                shrinkHorizontally(StxTheme.motion.spatial(MotionSpeed.Fast))
 
     /** Content that takes or gives back vertical room: an accordion, a helper message. */
     val expand: EnterTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeIn(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
-                expandVertically(StrangeTheme.motion.spatial())
+            fadeIn(StxTheme.motion.effects(MotionSpeed.Fast)) +
+                expandVertically(StxTheme.motion.spatial())
 
     val collapse: ExitTransition
         @Composable @ReadOnlyComposable
         get() =
-            fadeOut(StrangeTheme.motion.effects(MotionSpeed.Fast)) +
-                shrinkVertically(StrangeTheme.motion.spatial(MotionSpeed.Fast))
+            fadeOut(StxTheme.motion.effects(MotionSpeed.Fast)) +
+                shrinkVertically(StxTheme.motion.spatial(MotionSpeed.Fast))
 }

@@ -1,11 +1,11 @@
 # Tokens
 
 What a component is allowed to say instead of a number. Every token is reachable two ways — from a
-composable through `StrangeTheme`, and from inside a `Style` through `StyleScope` — and both read
+composable through `StxTheme`, and from inside a `Style` through `StyleScope` — and both read
 the same composition local, so they can never disagree.
 
 ```kotlin
-@Composable fun Something() = Box(Modifier.padding(StrangeTheme.spacing.md))
+@Composable fun Something() = Box(Modifier.padding(StxTheme.spacing.md))
 
 val somethingStyle = Style { contentPadding(spacing.md) }
 ```
@@ -15,7 +15,7 @@ finished.
 
 ## Colour
 
-`StrangeColors` holds the Material 3 `ColorScheme` and adds the semantic roles M3 does not define.
+`StxColors` holds the Material 3 `ColorScheme` and adds the semantic roles M3 does not define.
 
 | Role | Members | Where it comes from |
 | --- | --- | --- |
@@ -37,21 +37,21 @@ without naming twelve colours: `colors.tone(tone)` returns a `ToneColors` — `m
 platform-specific.** `platformColorScheme(seed, isDark, dynamicColor)` answers with the user's
 wallpaper palette on Android 12+ and with the seed everywhere else; `supportsDynamicColor` says
 which, so a settings screen can decide whether to *offer* the choice rather than showing a switch
-that does nothing. `strangeColors(scheme, isDark)` then adds the semantic roles to whichever scheme
+that does nothing. `stxColors(scheme, isDark)` then adds the semantic roles to whichever scheme
 arrived — the extra roles are not tied to the seed path.
 
 No component holds a colour of its own, so changing the scheme repaints all of them.
 
 ## Spacing
 
-`StrangeSpacing` — an eight-step scale, and nothing between the steps.
+`StxSpacing` — an eight-step scale, and nothing between the steps.
 
 | | `none` | `xxs` | `xs` | `sm` | `md` | `lg` | `xl` | `xxl` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | dp | 0 | 2 | 4 | 8 | 16 | 24 | 32 | 48 |
 
 `scaledBy(factor)` returns the whole scale multiplied — the hook for a density preference, applied
-once at `StrangeTheme` rather than per component.
+once at `StxTheme` rather than per component.
 
 ## Shapes and elevation — Material 3's, not ours
 
@@ -69,7 +69,7 @@ The eight slots are `extraSmall`, `small`, `medium`, `large`, `largeIncreased`, 
 `extraLargeIncreased` and `extraExtraLarge` — the last three arrived with Material 3 expressive and
 are gated behind `ExperimentalMaterial3ExpressiveApi`. A hand-written `Shapes(…)` fills only five
 and leaves those three on their defaults, which is a rounding that looks almost right; passing a
-whole `Shapes` to `StrangeTheme` is how a product changes them.
+whole `Shapes` to `StxTheme` is how a product changes them.
 
 There is no `full`: a pill is `CircleShape`, the same 50% corner M3 uses and reachable from Kotlin,
 unlike `ShapeDefaults.CornerFull`.
@@ -81,8 +81,8 @@ reads `MaterialTheme.shapes` and never touches the mirror.
 
 ## Motion
 
-**Motion is Material 3's, not ours.** `StrangeMotion` holds a `MotionScheme` — the one
-`StrangeTheme` hands `MaterialExpressiveTheme` — so a plain M3 component and one of ours animate
+**Motion is Material 3's, not ours.** `StxMotion` holds a `MotionScheme` — the one
+`StxTheme` hands `MaterialExpressiveTheme` — so a plain M3 component and one of ours animate
 with the same curves. No component writes `tween(300)`, and none holds an easing of its own.
 
 M3 splits motion along an axis worth keeping:
@@ -110,14 +110,14 @@ spatial spring and died on *Padding must be non-negative* the first time the squ
 `Modifier.offset` takes it, `padding` and `size` do not, and an alpha past 1 is silently clamped.
 When the sink cannot take an overshoot the value belongs on `effects` — or the two belong on
 separate animations, which is what `Modifier.animateStagger` does (spatial rise, effects fade) and
-what `Transitions` does per half. `StrangeMotionTest` pins the fact underneath: every spatial spec
+what `Transitions` does per half. `StxMotionTest` pins the fact underneath: every spatial spec
 is damped below 1, every effects spec at exactly 1.
 
-`StrangeMotion` is *held*, not read from the composition, because a `Style` block is not a
+`StxMotion` is *held*, not read from the composition, because a `Style` block is not a
 composable scope — it runs at apply time.
 
 **Which scheme.** `MotionScheme.expressive()` is the default: springier, allowed to overshoot.
-`MotionScheme.standard()` settles instead. Passing one to `StrangeTheme` changes every animation in
+`MotionScheme.standard()` settles instead. Passing one to `StxTheme` changes every animation in
 the tree, this library's and Material 3's alike. Both are singletons, so two default themes compare
 equal and installing one is not a recomposition.
 
@@ -137,7 +137,7 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 
 ## Styles
 
-`StrangeTheme.styles` (from `com.softistx.material.style`) is every component default in one place —
+`StxTheme.styles` (from `com.softistx.material.style`) is every component default in one place —
 `button`, `card`, `chip`, `listTile`, `field`, `alert(tone)`.
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and
@@ -149,7 +149,7 @@ Nothing is needed from it to *use* the library: each component already applies i
 seam for *adding* to one.
 
 ```kotlin
-Card(style = StrangeTheme.styles.card then { alpha(0.6f) })
+Card(style = StxTheme.styles.card then { alpha(0.6f) })
 ```
 
 To change a **colour**, pass Material 3's `*Colors` instead. A `background()` in a style block paints

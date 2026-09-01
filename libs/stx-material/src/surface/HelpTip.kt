@@ -3,7 +3,7 @@ package com.softistx.material.surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 
 /**
  * A question mark next to a label. [Tooltip] wrapping an [IconButton].
@@ -19,7 +19,7 @@ fun HelpTip(
 ) {
     Tooltip(text = text, modifier = modifier) {
         IconButton(
-            icon = StrangeIcons.Info,
+            icon = StxIcons.Info,
             description = description,
             onClick = {},
         )

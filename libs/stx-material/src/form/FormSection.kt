@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.display.SectionHeader
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A titled group of fields.
@@ -23,7 +23,7 @@ fun FormSection(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         SectionHeader(title = title, supporting = supporting)
         content()

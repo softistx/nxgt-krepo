@@ -12,7 +12,7 @@ import com.softistx.material.media.Avatar
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * A named paragraph: face, author, body, and an optional trailing slot.
@@ -33,16 +33,16 @@ fun Comment(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         Avatar(name = name, image = image, size = 32.dp)
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             ) {
                 Typography(text = name, variant = TypographyVariant.TitleSmall)
                 if (supporting != null) {

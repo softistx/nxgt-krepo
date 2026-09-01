@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import com.softistx.material.text.Typography
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * One of several, where seeing all of them at once is the point.
@@ -45,7 +45,7 @@ fun <T> RadioGroup(
     ) {
         Column(
             modifier = Modifier.selectableGroup(),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xxs),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         ) {
             options.forEach { option ->
                 Row(
@@ -56,7 +56,7 @@ fun <T> RadioGroup(
                             role = Role.RadioButton,
                             onClick = { onValueChange(option) },
                         ),
-                    horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+                    horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(selected = value == option, onClick = null, enabled = enabled)

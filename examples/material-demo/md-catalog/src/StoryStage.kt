@@ -17,7 +17,7 @@ import com.softistx.material.motion.Transitions
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 
 /**
  * The middle pane. The story swaps through the library's own transitions rather than appearing
@@ -36,8 +36,8 @@ fun StoryStage(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(StrangeTheme.spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.md),
+                    .padding(StxTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
         ) {
             Typography(text = story.name, variant = TypographyVariant.HeadlineSmall)
             Typography(text = story.id, variant = TypographyVariant.Code, emphasis = Emphasis.Subtle)

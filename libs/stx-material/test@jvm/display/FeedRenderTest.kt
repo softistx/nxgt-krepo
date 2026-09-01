@@ -17,7 +17,7 @@ import com.softistx.material.form.CheckItem
 import com.softistx.material.form.Checklist
 import com.softistx.material.form.Composer
 import com.softistx.material.media.PersonCard
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 
@@ -34,7 +34,7 @@ private fun render(content: @Composable () -> Unit): Int {
     val scene = ImageComposeScene(width = 480, height = 1600)
     try {
         scene.setContent {
-            StrangeTheme(isDark = false) {
+            StxTheme(isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -69,6 +69,6 @@ private fun paint() {
     ReactionBar(reactions = listOf(Reaction("👍", 3, selected = true)))
     AnnouncementBar(text = "The bank is delayed.", onDismiss = {})
     QuoteBlock(text = "Ship it.", attribution = "Amara")
-    LinkPreview(title = "Orders API", url = "https://api.strange.dev/orders")
+    LinkPreview(title = "Orders API", url = "https://api.softistx.dev/orders")
     Checklist(items = listOf(CheckItem("Pack", true), CheckItem("Ship")), onToggle = {})
 }

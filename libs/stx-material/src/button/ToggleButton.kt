@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.icon.Icon
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StrangeTheme
+import com.softistx.material.theme.StxTheme
 import androidx.compose.material3.ToggleButton as MaterialToggleButton
 
 /**
@@ -51,7 +51,7 @@ fun ToggleButton(
         style = style,
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(StrangeTheme.spacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (icon != null) {

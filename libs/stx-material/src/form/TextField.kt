@@ -18,7 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.softistx.material.button.IconButton
-import com.softistx.material.icon.StrangeIcons
+import com.softistx.material.icon.StxIcons
 import com.softistx.material.text.Typography
 
 /**
@@ -71,7 +71,7 @@ fun TextField(
                 secret -> {
                     {
                         IconButton(
-                            icon = if (revealed) StrangeIcons.EyeOff else StrangeIcons.Eye,
+                            icon = if (revealed) StxIcons.EyeOff else StxIcons.Eye,
                             description = if (revealed) "Hide the value" else "Show the value",
                             onClick = { revealed = !revealed },
                         )
