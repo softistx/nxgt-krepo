@@ -74,33 +74,29 @@ class SqlMigrationLedger(
      * not be what fails the write that is recording a failure.
      */
     override suspend fun prepare() {
-        jpa.connection { connection ->
-            connection
-                .executeUnprepared(
-                    """
-                    create table if not exists $ledger (
-                        version bigint primary key,
-                        description varchar(500) not null,
-                        status varchar(16) not null,
-                        applied_by varchar(200),
-                        failure varchar(2000),
-                        duration_ms bigint,
-                        started_at bigint not null,
-                        updated_at bigint not null
-                    )
-                    """.trimIndent(),
-                ).await()
-            connection
-                .executeUnprepared(
-                    """
-                    create table if not exists $locks (
-                        id varchar(1) primary key,
-                        locked_by varchar(200),
-                        locked_until bigint
-                    )
-                    """.trimIndent(),
-                ).await()
-        }
+        createTable(
+            """
+            create table if not exists $ledger (
+                version bigint primary key,
+                description varchar(500) not null,
+                status varchar(16) not null,
+                applied_by varchar(200),
+                failure varchar(2000),
+                duration_ms bigint,
+                started_at bigint not null,
+                updated_at bigint not null
+            )
+            """.trimIndent(),
+        )
+        createTable(
+            """
+            create table if not exists $locks (
+                id varchar(1) primary key,
+                locked_by varchar(200),
+                locked_until bigint
+            )
+            """.trimIndent(),
+        )
         insertIfAbsent(
             "insert into $locks (id, locked_by, locked_until) values (${parameters(1)}, null, null)",
             arrayOf<Any?>(LOCK),
@@ -205,6 +201,34 @@ class SqlMigrationLedger(
                         "where id = ${dialect.parameter(1)} and locked_by = ${dialect.parameter(2)}",
                     arrayOf<Any?>(id, owner),
                 ).await()
+        }
+    }
+
+    /**
+     * Issues a `create table if not exists`, and tries once more if it lost a race.
+     *
+     * **`create table if not exists` is not atomic on PostgreSQL.** Two sessions issuing the same one
+     * at the same moment can both pass its existence check, and the loser fails with
+     * `duplicate key value violates unique constraint "pg_type_pkey"` rather than with the no-op the
+     * clause promises. [prepare] runs *before* the migration lock is taken — it has to, the lock
+     * table is one of the two things it creates — so a rolling deploy starting several instances
+     * together is exactly that moment, and nothing else is holding them apart.
+     *
+     * The retry is the whole fix: by then the winner has committed, the existence check sees the
+     * table and the statement does nothing. A second failure is a real one and is thrown untouched,
+     * which is what a bad schema name or a missing grant reports as.
+     *
+     * Retried rather than serialised behind an advisory lock, for the reason `JpaWorkflowStore` gives
+     * about row locks — a lock spelled differently on every server is one this library would have to
+     * know every server to take, and [SqlDialect] exists to stay as small as it is.
+     */
+    private suspend fun createTable(sql: String) {
+        try {
+            jpa.connection { it.executeUnprepared(sql).await() }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Throwable) {
+            jpa.connection { it.executeUnprepared(sql).await() }
         }
     }
 
