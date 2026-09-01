@@ -1,5 +1,5 @@
 product: jvm/lib
-description: "The stx-workflow store on Redis, and the worker that picks up instances nobody is advancing"
+description: "The stx-workflow store on Redis: one hash per instance, a sorted set of what is due, and a lock apiece"
 
 apply:
   - //publishing.module-template.yaml

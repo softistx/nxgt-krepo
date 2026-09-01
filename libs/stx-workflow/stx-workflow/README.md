@@ -34,7 +34,7 @@ val instance = engine.start(checkout, Checkout(items, card))
 ## Shape
 
 ```
-com.strange.workflow          Workflow, WorkflowEngine, WorkflowInstance, WorkflowStatus, the exceptions
+com.strange.workflow          Workflow, WorkflowEngine, WorkflowWorker, WorkflowInstance, WorkflowStatus
 com.strange.workflow.dsl      the verbs — step, branch, parallel, await, sleep, retry, timeout, compensate
 com.strange.workflow.annotation  the same declaration as annotations on a class, read by workflowOf
 com.strange.workflow.engine   the loop: one attempt, the walk, the unwind
@@ -143,8 +143,9 @@ somebody, and it is the only status exempt from the store's retention.
 ## Resume is not a worker
 
 `engine.resume(id)` is for an operator, a test, or an application with a scheduler of its own.
-Anybody who wants instances picked up automatically after a crash wants `WorkflowWorker` from
-`stx-workflow-redis`; `resume` in a `while (true)` loop is that class, written again and worse.
+Anybody who wants instances picked up automatically after a crash wants `WorkflowWorker`; `resume` in
+a `while (true)` loop is that class, written again and worse. It is here rather than beside a store
+because it asks the engine what is due and resumes it, and knows nothing else.
 
 ## A wait is a record, not a coroutine
 

@@ -25,7 +25,7 @@ get("/cart/{id}") {
 
 ## The names
 
-No `Plugin` suffix, the way Ktor's own `install(ContentNegotiation)` carries none. Four of the seven
+No `Plugin` suffix, the way Ktor's own `install(ContentNegotiation)` carries none. Four of the eight
 could not simply take their backend's name: `Redis`, `Amqp`, `Kafka` and `Jpa` are the classes these
 plugins *hand out*, and an application that installs one and also names the type it gets back would
 have two imports of one name. Those three are named for what the plugin puts on the application —
@@ -90,6 +90,20 @@ because these clients close through `CloseGuard`, and it is the reason a connect
 outlive the application should not be registered at all.
 
 ## The ones that are not like the others
+
+**`Workflows` opens nothing.** It takes a `WorkflowStore` that already has a connection —
+`RedisWorkflowStore(application.redis)`, the one `install(RedisConnection)` opened — because a
+second pool for the same server is one nobody asked for. And it hands out a `WorkflowEngine`, which
+is not `AutoCloseable`: an engine owns neither the store nor the connection under it, so this is the
+one plugin here with nothing to close and no double-close question to answer.
+
+What it *does* own is the worker, and that is why it exists rather than being three lines of
+application code. `worker = true` starts a `WorkflowWorker` on the application's scope and closes it
+with the application; written by hand it is the close that gets forgotten, leaving a loop that
+outlives the redeploy it should have died with, resuming instances the next process is also
+resuming. It is **off by default**: installing the plugin gives an application a way to run
+workflows, and whether this process also recovers the fleet's abandoned ones is a separate decision.
+
 
 **`KafkaCluster` opens nothing and closes nothing.** That is not an omission — it is what `Kafka`
 itself says: a Kafka client connects when it is created, and a producer, a consumer and an admin
