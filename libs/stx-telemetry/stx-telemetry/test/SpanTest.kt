@@ -76,6 +76,18 @@ class SpanTest :
                 (span.endedAt >= span.startedAt + 10.milliseconds) shouldBe true
             }
 
+            scenario("the block can rename it once it knows what it is") {
+                val collector = Collector()
+                val telemetry = collecting(collector)
+                withTelemetry(telemetry) {
+                    span("GET /orders/8d1f") { name = "GET /orders/{id}" }
+                }
+                telemetry.close()
+
+                collector.span("GET /orders/{id}").shouldNotBeNull()
+                collector.span("GET /orders/8d1f").shouldBeNull()
+            }
+
             scenario("events are moments inside it, and a typed one is named by its type") {
                 val collector = Collector()
                 val telemetry = collecting(collector)
