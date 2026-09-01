@@ -56,6 +56,7 @@ The types live in two packages, and **which package is the first question**: can
 | A value computed once per key | `KeyedMutex` when the loader suspends | `Memo` |
 | An object that is not thread-safe | a `Mutex` you take around it | `Guarded` |
 | Getting work across the boundary | `Mailbox`, from a thread that cannot suspend | — |
+| A lock two processes contend for | `Lease`, over a store's own conditional writes | — |
 | A queue somebody else owns | — | `consumeAsFlow` |
 
 `concurrent/` is not the fallback for code that has not been made suspending yet. It is for the
@@ -79,6 +80,9 @@ private val serializers = Memo<Type, KSerializer<Any>> { resolveReflectively(it)
 
 // The value is ICU's MessageFormat, which its own documentation calls unsynchronized.
 private val format = Guarded(MessageFormat(pattern, locale))
+
+// The lock is a row in somebody's database, and this is the policy around the three writes.
+private val guard = Lease(5.minutes, ::take, ::renew, ::release)
 ```
 
 **`CoroutineSafeMap`** is a `Mutex` and a map. A mutex suspends where a `synchronized` block parks a
@@ -110,6 +114,22 @@ single owner and needs no synchronisation at all — plain `var`s, plain maps, n
 channel is FIFO, so two messages that must be applied in order *are*, which two guarded flags cannot
 promise however carefully each one is guarded. `AmqpPublisher` settles the broker's confirms this
 way, and `KafkaSubscriber` carries its handlers' completions the same way.
+
+**`Lease`** is the odd one out: the thing it makes safe is not shared memory but a row somebody else
+can also write. Redis has `SET NX PX`; a relational database and MongoDB have nothing of the kind, so
+both do the same thing instead — an owner and an expiry that one conditional write sets, another
+extends and a third clears. Only those three writes differ between stores, and `Lease` is everything
+around them. `stx-workflow-db`'s relational and Mongo stores hold one (*one worker advances this
+instance*) and so do `stx-migrations-db`'s two ledgers (*one process runs the migrations*).
+
+Three properties, and each one is a decision rather than a detail. **`take` declines instead of
+queueing** — whoever holds the id is already working on it, and a queue behind them ends with a fleet
+parked on one slow step; a caller that must wait polls, which keeps that decision with the caller.
+**It renews at a third of the duration while the work runs**, so the expiry says *this is being
+worked on right now* rather than *this code is short* — a fixed lease has to be guessed against the
+slowest run and is wrong either way. **The release happens under `NonCancellable`**, because a
+cancelled coroutine cannot make a suspending call, and a scope dying mid-step is exactly what a crash
+looks like.
 
 ## `getOrPut` on a `ConcurrentHashMap` is not atomic
 
