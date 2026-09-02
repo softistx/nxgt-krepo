@@ -1,4 +1,4 @@
-package com.softistx.ktor.mongo
+package com.softistx.mongo.ktor
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase

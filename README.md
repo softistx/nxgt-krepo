@@ -95,6 +95,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`examples/material-demo/README.md`](examples/material-demo/README.md) | The catalogue — why it is three modules, how to run it, how a story is registered |
 | [`libs/stx-kafka/stx-kafka/README.md`](libs/stx-kafka/stx-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
 | [`libs/stx-mongo/stx-mongo/README.md`](libs/stx-mongo/stx-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
+| [`libs/stx-mongo/stx-mongo-ktor/README.md`](libs/stx-mongo/stx-mongo-ktor/README.md) | The Ktor plugin — why the client is built in the library and not in the plugin, and why `uri` and `database` have no defaults |
 | [`docs/telemetry.md`](docs/telemetry.md) | What a stx-telemetry call may say — the root's settings, the log and span verbs, the severities, the attribute rules, `traceparent` and the signal model |
 | [`libs/stx-telemetry/stx-telemetry/README.md`](libs/stx-telemetry/stx-telemetry/README.md) | The telemetry library — why the span is a coroutine context element and not an MDC, why an event is a type, and why writing a log never waits |
 | [`libs/stx-telemetry/stx-telemetry-otlp/README.md`](libs/stx-telemetry/stx-telemetry-otlp/README.md) | The OTLP exporter — why not the Java SDK, the two encoding details that are easy to get wrong, and what is retried |
