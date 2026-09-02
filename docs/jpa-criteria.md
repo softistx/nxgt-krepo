@@ -12,6 +12,7 @@ says it loads. `docs/jpa-mapping.md` is the other half of this one — what an *
 own, no scope to be inside, and nothing that has to be finished before it is worth anything. A
 criteria is Criteria's; what these add is that its attributes are named `Purchase::total` instead of
 `"total"`, and that the result reaches a suspending terminal instead of a `CompletionStage`.
+[The last section](#the-whole-thing) is a read layer that uses all of it at once.
 
 ## The statement
 
@@ -231,8 +232,21 @@ val criteria = session.createQuery<PurchaseSummary>()
 val purchase = criteria.from(Purchase::class.java)
 val buyer = purchase.join(Purchase::customer)
 
-criteria.multiselect(purchase[Purchase::reference], purchase[Purchase::total], buyer[Buyer::name])
+criteria.select(
+    purchase.builder.construct(
+        PurchaseSummary::class.java,
+        purchase[Purchase::reference],
+        purchase[Purchase::total],
+        buyer[Buyer::name],
+    ),
+)
 ```
+
+**`select(construct(...))` and not `multiselect(...)`.** Both of Jakarta Persistence 3.2's
+`multiselect` overloads are deprecated, so the shorter spelling compiles with a warning and will
+stop compiling eventually. `construct` names the result class where the statement's type argument
+already implied it, which is the one thing lost — and `purchase.builder` is how the builder is
+reached off a node already in hand.
 
 `groupBy` and `having` are Criteria's own, and `having` is the only place a condition on an aggregate
 can go — `where` runs before the grouping. A projection of one column needs no class at all:
@@ -266,6 +280,127 @@ picks neither. Naming `Y` picks the second.
 will render it without comment. Where the restrictions are assembled from parts — `all(filters)`
 answering `null` for a request that narrowed nothing — check the result before running it.
 
+## The whole thing
+
+Every section above is one part of the vocabulary. This is a read layer that uses them together — a
+narrowed, ordered, paged list and the detail behind it — over the three entities the rest of this
+page names. It is the shape a listing endpoint has, and every rule above shows up in it somewhere.
+
+### Restrictions worth a name
+
+```kotlin
+object PurchaseSpecs {
+    fun over(cents: Long): JpaSpec<Purchase> = { it[Purchase::total] gt cents }
+
+    fun inTier(tier: String): JpaSpec<Purchase> = { it[Purchase::customer][Buyer::tier] eq tier }
+
+    fun referenced(term: String): JpaSpec<Purchase> = { it[Purchase::reference] ilike "%$term%" }
+}
+```
+
+A `JpaSpec<T>` is `(Root<T>) -> Predicate?` and nothing else, so naming a restriction needs no
+framework — only a function that returns one. `inTier` reaches through the association by chaining
+paths, which joins implicitly and keeps the spec usable from a projection, where a `fetch` could not
+go.
+
+### The list page is a projection
+
+```kotlin
+data class PurchaseRow(val reference: String, val total: Long, val buyer: String)
+
+suspend fun JpaSession.purchasePage(
+    filters: List<JpaSpec<Purchase>>,
+    size: Int,
+    offset: Int = 0,
+): List<PurchaseRow> {
+    val criteria = createQuery<PurchaseRow>()
+    val purchase = criteria.from(Purchase::class.java)
+    val buyer = purchase.join(Purchase::customer)
+
+    criteria.select(
+        buyer.builder.construct(
+            PurchaseRow::class.java,
+            purchase[Purchase::reference],
+            purchase[Purchase::total],
+            buyer[Buyer::name],
+        ),
+    )
+    all(filters.mapNotNull { it(purchase) })?.let(criteria::where)
+    criteria.orderBy(desc(purchase[Purchase::total]), asc(purchase[Purchase::reference]))
+
+    return query(criteria).limit(size).offset(offset).list()
+}
+```
+
+**A projection rather than the entity, because a list page shows three of its columns.** It reads
+only what it names, puts nothing in the persistence context, and has no lazy association left to
+throw on — which is what makes `limit` and `offset` safe here in a way they are not over a
+`fetchEach`.
+
+`all(...)` folding the filters is what lets the caller pass none: an empty list is `null`, which
+narrows nothing, rather than a predicate that matches nothing. That distinction is the whole reason
+`all` returns a nullable — and `?.let(criteria::where)` is how a caller says "narrow if there is
+anything to narrow by".
+
+The ordering ends in `reference` and not in `total` alone, for the same reason a keyset cursor ends
+in the id: `offset` over rows that tie is a page boundary that moves.
+
+### The detail is a plan
+
+```kotlin
+suspend fun JpaSession.purchaseDetail(id: Long, plan: EntityGraph<Purchase>): Purchase? =
+    find<Purchase>(id, plan)
+
+val plan = session.entityGraph<Purchase>()
+plan.add(Purchase::customer)
+plan.subgraphEachOf(Purchase::lines).add(PurchaseLine::purchase)
+```
+
+**A graph and not a fetch join, because there is no query here to hang a join on.** `find` loads by
+identifier; the plan is what says which associations come with it. It also reaches two levels, where
+a fetch stops at one — and it is a value, so the same plan serves every request and a `find` and a
+query cannot disagree about what "a purchase with its buyer" means.
+
+### The collections come back separately
+
+```kotlin
+suspend fun JpaSession.linesOf(references: List<String>): Map<String, List<String>> {
+    if (references.isEmpty()) return emptyMap()
+
+    val criteria = createQuery<PurchaseLine>()
+    val line = criteria.from(PurchaseLine::class.java)
+    val owner = line.fetch(PurchaseLine::purchase)
+
+    criteria.where(owner[Purchase::reference] oneOf references)
+
+    return query(criteria).list().groupBy({ it.purchase!!.reference }, { it.sku })
+}
+```
+
+**This is the answer to the one trap on this page that nothing refuses.** A `fetchEach` under a
+`limit` gives fewer owners than asked for, one of them silently incomplete and cached as whole. So
+the page is taken first, over owners, and their collections are loaded in a second query keyed on
+what came back. Two queries, both bounded, neither lying.
+
+Note `fetch` and then `owner[…]` in the `where`: the fetch node *is* a join, so the same node filters
+and loads, and the query does not join twice to do both. Fetching after a plain join on the same
+attribute would have emitted two joins to the same table — fetch first, and let the value it returns
+be the join.
+
+### What the three of them do together
+
+```kotlin
+val page = session.purchasePage(
+    filters = listOf(PurchaseSpecs.over(100L), PurchaseSpecs.inTier("gold")),
+    size = 20,
+)
+val lines = session.linesOf(page.map { it.reference })
+```
+
+Over three purchases — two for a gold-tier buyer at 400 and 150, one for a silver-tier buyer at 50 —
+that answers with `P-1 400 ada` and `P-2 150 ada`, and their lines in one further query. Passing no
+filters at all answers with all three, which is the `all(emptyList()) == null` rule doing its job
+rather than an empty page.
 ---
 
 Underneath it is JPA Criteria: Hibernate renders the SQL, and this is a Kotlin surface over its query

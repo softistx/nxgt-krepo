@@ -7,7 +7,8 @@ it lives here rather than in the module README, which answers *why the library i
 and stays roughly the size it is.
 
 `docs/jpa-criteria.md` is the other half — what a *query* may say. `libs/stx-jpa/stx-jpa/README.md` has
-the reasoning behind both.
+the reasoning behind both. [The last section](#the-whole-thing) is one entity
+obeying every rule on this page, with the schema it exports underneath it.
 
 ## Associations are lazy
 
@@ -218,3 +219,103 @@ statement of a rule rather than two that can drift apart.
 `expressly` comes along as a runtime-only dependency. Hibernate Validator interpolates a message like
 *"must be between {min} and {max}"* through Jakarta Expression Language and ships no implementation
 of one; without it the first constraint is a `NoClassDefFoundError`.
+
+## The whole thing
+
+Every section above is one rule. This is an entity that obeys all of them at once — and because the
+only honest witness to a mapping is the schema it exports, what Postgres reports for each column is
+underneath it.
+
+```kotlin
+@Embeddable
+class Handover(
+    var latitude: Double = 0.0,
+    var longitude: Double = 0.0,
+    var instructions: String = "",
+)
+
+@Entity
+@Table(name = "shipments")
+class Shipment(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+    @Column(nullable = false, unique = true)
+    var trackingRef: String = "",
+    var externalId: Uuid = Uuid.random(),
+    var dispatchedAt: Instant = Clock.System.now(),
+    @Embedded
+    @JdbcTypeCode(SqlTypes.JSON)
+    var handover: Handover = Handover(),
+    @field:NotNull
+    @field:Size(min = 2, max = 40)
+    var carrier: String? = null,
+    @ManyToOne(fetch = FetchType.LAZY)
+    var purchase: Purchase? = null,
+) : AuditedEntity()
+```
+
+Nothing on that class configures this module. Every line is JPA, Hibernate or Bean Validation, and
+what makes it a *stx-jpa* entity is the four defaults it is allowed to lean on.
+
+| Column | Type Postgres reports | Which rule put it there |
+| --- | --- | --- |
+| `tracking_ref` | `character varying` | The naming strategy — `trackingRef` unquoted would otherwise be `trackingref` |
+| `external_id` | `uuid` | The `autoApply` converter for `kotlin.uuid.Uuid`. Without it the type is serialized and the column is bytes nothing else can read |
+| `dispatched_at` | `timestamp with time zone` | The same, for `kotlin.time.Instant` |
+| `handover` | `jsonb` | `@Embedded` + `@JdbcTypeCode(SqlTypes.JSON)` — no `@Serializable`, no format mapper |
+| `carrier` | `character varying(40)` | `@Size(max = 40)`, which reaches the schema as well as the check |
+| `purchase_id` | `bigint` | An ordinary `@ManyToOne`, annotated `LAZY` because JPA's default is not |
+| `created_at` `last_modified_at` `created_by` `last_modified_by` | | `AuditedEntity` |
+
+Four of those rows are the ones worth knowing, because each of them fails *silently* when it is
+missing rather than loudly:
+
+- **`external_id` and `dispatched_at`.** An unmapped type is not refused — it is serialized. The
+  entity writes, reads and agrees with itself perfectly, and the column holds bytes that psql, a
+  migration and every other client of that database cannot read, compare or index.
+- **`tracking_ref`.** Hibernate on its own keeps the property name and Postgres folds it, so a
+  library without this strategy gives `trackingref`. Nothing breaks; the schema is just no longer
+  written the way SQL is written.
+- **`carrier`.** `@field:` and not `@Size` alone. A constraint annotation that lands on the
+  constructor parameter is one Hibernate never sees — it compiles, it exports `varchar(255)`, and it
+  validates nothing.
+- **`purchase`.** `FetchType.LAZY` spelled out, because JPA's default for a to-one is `EAGER` and
+  the reactive session has no transparent lazy loading. Eager is a select per distinct owner; the
+  query says what it loads instead, and [`docs/jpa-criteria.md`](jpa-criteria.md#the-whole-thing) is
+  the read layer that says it.
+
+### Connecting it
+
+```kotlin
+val jpa = Jpa.connect(
+    JpaConfig(uri = "postgresql://localhost:5432/orders", username = …, password = …),
+    listOf(Buyer::class, Purchase::class, PurchaseLine::class, Shipment::class),
+)
+```
+
+**Every entity in the unit is named, including the ones only reached through an association.**
+Leaving `PurchaseLine` out of that list is not a missing feature at startup — it is
+`AnnotationException: Association 'Purchase.lines' targets the type 'PurchaseLine' which does not
+belong to the same persistence unit`, at `connect`, before anything runs. Which is the right moment
+for it: `Jpa.scan` exists for applications that would rather not maintain the list, at the cost of
+a mapping that goes quiet when a class moves.
+
+### Writing one
+
+```kotlin
+val shipment = jpa.transaction { session ->
+    val shipment = Shipment(
+        trackingRef = "S-1",
+        carrier = "courier-one",
+        handover = Handover(52.52, 13.40, "leave with neighbour"),
+    ).apply { createdBy = "dispatcher" }
+    session.persist(shipment)
+    shipment
+}
+```
+
+`createdAt` and `lastModifiedAt` are stamped inside the flush and need nothing from the caller;
+`createdBy` is set here because only the caller knows the principal — there is no ambient user on a
+Vert.x context and nothing in this module reads a security context. An unset one is the empty string,
+which says *unset* as plainly as the epoch does for a timestamp.

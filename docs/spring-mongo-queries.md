@@ -14,7 +14,8 @@ model, the error and locale decisions, and the seven library integrations.
 this module's own and nothing that has to be finished before it is worth anything. A `Criteria` is
 Spring's; what these add is that its fields are named `Product::price` instead of `"price"`, that
 the combinators build the operator they say they build, and that a query string reaching them
-cannot say `$where`.
+cannot say `$where`. [The last section](#the-whole-thing) is the whole path a paged endpoint takes,
+from the document to the JSON.
 
 ## The predicate DSL
 
@@ -213,6 +214,147 @@ and the driver has a codec for `java.util.Date` and none for `kotlin.time.Instan
 Note that BSON dates hold milliseconds: a round trip loses anything finer. That matters for a cursor
 built from a timestamp and not at all for a `createdAt` somebody displays. Storing a string would
 keep the nanoseconds and lose range queries and index ordering, which is the worse trade.
+
+## The whole thing
+
+Every section above is one part of the vocabulary. This is the path a paged list endpoint actually
+takes, from the document to the JSON — the code is `examples/spring-orders`, so it compiles and its
+specs run on every build.
+
+### The document
+
+```kotlin
+@Auditable
+@Document("orders")
+data class Order(
+    @Id val id: String = ObjectId().toHexString(),
+    @Indexed(unique = true) @Field("ref") val reference: String,
+    val customer: String,
+    val status: OrderStatus = OrderStatus.PENDING,
+    /** Minor units — an order total is not a `Double`, and rounding a price is not a display choice. */
+    val total: Long,
+    val tags: List<String> = emptyList(),
+    @Indexed val placedAt: Instant = Clock.System.now(),
+)
+```
+
+Two fields here are load-bearing for everything below. `placedAt` is a `kotlin.time.Instant`, which
+is the field type that fails at *query* time with `Can't find a codec` unless
+[the converters](#the-converters) are registered — `stx.data.mongo.enabled` is what registers them.
+And `reference` is stored as `ref`, which is what makes the cursor rule visible rather than
+theoretical: sorting by `reference` and paging through it works only because the cursor is built
+from the mapping and not from the property name.
+
+### The repository
+
+One file where `template` appears, and nothing else:
+
+```kotlin
+@Repository
+class OrderRepository(
+    private val template: ReactiveMongoTemplate,
+) {
+    suspend fun page(window: MongoPage): Page<Order> = template.findPage(window)
+
+    suspend fun find(id: String): Order? = template.findById<Order>(id).awaitFirstOrNull()
+
+    suspend fun existsByReference(reference: String): Boolean =
+        template.existsBy<Order>(("ref" eq reference).query)
+
+    suspend fun paidAtLeast(floor: Long): List<Order> =
+        template
+            .findAsFlow<Order>(all(Order::status eq OrderStatus.PAID.name, Order::total gte floor).query)
+            .toList()
+}
+```
+
+It is a plain class over `ReactiveMongoTemplate` and not a `CrudRepository`, because this module
+offers extensions rather than a base class: `findPage<Order>(window)` needs no `KClass`, and a class
+cannot have a `reified` type parameter where an extension can.
+
+Three of those four lines are worth reading twice. `existsByReference` names `"ref"` as a **string**,
+because that is the stored name and there is no property called `ref` to name it with — the string
+forms exist for exactly this. `paidAtLeast` builds its predicate with `all(…)` rather than chaining
+`.and(…)`, so both clauses survive. And `find` uses `findById` rather than `("_id" eq id).query`,
+because the id is a `String` here and an `ObjectId` in the database, and only the first of those two
+goes through the converter that knows it.
+
+### The window, built once
+
+```kotlin
+override suspend fun findOrders(
+    filter: String?,
+    sort: String?,
+    size: Int?,
+    cursor: String?,
+): OrderPage =
+    orders
+        .page(
+            MongoPage.first(
+                size = size?.takeIf { it > 0 } ?: DEFAULT_PAGE_SIZE,
+                cursor = cursor,
+                query = filter.parseFilter(),
+                sort = sort.parseSort().toSort(),
+            ),
+        ).page()
+```
+
+**The ordering goes to `sort` and the narrowing to `query`, and the two are not interchangeable.**
+The keyset cursor is derived from `sort` alone, so an ordering baked into the query gives a
+right-looking first page, an empty second one, and nothing that says so. `MongoPage` refuses the
+combination outright now — this is what to write instead.
+
+A functional route gets the same window from one call, because `ServerRequest` already has all four
+parameters:
+
+```kotlin
+val page = template.findPage<Order>(request.mongoPage())
+```
+
+A controller is handed them already bound, so it spells the window out; a route reads them off the
+request. `mongoPage()` puts each where it belongs, which is why it is the spelling to reach for when
+there is a `ServerRequest` to reach it from.
+
+### The request, and what comes back
+
+```
+GET /orders?filter=status:eq:PAID;total:gte:10000&sort=placedAt:DESC&size=20
+```
+
+The filter narrows to paid orders of at least 100.00, the sort orders them newest first — and the
+keyset machinery appends `_id` to that ordering, because a keyset resumes from the last row's key
+and `placedAt` alone is not unique.
+
+```json
+{
+  "data": [ { "id": "…", "reference": "ORD-1042", "status": "PAID", "total": 24900 } ],
+  "info": {
+    "startCursor": "…",
+    "endCursor": "eyJwbGFjZWRBdCI6…",
+    "hasPreviousPage": false,
+    "hasNextPage": true
+  }
+}
+```
+
+`hasNextPage` costs no second query: `findPage` asks for one row more than the page size, and the
+presence of that extra row is the whole answer. The next page is the same URL with
+`&cursor=<endCursor>` — and **not** with a different `sort`, which would be refused, because a
+cursor from a differently ordered query would page along the wrong key and answer with rows that
+look perfectly plausible.
+
+### What the client can and cannot do to it
+
+```
+?filter=status:eq:PIAD                 → 400 filters.invalid, naming the clause
+?filter=total:gte:cheap                → 400 — never coerced to 0
+?filter=$where:eq:1                    → 400 — the field pattern refuses it
+?sort=$where:ASC                       → dropped; the rest of the sort still applies
+```
+
+That asymmetry is the design and not an oversight. **A dropped filter clause returns more rows than
+the caller asked for**, so `status:eq:PIAD` would answer with the whole collection; a dropped sort
+clause returns the right rows in the wrong order. Narrowing cannot afford to shrug, and ordering can.
 
 ## Adding to this vocabulary
 
