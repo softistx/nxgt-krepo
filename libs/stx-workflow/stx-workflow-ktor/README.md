@@ -3,16 +3,53 @@
 The Ktor plugin for [`stx-workflow`](../stx-workflow/README.md): one engine per application, and the
 worker on the application's own scope.
 
-```kotlin
-install(Workflows) {
-    store = RedisWorkflowStore(application.redis)
-    register(checkout)
-    worker = true
-}
+## An application that uses it
 
-post("/checkout") { call.respond(call.workflows.start(checkout, call.receive())) }
-post("/checkout/{id}/approve") { call.workflows.signal(call.parameters["id"]!!, APPROVAL, call.receive()) }
+A checkout that stops for a human approval and delegates delivery to a child workflow — the
+declaration itself is in [`docs/workflow.md`](../../../docs/workflow.md#the-whole-thing).
+
+```kotlin
+fun Application.module() {
+    install(RedisConnection) { config = RedisConfig(uri = "redis://localhost:6379", namespace = "orders") }
+
+    install(Workflows) {
+        store = RedisWorkflowStore(application.redis)
+        register(fulfilment)               // the child, or the parent cannot look it up on resume
+        register(checkout)
+        worker = true                      // this process also recovers abandoned instances
+        injectable = true                  // and hands the engine to Ktor's DI
+    }
+
+    routing {
+        post("/checkout") {
+            val order = call.receive<Order>()
+            call.respond(call.workflows.start(checkout, order, id = "checkout:${order.id}"))
+        }
+
+        post("/checkout/{id}/approve") {
+            call.workflows.signal("checkout:${call.parameters["id"]}", APPROVAL, call.receive<Approved>())
+            call.respond(HttpStatusCode.Accepted)
+        }
+
+        post("/hooks/courier") {
+            val event = courier.verify(call.receiveText(), call.request.headers)   // authenticate first
+            call.workflows.signal("${event.reference}/fulfil", COLLECTED, Collected(event.at))
+            call.respond(HttpStatusCode.OK)
+        }
+    }
+}
 ```
+
+Three things in there are load-bearing rather than decorative:
+
+- **`install(Workflows)` comes after the connection plugin.** Ktor runs install blocks in order, and
+  `application.redis` throws by name when `install(RedisConnection)` has not happened yet.
+- **The id is chosen, not generated.** `"checkout:${order.id}"` is what lets the approval route and
+  the courier's webhook find the instance again with nothing persisted to make the link — and the
+  child's is that plus the node's path, which is what `${event.reference}/fulfil` addresses.
+- **`start` returns at the first park**, not when the run is submitted, so `POST /checkout` answers
+  with an `Awaiting` instance rather than holding the request for two days. A declaration with no
+  park in it would hold it for the whole run; hand that off to a coroutine of your own.
 
 `call.workflows` and `Application.workflows` reach the engine; `injectable = true` registers it with
 Ktor's DI so a class the container builds can take a `WorkflowEngine` in its constructor.

@@ -2,7 +2,8 @@
 
 The vocabulary of [`stx-workflow`](../libs/stx-workflow/stx-workflow/README.md): every verb, what it
 takes, and what the engine does with it. The module README explains *why* the library is shaped this
-way; this file is what you may write.
+way; this file is what you may write. Every section below is one verb;
+[the last one](#the-whole-thing) is all of them in a single declaration.
 
 - [Declaring a workflow](#declaring-a-workflow)
 - [Steps](#steps)
@@ -23,6 +24,7 @@ way; this file is what you may write.
 - [In a Ktor application](#in-a-ktor-application)
 - [In a Spring Boot application](#in-a-spring-boot-application)
 - [The worker](#the-worker)
+- [The whole thing](#the-whole-thing)
 
 ## Declaring a workflow
 
@@ -412,6 +414,10 @@ the conditions again, so a fork stays taken even after a later step changed the 
 The branch's own journal entry means "this fork has been decided", and its `value` is the arm's name.
 
 Arms are `NodeSink<C>`, so anything a workflow can declare an arm can declare, branches included.
+
+**An arm is a path segment**, so a node inside one is `delivery/express/notify`. The `otherwise` arm
+is named `otherwise` — `delivery/otherwise/notify` — which is the one arm name you do not choose and
+the one to know before reading a journal.
 
 ## Fan-out
 
@@ -870,28 +876,95 @@ put them behind whatever your other admin routes are behind.
 
 ## In a Ktor application
 
+`com.softistx.workflow.ktor`, in `stx-workflow-ktor` — a module beside the library rather than a
+package in `stx-ktor`. This is [the whole thing](#the-whole-thing) behind HTTP.
+
 ```kotlin
 install(RedisConnection) { config = RedisConfig(uri = …, namespace = "orders") }
+
 install(Workflows) {
     store = RedisWorkflowStore(application.redis)
+    register(fulfilment)                       // the child, or the parent cannot look it up
     register(checkout)
-    worker = true
-    injectable = true
+    worker = true                              // this process also recovers abandoned instances
+    injectable = true                          // and hands the engine to Ktor's DI
 }
-
-post("/checkout") { call.respond(call.workflows.start(checkout, call.receive())) }
-post("/checkout/{id}/approve") { call.workflows.signal(call.parameters["id"]!!, APPROVAL, call.receive()) }
 ```
 
-`com.softistx.workflow.ktor`, in `stx-workflow-ktor` — a module beside the library rather than a package in `stx-ktor`. `call.workflows` and
-`Application.workflows` reach the engine; `injectable = true` registers it with Ktor's DI so a class
-the container builds can take a `WorkflowEngine` in its constructor.
+**`install(Workflows)` goes after the connection plugin it reads from.** Ktor runs install blocks in
+order, and `application.redis` throws by name when `install(RedisConnection)` has not happened yet.
+The plugin opens nothing: `RedisWorkflowStore(application.redis)` shares the connection that plugin
+opened, because a second pool for the same server is one nobody asked for.
 
-The plugin **does not open a connection**. It takes a `WorkflowStore` that has one —
-`RedisWorkflowStore(application.redis)` shares what `install(RedisConnection)` opened — because a
-second pool for the same server is one nobody asked for. And nothing here is closed: an engine owns
-neither the store nor the connection beneath it, which is why this is the one plugin in that module
-with no `AutoCloseable` to hand over.
+`call.workflows` and `Application.workflows` reach the engine; `injectable = true` registers it with
+Ktor's DI so a class the container builds can take a `WorkflowEngine` in its constructor.
+
+### The three routes this declaration needs
+
+```kotlin
+routing {
+    post("/checkout") {
+        val order = call.receive<Order>()
+        call.respond(call.workflows.start(checkout, order, id = "checkout:${order.id}"))
+    }
+
+    post("/checkout/{id}/approve") {
+        val approved = call.receive<Approved>()
+        call.workflows.signal("checkout:${call.parameters["id"]}", APPROVAL, approved)
+        call.respond(HttpStatusCode.Accepted)
+    }
+
+    post("/hooks/courier") {
+        val event = courier.verify(call.receiveText(), call.request.headers)   // authenticate first
+        call.workflows.signal("${event.reference}/fulfil", COLLECTED, Collected(event.at))
+        call.respond(HttpStatusCode.OK)
+    }
+}
+```
+
+**`start` returns when the instance stops, not when it is submitted**, so what `POST /checkout`
+answers with is the instance as it stands after the first park — `Awaiting` on the approval for a
+large order, `Awaiting` on the child for a small one. That is a useful response and a short request.
+A declaration with no park in it would hold the request open for the whole run instead, and a caller
+that wants the work handed off starts it from a coroutine of its own.
+
+The approval route reconstructs the id rather than storing one, which is why `start` was given
+`id = "checkout:${order.id}"`. The webhook does the same one level down: the child's id is the
+parent's plus the node's path, so `${event.reference}/fulfil` addresses it with nothing persisted
+anywhere to make the link.
+
+What the webhook answers decides whether the courier tries again — the table under
+[waiting for a signal](#webhooks-and-callbacks) is the whole of it, and `WorkflowConflictException`
+is the one row that means *retry me*.
+
+### The operator's inbox is a route you write
+
+```kotlin
+authenticate("admin") {
+    get("/admin/workflows/failed") {
+        call.respond(call.workflows.find(WorkflowStatus.Failed).map { "${it.id} ${it.error?.node}" })
+    }
+
+    post("/admin/workflows/{id}/resume") {
+        call.respond(call.workflows.resume(call.parameters["id"]!!).status)
+    }
+}
+```
+
+There is deliberately no ready-made endpoint for this. A route that lists instances and restarts them
+is exactly the route that must not be open, and who may call it is a question about your application.
+
+### The module.yaml the caller needs
+
+```yaml
+settings:
+  kotlin:
+    serialization: json
+```
+
+A workflow context is `@Serializable` by definition, so the setting belongs to the *calling* module —
+nothing in `stx-workflow-ktor` is serializable and nothing there can supply it. Forgetting it is a
+`SerializationException` at the first `start`, not a compile error.
 
 **`worker = false` is the default, and it is a decision rather than caution.** Installing the plugin
 gives an application a way to *run* workflows; enlisting it in recovering every abandoned instance in
@@ -900,42 +973,94 @@ runs on the application's own scope and is closed with it — which is the half 
 `WorkflowWorker(engine).start(this)` by hand tends to forget, leaving a loop that outlives the
 redeploy it should have died with.
 
+Nothing here is closed: an engine owns neither the store nor the connection beneath it, which is why
+this is the one plugin in that module with no `AutoCloseable` to hand over.
+
 ## In a Spring Boot application
+
+`com.softistx.workflow.spring`, in `stx-workflow-spring` — a module beside the library rather than a
+package in `stx-spring-boot`. The same declaration, from the container's side.
 
 ```yaml
 stx:
-  redis:    { enabled: true, uri: redis://localhost:6379, namespace: orders }
+  redis:
+    enabled: true
+    uri: redis://localhost:6379
+    namespace: orders
   workflow:
     enabled: true
     store: redis          # or jpa, or mongo
-    worker: { enabled: true }
+    lease: 30s
+    retention: 7d
+    child-poll: 1m
+    worker:
+      enabled: true
 ```
+
+[`docs/spring-configuration.md`](spring-configuration.md) has every key and what each costs.
 
 ```kotlin
-@Bean fun checkout(stock: Stock, payments: Payments): Workflow<Checkout> =
-    workflowOf(CheckoutWorkflow(stock, payments))
+@Configuration
+class CheckoutWorkflows {
+    @Bean
+    fun fulfilment(courier: Courier): Workflow<Fulfilment> = fulfilmentWorkflow(courier)
 
-@RestController
-class Checkouts(private val workflows: WorkflowEngine, private val checkout: Workflow<Checkout>) {
-    @PostMapping("/checkout")
-    suspend fun start(@RequestBody order: Checkout) = workflows.start(checkout, order)
+    @Bean
+    fun checkout(
+        warehouse: Warehouse,
+        reviews: Reviews,
+        payments: Payments,
+        billing: Billing,
+        orders: Orders,
+        fulfilment: Workflow<Fulfilment>,
+    ): Workflow<Order> = checkoutWorkflow(warehouse, reviews, payments, billing, orders, fulfilment)
 }
 ```
-
-`com.softistx.workflow.spring`, in `stx-workflow-spring` — a module beside the library rather than a package in `stx-spring-boot`.
-[`docs/spring-configuration.md`](spring-configuration.md) has every key.
 
 **Every `Workflow<*>` bean is registered with the engine.** That is the whole wiring and the part
 that had to be right: an instance is stored under its workflow's *name*, so an engine that cannot
 look that name up cannot resume it after a restart, and a process that registered half the fleet's
 workflows will fail on the other half. Registering by existing as a bean means there is no second
-list to keep in step.
+list to keep in step — the child above is registered because it is a bean, not because anything
+mentions it twice.
+
+```kotlin
+@RestController
+class Checkouts(
+    private val workflows: WorkflowEngine,
+    private val checkout: Workflow<Order>,
+) {
+    @PostMapping("/checkout")
+    suspend fun start(@RequestBody order: Order) =
+        workflows.start(checkout, order, id = "checkout:${order.id}")
+
+    @PostMapping("/checkout/{id}/approve")
+    suspend fun approve(@PathVariable id: String, @RequestBody approved: Approved) =
+        workflows.signal("checkout:$id", APPROVAL, approved).status
+
+    @PostMapping("/hooks/courier")
+    suspend fun collected(@RequestBody body: String, @RequestHeader headers: HttpHeaders): HttpStatus {
+        val event = courier.verify(body, headers)              // authenticate first
+        workflows.signal("${event.reference}/fulfil", COLLECTED, Collected(event.at))
+        return HttpStatus.OK
+    }
+}
+```
 
 Like the Ktor plugin, it opens nothing. `stx.workflow.store` names one of the three stores in
 `stx-workflow-db` and it is built over the connection the matching `stx.*` group already opened.
 **Nothing is inferred**: an application with both a `Redis` and a `Jpa` bean is not saying where its
 workflow instances belong. Leave the key unset and declare a `WorkflowStore` bean instead, and
-`@ConditionalOnMissingBean` steps aside for it.
+`@ConditionalOnMissingBean` steps aside for it. `store: jpa` additionally needs
+`com.softistx.workflow.jpa` in `stx.jpa.packages`, or the session factory has no `WorkflowInstanceRow`
+to map — and nothing in this module can fix that, because the factory is built from a list only the
+application has.
+
+The worker is a `SmartLifecycle`: started after the context is refreshed and stopped before it is
+torn down, on a scope of its own. `stx.workflow.worker.enabled` is off by default for the reason the
+Ktor plugin's `worker` is — running workflows and recovering the fleet's abandoned ones are different
+jobs, and usually different pods. This declaration needs one of them somewhere, though: its
+`sleep("settlement", 2.days)` and its `child` node both move only when somebody comes back for them.
 
 ## The worker
 
@@ -963,3 +1088,284 @@ the instance's lock itself and returns quietly when somebody else has it, so two
 same id is the normal shape of this rather than a race to prevent. It runs on a `CoroutineScope` the
 caller owns and cancels; `close()` stops it and touches neither the engine nor the connection under
 it.
+
+## The whole thing
+
+Every section above is one verb. This is all of them in one declaration: a checkout that reserves
+stock, asks a person when the amount is large enough to be worth asking about, charges and invoices
+at once, delegates delivery to a workflow of its own, waits out a settlement window, and takes every
+bit of it back in reverse if any of it cannot be made to work.
+
+Read it as the shape a real one has rather than as a demonstration — the only contrived thing here
+is that the collaborators are interfaces with no bodies.
+
+### The context, and the keys
+
+**One `@Serializable` type, every field defaulted**, and the handles nullable because they do not
+exist until the node that earns them has run:
+
+```kotlin
+@Serializable
+data class Order(
+    val id: String,
+    val items: List<String> = emptyList(),
+    val total: Int = 0,                    // in cents — the review threshold reads this
+    val card: String = "",
+    val express: Boolean = false,
+    val reservationId: String? = null,
+    val reviewId: String? = null,
+    val approvedBy: String? = null,
+    val chargeId: String? = null,
+    val invoiceId: String? = null,
+    val trackingId: String? = null,
+)
+
+@Serializable
+data class Fulfilment(
+    val orderId: String,
+    val items: List<String> = emptyList(),
+    val booking: String? = null,
+    val collectedAt: String? = null,
+)
+```
+
+Two things arrive from outside, and two things the fan-out produces. Both are keys rather than bare
+names, because both are persisted before the workflow reads them and something has to hold the
+serializer:
+
+```kotlin
+@Serializable data class Approved(val by: String, val note: String = "")
+@Serializable data class Collected(val at: String)
+
+private val APPROVAL = signal<Approved>("approval")
+private val COLLECTED = signal<Collected>("collected")
+
+private val CHARGE = outcome<String>("charge")
+private val INVOICE = outcome<String>("invoice")
+```
+
+### The child
+
+Delivery is its own workflow because it parks for days on a courier's callback, and a node that
+parks for days cannot be a function call inside the parent's step:
+
+```kotlin
+fun fulfilmentWorkflow(courier: Courier): Workflow<Fulfilment> =
+    workflow("fulfilment") {
+        step("book") {
+            context.copy(booking = courier.book(context.orderId))
+        }.compensate {
+            courier.cancel(context.booking!!)
+        }
+
+        await(COLLECTED) { collected ->
+            context.copy(collectedAt = collected.at)
+        } within 2.days
+    }
+```
+
+### The declaration
+
+```kotlin
+fun checkoutWorkflow(
+    warehouse: Warehouse,
+    reviews: Reviews,
+    payments: Payments,
+    billing: Billing,
+    orders: Orders,
+    fulfilment: Workflow<Fulfilment>,
+): Workflow<Order> =
+    workflow("checkout") {
+        step("reserve") {
+            context.copy(reservationId = warehouse.reserve(context.items))
+        }.compensate {
+            warehouse.release(context.reservationId!!)
+        } retry {
+            times = 3
+            backoff = exponential(200.milliseconds, max = 5.seconds)
+        }
+
+        branch("review") {
+            on("manual", { it.total >= 50_000 }) {
+                step("open") {
+                    context.copy(reviewId = reviews.open(context.id, context.total))
+                }.compensate {
+                    reviews.close(context.reviewId!!)
+                }
+
+                await(APPROVAL) { approved ->
+                    context.copy(approvedBy = approved.by)
+                } within 24.hours
+            }
+            otherwise {
+                step("auto") { context.copy(approvedBy = "policy") }
+            }
+        }
+
+        parallel("provision") {
+            branch(CHARGE) {
+                payments.charge(context.card, context.total, key = idempotencyKey)
+            }.compensate { charge ->
+                payments.refund(charge)
+            }
+
+            branch(INVOICE) {
+                billing.issue(context.id, context.total, key = idempotencyKey)
+            }.compensate { invoice ->
+                billing.void(invoice)
+            }
+
+            merge { out ->
+                context.copy(chargeId = out[CHARGE], invoiceId = out[INVOICE])
+            }
+        } retry {
+            times = 3
+            backoff = exponential(500.milliseconds, max = 10.seconds)
+        } timeout 30.seconds
+
+        child(
+            "fulfil",
+            fulfilment,
+            with = { Fulfilment(orderId = context.id, items = context.items) },
+        ) { done ->
+            context.copy(trackingId = done.booking)
+        } within 3.days
+
+        sleep("settlement", 2.days)
+
+        step("confirm") {
+            orders.confirm(context.id)
+            context
+        }
+
+        branch("notify") {
+            on("express", { it.express }) {
+                step("express") { context.also { orders.notify(it.id, express = true) } }
+            }
+            otherwise {
+                step("standard") { context.also { orders.notify(it.id, express = false) } }
+            }
+        }
+    }
+```
+
+Eight nodes, and each one is a decision the declaration makes visible:
+
+| Node | Why it is that verb |
+| --- | --- |
+| `reserve` | A step, because it has an effect and an undo. The retry is asked for because releasing stock is safe to attempt twice |
+| `review` | A branch, because "does this need a person?" is a fork — and a fork is *said* here, not written as an `if`, so the journal records which way it went |
+| `review/manual/approval` | An `await`, because the answer arrives from another process, possibly tomorrow. The `within` is what releases the reservation when nobody ever answers |
+| `provision` | A fan-out, because the charge and the invoice have nothing to say to each other and each has its own undo |
+| `fulfil` | A child, because delivery parks for days and has compensations of its own |
+| `settlement` | A `sleep`, not a `delay` — two days of `delay` is a two-day uptime requirement |
+| `confirm` | A step with no compensation. Nothing here takes back a confirmation, and pretending otherwise would be a lie in the journal |
+| `notify` | A branch again, and the arms are steps rather than an `if` inside one, for the same reason `review` is |
+
+### Wiring it up
+
+```kotlin
+val fulfilment = fulfilmentWorkflow(courier)
+val checkout = checkoutWorkflow(warehouse, reviews, payments, billing, orders, fulfilment)
+
+val engine = WorkflowEngine(RedisWorkflowStore(redis)) {
+    register(fulfilment)          // both, or the child cannot be looked up on resume
+    register(checkout)
+}
+
+WorkflowWorker(engine).start(scope)          // somebody has to come back for the sleep
+
+engine.start(checkout, order, id = "checkout:${order.id}")
+```
+
+**Both workflows are registered, and the worker is not optional here.** A declaration holding a
+`sleep` and a `child` has two places where nothing but a poll will move it on: the settlement window
+has to be woken, and the parent finds out its child finished by asking. An engine with nobody
+polling runs this workflow as far as the fan-out and then stops for good.
+
+The id is chosen rather than generated, because the two callbacks below have to find the instance
+again and `"checkout:${order.id}"` is a string both sides can reconstruct.
+
+### The two things that come from outside
+
+```kotlin
+engine.signal("checkout:${order.id}", APPROVAL, Approved(by = "ops@example.com"))
+engine.signal("checkout:${order.id}/fulfil", COLLECTED, Collected(at = collectedAt))
+```
+
+The child's id is the parent's plus the node's path, which is what makes the courier's callback
+addressable without storing a second identifier anywhere.
+
+Neither call has to be ordered against the wait it answers. A courier that calls back before `book`
+has returned is the ordinary case, not the race — the delivery is written to the record when it is
+taken and read by the `await` whenever it gets there.
+
+### The journal one run leaves
+
+A small order, which takes the automatic arm:
+
+```
+Succeeded  reserve
+Succeeded  review
+Succeeded  review/otherwise/auto
+Succeeded  provision/charge
+Succeeded  provision/invoice
+Succeeded  provision
+Paused     fulfil
+Succeeded  fulfil
+Paused     settlement
+```
+
+A large one, which takes the manual arm and stops for a person:
+
+```
+Succeeded  reserve
+Succeeded  review
+Succeeded  review/manual/open
+Paused     review/manual/approval
+Succeeded  review/manual/approval
+Succeeded  provision/charge
+Succeeded  provision/invoice
+Succeeded  provision
+Paused     fulfil
+Succeeded  fulfil
+Paused     settlement
+```
+
+Three things to read off those. **A fan-out writes one entry per leg and one for itself**, so
+`provision` costs three lines rather than one. **A wait writes `Paused` when it stops and
+`Succeeded` when it ends** — the pair is how "where is this instance parked" is answered without
+a field that could disagree with the journal, and the child's `fulfil` writes the same pair for
+the same reason. And **the arm a branch took is the branch's own entry**: `review` succeeded, and
+its `value` holds the arm's name.
+
+`otherwise` is a path segment like any other — a step in it is `review/otherwise/auto`, not
+`review/auto`. Names given to `on` arms are yours; `otherwise` is the one the engine names for you.
+
+### What each failure does
+
+| What fails | What the instance does |
+| --- | --- |
+| `warehouse.reserve` | Three attempts, growing 200ms → 5s. Then nothing before it to undo, so the instance lands `Compensated` having done nothing |
+| `billing.issue` | The fan-out is retried three times, and **only the leg that has not succeeded is re-run** — the card is charged once on the way to failing. Then `provision/charge` is refunded, `reserve` is released, and the instance is `Compensated` |
+| Nobody approves within 24 hours | `AwaitTimeoutException`. The review is closed and the reservation released — which is what the deadline is *for*, and why it is a failure rather than an arm |
+| The child cannot deliver | `ChildFailedException` on the `fulfil` node. The child has already run its own compensations in its own journal; the parent then unwinds through the fan-out and the reservation |
+| `payments.refund` itself fails | The unwind stops there, and the instance lands `Failed` with the node named. Nothing before it is undone, and `engine.find(Failed)` is where somebody finds it |
+
+That second row is the one worth checking against the journal, because it is the behaviour the
+design is bought with:
+
+```
+Succeeded    reserve
+Succeeded    review
+Succeeded    review/otherwise/auto
+Succeeded    provision/charge
+Compensated  provision/charge
+Failed       provision/invoice     (3 attempts)
+Compensated  reserve
+```
+
+`review/otherwise/auto` is stepped over on the way back, because a step with no compensation has
+nothing to take back. `provision/charge` is compensated where it stands, before the unwind leaves
+the fan-out. And the instance is `Compensated`, not `Failed` — a workflow that could not finish and
+undid itself completely did exactly what it promised.

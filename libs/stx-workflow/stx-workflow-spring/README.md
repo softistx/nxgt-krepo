@@ -3,19 +3,65 @@
 Spring Boot auto-configuration for [`stx-workflow`](../stx-workflow/README.md). One engine for the
 application, over the store `stx.workflow.store` names, with every `Workflow` bean registered on it.
 
+## An application that uses it
+
+The same checkout that stops for a human approval and delegates delivery to a child workflow — the
+declaration itself is in [`docs/workflow.md`](../../../docs/workflow.md#the-whole-thing).
+
 ```yaml
 stx:
-  redis: { enabled: true, uri: redis://localhost:6379, namespace: orders }
+  redis:
+    enabled: true
+    uri: redis://localhost:6379
+    namespace: orders
   workflow:
     enabled: true
     store: redis          # or jpa, or mongo
-    worker: { enabled: true }
+    lease: 30s
+    retention: 7d
+    child-poll: 1m
+    worker:
+      enabled: true
 ```
 
 ```kotlin
-@Bean fun checkout(stock: Stock, payments: Payments): Workflow<Checkout> =
-    workflowOf(CheckoutWorkflow(stock, payments))
+@Configuration
+class CheckoutWorkflows {
+    @Bean
+    fun fulfilment(courier: Courier): Workflow<Fulfilment> = fulfilmentWorkflow(courier)
+
+    @Bean
+    fun checkout(
+        warehouse: Warehouse,
+        payments: Payments,
+        orders: Orders,
+        fulfilment: Workflow<Fulfilment>,
+    ): Workflow<Order> = checkoutWorkflow(warehouse, payments, orders, fulfilment)
+}
+
+@RestController
+class Checkouts(
+    private val workflows: WorkflowEngine,
+    private val checkout: Workflow<Order>,
+) {
+    @PostMapping("/checkout")
+    suspend fun start(@RequestBody order: Order) =
+        workflows.start(checkout, order, id = "checkout:${order.id}")
+
+    @PostMapping("/checkout/{id}/approve")
+    suspend fun approve(@PathVariable id: String, @RequestBody approved: Approved) =
+        workflows.signal("checkout:$id", APPROVAL, approved).status
+}
 ```
+
+Both workflows are registered because both are beans — the child is not mentioned twice anywhere.
+The id is chosen rather than generated so the approval route can reconstruct it, and the courier's
+webhook addresses the child as `"checkout:$id/fulfil"`, which is the parent's id plus the node's
+path. `start` returns at the first park, so `POST /checkout` answers with an `Awaiting` instance
+rather than holding the request until the delivery is collected.
+
+An annotated declaration is a bean the same way — `workflowOf(CheckoutWorkflow(stock, payments))`
+returns an ordinary `Workflow<C>`, and nothing downstream can tell the two front ends apart.
 
 [`docs/spring-configuration.md`](../../../docs/spring-configuration.md) has every key.
 

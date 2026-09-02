@@ -987,6 +987,13 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
+  **Every reference page and every integration README ends with a complete example.** `## The whole
+  thing` on a `docs/` page is one declaration using the whole vocabulary at once; `## An application
+  that uses it` on a `*-ktor` / `*-spring` README is the install or the YAML, the routes, and what
+  comes back. A page of fragments documents each verb and teaches nobody how they fit — which is
+  what `docs/workflow.md` was before it grew one. A change that adds a verb extends that example in
+  the same commit, and every Kotlin block in one is compiled before it is written down.
+
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
   the signal to keep appending. `libs/stx-openapi-generator/README.md` reached 394 lines before its
   reference half moved out; splitting on *audience* rather than on length is what made the seam
