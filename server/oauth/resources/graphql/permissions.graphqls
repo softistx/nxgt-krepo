@@ -1,16 +1,16 @@
-type Permission {
+type Permission @annotate(name: "Serializable", type: "serialization") {
     id: ID!
     name: String!
     description: String
     metadata: AuditMetadata!
 }
 
-input CreatePermissionInput {
+input CreatePermissionInput @annotate(name: "Serializable", type: "serialization") {
     name: String!
     description: String
 }
 
-input UpdatePermissionInput {
+input UpdatePermissionInput @annotate(name: "Serializable", type: "serialization") {
     name: String
     description: String
 }
