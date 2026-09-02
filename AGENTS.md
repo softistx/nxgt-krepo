@@ -896,6 +896,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-migrations/stx-migrations-ktor/README.md` | The Ktor plugin — why `runBlocking` in `install` is the gate, why it goes after the connection plugin, why it owns and closes nothing, and why the `sql { }` / `mongo { }` DSL ends in `gate` |
   | `libs/stx-migrations/stx-migrations-spring/README.md` | The Spring auto-configuration — `stx.migrations.*`, why an `InitializingBean` and not a suspending listener, and why nothing is inferred about where the ledger goes |
   | `libs/stx-kafka/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
+  | `libs/stx-kafka/stx-kafka-ktor/README.md` | The Ktor plugin for it — why it owns nothing, and why that is the correct shape rather than a gap |
   | `libs/stx-mongo/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/stx-mongo/stx-mongo-ktor/README.md` | The Ktor plugin for it — why construction stays in the library and only the lifecycle is here, and why two handles rather than one |
   | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
