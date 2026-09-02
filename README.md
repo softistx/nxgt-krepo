@@ -71,6 +71,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-openapi-generator/README.md`](libs/stx-openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
 | [`libs/stx-common/README.md`](libs/stx-common/README.md) | The shared module — what belongs in it, which concurrency type a given caller wants, why `getOrPut` on a `ConcurrentHashMap` is not atomic, and what the standard library already covers |
 | [`libs/stx-amqp/stx-amqp/README.md`](libs/stx-amqp/stx-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
+| [`libs/stx-amqp/stx-amqp-ktor/README.md`](libs/stx-amqp/stx-amqp-ktor/README.md) | The Ktor plugin — why it owns the connection and not the channel, and why the connect blocks |
 | [`libs/stx-i18n/stx-i18n/README.md`](libs/stx-i18n/stx-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
 | [`libs/stx-ktor/README.md`](libs/stx-ktor/README.md) | The Ktor integrations — the seven plugins, what each owns, and how one module holds them without a fat dependency list |
 | [`libs/stx-spring-boot/README.md`](libs/stx-spring-boot/README.md) | The Spring integration — the opt-in `stx.*` model, why the IDE metadata is written by hand, and what `compile-only` buys a consumer |
