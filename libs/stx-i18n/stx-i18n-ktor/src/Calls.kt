@@ -1,4 +1,4 @@
-package com.softistx.ktor.i18n
+package com.softistx.i18n.ktor
 
 import com.softistx.i18n.Messages
 import com.softistx.i18n.Translator
