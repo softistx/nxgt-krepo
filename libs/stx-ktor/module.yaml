@@ -16,7 +16,6 @@ dependencies:
   # Verified with `./kotlin show dependencies -m stx-ktor`: a compile-only entry is in the COMPILE
   # scope and absent from RUNTIME.
   - //libs/stx-i18n/stx-i18n: compile-only
-  - //libs/stx-redis/stx-redis: compile-only
   - //libs/stx-amqp/stx-amqp: compile-only
   - //libs/stx-kafka/stx-kafka: compile-only
   - //libs/stx-storage/stx-storage: compile-only
@@ -39,7 +38,6 @@ dependencies:
 test-dependencies:
   # the specs run the plugins for real, so here the libraries are on the runtime classpath too
   - //libs/stx-i18n/stx-i18n
-  - //libs/stx-redis/stx-redis
   - //libs/stx-amqp/stx-amqp
   - //libs/stx-kafka/stx-kafka
   - //libs/stx-storage/stx-storage

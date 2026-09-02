@@ -902,6 +902,7 @@ the same each time, and the mistakes are the same each time too.
   | `docs/spring-mongo-queries.md` | What a stx-spring-boot Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
   | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
   | `libs/stx-redis/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
+  | `libs/stx-redis/stx-redis-ktor/README.md` | The Ktor plugin for it — why the connection is shared, why `config` is defaulted where `MongoDB`'s `uri` is not, and the double close |
   | `libs/stx-storage/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
   | `libs/stx-material/README.md` | How is the UI library shaped, how does `StxTheme` slot into an application that already uses Material 3, and how do I add a component? |
   | `libs/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
