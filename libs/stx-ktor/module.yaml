@@ -16,7 +16,6 @@ dependencies:
   # Verified with `./kotlin show dependencies -m stx-ktor`: a compile-only entry is in the COMPILE
   # scope and absent from RUNTIME.
   - //libs/stx-i18n/stx-i18n: compile-only
-  - //libs/stx-storage/stx-storage: compile-only
 
   # `CorsPolicy` is what `cors(policy)` takes, so a caller has to see it.
   - //libs/stx-common: exported
@@ -36,7 +35,6 @@ dependencies:
 test-dependencies:
   # the specs run the plugins for real, so here the libraries are on the runtime classpath too
   - //libs/stx-i18n/stx-i18n
-  - //libs/stx-storage/stx-storage
   # and the servers they connect to, started for the run
   - //libs/stx-testing
 
