@@ -1,0 +1,50 @@
+product: jvm/app
+description: A Ktor GraphQL catalogue showing for user managements
+
+apply:
+  - //stx-artifacts.module-template.yaml
+
+dependencies:
+  # As published artifacts, not as modules of this project — see the template above.
+  - $libs.stx.graphix
+  - $libs.stx.graphix.ktor
+  - $ktor.server.core
+  - $ktor.server.netty
+  - $ktor.server.requestValidation
+  - $ktor.server.mustache
+  - $ktor.server.websockets
+  - $ktor.server.websockets
+  - $ktor.server.auth.jwt
+  - $ktor.server.autoHeadResponse
+  - $ktor.server.contentNegotiation
+  - $ktor.server.cors
+  - $ktor.server.cachingHeaders
+  - $ktor.server.compression
+  - $ktor.serialization.kotlinx.json
+  - $libs.slf4j.nop
+  - $libs.koin.ktor
+  - $libs.apollo.api
+  - $libs.koin.logger.slf4j
+  - $libs.koin.annotations
+
+test-dependencies:
+  - $ktor.server.testHost
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+plugins:
+  apollo:
+    enabled: true
+    packageName: com.softistx.oauth.graphql
+
+settings:
+  ktor:
+    enabled: true
+    version: 3.5.2
+  kotlin:
+    serialization: json
+  jvm:
+    # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file named
+    # `main.kt`; this one is `Shop.kt`, next to the `Catalog` it serves.
+    mainClass: com.softistx.oauth.OauthKt

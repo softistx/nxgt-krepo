@@ -176,9 +176,9 @@ koin-androidx-compose-navigation = { module = "io.insert-koin:koin-androidx-comp
 # Versioned, unlike the koin aliases around it: those are resolved through `koin-bom` by the
 # Gradle consumers of this catalog, and the toolchain modules that use this one name no BOM.
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
-koin-annotations = { module = "io.insert-koin:koin-annotations" }
-koin-ktor = { module = "io.insert-koin:koin-ktor" }
-koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
+koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin" }
+koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
+koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 
 # Ktor's own dependency injection. Not one of the `$ktor.*` toolchain shortcuts — `$ktor.server.di`
 # resolves to nothing — so it is named here like any other coordinate, on the `ktor` version.
@@ -319,60 +319,64 @@ stx-workflow-db = { module = "com.softistx:stx-workflow-db", version.ref = "stx"
 
 [bundles]
 compose = [
-    "androidx-core-ktx",
-    "androidx-lifecycle-runtime-ktx",
-    "androidx-activity-compose",
-    "androidx-paging",
-    "androidx-animation",
-    "androidx-navigation-compose",
-    "androidx-biometric",
-    "graphics-shapes",
-    "compose-material3-window-size",
-    "compose-material-icons-extended",
-    "room-runtime",
-    "room-paging",
-    "kotlinx-datetime",
-    "kotlinx-coroutines-android",
-    "kotlinx-serialization",
-    "datastore",
-    "datastore-preferences",
-    "kodein-di-framework-compose",
-    "work-gcm",
-    "work-multiprocess",
-    "work-runtime-ktx",
-    "koin-androidx-compose",
-    "koin-androidx-compose-navigation",
-    "koin-annotations",
-    "konform",
-    "kotlinx-rpc-krpc-client",
-    "kotlinx-rpc-krpc-ktor-client",
-    "kotlinx-rpc-krpc-serialization-json"
+	"androidx-core-ktx",
+	"androidx-lifecycle-runtime-ktx",
+	"androidx-activity-compose",
+	"androidx-paging",
+	"androidx-animation",
+	"androidx-navigation-compose",
+	"androidx-biometric",
+	"graphics-shapes",
+	"compose-material3-window-size",
+	"compose-material-icons-extended",
+	"room-runtime",
+	"room-paging",
+	"kotlinx-datetime",
+	"kotlinx-coroutines-android",
+	"kotlinx-serialization",
+	"datastore",
+	"datastore-preferences",
+	"kodein-di-framework-compose",
+	"work-gcm",
+	"work-multiprocess",
+	"work-runtime-ktx",
+	"koin-androidx-compose",
+	"koin-androidx-compose-navigation",
+	"koin-annotations",
+	"konform",
+	"kotlinx-rpc-krpc-client",
+	"kotlinx-rpc-krpc-ktor-client",
+	"kotlinx-rpc-krpc-serialization-json"
 ]
 compose-android-test = [
-    "androidx-junit",
-    "androidx-espresso-core",
-    "work-testing"
+	"androidx-junit",
+	"androidx-espresso-core",
+	"work-testing"
 ]
 compose-test = ["junit"]
 compose-ksp = [
-    "room-compiler",
+	"room-compiler",
 ]
 
 ktor = [
-"logback-classic", "nimbus-jose-jwt", "kotlin-css",
-    "kotlinx-rpc-krpc-server", "kotlinx-rpc-krpc-ktor-server", "kotlinx-rpc-krpc-serialization-json"
+	"logback-classic", "nimbus-jose-jwt", "kotlin-css",
+	"kotlinx-rpc-krpc-server", "kotlinx-rpc-krpc-ktor-server", "kotlinx-rpc-krpc-serialization-json"
 ]
 kotlinx = ["kotlinx-coroutines-core", "kotlinx-coroutines-reactive", "kotlinx-datetime"]
 faker = ["kotlin-faker", "kotlin-faker-books", "kotlin-faker-databases", "kotlin-faker-lorem", "kotlin-faker-tech", "kotlin-faker-tvshows"]
 ktor-mix = [
-    "icu4j", "spring-security-crypto", "commons-logging", "mail",
-    "mongodb-bsonx", "mongodb-driver", "mongodb-driver-extensions", "kasechange",
-    "konform", "rxrelay", "koin-ktor", "koin-logger-slf4j", "koin-annotations",
+	"icu4j", "spring-security-crypto", "commons-logging", "mail",
+	"mongodb-bsonx", "mongodb-driver", "mongodb-driver-extensions", "kasechange",
+	"konform", "rxrelay", "koin-ktor", "koin-logger-slf4j", "koin-annotations",
 ]
 
 ktor-test = ["kotlin-test-junit", "kotest-assertions-ktor", "kotest-runner-junit5", "kotest-framework-engine"]
 shared = [
-    "kotlinx-rpc-krpc-client", "kotlinx-rpc-krpc-serialization-json", "kotlinx-serialization",
-    "mongodb-bsonx"
+	"kotlinx-rpc-krpc-client", "kotlinx-rpc-krpc-serialization-json", "kotlinx-serialization",
+	"mongodb-bsonx"
 ]
 shared-test = ["kotlin-test-junit", "kotest-runner-junit5", "kotest-framework-engine"]
+
+
+[plugins]
+koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-compiler" }

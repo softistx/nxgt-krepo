@@ -1,6 +1,7 @@
 modules:
   - examples/*
   - examples/*/*
+  - server/*
   - libs/*
   - libs/*/*
   - plugins/*
