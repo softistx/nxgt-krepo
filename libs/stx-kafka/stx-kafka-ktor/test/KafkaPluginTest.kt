@@ -1,4 +1,4 @@
-package com.softistx.ktor.kafka
+package com.softistx.kafka.ktor
 
 import com.softistx.kafka.Kafka
 import com.softistx.kafka.KafkaConfig
