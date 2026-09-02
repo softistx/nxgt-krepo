@@ -123,6 +123,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-redis/stx-redis-spring/README.md`](libs/stx-redis/stx-redis-spring/README.md) | The Spring auto-configuration — why it is off unless asked for, and why `stx.redis` is not `spring.data.redis` |
 | [`libs/stx-storage/stx-storage/README.md`](libs/stx-storage/stx-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
 | [`libs/stx-storage/stx-storage-ktor/README.md`](libs/stx-storage/stx-storage-ktor/README.md) | The Ktor plugin — and why it is the one whose `config` is required rather than defaulted |
+| [`libs/stx-storage/stx-storage-spring/README.md`](libs/stx-storage/stx-storage-spring/README.md) | The Spring auto-configuration — why no credential has a default, and why its spec points at a dead port |
 | [`libs/stx-testing/README.md`](libs/stx-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |
 | [`plugins/openapi/README.md`](plugins/openapi/README.md) | The build plugin: settings, and what each choice needs on the consuming module's classpath |
 | [`AGENTS.md`](AGENTS.md) | Build commands, module layout, and the conventions this repo holds itself to |

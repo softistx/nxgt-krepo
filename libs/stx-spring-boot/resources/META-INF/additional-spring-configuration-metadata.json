@@ -41,11 +41,6 @@
       "sourceType": "com.softistx.spring.integration.jpa.JpaIntegrationProperties"
     },
     {
-      "name": "stx.storage",
-      "type": "com.softistx.spring.integration.storage.StorageIntegrationProperties",
-      "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties"
-    },
-    {
       "name": "stx.i18n",
       "type": "com.softistx.spring.integration.i18n.I18nIntegrationProperties",
       "sourceType": "com.softistx.spring.integration.i18n.I18nIntegrationProperties"
@@ -342,41 +337,6 @@
       "sourceType": "com.softistx.spring.integration.jpa.JpaIntegrationProperties",
       "defaultValue": {},
       "description": "Anything else Hibernate understands, applied last and overriding everything above."
-    },
-    {
-      "name": "stx.storage.enabled",
-      "type": "java.lang.Boolean",
-      "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties",
-      "defaultValue": false,
-      "description": "Open an stx-storage connection. Off by default."
-    },
-    {
-      "name": "stx.storage.endpoint",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties",
-      "defaultValue": null,
-      "description": "Where the store is. MinIO, S3, or anything speaking S3. Required when enabled."
-    },
-    {
-      "name": "stx.storage.access-key",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties",
-      "defaultValue": null,
-      "description": "Required when enabled, and with no default on purpose: a credential with a default is a credential in source control."
-    },
-    {
-      "name": "stx.storage.secret-key",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties",
-      "defaultValue": null,
-      "description": "Required when enabled, and with no default, for the same reason."
-    },
-    {
-      "name": "stx.storage.region",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties",
-      "defaultValue": null,
-      "description": "Can stay unset against MinIO. Against S3 itself it usually cannot: the SDK will otherwise ask the service where a bucket lives, once per bucket the first time it sees one."
     },
     {
       "name": "stx.i18n.enabled",

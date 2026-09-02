@@ -7,10 +7,7 @@ import com.softistx.jpa.Jpa
 import com.softistx.spring.integration.i18n.I18nIntegrationAutoConfiguration
 import com.softistx.spring.integration.jpa.JpaIntegrationAutoConfiguration
 import com.softistx.spring.integration.mongo.MongoIntegrationAutoConfiguration
-import com.softistx.spring.integration.storage.StorageIntegrationAutoConfiguration
-import com.softistx.spring.integration.storage.StorageIntegrationProperties
 import com.softistx.spring.testing.UNREACHABLE_MONGO
-import com.softistx.storage.ObjectStorage
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -92,32 +89,6 @@ class IntegrationWiringTest :
                 .run { context -> context.failure() shouldContain "stx.jpa.packages" }
         }
 
-        "storage: nothing is opened until an application asks" {
-            storage().run { context -> context.getBeanNamesForType(ObjectStorage::class.java).size shouldBe 0 }
-        }
-
-        "storage: enabling it opens a client" {
-            storage()
-                .withPropertyValues(
-                    "stx.storage.enabled=true",
-                    "stx.storage.endpoint=$UNREACHABLE_HTTP",
-                    "stx.storage.access-key=who",
-                    "stx.storage.secret-key=cares",
-                ).run { context -> context.getBeanNamesForType(ObjectStorage::class.java).size shouldBe 1 }
-        }
-
-        "storage: a missing credential names itself, and none of them has a default" {
-            // A credential with a default is a credential in source control.
-            storage()
-                .withPropertyValues("stx.storage.enabled=true", "stx.storage.endpoint=$UNREACHABLE_HTTP")
-                .run { context -> context.failure() shouldContain "stx.storage.access-key" }
-
-            with(StorageIntegrationProperties()) {
-                accessKey shouldBe null
-                secretKey shouldBe null
-            }
-        }
-
         "i18n: no catalogs are loaded until an application asks" {
             i18n().run { context -> context.getBeanNamesForType(Messages::class.java).size shouldBe 0 }
         }
@@ -146,22 +117,11 @@ class IntegrationWiringTest :
         }
     })
 
-/**
- * An HTTP address nothing listens on, for the same reason as [UNREACHABLE_MONGO].
- *
- * `localhost:9000` is the workspace's MinIO, which every property in this file used to name. The
- * credentials here are junk, so a real store would have refused them — but a wiring spec that points
- * at a port somebody else is serving is one library change away from doing something on it.
- */
-private const val UNREACHABLE_HTTP = "http://127.0.0.1:1"
-
 private fun mongo() = runnerFor(MongoIntegrationAutoConfiguration::class.java)
 
 private fun i18n() = runnerFor(I18nIntegrationAutoConfiguration::class.java)
 
 private fun jpa() = runnerFor(JpaIntegrationAutoConfiguration::class.java)
-
-private fun storage() = runnerFor(StorageIntegrationAutoConfiguration::class.java)
 
 private fun runnerFor(type: Class<*>) = ApplicationContextRunner().withConfiguration(AutoConfigurations.of(type))
 
