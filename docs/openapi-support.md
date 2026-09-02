@@ -17,6 +17,9 @@ Two rules hold across everything below:
 - **A name is derived, unless the document states one.** Every derivation is written down here, and
   every one of them can be overridden with `x-kotlin-name`.
 
+[The last section](#the-whole-thing) is one endpoint travelling the whole way — a split document, the
+bundle, the generated interface, and the controller that implements it.
+
 ## Where it lands
 
 Almost nothing is written to the package you name. Every generated file goes in one of three
@@ -467,3 +470,146 @@ drops its path variable and a 404 or a null at run time instead.
 
 **So `$ref` a shared parameter from each operation**, which costs one line per verb and is what
 `components/parameters/` is for. The `openapi-spec-first` skill states the rule; this is why.
+
+## The whole thing
+
+Every section above is what the generator makes of one keyword. This is one endpoint travelling the
+whole way — a split document, the redocly bundle, the generated interface, and the controller that
+implements it. It is `examples/spring-orders`, so it builds and its specs run against the result.
+
+### The document is split, and bundled before the build reads it
+
+```
+examples/spring-orders/openapi/
+├── openapi.yaml                 # info, servers, tags, and a $ref per path
+├── api-docs.yaml                # what redocly bundles the above into — the build reads only this
+├── paths/
+│   ├── orders.yaml
+│   ├── orders_id.yaml
+│   └── orders_id_status.yaml
+└── components/
+    ├── parameters/id.yaml
+    ├── schemas/ChangeStatusRequest.yaml
+    └── responses/NotFound.yaml
+```
+
+```yaml
+# openapi.yaml
+openapi: 3.1.0
+info:
+  title: Spring Orders
+  version: 1.0.0
+tags:
+  - name: orders-controller
+    description: Placing, reading and moving orders along
+paths:
+  /orders/{id}/status:
+    $ref: paths/orders_id_status.yaml
+```
+
+```yaml
+# paths/orders_id_status.yaml
+patch:
+  tags:
+    - orders-controller
+  summary: Move an order along.
+  operationId: changeStatus
+  parameters:
+    - $ref: ../components/parameters/id.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/schemas/ChangeStatusRequest.yaml
+  responses:
+    '200':
+      description: The order in its new status.
+      content:
+        application/json:
+          schema:
+            $ref: ../components/schemas/OrderResponse.yaml
+    '404':
+      $ref: ../components/responses/NotFound.yaml
+```
+
+**`redocly bundle orders@v1` before building.** The generator reads `api-docs.yaml` and nothing else,
+so a document edited and not bundled generates the *previous* contract and says nothing about it —
+which is the one failure mode of this layout, and the reason the alias exists in `redocly.yaml`
+rather than a path being retyped at each call site.
+
+### What the build makes of it
+
+```yaml
+# module.yaml
+  openapi:
+    enabled: true
+    specs:
+      - spec: openapi/api-docs.yaml
+        packageName: com.softistx.example.orders.api
+        client: Spring
+        models: Kotlinx
+        interfacePrefix: I
+        interfaceSuffix: Service
+```
+
+| Setting | What it decides |
+| --- | --- |
+| `client: Spring` | `@HttpExchange` interfaces. `Ktor` gives a client instead; `None` gives models only, which is what a hand-written Ktor route wants |
+| `models: Kotlinx` | `@Serializable` DTOs. Not `Auto`, which gives Jackson — and `stx.json.enabled` puts kotlinx codecs on WebFlux, so a Jackson model fails to encode at the first response |
+| `interfacePrefix` / `Suffix` | `orders-controller` → `IOrdersService`. **One interface per tag**, which is what `groupBy: Tag` means and why the tag names above look like class names |
+
+### The controller implements what was generated
+
+```kotlin
+@RestController
+class OrderController(
+    private val service: OrderService,
+) : IOrdersService {
+    override suspend fun findOrder(@PathVariable id: String) = service.findOrder(id)
+
+    @ResponseStatus(HttpStatus.CREATED)
+    override suspend fun placeOrder(@RequestBody body: PlaceOrderRequest) = service.placeOrder(body)
+
+    override suspend fun changeStatus(
+        @PathVariable id: String,
+        @RequestBody body: ChangeStatusRequest,
+    ) = service.changeStatus(id, body)
+}
+```
+
+**There is no `@PatchMapping` in that file, and no path string.** The verbs, the paths and the
+content types are `@HttpExchange` annotations on the generated interface, and Spring's mapping search
+walks the whole type hierarchy to find them — so an endpoint cannot disagree with the document,
+because nobody typed it twice.
+
+Two things the interface cannot carry, and they are the only handwritten HTTP left:
+
+- **A status other than 200.** The document says 201 for a placed order and 204 for a cancelled one;
+  `@HttpExchange` has nowhere to put that, so it is `@ResponseStatus` on the override.
+- **The parameter bindings, repeated.** Spring does not reliably inherit parameter annotations, and
+  the failure is a 400 at run time rather than anything at build time — which is why they are written
+  out again rather than trusted.
+
+Note the constructor takes `OrderService` and not `IOrdersService`: the service implements the same
+generated interface, so by-type injection would be ambiguous between the two beans. That is a
+consequence of the layering the skill prescribes — repository → service → controller, with the
+service on the same interface — and it is what makes a document change break the service too rather
+than being absorbed by a controller that quietly drops a parameter.
+
+### And the document is linted, not just bundled
+
+```yaml
+# redocly.yaml
+apis:
+  orders@v1:
+    root: ./examples/spring-orders/openapi/openapi.yaml
+    rules:
+      no-ambiguous-paths: error     # two paths matching one request is a routing bug
+      security-defined: off         # this demo authenticates nobody; declaring a scheme would lie
+```
+
+Turning a `recommended` rule off is a decision worth a comment next to it. `security-defined: off`
+is there because declaring a scheme the application does not enforce makes the document lie, which
+is worse than the warning it silences — and the line goes the moment the example grows an auth
+scheme.

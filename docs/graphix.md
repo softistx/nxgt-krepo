@@ -5,6 +5,7 @@ every phase — a new annotation, a new scalar, a new mapping rule — so it liv
 in the module README, which answers *why the library is shaped this way*.
 
 `libs/stx-graphix/stx-graphix/README.md` has the reasoning.
+[The last section](#the-whole-thing) is a whole schema and the class that answers it.
 
 ## Roots
 
@@ -553,3 +554,149 @@ Graphix {
     query(ProductQueries(store))
 }
 ```
+
+## The whole thing
+
+Every section above is one annotation or one setting. This is a schema and the class that answers it
+— a query, a mutation, a subscription, a union and the batch mapping that keeps a nested list from
+being an N+1. It is `examples/graphix-shop`, so it builds and its four specs run on every build.
+
+### The documents are the schema
+
+`resources/graphql/` is scanned, nested folders included, and every file is merged — so the schema is
+split the way the domain is rather than the way a scanner would like:
+
+```graphql
+# product.graphqls
+type Product {
+  id: String!
+  name: String!
+  price: Long!
+  reviews: [Review!]!
+}
+
+# review.graphqls
+type Review {
+  id: String!
+  body: String!
+}
+
+# search.graphqls
+"A product or a review — whichever matched the term."
+union SearchResult = Product | Review
+
+extend type Query {
+  search(term: String!): [SearchResult!]!
+}
+
+# schema.graphqls
+scalar Long
+
+type Query {
+  product(id: String!): Product
+  products: [Product!]!
+}
+
+type Mutation {
+  addProduct(name: String!, price: Long!): Product!
+}
+
+type Subscription {
+  productAdded: Product!
+}
+```
+
+`extend type Query` is how a file adds a field to a type another file declared, which is what makes
+one file per concern possible without one file listing every root field. `scalar Long` is declared
+because a field uses it; the scalar itself is wired automatically, along with `Instant` and `Uuid`.
+
+### One class answers all of it
+
+```kotlin
+class Catalog {
+    @QueryMapping
+    fun product(@Argument id: String): Product? = products.find { it.id == id }
+
+    @QueryMapping
+    fun products(): List<Product> = products.toList()
+
+    @QueryMapping
+    fun search(@Argument term: String): List<Any> { … }
+
+    @MutationMapping
+    fun addProduct(@Argument name: String, @Argument price: Long): Product { … }
+
+    @SubscriptionMapping
+    fun productAdded(): Flow<Product> = added
+
+    @BatchMapping
+    fun reviews(products: List<Product>): Map<Product, List<Review>> =
+        products.associateWith { reviews[it.id].orEmpty() }
+}
+```
+
+Four things there are the ones worth copying:
+
+- **`@BatchMapping` and not `@SchemaMapping`.** `{ products { reviews { body } } }` resolves
+  `reviews` once per product with a field mapping — the N+1, in a GraphQL server rather than in a
+  database layer. A batch mapping is handed every parent at once and answers a `Map`, so the whole
+  query is two loads regardless of how many products came back.
+- **`search` returns `List<Any>`, and that is not a shortcut.** Kotlin has no union type. On the SDL
+  path the *document* is the schema, so a resolver's Kotlin return type is never read for shape —
+  Graphix resolves each row by its class name, with no type resolver registered. `Product` and
+  `Review` are named in the union, so they resolve.
+- **`@SubscriptionMapping` returns a `Flow`.** Cancelling the transport cancels it; nothing here has
+  to unregister anything.
+- **One instance, four roles.** The same `Catalog` is the query root, the mutation root, the
+  subscription root and the owner of a type field, because that is where the state is. Nothing
+  requires them to be one class, and nothing requires them to be four.
+
+### Wiring it up
+
+```kotlin
+fun Application.shop() {
+    val catalog = Catalog()
+    install(GraphQL) {
+        sandbox = true
+        schema {
+            query(catalog)
+            mutation(catalog)
+            subscription(catalog)
+            type(catalog)
+        }
+    }
+}
+```
+
+`/graphql` for the operations, `/sandbox` for the Apollo Sandbox. In Spring the same class is a
+`@GraphQLController` bean and `stx.graphix.enabled=true` is the whole of the wiring —
+[`docs/spring-configuration.md`](spring-configuration.md) has the keys.
+
+### What a request looks like
+
+```bash
+curl -s localhost:8080/graphql -H 'content-type: application/json' \
+  -d '{"query":"{ products { name price reviews { body } } }"}'
+```
+
+```json
+{"data":{"products":[
+  {"name":"Mug","price":1200,"reviews":[{"body":"Holds coffee"}]},
+  {"name":"Kettle","price":4500,"reviews":[{"body":"Boils fast"}]}
+]}}
+```
+
+And the union, selected with inline fragments and resolved by class name alone:
+
+```graphql
+{ search(term: "co") { __typename ... on Product { name } ... on Review { body } } }
+```
+
+```json
+{"data":{"search":[{"__typename":"Review","body":"Holds coffee"}]}}
+```
+
+A subscription over the same schema is the same document through the socket:
+`subscriptions = GraphqlWs` on the plugin, `graphql-transport-ws` on the wire, and a POST of a
+subscription document is then a 400 — the socket is the subscription transport, and an HTTP body
+that asks for one is asking the wrong endpoint.

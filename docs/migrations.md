@@ -2,7 +2,8 @@
 
 The vocabulary of [`stx-migrations`](../libs/stx-migrations/stx-migrations/README.md): what a migration
 is, what the runner does with it, and what each store's ledger holds. The module README explains *why*
-the library is shaped this way; this file is what you may write.
+the library is shaped this way; this file is what you may write. [The last section](#the-whole-thing)
+is a schema being moved twice, the gate that runs it, and the ledger it leaves.
 
 - [Writing a migration](#writing-a-migration)
 - [The version](#the-version)
@@ -19,6 +20,7 @@ the library is shaped this way; this file is what you may write.
 - [In a Spring Boot application](#in-a-spring-boot-application)
 - [A migration must be safe to attempt twice](#a-migration-must-be-safe-to-attempt-twice)
 - [Deliberately absent](#deliberately-absent)
+- [The whole thing](#the-whole-thing)
 
 ## Writing a migration
 
@@ -575,3 +577,128 @@ are the only two outcomes an operator has to tell apart.
   PostgreSQL a killed process would leave no trace at all — and it needs the ledger and the context to
   share a connection, which these two interfaces deliberately do not express. It is the known next
   step, not an oversight.
+
+## The whole thing
+
+Every section above is one rule. This is a schema being moved twice — a seed and a backfill — the
+gate that runs them, and the ledger they leave behind. It is `examples/spring-orders`, so it builds
+and `OrdersApplicationTest` asserts the ledger on every build.
+
+### Two migrations
+
+```kotlin
+@Component
+class V1Seed : MongoMigration {
+    override val version = 1L
+    override val description = "seeds three demo orders"
+
+    override suspend fun migrate(context: MongoDatabase) {
+        context.getCollection<Document>(ORDERS).insertMany(
+            listOf(
+                order("A-1001", "ada", "PAID", 24_990),
+                order("A-1002", "grace", "PENDING", 4_500),
+                order("A-1003", "ada", "PAID", 132_000),
+            ),
+        )
+    }
+
+    private fun order(reference: String, customer: String, status: String, total: Long): Document =
+        Document("_id", ObjectId())
+            .append("ref", reference)
+            .append("customer", customer)
+            .append("status", status)
+            .append("total", total)
+            .append("tags", emptyList<String>())
+}
+
+@Component
+class V2Tags : MongoMigration {
+    override val version = 2L
+    override val description = "backfills tags on orders written before the field existed"
+
+    override suspend fun migrate(context: MongoDatabase) {
+        context
+            .getCollection<Document>(ORDERS)
+            .updateMany(Filters.exists("tags", false), Updates.set("tags", emptyList<String>()))
+    }
+}
+```
+
+**Raw `Document`s, and not the application's `Order` class.** A migration writes what the database
+holds, not what today's mapping says it should hold: `Order` may gain a field, lose one or be renamed
+tomorrow, and this migration has to still mean in a year what it meant when it was reviewed. `ref`
+rather than `reference` for the same reason — the stored name is the one that exists here.
+
+**The version is declared, not read out of the class name.** `V1Seed` could be renamed `SeedOrders`
+without changing what has run. Two migrations claiming version 1 abort the whole run rather than one
+of them being picked silently.
+
+**`V2Tags` finds nothing to do on a fresh database**, because `V1Seed` already writes `tags`. A
+backfill that is a no-op on a new deployment and the whole point on an old one is the normal case,
+not a sign the migration was unnecessary — and it is also why the statement is an `updateMany` with
+a filter rather than a read-modify-write: running it twice changes nothing either way, which is the
+rule a killed process makes non-negotiable.
+
+### The gate
+
+```yaml
+stx:
+  migrations:
+    enabled: true
+    store: mongo
+```
+
+That is the whole wiring in Spring. **A migration is a bean, collected by type** — no annotation to
+remember and nothing to list, so a migration cannot be silently skipped for lacking a marker. The
+gate is an `InitializingBean`, so a failure aborts the context refresh: no web server, no
+`ApplicationReadyEvent`, no requests against a half-migrated database.
+
+In Ktor the same two migrations are named explicitly, because there is no container to collect them:
+
+```kotlin
+install(MongoDB) { config = MongoConfig(uri = …, database = "orders") }
+
+install(Migrations) {
+    mongo(application.database) {
+        migration(V1Seed(), V2Tags())
+    }
+}
+```
+
+`install(Migrations)` blocks inside `install`, which is what makes it a gate: an exception leaves the
+install block, leaves `embeddedServer`, and the port is never opened. It goes **after** the connection
+plugin it reads from — `application.database` throws by name otherwise, and Ktor runs install blocks
+in order.
+
+Note `application.database` and not `application.mongo`: the latter is the client, and a ledger is
+written in one database.
+
+### The ledger it leaves
+
+```kotlin
+@RestController
+class MigrationHealth(private val gate: MigrationGate) {
+    @GetMapping("/health/migrations")
+    fun applied() = gate.ledger.map { "${it.version} ${it.description} ${it.status}" }
+}
+```
+
+```
+1 seeds three demo orders APPLIED
+2 backfills tags on orders written before the field existed APPLIED
+```
+
+A snapshot taken as the context refreshed, not a live read: once the gate has passed, only another
+process can change the ledger, and this one could not act on the news anyway. Ktor's `call.migrations`
+is the same value for the same reason.
+
+### What a killed process leaves
+
+A process that dies between the statement and the ledger write leaves that version `RUNNING`, and the
+**next startup refuses to continue** rather than guessing. That is the one status a person has to
+resolve, and it is why every migration above has to be safe to attempt twice: the resolution is
+almost always "run it again", and a migration that cannot survive that turns a crash into a manual
+data repair.
+
+The lock is what stops two processes attempting it at once, and `prepare()` runs before the lock
+because the thing that creates the ledger cannot itself require the ledger's lock.

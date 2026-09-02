@@ -7,7 +7,8 @@ and stays roughly the size it is.
 
 [`libs/stx-spring-boot/README.md`](../libs/stx-spring-boot/README.md) has the reasoning.
 [`docs/spring-mongo-queries.md`](spring-mongo-queries.md) is the other half of this one — what a
-query may say.
+query may say. [The last section](#the-whole-thing) is one application's whole
+`application.yaml`, and its test profile.
 
 ## Four rules that apply to every key on this page
 
@@ -542,3 +543,117 @@ be autocompletion quietly missing an entry, which nobody reports.
 
 **A new key is added to that file in the same change that reads it** — and to the table above, which
 is the part a reader finds.
+
+## The whole thing
+
+Every section above is one group of keys. This is one application's whole `application.yaml` — the
+file `examples/spring-orders` actually starts with, so every key in it is one a running application
+sets rather than one this page could set.
+
+```yaml
+spring:
+  application:
+    name: spring-orders
+  mongodb:
+    # Boot's own property, not one of ours. `spring.mongodb`, not `spring.data.mongodb`:
+    # Boot 4 split the prefix, and the old spelling binds to nothing and is reported by nothing.
+    uri: ${MONGO_URI:mongodb://localhost:27017/spring_orders}
+
+stx:
+  json:
+    enabled: true                  # kotlinx-serialization for bodies, in place of Jackson
+
+  errors:
+    enabled: true                  # ApiException -> a translated ErrorResponse
+    include-debug-message: true    # a demo. Leave this off in a deployment
+
+  i18n:
+    enabled: true                  # and it is what supplies the Messages bean `errors` requires
+    languages: [ en, fr ]
+    fallback: en
+    fail-on-missing-key: false
+
+  cors:
+    enabled: true
+    origins: [ "http://localhost:5173" ]
+
+  data:
+    mongo:
+      enabled: true                # the kotlin.time.Instant converters
+      create-indexes: true         # @Indexed becomes a real index, once, after the context is ready
+      audit:
+        enabled: true              # every save of an @Auditable document appends a version
+
+  migrations:
+    enabled: true                  # the gate: no migration, no port
+    store: mongo                   # named, never inferred
+
+  telemetry:
+    enabled: true                  # a root, installed, plus a server span per request
+    environment: development
+    console: true                  # development only; a deployment wants json-lines or a destination
+    ignore: [ /health ]            # the endpoint a load balancer asks every second
+    mongo:
+      enabled: true
+      uri: ${TELEMETRY_MONGO_URI:mongodb://localhost:27017}
+      database: spring_orders_telemetry
+      retention: 7d
+
+logging:
+  level:
+    com.softistx.migrations: INFO
+```
+
+**Every `enabled: true` in there is a feature that would not exist without it**, which is the whole
+of the opt-in model: nothing in `stx-spring-boot` starts because the jar is on the classpath, and
+deleting a line removes exactly the thing it names and nothing else.
+
+Six of those lines are the ones that are not obvious from their names:
+
+| Line | What it actually decides |
+| --- | --- |
+| `stx.errors` without `stx.i18n` | **Refuses to start.** A translated error needs a `Messages` bean, and failing at refresh is the design — the alternative is a 500 that renders a key |
+| `stx.data.mongo.enabled` | A `kotlin.time.Instant` field fails at **query** time with `Can't find a codec` without it, not at mapping time. So an entity that saved cleanly stops being readable |
+| `stx.data.mongo.create-indexes` | Creates what `@Indexed` asks for, once, after the context is ready. It never drops anything — an index this application no longer declares stays |
+| `stx.migrations.store` | Names one ledger. An application with two candidate connections is not saying which, so naming a store whose connection bean is absent fails at refresh rather than at the first migration |
+| `stx.telemetry` with no `service` | Falls back to `spring.application.name`. That is why the file above sets one and never repeats it |
+| `stx.telemetry.mongo.uri` | **Telemetry's own client**, deliberately not `spring.mongodb.uri`. A burst of signals must not exhaust the pool the requests are queueing for |
+
+And one thing that is deliberately *not* in the file: there is no `stx.mongo`. The migration ledger
+and the audit trail both want the coroutine driver's `MongoDatabase`, and `stx-spring-boot` bridges
+one from the `ReactiveMongoDatabaseFactory` Spring Data already built. Turning on `stx.mongo` to
+produce one instead opens a second pool against the same server — and under test, one that never saw
+the harness's per-run database suffix, so the migrations would run against a database nobody chose
+and every spec would still pass.
+
+### The test profile overrides, it does not restate
+
+```yaml
+# testResources/application-test.yaml
+server:
+  port: 8088                       # not 8080 — a demo left running must not make the suite pass
+
+spring:
+  mongodb:
+    database: spring_orders_test   # a *prefix*; testDatabase appends this run's suffix
+
+stx:
+  i18n:
+    fail-on-missing-key: true      # a suite should not pass over a translation nobody wrote
+  telemetry:
+    console: false                 # still enabled — the span filter is under test, not scenery
+    mongo:
+      enabled: false
+```
+
+**It names four keys and inherits everything else**, so what the suite exercises is the
+configuration the application actually ships rather than a second copy of it that can drift.
+
+No URI is named — only a database, and it is a prefix: `stx-spring-boot`'s `testDatabase` appends
+this run's suffix and `MongoTestConfiguration` splices the result into the connection string it
+built from the container or the server, so two suites against one server cannot clear each other's
+data and there is no placeholder to mistake for a real URI.
+
+Note what is *not* overridden. `stx.telemetry.enabled` stays on, with only the console silenced: the
+`CoWebFilter` and the installed root are part of the configuration under test. Turning telemetry off
+for the suite is how a filter that throws on an edge case ships.
