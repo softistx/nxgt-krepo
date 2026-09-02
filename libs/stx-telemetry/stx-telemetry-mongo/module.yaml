@@ -10,7 +10,7 @@ dependencies:
   # Versions for every org.mongodb artifact, the same BOM libs/stx-mongo uses
   - bom: $libs.mongodb.driver.bom
   # MongoDatabase is a constructor parameter, so a consumer has to see it to build one of these.
-  # Deliberately *not* //libs/stx-mongo: that library is sessions, pagination, GridFS and auditing,
+  # Deliberately *not* //libs/stx-mongo/stx-mongo: that library is sessions, pagination, GridFS and auditing,
   # and an exporter needs a collection and an insert. Depending on it would pull the Reactive Streams
   # driver into every application that wants telemetry in a database.
   - $libs.mongodb.driver: exported

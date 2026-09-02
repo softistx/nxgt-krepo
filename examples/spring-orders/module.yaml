@@ -26,7 +26,7 @@ dependencies:
   # `stx-spring-boot` bridges from Spring Data's `ReactiveMongoDatabaseFactory`. Compile-only in
   # stx-migrations-db for the reason its manifest gives; this is the application adding it, which is
   # also what puts the ledger's driver on the runtime classpath.
-  - //libs/stx-mongo
+  - //libs/stx-mongo/stx-mongo
 
   # The telemetry root, the `CoWebFilter` that makes each request a server span, and the
   # `stx.telemetry.*` keys. Nothing starts because this is on the classpath — `stx.telemetry.enabled`
