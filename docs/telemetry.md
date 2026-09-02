@@ -15,6 +15,7 @@ lot into a Mongo collection.
 - [Sampling](#sampling)
 - [Exporters](#exporters)
 - [The signal model](#the-signal-model)
+- [The whole thing](#the-whole-thing)
 
 ## The root
 
@@ -222,10 +223,15 @@ carries it to the next service. Logs are emitted whether or not their trace is s
 
 ```kotlin
 interface Exporter : AutoCloseable {
-    suspend fun export(batch: List<Signal>)
+    suspend fun export(resource: Resource, batch: List<Signal>)
     override fun close() {}
 }
 ```
+
+The `Resource` is passed on **every** call rather than handed over once at startup: it is constant
+and small, and a hook that must be called before the first export is a hook somebody's
+implementation will forget. Every destination that leaves this process needs it — OTLP puts it at
+the root of its document — and an exporter that does not is free to ignore it.
 
 Called from the single coroutine that owns the queue, so an implementation needs no synchronisation
 and may take as long as it needs without blocking anybody who writes a log. It should not throw;
@@ -298,3 +304,102 @@ and that is one `when` in one place. Metrics will join as a third variant.
 `ErrorInfo` flattens a `Throwable` to strings at the point of failure, rather than carrying it
 through a queue that may outlive the scope it came from — a `Throwable` holds references to whatever
 was on the stack when it was built.
+
+## The whole thing
+
+Every section above is one verb. This is a request being handled: a trace that arrived over the wire,
+a client span for the call it makes, typed events, and the header it hands on.
+
+```kotlin
+@Serializable @SerialName("checkout.charged")
+data class Charged(val orderId: String, val amount: Long)
+
+@Serializable @SerialName("checkout.refused")
+data class Refused(val orderId: String, val code: String)
+
+private val log = logger<CheckoutService>()
+
+suspend fun checkout(gateway: Gateway, orderId: String, amount: Long, incoming: String?): Boolean =
+    continuing(incoming, "POST /checkout", "http.route" to "/checkout") {
+        name = "POST /checkout/{id}"
+
+        withAttributes("order.id" to orderId) {
+            span("charge", kind = SpanKind.Client) {
+                attribute("processor", gateway.name)
+
+                val ok = gateway.charge(orderId, amount, traceparent())
+                if (ok) {
+                    log.info(Charged(orderId, amount))
+                } else {
+                    status = SpanStatus.Error
+                    log.warn(Refused(orderId, "limit"))
+                }
+                ok
+            }
+        }
+    }
+```
+
+Given the inbound header
+`00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01`, that emits two spans and one log, related
+like this:
+
+| | `traceId` | `parent` | |
+| --- | --- | --- | --- |
+| `POST /checkout/{id}` | `4bf92f35…4736` | `00f067aa0ba902b7` | The caller's trace, continued — not a new one |
+| `charge` | `4bf92f35…4736` | the server span's id | `SpanKind.Client`, and `traceparent()` inside it is what the gateway is handed |
+| `checkout.charged` | `4bf92f35…4736` | the `charge` span's id | A log carries the span it was written in |
+
+Six things in those twenty lines are decisions rather than syntax:
+
+- **`continuing` and not `span`.** It reads the inbound header, so this process's spans join the
+  caller's trace instead of starting one that nothing can be correlated with. A malformed or absent
+  header starts a fresh trace rather than failing, which is what lets the same function serve a
+  caller that does not propagate.
+- **`name` is reassigned inside the block.** A server span is `POST /checkout` until routing has
+  matched it and `POST /checkout/{id}` after — a name carrying the id is a cardinality problem in
+  every backend that groups by it.
+- **`withAttributes` and `attribute` are not the same thing, and the difference is measurable.**
+  `order.id` is on the `withAttributes`, so it appears on the `charge` span *and* on the log written
+  inside it. `processor` is set with `SpanScope.attribute`, so it appears on that span **and on
+  nothing else** — the log does not carry it.
+- **`traceparent()` rather than a header assembled by hand.** It is the current span's context in
+  the W3C format, and it is what makes the gateway's own spans children of this one.
+- **`status = SpanStatus.Error` with no exception thrown.** A refusal is a business outcome, not a
+  failure of this code; the span says the work did not succeed while the function returns normally.
+  A thrown exception would set the same status and propagate, which is the other half of the same
+  rule: a span observes, it never swallows.
+- **`@SerialName` on the event types.** The serial name *is* the event name, so without it the name
+  is the class's — which changes when the class moves package, and takes every dashboard built on it
+  with it.
+
+### The root, and the shutdown
+
+```kotlin
+fun main() {
+    val telemetry = Telemetry("checkout") {
+        version = "1.4.0"
+        environment = "production"
+        attributes = attributesOf("region" to "eu-west-1")
+        sampler = Sampler.ratio(0.1)
+        export(OtlpExporter("http://localhost:4318"))
+    }.install()
+
+    Runtime.getRuntime().addShutdownHook(Thread.ofVirtual().unstarted { telemetry.close() })
+
+    server.start(wait = true)
+}
+```
+
+`install()` is what makes `log` and `span` outside any `withTelemetry` find this root — without it
+every call above is a silent no-op, which is the correct behaviour for a library opening spans in an
+application that has never heard of this one, and the wrong one for the application itself.
+
+**`close()` blocks, and it has to.** A shutdown hook cannot suspend, and a close that returned before
+the backlog shipped would drop exactly the signals that explain the shutdown. It is `unstarted`
+rather than `startVirtualThread` because a hook must be registered before it runs.
+
+The sampler is asked **once per trace, at its root** — so a sampled-out trace costs nothing further
+down, and a trace that arrived sampled stays sampled through this process. `Sampler.ratio(0.1)` on
+a service that only ever continues somebody else's traces samples nothing of its own, which is the
+intended reading rather than a surprise.
