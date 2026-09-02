@@ -1,0 +1,6 @@
+type AuditMetadata {
+    createdDate: String!
+    lastModifiedDate: String!
+    createdBy: String
+    lastModifiedBy: String
+}

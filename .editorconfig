@@ -1,3 +1,6 @@
+[**/build/**]
+ktlint = disabled
+
 [*.{kt,kts}]
 ktlint_standard_no-wildcard-imports = disabled
 # @Composable functions are PascalCase by Compose convention — they read as declarations of UI,
