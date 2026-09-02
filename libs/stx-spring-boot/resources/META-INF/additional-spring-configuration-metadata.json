@@ -31,11 +31,6 @@
       "sourceType": "com.softistx.spring.data.mongo.audit.AuditProperties"
     },
     {
-      "name": "stx.mongo",
-      "type": "com.softistx.spring.integration.mongo.MongoIntegrationProperties",
-      "sourceType": "com.softistx.spring.integration.mongo.MongoIntegrationProperties"
-    },
-    {
       "name": "stx.i18n",
       "type": "com.softistx.spring.integration.i18n.I18nIntegrationProperties",
       "sourceType": "com.softistx.spring.integration.i18n.I18nIntegrationProperties"
@@ -206,27 +201,6 @@
       "sourceType": "com.softistx.spring.data.mongo.audit.AuditProperties",
       "defaultValue": "audits",
       "description": "The collection audit entries are written to. Changing it after entries exist starts a new, empty history."
-    },
-    {
-      "name": "stx.mongo.enabled",
-      "type": "java.lang.Boolean",
-      "sourceType": "com.softistx.spring.integration.mongo.MongoIntegrationProperties",
-      "defaultValue": false,
-      "description": "Open an stx-mongo coroutine client. Off by default. Distinct from stx.data.mongo and from Spring Boot's spring.data.mongodb, which configure Spring Data's ReactiveMongoTemplate — a different API onto the same server, and a second pool if both are on."
-    },
-    {
-      "name": "stx.mongo.uri",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.mongo.MongoIntegrationProperties",
-      "defaultValue": null,
-      "description": "The connection string. Required when enabled: a default would be a guess about somebody's cluster."
-    },
-    {
-      "name": "stx.mongo.database",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.mongo.MongoIntegrationProperties",
-      "defaultValue": null,
-      "description": "The database the MongoDatabase bean points at. Required when enabled."
     },
     {
       "name": "stx.i18n.enabled",
