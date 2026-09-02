@@ -1,4 +1,4 @@
-package com.softistx.ktor.jpa.entity
+package com.softistx.jpa.ktor.entity
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

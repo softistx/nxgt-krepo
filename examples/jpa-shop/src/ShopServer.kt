@@ -4,7 +4,7 @@ import com.softistx.example.shop.routes.productRoutes
 import com.softistx.jpa.JpaConfig
 import com.softistx.jpa.JpaNotFoundException
 import com.softistx.jpa.SchemaMode
-import com.softistx.ktor.jpa.JpaConnection
+import com.softistx.jpa.ktor.JpaConnection
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
