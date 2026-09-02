@@ -1,0 +1,18 @@
+# Where the `com.softistx:stx-*` artifacts come from, for the modules that consume them as
+# **published artifacts** rather than as modules in this project.
+#
+# Every example under `examples/` applies this. That is deliberate and it is what the examples are
+# for: an example that depends on `//libs/stx-jpa/stx-jpa` proves the sources compile together,
+# which the libraries' own specs already prove. Depending on `com.softistx:stx-jpa:0.1.0` proves
+# something no other spec here does — that the published POM names what a consumer needs, at the
+# scope a consumer needs it. Both times that was wrong in this repo, an example is what found it:
+# `kotlinx-coroutines-reactor` had to become `exported` because `spring-orders` could not compile
+# an inline function without it.
+#
+# `mavenLocal` on top of the defaults, not instead of them: everything that is not `com.softistx`
+# still comes from Maven Central. Publish before building an example after changing a library —
+# `./kotlin publish mavenLocal -m <module> --non-transitive` — because a stale artifact is exactly
+# the failure this arrangement is meant to expose, and it will expose it.
+
+repositories:
+  - url: mavenLocal

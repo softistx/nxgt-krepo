@@ -1,9 +1,13 @@
 product: jvm/app
 description: A Ktor GraphQL catalogue showing stx-graphix-ktor — annotated queries and mutations over HTTP
 
+apply:
+  - //stx-artifacts.module-template.yaml
+
 dependencies:
-  - //libs/stx-graphix/stx-graphix
-  - //libs/stx-graphix/stx-graphix-ktor
+  # As published artifacts, not as modules of this project — see the template above.
+  - $libs.stx.graphix
+  - $libs.stx.graphix.ktor
   - $ktor.server.core
   - $ktor.server.netty
   - $libs.slf4j.nop
