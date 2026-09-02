@@ -70,13 +70,13 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |
 | [`libs/stx-openapi-generator/README.md`](libs/stx-openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
 | [`libs/stx-common/README.md`](libs/stx-common/README.md) | The shared module — what belongs in it, which concurrency type a given caller wants, why `getOrPut` on a `ConcurrentHashMap` is not atomic, and what the standard library already covers |
-| [`libs/stx-amqp/README.md`](libs/stx-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
-| [`libs/stx-i18n/README.md`](libs/stx-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
+| [`libs/stx-amqp/stx-amqp/README.md`](libs/stx-amqp/stx-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
+| [`libs/stx-i18n/stx-i18n/README.md`](libs/stx-i18n/stx-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
 | [`libs/stx-ktor/README.md`](libs/stx-ktor/README.md) | The Ktor integrations — the seven plugins, what each owns, and how one module holds them without a fat dependency list |
 | [`libs/stx-spring-boot/README.md`](libs/stx-spring-boot/README.md) | The Spring integration — the opt-in `stx.*` model, why the IDE metadata is written by hand, and what `compile-only` buys a consumer |
 | [`docs/spring-mongo-queries.md`](docs/spring-mongo-queries.md) | What a stx-spring-boot Mongo query may say — the operators, the filter and sort grammars, and the keyset paging rules |
 | [`docs/spring-configuration.md`](docs/spring-configuration.md) | Every `stx.*` key an application may set, its default, and what switching it on costs |
-| [`libs/stx-jpa/README.md`](libs/stx-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, and why each part is shaped the way it is |
+| [`libs/stx-jpa/stx-jpa/README.md`](libs/stx-jpa/stx-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, and why each part is shaped the way it is |
 | [`docs/jpa-criteria.md`](docs/jpa-criteria.md) | What a stx-jpa query may say — operators, joins, fetch joins, entity graphs, projections, and the two escapes |
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a stx-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
 | [`docs/graphix.md`](docs/graphix.md) | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, SDL scan, HTTP/SSE/graphql-ws |
@@ -92,8 +92,8 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-material/docs/components.md`](libs/stx-material/docs/components.md) | Every component, its parameters, and its story in the catalogue |
 | [`examples/workflow-checkout/README.md`](examples/workflow-checkout/README.md) | The checkout saga — compensation, a fan-out, and a process killed mid-charge to show what at-least-once buys and costs |
 | [`examples/material-demo/README.md`](examples/material-demo/README.md) | The catalogue — why it is three modules, how to run it, how a story is registered |
-| [`libs/stx-kafka/README.md`](libs/stx-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
-| [`libs/stx-mongo/README.md`](libs/stx-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
+| [`libs/stx-kafka/stx-kafka/README.md`](libs/stx-kafka/stx-kafka/README.md) | The Kafka library — publishing, the poll loop and its commits, and what at-least-once costs |
+| [`libs/stx-mongo/stx-mongo/README.md`](libs/stx-mongo/stx-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
 | [`docs/telemetry.md`](docs/telemetry.md) | What a stx-telemetry call may say — the root's settings, the log and span verbs, the severities, the attribute rules, `traceparent` and the signal model |
 | [`libs/stx-telemetry/stx-telemetry/README.md`](libs/stx-telemetry/stx-telemetry/README.md) | The telemetry library — why the span is a coroutine context element and not an MDC, why an event is a type, and why writing a log never waits |
 | [`libs/stx-telemetry/stx-telemetry-otlp/README.md`](libs/stx-telemetry/stx-telemetry-otlp/README.md) | The OTLP exporter — why not the Java SDK, the two encoding details that are easy to get wrong, and what is retried |
@@ -111,8 +111,8 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-migrations/stx-migrations-db/README.md`](libs/stx-migrations/stx-migrations-db/README.md) | Where the ledger lives — why one module and not two, and per store: the uniqueness, the lock, the instants, and how DDL reaches a database with no JDBC in front of it |
 | [`libs/stx-migrations/stx-migrations-ktor/README.md`](libs/stx-migrations/stx-migrations-ktor/README.md) | The Ktor plugin — why `runBlocking` inside `install` is what makes it a gate, why it goes after the connection plugin, and why `sql { }` / `mongo { }` are sugar over the one `gate` that is the contract |
 | [`libs/stx-migrations/stx-migrations-spring/README.md`](libs/stx-migrations/stx-migrations-spring/README.md) | The Spring auto-configuration — why an `InitializingBean` and not a suspending listener, and why naming a store without its connection is an error rather than a shrug |
-| [`libs/stx-redis/README.md`](libs/stx-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
-| [`libs/stx-storage/README.md`](libs/stx-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
+| [`libs/stx-redis/stx-redis/README.md`](libs/stx-redis/stx-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
+| [`libs/stx-storage/stx-storage/README.md`](libs/stx-storage/stx-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
 | [`libs/stx-testing/README.md`](libs/stx-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |
 | [`plugins/openapi/README.md`](plugins/openapi/README.md) | The build plugin: settings, and what each choice needs on the consuming module's classpath |
 | [`AGENTS.md`](AGENTS.md) | Build commands, module layout, and the conventions this repo holds itself to |

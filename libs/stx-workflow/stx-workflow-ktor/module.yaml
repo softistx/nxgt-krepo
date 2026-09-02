@@ -17,7 +17,7 @@ dependencies:
 
 test-dependencies:
   - //libs/stx-workflow/stx-workflow-db
-  - //libs/stx-redis
+  - //libs/stx-redis/stx-redis
   - //libs/stx-testing
   - $libs.ktor.server.di
   - $ktor.server.testHost
