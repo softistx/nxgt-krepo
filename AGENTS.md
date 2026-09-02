@@ -880,6 +880,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-ktor/README.md` | The Ktor seam — the four lifecycle verbs and the one rule behind them, the two facts about Ktor's container that `injectable = true` rests on, and why no integration lives here |
   | `libs/stx-jpa/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
   | `libs/stx-jpa/stx-jpa-ktor/README.md` | The Ktor plugin for it — the factory/session split, the blocking bootstrap, and why the `stx-jpa` edge is `exported` here where the hub had it `compile-only` |
+  | `libs/stx-jpa/stx-jpa-spring/README.md` | The Spring auto-configuration for it — the two beans, the required `packages`, and why `SchemaMode` defers to stx-migrations |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, `@Argument`, `@GraphQLContext`). **This is where a new annotation, scalar or directive is documented** |
