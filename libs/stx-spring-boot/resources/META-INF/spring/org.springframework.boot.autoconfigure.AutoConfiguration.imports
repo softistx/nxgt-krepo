@@ -7,7 +7,6 @@ com.softistx.spring.data.mongo.audit.AuditAutoConfiguration
 com.softistx.spring.integration.mongo.MongoIntegrationAutoConfiguration
 com.softistx.spring.integration.jpa.JpaIntegrationAutoConfiguration
 com.softistx.spring.integration.storage.StorageIntegrationAutoConfiguration
-com.softistx.spring.integration.redis.RedisIntegrationAutoConfiguration
 com.softistx.spring.integration.kafka.KafkaIntegrationAutoConfiguration
 com.softistx.spring.integration.amqp.AmqpIntegrationAutoConfiguration
 com.softistx.spring.integration.i18n.I18nIntegrationAutoConfiguration

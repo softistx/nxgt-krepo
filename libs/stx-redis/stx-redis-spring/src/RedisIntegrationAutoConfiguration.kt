@@ -1,4 +1,4 @@
-package com.softistx.spring.integration.redis
+package com.softistx.redis.spring
 
 import com.softistx.redis.Redis
 import com.softistx.redis.RedisConfig

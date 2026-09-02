@@ -6,19 +6,16 @@ import com.softistx.amqp.Amqp
 import com.softistx.i18n.Messages
 import com.softistx.jpa.Jpa
 import com.softistx.kafka.Kafka
-import com.softistx.redis.Redis
 import com.softistx.spring.integration.amqp.AmqpIntegrationAutoConfiguration
 import com.softistx.spring.integration.i18n.I18nIntegrationAutoConfiguration
 import com.softistx.spring.integration.jpa.JpaIntegrationAutoConfiguration
 import com.softistx.spring.integration.kafka.KafkaIntegrationAutoConfiguration
 import com.softistx.spring.integration.mongo.MongoIntegrationAutoConfiguration
-import com.softistx.spring.integration.redis.RedisIntegrationAutoConfiguration
 import com.softistx.spring.integration.storage.StorageIntegrationAutoConfiguration
 import com.softistx.spring.integration.storage.StorageIntegrationProperties
 import com.softistx.spring.testing.UNREACHABLE_MONGO
 import com.softistx.storage.ObjectStorage
 import com.softistx.testing.containers.rabbitContainer
-import com.softistx.testing.containers.redisContainer
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -34,7 +31,7 @@ import java.util.Locale
 /**
  * What the `integration/` auto-configurations do and, mostly, do not do.
  *
- * Every one of the seven is the same shape — `@ConditionalOnClass`, `@ConditionalOnProperty` with no
+ * Every one of them is the same shape — `@ConditionalOnClass`, `@ConditionalOnProperty` with no
  * `matchIfMissing`, `@ConditionalOnMissingBean` on every bean, built through that library's own
  * factory — so the specs are the same three questions asked of each: nothing without the property,
  * the beans with it, and an application's own bean winning.
@@ -146,16 +143,6 @@ class IntegrationWiringTest :
                 }
         }
 
-        "redis: nothing is opened until an application asks" {
-            redis().run { context -> context.getBeanNamesForType(Redis::class.java).size shouldBe 0 }
-        }
-
-        "redis: enabling it opens a connection".config(enabled = redisServer.available) {
-            redis()
-                .withPropertyValues("stx.redis.enabled=true", "stx.redis.uri=${redisServer.endpoint}", "stx.redis.namespace=orders")
-                .run { context -> context.getBean(Redis::class.java).namespace shouldBe "orders" }
-        }
-
         "amqp: nothing is opened until an application asks" {
             amqp().run { context -> context.getBeanNamesForType(Amqp::class.java).size shouldBe 0 }
         }
@@ -204,24 +191,20 @@ class IntegrationWiringTest :
 private const val UNREACHABLE_HTTP = "http://127.0.0.1:1"
 
 /**
- * The two backends the specs above really do connect to, resolved the way every other spec in this
+ * The one backend the specs above really do connect to, resolved the way every other spec in this
  * repo resolves one: `stx-testing` declares them, and asking for the endpoint is what starts a
  * container — or reuses the server `REDIS_TEST_URI` / `AMQP_TEST_URI` names.
  *
  * These read `System.getenv` directly until every other harness had stopped doing so. A spec gated on
  * a variable being exported proves nothing on a machine where nobody exported it, which is the whole
- * reason `ContainerService` defaults to a container. Two small images — Redis is ~30 MiB, RabbitMQ
- * ~200 MiB — and neither is the Kafka cluster this file has no reason to start.
+ * reason `ContainerService` defaults to a container. A small image — RabbitMQ is ~200 MiB — and not
+ * the Kafka cluster this file has no reason to start.
  */
-private val redisServer = redisContainer()
-
 private val amqpBroker = rabbitContainer()
 
 private fun mongo() = runnerFor(MongoIntegrationAutoConfiguration::class.java)
 
 private fun kafka() = runnerFor(KafkaIntegrationAutoConfiguration::class.java)
-
-private fun redis() = runnerFor(RedisIntegrationAutoConfiguration::class.java)
 
 private fun amqp() = runnerFor(AmqpIntegrationAutoConfiguration::class.java)
 
