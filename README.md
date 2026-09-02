@@ -118,6 +118,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-redis/stx-redis/README.md`](libs/stx-redis/stx-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
 | [`libs/stx-redis/stx-redis-ktor/README.md`](libs/stx-redis/stx-redis-ktor/README.md) | The Ktor plugin — why one connection and not one per request, and what `injectable = true` costs and does not |
 | [`libs/stx-storage/stx-storage/README.md`](libs/stx-storage/stx-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
+| [`libs/stx-storage/stx-storage-ktor/README.md`](libs/stx-storage/stx-storage-ktor/README.md) | The Ktor plugin — and why it is the one whose `config` is required rather than defaulted |
 | [`libs/stx-testing/README.md`](libs/stx-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |
 | [`plugins/openapi/README.md`](plugins/openapi/README.md) | The build plugin: settings, and what each choice needs on the consuming module's classpath |
 | [`AGENTS.md`](AGENTS.md) | Build commands, module layout, and the conventions this repo holds itself to |
