@@ -1,4 +1,4 @@
-package com.softistx.ktor.amqp
+package com.softistx.amqp.ktor
 
 import com.softistx.amqp.Amqp
 import com.softistx.ktor.required
