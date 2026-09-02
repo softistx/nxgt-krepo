@@ -702,6 +702,14 @@ modules:
 
 Only directories that directly contain a `module.yaml` are matched, so grouping directories such as `examples/material-demo` and `libs/stx-graphix` and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported as an error, so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
 
+**Every published library is a family directory.** `libs/<name>/` contains no `module.yaml` of its
+own; the library itself is `libs/<name>/<name>/`, and each framework integration is a sibling beside
+it — `libs/stx-jpa/stx-jpa`, `libs/stx-jpa/stx-jpa-ktor`, `libs/stx-jpa/stx-jpa-spring`. That is what
+lets an integration be published, versioned and depended on without the hub it used to live in.
+A module's name is still its own directory name, so the leaf keeps the artifact: `libs/stx-jpa/stx-jpa`
+publishes as `com.softistx:stx-jpa`, exactly as `libs/stx-jpa` did. Nesting a library one level down
+changes no coordinate.
+
 Rules that are easy to get wrong:
 
 - **A module's name is its directory name, and it must be unique across the whole project.** There is no `name:` property in `module.yaml` (it fails with `Unknown property`), and a `modules:` entry is a path string, not a mapping — so two directories called `android` under different parents abort *every* command with `Module name 'android' is not unique`. `-m` takes the bare name only, never a path, so there is no way to disambiguate after the fact. Hence `md-catalog`/`md-desktop`/`md-android` rather than `catalog`/`desktop`/`android`: prefix a demo's modules so the next demo can have the same shapes. `description:` gives a module a readable label in `kotlin show modules`, but does not change its name.
@@ -861,10 +869,10 @@ the same each time, and the mistakes are the same each time too.
   | `plugins/dgs-codegen/README.md` | How do I generate DGS types from SDL in a toolchain module |
   | `plugins/apollo/README.md` | How do I generate Apollo models and `OPERATION_DOCUMENT` from schema + documents |
   | `libs/stx-common/README.md` | What belongs in the shared module, which concurrency type a given caller wants, the `getOrPut` trap, and the table of what the standard library already covers so nothing here wraps it twice |
-  | `libs/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
-  | `libs/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
+  | `libs/stx-amqp/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
+  | `libs/stx-i18n/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/stx-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
-  | `libs/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
+  | `libs/stx-jpa/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, `@Argument`, `@GraphQLContext`). **This is where a new annotation, scalar or directive is documented** |
@@ -886,13 +894,13 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-migrations/stx-migrations-db/README.md` | Where the ledger lives — why one module and not two, and per store: the uniqueness, the lock, the instants, and how DDL reaches the database |
   | `libs/stx-migrations/stx-migrations-ktor/README.md` | The Ktor plugin — why `runBlocking` in `install` is the gate, why it goes after the connection plugin, why it owns and closes nothing, and why the `sql { }` / `mongo { }` DSL ends in `gate` |
   | `libs/stx-migrations/stx-migrations-spring/README.md` | The Spring auto-configuration — `stx.migrations.*`, why an `InitializingBean` and not a suspending listener, and why nothing is inferred about where the ledger goes |
-  | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
-  | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
+  | `libs/stx-kafka/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
+  | `libs/stx-mongo/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
   | `docs/spring-mongo-queries.md` | What a stx-spring-boot Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
   | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
-  | `libs/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
-  | `libs/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
+  | `libs/stx-redis/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
+  | `libs/stx-storage/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
   | `libs/stx-material/README.md` | How is the UI library shaped, how does `StxTheme` slot into an application that already uses Material 3, and how do I add a component? |
   | `libs/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
   | `libs/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
@@ -908,7 +916,7 @@ the same each time, and the mistakes are the same each time too.
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
   the signal to keep appending. `libs/stx-openapi-generator/README.md` reached 394 lines before its
   reference half moved out; splitting on *audience* rather than on length is what made the seam
-  obvious. `libs/stx-jpa/README.md` reached 921 and split the same way, into the query vocabulary
+  obvious. `libs/stx-jpa/stx-jpa/README.md` reached 921 and split the same way, into the query vocabulary
   and the mapping vocabulary — the two halves that grow — leaving the reasoning behind.
 - **Keep files short and single-purpose.** One file holds one concern; when two things could be
   separated cleanly, separate them. A file growing past roughly 150 lines is a signal to split it,

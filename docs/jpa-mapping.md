@@ -6,7 +6,7 @@ the two Kotlin types this module converts, JSON columns, and Bean Validation. Th
 it lives here rather than in the module README, which answers *why the library is shaped this way*
 and stays roughly the size it is.
 
-`docs/jpa-criteria.md` is the other half — what a *query* may say. `libs/stx-jpa/README.md` has
+`docs/jpa-criteria.md` is the other half — what a *query* may say. `libs/stx-jpa/stx-jpa/README.md` has
 the reasoning behind both.
 
 ## Associations are lazy
@@ -19,7 +19,7 @@ What makes this a rule rather than advice is that the reactive session has no tr
 loading, so the two options are not "fast" and "slow": an unfetched lazy association throws, and an
 eager one silently multiplies statements. Neither is something to discover in production. The query
 says what it loads — `fetch`, `fetchEach`, or a projection that loads no entity — and
-`libs/stx-jpa/README.md` has the reasoning under *A query says what it loads*.
+`libs/stx-jpa/stx-jpa/README.md` has the reasoning under *A query says what it loads*.
 
 ## Which database
 

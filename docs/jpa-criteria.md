@@ -5,7 +5,7 @@ escape. This is the half of `libs/stx-jpa` that gains an entry every phase, so i
 rather than in the module README, which answers *why the library is shaped this way* and stays
 roughly the size it is.
 
-`libs/stx-jpa/README.md` has the rest: the confinement rule, the four ways in, and what a query
+`libs/stx-jpa/stx-jpa/README.md` has the rest: the confinement rule, the four ways in, and what a query
 says it loads. `docs/jpa-mapping.md` is the other half of this one — what an *entity* may say.
 
 **Everything here is an extension on a JPA or Hibernate type.** There is no builder of this module's
