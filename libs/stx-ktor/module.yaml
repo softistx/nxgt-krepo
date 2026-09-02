@@ -17,7 +17,6 @@ dependencies:
   # scope and absent from RUNTIME.
   - //libs/stx-i18n/stx-i18n: compile-only
   - //libs/stx-redis/stx-redis: compile-only
-  - //libs/stx-mongo/stx-mongo: compile-only
   - //libs/stx-amqp/stx-amqp: compile-only
   - //libs/stx-kafka/stx-kafka: compile-only
   - //libs/stx-storage/stx-storage: compile-only
@@ -41,7 +40,6 @@ test-dependencies:
   # the specs run the plugins for real, so here the libraries are on the runtime classpath too
   - //libs/stx-i18n/stx-i18n
   - //libs/stx-redis/stx-redis
-  - //libs/stx-mongo/stx-mongo
   - //libs/stx-amqp/stx-amqp
   - //libs/stx-kafka/stx-kafka
   - //libs/stx-storage/stx-storage
@@ -58,11 +56,6 @@ test-dependencies:
   - $libs.slf4j.nop
 
 settings:
-  kotlin:
-    # For the documents the Mongo spec round-trips. Nothing in `src/` is @Serializable: this is the
-    # block an application needs in its own module.yaml when the types it hands a plugin are.
-    serialization: json
-
   ktor:
     enabled: true
     # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is
