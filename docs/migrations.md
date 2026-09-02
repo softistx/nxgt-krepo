@@ -14,6 +14,7 @@ the library is shaped this way; this file is what you may write.
 - [The lock](#the-lock)
 - [`prepare()` runs before the lock, and has to](#prepare-runs-before-the-lock-and-has-to)
 - [What a killed process leaves](#what-a-killed-process-leaves)
+  - [Clearing it](#clearing-it)
 - [In a Ktor application](#in-a-ktor-application)
 - [In a Spring Boot application](#in-a-spring-boot-application)
 - [A migration must be safe to attempt twice](#a-migration-must-be-safe-to-attempt-twice)
@@ -42,6 +43,50 @@ interface SqlMigration : Migration<SqlMigrationSession>
 One line each, and they earn it. A generic `Migration<*>` erases: a Spring `ObjectProvider` or any
 scan could not tell a Mongo migration from a SQL one, so an application with both stores would hand
 every migration to both runners.
+
+So a real one, on SQL:
+
+```kotlin
+class V1Orders : SqlMigration {
+    override val version = 1L
+    override val description = "the orders table"
+
+    override suspend fun migrate(context: SqlMigrationSession) {
+        context.execute(
+            """
+            create table if not exists orders (
+                id         bigint primary key,
+                reference  varchar(64) not null unique,
+                status     varchar(16) not null,
+                total      bigint not null,
+                placed_at  timestamp not null
+            )
+            """.trimIndent(),
+        )
+    }
+}
+```
+
+and the same thing on MongoDB, where a migration is handed the database itself:
+
+```kotlin
+class V2Tags : MongoMigration {
+    override val version = 2L
+    override val description = "backfill tags on orders written before the field existed"
+
+    override suspend fun migrate(context: MongoDatabase) {
+        context
+            .getCollection<Document>("orders")
+            .updateMany(Filters.exists("tags", false), Updates.set("tags", emptyList<String>()))
+    }
+}
+```
+
+**Raw `Document`, not the application's entity.** A migration writes what the database holds, not what
+today's mapping says it should: the class may gain a field, lose one or be renamed tomorrow, and this
+migration still has to mean in a year what it meant when it was reviewed. The same rule is why the SQL
+one spells column names rather than going through `stx-jpa`. `examples/spring-orders` runs both of
+these for real.
 
 ## The version
 
@@ -215,6 +260,49 @@ interface SqlMigrationSession {
 }
 ```
 
+```kotlin
+class V3Currency(private val expectedOrders: Int) : SqlMigration {
+    override val version = 3L
+    override val description = "orders written before the column are in EUR"
+
+    override suspend fun migrate(context: SqlMigrationSession) {
+        // Two statements in one call. `execute` is unprepared, which is what allows it.
+        context.execute(
+            """
+            alter table orders add column currency varchar(3);
+            create index orders_currency on orders (currency);
+            """.trimIndent(),
+        )
+
+        // `update` is prepared, and it answers with a row count. `execute` answers with nothing.
+        val backfilled: Int = context.update("update orders set currency = 'EUR' where currency is null")
+        require(backfilled <= expectedOrders) { "$backfilled orders is more than V3 meant to touch" }
+    }
+}
+```
+
+What a migration does with that count is its own business. Throwing on one it did not expect is the
+useful case, and it behaves like any other failure: the record goes to `FAILED`, nothing after it
+runs, and the application does not start.
+
+Note what that example is *not*: re-attemptable. `add column` fails the second time, on both servers —
+see [A migration must be safe to attempt twice](#a-migration-must-be-safe-to-attempt-twice) for what
+to write instead, and why the library cannot fix this for you.
+
+The library guarantees the **transport**, not the portability of the SQL you send through it. Which
+server a migration is written for is the author's to know, exactly as it would be in a `.sql` file —
+and `if not exists` is where the two verified servers part company. Measured on PostgreSQL 17.11 and
+MySQL 8.4, the image `mysqlContainer()` pins:
+
+| | PostgreSQL | MySQL |
+| --- | --- | --- |
+| `create table if not exists` | yes | yes |
+| `create index if not exists` | yes | **no** — `ERROR 1064`, a syntax error |
+| `alter table … add column if not exists` | yes | **no** — `ERROR 1064` |
+
+MariaDB accepts all three; MySQL is the odd one out, and it fails at *parse* time, so there is no
+partial application to reason about — the statement simply never runs.
+
 `execute` goes out unprepared, which is what makes `create index`, two statements in one call and a
 literal `?` used as a Postgres `jsonb` operator reach the server unchanged. `stx-jpa`'s `NativeDdlTest`
 measures each of those, and measures the session's own native verbs refusing them.
@@ -273,14 +361,65 @@ there, and a ledger that behaved differently per server is a ledger with a diale
 The next startup **refuses in every case**, naming the version and the host that claimed it. What
 differs is the state of the data underneath.
 
-| store | the lock | the data | clearing it |
-| --- | --- | --- | --- |
-| MongoDB | expires at most one lease later | whatever the migration wrote is written | delete or fix the `RUNNING` document |
-| PostgreSQL | same | DDL is transactional, so a migration that ran its statements in one transaction left nothing | one `update` on the ledger row |
-| MySQL | same | DDL is **not** transactional, so a multi-statement migration may be half applied | check the schema, then one `update` |
+| store | the lock | the data |
+| --- | --- | --- |
+| MongoDB | expires at most one lease later | whatever the migration wrote is written |
+| PostgreSQL | same | DDL is transactional, so a migration that ran its statements in one transaction left nothing |
+| MySQL | same | DDL is **not** transactional, so a multi-statement migration may be half applied |
 
 This is why a migration has to be re-attemptable: the cheapest repair is to make it safe to run again
 and clear the record.
+
+### Clearing it
+
+A record looks like this — a row in `stx_migrations`, or a document keyed on the version:
+
+```
+ version | description      | status  | applied_by       | failure | duration_ms | started_at    | updated_at
+       2 | backfill tags    | RUNNING | box-7/4182/9f3ac | <null>  |      <null> | 1756742400000 | 1756742400000
+```
+
+```javascript
+{ _id: NumberLong(2), description: "backfill tags", status: "RUNNING",
+  appliedBy: "box-7/4182/9f3ac", failure: null, durationMillis: null,
+  startedAt: ISODate("2026-09-01T12:00:00Z"), updatedAt: ISODate("2026-09-01T12:00:00Z") }
+```
+
+**Deciding is the whole job; the statement is one line.** Look at the schema and answer one question:
+did the change land?
+
+*It did not land, or you have made the migration safe to run again* — **delete the record.** An
+`update` will not do: `claim` is an insert, so a row that is there at all makes the next run refuse.
+
+```sql
+delete from stx_migrations where version = 2;
+```
+```javascript
+db.stx_migrations.deleteOne({ _id: NumberLong(2) })
+```
+
+*It landed and only the record is wrong* — mark it applied, and the next run skips it.
+
+```sql
+update stx_migrations set status = 'APPLIED', failure = null where version = 2;
+```
+```javascript
+db.stx_migrations.updateOne({ _id: NumberLong(2) }, { $set: { status: "APPLIED", failure: null } })
+```
+
+The lock releases itself one lease after the process died, so there is normally nothing to do about
+it. To take it back sooner — the primary key is a literal `x` on SQL and the string `migrations` on
+MongoDB, because a lock table with one row still needs one:
+
+```sql
+update stx_migrations_lock set locked_by = null, locked_until = null where id = 'x';
+```
+```javascript
+db.stx_migrations_lock.updateOne({ _id: "migrations" }, { $set: { lockedBy: null, lockedUntil: null } })
+```
+
+Do that only once you are sure nobody is still migrating. The lease exists precisely so you do not
+have to be sure.
 
 ## In a Ktor application
 
@@ -373,23 +512,50 @@ application already has. Turning on `stx.mongo` to produce one instead opens a s
 same server — and under test a pool that never saw the harness's per-run database suffix, so the
 migrations would run against a database nobody chose and every spec would still pass.
 
+**Reading the ledger back** is `MigrationGate`, the same bean that ran it — the Spring twin of Ktor's
+`call.migrations`:
+
+```kotlin
+@RestController
+class MigrationHealth(private val gate: MigrationGate) {
+    @GetMapping("/health/migrations")
+    fun applied() = gate.ledger.map { "${it.version} ${it.description} ${it.status}" }
+}
+```
+
+A snapshot taken as the context refreshed, not a live read: once the gate has passed, only another
+process can change the ledger, and this one could not act on the news anyway.
+
 `examples/spring-orders` is the whole path run end to end: two `@Component` migrations over Spring
 Data's own pool, the ledger asserted in `OrdersApplicationTest`, and no spec polling for anything.
 
 ## A migration must be safe to attempt twice
 
-Not because the runner will — an `APPLIED` record is skipped — but because the row above says an
-operator may have to make it. In practice:
+Not because the runner will — an `APPLIED` record is skipped — but because
+[clearing a stuck record](#clearing-it) means somebody deleting it and letting the migration run
+again. Write every statement so the second attempt is a no-op rather than an error:
 
 ```kotlin
+// on both servers
 context.execute("create table if not exists orders (…)")
+context.update("update orders set currency = 'EUR' where currency is null")
+
+// on PostgreSQL, where `if not exists` also covers indexes and columns
+context.execute("create index if not exists orders_currency on orders (currency)")
 context.execute("alter table orders add column if not exists currency varchar(3)")
 
+// on MongoDB, where a filtered update is naturally a no-op the second time
 database.getCollection<Document>("orders").updateMany(exists("tags", false), set("tags", emptyList()))
 ```
 
-Each of those is the same statement written so that running it a second time is a no-op rather than an
-error.
+**On MySQL, an index or a column cannot be added idempotently at all.** Both spellings are syntax
+errors there (measured above), and `SqlMigrationSession` has no `select` to check
+`information_schema` with first. That is not something the library can fix for you — it is why the
+ledger fails closed, and why [clearing a record](#clearing-it) asks you to look at the schema before
+deciding.
+
+The practical shape on MySQL: keep such a migration to **one statement**, so *ran* and *did not run*
+are the only two outcomes an operator has to tell apart.
 
 ## Deliberately absent
 
