@@ -14,9 +14,11 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Path
+import java.nio.file.attribute.FileTime
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.exists
 import kotlin.io.path.readText
+import kotlin.io.path.setLastModifiedTime
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
@@ -45,6 +47,25 @@ class FileExporterTest :
             var at: Instant,
         ) : Clock {
             override fun now(): Instant = at
+        }
+
+        /**
+         * A restart, leaving the file as a real one would be left.
+         *
+         * [FileExporter.open] takes `openedAt` off the filesystem when the file already exists, and
+         * that is the right thing: a process that was down has no other record of when its window
+         * began. But it means a spec that freezes the [Clock] has to freeze the modification time
+         * with it, or the exporter compares a real timestamp against a fake `now` and decides to
+         * roll — or not — depending on which day the suite happens to run. These two scenarios did
+         * exactly that, and went red the morning after they were written.
+         */
+        suspend fun restart(
+            path: Path,
+            at: Instant = start,
+            export: suspend (FileExporter) -> Unit,
+        ) {
+            FileExporter(path, clock = Ticking(at)).use { export(it) }
+            path.setLastModifiedTime(FileTime.fromMillis(at.toEpochMilliseconds()))
         }
 
         feature("the lines") {
@@ -138,8 +159,8 @@ class FileExporterTest :
             scenario("it continues the file it left, rather than one per deploy") {
                 val path = directory().resolve("telemetry.jsonl")
 
-                FileExporter(path, clock = Ticking(start)).use { it.export(resource, listOf(log("before"))) }
-                FileExporter(path, clock = Ticking(start)).use { it.export(resource, listOf(log("after"))) }
+                restart(path) { it.export(resource, listOf(log("before"))) }
+                restart(path) { it.export(resource, listOf(log("after"))) }
 
                 path.readText().trim().lines() shouldHaveSize 2
             }
@@ -148,7 +169,7 @@ class FileExporterTest :
                 val directory = directory()
                 val path = directory.resolve("telemetry.jsonl")
 
-                repeat(3) { FileExporter(path, clock = Ticking(start)).use { e -> e.export(resource, listOf(log("$it"))) } }
+                repeat(3) { n -> restart(path) { it.export(resource, listOf(log("$n"))) } }
 
                 directory.toFile().list()!!.single() shouldBe "telemetry.jsonl"
             }
