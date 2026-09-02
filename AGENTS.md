@@ -23,7 +23,7 @@ What exists:
 | `libs/stx-ktor` | The Ktor seam, and only the seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the one CORS policy `stx-spring-boot` builds Spring's from. No integration lives here — each is a module beside its own library — and the tell is that no spec in this module talks to a backend |
 | `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
 | `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
-| `libs/stx-spring-boot` | Spring Boot integration for the libraries here, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, and every auto-configuration opt-in behind `stx.*` |
+| `libs/stx-spring-boot` | The Spring seam, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, security, CORS, the JSON codec, and the Spring Data Mongo layer. Each `stx-*` library's own auto-configuration is a module beside that library, not a package here |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `libs/stx-graphix` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphix-ktor` and `stx-graphix-spring` are the HTTP integrations |
 | `libs/stx-workflow` | Compensable workflows for a Kotlin coroutine service: a DSL of steps each with its own compensation, one `@Serializable` context threaded through them, and state checkpointed after every node so a process that dies mid-run is picked up where it stopped. `await` and `sleep` stop an instance for a signal or a deadline by writing it down rather than by holding a coroutine, and `workflowOf` reads the same declaration off an annotated class. `engine.find(Failed)` is the operator's inbox for the one outcome the engine refuses to resolve. Four modules in the group: the engine, `stx-workflow-db` for where instances live (Redis, SQL through `stx-jpa`, or MongoDB), and `stx-workflow-ktor` / `stx-workflow-spring` for the two framework integrations |
@@ -442,8 +442,9 @@ resource-lifecycle idiom (`own`, `publish`, `resource`, `required`) and the one 
 with Spring. It is the **seam**, not the switchboard, and its own specs are the tell — there is no
 backend in any of them. Those four verbs are public rather than internal for exactly this reason:
 they are the contract between the seam and every integration built on it, and a contract cannot be
-internal. `libs/stx-spring-boot` is the same seam for Spring and is still on the way there: its
-`src/integration/**` auto-configurations have not moved out yet.
+internal. `libs/stx-spring-boot` is the same seam for Spring, and it has no `src/integration/`
+either: what is left there is error handling, security, CORS, the JSON and web conventions, and the
+Spring Data Mongo layer — none of which belongs to a `stx-*` library.
 
 The framework modules know the framework, the libraries know the backends, and neither knows two.
 
@@ -876,6 +877,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-amqp/stx-amqp-ktor/README.md` | The Ktor plugin for it — the connection/channel split that decides its shape, and the blocking connect |
   | `libs/stx-amqp/stx-amqp-spring/README.md` | The Spring auto-configuration for it — the same connection/channel split, from the container's side |
   | `libs/stx-i18n/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
+  | `libs/stx-i18n/stx-i18n-spring/README.md` | The Spring auto-configuration for it — why narrowing the locale resolver is the half that matters, and why Boot's own property wins |
   | `libs/stx-i18n/stx-i18n-ktor/README.md` | The Ktor plugin for it — the one that owns nothing and resolves per request, and why `?lang=` is a decision rather than a default |
   | `libs/stx-ktor/README.md` | The Ktor seam — the four lifecycle verbs and the one rule behind them, the two facts about Ktor's container that `injectable = true` rests on, and why no integration lives here |
   | `libs/stx-jpa/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
