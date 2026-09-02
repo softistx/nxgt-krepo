@@ -1,10 +1,15 @@
 product: jvm/app
 
+apply:
+  - //stx-artifacts.module-template.yaml
+
 dependencies:
+  # As published artifacts, not as modules of this project — see the template above.
+  #
   # The library this example is about: entities, sessions, and the Criteria extensions.
-  - //libs/stx-jpa/stx-jpa
+  - $libs.stx.jpa
   # `JpaConnection` and `call.jpa` — one session factory for the application, closed with it.
-  - //libs/stx-jpa/stx-jpa-ktor
+  - $libs.stx.jpa.ktor
   - $ktor.server.core
   - $ktor.server.netty
   - $ktor.server.contentNegotiation

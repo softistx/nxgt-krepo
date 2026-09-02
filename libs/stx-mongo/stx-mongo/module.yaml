@@ -9,9 +9,16 @@ dependencies:
   # `findPage` answers with a `Page`, so a consumer cannot call it without seeing the type.
   - //libs/stx-common: exported
 
-  # Every org.mongodb artifact below takes its version from this BOM, which is why the
-  # catalog declares them without one
-  - bom: $libs.mongodb.driver.bom
+  # No `bom:` entry, and the catalog gives every org.mongodb alias below an explicit `version.ref`
+  # instead. A BOM does not survive publication: the toolchain strips the versions off the artifacts
+  # it manages, but writes the BOM itself into the POM as an ordinary dependency and into the Gradle
+  # metadata as an ordinary `requires` — not as a platform, and with no `dependencyConstraints`. The
+  # result is a published module whose dependencies carry no version and no constraint, which no
+  # consumer can resolve. `examples/spring-orders` is what found that, on the day it started
+  # depending on `com.softistx:stx-mongo:0.1.0` rather than on this module's sources.
+  #
+  # One version number still, because `version.ref = "mongodb"` in the catalog is what they all
+  # point at — the BOM was never the only thing keeping them aligned.
   # MongoCollection, ClientSession, Bson and Flow are all over this module's public API,
   # so a consuming module has to see them to call anything here
   - $libs.mongodb.driver: exported
