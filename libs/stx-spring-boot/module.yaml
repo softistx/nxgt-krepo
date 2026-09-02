@@ -18,7 +18,6 @@ dependencies:
   - //libs/stx-mongo/stx-mongo: compile-only
   - //libs/stx-jpa/stx-jpa: compile-only
   - //libs/stx-storage/stx-storage: compile-only
-  - //libs/stx-redis/stx-redis: compile-only
   - //libs/stx-kafka/stx-kafka: compile-only
   - //libs/stx-amqp/stx-amqp: compile-only
 
@@ -108,7 +107,6 @@ test-dependencies:
   - //libs/stx-mongo/stx-mongo
   - //libs/stx-jpa/stx-jpa
   - //libs/stx-storage/stx-storage
-  - //libs/stx-redis/stx-redis
   - //libs/stx-kafka/stx-kafka
   - //libs/stx-amqp/stx-amqp
   # ApplicationContextRunner, for asserting what does and does not appear in a context
