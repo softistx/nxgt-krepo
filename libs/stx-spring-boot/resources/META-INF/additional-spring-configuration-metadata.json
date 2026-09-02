@@ -46,11 +46,6 @@
       "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties"
     },
     {
-      "name": "stx.kafka",
-      "type": "com.softistx.spring.integration.kafka.KafkaIntegrationProperties",
-      "sourceType": "com.softistx.spring.integration.kafka.KafkaIntegrationProperties"
-    },
-    {
       "name": "stx.amqp",
       "type": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties",
       "sourceType": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties"
@@ -387,34 +382,6 @@
       "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties",
       "defaultValue": null,
       "description": "Can stay unset against MinIO. Against S3 itself it usually cannot: the SDK will otherwise ask the service where a bucket lives, once per bucket the first time it sees one."
-    },
-    {
-      "name": "stx.kafka.enabled",
-      "type": "java.lang.Boolean",
-      "sourceType": "com.softistx.spring.integration.kafka.KafkaIntegrationProperties",
-      "defaultValue": false,
-      "description": "Register the stx-kafka cluster handle. Off by default. It opens nothing: the connections belong to the publishers and subscribers it hands out."
-    },
-    {
-      "name": "stx.kafka.bootstrap",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.kafka.KafkaIntegrationProperties",
-      "defaultValue": "localhost:9092",
-      "description": "host:port pairs, comma-separated."
-    },
-    {
-      "name": "stx.kafka.client-id",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.kafka.KafkaIntegrationProperties",
-      "defaultValue": null,
-      "description": "What this application calls itself to the broker. Worth setting: it is what the broker's metrics and logs name, and consumer-1 in an incident is not a name."
-    },
-    {
-      "name": "stx.kafka.properties",
-      "type": "java.util.Map<java.lang.String,java.lang.String>",
-      "sourceType": "com.softistx.spring.integration.kafka.KafkaIntegrationProperties",
-      "defaultValue": {},
-      "description": "Anything else the clients understand, applied last."
     },
     {
       "name": "stx.amqp.enabled",
