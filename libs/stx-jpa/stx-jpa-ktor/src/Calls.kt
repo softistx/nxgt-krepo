@@ -1,4 +1,4 @@
-package com.softistx.ktor.jpa
+package com.softistx.jpa.ktor
 
 import com.softistx.jpa.Jpa
 import com.softistx.ktor.required

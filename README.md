@@ -77,6 +77,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`docs/spring-mongo-queries.md`](docs/spring-mongo-queries.md) | What a stx-spring-boot Mongo query may say — the operators, the filter and sort grammars, and the keyset paging rules |
 | [`docs/spring-configuration.md`](docs/spring-configuration.md) | Every `stx.*` key an application may set, its default, and what switching it on costs |
 | [`libs/stx-jpa/stx-jpa/README.md`](libs/stx-jpa/stx-jpa/README.md) | The Postgres library — the session confinement rule everything else follows from, and why each part is shaped the way it is |
+| [`libs/stx-jpa/stx-jpa-ktor/README.md`](libs/stx-jpa/stx-jpa-ktor/README.md) | The Ktor plugin — why it owns a factory and not a session, why `runBlocking` inside `install`, and why a scan that finds nothing fails |
 | [`docs/jpa-criteria.md`](docs/jpa-criteria.md) | What a stx-jpa query may say — operators, joins, fetch joins, entity graphs, projections, and the two escapes |
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a stx-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
 | [`docs/graphix.md`](docs/graphix.md) | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, SDL scan, HTTP/SSE/graphql-ws |
