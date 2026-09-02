@@ -13,11 +13,15 @@ import kotlinx.coroutines.runBlocking
  * ```kotlin
  * install(JpaConnection) { config = JpaConfig(uri = …, username = …, password = …) }
  * install(Migrations) {
- *     gate(SqlMigrations(application.jpa, listOf(V1Orders(), V2OrderIndex())))
+ *     sql(application.jpa) { migration(V1Orders(), V2OrderIndex()) }
  * }
  *
  * get("/health/migrations") { call.respond(call.migrations.map { "${it.version} ${it.status}" }) }
  * ```
+ *
+ * `sql { }` and `mongo { }` live in `Stores.kt` and are sugar over [MigrationsConfiguration.gate],
+ * which stays the whole contract: an application with a ledger of its own builds its own runner and
+ * hands it over, and nothing in this file names a store.
  *
  * **Install it after the connection plugin it reads from.** A runner is built from a `Jpa` or a
  * `MongoDatabase` that `install(JpaConnection)` or `install(MongoConnection)` put on the application,
@@ -57,6 +61,9 @@ class MigrationsConfiguration {
      * More than one is allowed and they run in the order they were added — an application migrating
      * both a SQL database and a MongoDB adds two. They are separate ledgers with separate locks, so
      * "in order" is a statement about this process and not a transaction across two servers.
+     *
+     * [sql][com.softistx.migrations.ktor.sql] and [mongo][com.softistx.migrations.ktor.mongo] end
+     * here too, which is why the DSL and a hand-built runner mix in one block.
      */
     fun gate(runner: MigrationRunner<*>) {
         runners += runner
