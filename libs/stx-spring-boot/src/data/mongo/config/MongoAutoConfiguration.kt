@@ -2,7 +2,6 @@ package com.softistx.spring.data.mongo.config
 
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.softistx.spring.data.mongo.convert.stxMongoConverters
-import com.softistx.spring.integration.mongo.MongoIntegrationAutoConfiguration
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
@@ -31,17 +30,27 @@ import org.springframework.data.mongodb.gridfs.ReactiveGridFsTemplate
  * `spring.data.mongodb.representation`. Registering first and carrying that property across is the
  * only arrangement where both the `kotlin.time.Instant` converters and Boot's own setting survive.
  *
- * The `after` is a second ordering question, and it decides a winner rather than a moment.
- * [MongoIntegrationAutoConfiguration] contributes a coroutine `MongoDatabase` too, from a client
- * `stx.mongo` opened itself; so does [CoroutineDatabaseConfiguration] below, from the pool Spring
- * Data already has. Both are `@ConditionalOnMissingBean`, so without an order the winner in an
- * application that turned on both would be whichever configuration Boot happened to read first —
- * and the loser is a migration run against a database nobody chose. Ordered, an explicit `stx.mongo`
- * wins: it names a URI and a database out loud, and this one only ever infers.
+ * The `afterName` is a second ordering question, and it decides a winner rather than a moment.
+ * `stx-mongo-spring`'s `MongoIntegrationAutoConfiguration` contributes a coroutine `MongoDatabase`
+ * too, from a client `stx.mongo` opened itself; so does [CoroutineDatabaseConfiguration] below, from
+ * the pool Spring Data already has. Both are `@ConditionalOnMissingBean`, so without an order the
+ * winner in an application that turned on both would be whichever configuration Boot happened to
+ * read first — and the loser is a migration run against a database nobody chose. Ordered, an
+ * explicit `stx.mongo` wins: it names a URI and a database out loud, and this one only ever infers.
+ *
+ * **A name rather than a class, and that is the point of the string.** That configuration lives in
+ * `stx-mongo-spring` now, which depends on nothing here — so naming its class would mean this module
+ * depending on it, and the edge would point the wrong way for the sake of an ordering hint. Spring
+ * resolves `afterName` lazily and ignores what it cannot find, so an application without
+ * `stx-mongo-spring` on its classpath is not asked to have it.
+ *
+ * What a string costs is that the compiler cannot check it, so `MongoDatabaseOrderingTest` checks
+ * the name — and says plainly what it cannot check, because `ApplicationContextRunner` does not
+ * reproduce Boot's auto-configuration sort.
  */
 @AutoConfiguration(
     before = [DataMongoAutoConfiguration::class],
-    after = [MongoIntegrationAutoConfiguration::class],
+    afterName = ["com.softistx.mongo.spring.MongoIntegrationAutoConfiguration"],
 )
 @EnableConfigurationProperties(MongoProperties::class, DataMongoProperties::class)
 @ConditionalOnClass(ReactiveMongoTemplate::class)

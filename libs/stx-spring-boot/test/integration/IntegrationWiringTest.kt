@@ -1,19 +1,11 @@
 package com.softistx.spring.integration
 
-import com.mongodb.kotlin.client.coroutine.MongoClient
-import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.softistx.i18n.Messages
 import com.softistx.spring.integration.i18n.I18nIntegrationAutoConfiguration
-import com.softistx.spring.integration.mongo.MongoIntegrationAutoConfiguration
-import com.softistx.spring.testing.UNREACHABLE_MONGO
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import org.springframework.boot.autoconfigure.AutoConfigurations
-import org.springframework.boot.test.context.assertj.AssertableApplicationContext
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.web.server.i18n.AcceptHeaderLocaleContextResolver
 import org.springframework.web.server.i18n.LocaleContextResolver
 import java.util.Locale
@@ -32,48 +24,6 @@ import java.util.Locale
  */
 class IntegrationWiringTest :
     StringSpec({
-
-        "mongo: nothing is opened until an application asks" {
-            mongo().run { context ->
-                context.getBeanNamesForType(MongoClient::class.java).size shouldBe 0
-            }
-        }
-
-        "mongo: enabling it gives a client and a database" {
-            mongo()
-                .withPropertyValues(
-                    "stx.mongo.enabled=true",
-                    "stx.mongo.uri=$UNREACHABLE_MONGO",
-                    "stx.mongo.database=orders",
-                ).run { context ->
-                    context.getBeanNamesForType(MongoClient::class.java).size shouldBe 1
-                    context.getBean(MongoDatabase::class.java).name shouldBe "orders"
-                }
-        }
-
-        "mongo: enabling it without a uri says which key is missing" {
-            // The alternative is a binder error naming a constructor parameter, which is not where
-            // the reader has to look.
-            mongo()
-                .withPropertyValues("stx.mongo.enabled=true", "stx.mongo.database=orders")
-                .run { context -> context.failure() shouldContain "stx.mongo.uri" }
-        }
-
-        "mongo: an application's own client wins" {
-            // Which is how TLS, pool sizes and read concerns get set: this module has no opinion
-            // about them and should not grow properties for each one.
-            mongo()
-                .withPropertyValues(
-                    "stx.mongo.enabled=true",
-                    "stx.mongo.uri=$UNREACHABLE_MONGO",
-                    "stx.mongo.database=orders",
-                ).withUserConfiguration(OwnMongoClient::class.java)
-                .run { context ->
-                    context.getBeanNamesForType(MongoClient::class.java).toList() shouldBe listOf("ownClient")
-                    // The database is still built over it, rather than opening a second pool.
-                    context.getBean(MongoDatabase::class.java).name shouldBe "orders"
-                }
-        }
 
         "i18n: no catalogs are loaded until an application asks" {
             i18n().run { context -> context.getBeanNamesForType(Messages::class.java).size shouldBe 0 }
@@ -103,20 +53,6 @@ class IntegrationWiringTest :
         }
     })
 
-private fun mongo() = runnerFor(MongoIntegrationAutoConfiguration::class.java)
-
 private fun i18n() = runnerFor(I18nIntegrationAutoConfiguration::class.java)
 
 private fun runnerFor(type: Class<*>) = ApplicationContextRunner().withConfiguration(AutoConfigurations.of(type))
-
-/** The message of whatever stopped the context starting, with its causes — the `require` is a cause. */
-private fun AssertableApplicationContext.failure(): String =
-    generateSequence(startupFailure) { it.cause }
-        .mapNotNull { it.message }
-        .joinToString("\n")
-
-@Configuration(proxyBeanMethods = false)
-private class OwnMongoClient {
-    @Bean
-    fun ownClient(): MongoClient = MongoClient.create(UNREACHABLE_MONGO)
-}
