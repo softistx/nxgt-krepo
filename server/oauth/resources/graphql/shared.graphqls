@@ -1,6 +1,6 @@
 type AuditMetadata @annotate(name: "Serializable", type: "serialization") {
-    createdDate: DateTime!
-    lastModifiedDate: DateTime!
+    createdDate: Instant!
+    lastModifiedDate: Instant!
     createdBy: String
     lastModifiedBy: String
 }

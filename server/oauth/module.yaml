@@ -42,7 +42,7 @@ plugins:
     includeImports:
       serialization: "kotlinx.serialization"
     typeMapping:
-      DateTime: "kotlin.time.Instant"
+      Instant: "kotlin.time.Instant"
 
 settings:
   ktor:

@@ -1,2 +1,2 @@
-scalar DateTime
+scalar Instant
 scalar JSON
