@@ -1,4 +1,4 @@
-package com.softistx.spring.integration.kafka
+package com.softistx.kafka.spring
 
 import com.softistx.kafka.Kafka
 import com.softistx.kafka.KafkaConfig

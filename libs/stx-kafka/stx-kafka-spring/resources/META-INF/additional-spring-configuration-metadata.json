@@ -1,0 +1,39 @@
+{
+  "groups": [
+    {
+      "name": "stx.kafka",
+      "type": "com.softistx.kafka.spring.KafkaIntegrationProperties",
+      "sourceType": "com.softistx.kafka.spring.KafkaIntegrationProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.kafka.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.softistx.kafka.spring.KafkaIntegrationProperties",
+      "defaultValue": false,
+      "description": "Register the stx-kafka cluster handle. Off by default. It opens nothing: the connections belong to the publishers and subscribers it hands out."
+    },
+    {
+      "name": "stx.kafka.bootstrap",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.kafka.spring.KafkaIntegrationProperties",
+      "defaultValue": "localhost:9092",
+      "description": "host:port pairs, comma-separated."
+    },
+    {
+      "name": "stx.kafka.client-id",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.kafka.spring.KafkaIntegrationProperties",
+      "defaultValue": null,
+      "description": "What this application calls itself to the broker. Worth setting: it is what the broker's metrics and logs name, and consumer-1 in an incident is not a name."
+    },
+    {
+      "name": "stx.kafka.properties",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "sourceType": "com.softistx.kafka.spring.KafkaIntegrationProperties",
+      "defaultValue": {},
+      "description": "Anything else the clients understand, applied last."
+    }
+  ]
+}
