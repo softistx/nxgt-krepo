@@ -20,7 +20,7 @@ What exists:
 | `libs/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
 | `libs/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StxTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
 | `libs/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
-| `libs/stx-ktor` | The Ktor seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the integrations that are that idiom applied — a connection per application opened and closed with it, and one negotiated locale per request. An integration with a design of its own is a module beside its library instead |
+| `libs/stx-ktor` | The Ktor seam, and only the seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the one CORS policy `stx-spring-boot` builds Spring's from. No integration lives here — each is a module beside its own library — and the tell is that no spec in this module talks to a backend |
 | `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
 | `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/stx-spring-boot` | Spring Boot integration for the libraries here, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, and every auto-configuration opt-in behind `stx.*` |
@@ -413,8 +413,9 @@ formatting library it will never call. The same test applies to the next candida
 a dependency, it brings that dependency to everything.
 
 **A framework integration is a sibling module of the library it integrates**, in that library's own
-group: `stx-workflow-ktor` and `stx-workflow-spring` beside `stx-workflow`, `stx-graphix-ktor` and
-`stx-graphix-spring` beside `stx-graphix`.
+family directory: `stx-jpa-ktor` beside `stx-jpa`, `stx-workflow-ktor` and `stx-workflow-spring`
+beside `stx-workflow`. Every one of them, with no exception for the small ones — see *The exception
+this rule used to have* below, which records why there was one and why it is gone.
 
 Not in the framework module, because that makes it know every library in the repository: `stx-ktor`
 held one package per integration, so **adding a library modified it**, and an application installing
@@ -433,15 +434,16 @@ now pointing from the things that must stay light to the heavy ones.
   library's build.
 - Its manifest would stop describing what it is.
 
-And the gain is smaller than it looks: a Ktor application using four of these libraries takes five
-dependencies today and would take four, because the seam already provides the "one dependency" on the
-framework side.
+A sibling module has neither problem: `stx-jpa-ktor` compiles against Ktor and `stx-jpa` does not,
+and the two test suites still fail independently.
 
-`libs/stx-ktor` and `libs/stx-spring-boot` keep what belongs to no library and is the same for all of
-them — for Ktor, the resource-lifecycle idiom (`own`, `publish`, `resource`, `required`); for Spring,
-error handling, CORS, security, and the JSON and web conventions. They are the **seam**, not the
-switchboard. Those four Ktor verbs are public rather than internal for exactly this reason: they are
-the contract between the seam and every integration built on it, and a contract cannot be internal.
+`libs/stx-ktor` keeps what belongs to no library and is the same for all of them: the
+resource-lifecycle idiom (`own`, `publish`, `resource`, `required`) and the one CORS policy shared
+with Spring. It is the **seam**, not the switchboard, and its own specs are the tell — there is no
+backend in any of them. Those four verbs are public rather than internal for exactly this reason:
+they are the contract between the seam and every integration built on it, and a contract cannot be
+internal. `libs/stx-spring-boot` is the same seam for Spring and is still on the way there: its
+`src/integration/**` auto-configurations have not moved out yet.
 
 The framework modules know the framework, the libraries know the backends, and neither knows two.
 
@@ -451,39 +453,39 @@ that prefer it. What the module actually held was one line per backend —
 `single { Redis.connect(config) } onClose { it?.close() }` — which an application writes itself in
 less time than it takes to find the dependency.
 
-**Which side of the line an integration falls on is not its size — it is whether it has a design of
-its own.**
+**A library edge in an integration module is `exported`, not `compile-only`.** This is the rule that
+changed when the hub was emptied, and it is the reason the move was worth making rather than a
+tidy-up. In `stx-ktor` every backend had to be `compile-only`: `call.redis` returns a `Redis` and
+Lettuce still had to stay off the classpath of an application that only installed `I18n`. In
+`stx-redis-ktor` there is no such application — `RedisConfig` is the only way to configure the
+plugin at all — so the edge is `exported` and a consumer inherits it. The dependency stops being
+optional because it stopped being one.
 
-- A module, when it brings its own lifecycle, its own configuration surface, its own decisions:
-  `stx-workflow-spring` chooses between three stores and runs a `SmartLifecycle`;
-  `stx-graphix-ktor` owns routes, a websocket protocol and a sandbox. Each needs a README to explain
-  a decision, and that is the tell.
-- In the seam, when it is **the seam's idiom applied to one more type**: `stx-ktor/redis` is
-  `resource(RedisKey, instance) { Redis.connect(config) }` and an accessor. Its README would read
-  "the idiom, applied", and a published artifact each — manifest, README, coordinates for a consumer
-  to discover — costs more than it removes.
+`compile-only` keeps its place for what an integration genuinely may not use: `ktor-server-di` in
+every plugin, so that an application which never sets `injectable = true` never loads a class from
+it, and the store libraries in `stx-migrations-ktor`, which offers two ledgers and expects a caller
+to want one. Verified the same way as before — `./kotlin show dependencies -m <module>`: a
+compile-only entry sits in COMPILE and is absent from RUNTIME.
 
-So `workflow` and `graphix` are modules and the seven small ones stay where they are. The line was
-drawn after moving `workflow` and reading the others; the first version of this rule said every
-integration should move, which would have meant a module per library per seam for code that mostly
-restates one idiom once each.
+**The exception this rule used to have.** It said the line was not an integration's size but whether
+it had *a design of its own*: a module when it brought its own lifecycle and configuration surface —
+`stx-workflow-spring` choosing between three stores, `stx-graphix-ktor` owning routes and a
+websocket protocol — and a package in the seam when it was **the seam's idiom applied to one more
+type**, since a published artifact each was said to cost more than it removed.
 
-A *new* integration is written to this rule rather than added to a hub by default: ask which of the
-two it is first.
+That was wrong twice over. It made the repository state one relationship in two shapes, so a reader
+had to know which list an integration was on before knowing where to look for it. And the cost it
+weighed was the wrong one: what an integration in the hub actually costs is that its library edge
+can never be honest — six optional siblings force the seventh to be optional too.
 
-**Every backend is declared `compile-only`, including the ones this module's API returns.**
-`call.redis` hands back a `Redis` and Lettuce still stays off a consumer's runtime classpath, which
-sounds wrong and is not: an application that installs `RedisConnection` already depends on
-`stx-redis`, because `RedisConfig` is the only way to configure the plugin at all — and one that
-installs only `I18n` never loads a class from any of the others, so nothing is missing when
-nothing is linked. It is self-enforcing rather than a convention to remember. Verified with
-`./kotlin show dependencies -m stx-ktor`: a compile-only entry sits in the COMPILE scope and is
-absent from RUNTIME.
+The size argument was also weaker than it read. Each of the seven was 64–180 lines, and each still
+had enough of its own to say to fill a README: why `KafkaCluster` owns nothing, why `Storage` is the
+one whose `config` is required, why `MongoDB` builds its client through the library rather than
+itself. An integration with nothing to explain would be an argument for deleting it, not for hiding
+it in a hub.
 
-The tests are the other half: they need the real libraries at runtime, so `test-dependencies`
-carries each of them again at normal scope, plus `//libs/stx-testing` for the servers to talk to.
-Every plugin is specced against a real backend, because "one connection, closed on stop" is not
-observable from a mock.
+So: every integration is a module beside its library, and a *new* one is written that way rather
+than added to a seam.
 
 The library knows the backend, the integration module knows the framework, and neither has to know
 both. That is the whole of the rule, and it is why an integration is a module beside its library
@@ -535,7 +537,8 @@ neither is guessable:
 
 One more thing that only a test says out loud: `compile-only` keeps a dependency off the *test*
 runtime too, so a `@ConditionalOnClass` guarding it correctly declines to match in a spec. Add the
-dependency to `test-dependencies` at normal scope — the same shape `stx-ktor` uses — rather than
+dependency to `test-dependencies` at normal scope — the same shape every `*-ktor` module uses for
+`ktor-server-di` — rather than
 weakening the condition.
 
 ### Local services
@@ -747,8 +750,8 @@ settings:
 ```
 
 `./kotlin show settings -m <module>` says which one is in force: `# module.yaml` when it is pinned,
-`# default` when the toolchain is choosing. Three modules enable it — `stx-ktor`, `demo-api`,
-`demo-client` — and all three carry the pin.
+`# default` when the toolchain is choosing. Sixteen modules enable it — `stx-ktor`, every `*-ktor`
+integration beside its library, and the four Ktor examples — and every one of them carries the pin.
 
 The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.10 with CLI 0.12.0), so that entry does not control what this repo compiles with.
 
@@ -872,7 +875,8 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-amqp/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
   | `libs/stx-amqp/stx-amqp-ktor/README.md` | The Ktor plugin for it — the connection/channel split that decides its shape, and the blocking connect |
   | `libs/stx-i18n/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
-  | `libs/stx-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
+  | `libs/stx-i18n/stx-i18n-ktor/README.md` | The Ktor plugin for it — the one that owns nothing and resolves per request, and why `?lang=` is a decision rather than a default |
+  | `libs/stx-ktor/README.md` | The Ktor seam — the four lifecycle verbs and the one rule behind them, the two facts about Ktor's container that `injectable = true` rests on, and why no integration lives here |
   | `libs/stx-jpa/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
   | `libs/stx-jpa/stx-jpa-ktor/README.md` | The Ktor plugin for it — the factory/session split, the blocking bootstrap, and why the `stx-jpa` edge is `exported` here where the hub had it `compile-only` |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
@@ -966,8 +970,8 @@ the same each time, and the mistakes are the same each time too.
   needed it first, and three specs later the fixtures are scattered across four packages with no rule
   anyone could state. **Test fixtures live in a package named for what they are, not for the spec that
   happened to need them first** — entities in `test/entity/`, and the same for any other family of
-  fixture a module grows. A spec imports its fixtures; it does not host them. `stx-jpa`,
-  `stx-ktor` keeps its JPA entities in `…entity`.
+  fixture a module grows. A spec imports its fixtures; it does not host them. `stx-jpa` and
+  `stx-jpa-ktor` both keep their JPA entities in `…entity`.
 
   One exception, and it has to be argued in the file: a spec that is *about* a package boundary owns
   the package it scans. `stx-jpa`'s `EntityScanTest` needs a package holding nothing but the
