@@ -114,6 +114,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-migrations/stx-migrations-ktor/README.md`](libs/stx-migrations/stx-migrations-ktor/README.md) | The Ktor plugin — why `runBlocking` inside `install` is what makes it a gate, why it goes after the connection plugin, and why `sql { }` / `mongo { }` are sugar over the one `gate` that is the contract |
 | [`libs/stx-migrations/stx-migrations-spring/README.md`](libs/stx-migrations/stx-migrations-spring/README.md) | The Spring auto-configuration — why an `InitializingBean` and not a suspending listener, and why naming a store without its connection is an error rather than a shrug |
 | [`libs/stx-redis/stx-redis/README.md`](libs/stx-redis/stx-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
+| [`libs/stx-redis/stx-redis-ktor/README.md`](libs/stx-redis/stx-redis-ktor/README.md) | The Ktor plugin — why one connection and not one per request, and what `injectable = true` costs and does not |
 | [`libs/stx-storage/stx-storage/README.md`](libs/stx-storage/stx-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
 | [`libs/stx-testing/README.md`](libs/stx-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |
 | [`plugins/openapi/README.md`](plugins/openapi/README.md) | The build plugin: settings, and what each choice needs on the consuming module's classpath |
