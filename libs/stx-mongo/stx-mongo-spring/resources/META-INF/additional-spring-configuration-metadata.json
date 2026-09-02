@@ -1,0 +1,32 @@
+{
+  "groups": [
+    {
+      "name": "stx.mongo",
+      "type": "com.softistx.mongo.spring.MongoIntegrationProperties",
+      "sourceType": "com.softistx.mongo.spring.MongoIntegrationProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.mongo.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.softistx.mongo.spring.MongoIntegrationProperties",
+      "defaultValue": false,
+      "description": "Open an stx-mongo coroutine client. Off by default. Distinct from stx.data.mongo and from Spring Boot's spring.data.mongodb, which configure Spring Data's ReactiveMongoTemplate — a different API onto the same server, and a second pool if both are on."
+    },
+    {
+      "name": "stx.mongo.uri",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.mongo.spring.MongoIntegrationProperties",
+      "defaultValue": null,
+      "description": "The connection string. Required when enabled: a default would be a guess about somebody's cluster."
+    },
+    {
+      "name": "stx.mongo.database",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.mongo.spring.MongoIntegrationProperties",
+      "defaultValue": null,
+      "description": "The database the MongoDatabase bean points at. Required when enabled."
+    }
+  ]
+}

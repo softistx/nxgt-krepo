@@ -13,9 +13,9 @@ dependencies:
   # loads a class from none of them. @ConditionalOnClass is what keeps the configuration readable
   # when they are absent.
   - //libs/stx-workflow/stx-workflow-db: compile-only
-  - //libs/stx-redis: compile-only
-  - //libs/stx-jpa: compile-only
-  - //libs/stx-mongo: compile-only
+  - //libs/stx-redis/stx-redis: compile-only
+  - //libs/stx-jpa/stx-jpa: compile-only
+  - //libs/stx-mongo/stx-mongo: compile-only
   # spring-context and spring-boot-autoconfigure, which is all this module touches — there is no
   # HTTP surface here, so the webflux starter stx-spring-boot needs would be weight for nothing.
   - $spring.boot.starter: exported
@@ -26,7 +26,7 @@ dependencies:
 test-dependencies:
   # the wiring specs stand the stores up for real, so here they are on the runtime classpath
   - //libs/stx-workflow/stx-workflow-db
-  - //libs/stx-redis
+  - //libs/stx-redis/stx-redis
   - //libs/stx-testing
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5

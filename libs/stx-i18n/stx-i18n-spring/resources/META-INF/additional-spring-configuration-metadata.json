@@ -1,0 +1,48 @@
+{
+  "groups": [
+    {
+      "name": "stx.i18n",
+      "type": "com.softistx.i18n.spring.I18nIntegrationProperties",
+      "sourceType": "com.softistx.i18n.spring.I18nIntegrationProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.i18n.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.softistx.i18n.spring.I18nIntegrationProperties",
+      "defaultValue": false,
+      "description": "Load the message catalogs and narrow the locale resolver to the languages named below. Off by default."
+    },
+    {
+      "name": "stx.i18n.languages",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.softistx.i18n.spring.I18nIntegrationProperties",
+      "defaultValue": [
+        "en"
+      ],
+      "description": "The languages with catalogs — [en, fr], or [en, fr-CA] for a region. The version this replaces hardcoded en and fr in a @Configuration class."
+    },
+    {
+      "name": "stx.i18n.fallback",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.i18n.spring.I18nIntegrationProperties",
+      "defaultValue": "en",
+      "description": "The language a key falls back to when the request's has no text for it. Per key, not per request."
+    },
+    {
+      "name": "stx.i18n.base-name",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.i18n.spring.I18nIntegrationProperties",
+      "defaultValue": "locales/messages",
+      "description": "Where the .properties catalogs are — locales/messages_fr.properties for fr."
+    },
+    {
+      "name": "stx.i18n.fail-on-missing-key",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.softistx.i18n.spring.I18nIntegrationProperties",
+      "defaultValue": false,
+      "description": "Throw on a key with no text anywhere, instead of returning the key. Off in a deployment and worth turning on in a test suite: a running server should not fail a request over a translation, and a test suite should not pass over one."
+    }
+  ]
+}

@@ -17,10 +17,11 @@ import org.springframework.context.annotation.Configuration
  * a starter that takes over error handling the moment it is present is the kind of surprise that
  * gets a library removed.
  *
- * [ApiExceptionHandler] needs a [Messages] bean. An application either declares one or turns on
- * `stx.i18n`, which contributes it. There is deliberately no fallback that skips translation: a
- * response body reading `orders.not-found` in production is worse than a context that refuses to
- * start and says which bean is missing.
+ * [ApiExceptionHandler] needs a [Messages] bean. An application either declares one or adds
+ * `com.softistx:stx-i18n-spring` and turns on `stx.i18n`, which contributes it — this module
+ * exports [Messages] the *type*, not the auto-configuration that builds one. There is deliberately
+ * no fallback that skips translation: a response body reading `orders.not-found` in production is
+ * worse than a context that refuses to start and says which bean is missing.
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ErrorProperties::class)

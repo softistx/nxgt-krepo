@@ -7,9 +7,9 @@ import com.softistx.example.shop.model.NewProduct
 import com.softistx.example.shop.model.ProductPage
 import com.softistx.example.shop.model.view
 import com.softistx.jpa.criteria.and
+import com.softistx.jpa.ktor.jpa
 import com.softistx.jpa.session.session
 import com.softistx.jpa.session.transaction
-import com.softistx.ktor.jpa.jpa
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond

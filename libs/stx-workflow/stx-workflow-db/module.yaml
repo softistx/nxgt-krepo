@@ -23,15 +23,15 @@ dependencies:
   # That is what keeps one module from handing every consumer three drivers. Verified with
   # `./kotlin show dependencies -m stx-workflow-db`: a compile-only entry is in the COMPILE scope
   # and absent from RUNTIME.
-  - //libs/stx-redis: compile-only
-  - //libs/stx-jpa: compile-only
-  - //libs/stx-mongo: compile-only
+  - //libs/stx-redis/stx-redis: compile-only
+  - //libs/stx-jpa/stx-jpa: compile-only
+  - //libs/stx-mongo/stx-mongo: compile-only
 
 test-dependencies:
   # the specs stand each store up for real, so here the libraries are on the runtime classpath too
-  - //libs/stx-redis
-  - //libs/stx-jpa
-  - //libs/stx-mongo
+  - //libs/stx-redis/stx-redis
+  - //libs/stx-jpa/stx-jpa
+  - //libs/stx-mongo/stx-mongo
   # and the servers they talk to, started for the run when the workspace's own are not named
   - //libs/stx-testing
   # the JPA harness creates and drops each spec's schema with the Postgres client directly;
