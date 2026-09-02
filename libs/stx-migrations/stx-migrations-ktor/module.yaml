@@ -24,8 +24,8 @@ dependencies:
   # Verified with `./kotlin show dependencies -m stx-migrations-ktor`: these sit in COMPILE and are
   # absent from RUNTIME.
   - //libs/stx-migrations/stx-migrations-db: compile-only
-  - //libs/stx-jpa: compile-only
-  - //libs/stx-mongo: compile-only
+  - //libs/stx-jpa/stx-jpa: compile-only
+  - //libs/stx-mongo/stx-mongo: compile-only
   # `publish` and `required` — the resource-lifecycle idiom every plugin in this repo shares. It
   # stays in stx-ktor because it belongs to no integration; this module is a caller of it.
   - //libs/stx-ktor
@@ -42,7 +42,7 @@ test-dependencies:
   # construct a ledger — but still no server: the driver's client connects lazily, so a database
   # handle over an unreachable URI is enough to prove what `mongo { }` assembles.
   - //libs/stx-migrations/stx-migrations-db
-  - //libs/stx-mongo
+  - //libs/stx-mongo/stx-mongo
   - $libs.ktor.server.di
   - $ktor.server.testHost
   - $libs.kotest.runner.junit5

@@ -1,0 +1,116 @@
+{
+  "groups": [
+    {
+      "name": "stx.jpa",
+      "type": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.jpa.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": false,
+      "description": "Build a Hibernate Reactive session factory at startup. Off by default."
+    },
+    {
+      "name": "stx.jpa.uri",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": "postgresql://localhost:5432/postgres",
+      "description": "postgresql://host:port/database, the way a reactive driver spells it. Not a JDBC URL — a jdbc: prefix is the first thing to suspect when a connection fails for no visible reason."
+    },
+    {
+      "name": "stx.jpa.username",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "Sent separately, because the URI does not carry it and must not be made to."
+    },
+    {
+      "name": "stx.jpa.password",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "Sent separately, for the same reason."
+    },
+    {
+      "name": "stx.jpa.schema",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "The default schema for unqualified table names. Left to the server's search_path when unset."
+    },
+    {
+      "name": "stx.jpa.packages",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": [],
+      "description": "The packages entities are scanned from. Required when enabled. The scan also finds @Converters, which naming classes one by one does not."
+    },
+    {
+      "name": "stx.jpa.naming",
+      "type": "com.softistx.jpa.naming.Naming",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": "snake-case",
+      "description": "What a column is called when the entity does not say. created_by, not createdby."
+    },
+    {
+      "name": "stx.jpa.schema-mode",
+      "type": "com.softistx.jpa.SchemaMode",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": "none",
+      "description": "What Hibernate does to the schema at startup. none outside tests: a schema is migrated by something that keeps a history, not by an ORM inferring one from the classes it was handed."
+    },
+    {
+      "name": "stx.jpa.pool-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": 10,
+      "description": "How many connections the pool holds. A reactive pool is not sized like a blocking one — a connection is held for the length of a statement, not of a request."
+    },
+    {
+      "name": "stx.jpa.connect-timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long to wait for a connection before failing. A java.time.Duration (30s, PT30S): the binder has never heard of kotlin.time.Duration."
+    },
+    {
+      "name": "stx.jpa.idle-timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long an idle connection is kept before the pool closes it."
+    },
+    {
+      "name": "stx.jpa.statement-cache-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "How many prepared statements each connection caches. Off in the driver by default."
+    },
+    {
+      "name": "stx.jpa.batch-size",
+      "type": "java.lang.Integer",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": null,
+      "description": "How many inserts or updates Hibernate sends in one batch. Unset is one statement per row."
+    },
+    {
+      "name": "stx.jpa.show-sql",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": false,
+      "description": "Log every statement. Useful once, expensive always."
+    },
+    {
+      "name": "stx.jpa.properties",
+      "type": "java.util.Map<java.lang.String,java.lang.String>",
+      "sourceType": "com.softistx.jpa.spring.JpaIntegrationProperties",
+      "defaultValue": {},
+      "description": "Anything else Hibernate understands, applied last and overriding everything above."
+    }
+  ]
+}

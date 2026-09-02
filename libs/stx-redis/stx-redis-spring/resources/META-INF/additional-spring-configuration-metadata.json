@@ -1,0 +1,39 @@
+{
+  "groups": [
+    {
+      "name": "stx.redis",
+      "type": "com.softistx.redis.spring.RedisIntegrationProperties",
+      "sourceType": "com.softistx.redis.spring.RedisIntegrationProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "stx.redis.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "com.softistx.redis.spring.RedisIntegrationProperties",
+      "defaultValue": false,
+      "description": "Open an stx-redis connection. Off by default. Not spring.data.redis, which configures Spring Data's own template over a different client."
+    },
+    {
+      "name": "stx.redis.uri",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.redis.spring.RedisIntegrationProperties",
+      "defaultValue": "redis://localhost:6379",
+      "description": "Where the server is."
+    },
+    {
+      "name": "stx.redis.namespace",
+      "type": "java.lang.String",
+      "sourceType": "com.softistx.redis.spring.RedisIntegrationProperties",
+      "defaultValue": "",
+      "description": "Prefixed to every key this application writes. Worth setting whenever the server is shared: Redis has one flat keyspace per database, so two applications with a session: key and no namespace are one application overwriting the other."
+    },
+    {
+      "name": "stx.redis.timeout",
+      "type": "java.time.Duration",
+      "sourceType": "com.softistx.redis.spring.RedisIntegrationProperties",
+      "defaultValue": null,
+      "description": "How long a command waits before failing. A java.time.Duration (10s, PT10S): the binder has never heard of kotlin.time.Duration."
+    }
+  ]
+}

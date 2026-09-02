@@ -1,5 +1,5 @@
 product: jvm/lib
-description: "Spring Boot integration for the stx libraries: WebFlux helpers, Spring Data Mongo, and one auto-configuration per library"
+description: "The Spring Boot seam for the stx libraries: WebFlux helpers, translated errors, security and Spring Data Mongo — each library's own auto-configuration is a module beside it"
 
 apply:
   - //publishing.module-template.yaml
@@ -7,20 +7,20 @@ apply:
 dependencies:
   # `Messages` is a constructor parameter of the exception handler and `Translator` is what its
   # extensions return, so a consumer has to see both to build or call either.
-  - //libs/stx-i18n: exported
+  - //libs/stx-i18n/stx-i18n: exported
 
   # `Page` and `PageInfo` are what `Page<T>.response()` takes and what its envelope carries, and
   # `CorsPolicy` is what `stx.cors` becomes — the same type stx-ktor installs Ktor's plugin from.
   - //libs/stx-common: exported
 
-  # The libraries `integration/` wires, every one compile-only for the reason spelled out below —
-  # and local modules first, before any alias, as AGENTS.md's *Module layout* requires.
-  - //libs/stx-mongo: compile-only
-  - //libs/stx-jpa: compile-only
-  - //libs/stx-storage: compile-only
-  - //libs/stx-redis: compile-only
-  - //libs/stx-kafka: compile-only
-  - //libs/stx-amqp: compile-only
+  # The coroutine driver, for one bean and one bean only: `stx.data.mongo` bridges Spring Data's own
+  # pool to a `com.mongodb.kotlin.client.coroutine.MongoDatabase`, so an application on Spring Data
+  # can hand that handle to stx-migrations without opening a second client. Compile-only, and
+  # `@ConditionalOnClass` is what keeps the nested configuration readable when it is absent — an
+  # application that never sets `stx.data.mongo.enabled` loads no class from it.
+  #
+  # This is *not* the stx.mongo integration, which now lives in //libs/stx-mongo/stx-mongo-spring.
+  - //libs/stx-mongo/stx-mongo: compile-only
 
   # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.
   # The starter also brings spring-context and spring-boot-autoconfigure, which every package here
@@ -89,6 +89,17 @@ dependencies:
   - $libs.kotest.extensions.spring: compile-only
 
 test-dependencies:
+  # the coroutine driver at runtime, for the bridge bean's own specs
+  - //libs/stx-mongo/stx-mongo
+  # MongoDatabaseOrderingTest, and only that spec. The ordering between this module's inferred
+  # coroutine MongoDatabase and stx-mongo-spring's explicit one is expressed as `afterName` — a
+  # string, because that module depends on nothing here and the edge may not be reversed for an
+  # ordering hint. A string is what a compiler cannot check, so a spec does, and a spec that orders
+  # two configurations has to see both.
+  #
+  # Not a cycle: this is a *test* edge back at a module that depends on this one's main sources, and
+  # the toolchain resolves that (verified in a throwaway project before relying on it here).
+  - //libs/stx-mongo/stx-mongo-spring
   # The MongoDB the findPage specs page through: `MONGO_TEST_URI` when the workspace's replica set
   # is already up, a container started once for the run otherwise, and the specs report skipped when
   # neither is there. Declared in stx-testing's `Backends.kt`, never in this tree.
@@ -105,12 +116,6 @@ test-dependencies:
   - $libs.javers.core
 
   # And the stx libraries the integration specs stand up for real, for the same reason.
-  - //libs/stx-mongo
-  - //libs/stx-jpa
-  - //libs/stx-storage
-  - //libs/stx-redis
-  - //libs/stx-kafka
-  - //libs/stx-amqp
   # ApplicationContextRunner, for asserting what does and does not appear in a context
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5

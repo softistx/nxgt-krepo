@@ -7,10 +7,11 @@ apply:
 dependencies:
   # Exporter, Signal and signalJson — what this module implements and encodes through
   - //libs/stx-telemetry/stx-telemetry: exported
-  # Versions for every org.mongodb artifact, the same BOM libs/stx-mongo uses
-  - bom: $libs.mongodb.driver.bom
+  # No `bom:` entry — the catalog gives the alias below an explicit `version.ref`, for the reason
+  # stx-mongo's manifest spells out: a BOM does not survive publication, and a published module whose
+  # dependencies carry no version is one no consumer can resolve.
   # MongoDatabase is a constructor parameter, so a consumer has to see it to build one of these.
-  # Deliberately *not* //libs/stx-mongo: that library is sessions, pagination, GridFS and auditing,
+  # Deliberately *not* //libs/stx-mongo/stx-mongo: that library is sessions, pagination, GridFS and auditing,
   # and an exporter needs a collection and an insert. Depending on it would pull the Reactive Streams
   # driver into every application that wants telemetry in a database.
   - $libs.mongodb.driver: exported

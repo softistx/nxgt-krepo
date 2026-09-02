@@ -13,8 +13,8 @@ dependencies:
   # it, and one that names none loads a class from neither. @ConditionalOnClass is what keeps the
   # configuration readable when they are absent.
   - //libs/stx-migrations/stx-migrations-db: compile-only
-  - //libs/stx-jpa: compile-only
-  - //libs/stx-mongo: compile-only
+  - //libs/stx-jpa/stx-jpa: compile-only
+  - //libs/stx-mongo/stx-mongo: compile-only
   # spring-context and spring-boot-autoconfigure, which is all this module touches — there is no
   # HTTP surface here.
   - $spring.boot.starter: exported
@@ -29,8 +29,8 @@ test-dependencies:
   # so the @ConditionalOnClass nested configurations are actually evaluated rather than skipped —
   # the specs that ask what `store: sql` does without a `Jpa` bean need them present.
   - //libs/stx-migrations/stx-migrations-db
-  - //libs/stx-jpa
-  - //libs/stx-mongo
+  - //libs/stx-jpa/stx-jpa
+  - //libs/stx-mongo/stx-mongo
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
