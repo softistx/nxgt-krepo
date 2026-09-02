@@ -286,19 +286,45 @@ and clear the record.
 
 ```kotlin
 install(JpaConnection) { config = JpaConfig(uri = …, username = …, password = …) }
+install(MongoDB) { config = MongoConfig(uri = …, database = "orders") }
+
 install(Migrations) {
-    gate(SqlMigrations(application.jpa, listOf(V1Orders(), V2OrderIndex())))
+    sql(application.jpa) {
+        migration(V1Orders(), V2OrderIndex())
+    }
+    mongo(application.database) {
+        migration(V1Seed(), V2Tags())
+    }
     injectable = true          // optional: the ledger through Ktor's DI
 }
 
 get("/health/migrations") { call.respond(call.migrations.map { "${it.version} ${it.status}" }) }
 ```
 
-`install(Migrations)` **goes after the connection plugin it reads from** — the runner is built from
-what `install(JpaConnection)` or `install(MongoConnection)` put on the application, and Ktor runs
-install blocks in order. More than one `gate(…)` is allowed and they run in the order added; they are
-separate ledgers with separate locks, so *in order* is a statement about this process rather than a
-transaction across two servers.
+`sql { }` and `mongo { }` each build one ledger and add one runner. Both take the connection
+explicitly — `application.jpa`, `application.database` — because that is the only thing about a Ktor
+application the plugin could not otherwise know, and guessing it is how a migration ends up running
+against the wrong database. Note `application.database` and not `application.mongo`: the latter is the
+client, and a ledger is written in one database.
+
+Each block accepts `migration(…)` as many times as you like, plus the four knobs `stx.migrations.*`
+spells for Spring — `lease`, `lockTimeout`, `lockPoll`, `staleAfter` — and `table` / `collection` for
+where the ledger lives.
+
+**`gate(runner)` is still the contract underneath.** The DSL ends in a call to it, so an application
+with a ledger of its own keeps building its runner and handing it over, and the two mix in one block:
+
+```kotlin
+install(Migrations) {
+    sql(application.jpa) { migration(V1Orders()) }
+    gate(myOwnRunner)
+}
+```
+
+`install(Migrations)` **goes after the connection plugins it reads from** — `application.jpa` throws
+by name when `install(JpaConnection)` has not happened yet, and Ktor runs install blocks in order.
+Runners run in the order they were added; they are separate ledgers with separate locks, so *in
+order* is a statement about this process rather than a transaction across two servers.
 
 The plugin blocks inside `install`, which is what makes it a gate: an exception leaves the install
 block, leaves `embeddedServer`, and the port is never opened. `call.migrations` is the ledger as it
