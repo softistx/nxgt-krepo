@@ -884,7 +884,7 @@ the same each time, and the mistakes are the same each time too.
   | `docs/migrations.md` | What a stx-migrations migration may say — the version, the statuses and their transitions, the runner's order, the ledger contract, the lock, and what a killed process leaves per store. **This is where a new status, ledger method or store is documented** |
   | `libs/stx-migrations/stx-migrations/README.md` | How the migration library is shaped — why the version is declared and not parsed, why a gate throws where the prior art logged, and why neither Flyway nor Liquibase is underneath it |
   | `libs/stx-migrations/stx-migrations-db/README.md` | Where the ledger lives — why one module and not two, and per store: the uniqueness, the lock, the instants, and how DDL reaches the database |
-  | `libs/stx-migrations/stx-migrations-ktor/README.md` | The Ktor plugin — why `runBlocking` in `install` is the gate, why it goes after the connection plugin, and why it owns and closes nothing |
+  | `libs/stx-migrations/stx-migrations-ktor/README.md` | The Ktor plugin — why `runBlocking` in `install` is the gate, why it goes after the connection plugin, why it owns and closes nothing, and why the `sql { }` / `mongo { }` DSL ends in `gate` |
   | `libs/stx-migrations/stx-migrations-spring/README.md` | The Spring auto-configuration — `stx.migrations.*`, why an `InitializingBean` and not a suspending listener, and why nothing is inferred about where the ledger goes |
   | `libs/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
   | `libs/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
