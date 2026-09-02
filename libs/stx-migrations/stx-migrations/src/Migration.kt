@@ -54,8 +54,19 @@ interface Migration<in C> {
      */
     val version: Long
 
-    /** Recorded beside it, for whoever reads the ledger later. Defaults to the class's own name. */
-    val description: String get() = this::class.java.simpleName
+    /**
+     * Recorded beside it, for whoever reads the ledger later. Defaults to the class's own name.
+     *
+     * **Nothing keys on this**, which is what makes the class name free: [version] is the identity,
+     * so a migration can be renamed, moved or given a sentence here without the ledger noticing.
+     *
+     * Truncated at `$$` because a Spring bean that also carries `@Transactional`, or that an aspect
+     * matches, is a CGLIB subclass named `V1Seed$$SpringCGLIB$$0` — and a ledger row saying that is
+     * a row nobody wants to read at three in the morning. The runner this library replaces stripped
+     * it too, but for a much sharper reason: back then the name carried the *version*, so a proxy
+     * did not spoil a description, it lost a migration.
+     */
+    val description: String get() = this::class.java.simpleName.substringBefore("\$\$")
 
     /**
      * Applies the change.
