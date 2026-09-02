@@ -1,11 +1,11 @@
-package com.softistx.ktor.jpa
+package com.softistx.jpa.ktor
 
 import com.softistx.jpa.Jpa
 import com.softistx.jpa.JpaConfig
 import com.softistx.jpa.JpaMappingException
 import com.softistx.jpa.SchemaMode
+import com.softistx.jpa.ktor.entity.Note
 import com.softistx.jpa.session.transaction
-import com.softistx.ktor.jpa.entity.Note
 import com.softistx.testing.containers.TestNames
 import com.softistx.testing.containers.postgresContainer
 import io.kotest.assertions.throwables.shouldThrow
@@ -138,7 +138,7 @@ class JpaPluginTest :
                     application {
                         install(JpaConnection) {
                             config = config()
-                            packages("com.softistx.ktor.jpa.entity")
+                            packages("com.softistx.jpa.ktor.entity")
                         }
                         routing {
                             get("/") {
@@ -162,14 +162,14 @@ class JpaPluginTest :
                             application {
                                 install(JpaConnection) {
                                     config = config()
-                                    packages("com.softistx.ktor.redis")
+                                    packages("com.softistx.ktor")
                                 }
                             }
                             startApplication()
                         }
                     }
 
-                failure.message shouldContain "com.softistx.ktor.redis"
+                failure.message shouldContain "com.softistx.ktor"
             }
         }
 
