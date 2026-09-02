@@ -23,9 +23,9 @@ dependencies:
   - $ktor.serialization.kotlinx.json
   - $libs.slf4j.nop
   - $libs.koin.ktor
-  - $libs.apollo.api
   - $libs.koin.logger.slf4j
   - $libs.koin.annotations
+  - $libs.jackson.annotations
 
 test-dependencies:
   - $ktor.server.testHost
@@ -34,9 +34,15 @@ test-dependencies:
   - $libs.kotest.assertions.core
 
 plugins:
-  apollo:
+  dgs-codegen:
     enabled: true
+    language: Kotlin
     packageName: com.softistx.oauth.graphql
+    generateCustomAnnotations: true
+    includeImports:
+      serialization: "kotlinx.serialization"
+    typeMapping:
+      DateTime: "kotlin.time.Instant"
 
 settings:
   ktor:

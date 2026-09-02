@@ -296,7 +296,6 @@ confluent-kafka-avro-serializer = { module = "io.confluent:kafka-avro-serializer
 
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
 icu4j = { module = "com.ibm.icu:icu4j", version = "78.3" }
-
 # ---- This repository's own artifacts -------------------------------------------------------------
 # The examples depend on these as *published* coordinates rather than as `//libs/...` modules, so
 # that what they exercise is the POM a consumer actually gets. See `stx-artifacts.module-template.yaml`.

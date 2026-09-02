@@ -1,6 +1,5 @@
 package com.softistx.oauth.plugins
 
-import com.softistx.oauth.di.KtorApplication
 import com.strange.api.di.Properties
 import io.ktor.server.application.*
 import org.koin.core.logger.Level
@@ -8,7 +7,6 @@ import org.koin.dsl.module
 import org.koin.environmentProperties
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
-import org.koin.plugin.module.dsl.withConfiguration
 
 fun Application.configureDependencyInjection() {
     install(Koin) {
@@ -19,6 +17,5 @@ fun Application.configureDependencyInjection() {
             module {
             },
         )
-        withConfiguration<KtorApplication>()
     }
 }
