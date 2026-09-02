@@ -59,6 +59,16 @@ not refresh, a Ktor server that never binds — rather than at the moment one of
 `description` defaults to the class's own simple name and is recorded beside the version. It is for
 whoever reads the ledger later; nothing keys on it.
 
+**The class name is free**, and that is the point of declaring the version rather than parsing it.
+`V1Seed`, `SeedOrders` and `AddTagsToOrders` are the same migration to the ledger, so renaming one or
+moving its package changes nothing about what has run. Prefixing with the version anyway — `V1Seed`,
+`V2Tags` — is worth doing, because it makes the running order readable in a file tree; it is a
+convention for people, and there is no property that turns it into a rule.
+
+The default is truncated at `$$`: a Spring bean that also carries `@Transactional`, or that an aspect
+matches, is a CGLIB subclass named `V1Seed$$SpringCGLIB$$0`, and that is not a description anybody
+wants to find in a ledger. `ProxiedDescriptionTest` builds one and asserts what gets recorded.
+
 ## Statuses and their transitions
 
 ```
