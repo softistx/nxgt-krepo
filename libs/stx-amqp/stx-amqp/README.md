@@ -173,5 +173,5 @@ acknowledgement removing a message, a rejection moving it, a TTL expiring one. T
 `AMQP_TEST_URI`, which has **no default** and makes them skip when it is unset: the URI carries the
 credentials, and a credential with a default is a credential in source control. They create only the
 exchanges and queues they delete, under names unique per run. See the local services section of
-[AGENTS.md](../../AGENTS.md) for the broker this workspace runs and the line that points the specs
+[AGENTS.md](../../../AGENTS.md) for the broker this workspace runs and the line that points the specs
 at it.

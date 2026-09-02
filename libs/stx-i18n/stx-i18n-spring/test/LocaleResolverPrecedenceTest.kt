@@ -1,4 +1,4 @@
-package com.softistx.spring.integration.i18n
+package com.softistx.i18n.spring
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
