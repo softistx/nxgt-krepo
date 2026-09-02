@@ -1,4 +1,4 @@
-package com.softistx.ktor.storage
+package com.softistx.storage.ktor
 
 import com.softistx.ktor.resource
 import com.softistx.storage.ObjectStorage
