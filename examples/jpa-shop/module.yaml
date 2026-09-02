@@ -2,7 +2,7 @@ product: jvm/app
 
 dependencies:
   # The library this example is about: entities, sessions, and the Criteria extensions.
-  - //libs/stx-jpa
+  - //libs/stx-jpa/stx-jpa
   # `JpaConnection` and `call.jpa` — one session factory for the application, closed with it.
   - //libs/stx-ktor
   - $ktor.server.core

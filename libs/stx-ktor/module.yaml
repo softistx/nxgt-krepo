@@ -15,13 +15,13 @@ dependencies:
   #
   # Verified with `./kotlin show dependencies -m stx-ktor`: a compile-only entry is in the COMPILE
   # scope and absent from RUNTIME.
-  - //libs/stx-i18n: compile-only
-  - //libs/stx-redis: compile-only
-  - //libs/stx-mongo: compile-only
-  - //libs/stx-amqp: compile-only
-  - //libs/stx-kafka: compile-only
-  - //libs/stx-storage: compile-only
-  - //libs/stx-jpa: compile-only
+  - //libs/stx-i18n/stx-i18n: compile-only
+  - //libs/stx-redis/stx-redis: compile-only
+  - //libs/stx-mongo/stx-mongo: compile-only
+  - //libs/stx-amqp/stx-amqp: compile-only
+  - //libs/stx-kafka/stx-kafka: compile-only
+  - //libs/stx-storage/stx-storage: compile-only
+  - //libs/stx-jpa/stx-jpa: compile-only
 
   # `CorsPolicy` is what `cors(policy)` takes, so a caller has to see it.
   - //libs/stx-common: exported
@@ -40,13 +40,13 @@ dependencies:
 
 test-dependencies:
   # the specs run the plugins for real, so here the libraries are on the runtime classpath too
-  - //libs/stx-i18n
-  - //libs/stx-redis
-  - //libs/stx-mongo
-  - //libs/stx-amqp
-  - //libs/stx-kafka
-  - //libs/stx-storage
-  - //libs/stx-jpa
+  - //libs/stx-i18n/stx-i18n
+  - //libs/stx-redis/stx-redis
+  - //libs/stx-mongo/stx-mongo
+  - //libs/stx-amqp/stx-amqp
+  - //libs/stx-kafka/stx-kafka
+  - //libs/stx-storage/stx-storage
+  - //libs/stx-jpa/stx-jpa
   # and the servers they connect to, started for the run
   - //libs/stx-testing
 

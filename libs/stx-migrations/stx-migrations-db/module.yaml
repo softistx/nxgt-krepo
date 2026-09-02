@@ -18,8 +18,8 @@ dependencies:
   #
   # Verified with `./kotlin show dependencies -m stx-migrations-db`: a compile-only entry is in the
   # COMPILE scope and absent from RUNTIME.
-  - //libs/stx-mongo: compile-only
-  - //libs/stx-jpa: compile-only
+  - //libs/stx-mongo/stx-mongo: compile-only
+  - //libs/stx-jpa/stx-jpa: compile-only
   # `@Language("SQL")`, which marks the migration-facing verbs so the IDE injects SQL into a caller's
   # string. Compile-only: the annotation is CLASS-retained and read by tooling, never loaded at
   # runtime. It arrives through kotlin-stdlib already, and is named here for the reason stx-jpa's
@@ -28,8 +28,8 @@ dependencies:
 
 test-dependencies:
   # the specs stand each store up for real, so here the libraries are on the runtime classpath too
-  - //libs/stx-mongo
-  - //libs/stx-jpa
+  - //libs/stx-mongo/stx-mongo
+  - //libs/stx-jpa/stx-jpa
   # and the servers they talk to, started for the run when the workspace's own are not named
   - //libs/stx-testing
   # the SQL harness creates and drops each spec's schema with the drivers directly; stx-jpa keeps
