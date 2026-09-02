@@ -5,11 +5,9 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.softistx.amqp.Amqp
 import com.softistx.i18n.Messages
 import com.softistx.jpa.Jpa
-import com.softistx.kafka.Kafka
 import com.softistx.spring.integration.amqp.AmqpIntegrationAutoConfiguration
 import com.softistx.spring.integration.i18n.I18nIntegrationAutoConfiguration
 import com.softistx.spring.integration.jpa.JpaIntegrationAutoConfiguration
-import com.softistx.spring.integration.kafka.KafkaIntegrationAutoConfiguration
 import com.softistx.spring.integration.mongo.MongoIntegrationAutoConfiguration
 import com.softistx.spring.integration.storage.StorageIntegrationAutoConfiguration
 import com.softistx.spring.integration.storage.StorageIntegrationProperties
@@ -123,26 +121,6 @@ class IntegrationWiringTest :
             }
         }
 
-        "kafka: nothing is registered until an application asks" {
-            kafka().run { context -> context.getBeanNamesForType(Kafka::class.java).size shouldBe 0 }
-        }
-
-        "kafka: enabling it registers a cluster handle that has opened nothing" {
-            // The one integration where the context is not holding a connection: a Kafka client
-            // connects when it is constructed, so the connections belong to the publishers and
-            // subscribers this hands out, each closed by whoever asked for it.
-            kafka()
-                .withPropertyValues(
-                    "stx.kafka.enabled=true",
-                    "stx.kafka.bootstrap=localhost:9092",
-                    "stx.kafka.client-id=orders",
-                ).run { context ->
-                    val cluster = context.getBean(Kafka::class.java)
-                    cluster.bootstrap shouldBe "localhost:9092"
-                    cluster.config.clientId shouldBe "orders"
-                }
-        }
-
         "amqp: nothing is opened until an application asks" {
             amqp().run { context -> context.getBeanNamesForType(Amqp::class.java).size shouldBe 0 }
         }
@@ -203,8 +181,6 @@ private const val UNREACHABLE_HTTP = "http://127.0.0.1:1"
 private val amqpBroker = rabbitContainer()
 
 private fun mongo() = runnerFor(MongoIntegrationAutoConfiguration::class.java)
-
-private fun kafka() = runnerFor(KafkaIntegrationAutoConfiguration::class.java)
 
 private fun amqp() = runnerFor(AmqpIntegrationAutoConfiguration::class.java)
 
