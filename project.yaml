@@ -1,10 +1,10 @@
 modules:
   - examples/*
   - examples/*/*
-  - server/*
   - libs/*
   - libs/*/*
   - plugins/*
+  - server/*
 
 plugins:
   - ./plugins/openapi

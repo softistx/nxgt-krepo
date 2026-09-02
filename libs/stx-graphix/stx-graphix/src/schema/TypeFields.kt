@@ -5,12 +5,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.hasAnnotation
-import kotlin.reflect.full.instanceParameter
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.memberFunctions
-import kotlin.reflect.full.valueParameters
+import kotlin.reflect.full.*
 
 internal data class TypeFieldMeta(
     val instance: Any,
@@ -34,9 +29,6 @@ internal fun collectTypeFields(instances: List<Any>): List<TypeFieldMeta> {
             instance::class.memberFunctions.filter {
                 it.hasAnnotation<SchemaMapping>() || it.hasAnnotation<BatchMapping>()
             }
-        if (functions.isEmpty()) {
-            throw GraphixException("${instance::class.qualifiedName} has no @SchemaMapping or @BatchMapping functions")
-        }
         functions.forEach { function ->
             if (function.hasAnnotation<SchemaMapping>() && function.hasAnnotation<BatchMapping>()) {
                 throw GraphixException("@SchemaMapping and @BatchMapping cannot both sit on ${function.name}")
