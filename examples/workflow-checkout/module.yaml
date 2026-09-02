@@ -1,13 +1,18 @@
 product: jvm/app
 description: A checkout saga showing stx-workflow — compensation, a fan-out, and a run that survives the process that started it
 
+apply:
+  - //stx-artifacts.module-template.yaml
+
 dependencies:
+  # As published artifacts, not as modules of this project — see the template above.
+  #
   # The library this example is about: the DSL and the engine.
-  - //libs/stx-workflow/stx-workflow
+  - $libs.stx.workflow
   # The store the instances live in, so the crash actually has something to be recovered from.
-  - //libs/stx-workflow/stx-workflow-db
+  - $libs.stx.workflow.db
   # Redis.connect — the example opens the connection and closes it, as a caller must.
-  - //libs/stx-redis/stx-redis
+  - $libs.stx.redis
   # Lettuce logs through SLF4J; a no-op provider keeps the narration readable
   - $libs.slf4j.nop
 
