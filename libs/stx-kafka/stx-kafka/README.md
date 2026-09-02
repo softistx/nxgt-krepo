@@ -151,5 +151,5 @@ commits when it says it does, that partitions run concurrently while each keeps 
 The integration specs point at a real cluster through `KAFKA_TEST_BOOTSTRAP` and skip themselves
 when it is unreachable, so a machine without one reports skipped tests rather than a red build. They
 create only the topics and groups they delete and never touch one they did not create — see the
-local services section of [AGENTS.md](../../AGENTS.md) for the cluster this workspace runs and the
+local services section of [AGENTS.md](../../../AGENTS.md) for the cluster this workspace runs and the
 `/etc/hosts` entries its advertised listeners need.

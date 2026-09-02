@@ -1,7 +1,7 @@
 # stx-spring-boot
 
-Spring Boot integration for the libraries here — the same job `stx-ktor` does for Ktor, and the same
-shape: one package per concern, one module for all of them.
+The Spring Boot seam — the same job `stx-ktor` does for Ktor, and the same shape: what belongs to
+the framework rather than to any one library, one package per concern.
 
 ```
 com.softistx.spring.error    ApiException, ErrorResponse, the advices that connect them
@@ -12,7 +12,6 @@ com.softistx.spring.security who is calling, and the annotations that say who ma
 com.softistx.spring.cors     a browser policy read from configuration
 com.softistx.spring.json     kotlinx-serialization as WebFlux's codec
 com.softistx.spring.data     the Spring Data layer — Mongo's query vocabulary, paging and wiring
-com.softistx.spring.integration  one auto-configuration per stx-* library
 ```
 
 `examples/spring-orders` is all of it running: a Spring Boot application with **no configuration
@@ -507,106 +506,42 @@ belongs to whichever request last ran on it. It looks correct in development, wh
 in flight at a time, and starts serving French to English readers under load — a bug with no stack
 trace and no failing test. The exchange follows the request wherever it resumes.
 
-## The stx libraries
+## The stx libraries — one module each
 
-`integration/` is one auto-configuration per `stx-*` library, so a Spring application uses them
-without wiring anything.
+Turning a library on is one `stx.*` block, and the auto-configuration that reads it lives **beside
+that library** rather than here:
 
-```yaml
-stx:
-  mongo:   { enabled: true, uri: mongodb://localhost:27017, database: orders }
-  jpa:     { enabled: true, uri: "postgresql://localhost:5432/orders", packages: [ com.acme.domain ] }
-  storage: { enabled: true, endpoint: http://localhost:9000, access-key: ${MINIO_KEY}, secret-key: ${MINIO_SECRET} }
-  redis:   { enabled: true, uri: redis://localhost:6379, namespace: orders }
-  kafka:   { enabled: true, bootstrap: "localhost:9092", client-id: orders }
-  amqp:    { enabled: true, uri: "amqp://user:secret@rabbit:5672/billing" }
-  i18n:    { enabled: true, languages: [ en, fr ], fallback: en }
-  workflow:
-    enabled: true
-    worker: { enabled: true }
-```
+| property | module |
+| --- | --- |
+| `stx.mongo` | `libs/stx-mongo/stx-mongo-spring` |
+| `stx.jpa` | `libs/stx-jpa/stx-jpa-spring` |
+| `stx.redis` | `libs/stx-redis/stx-redis-spring` |
+| `stx.kafka` | `libs/stx-kafka/stx-kafka-spring` |
+| `stx.amqp` | `libs/stx-amqp/stx-amqp-spring` |
+| `stx.storage` | `libs/stx-storage/stx-storage-spring` |
+| `stx.i18n` | `libs/stx-i18n/stx-i18n-spring` |
 
-```kotlin
-class OrderRepository(private val orders: MongoDatabase)   // built by the container, nothing to install
-```
+They used to be `com.softistx.spring.integration`, one package each in this module. `stx-workflow`,
+`stx-migrations`, `stx-graphix` and `stx-telemetry` already kept theirs beside their own libraries,
+so this module was stating one relationship in a second shape — and it cost each of them an honest
+dependency: an integration in a hub has to declare its library `compile-only`, because six siblings
+are optional, even though its own is not. Beside its library each edge is `exported`.
 
-Every one of them is the same shape, and the shape is the point:
+Each of those modules has a README for the decision worth knowing — why `stx.kafka` opens nothing,
+why no `stx.storage` credential has a default, why `stx.jpa` refuses without `packages`, why
+`stx.i18n` needs WebFlux when its siblings need only `spring-boot-starter`. `docs/spring-configuration.md`
+is still one page for every key.
 
-- **`@ConditionalOnClass`**, so the `compile-only` dependency stays optional at runtime. A package
-  nobody added the library for is dark.
-- **`@ConditionalOnProperty` with no `matchIfMissing`.** Putting `stx-spring-boot` on a classpath
-  opens no connection to anything.
-- **`@ConditionalOnMissingBean` on every bean**, which is how a deployment sets the things this
-  module has no opinion about. TLS, pool sizes and read concerns are not properties here; declaring
-  your own `MongoClient` bean is the answer, and the `MongoDatabase` is still built over it rather
-  than opening a second pool.
-- **Built through that library's own factory** — `mongoClient`, `Jpa.scan`, `ObjectStorage.connect` —
-  never by assembling a client here. The factory knows something the caller does not: a Mongo client
-  built without `stx-mongo`'s codec registry compiles, connects, reads, and then stores an `Instant`
-  as something nothing in that library can read back, with every step succeeding until the data is
-  already written.
-- **Closed with the context**, through the inferred `close()`. All of these close idempotently via
-  `CloseGuard`, so an application that also closes its own is not a problem.
-- **A missing required key is a sentence naming the key.** `stx.mongo.enabled is true but
-  stx.mongo.uri is not set`, not a binder error naming a constructor parameter.
+**What did not move.** `stx.data.mongo` is Spring Data, not a `stx-*` integration, and stays here —
+including the bean that bridges Spring Data's own pool to a coroutine `MongoDatabase` so that an
+application already on Spring Data can hand that handle to `stx-migrations` without opening a second
+client. That bean and `stx-mongo-spring`'s can both contribute a `MongoDatabase`, which is why
+`MongoAutoConfiguration` orders itself after that module by name — see `MongoDatabaseOrderingTest`.
 
-`stx.mongo` is not `stx.data.mongo`, and neither is Spring Boot's `spring.mongodb`. The last two
-configure Spring Data's `ReactiveMongoTemplate`; the first hands you `stx-mongo`'s coroutine client.
-They are different APIs onto the same server, and turning both on means two connection pools.
+`stx-i18n` also stays an `exported` dependency of this module, and that is not a leftover:
+`RequestTranslator` and the translated error body are this module's own features, and `Messages` is a
+constructor parameter of its exception handler. What moved is the auto-configuration, not the use.
 
-**`stx.jpa` and `stx.amqp` block the thread that is starting the application, deliberately.**
-`Jpa.connect` and `Amqp.connect` both suspend — reading the annotations off every entity and
-standing up a service registry is ordinary blocking work — and a `@Bean` method cannot. That thread
-is doing nothing else and is not an event loop, so this is the one place where blocking is the right
-answer rather than a shortcut.
-
-**`stx.amqp` opens a socket there and `stx.jpa` does not**, and that difference is also deliberate.
-On the default `schema-mode` Hibernate's pool opens its first connection when something asks for a
-session, so a wrong password surfaces on first use; any other mode has schema work to do and
-connects at startup, which is the point of choosing one. AMQP connects either way — a service whose
-work arrives over that connection should fail its boot when the broker is not there, rather than
-start and quietly consume nothing.
-
-**`stx.kafka` opens nothing at all, and has no `close()` to call.** `Kafka` is deliberately not a
-`connect()`: a Kafka client connects when it is constructed, so the connections belong to the
-publishers, subscribers and admin clients it hands out — each with its own lifetime, thread and
-failure mode. A handle that owned them all would eventually close a producer another part of the
-application was still using. So this is the one integration where the application still owns real
-resources: `kafka.publisher<OrderEvent>()` is yours to close.
-
-**`stx.i18n` also narrows the locale resolver, and that is the half that matters.** WebFlux's
-default answers with whatever `Accept-Language` asked for, catalog or no catalog, so a browser
-asking for Japanese produces a `Translator` for Japanese that falls back key by key. Told the
-supported set, it answers with the closest language actually loaded. It is also the only one of the
-seven without `@ConditionalOnClass` — `stx-i18n` is an `exported` dependency of this module, because
-the exception handler translates, so the class is always there and the condition could only ever be
-true.
-
-**`stx.workflow` is the one that wires beans rather than opening a connection.** Every
-`Workflow<*>` bean is registered with the engine it builds, and that is the load-bearing part: an
-instance is stored under its workflow's *name*, so an engine that cannot look that name up cannot
-resume it after a restart, and a process that registered half the fleet's workflows fails on the
-other half. Collecting them as beans means a workflow is registered by existing.
-
-It opens nothing. A store is a connection somebody already made — with `stx-workflow-db` on the
-classpath and `stx.redis` on, one is built over *that* connection rather than a second pool for the
-same server — and anything else is a `WorkflowStore` bean.
-
-Its worker is a `SmartLifecycle`, and off by default. Off because enabling `stx.workflow` gives an
-application a way to *run* workflows, and whether this process also recovers the fleet's abandoned
-ones is a separate decision, usually answered differently by the API pods and by the two boxes meant
-to do the recovering. A lifecycle because the alternatives are both wrong: started in an
-`@PostConstruct` it would resume instances against half-built collaborators, and left to a plain
-`close()` it would never start at all.
-
-**Not every setting is a property, and that is the design.** A `Json`, a `ConnectionFactory` and a
-`MongoClientSettings.Builder` are not strings, and growing a key for each one turns a config class
-into a worse copy of the thing it configures. Declare your own bean instead —
-`@ConditionalOnMissingBean` is on every one of them.
-
-**No buckets are created by `stx.storage`.** `ensureBucket` is one call and belongs to whoever knows
-which buckets the application needs. Creating them from a property list would make startup write to
-somebody's object store out of a config file nobody reviewed as a schema.
 
 ## Testing an application built on this
 
@@ -691,12 +626,15 @@ auto-configuration imports it, so an application that never writes a spec never 
 
 ## Dependencies
 
-One rule, borrowed from `stx-ktor`: **every integration dependency is `compile-only`**. An
-application that wants the error handling must not inherit Jakarta Validation, a Mongo driver and a
-Kafka client along with it. What that means in practice is that a package guarded by
-`@ConditionalOnClass` is dark until the application adds that library itself — and that the specs
-here list those libraries under `test-dependencies`, or they would assert against conditions that
-never match.
+One rule: **an optional dependency is `compile-only`**. An application that wants the error handling
+must not inherit Jakarta Validation and a Mongo driver along with it. What that means in practice is
+that a package guarded by `@ConditionalOnClass` is dark until the application adds that library
+itself — and that the specs here list those libraries under `test-dependencies`, or they would
+assert against conditions that never match.
+
+That rule used to cover seven `stx-*` libraries too. It no longer does, because those integrations
+are modules beside their own libraries now, where the same edge is `exported` — a dependency is
+optional here and not optional there, and each manifest can finally say which.
 
 That is not theoretical. `ErrorAutoConfigurationTest` found no `ValidationExceptionHandler` on its
 first run, because `compile-only` had done exactly what it says — which is what a consumer without
@@ -711,6 +649,6 @@ COMPILE scope and absent from RUNTIME.
 | --- | --- |
 | [`../../docs/spring-mongo-queries.md`](../../docs/spring-mongo-queries.md) | What a query may say — the operators, the filter and sort grammars, and the paging rules |
 | [`../../docs/spring-configuration.md`](../../docs/spring-configuration.md) | Every `stx.*` key, its default, and what switching it on costs |
-| [`../stx-ktor/README.md`](../stx-ktor/README.md) | The same seven backends behind Ktor plugins — the module this one is shaped after |
-| [`../stx-i18n/README.md`](../stx-i18n/README.md) | What `Messages` loads, how a key falls back, and what `Accept-Language` negotiation matches |
+| [`../stx-ktor/README.md`](../stx-ktor/README.md) | The Ktor seam — the same split, drawn the same way, and the resource idiom its plugins are built on |
+| [`../stx-i18n/stx-i18n/README.md`](../stx-i18n/stx-i18n/README.md) | What `Messages` loads, how a key falls back, and what `Accept-Language` negotiation matches |
 | [`../../AGENTS.md`](../../AGENTS.md) | The repo's conventions, including publishing and the catalog |

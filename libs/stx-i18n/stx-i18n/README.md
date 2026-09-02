@@ -84,7 +84,7 @@ RFC 4647 lookup over the locales actually shipped, quality values honoured. A ma
 fallback, never a failed request — the header comes from a client nobody controls.
 
 This is the half an Android app has no use for, where the locale is a setting. See
-[`libs/stx-ktor`](../stx-ktor/README.md) for the server plugin over it.
+[`libs/stx-i18n/stx-i18n-ktor`](../stx-i18n-ktor/README.md) for the server plugin over it.
 
 ## Catalogs are read as UTF-8, strictly
 

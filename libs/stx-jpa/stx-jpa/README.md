@@ -39,8 +39,8 @@ all suspend and answer with values.
 
 **This file answers *why the library is shaped this way*.** The two vocabularies — what a query may
 say and what an entity may say — gain an entry every phase, so they live in
-[`docs/jpa-criteria.md`](../../docs/jpa-criteria.md) and
-[`docs/jpa-mapping.md`](../../docs/jpa-mapping.md).
+[`docs/jpa-criteria.md`](../../../docs/jpa-criteria.md) and
+[`docs/jpa-mapping.md`](../../../docs/jpa-mapping.md).
 
 ## The rule this library is built around
 
@@ -304,7 +304,7 @@ an `EntityGraph` a `val` can keep; a join is a `Join` that later paths hang off.
 needs a function, not a framework.
 
 The vocabulary — the operators, the joins, the fetch rules, the function list, the two escapes — is
-[`docs/jpa-criteria.md`](../../docs/jpa-criteria.md). It gains an entry every phase, which is the
+[`docs/jpa-criteria.md`](../../../docs/jpa-criteria.md). It gains an entry every phase, which is the
 signal it does not belong here. What stays below is where the extensions deliberately stop.
 ## A query says what it loads
 
@@ -513,7 +513,7 @@ epoch stamp says so.
 
 Which database, what a column ends up called, how an identifier is generated, `kotlin.time.Instant`
 and `kotlin.uuid.Uuid`, JSON columns, and Bean Validation all live in
-[`docs/jpa-mapping.md`](../../docs/jpa-mapping.md). That half gains an entry every phase — a
+[`docs/jpa-mapping.md`](../../../docs/jpa-mapping.md). That half gains an entry every phase — a
 `SqlTypes` code, a strategy, a converter — and this file answers *why the library is shaped this way*
 instead, which is roughly constant.
 

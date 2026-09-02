@@ -1,4 +1,4 @@
-package com.softistx.spring.integration.i18n
+package com.softistx.i18n.spring
 
 import com.softistx.i18n.Messages
 import com.softistx.i18n.MissingKey

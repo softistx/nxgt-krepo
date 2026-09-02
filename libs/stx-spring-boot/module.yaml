@@ -1,5 +1,5 @@
 product: jvm/lib
-description: "Spring Boot integration for the stx libraries: WebFlux helpers, Spring Data Mongo, and one auto-configuration per library"
+description: "The Spring Boot seam for the stx libraries: WebFlux helpers, translated errors, security and Spring Data Mongo — each library's own auto-configuration is a module beside it"
 
 apply:
   - //publishing.module-template.yaml
