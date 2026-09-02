@@ -102,6 +102,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-kafka/stx-kafka-spring/README.md`](libs/stx-kafka/stx-kafka-spring/README.md) | The Spring auto-configuration — why its bean holds no connection, and why its wiring spec needs no broker |
 | [`libs/stx-mongo/stx-mongo/README.md`](libs/stx-mongo/stx-mongo/README.md) | The MongoDB library — its packages, and the reasoning behind the parts that are not obvious |
 | [`libs/stx-mongo/stx-mongo-ktor/README.md`](libs/stx-mongo/stx-mongo-ktor/README.md) | The Ktor plugin — why the client is built in the library and not in the plugin, and why `uri` and `database` have no defaults |
+| [`libs/stx-mongo/stx-mongo-spring/README.md`](libs/stx-mongo/stx-mongo-spring/README.md) | The Spring auto-configuration — the codec registry argument again, and which of two `MongoDatabase` beans an application ends up with |
 | [`docs/telemetry.md`](docs/telemetry.md) | What a stx-telemetry call may say — the root's settings, the log and span verbs, the severities, the attribute rules, `traceparent` and the signal model |
 | [`libs/stx-telemetry/stx-telemetry/README.md`](libs/stx-telemetry/stx-telemetry/README.md) | The telemetry library — why the span is a coroutine context element and not an MDC, why an event is a type, and why writing a log never waits |
 | [`libs/stx-telemetry/stx-telemetry-otlp/README.md`](libs/stx-telemetry/stx-telemetry-otlp/README.md) | The OTLP exporter — why not the Java SDK, the two encoding details that are easy to get wrong, and what is retried |

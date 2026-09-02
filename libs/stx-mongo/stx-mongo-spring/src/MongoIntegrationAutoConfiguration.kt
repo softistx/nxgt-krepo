@@ -1,4 +1,4 @@
-package com.softistx.spring.integration.mongo
+package com.softistx.mongo.spring
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
