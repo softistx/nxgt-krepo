@@ -72,6 +72,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-common/README.md`](libs/stx-common/README.md) | The shared module — what belongs in it, which concurrency type a given caller wants, why `getOrPut` on a `ConcurrentHashMap` is not atomic, and what the standard library already covers |
 | [`libs/stx-amqp/stx-amqp/README.md`](libs/stx-amqp/stx-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
 | [`libs/stx-amqp/stx-amqp-ktor/README.md`](libs/stx-amqp/stx-amqp-ktor/README.md) | The Ktor plugin — why it owns the connection and not the channel, and why the connect blocks |
+| [`libs/stx-amqp/stx-amqp-spring/README.md`](libs/stx-amqp/stx-amqp-spring/README.md) | The Spring auto-configuration — what the bean owns and what it deliberately does not |
 | [`libs/stx-i18n/stx-i18n/README.md`](libs/stx-i18n/stx-i18n/README.md) | The i18n library — catalogs, the per-key locale walk, the missing-key policy, and negotiation |
 | [`libs/stx-i18n/stx-i18n-ktor/README.md`](libs/stx-i18n/stx-i18n-ktor/README.md) | The Ktor plugin — why the locale is resolved once at call setup, and why `?lang=` is off by default |
 | [`libs/stx-ktor/README.md`](libs/stx-ktor/README.md) | The Ktor foundation — the four lifecycle verbs and the rule behind them, what Ktor's container does to what a plugin registers, and why no integration lives here |
