@@ -1,4 +1,4 @@
-package com.softistx.ktor.redis
+package com.softistx.redis.ktor
 
 import com.softistx.ktor.required
 import com.softistx.redis.Redis
