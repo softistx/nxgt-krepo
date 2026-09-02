@@ -1,4 +1,4 @@
-package com.softistx.spring.integration.storage
+package com.softistx.storage.spring
 
 import com.softistx.storage.ObjectStorage
 import com.softistx.storage.StorageConfig

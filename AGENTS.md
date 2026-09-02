@@ -914,6 +914,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-redis/stx-redis-spring/README.md` | The Spring auto-configuration for it — the opt-in rule, and what deliberately is not a property |
   | `libs/stx-storage/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
   | `libs/stx-storage/stx-storage-ktor/README.md` | The Ktor plugin for it — and why a credential with a default is a credential in source control |
+  | `libs/stx-storage/stx-storage-spring/README.md` | The Spring auto-configuration for it — the same credential rule, asserted from both sides by its wiring spec |
   | `libs/stx-material/README.md` | How is the UI library shaped, how does `StxTheme` slot into an application that already uses Material 3, and how do I add a component? |
   | `libs/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
   | `libs/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
