@@ -1,4 +1,4 @@
-package com.softistx.spring.integration.amqp
+package com.softistx.amqp.spring
 
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpConfig

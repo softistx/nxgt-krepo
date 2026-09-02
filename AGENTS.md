@@ -874,6 +874,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-common/README.md` | What belongs in the shared module, which concurrency type a given caller wants, the `getOrPut` trap, and the table of what the standard library already covers so nothing here wraps it twice |
   | `libs/stx-amqp/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
   | `libs/stx-amqp/stx-amqp-ktor/README.md` | The Ktor plugin for it — the connection/channel split that decides its shape, and the blocking connect |
+  | `libs/stx-amqp/stx-amqp-spring/README.md` | The Spring auto-configuration for it — the same connection/channel split, from the container's side |
   | `libs/stx-i18n/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/stx-i18n/stx-i18n-ktor/README.md` | The Ktor plugin for it — the one that owns nothing and resolves per request, and why `?lang=` is a decision rather than a default |
   | `libs/stx-ktor/README.md` | The Ktor seam — the four lifecycle verbs and the one rule behind them, the two facts about Ktor's container that `injectable = true` rests on, and why no integration lives here |
