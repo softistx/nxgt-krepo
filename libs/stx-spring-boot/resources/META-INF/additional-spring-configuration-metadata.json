@@ -46,11 +46,6 @@
       "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties"
     },
     {
-      "name": "stx.amqp",
-      "type": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties",
-      "sourceType": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties"
-    },
-    {
       "name": "stx.i18n",
       "type": "com.softistx.spring.integration.i18n.I18nIntegrationProperties",
       "sourceType": "com.softistx.spring.integration.i18n.I18nIntegrationProperties"
@@ -382,48 +377,6 @@
       "sourceType": "com.softistx.spring.integration.storage.StorageIntegrationProperties",
       "defaultValue": null,
       "description": "Can stay unset against MinIO. Against S3 itself it usually cannot: the SDK will otherwise ask the service where a bucket lives, once per bucket the first time it sees one."
-    },
-    {
-      "name": "stx.amqp.enabled",
-      "type": "java.lang.Boolean",
-      "sourceType": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties",
-      "defaultValue": false,
-      "description": "Open an stx-amqp connection at startup. Off by default. Unlike stx.jpa this really does open a socket at startup, so a broker that is not there fails the boot rather than the first publish."
-    },
-    {
-      "name": "stx.amqp.uri",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties",
-      "defaultValue": "amqp://localhost:5672",
-      "description": "Host, port, virtual host and credentials. The default vhost is named / while a URI path of / means the empty vhost, so amqp://localhost:5672/ authenticates against a vhost most brokers do not have and fails about permissions rather than about spelling. Write amqp://localhost:5672 or amqp://localhost:5672/%2F."
-    },
-    {
-      "name": "stx.amqp.connection-name",
-      "type": "java.lang.String",
-      "sourceType": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties",
-      "defaultValue": null,
-      "description": "What this connection calls itself in the broker's management UI. Worth setting."
-    },
-    {
-      "name": "stx.amqp.heartbeat",
-      "type": "java.time.Duration",
-      "sourceType": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties",
-      "defaultValue": null,
-      "description": "What makes a dead connection look dead. Without it a broker restart or a dropped NAT mapping leaves a socket that reads as open and delivers nothing."
-    },
-    {
-      "name": "stx.amqp.connection-timeout",
-      "type": "java.time.Duration",
-      "sourceType": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties",
-      "defaultValue": null,
-      "description": "How long to wait for the connection itself."
-    },
-    {
-      "name": "stx.amqp.recovery",
-      "type": "java.lang.Boolean",
-      "sourceType": "com.softistx.spring.integration.amqp.AmqpIntegrationProperties",
-      "defaultValue": true,
-      "description": "Reconnect and re-declare after a broker restart."
     },
     {
       "name": "stx.i18n.enabled",
