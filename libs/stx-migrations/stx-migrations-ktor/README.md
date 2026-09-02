@@ -3,14 +3,15 @@
 `install(Migrations)`, and the server does not bind until they pass.
 
 ```kotlin
-install(JpaConnection) { config = JpaConfig(uri = System.getenv("POSTGRES_URI"), username = …, password = …) }
+install(JpaConnection) { config = JpaConfig(uri = …, username = …, password = …) }
+
 install(Migrations) {
-    gate(SqlMigrations(application.jpa, listOf(V1Orders(), V2OrderIndex())))
+    sql(application.jpa) {
+        migration(V1Orders(), V2OrderIndex())
+    }
 }
 
-get("/health/migrations") {
-    call.respond(call.migrations.map { "${it.version} ${it.description} ${it.status}" })
-}
+get("/health/migrations") { call.respond(call.migrations.map { "${it.version} ${it.status}" }) }
 ```
 
 ## Why `runBlocking` inside `install` is the gate
@@ -63,11 +64,40 @@ A ClassGraph scan is deferred rather than designed out. Note for whoever writes 
 needs `enableClassInfo()` and `getClassesImplementing`, a different switch from `EntityScan`'s
 `enableAnnotationInfo()`, and there is no precedent for it in this repo.
 
-## This module names no store
+## `gate` is the contract; `sql { }` and `mongo { }` are sugar over it
 
-It depends on the **core** only. `MigrationsConfiguration.gate` takes a `MigrationRunner<*>` the
-application has already built — exactly as `stx-workflow-ktor` takes a `WorkflowStore` and never
-names Redis. Which store is underneath is `stx-migrations-db`'s question.
+`MigrationsConfiguration.gate` takes a `MigrationRunner<*>` the application has already built, and
+that is the whole of what the plugin runs. The DSL in `Stores.kt` builds one of the two stock runners
+and calls `gate` with it — so the two mix in a single block, and an application with a ledger of its
+own is not pushed onto a legacy path:
 
-Which is also why the specs here need no container: `InMemoryLedger` from the core is a real ledger
-with a real conditional claim and a real lock, so `MigrationPluginTest` runs in about a second.
+```kotlin
+install(Migrations) {
+    sql(application.jpa) { migration(V1Orders()) }
+    mongo(application.database) { migration(V1Seed(), V2Tags()) }
+    gate(myOwnRunner)
+}
+```
+
+Both take the connection explicitly. That is the one thing about a Ktor application the plugin could
+not otherwise know — there is no bean registry here — and guessing it is how migrations end up
+running against the wrong database. `application.database` and not `application.mongo`: the latter is
+the client, and a ledger is written in one database.
+
+**`Stores.kt` is a file of its own, and `Plugin.kt` still names no store.** `stx-migrations-db`,
+`stx-jpa` and `stx-mongo` are `compile-only` here — the three lines `stx-migrations-spring` already
+carries, for its reason: a ledger cannot be *constructed* without the library that provides its
+connection, so an application calling `sql { }` already depends on `stx-jpa`, and one that calls
+neither loads a class from none of them. Verified with `./kotlin show dependencies -m
+stx-migrations-ktor`: all three sit in COMPILE and are absent from RUNTIME.
+
+That is also why the specs here need no container. `InMemoryLedger` from the core is a real ledger
+with a real conditional claim and a real lock, so `MigrationPluginTest` runs in about a second; and
+`StoresTest` builds a real `MongoMigrationLedger` over a database handle pointed at an unreachable
+URI, because the driver's client connects lazily and assembling a ledger contacts nothing. Whether
+that ledger works against a server is `stx-migrations-db`'s question, asked there against three.
+
+`sql { }` has no twin in `StoresTest`, on purpose: `Jpa` has an `internal` constructor, so reaching
+one means starting Hibernate against a real database, and what that would assert is six lines of
+pass-through whose mirror image is already asserted. The part with logic is the collector, and the
+two builders share it.
