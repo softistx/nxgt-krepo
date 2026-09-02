@@ -17,7 +17,6 @@ dependencies:
   # scope and absent from RUNTIME.
   - //libs/stx-i18n/stx-i18n: compile-only
   - //libs/stx-amqp/stx-amqp: compile-only
-  - //libs/stx-kafka/stx-kafka: compile-only
   - //libs/stx-storage/stx-storage: compile-only
 
   # `CorsPolicy` is what `cors(policy)` takes, so a caller has to see it.
@@ -39,7 +38,6 @@ test-dependencies:
   # the specs run the plugins for real, so here the libraries are on the runtime classpath too
   - //libs/stx-i18n/stx-i18n
   - //libs/stx-amqp/stx-amqp
-  - //libs/stx-kafka/stx-kafka
   - //libs/stx-storage/stx-storage
   # and the servers they connect to, started for the run
   - //libs/stx-testing
