@@ -1,4 +1,4 @@
-package com.softistx.spring.integration.jpa
+package com.softistx.jpa.spring
 
 import com.softistx.jpa.Jpa
 import com.softistx.jpa.JpaConfig

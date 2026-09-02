@@ -1,0 +1,29 @@
+product: jvm/lib
+description: "Spring Boot auto-configuration for stx-jpa, opt-in behind stx.jpa — a session factory, and a scan that must find something"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Jpa is the bean this module registers, Stage.SessionFactory is the second bean it exposes, and JpaConfig is what both are built from. Exported, where the hub had it compile-only: a consumer of this module cannot use the
+  # auto-configuration without the library. It was optional in stx-spring-boot only because six
+  # sibling integrations were.
+  - //libs/stx-jpa/stx-jpa: exported
+  # spring-context and spring-boot-autoconfigure, which is all this module touches.
+  - $spring.boot.starter: exported
+  # Spring binds Kotlin configuration properties through the primary constructor only when reflect
+  # is present — the same line stx-spring-boot and stx-workflow-spring carry.
+  - $libs.kotlin.reflect
+
+test-dependencies:
+  - $spring.boot.starter.test
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  springBoot: enabled
+  kotlin:
+    # ConfigurationMetadataTest and ConfigurationDocsTest read the metadata JSON with kotlinx
+    serialization: json

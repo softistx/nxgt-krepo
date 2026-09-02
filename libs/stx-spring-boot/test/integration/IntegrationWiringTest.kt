@@ -3,9 +3,7 @@ package com.softistx.spring.integration
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.softistx.i18n.Messages
-import com.softistx.jpa.Jpa
 import com.softistx.spring.integration.i18n.I18nIntegrationAutoConfiguration
-import com.softistx.spring.integration.jpa.JpaIntegrationAutoConfiguration
 import com.softistx.spring.integration.mongo.MongoIntegrationAutoConfiguration
 import com.softistx.spring.testing.UNREACHABLE_MONGO
 import io.kotest.core.spec.style.StringSpec
@@ -77,18 +75,6 @@ class IntegrationWiringTest :
                 }
         }
 
-        "jpa: nothing is built until an application asks" {
-            jpa().run { context -> context.getBeanNamesForType(Jpa::class.java).size shouldBe 0 }
-        }
-
-        "jpa: enabling it without packages says so" {
-            // Naming no packages would build a session factory that maps nothing, and the first
-            // query would fail with an unrelated message about an unknown entity.
-            jpa()
-                .withPropertyValues("stx.jpa.enabled=true")
-                .run { context -> context.failure() shouldContain "stx.jpa.packages" }
-        }
-
         "i18n: no catalogs are loaded until an application asks" {
             i18n().run { context -> context.getBeanNamesForType(Messages::class.java).size shouldBe 0 }
         }
@@ -120,8 +106,6 @@ class IntegrationWiringTest :
 private fun mongo() = runnerFor(MongoIntegrationAutoConfiguration::class.java)
 
 private fun i18n() = runnerFor(I18nIntegrationAutoConfiguration::class.java)
-
-private fun jpa() = runnerFor(JpaIntegrationAutoConfiguration::class.java)
 
 private fun runnerFor(type: Class<*>) = ApplicationContextRunner().withConfiguration(AutoConfigurations.of(type))
 

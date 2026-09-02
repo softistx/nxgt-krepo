@@ -16,7 +16,6 @@ dependencies:
   # The libraries `integration/` wires, every one compile-only for the reason spelled out below —
   # and local modules first, before any alias, as AGENTS.md's *Module layout* requires.
   - //libs/stx-mongo/stx-mongo: compile-only
-  - //libs/stx-jpa/stx-jpa: compile-only
 
   # ServerWebExchange, ServerRequest and ServerResponse are all over this module's public API.
   # The starter also brings spring-context and spring-boot-autoconfigure, which every package here
@@ -102,7 +101,6 @@ test-dependencies:
 
   # And the stx libraries the integration specs stand up for real, for the same reason.
   - //libs/stx-mongo/stx-mongo
-  - //libs/stx-jpa/stx-jpa
   # ApplicationContextRunner, for asserting what does and does not appear in a context
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5
