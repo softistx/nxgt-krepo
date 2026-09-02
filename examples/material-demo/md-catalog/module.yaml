@@ -5,9 +5,14 @@ product:
   type: kmp/lib
   platforms: [ jvm, android ]
 
+apply:
+  - //stx-artifacts.module-template.yaml
+
 dependencies:
-  # The library under demonstration.
-  - //libs/stx-material: exported
+  # The library under demonstration, as a published artifact and not as a module — the point of the
+  # examples. `stx-material` is the only KMP one, so it is also the only place the published
+  # *Gradle metadata* is doing variant resolution rather than handing over a single jar.
+  - $libs.stx.material: exported
   # The catalogue is itself a Compose UI, and it reaches for Material 3 directly wherever
   # stx-material has not reached yet — text fields and sliders arrive in phase 2, and the
   # control panel needs them now. From the catalog rather than `$compose.material3`, which the

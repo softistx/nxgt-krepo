@@ -321,16 +321,20 @@ optional features. `stx-spring` was also the wrong half of the name: nothing her
 Spring Boot.
 
 ```bash
-./kotlin publish -m stx-mongo --transitive mavenLocal    # one library and what it depends on
-./kotlin publish $(ls libs | sed 's/^/-m /') mavenLocal  # all of them
+./kotlin publish -m stx-mongo --transitive mavenLocal   # one library and what it depends on
+# all of them — `ls libs` lists family *directories*, so the selection comes from the manifests
+./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs plugins \
+  --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
 ```
 
-Three things about it that are not guessable:
+Five things about it that are not guessable:
 
 - **`kotlin publish <id>` with no `-m` fails**, and not on the modules being published: it walks
   *every* module in the project and stops at the first one without that repository id —
   `Module 'demo-api' does not have repository with id 'mavenLocal'`. The examples are not products
-  and must not carry a publishing block, so a selection is always passed.
+  and must not carry a publishing block, so a selection is always passed. Note that they *do* carry
+  `mavenLocal` in `repositories:` — a **resolution** repository, which this check does not accept
+  in place of a publication one.
 - **Publishing is all-or-nothing across a dependency chain.** The toolchain refuses a module
   configured for publishing that depends on one that is not — `ERROR: Module 'stx-mongo' is
   configured for publishing but depends on module 'stx-common' which is not` — with a pointer at the
@@ -339,10 +343,62 @@ Three things about it that are not guessable:
   `stx-material-jvm`, `stx-material-android`, `stx-material-iosarm64`,
   `stx-material-iossimulatorarm64`. Its `composeResources` are *not* in the publication yet
   (KTC-5698) — the jar publishes, the resources do not.
+- **A `- bom:` entry does not survive publication.** It lands in the Gradle metadata as an ordinary
+  dependency rather than a platform, with no `dependencyConstraints`, so every artifact it was
+  managing publishes with **no version at all** and a consumer fails with *"its version could not be
+  resolved"*. The POM does get a `<dependencyManagement>` import, and the resolver does not honour
+  that from a transitive POM. So a published library pins its own versions: give the catalog alias a
+  `version.ref` and drop the `bom:` line. `libs/stx-mongo/stx-mongo` and
+  `libs/stx-telemetry/stx-telemetry-mongo` both carry a comment saying so.
+- **The publish task caches, and its up-to-date check does not notice a `module.yaml` edit.** It
+  copies `build/tasks/_<module>_prepareMavenPublishables/`, so a manifest change can be rebuilt,
+  republished and reported successful while the installed `.pom` and `.module` are the *old* ones —
+  `publish=0` with byte-identical metadata, and deleting the artifacts from `~/.m2` does not help
+  because the task will not regenerate them either. `rm -rf build/incremental.state` is what
+  invalidates it. Check the result rather than the exit code:
+
+  ```bash
+  python3 -c 'import json,glob,os
+  for p in glob.glob(os.path.expanduser("~/.m2/repository/com/softistx/*/*/*.module")):
+      d = json.load(open(p))
+      for v in d.get("variants", []):
+          for x in v.get("dependencies", []):
+              if not x.get("version"):
+                  print("NO VERSION:", os.path.basename(p), v["name"], x["module"])'
+  ```
 
 `mavenLocal` needs no credentials, no PGP key and no POM metadata. A real repository is one more
 block in the same template, changing nothing in any module. The feature is a preview in the
 toolchain and its docs say it is likely to change.
+
+### The examples consume published artifacts, not modules
+
+**No module under `examples/` may name a `//libs/...` dependency.** Each applies
+`//stx-artifacts.module-template.yaml`, which adds `mavenLocal` on top of the default repositories,
+and names each library through a `$libs.stx.*` catalog alias — `com.softistx:stx-jpa:0.1.0` and not
+`//libs/stx-jpa/stx-jpa`.
+
+That is the whole point of having examples. A module reference proves the sources compile together,
+which the libraries' own specs already prove. A **published coordinate** proves the thing no other
+spec here can: that the POM names what a consumer needs, at the scope a consumer needs it. Both
+times a published artifact was wrong in this repo, an example is what found it —
+`kotlinx-coroutines-reactor` had to become `exported` because `spring-orders` could not compile an
+inline function without it, and the split of the two hubs into per-library integration modules left
+`stx-spring-boot` exporting `Messages` the *type* while the auto-configuration that builds one had
+moved to `com.softistx:stx-i18n-spring`, so `spring-orders` started failing its context refresh with
+*"required a bean of type 'com.softistx.i18n.Messages' that could not be found"*. On module
+references that defect is invisible, because a module reference carries the whole `libs/` graph.
+
+**The cost is a step in the loop: publish before building an example after changing a library.**
+
+```bash
+./kotlin publish mavenLocal -m <library> --non-transitive
+./kotlin build -m <example>
+```
+
+A stale artifact is exactly the failure this arrangement exists to expose, and it will expose it —
+as a compile error against code you just wrote. Read the two publish-cache notes above before
+concluding the library is at fault.
 
 Running a single test:
 

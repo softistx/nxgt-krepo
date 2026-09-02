@@ -1,11 +1,27 @@
 product: jvm/app
 description: "A demo order book on stx-spring-boot: a spec-first REST API, keyset paging, an audit trail and two stx-migrations migrations"
 
+apply:
+  - //stx-artifacts.module-template.yaml
+
 dependencies:
+  # Every `com.softistx` line below is a **published artifact**, resolved from mavenLocal rather
+  # than from this project's own sources — which is what makes this example the check on the POMs.
+  # See the template above.
+  #
   # The library this example is about: the error handler, the web helpers, the Mongo criteria and
   # filter grammar, the audit trail and the migration runner. It exports stx-i18n and stx-common,
   # so `Messages`, `Page` and `ApiException` come with it.
-  - //libs/stx-spring-boot
+  - $libs.stx.spring.boot
+
+  # The `Messages` bean `stx.errors` needs, and the locale resolver that narrows Accept-Language to
+  # the two catalogs below. `stx-spring-boot` exports the *library* — `Messages` the type, and
+  # `Messages.forRequest` — but the auto-configuration that builds one is its own artifact, so
+  # turning on `stx.i18n` is this line plus the block in `application.yaml`. Depending on the module
+  # rather than the artifact hid this: an application on the published POMs gets no `Messages` bean
+  # from `stx-spring-boot` alone, and the context refuses to start saying exactly which bean is
+  # missing.
+  - $libs.stx.i18n.spring
 
   # Spring Data Reactive Mongo is `compile-only` in stx-spring-boot — a package guarded by
   # `@ConditionalOnClass` is dark until the application adds the library itself. This is the
@@ -17,27 +33,27 @@ dependencies:
 
   # The migration gate `stx.migrations` turns on. It holds both ledgers `compile-only`, so the two
   # lines below are this application choosing MongoDB — the same rule as every other entry here.
-  - //libs/stx-migrations/stx-migrations-spring
+  - $libs.stx.migrations.spring
 
   # The Mongo ledger itself, and `MongoMigration`, which is what `src/migration/` implements.
-  - //libs/stx-migrations/stx-migrations-db
+  - $libs.stx.migrations.db
 
   # The coroutine driver's `MongoDatabase` — the type a MongoMigration is handed, and the bean
   # `stx-spring-boot` bridges from Spring Data's `ReactiveMongoDatabaseFactory`. Compile-only in
   # stx-migrations-db for the reason its manifest gives; this is the application adding it, which is
   # also what puts the ledger's driver on the runtime classpath.
-  - //libs/stx-mongo/stx-mongo
+  - $libs.stx.mongo
 
   # The telemetry root, the `CoWebFilter` that makes each request a server span, and the
   # `stx.telemetry.*` keys. Nothing starts because this is on the classpath — `stx.telemetry.enabled`
   # in `application.yaml` is what turns it on, the same opt-in rule as every other line here.
-  - //libs/stx-telemetry/stx-telemetry-spring
+  - $libs.stx.telemetry.spring
 
   # The exporter `stx.telemetry.mongo` builds. `compile-only` in stx-telemetry-spring, and of the
   # three lines in this file that follow that rule it is the one with the sharpest reason: it carries
   # the Mongo coroutine driver, so an application that wants no telemetry in a database must not ship
   # one merely because the auto-configuration knows how to use it. This is the application adding it.
-  - //libs/stx-telemetry/stx-telemetry-mongo
+  - $libs.stx.telemetry.mongo
 
 test-dependencies:
   # The MongoDB the specs drive the whole application against: `MONGO_TEST_URI` when the workspace's
@@ -48,7 +64,7 @@ test-dependencies:
   # that module holds this one `compile-only` — a test-support package is not something every
   # consumer of the library should inherit, so an application that writes specs opts in by adding the
   # line. `$spring.boot.starter.test` and the Kotest entries below are here for the same reason.
-  - //libs/stx-testing
+  - $libs.stx.testing
 
   # `WebTestClient`, which is what makes this an end-to-end test rather than a unit one: it speaks
   # HTTP to a real port, so the routes, the codecs, the exception advice and the Mongo mapping are
