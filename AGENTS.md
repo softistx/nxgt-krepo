@@ -870,6 +870,7 @@ the same each time, and the mistakes are the same each time too.
   | `plugins/apollo/README.md` | How do I generate Apollo models and `OPERATION_DOCUMENT` from schema + documents |
   | `libs/stx-common/README.md` | What belongs in the shared module, which concurrency type a given caller wants, the `getOrPut` trap, and the table of what the standard library already covers so nothing here wraps it twice |
   | `libs/stx-amqp/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
+  | `libs/stx-amqp/stx-amqp-ktor/README.md` | The Ktor plugin for it — the connection/channel split that decides its shape, and the blocking connect |
   | `libs/stx-i18n/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/stx-ktor/README.md` | The Ktor integrations — what each plugin owns and closes, and how one module holds them all without becoming a fat dependency |
   | `libs/stx-jpa/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
