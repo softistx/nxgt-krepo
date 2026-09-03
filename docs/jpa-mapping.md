@@ -21,6 +21,57 @@ eager one silently multiplies statements. Neither is something to discover in pr
 says what it loads — `fetch`, `fetchEach`, or a projection that loads no entity — and
 `libs/stx-jpa/stx-jpa/README.md` has the reasoning under *A query says what it loads*.
 
+## The foreign key as a column
+
+The rule above assumes the query knows what will be read. Sometimes it cannot — a GraphQL request
+loads the parents before anything knows whether the child field was selected — and then neither
+answer works: fetching always loads what nobody asked for, and fetching never leaves the caller
+holding an association it may not touch. Map the key a second time, as a plain column:
+
+```kotlin
+@Entity
+class Purchase(
+    @Id var id: Long = 0,
+    @ManyToOne(fetch = FetchType.LAZY) var customer: Buyer? = null,
+) {
+    @Column(name = "customer_id", insertable = false, updatable = false)
+    var customerId: Long? = null
+}
+```
+
+**The two flags are not decoration.** Without them Hibernate refuses to build the factory at all,
+and names the remedy itself:
+
+```
+Column 'customer_id' is duplicated in mapping for entity '…Purchase'
+(use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)
+```
+
+That is what makes this a second *view* of one column rather than a second column. `customer` stays
+the writable side and remains the only way to change what the row points at.
+
+**It costs nothing.** The value is already in the row that loaded the owner, so reading it goes back
+for nothing — measured as zero `entityFetchCount` in `ForeignKeyColumnTest`, beside the reading of
+`customer` that throws in the same scenario.
+
+**And it goes stale.** A read-only mapping is never written back, so an instance whose association
+has just been reassigned still reports the *old* key, flush included:
+
+```kotlin
+val purchase = session.get<Purchase>(1L)
+purchase.customer = session.get<Buyer>(2L)
+session.flush()
+
+purchase.customerId    // still 1 — correct only after the owner is loaded again
+```
+
+Nothing warns about this and nothing can. Treat the scalar as what the row said when it was read: a
+key to look something up with, never a value to decide a write from.
+
+The reason it is worth the trouble is `@BatchMapping` in
+[`docs/graphix.md`](graphix.md) — a DataLoader has to key on something, and reading the association
+to learn its id is precisely the throw the batch was avoiding.
+
 ## Which database
 
 Postgres, MySQL and DB2. Hibernate Reactive names none of them: it picks a driver at runtime from
