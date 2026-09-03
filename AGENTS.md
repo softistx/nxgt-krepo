@@ -297,6 +297,7 @@ The toolchain finds the project by walking up from the working directory, so the
 ./kotlin check                      # run all checks; ./kotlin show checks lists them
 ./kotlin run -m <module>            # run an application module
 ./kotlin publish -m stx-mongo mavenLocal   # publish one library; see Publishing below for why -m
+                                           # run this in every change that touches libs/
 ./kotlin clean                      # drop build/ and project caches
 ```
 
@@ -371,9 +372,9 @@ Five things about it that are not guessable:
 block in the same template, changing nothing in any module. The feature is a preview in the
 toolchain and its docs say it is likely to change.
 
-### The examples consume published artifacts, not modules
+### The examples and the servers consume published artifacts, not modules
 
-**No module under `examples/` may name a `//libs/...` dependency.** Each applies
+**No module under `examples/` or `server/` may name a `//libs/...` dependency.** Each applies
 `//stx-artifacts.module-template.yaml`, which adds `mavenLocal` on top of the default repositories,
 and names each library through a `$libs.stx.*` catalog alias — `com.softistx:stx-jpa:0.1.0` and not
 `//libs/stx-jpa/stx-jpa`.
@@ -389,12 +390,24 @@ moved to `com.softistx:stx-i18n-spring`, so `spring-orders` started failing its 
 *"required a bean of type 'com.softistx.i18n.Messages' that could not be found"*. On module
 references that defect is invisible, because a module reference carries the whole `libs/` graph.
 
-**The cost is a step in the loop: publish before building an example after changing a library.**
+**The cost is a step in the loop: publish to `mavenLocal` in the same change that touches a
+library.** Not before a release, not when a consumer happens to fail — every change under `libs/`,
+as soon as its own specs are green.
 
 ```bash
 ./kotlin publish mavenLocal -m <library> --non-transitive
-./kotlin build -m <example>
+./kotlin build -m <example-or-server>
 ```
+
+Do it even when no consumer is being built in this session. `~/.m2` is what the IDE resolves, what
+the user's next `./kotlin run -m oauth` reads, and what any other checkout on this machine sees — so
+skipping the publish leaves everyone but this session looking at the previous version of a library
+that has already been merged. That gap is silent: the build stays green against the stale jar and
+reports a signature nobody has written for hours.
+
+A green `./kotlin build -m <consumer>` says nothing about the change unless the publish preceded it.
+Saying "the example still builds" after editing a library and not publishing is reporting a stale
+result as a verification; state which of the two you actually ran.
 
 A stale artifact is exactly the failure this arrangement exists to expose, and it will expose it —
 as a compile error against code you just wrote. Read the two publish-cache notes above before
