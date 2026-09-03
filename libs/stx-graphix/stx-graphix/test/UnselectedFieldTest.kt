@@ -55,13 +55,30 @@ class UnselectedFieldTest :
             }
 
             scenario("and asking for it is a validation error, before any resolver runs") {
-                val error =
-                    Graphix { resolvers(ShelfQueries()) }
-                        .execute(GraphixRequest("{ guarded { contents } }"))
-                        .errors
-                        .single()
+                val result = Graphix { resolvers(ShelfQueries()) }.execute(GraphixRequest("{ guarded { contents } }"))
+                val error = result.errors.single()
 
-                error.message shouldContain "contents"
+                error.errorType shouldBe "ValidationError"
+                error.message shouldContain "Field 'contents' in type 'GuardedShelf' is undefined"
+                // Empty, because there is no field to be at: nothing was executed to have a path in.
+                error.path shouldBe emptyList()
+            }
+
+            scenario("so nothing runs at all, where a throwing field runs everything else first") {
+                // The argument for @GraphQLIgnore over hoping nobody selects it, and it is not the
+                // response shape: `contents` is `String!`, so null-bubbling answers `data: null`
+                // either way. What differs is what happened before the answer.
+                val undefined = ShelfQueries()
+                Graphix { resolvers(undefined) }
+                    .execute(GraphixRequest("{ guarded { title contents } shelf { title } }"))
+                    .data shouldBe null
+                undefined.calls.get() shouldBe 0
+
+                val throwing = ShelfQueries()
+                Graphix { resolvers(throwing) }
+                    .execute(GraphixRequest("{ guarded { title } shelf { contents } }"))
+                    .data shouldBe null
+                throwing.calls.get() shouldBe 2
             }
         }
     })

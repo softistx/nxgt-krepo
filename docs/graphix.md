@@ -500,6 +500,12 @@ property outside the selection is never touched. And a property outside the `@Se
 descriptor — `@GraphQLIgnore`, or `@Transient` — has no field to select at all, which is the stronger
 guarantee of the two. `UnselectedFieldTest` pins both against a property that throws when read.
 
+The two are not the same protection. A field that exists and throws runs **every other resolver
+first** and fails during execution; a field that is not in the schema is a `ValidationError` — the
+document is rejected whole, `data` is `null`, and **no resolver runs at all**. Null-bubbling hides
+that difference in the response when the failing field is non-nullable, so it is measured by
+counting what ran, not by reading the answer.
+
 That matters when the parent is a JPA entity, because there a property that throws when read is not
 a fixture: an unfetched `LAZY` association is exactly that. So the DataLoader keys on the **foreign
 key column** beside the association rather than on the association itself, and `@GraphQLIgnore` on
