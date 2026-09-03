@@ -29,9 +29,10 @@ dependencies:
   # `publish` and `required` — the resource-lifecycle idiom every plugin in this repo shares. It
   # stays in stx-ktor because it belongs to no integration; this module is a caller of it.
   - //libs/stx-ktor
-  # Ktor DI, for `injectable = true`. Compile-only so an application that never sets it never loads
-  # a class from it — the same rule as stx-ktor and stx-workflow-ktor.
-  - $libs.ktor.server.di: compile-only
+  # Ktor DI. Installing the plugin registers the ledger with the container, so this is on the
+  # runtime classpath of every application that installs it — and exported, because resolving what
+  # was registered is the point.
+  - $libs.ktor.server.di: exported
 
 test-dependencies:
   # No container anywhere in this module's specs: what is being tested is the gate, and InMemoryLedger
@@ -43,7 +44,6 @@ test-dependencies:
   # handle over an unreachable URI is enough to prove what `mongo { }` assembles.
   - //libs/stx-migrations/stx-migrations-db
   - //libs/stx-mongo/stx-mongo
-  - $libs.ktor.server.di
   - $ktor.server.testHost
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine

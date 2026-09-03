@@ -29,6 +29,9 @@ import graphql.GraphQL as GraphQLEngine
  *
  * [instance] adopts an engine built elsewhere and is not closed — there is nothing to close on
  * graphql-java. The plugin only registers routes.
+ *
+ * **Installing it registers the engine with Ktor's DI**, so a class the container builds takes a
+ * [Graphix] in its constructor. See [provideGraphix].
  */
 val GraphQL =
     createApplicationPlugin(name = "GraphQL", createConfiguration = ::GraphQLConfiguration) {
@@ -59,7 +62,7 @@ val GraphQL =
             graphqlRoute(path, engine, json, subscriptions)
             if (sandbox != null) sandboxRoute(sandboxPath, sandbox)
         }
-        if (pluginConfig.injectable) application.provideGraphix()
+        application.provideGraphix()
     }
 
 /** What [GraphQL] installs with. Either [schema] or [instance] must be set. */
@@ -114,11 +117,6 @@ class GraphQLConfiguration {
     var json: Json = lenientJson
 
     /**
-     * Registers the engine with Ktor DI. Off by default: `ktor-server-di` is compile-only.
-     */
-    var injectable: Boolean = true
-
-    /**
      * Directories of `.graphqls` / `.gqls` files. Default `classpath:graphql/`, the same
      * place Spring GraphQL looks. Several files merge. An empty scan keeps the annotated schema.
      */
@@ -129,7 +127,8 @@ class GraphQLConfiguration {
 
     /**
      * Pull [GraphixCustomizer], scalars and field directives from Ktor DI — the same
-     * beans Spring collects. Off by default: `ktor-server-di` is compile-only.
+     * beans Spring collects. Off by default: what shapes the schema should be visible in the
+     * `schema { }` block rather than assembled from whatever the container happens to hold.
      */
     var fromDi: Boolean = false
 

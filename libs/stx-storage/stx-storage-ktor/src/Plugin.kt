@@ -17,6 +17,10 @@ import io.ktor.util.*
  *
  * [StorageConfig] is required and has no default, unlike the other plugins here, because two of its
  * three fields are credentials — and a credential with a default is a credential in source control.
+ *
+ * **Installing it registers the client with Ktor's DI**, so a class the container builds takes an
+ * [ObjectStorage] in its constructor rather than reaching through a call. See [provideStorage] for
+ * what the container's second claim on closing it means.
  */
 val Storage =
     createApplicationPlugin(name = "Storage", createConfiguration = ::StorageConfiguration) {
@@ -24,7 +28,7 @@ val Storage =
             val config = requireNotNull(pluginConfig.config) { "install(Storage) needs `config` or `instance`" }
             ObjectStorage.connect(config)
         }
-        if (pluginConfig.injectable) application.provideStorage()
+        application.provideStorage()
     }
 
 /** What [Storage] connects with. */
@@ -40,21 +44,6 @@ class StorageConfiguration {
      * through `call.storage`.
      */
     var instance: ObjectStorage? = null
-
-    /**
-     * Registers the client with Ktor's DI as well, so a class the container builds can take a
-     * [ObjectStorage] in its constructor — the same one `call.storage` hands a route.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime. Setting it
-     * calls [provideStorage], which lives in its own file for that reason — nothing loads a class
-     * from Ktor's DI until the flag is true.
-     *
-     * The container closes what it hands out when the application stops, so this hands it a second
-     * claim on closing the client. That is safe — these clients close idempotently — but a
-     * client that has to outlive the application does not belong in it.
-     */
-    var injectable: Boolean = true
 }
 
 internal val StorageKey = AttributeKey<ObjectStorage>("com.softistx.storage.ObjectStorage")

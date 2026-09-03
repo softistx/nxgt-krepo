@@ -26,11 +26,13 @@ it rather than requiring one. A second opinion about those defaults here would o
 the two to disagree. `MongoDB` has no equivalent — a connection string and a database name are
 guesses about somebody's cluster, so that plugin requires both.
 
-## `injectable = true`, and the double close
+## Injection, and the double close
 
-Setting it calls `provideRedis()`, which registers the connection the plugin already opened rather
-than letting the container build a second one. The container then closes it at application stop —
-*as well as* the plugin — and that is fine: `Redis.close` goes through `CloseGuard`.
+Installing the plugin registers the connection with Ktor's DI. It is not a flag: the connection the
+plugin already opened goes into the container rather than letting it build a second one, so a class
+the container builds takes a `Redis` in its constructor and gets the one routes are using. The
+container then closes it at application stop — *as well as* the plugin — and that is fine:
+`Redis.close` goes through `CloseGuard`.
 
 The two facts this rests on are pinned by specs rather than taken from documentation. Ktor's
 container closing every `AutoCloseable` it hands out, including one a provider merely passed

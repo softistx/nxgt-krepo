@@ -37,7 +37,8 @@ import kotlinx.coroutines.runBlocking
  *
  * **It owns nothing and closes nothing.** A runner holds a ledger, a ledger holds a connection
  * somebody else opened, and none of the three is `AutoCloseable`. This publishes the ledger it read
- * so a health route can show it, and that is all it puts on the application.
+ * so a health route can show it, and registers the same list with Ktor's DI so a class the container
+ * builds can report on it too. That is all it puts on the application.
  *
  * **The list of migrations is explicit.** There is no bean registry to ask here and no scan should
  * pretend to be one — `scanEntities`' KDoc already states the position: *"a list breaks the build when
@@ -48,7 +49,7 @@ val Migrations =
     createApplicationPlugin(name = "Migrations", createConfiguration = ::MigrationsConfiguration) {
         val ledger = runBlocking { pluginConfig.runners.flatMap { it.run() } }
         application.publish(LedgerKey, ledger)
-        if (pluginConfig.injectable) application.provideMigrations()
+        application.provideMigrations()
     }
 
 /** What [Migrations] runs. */
@@ -73,15 +74,6 @@ class MigrationsConfiguration {
     fun gate(runners: Iterable<MigrationRunner<*>>) {
         this.runners += runners
     }
-
-    /**
-     * Registers the ledger with Ktor's DI as well, so a class the container builds can take the
-     * `List<MigrationRecord>` a health endpoint reports.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime.
-     */
-    var injectable: Boolean = true
 }
 
 internal val LedgerKey = AttributeKey<List<MigrationRecord>>("com.softistx.migrations.MigrationLedger")

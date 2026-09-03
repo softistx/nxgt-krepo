@@ -173,7 +173,7 @@ class JpaPluginTest :
             }
         }
 
-        feature("a factory made injectable").config(enabled = postgres.available) {
+        feature("the factory through Ktor's DI").config(enabled = postgres.available) {
             scenario("is the one the plugin built, not a second one") {
                 lateinit var injected: Jpa
                 testApplication {
@@ -181,7 +181,6 @@ class JpaPluginTest :
                         install(JpaConnection) {
                             config = config()
                             entities(Note::class)
-                            injectable = true
                         }
 
                         injected = dependencies.resolve()

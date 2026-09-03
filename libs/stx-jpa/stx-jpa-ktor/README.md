@@ -15,9 +15,10 @@ get("/orders/{id}") {
 ```
 
 Three files, and the split is the point: `Plugin.kt` builds the factory, `Calls.kt` is how a route
-reaches it, and `Dependencies.kt` is the one thing that touches `ktor-server-di`. That last one is a
-file of its own so an application which never sets `injectable = true` never loads a class from a
-dependency this module keeps `compile-only`.
+reaches it, and `Dependencies.kt` is the one thing that touches `ktor-server-di`. Installing the
+plugin calls it — the factory goes into Ktor's container as well as onto the application, so a class
+the container builds takes a `Jpa` in its constructor and gets the one routes are using. There is no
+flag for that, and no second factory anywhere.
 
 ## Why a factory and not a session
 

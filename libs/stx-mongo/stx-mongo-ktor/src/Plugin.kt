@@ -26,6 +26,10 @@ import io.ktor.util.*
  *
  * The driver's client is a pool and is thread-safe, so one is right; [configure] is there for the
  * TLS, pool and read-concern settings a deployment has opinions about and this module should not.
+ *
+ * **Installing it registers both with Ktor's DI**, so a class the container builds takes a
+ * [MongoDatabase] — or the [MongoClient] — in its constructor rather than reaching through a call.
+ * See [provideMongo] for what the container's second claim on closing it means.
  */
 val MongoDB =
     createApplicationPlugin(name = "Mongo", createConfiguration = ::MongoDBConfiguration) {
@@ -38,7 +42,7 @@ val MongoDB =
             }
 
         application.publish(MongoDatabaseKey, client.getDatabase(name))
-        if (pluginConfig.injectable) application.provideMongo()
+        application.provideMongo()
     }
 
 /** What [MongoDB] connects with. */
@@ -60,21 +64,6 @@ class MongoDBConfiguration {
      * through `call.mongo`.
      */
     var instance: MongoClient? = null
-
-    /**
-     * Registers the client and the database with Ktor's DI as well, so a class the container builds can take a
-     * [MongoDatabase] in its constructor — the same one `call.database` hands a route.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime. Setting it
-     * calls [provideMongo], which lives in its own file for that reason — nothing loads a class
-     * from Ktor's DI until the flag is true.
-     *
-     * The container closes what it hands out when the application stops, so this hands it a second
-     * claim on closing the client. That is safe — these clients close idempotently — but a
-     * client that has to outlive the application does not belong in it.
-     */
-    var injectable: Boolean = true
 }
 
 internal val MongoKey = AttributeKey<MongoClient>("com.mongodb.kotlin.client.coroutine.MongoClient")
