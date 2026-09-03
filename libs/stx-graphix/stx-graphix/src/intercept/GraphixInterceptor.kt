@@ -34,8 +34,8 @@ fun interface GraphixInterceptor {
 }
 
 /**
- * Registers [interceptor]. Spring collects every bean of this type in declaration order; Ktor's
- * plugin takes `intercept { }` blocks and, with `fromDi = true`, the same beans from its container.
+ * Registers [interceptor]. Spring collects every bean of this type in declaration order, Ktor's
+ * plugin takes `intercept { }` blocks, and `stx-graphix-koin`'s `fromKoin()` takes every single.
  */
 fun GraphixBuilder.intercept(interceptor: GraphixInterceptor) {
     addInterceptor(interceptor)

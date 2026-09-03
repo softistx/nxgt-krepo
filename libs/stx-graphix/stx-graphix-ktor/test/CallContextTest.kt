@@ -5,7 +5,6 @@ import com.softistx.graphix.GraphixError
 import com.softistx.graphix.GraphixResult
 import com.softistx.graphix.http.GRAPHQL_TRANSPORT_WS
 import com.softistx.graphix.http.SubscriptionProtocol
-import com.softistx.graphix.intercept.GraphixInterceptor
 import com.softistx.graphix.intercept.put
 import com.softistx.graphix.ktor.fixture.Caller
 import com.softistx.graphix.ktor.fixture.CallerQueries
@@ -27,7 +26,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.install
-import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
@@ -183,30 +181,6 @@ class CallContextTest :
                     }
                 }
                 order shouldBe listOf("first", "second", "first-back")
-            }
-
-            scenario("fromDi takes them from the container too") {
-                testApplication {
-                    application {
-                        dependencies {
-                            provide<GraphixInterceptor> {
-                                GraphixInterceptor {
-                                    put(Caller("from-di"))
-                                    proceed()
-                                }
-                            }
-                        }
-                        install(GraphQL) {
-                            fromDi = true
-                            schema { resolvers(ContextQueries()) }
-                        }
-                    }
-                    client
-                        .post("/graphql") {
-                            contentType(ContentType.Application.Json)
-                            setBody("""{"query":"{ who }"}""")
-                        }.bodyAsText() shouldContain """"who":"from-di""""
-                }
             }
         }
 
