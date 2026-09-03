@@ -53,6 +53,7 @@ class GraphixAutoConfiguration {
             schemaLocations(properties.schemaLocations)
             schemaFileExtensions(properties.schemaFileExtensions)
             introspection(properties.introspection)
+            builtInScalars(properties.builtInScalars)
             controllers.forEach { addController(it) }
             scalars.forEach { scalar(it) }
             directives.forEach { fieldDirective(it) }

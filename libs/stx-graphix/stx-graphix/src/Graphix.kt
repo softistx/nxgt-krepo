@@ -116,6 +116,7 @@ class GraphixBuilder internal constructor(
     private val fieldDirectives = mutableMapOf<String, FieldDirectiveWrap>()
     private val typeResolvers = mutableMapOf<String, GraphixTypeName>()
     private var introspection = true
+    private var builtInScalars = true
     private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
     private var validation: GraphixValidation? = null
     private var messages: GraphixMessages = GraphixMessages.Bundled
@@ -183,6 +184,22 @@ class GraphixBuilder internal constructor(
             return
         }
         throw GraphixException("duplicate field directive '${directive.name}'")
+    }
+
+    /**
+     * Whether every built-in scalar is in the schema. **On by default**: `LocalDate`, `BigDecimal`,
+     * `PositiveInt` and the rest are there whether or not a field uses one, so a client's code
+     * generator sees the whole vocabulary and a bounded scalar needs no registration.
+     *
+     * Off, the schema carries only the built-ins a field actually resolved to, and a bounded one
+     * is reached by `scalars(...)` or by declaring it in SDL. That is the choice to make when
+     * introspection is a published contract and its size is part of the contract.
+     *
+     * A scalar the application defined under a built-in's name is unaffected either way: its own
+     * definition wins.
+     */
+    fun builtInScalars(enabled: Boolean) {
+        builtInScalars = enabled
     }
 
     /**
@@ -261,6 +278,7 @@ class GraphixBuilder internal constructor(
                 kotlinScalars,
                 fieldDirectives,
                 typeResolvers,
+                builtInScalars,
             )
         val builder = GraphQL.newGraphQL(schema)
         validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }

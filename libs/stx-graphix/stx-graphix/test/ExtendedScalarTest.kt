@@ -3,6 +3,8 @@ package com.softistx.graphix
 import com.softistx.graphix.fixture.ExtendedScalarQueries
 import com.softistx.graphix.fixture.QuantityQueries
 import com.softistx.graphix.fixture.ScalarQueries
+import com.softistx.graphix.scalar.Scalars
+import com.softistx.graphix.scalar.scalar
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -93,17 +95,32 @@ class ExtendedScalarTest :
             }
         }
 
-        feature("the schema advertises what it uses") {
-            scenario("a scalar a field uses is in the schema") {
-                graphix.sdl() shouldContain "scalar LocalDate"
-                graphix.sdl() shouldContain "scalar BigDecimal"
+        feature("what the schema advertises") {
+            scenario("every built-in is there by default, used or not") {
+                val small = Graphix { query(ScalarQueries()) }
+                Scalars.All.forEach { small.sdl() shouldContain "scalar ${it.name}" }
             }
 
-            scenario("a scalar nothing uses is not") {
-                val small = Graphix { query(ScalarQueries()) }
+            scenario("builtInScalars(false) narrows it to what a field resolved to") {
+                val small =
+                    Graphix {
+                        builtInScalars(false)
+                        query(ScalarQueries())
+                    }
                 small.sdl() shouldContain "scalar Instant"
                 small.sdl() shouldNotContain "scalar LocalDate"
                 small.sdl() shouldNotContain "scalar PositiveInt"
+            }
+
+            scenario("a scalar the application defined under a built-in's name stays its own") {
+                val engine =
+                    Graphix {
+                        scalar("Locale", description = "ours") {
+                            serialize { value -> value.toString() }
+                        }
+                        query(ScalarQueries())
+                    }
+                engine.sdl() shouldContain "\"ours\"\nscalar Locale"
             }
         }
 
@@ -124,6 +141,25 @@ class ExtendedScalarTest :
                 val result = bounded.execute(GraphixRequest("{ quantity(value: 0) }"))
                 result.isOk shouldBe false
                 result.errors.single().message shouldContain "greater than zero"
+            }
+
+            scenario("a document gets the built-ins it never declared") {
+                // bounded.graphqls names PositiveInt and nothing else.
+                bounded.sdl() shouldContain "scalar LocalDate"
+                bounded.sdl() shouldContain "scalar BigDecimal"
+            }
+
+            scenario("builtInScalars(false) leaves the document exactly as it was written") {
+                val narrow =
+                    Graphix {
+                        builtInScalars(false)
+                        schemaLocations("graphix-bounded")
+                        query(QuantityQueries())
+                    }
+                narrow.sdl() shouldContain "scalar PositiveInt"
+                narrow.sdl() shouldNotContain "scalar LocalDate"
+                // The wiring is unconditional, so the document's own declaration still resolves.
+                narrow.execute(GraphixRequest("{ quantity(value: 5) }")).data shouldBe mapOf("quantity" to 5)
             }
         }
     })

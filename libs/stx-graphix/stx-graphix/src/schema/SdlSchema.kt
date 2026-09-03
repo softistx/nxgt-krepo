@@ -7,6 +7,7 @@ import com.softistx.graphix.execute.bindArguments
 import com.softistx.graphix.execute.resolverFetcher
 import com.softistx.graphix.execute.subscriptionFetcher
 import com.softistx.graphix.scalar.Scalars
+import graphql.language.ScalarTypeDefinition
 import graphql.schema.DataFetcher
 import graphql.schema.GraphQLSchema
 import graphql.schema.idl.RuntimeWiring
@@ -29,8 +30,13 @@ internal fun List<SchemaFile>.sdlSchema(
     customScalars: List<graphql.schema.GraphQLScalarType> = emptyList(),
     fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
     typeResolvers: Map<String, GraphixTypeName> = emptyMap(),
+    builtInScalars: Boolean = true,
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     val registry = typeRegistry()
+    // A document is the schema here, so a built-in reaches it as a declaration. Declaring them all
+    // is what lets `LocalDate` be used in SDL without the `scalar LocalDate` line above it; a name
+    // the document or the application already defined is left exactly as it defined it.
+    if (builtInScalars) registry.declareScalars(builtInScalarTypes(true, customScalars))
     val typeFields = if (typeInstances.isEmpty()) emptyList() else collectTypeFields(typeInstances)
     val byType = linkedMapOf<String, TypeRuntimeWiring.Builder>()
     // RuntimeWiring is strict: a second fetcher for one coordinate throws rather than replacing.
@@ -93,11 +99,11 @@ internal fun List<SchemaFile>.sdlSchema(
         implementors.forEach { wire(it, field.fieldName, fetcher) }
     }
     val wiring = RuntimeWiring.newRuntimeWiring()
-    // Every built-in is wired, so a document may declare `scalar LocalDate` and stop there. The
-    // application's own scalars are wired after, and a name it defines itself is its own: a schema
-    // that already has a `Locale` scalar keeps the meaning it gave that name.
-    val defined = customScalars.mapTo(mutableSetOf()) { it.name }
-    Scalars.All.filterNot { it.name in defined }.forEach { wiring.scalar(it) }
+    // Every built-in is wired whether or not it was declared: wiring a scalar the document never
+    // names costs nothing, and it is what makes `builtInScalars(false)` plus a hand-written
+    // `scalar LocalDate` still work. The application's own are wired after, and a name it defines
+    // itself is its own — a schema that already has a `Locale` scalar keeps the meaning it gave it.
+    builtInScalarTypes(true, customScalars).forEach { wiring.scalar(it) }
     customScalars.forEach { wiring.scalar(it) }
     fieldDirectives.forEach { (name, wrap) ->
         wiring.directive(name, GraphixDirective(name, wrap).toSchemaWiring())
@@ -123,6 +129,18 @@ internal fun List<SchemaFile>.sdlSchema(
         }
     }
     return schema to declared + batched
+}
+
+/**
+ * Declares the [types] the document did not. `registry.scalars()` already holds GraphQL's own five
+ * plus everything the documents named, so a scalar the schema defined for itself is never
+ * redefined here — the document's declaration is the one that stands.
+ */
+private fun TypeDefinitionRegistry.declareScalars(types: List<graphql.schema.GraphQLScalarType>) {
+    val declared = scalars()
+    types
+        .filterNot { declared.containsKey(it.name) }
+        .forEach { add(ScalarTypeDefinition.newScalarTypeDefinition().name(it.name).build()) }
 }
 
 private fun List<SchemaFile>.typeRegistry(): TypeDefinitionRegistry {
