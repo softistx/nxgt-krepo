@@ -629,7 +629,9 @@ forgotten `@Argument` has always produced. That is what keeps a typo from being 
 context, and it is why a third stack needs one call rather than a change to Graphix.
 
 **Whoever fills the context registers the type.** The core registers `GraphqlWsInit`, which it puts
-on every graphql-ws operation; `stx-graphix-ktor` registers `ApplicationCall`; `stx-graphix-spring`
+on every graphql-ws operation (*[The connection_init payload](#the-connection_init-payload)*, which
+also has the reason a resolver should usually not take one); `stx-graphix-ktor` registers
+`ApplicationCall`; `stx-graphix-spring`
 registers `ServerWebExchange`; an application registers its own `Caller`, because it is its own
 interceptor that puts one there.
 
@@ -666,7 +668,8 @@ and one interceptor reads the same over POST, over SSE and over graphql-ws.
 The chain runs **once per operation, not once per connection**. On a graphql-ws socket that means
 every `subscribe` frame, which is what lets a credential that expires mid-socket be seen to have
 expired — the client's `connection_init` payload is in the context as `GraphqlWsInit`, re-read each
-time rather than frozen at the handshake.
+time rather than frozen at the handshake. *[The connection_init
+payload](#the-connection_init-payload)* has its shape.
 
 An interceptor may not unmake the operation: the engine's own reserved keys are written after the
 chain's, so putting something under `OperationScope` has no effect. The per-operation
@@ -909,11 +912,15 @@ with `introspection(false)`, the schema panel is just empty. And **the CDN** —
 `embeddable-sandbox.cdn.apollographql.com`, so a strict `Content-Security-Policy` or an air-gapped
 network will block it, and the page renders blank with a console error.
 
+**The sandbox cannot run a subscription under `graphql-ws`.** The page is given an endpoint and
+nothing else — it is never told to open a socket — so it POSTs the subscription document and gets
+the deliberate 400. Testing one needs a real graphql-ws client, or `sse` for the duration.
+
 A **subscription** is one of two protocols, configurable, default `sse`:
 
 | Protocol | Transport | Config |
 | --- | --- | --- |
-| `sse` | `text/event-stream` on POST, one `data: {json}` frame per event | Ktor `subscriptions = Sse`; Spring `stx.graphix.subscriptions=sse` |
+| `sse` | `text/event-stream` on POST **and** GET, one `data: {json}` frame per event | Ktor `subscriptions = Sse`; Spring `stx.graphix.subscriptions=sse` |
 | `graphql-ws` | WebSocket on the same path, sub-protocol `graphql-transport-ws` | Ktor `subscriptions = GraphqlWs`; Spring `stx.graphix.subscriptions=graphql-ws` |
 
 SSE keeps the `{ "data", "errors" }` envelope. Cancelling the HTTP client cancels the `Flow`.
@@ -921,6 +928,63 @@ SSE keeps the `{ "data", "errors" }` envelope. Cancelling the HTTP client cancel
 and `ping` / `pong`. HTTP POST of a subscription document is then 400 — the socket is the
 subscription transport. Queries and mutations stay POST/GET, and also run as a single `next`
 over the socket.
+
+### The connection_init payload
+
+**A socket carries no `Authorization` header past the handshake.** That is the whole reason the
+protocol has a `connection_init` frame, and Graphix puts what the client sent there into the
+operation context as `GraphqlWsInit`:
+
+```kotlin
+data class GraphqlWsInit(val payload: JsonElement?)
+```
+
+A `JsonElement` and not a shape of its own, because the protocol says only that the payload is
+arbitrary JSON — `{"authToken": "…"}` is convention, not spec — and `null` when the client sent
+none. The core registers the type itself, so nothing calls `contextParameter(...)` for it:
+
+```kotlin
+@SubscriptionMapping
+fun events(init: GraphqlWsInit): Flow<Event> {
+    val token = init.payload?.jsonObject?.get("authToken")?.jsonPrimitive?.content
+    …
+}
+```
+
+It is filled **per operation, not per socket** — the payload is read again on every `subscribe`
+frame, next to the interceptor chain that also runs per operation rather than per connection. That
+is what lets a credential expiring mid-socket be seen to have expired, instead of a socket keeping
+whatever it was authorised with at the handshake.
+
+The rest of a socket operation's context is the **handshake's**: `ApplicationCall` under Ktor,
+`ServerWebExchange` under Spring, both from the one HTTP request a socket has, and both frozen at
+the upgrade. Anything that changes mid-socket comes through `connection_init` instead.
+
+> **A context type is a hard requirement of the parameter.** A resolver taking `init: GraphqlWsInit`
+> works over the socket and *fails everywhere else* — over POST or SSE the type is absent, and the
+> field comes back as `no com.softistx.graphix.http.GraphqlWsInit in the operation context` in
+> `errors[]`. It is an ordinary field error, so an `errors { }` handler can edit it, but the field is
+> still broken on that transport.
+
+So a field reachable from more than one transport reads the payload in an **interceptor**, where
+`get<T>()` answers `null` rather than failing, and puts a domain type the resolvers can take:
+
+```kotlin
+intercept {
+    val token =
+        get<GraphqlWsInit>()?.payload?.jsonObject?.get("authToken")?.jsonPrimitive?.content
+            ?: call.request.headers["Authorization"]        // GraphixChain.call, from stx-graphix-ktor
+    put(Caller(token ?: "anonymous"))
+    proceed()
+}
+```
+
+Resolvers then take `Caller`, which exists on every transport. Note the order: over the socket
+`call` is the *handshake's*, whose `Authorization` header a browser cannot set, so `connection_init`
+is asked first and the header is the POST/SSE fallback.
+
+To refuse outright, `GraphqlWsClose` carries the protocol's own codes — `UNAUTHORIZED` (4401),
+`INIT_TIMEOUT` (4408), `SUBSCRIBER_EXISTS` (4409), `TOO_MANY_INITS` (4429).
 
 **Ktor** — `install(GraphQL)` in `stx-graphix-ktor`, path configurable, default `/graphql`.
 

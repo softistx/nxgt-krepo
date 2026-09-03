@@ -17,7 +17,7 @@ data class GraphixProperties(
     /** HTTP path for POST and GET. The GraphQL protocol default, not a Graphix-specific name. */
     val path: String = "/graphql",
     /**
-     * How subscriptions are served. `sse` (default) is `text/event-stream` on POST.
+     * How subscriptions are served. `sse` (default) is `text/event-stream` on POST and GET.
      * `graphql-ws` is a WebSocket on [path]; HTTP POST of a subscription is then 400.
      */
     val subscriptions: SubscriptionProtocol = SubscriptionProtocol.Sse,
