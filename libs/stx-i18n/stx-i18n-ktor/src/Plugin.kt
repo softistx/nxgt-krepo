@@ -3,12 +3,11 @@ package com.softistx.i18n.ktor
 import com.softistx.i18n.Messages
 import com.softistx.i18n.Translator
 import com.softistx.ktor.publish
-import io.ktor.http.HttpHeaders
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.server.application.hooks.CallSetup
-import io.ktor.server.request.ApplicationRequest
-import io.ktor.util.AttributeKey
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.application.hooks.*
+import io.ktor.server.request.*
+import io.ktor.util.*
 
 /**
  * Resolves each request's locale once, and hands it to the route.
@@ -66,7 +65,7 @@ data class I18nConfiguration(
      *
      * A route keeps using `call.translate`, which is per-request and is not what DI is for.
      */
-    var injectable: Boolean = false,
+    var injectable: Boolean = true,
 )
 
 internal val TranslatorKey = AttributeKey<Translator>("com.softistx.i18n.Translator")

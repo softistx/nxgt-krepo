@@ -3,8 +3,8 @@ package com.softistx.storage.ktor
 import com.softistx.ktor.resource
 import com.softistx.storage.ObjectStorage
 import com.softistx.storage.StorageConfig
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.util.*
 
 /**
  * One object-storage client for the application, closed when it stops.
@@ -54,7 +54,7 @@ class StorageConfiguration {
      * claim on closing the client. That is safe — these clients close idempotently — but a
      * client that has to outlive the application does not belong in it.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 }
 
 internal val StorageKey = AttributeKey<ObjectStorage>("com.softistx.storage.ObjectStorage")

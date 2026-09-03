@@ -3,8 +3,8 @@ package com.softistx.kafka.ktor
 import com.softistx.kafka.Kafka
 import com.softistx.kafka.KafkaConfig
 import com.softistx.ktor.publish
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.util.*
 
 /**
  * The cluster configuration, in one place, reachable from a route.
@@ -59,7 +59,7 @@ class KafkaClusterConfiguration {
      * claim on closing the cluster. That is safe — these clients close idempotently — but a
      * cluster that has to outlive the application does not belong in it.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 }
 
 internal val KafkaKey = AttributeKey<Kafka>("com.softistx.kafka.Kafka")

@@ -7,8 +7,8 @@ import com.softistx.workflow.WorkflowEngine
 import com.softistx.workflow.WorkflowEngineBuilder
 import com.softistx.workflow.WorkflowWorker
 import com.softistx.workflow.store.WorkflowStore
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -102,7 +102,7 @@ class WorkflowsConfiguration {
      * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
      * application that never asks for this must not be made to carry it at runtime.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 
     internal val registrations = mutableListOf<Workflow<*>>()
 

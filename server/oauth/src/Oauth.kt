@@ -1,7 +1,5 @@
 package com.softistx.oauth
 
-import com.softistx.graphix.ktor.GraphQL
-import com.softistx.oauth.controllers.PermissionController
 import com.softistx.oauth.plugins.*
 import io.ktor.server.application.*
 import io.ktor.server.config.*
@@ -18,8 +16,9 @@ fun main() {
 
 /** Installs GraphQL at `/graphql`, and the Apollo Sandbox at `/sandbox`. */
 fun Application.oauth() {
-    val permission = PermissionController()
     configureDependencyInjection()
+    configureDatabase()
+    configureGraphQL()
     configureValidation()
     configureSockets()
     configureTemplating()
@@ -27,9 +26,4 @@ fun Application.oauth() {
     configureHTTP()
     configureSecurity()
     configureRouting()
-    install(GraphQL) {
-        sandbox = true
-        builtInScalars = true
-        schema { resolvers(permission) }
-    }
 }

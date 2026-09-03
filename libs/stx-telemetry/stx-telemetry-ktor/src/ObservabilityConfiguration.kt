@@ -5,9 +5,8 @@ import com.softistx.telemetry.Telemetry
 import com.softistx.telemetry.export.Exporter
 import com.softistx.telemetry.model.Severity
 import com.softistx.telemetry.trace.Sampler
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.request.httpMethod
-import io.ktor.server.request.path
+import io.ktor.server.application.*
+import io.ktor.server.request.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -59,7 +58,7 @@ class ObservabilityConfiguration {
      * Off by default, and it has to be: `ktor-server-di` is compile-only here, so an application that
      * never asks for this must not be made to carry it at runtime.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 
     /**
      * What a request's span is called before routing has matched it.

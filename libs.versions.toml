@@ -304,11 +304,13 @@ stx-graphix = { module = "com.softistx:stx-graphix", version.ref = "stx" }
 stx-graphix-ktor = { module = "com.softistx:stx-graphix-ktor", version.ref = "stx" }
 stx-jpa = { module = "com.softistx:stx-jpa", version.ref = "stx" }
 stx-jpa-ktor = { module = "com.softistx:stx-jpa-ktor", version.ref = "stx" }
+stx-jpa-spring = { module = "com.softistx:stx-jpa-spring", version.ref = "stx" }
 stx-i18n-spring = { module = "com.softistx:stx-i18n-spring", version.ref = "stx" }
 stx-material = { module = "com.softistx:stx-material", version.ref = "stx" }
 stx-migrations-db = { module = "com.softistx:stx-migrations-db", version.ref = "stx" }
 stx-migrations-spring = { module = "com.softistx:stx-migrations-spring", version.ref = "stx" }
 stx-mongo = { module = "com.softistx:stx-mongo", version.ref = "stx" }
+stx-mongo-ktor = { module = "com.softistx:stx-mongo-ktor", version.ref = "stx" }
 stx-redis = { module = "com.softistx:stx-redis", version.ref = "stx" }
 stx-spring-boot = { module = "com.softistx:stx-spring-boot", version.ref = "stx" }
 stx-telemetry-mongo = { module = "com.softistx:stx-telemetry-mongo", version.ref = "stx" }

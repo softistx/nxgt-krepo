@@ -3,8 +3,8 @@ package com.softistx.amqp.ktor
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpConfig
 import com.softistx.ktor.resource
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -64,7 +64,7 @@ class AmqpConnectionConfiguration {
      * claim on closing the connection. That is safe — these clients close idempotently — but a
      * connection that has to outlive the application does not belong in it.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 }
 
 internal val AmqpKey = AttributeKey<Amqp>("com.softistx.amqp.Amqp")

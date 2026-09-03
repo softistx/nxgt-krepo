@@ -3,8 +3,8 @@ package com.softistx.redis.ktor
 import com.softistx.ktor.resource
 import com.softistx.redis.Redis
 import com.softistx.redis.RedisConfig
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.util.*
 
 /**
  * One Redis connection for the application, closed when it stops.
@@ -59,7 +59,7 @@ class RedisConnectionConfiguration {
      * claim on closing the connection. That is safe — these clients close idempotently — but a
      * connection that has to outlive the application does not belong in it.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 }
 
 internal val RedisKey = AttributeKey<Redis>("com.softistx.redis.Redis")

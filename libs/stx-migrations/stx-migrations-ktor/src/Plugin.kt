@@ -3,8 +3,8 @@ package com.softistx.migrations.ktor
 import com.softistx.ktor.publish
 import com.softistx.migrations.MigrationRecord
 import com.softistx.migrations.MigrationRunner
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -81,7 +81,7 @@ class MigrationsConfiguration {
      * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
      * application that never asks for this must not be made to carry it at runtime.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 }
 
 internal val LedgerKey = AttributeKey<List<MigrationRecord>>("com.softistx.migrations.MigrationLedger")

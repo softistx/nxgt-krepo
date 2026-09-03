@@ -6,8 +6,8 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.softistx.ktor.publish
 import com.softistx.ktor.resource
 import com.softistx.mongo.mongoClient
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.util.*
 
 /**
  * One Mongo client for the application and one database handle over it, closed when it stops.
@@ -74,7 +74,7 @@ class MongoDBConfiguration {
      * claim on closing the client. That is safe — these clients close idempotently — but a
      * client that has to outlive the application does not belong in it.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 }
 
 internal val MongoKey = AttributeKey<MongoClient>("com.mongodb.kotlin.client.coroutine.MongoClient")
