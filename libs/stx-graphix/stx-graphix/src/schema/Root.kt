@@ -46,7 +46,7 @@ internal fun root(
                 types.output(
                     when (kind) {
                         RootKind.SUBSCRIPTION -> function.returnType.subscriptionElement()
-                        else -> function.returnType.unwrapAsync()
+                        else -> function.returnType.resolverOutput()
                     },
                     function.isGraphQLId(),
                 )

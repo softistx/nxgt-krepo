@@ -71,6 +71,7 @@ class Graphix internal constructor(
     internal val interceptors: List<GraphixInterceptor> = emptyList(),
     /** Kept past `build()` because the seats outside graphql-java need it too. */
     internal val errorHandlers: ErrorHandlers = ErrorHandlers(emptyList(), null),
+    internal val maxListElements: Int? = null,
 ) {
     /**
      * Runs one query or mutation. Field failures land in [GraphixResult.errors]; this call
@@ -112,7 +113,7 @@ class Graphix internal constructor(
         return try {
             val result =
                 engine
-                    .executeAsync(executionInput(request, context, scope, loaders, validation, introspection, messages))
+                    .executeAsync(executionInput(request, context, scope, loaders, validation, introspection, messages, maxListElements))
                     .await()
             if (result.getData<Any>() is Publisher<*>) {
                 throw GraphixException("this is a subscription — use Graphix.subscribe")
@@ -144,6 +145,7 @@ class GraphixBuilder internal constructor(
     private val typeResolvers = mutableMapOf<String, GraphixTypeName>()
     private var introspection = true
     private var builtInScalars = true
+    private var maxListElements: Int? = null
     private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
 
     // Whoever fills the operation context registers the type. The core fills exactly one:
@@ -260,6 +262,23 @@ class GraphixBuilder internal constructor(
         introspection = enabled
     }
 
+    /**
+     * How many elements a `Flow` field may produce before it fails.
+     *
+     * Unset, and nothing is bounded — a `List` return has always been unbounded and this changes
+     * none of it. It exists because a `Flow` can be *infinite* where a `List` cannot: without a
+     * bound such a field does not fail, it simply never answers, and a request that never answers is
+     * worse than one that errors. Past it the field is a [TooManyElements] an `errors { }` handler
+     * can edit like any other.
+     *
+     * It bounds emission, not silence. A flow that emits nothing and never completes still hangs
+     * until the operation is cancelled — that wants a request timeout, which is a different thing.
+     */
+    fun maxListElements(max: Int) {
+        require(max > 0) { "maxListElements must be positive" }
+        maxListElements = max
+    }
+
     internal fun addTypeResolver(
         typeName: String,
         resolver: GraphixTypeName,
@@ -354,7 +373,16 @@ class GraphixBuilder internal constructor(
         // guessable from the API.
         if (!handlers.isEmpty()) builder.defaultDataFetcherExceptionHandler(errorDispatch(handlers, messages))
         engineCustomizers.forEach { with(it) { builder.customize() } }
-        return Graphix(builder.build(), loaders, validation, introspection, messages, interceptors.toList(), handlers)
+        return Graphix(
+            builder.build(),
+            loaders,
+            validation,
+            introspection,
+            messages,
+            interceptors.toList(),
+            handlers,
+            maxListElements,
+        )
     }
 }
 
