@@ -20,8 +20,10 @@ import kotlinx.serialization.json.JsonObject
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.server.*
+import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import java.util.Locale
+import kotlin.reflect.KClass
 
 /** WebFlux adapter: the same JSON envelope as Ktor, over `RouterFunction`. */
 internal class GraphixHandler(
@@ -40,7 +42,7 @@ internal class GraphixHandler(
 
     private fun post(request: ServerRequest): Mono<ServerResponse> =
         request.bodyToMono<String>().defaultIfEmpty("").flatMap { body ->
-            mono { handlePost(body, request.preferredLocale()) }
+            mono { handlePost(body, request.preferredLocale(), request.context()) }
         }
 
     private fun get(request: ServerRequest): Mono<ServerResponse> = mono { handleGet(request) }
@@ -48,6 +50,7 @@ internal class GraphixHandler(
     private suspend fun handlePost(
         body: String,
         locale: Locale?,
+        context: Map<KClass<*>, Any>,
     ): ServerResponse {
         val graphixRequest =
             try {
@@ -57,7 +60,7 @@ internal class GraphixHandler(
             } catch (failure: BadGraphixHttp) {
                 return badRequest(failure.message ?: "malformed GraphQL request")
             }
-        return respond(graphixRequest)
+        return respond(graphixRequest, context)
     }
 
     private suspend fun handleGet(request: ServerRequest): ServerResponse {
@@ -79,25 +82,35 @@ internal class GraphixHandler(
                 operationName = request.queryParam("operationName").orElse(null),
                 variables = variables,
             ).toGraphixRequest(request.preferredLocale())
-        return respond(graphixRequest)
+        return respond(graphixRequest, request.context())
     }
 
     /** The request's `Accept-Language`, as the locale its coercion errors are translated in. */
     private fun ServerRequest.preferredLocale(): Locale? = acceptedLocale(headers().firstHeader(HttpHeaders.ACCEPT_LANGUAGE))
 
-    private suspend fun respond(request: GraphixRequest): ServerResponse {
+    /**
+     * The exchange *is* the operation's context. Taking it off the [ServerRequest] rather than out
+     * of a reactor context sidesteps the `mono { }` bridge entirely — nothing here depends on a
+     * coroutine context surviving it.
+     */
+    private fun ServerRequest.context(): Map<KClass<*>, Any> = mapOf(ServerWebExchange::class to exchange())
+
+    private suspend fun respond(
+        request: GraphixRequest,
+        context: Map<KClass<*>, Any>,
+    ): ServerResponse {
         if (request.isSubscription()) {
             if (subscriptions == SubscriptionProtocol.GraphqlWs) {
                 return badRequest("subscriptions use graphql-ws")
             }
             val events =
-                engine.subscribe(request).map { json.encodeToString(GraphixHttpResponse.serializer(), it.toHttp()) }
+                engine.subscribe(request, context).map { json.encodeToString(GraphixHttpResponse.serializer(), it.toHttp()) }
             return ServerResponse
                 .ok()
                 .contentType(MediaType.TEXT_EVENT_STREAM)
                 .bodyAndAwait(events)
         }
-        return ok(engine.execute(request).toHttp())
+        return ok(engine.execute(request, context).toHttp())
     }
 
     private suspend fun ok(body: GraphixHttpResponse): ServerResponse =
