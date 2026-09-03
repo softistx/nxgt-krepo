@@ -5,6 +5,8 @@ import com.softistx.graphix.GraphixBuilder
 import com.softistx.graphix.GraphixCustomizer
 import com.softistx.graphix.customize
 import com.softistx.graphix.engine
+import com.softistx.graphix.error.GraphixExceptionHandler
+import com.softistx.graphix.error.exceptionHandler
 import com.softistx.graphix.intercept.GraphixInterceptor
 import com.softistx.graphix.intercept.intercept
 import com.softistx.graphix.scalar.scalar
@@ -16,8 +18,8 @@ import org.koin.core.context.GlobalContext
 
 /**
  * Builds the schema from what [koin] holds: every [GraphixResolver], [GraphQLScalarType],
- * [GraphixDirective], [GraphixCustomizer], [GraphixInterceptor] and [GraphQLEngineCustomizer]
- * single, in one call.
+ * [GraphixDirective], [GraphixCustomizer], [GraphixInterceptor], [GraphQLEngineCustomizer] and
+ * [GraphixExceptionHandler] single, in one call.
  *
  * ```kotlin
  * install(GraphQL) {
@@ -44,4 +46,5 @@ fun GraphixBuilder.fromKoin(koin: Koin = GlobalContext.get()) {
     koin.getAll<GraphixCustomizer>().forEach { customize(it) }
     koin.getAll<GraphixInterceptor>().forEach { intercept(it) }
     koin.getAll<GraphQLEngineCustomizer>().forEach { engine(it) }
+    koin.getAll<GraphixExceptionHandler>().forEach { exceptionHandler(it) }
 }

@@ -64,6 +64,44 @@ It is not a dependency on `stx-i18n` for the same reason `stx-i18n` is not in `s
 is a 15 MB jar, and a service that never translates anything should not carry a message formatter
 to run GraphQL.
 
+## A thrown exception is not an answer
+
+Without a handler, whatever a resolver threw becomes the client's `message` — the ORM's, the HTTP
+client's, the one with the table name in it. That is a leak by default, and no classification comes
+with it, so a client cannot tell "you sent nonsense" from "we broke".
+
+`errors { }` is where an application says otherwise, and its shape is chosen so that saying *less*
+is the cheap thing:
+
+```kotlin
+errors {
+    on<ProductNotFound> { failure -> error.withMessage("No product ${failure.id}").withErrorType(NOT_FOUND) }
+    fallback { error.withMessage("Internal error").withErrorType(INTERNAL_ERROR) }
+}
+```
+
+`error` arrives already filled — message, `path`, `locations` — so a handler that only classifies
+restates nothing, the way `GraphqlErrorBuilder<?>` arrives filled in Spring GraphQL's
+`@GraphQlExceptionHandler`. It is a `data class`, so `copy()` is the builder and the `withX`
+extensions are names for the copies.
+
+**Nothing changes until a handler claims it.** Returning `null` means *not mine* and the next
+handler is asked; an exception nobody claims keeps exactly the answer it would have had. Registering
+a handler for one exception type is not a decision about every other one — `fallback { }` is how an
+application says it wants all of them. That is what makes the feature purely additive: adding
+`errors { }` to an existing engine cannot change an error it does not mention.
+
+There is **one** mechanism, not two. `GraphixExceptionHandler` is a single function taking the
+error and the exception, and `on<T> { }` is sugar over one that declines anything but `T`. A single
+function is what a container can be asked for, which is why a Spring `@Bean` and a Koin single are
+found without a second form to learn.
+
+Three seats, because a throw does not always have a field: the data fetcher, the interceptor chain,
+and a subscription `Flow` that throws mid-stream. The last two were holes before this — an
+interceptor throw left `execute` as a 500, and a mid-stream throw escaped `subscribe` raw for SSE to
+lose. [`docs/graphix.md`](../../../docs/graphix.md) has the table and the one graphql-java trap
+worth knowing.
+
 ## Why not graphql-kotlin
 
 Expedia's library is Jackson-first and scans. This repo's JSON is kotlinx.serialization, a

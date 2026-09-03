@@ -1,7 +1,11 @@
 package com.softistx.graphix
 
 import com.softistx.common.serialization.lenientJson
+import com.softistx.graphix.error.ErrorHandlers
+import com.softistx.graphix.error.GraphixExceptionHandler
+import com.softistx.graphix.error.handleOutsideField
 import com.softistx.graphix.execute.RegisteredLoader
+import com.softistx.graphix.execute.errorDispatch
 import com.softistx.graphix.execute.executionInput
 import com.softistx.graphix.execute.toGraphixResult
 import com.softistx.graphix.http.GraphqlWsInit
@@ -65,6 +69,8 @@ class Graphix internal constructor(
     internal val introspection: Boolean = true,
     internal val messages: GraphixMessages = GraphixMessages.Bundled,
     internal val interceptors: List<GraphixInterceptor> = emptyList(),
+    /** Kept past `build()` because the seats outside graphql-java need it too. */
+    internal val errorHandlers: ErrorHandlers = ErrorHandlers(emptyList(), null),
 ) {
     /**
      * Runs one query or mutation. Field failures land in [GraphixResult.errors]; this call
@@ -87,9 +93,15 @@ class Graphix internal constructor(
         request: GraphixRequest,
         context: Map<KClass<*>, Any> = emptyMap(),
     ): GraphixResult =
-        runChain(interceptors, request, context) { operation, values ->
-            flow { emit(executeOnce(operation, values)) }
-        }.single()
+        try {
+            runChain(interceptors, request, context) { operation, values ->
+                flow { emit(executeOnce(operation, values)) }
+            }.single()
+        } catch (failure: Throwable) {
+            // An interceptor throw never reached graphql-java, so it never reached the seat there.
+            // Unclaimed, it is rethrown and nothing changes.
+            handleOutsideField(failure, request, context) ?: throw failure
+        }
 
     private suspend fun executeOnce(
         request: GraphixRequest,
@@ -140,6 +152,10 @@ class GraphixBuilder internal constructor(
     private val interceptors = mutableListOf<GraphixInterceptor>()
     private var validation: GraphixValidation? = null
     private var messages: GraphixMessages = GraphixMessages.Bundled
+
+    // Ordered: the first handler to answer wins, the way the first interceptor to run is outermost.
+    private val errorHandlers = mutableListOf<GraphixExceptionHandler>()
+    private var errorFallback: GraphixExceptionHandler? = null
 
     /**
      * Registers [instances]. Each one's annotated functions say what they are: `@QueryMapping`
@@ -265,6 +281,15 @@ class GraphixBuilder internal constructor(
         interceptors += interceptor
     }
 
+    internal fun addErrorHandler(handler: GraphixExceptionHandler) {
+        errorHandlers += handler
+    }
+
+    internal fun addErrorFallback(handler: GraphixExceptionHandler) {
+        if (errorFallback != null) throw GraphixException("the error fallback is already set")
+        errorFallback = handler
+    }
+
     /**
      * Where coercion errors get their text. The default is the catalogues in this jar, English and
      * French; anything else is one lambda, and `stx-i18n` fits it directly:
@@ -321,8 +346,15 @@ class GraphixBuilder internal constructor(
             )
         val builder = GraphQL.newGraphQL(schema)
         validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }
+        val handlers = ErrorHandlers(errorHandlers.toList(), errorFallback)
+        // Before the customizers, not after: `engine { defaultDataFetcherExceptionHandler(…) }` is an
+        // explicit choice and should still win. What it cannot survive is
+        // `engine { queryExecutionStrategy(…) }` — graphql-java only applies the default handler to
+        // strategies left null at build, so setting one silently drops this seat. Documented, not
+        // guessable from the API.
+        if (!handlers.isEmpty()) builder.defaultDataFetcherExceptionHandler(errorDispatch(handlers, messages))
         engineCustomizers.forEach { with(it) { builder.customize() } }
-        return Graphix(builder.build(), loaders, validation, introspection, messages, interceptors.toList())
+        return Graphix(builder.build(), loaders, validation, introspection, messages, interceptors.toList(), handlers)
     }
 }
 

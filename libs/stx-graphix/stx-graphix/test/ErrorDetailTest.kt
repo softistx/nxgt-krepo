@@ -1,5 +1,8 @@
 package com.softistx.graphix
 
+import com.softistx.graphix.error.errors
+import com.softistx.graphix.error.on
+import com.softistx.graphix.error.withExtension
 import com.softistx.graphix.fixture.BoomQueries
 import com.softistx.graphix.fixture.GreetingQueries
 import com.softistx.graphix.http.GraphixHttpRequest
@@ -31,6 +34,33 @@ class ErrorDetailTest :
                 error.locations.first().column shouldBe 3
             }
 
+            scenario("the classification reaches the client, under extensions") {
+                val graphql = Graphix { resolvers(BoomQueries()) }
+                val response = graphql.execute(GraphixRequest("{ boom }")).toHttp()
+
+                // The spec gives an error a message, a path and locations and leaves the rest to
+                // extensions, which is where graphql-java's own serializer puts the classification.
+                // This library kept errorType on GraphixError and then dropped it on the way out, so
+                // nothing a handler classified could be seen by anyone.
+                val extensions =
+                    response.errors!!
+                        .single()
+                        .extensions
+                        .shouldNotBeNull()
+                extensions["classification"] shouldBe JsonPrimitive("DataFetchingException")
+            }
+
+            scenario("an extensions entry the application wrote keeps its own classification") {
+                val graphql =
+                    Graphix {
+                        resolvers(BoomQueries())
+                        errors { on<IllegalStateException> { error.withExtension("classification", "MINE") } }
+                    }
+                val response = graphql.execute(GraphixRequest("{ boom }")).toHttp()
+
+                response.errors!!.single().extensions!!["classification"] shouldBe JsonPrimitive("MINE")
+            }
+
             scenario("a validation error is classified as one") {
                 val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result = graphql.execute(GraphixRequest("{ nope }"))
@@ -54,14 +84,20 @@ class ErrorDetailTest :
                     .line shouldBe 1
             }
 
-            scenario("an error with no extensions omits them rather than sending an empty object") {
+            scenario("extensions carry the classification and nothing invented") {
                 val graphql = Graphix { resolvers(BoomQueries()) }
                 val http = graphql.execute(GraphixRequest("{ boom }")).toHttp()
 
+                // This used to assert `extensions == null` for an error nobody had annotated. It
+                // cannot any more, and that is the point: the classification had nowhere else to go
+                // and was being dropped. What still holds is that nothing else is invented, and that
+                // the response-level object stays absent rather than empty.
                 http.errors
                     .shouldNotBeNull()
                     .first()
-                    .extensions shouldBe null
+                    .extensions
+                    .shouldNotBeNull()
+                    .keys shouldBe setOf("classification")
                 http.extensions shouldBe null
             }
         }
