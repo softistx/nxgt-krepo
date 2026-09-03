@@ -17,6 +17,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import java.util.Locale
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -25,6 +26,9 @@ import kotlin.time.Duration.Companion.seconds
  *
  * [send] is one already-encoded JSON text frame. [close] is the WebSocket close (code, reason).
  * Cancelling [scope] or calling [shutdown] drops every in-flight operation.
+ *
+ * [locale] is the socket's, not the operation's: a WebSocket negotiates `Accept-Language` once, at
+ * the handshake, and every operation on it is answered in that language.
  */
 class GraphqlWsSession(
     private val engine: Graphix,
@@ -33,6 +37,7 @@ class GraphqlWsSession(
     private val close: suspend (code: Int, reason: String) -> Unit,
     private val scope: CoroutineScope,
     initTimeout: Duration = 3.seconds,
+    private val locale: Locale? = null,
 ) {
     private val mutex = Mutex()
     private val sendMutex = Mutex()
@@ -96,7 +101,7 @@ class GraphqlWsSession(
         val request =
             try {
                 val payload = frame.payload ?: throw BadGraphixHttp("subscribe needs a payload")
-                json.decodeFromJsonElement(GraphixHttpRequest.serializer(), payload).toGraphixRequest()
+                json.decodeFromJsonElement(GraphixHttpRequest.serializer(), payload).toGraphixRequest(locale)
             } catch (failure: Exception) {
                 mutex.withLock { shut(GraphqlWsClose.INVALID, failure.message ?: "invalid subscribe") }
                 return

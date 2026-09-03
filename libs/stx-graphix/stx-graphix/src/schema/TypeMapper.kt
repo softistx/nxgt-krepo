@@ -36,6 +36,9 @@ import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.full.valueParameters
 import kotlin.uuid.ExperimentalUuidApi
 
+/** The built-ins, as a set, so [TypeMapper.record] is a lookup and not a scan. */
+private val BuiltInScalarTypes: Set<graphql.schema.GraphQLScalarType> = Scalars.All.toSet()
+
 /** A GraphQL field on [typeName] named [fieldName], backed by the Kotlin property [propertyName]. */
 internal data class PropertyRename(
     val typeName: String,
@@ -61,6 +64,7 @@ internal class TypeMapper(
     private val implementors = linkedMapOf<String, MutableSet<String>>()
     private val renames = mutableListOf<PropertyRename>()
     private val building = mutableSetOf<String>()
+    private val scalars = linkedSetOf<graphql.schema.GraphQLScalarType>()
 
     /** GraphQL output type for [kType], including nullability. [id] makes a string type `ID`. */
     fun output(
@@ -74,9 +78,17 @@ internal class TypeMapper(
         id: Boolean = false,
     ): GraphQLInputType = wrapInput(mapInput(kType, id), kType.isMarkedNullable)
 
-    /** Every named type this mapper built — for `additionalTypes`. */
+    /**
+     * Every named type this mapper built — for `additionalTypes`. The scalars in it are the
+     * built-in ones a field actually used: a service with no dates does not advertise
+     * `scalar Instant`, and a schema that advertised all two dozen would say nothing at all.
+     */
     fun additionalTypes(): Set<GraphQLNamedType> =
-        (outputs.values + inputs.values + enums.values + interfaces.values + unions.values).toSet()
+        (outputs.values + inputs.values + enums.values + interfaces.values + unions.values + scalars).toSet()
+
+    /** Notes a built-in scalar as used. Spec scalars are always in the schema and are not noted. */
+    private fun record(type: graphql.schema.GraphQLScalarType): graphql.schema.GraphQLScalarType =
+        type.also { if (it in BuiltInScalarTypes) scalars += it }
 
     /** The interfaces and unions this mapper built. Each needs a type resolver in the code registry. */
     fun abstractTypes(): List<GraphQLNamedType> = interfaces.values + unions.values
@@ -92,9 +104,9 @@ internal class TypeMapper(
         id: Boolean = false,
     ): GraphQLOutputType {
         if (id) idScalar(kType)?.let { return it }
-        scalarFromClass(kType, kotlinScalars)?.let { return it }
+        scalarFromClass(kType, kotlinScalars)?.let { return record(it) }
         val descriptor = descriptorOf(kType)
-        scalarOf(descriptor)?.let { return it }
+        scalarOf(descriptor)?.let { return record(it) }
         return when (descriptor.kind) {
             StructureKind.LIST -> {
                 GraphQLList.list(
@@ -137,9 +149,9 @@ internal class TypeMapper(
         id: Boolean = false,
     ): GraphQLInputType {
         if (id) idScalar(kType)?.let { return it }
-        scalarFromClass(kType, kotlinScalars)?.let { return it }
+        scalarFromClass(kType, kotlinScalars)?.let { return record(it) }
         val descriptor = descriptorOf(kType)
-        scalarOf(descriptor)?.let { return it }
+        scalarOf(descriptor)?.let { return record(it) }
         return when (descriptor.kind) {
             StructureKind.LIST -> {
                 GraphQLList.list(

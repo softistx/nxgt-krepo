@@ -8,12 +8,14 @@ import com.softistx.graphix.http.GraphixHttpError
 import com.softistx.graphix.http.GraphixHttpRequest
 import com.softistx.graphix.http.GraphixHttpResponse
 import com.softistx.graphix.http.SubscriptionProtocol
+import com.softistx.graphix.http.acceptedLocale
 import com.softistx.graphix.http.toGraphixRequest
 import com.softistx.graphix.http.toHttp
 import com.softistx.graphix.http.toSse
 import com.softistx.graphix.isSubscription
 import com.softistx.graphix.subscribe
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receiveText
@@ -27,6 +29,7 @@ import io.ktor.server.websocket.webSocket
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import java.util.Locale
 
 /**
  * The Apollo Sandbox page. A **sibling** of the GraphQL path, not a child, so it is its own
@@ -64,7 +67,7 @@ private suspend fun ApplicationCall.handlePost(
     val body = receiveText()
     val request =
         try {
-            json.decodeFromString(GraphixHttpRequest.serializer(), body).toGraphixRequest()
+            json.decodeFromString(GraphixHttpRequest.serializer(), body).toGraphixRequest(preferredLocale())
         } catch (failure: SerializationException) {
             return respondBadRequest(json, "malformed GraphQL JSON: ${failure.message}")
         } catch (failure: BadGraphixHttp) {
@@ -95,7 +98,7 @@ private suspend fun ApplicationCall.handleGet(
             query = query,
             operationName = request.queryParameters["operationName"],
             variables = variables,
-        ).toGraphixRequest()
+        ).toGraphixRequest(preferredLocale())
     respondResult(engine, json, request, subscriptions)
 }
 
@@ -136,3 +139,6 @@ private suspend fun ApplicationCall.respondBadRequest(
         HttpStatusCode.BadRequest,
     )
 }
+
+/** The call's `Accept-Language`, as the locale every coercion error on it is translated in. */
+private fun ApplicationCall.preferredLocale(): Locale? = acceptedLocale(request.headers[HttpHeaders.AcceptLanguage])

@@ -4,6 +4,7 @@ import com.softistx.common.serialization.lenientJson
 import com.softistx.graphix.execute.RegisteredLoader
 import com.softistx.graphix.execute.executionInput
 import com.softistx.graphix.execute.toGraphixResult
+import com.softistx.graphix.message.GraphixMessages
 import com.softistx.graphix.schema.DefaultSchemaExtensions
 import com.softistx.graphix.schema.DefaultSchemaLocations
 import com.softistx.graphix.schema.FieldDirectiveWrap
@@ -54,6 +55,7 @@ class Graphix internal constructor(
     internal val loaders: List<RegisteredLoader> = emptyList(),
     internal val validation: GraphixValidation? = null,
     internal val introspection: Boolean = true,
+    internal val messages: GraphixMessages = GraphixMessages.Bundled,
 ) {
     /**
      * Runs one query or mutation. Field failures land in [GraphixResult.errors]; this call
@@ -79,7 +81,9 @@ class Graphix internal constructor(
         val scope = CoroutineScope(currentCoroutineContext() + job + CoroutineName("graphql"))
         return try {
             val result =
-                engine.executeAsync(executionInput(request, context, scope, loaders, validation, introspection)).await()
+                engine
+                    .executeAsync(executionInput(request, context, scope, loaders, validation, introspection, messages))
+                    .await()
             if (result.getData<Any>() is Publisher<*>) {
                 throw GraphixException("this is a subscription — use Graphix.subscribe")
             }
@@ -114,6 +118,7 @@ class GraphixBuilder internal constructor(
     private var introspection = true
     private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
     private var validation: GraphixValidation? = null
+    private var messages: GraphixMessages = GraphixMessages.Bundled
 
     /** Registers [instance]; every `@QueryMapping` function on it becomes a field on `Query`. */
     fun query(instance: Any) {
@@ -203,6 +208,33 @@ class GraphixBuilder internal constructor(
     }
 
     /**
+     * Where coercion errors get their text. The default is the catalogues in this jar, English and
+     * French; anything else is one lambda, and `stx-i18n` fits it directly:
+     *
+     * ```kotlin
+     * messages { locale, key, args -> catalog.forLocale(locale).translate(key, args) }
+     * ```
+     *
+     * The locale is the operation's — `GraphixRequest.locale`, which the HTTP integrations
+     * negotiate from `Accept-Language`. A single operation may override the source by putting a
+     * [GraphixMessages] in `execute`'s context map.
+     *
+     * **One place this does not reach**, and it is graphql-java's: a **literal written in the
+     * document** is coerced during validation, and `ValidationContext` builds a `GraphQLContext`
+     * of its own holding the locale and nothing else, so the source put there for the operation
+     * is not there to be found. Those errors come from the bundled catalogue — in the right
+     * language, since the locale does survive. A variable's value and a resolver's result are
+     * coerced during execution and see this source. `ScalarMessageTest` pins both halves.
+     *
+     * Adding a **language** has no such split: the bundled catalogue reads
+     * `stx/graphix/messages_<locale>.properties` off the classpath, so a file in the application's own
+     * resources answers in both phases.
+     */
+    fun messages(source: GraphixMessages) {
+        messages = source
+    }
+
+    /**
      * graphql-java 26 validation: complexity limits in the operation context, field rules as
      * instrumentation. Declared here so a caller does not wire `QueryComplexityLimits` or
      * `FieldValidationInstrumentation` by hand.
@@ -233,7 +265,7 @@ class GraphixBuilder internal constructor(
         val builder = GraphQL.newGraphQL(schema)
         validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }
         engineCustomizers.forEach { with(it) { builder.customize() } }
-        return Graphix(builder.build(), loaders, validation, introspection)
+        return Graphix(builder.build(), loaders, validation, introspection, messages)
     }
 }
 
