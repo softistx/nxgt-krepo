@@ -302,6 +302,7 @@ icu4j = { module = "com.ibm.icu:icu4j", version = "78.3" }
 # that what they exercise is the POM a consumer actually gets. See `stx-artifacts.module-template.yaml`.
 stx-graphix = { module = "com.softistx:stx-graphix", version.ref = "stx" }
 stx-graphix-ktor = { module = "com.softistx:stx-graphix-ktor", version.ref = "stx" }
+stx-graphix-koin = { module = "com.softistx:stx-graphix-koin", version.ref = "stx" }
 stx-jpa = { module = "com.softistx:stx-jpa", version.ref = "stx" }
 stx-jpa-ktor = { module = "com.softistx:stx-jpa-ktor", version.ref = "stx" }
 stx-jpa-spring = { module = "com.softistx:stx-jpa-spring", version.ref = "stx" }

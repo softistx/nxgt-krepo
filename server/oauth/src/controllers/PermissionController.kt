@@ -1,5 +1,6 @@
 package com.softistx.oauth.controllers
 
+import com.softistx.graphix.koin.GraphixResolver
 import com.softistx.graphix.schema.Argument
 import com.softistx.graphix.schema.MutationMapping
 import com.softistx.graphix.schema.QueryMapping
@@ -8,7 +9,7 @@ import com.softistx.oauth.models.Permission
 import org.koin.core.annotation.Singleton
 
 @Singleton
-class PermissionController {
+class PermissionController : GraphixResolver {
     @QueryMapping
     suspend fun permissions(): List<Permission> =
         listOf(
