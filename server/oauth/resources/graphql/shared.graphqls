@@ -5,6 +5,12 @@ type AuditMetadata @annotate(name: "Serializable", type: "serialization") {
     lastModifiedBy: String
 }
 
+enum EventType {
+    CREATED
+    UPDATED
+    DELETED
+}
+
 
 ## Directives
 
