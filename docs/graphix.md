@@ -640,11 +640,42 @@ Registration differs by stack:
 | Core | `intercept { }` in the `Graphix { }` builder |
 | Ktor | `intercept { }` in `install(GraphQL) { }`, and `GraphixInterceptor` in the DI container with `fromDi = true` |
 | Spring | A `GraphixInterceptor` `@Bean`; `@Order` decides which is outermost |
+| Koin | A `GraphixInterceptor` single, collected by `fromKoin()` — see [From a Koin container](#from-a-koin-container) |
 
 Each integration also ships accessors for the type it owns — `GraphixChain.call`,
 `DataFetchingEnvironment.call` and `GraphQLContext.call` in Ktor, and the `exchange` twins in
 Spring — so a field directive or a resolver holding a DFE reaches the request without going through
 `graphQlContext.get(...)` by hand.
+
+## From a Koin container
+
+`stx-graphix-koin` builds the whole schema from what Koin holds, in one call:
+
+```kotlin
+@Singleton
+class ProductQueries(private val store: Store) : GraphixResolver {
+    @QueryMapping
+    suspend fun products(): List<Product> = store.all()
+}
+
+Graphix { fromKoin() }          // or, under Ktor: install(GraphQL) { schema { fromKoin() } }
+```
+
+It collects every `GraphixResolver`, `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`,
+`GraphixInterceptor` and `GraphQLEngineCustomizer` single. `fromKoin()` is a `GraphixBuilder`
+extension, so it is the same call under Ktor, under Spring, and in a plain `Graphix { }`.
+
+**Only resolvers need the marker.** The other five are already types, so the type *is* the marker
+and a `@Singleton` binding it is found as it stands. A resolver is an ordinary class holding
+`@QueryMapping` functions, with nothing in common with the next one, and Koin — unlike Spring —
+cannot be queried by annotation: `getAll<T>()` answers *"every single bound to T"*, which is a
+question only a type can ask. Hence `GraphixResolver`, implemented rather than annotated.
+
+> A meta-annotation would be nicer — `@Singleton annotation class GraphQLController`, one mark
+> rather than two — and it does **not** work. Koin's compiler plugin matches direct annotations
+> only, so a meta-annotated class compiles and is then silently absent from the container. Measured
+> on Koin 4.2.2 / koin-compiler-plugin 1.1.0. Spring's `@GraphQLController` behaves differently
+> because Spring reads annotation metadata at runtime, where meta-annotations are visible.
 
 ## Documents
 
