@@ -125,8 +125,9 @@ are the DataFetchers. No files, the `@Serializable` types stay the schema.
 
 Custom scalars and field directives are declared on the builder (`scalar { }`,
 `fieldDirective { }`). The lambdas see the operation `GraphQLContext`. Spring collects
-`GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and `GraphQLEngineCustomizer`
-beans; Ktor's `customize { }` / `fromDi = true` is the same list from DI.
+`GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`, `GraphixInterceptor` and
+`GraphQLEngineCustomizer` beans; Ktor's `customize { }` / `intercept { }` / `fromDi = true` is
+the same list from DI.
 
 ## The data fetcher is not yours
 
@@ -149,7 +150,21 @@ Per-request state is the other bag. `@GraphQLContext` reads `Graphix.execute(...
 to find `OrderService`, or putting `OrderService` in the operation context because it "feels
 like DI". The first is a service locator. The second makes a singleton look request-scoped.
 
-[`docs/graphix.md`](../../../docs/graphix.md) has the three columns a resolver may see.
+`intercept { }` is what fills that bag. A `GraphixInterceptor` wraps one operation — rewrite the
+request, `put` something in the context, refuse it, or shape the response — and `proceed()` is the
+rest of the chain. It returns a `Flow<GraphixResult>` whatever the operation kind, one element for
+a query and N for a subscription, so a single interceptor serves both entry points and both HTTP
+transports rather than needing a streaming twin.
+
+Which types a resolver may take unannotated is **registered, not guessed**:
+`contextParameter(SomeType::class)` says a type is supplied rather than asked for. This module
+registers none — `DataFetchingEnvironment` and graphql-java's own `GraphQLContext` are known
+because they are graphql-java's, and `ApplicationCall` and `ServerWebExchange` are registered by
+`stx-graphix-ktor` and `stx-graphix-spring`. That is why neither framework appears in this
+module's dependencies, and why a third one would be a call rather than a change here.
+
+[`docs/graphix.md`](../../../docs/graphix.md) has the full table of what a resolver may see, and
+the interceptor reference.
 
 ## What this slice does not do
 

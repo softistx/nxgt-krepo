@@ -506,13 +506,14 @@ collector is. `execute` on a subscription document throws rather than serialisin
 `Publisher` as a single JSON object.
 
 The data fetcher is not part of the public API. A resolver is a function on an instance Graphix
-already holds. What it can see is exactly three things:
+already holds. What it can see is exactly four things:
 
 | Need | Where it comes from |
 | --- | --- |
 | A Spring bean, a store, a client | The constructor (or property) of the query/mutation/type class. The data fetcher calls *that* instance |
 | Arguments from the GraphQL document | `@Argument` parameters, bound from `variables` / literals |
 | Who is calling, the locale, anything per request | `@GraphQLContext` on a parameter, filled from `execute`'s `context` map |
+| The HTTP request, the DFE, the context bag itself | A parameter of that type, with no annotation — see [Framework parameters](#framework-parameters) |
 
 A Spring `OrderService` is not GraphQL context. It is injected when Spring builds the
 `@GraphQLController`, and Graphix keeps that bean:
@@ -551,14 +552,99 @@ graphix.execute(
 )
 ```
 
-The HTTP plugins (Ktor and Spring) currently put only the operation `CoroutineScope` in that map,
-so that `suspend` resolvers run. They do not yet forward `ApplicationCall`, `ServerWebExchange` or
-Spring Security. Until they do, a per-request `Caller` has to be passed to `execute` by whoever
-owns the HTTP call — or the resolver reads it some other way.
+Both HTTP integrations fill that map on every operation — see
+[Framework parameters](#framework-parameters) — so a `Caller` is normally put there by an
+[interceptor](#interceptors) rather than by whoever calls `execute`.
+
+### Framework parameters
 
 `DataFetchingEnvironment` is not a constructor argument and not a GraphQL argument. A mapping
 that needs this field's source, arguments or DataLoader takes `dfe: DataFetchingEnvironment`
 by type — no `@GraphQLContext`.
+
+Three more types work the same way, unannotated and by type:
+
+| Type | Registered by | What it is |
+| --- | --- | --- |
+| `graphql.GraphQLContext` | Nothing — it is graphql-java's own | The whole context bag, when a resolver would rather read several keys than list them |
+| `io.ktor.server.application.ApplicationCall` | `stx-graphix-ktor`, at install | The call the operation arrived on |
+| `org.springframework.web.server.ServerWebExchange` | `stx-graphix-spring`, in the auto-configuration | The exchange the operation arrived on |
+
+```kotlin
+@QueryMapping
+fun me(call: ApplicationCall): String = call.request.headers["X-User"] ?: "anonymous"
+```
+
+The last two are **registered, not guessed**. The core names no framework type; an integration
+declares its own with `contextParameter(...)` when it builds the engine, and puts the value in the
+context on every route:
+
+```kotlin
+Graphix {
+    contextParameter(ServerWebExchange::class)   // what stx-graphix-spring does for you
+    resolvers(ProductQueries(store))
+}
+```
+
+A type nobody registered is still an error at schema build, naming the parameter — the same error a
+forgotten `@Argument` has always produced. That is what keeps a typo from being silently treated as
+context, and it is why a third stack needs one call rather than a change to Graphix.
+
+> The annotation `com.softistx.graphix.schema.GraphQLContext` and the type
+> `graphql.GraphQLContext` share a simple name. A file wanting both needs an import alias —
+> `import graphql.GraphQLContext as OperationContext` is what this repo's own sources use.
+
+A framework parameter counts as *supplied*, which matters for `@SchemaMapping`: the parent source is
+the first parameter Graphix does not supply itself, so `fun reviews(call: ApplicationCall, product:
+Product)` still resolves `Product` as the parent.
+
+## Interceptors
+
+A `GraphixInterceptor` wraps one operation. It can rewrite the request, contribute to the operation
+context, refuse the operation without calling the engine, or shape what comes back:
+
+```kotlin
+Graphix {
+    resolvers(ProductQueries(store))
+    intercept {
+        val token = call.request.headers["Authorization"]
+            ?: return@intercept flowOf(GraphixResult(null, listOf(GraphixError("unauthenticated"))))
+        put(Caller(verify(token)))
+        proceed()
+    }
+}
+```
+
+`GraphixChain` is the receiver: `request` is a `var`, `put`/`get` reach the operation context by
+`KClass`, and `proceed()` is the rest of the chain ending at the engine. Interceptors run in
+registration order, outermost first.
+
+**`proceed()` returns a `Flow<GraphixResult>` for every operation kind** — one element for a query or
+a mutation, N for a subscription. That is deliberate: `proceed().map { … }` shapes a single response
+and every subscription event with the same line, so there is no second hook to write for streaming,
+and one interceptor reads the same over POST, over SSE and over graphql-ws.
+
+The chain runs **once per operation, not once per connection**. On a graphql-ws socket that means
+every `subscribe` frame, which is what lets a credential that expires mid-socket be seen to have
+expired — the client's `connection_init` payload is in the context as `GraphqlWsInit`, re-read each
+time rather than frozen at the handshake.
+
+An interceptor may not unmake the operation: the engine's own reserved keys are written after the
+chain's, so putting something under `OperationScope` has no effect. The per-operation
+`GraphixMessages` and `GraphixLimits` overrides are honoured.
+
+Registration differs by stack:
+
+| Stack | How |
+| --- | --- |
+| Core | `intercept { }` in the `Graphix { }` builder |
+| Ktor | `intercept { }` in `install(GraphQL) { }`, and `GraphixInterceptor` in the DI container with `fromDi = true` |
+| Spring | A `GraphixInterceptor` `@Bean`; `@Order` decides which is outermost |
+
+Each integration also ships accessors for the type it owns — `GraphixChain.call`,
+`DataFetchingEnvironment.call` and `GraphQLContext.call` in Ktor, and the `exchange` twins in
+Spring — so a field directive or a resolver holding a DFE reaches the request without going through
+`graphQlContext.get(...)` by hand.
 
 ## Documents
 

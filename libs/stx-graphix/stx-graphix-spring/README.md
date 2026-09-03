@@ -33,14 +33,30 @@ class OrderMutations(
 
 The application still creates the controller bean (component scan, or an `@Bean`). This module
 collects every bean annotated `@GraphQLController` and builds one `Graphix` from them, plus
-`GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and `GraphQLEngineCustomizer`
-beans. An application's own `Graphix` bean wins (`@ConditionalOnMissingBean`).
+`GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`, `GraphixInterceptor` and
+`GraphQLEngineCustomizer` beans. Those arrive as `ObjectProvider.orderedStream()`, so `@Order`
+decides which interceptor is outermost. An application's own `Graphix` bean wins
+(`@ConditionalOnMissingBean`).
 
 **A Spring bean is the controller's constructor, not GraphQL context.** `OrderService` is injected
 when Boot builds `OrderMutations`. Graphix keeps that instance and the data fetcher calls it.
-`@GraphQLContext` is the other bag: who is calling, the locale, anything that exists only for this
-operation. The HTTP handler does not yet put `ServerWebExchange` or the security principal in
-that map — see [`docs/graphix.md`](../../../docs/graphix.md).
+What exists only for one operation comes the other way: **every operation carries its
+`ServerWebExchange`**, over POST, over SSE and over graphql-ws alike.
+
+```kotlin
+@Bean
+@Order(1)
+fun authentication() = GraphixInterceptor {
+    put(Caller(exchange.request.headers.getFirst("X-User") ?: "anonymous"))
+    proceed()
+}
+
+@QueryMapping
+fun me(exchange: ServerWebExchange): String = exchange.request.headers.getFirst("X-User") ?: "anonymous"
+```
+
+An interceptor is a bean, not a property, so there is no new `stx.graphix.*` key for it — see
+[`docs/graphix.md`](../../../docs/graphix.md) for the reference.
 
 Introspection (`{ __schema }`, `{ __type }`) is on the same path; `stx.graphix.introspection=false`
 turns it off.
