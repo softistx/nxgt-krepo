@@ -46,7 +46,10 @@ private fun Graphix.subscribeOnce(
         val scope = CoroutineScope(currentCoroutineContext() + job + CoroutineName("graphql-subscription"))
         try {
             val result =
-                engine.executeAsync(executionInput(request, context, scope, loaders, validation, introspection, messages)).await()
+                engine
+                    .executeAsync(
+                        executionInput(request, context, scope, loaders, validation, introspection, messages, maxListElements),
+                    ).await()
             val data = result.getData<Any>()
             if (data is Publisher<*>) {
                 @Suppress("UNCHECKED_CAST")

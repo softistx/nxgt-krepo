@@ -7,6 +7,7 @@ import com.softistx.graphix.fixture.GreetingQueries
 import com.softistx.graphix.fixture.Product
 import com.softistx.graphix.fixture.ProductMutations
 import com.softistx.graphix.fixture.ProductQueries
+import com.softistx.graphix.fixture.StagedQueries
 import com.softistx.graphix.schema.contextParameter
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -17,6 +18,16 @@ import kotlinx.coroutines.delay
 class ExecuteTest :
     FeatureSpec({
         feature("execute") {
+            scenario("a plain fun returning a CompletionStage is completed by graphql-java, not rewrapped") {
+                // The `else` branch of suspendFetcher hands this back as it stands. Nothing pinned
+                // that until a collecting branch was added beside it, and the comment there says
+                // what breaks: a DataLoader.load future wrapped in future { } never completes.
+                Graphix { resolvers(StagedQueries()) }
+                    .execute(GraphixRequest("{ later }"))
+                    .data
+                    ?.get("later") shouldBe "eventually"
+            }
+
             scenario("a query field returns its value") {
                 val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result = graphql.execute(GraphixRequest("{ hello }"))
