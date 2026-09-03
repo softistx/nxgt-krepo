@@ -23,20 +23,20 @@ class SdlPolymorphicTest :
 
         feature("an SDL document with abstract types") {
             scenario("a union builds with no application type resolver") {
-                val sdl = poly { query(SdlPolyQueries()) }.sdl()
+                val sdl = poly { resolvers(SdlPolyQueries()) }.sdl()
 
                 sdl shouldContain "union SearchResult"
             }
 
             scenario("an interface builds with no application type resolver") {
-                val sdl = poly { query(SdlPolyQueries()) }.sdl()
+                val sdl = poly { resolvers(SdlPolyQueries()) }.sdl()
 
                 sdl shouldContain "interface Node"
                 sdl shouldContain "type Film implements Node"
             }
 
             scenario("inline fragments select on a union") {
-                val graphql = poly { query(SdlPolyQueries()) }
+                val graphql = poly { resolvers(SdlPolyQueries()) }
                 val result =
                     graphql.execute(
                         GraphixRequest("{ search { ... on Film { title minutes } ... on Song { bpm } } }"),
@@ -48,7 +48,7 @@ class SdlPolymorphicTest :
             }
 
             scenario("__typename on a union is the runtime Kotlin class") {
-                val graphql = poly { query(SdlPolyQueries()) }
+                val graphql = poly { resolvers(SdlPolyQueries()) }
                 val result = graphql.execute(GraphixRequest("{ search { __typename } }"))
 
                 result.isOk shouldBe true
@@ -60,7 +60,7 @@ class SdlPolymorphicTest :
                 val graphql =
                     poly {
                         typeResolver("SearchResult") { "Song" }
-                        query(SdlPolyQueries())
+                        resolvers(SdlPolyQueries())
                     }
                 val result = graphql.execute(GraphixRequest("{ search { __typename } }"))
 
@@ -72,8 +72,8 @@ class SdlPolymorphicTest :
             scenario("an @SchemaMapping on an interface fans out to its implementors") {
                 val graphql =
                     poly {
-                        query(SdlPolyQueries())
-                        type(SdlNodeFields())
+                        resolvers(SdlPolyQueries())
+                        resolvers(SdlNodeFields())
                     }
                 val result = graphql.execute(GraphixRequest("{ nodes { id slug } }"))
 
@@ -85,8 +85,8 @@ class SdlPolymorphicTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         poly {
-                            query(SdlPolyQueries())
-                            type(SdlUnionFields())
+                            resolvers(SdlPolyQueries())
+                            resolvers(SdlUnionFields())
                         }
                     }
 

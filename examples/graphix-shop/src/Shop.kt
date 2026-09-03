@@ -25,11 +25,8 @@ fun Application.shop() {
     val catalog = Catalog()
     install(GraphQL) {
         sandbox = true
-        schema {
-            query(catalog)
-            mutation(catalog)
-            subscription(catalog)
-            type(catalog)
-        }
+        // One registration: Catalog's @QueryMapping, @MutationMapping, @SubscriptionMapping and
+        // @SchemaMapping functions each say what they are, so nothing here has to say it again.
+        schema { resolvers(catalog) }
     }
 }

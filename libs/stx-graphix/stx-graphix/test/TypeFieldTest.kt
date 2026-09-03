@@ -21,8 +21,8 @@ class TypeFieldTest :
             scenario("@SchemaMapping adds a field on the parent type") {
                 val sdl =
                     Graphix {
-                        query(ProductQueries())
-                        type(ProductFields())
+                        resolvers(ProductQueries())
+                        resolvers(ProductFields())
                     }.sdl()
                 sdl shouldContain "type Product"
                 sdl shouldContain "extra: String!"
@@ -34,8 +34,8 @@ class TypeFieldTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            query(ProductQueries())
-                            type(DuplicateNameFields())
+                            resolvers(ProductQueries())
+                            resolvers(DuplicateNameFields())
                         }
                     }
                 failure.message shouldContain "duplicate field 'name'"
@@ -44,8 +44,8 @@ class TypeFieldTest :
             scenario("@SchemaMapping typeName and field override the defaults") {
                 val sdl =
                     Graphix {
-                        query(ProductQueries())
-                        type(NamedSchemaFields())
+                        resolvers(ProductQueries())
+                        resolvers(NamedSchemaFields())
                     }.sdl()
                 sdl shouldContain "nick: String!"
                 sdl shouldNotContain "unused"
@@ -55,8 +55,8 @@ class TypeFieldTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            query(ProductQueries())
-                            type(BothMappings())
+                            resolvers(ProductQueries())
+                            resolvers(BothMappings())
                         }
                     }
                 failure.message shouldContain "cannot both sit"
@@ -66,8 +66,8 @@ class TypeFieldTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            query(ProductQueries())
-                            type(BadBatchFields())
+                            resolvers(ProductQueries())
+                            resolvers(BadBatchFields())
                         }
                     }
                 failure.message shouldContain "must be @Argument"
@@ -78,8 +78,8 @@ class TypeFieldTest :
             scenario("@SchemaMapping reads the parent and binds arguments") {
                 val graphql =
                     Graphix {
-                        query(ProductQueries())
-                        type(ProductFields())
+                        resolvers(ProductQueries())
+                        resolvers(ProductFields())
                     }
                 val extra = graphql.execute(GraphixRequest("""{ product(id: "p1") { extra } }"""))
                 (extra.data.shouldNotBeNull()["product"] as Map<*, *>)["extra"] shouldBe "MUG"
@@ -101,8 +101,8 @@ class TypeFieldTest :
                     )
                 val graphql =
                     Graphix {
-                        query(ProductQueries(products))
-                        type(fields)
+                        resolvers(ProductQueries(products))
+                        resolvers(fields)
                     }
                 val result = graphql.execute(GraphixRequest("{ products { name reviews { body } } }"))
                 result.isOk shouldBe true

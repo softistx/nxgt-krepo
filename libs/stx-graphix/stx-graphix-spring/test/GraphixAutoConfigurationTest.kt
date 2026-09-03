@@ -108,7 +108,7 @@ private class GreetingConfiguration {
 @Configuration
 private class OwnEngineConfiguration {
     @Bean
-    fun mine(): Graphix = Graphix { query(GreetingQueries()) }
+    fun mine(): Graphix = Graphix { resolvers(GreetingQueries()) }
 }
 
 @GraphQLController

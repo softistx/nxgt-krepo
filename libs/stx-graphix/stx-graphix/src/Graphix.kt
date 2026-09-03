@@ -10,6 +10,7 @@ import com.softistx.graphix.schema.DefaultSchemaLocations
 import com.softistx.graphix.schema.FieldDirectiveWrap
 import com.softistx.graphix.schema.GraphixDirective
 import com.softistx.graphix.schema.GraphixTypeName
+import com.softistx.graphix.schema.carriesMappings
 import com.softistx.graphix.schema.graphQLSchema
 import com.softistx.graphix.schema.loadSchemaFiles
 import com.softistx.graphix.validation.GraphixValidation
@@ -41,10 +42,12 @@ import kotlin.reflect.KClass
  *
  * ```kotlin
  * val graphix = Graphix {
- *     query(ProductQueries(store))
- *     mutation(ProductMutations(store))
- *     subscription(ProductSubscriptions(store))
- *     type(ProductFields(reviews))
+ *     resolvers(
+ *         ProductQueries(store),
+ *         ProductMutations(store),
+ *         ProductSubscriptions(store),
+ *         ProductFields(reviews),
+ *     )
  * }
  * val result = graphix.execute(GraphixRequest("{ products { name } }"))
  * graphix.subscribe(GraphixRequest("subscription { productAdded { name } }"))
@@ -105,10 +108,7 @@ class Graphix internal constructor(
 class GraphixBuilder internal constructor(
     private val json: Json,
 ) {
-    private val queries = mutableListOf<Any>()
-    private val mutations = mutableListOf<Any>()
-    private val subscriptions = mutableListOf<Any>()
-    private val types = mutableListOf<Any>()
+    private val instances = mutableListOf<Any>()
     private var resourceLocations: List<String> = DefaultSchemaLocations
     private var resourceExtensions: List<String> = DefaultSchemaExtensions
     private val customScalars = mutableListOf<GraphQLScalarType>()
@@ -121,28 +121,41 @@ class GraphixBuilder internal constructor(
     private var validation: GraphixValidation? = null
     private var messages: GraphixMessages = GraphixMessages.Bundled
 
-    /** Registers [instance]; every `@QueryMapping` function on it becomes a field on `Query`. */
-    fun query(instance: Any) {
-        queries += instance
-    }
-
-    /** Registers [instance]; every `@MutationMapping` function on it becomes a field on `Mutation`. */
-    fun mutation(instance: Any) {
-        mutations += instance
-    }
-
-    /** Registers [instance]; every `@SubscriptionMapping` function on it becomes a field on `Subscription`. */
-    fun subscription(instance: Any) {
-        subscriptions += instance
-    }
-
     /**
-     * Registers [instance]; every `@SchemaMapping` / `@BatchMapping` function becomes an extra
-     * field on its parent type. Nested `@Serializable` properties stay property getters.
-     * A field is one or the other, not both.
+     * Registers [instances]. Each one's annotated functions say what they are: `@QueryMapping`
+     * becomes a field on `Query`, `@MutationMapping` on `Mutation`, `@SubscriptionMapping` on
+     * `Subscription`, and `@SchemaMapping` / `@BatchMapping` an extra field on the parent type
+     * they name. A `dataLoader { }` property on any of them is registered too.
+     *
+     * ```kotlin
+     * Graphix {
+     *     resolvers(ProductQueries(store), ProductMutations(store), ProductFields(reviews))
+     * }
+     * ```
+     *
+     * There is **one** call because the annotation already discriminates. Asking for `query(…)`
+     * as well was asking the caller to repeat what the function had already declared, and it made
+     * a class holding both a query and a mutation something you had to register twice. A class
+     * carrying no mapping at all is a build failure naming that class — which is the mistake the
+     * old `query(NotAQuery())` used to catch.
+     *
+     * The application still **names** what it registers: this is a list of constructed objects,
+     * nothing is scanned for, and a Spring `OrderService` lives on one of their constructors.
      */
-    fun type(instance: Any) {
-        types += instance
+    fun resolvers(vararg instances: Any) {
+        resolvers(instances.asList())
+    }
+
+    fun resolvers(instances: Collection<Any>) {
+        instances.forEach { instance ->
+            if (!instance.carriesMappings()) {
+                throw GraphixException(
+                    "${instance::class.qualifiedName} has no @QueryMapping, @MutationMapping, " +
+                        "@SubscriptionMapping, @SchemaMapping or @BatchMapping function",
+                )
+            }
+            this.instances += instance
+        }
     }
 
     /**
@@ -268,10 +281,7 @@ class GraphixBuilder internal constructor(
         val files = resourceLocations.loadSchemaFiles(resourceExtensions)
         val (schema, loaders) =
             graphQLSchema(
-                queries,
-                mutations,
-                subscriptions,
-                types,
+                instances,
                 json,
                 files,
                 customScalars,

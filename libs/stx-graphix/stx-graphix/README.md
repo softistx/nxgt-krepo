@@ -5,9 +5,7 @@ GraphQL for a Kotlin coroutine service, over graphql-java 26. Annotated function
 
 ```kotlin
 val graphql = Graphix {
-    query(ProductQueries(store))
-    mutation(ProductMutations(store))
-    subscription(ProductSubscriptions(store))
+    resolvers(ProductQueries(store), ProductMutations(store), ProductSubscriptions(store))
 }
 
 val result = graphql.execute(GraphixRequest("{ product(id: \"p1\") { name } }"))
@@ -110,9 +108,16 @@ is for a document that cannot even be submitted.
 
 ## No resolver scan in core
 
-`Graphix { query(instance); mutation(instance); subscription(instance); type(instance) }`. Spring may collect `@GraphQLController` beans;
-that is the Spring module's job. A classpath walk for *classes* would make a worker with no
-Spring carry one.
+`Graphix { resolvers(productQueries, productMutations, productFields) }`. Spring may collect
+`@GraphQLController` beans; that is the Spring module's job. A classpath walk for *classes* would
+make a worker with no Spring carry one.
+
+**One call, not four.** `@QueryMapping` already says the function is a query, so a `query(...)`
+beside it was the caller repeating the annotation — and it made a class holding a query and a
+mutation something you had to register twice, or half of it disappeared. The instances are still
+**named**: what is refused here is scanning for them, not the second sentence about what they are.
+The trade is that a class is registered whole; exposing its queries but not its mutations means
+splitting the class, which is the answer SOLID would have given anyway.
 
 Schema **documents** are the other scan, and it is the Spring GraphQL one: `classpath:graphql/`,
 every `.graphqls` / `.gqls` file, merged. Present files are the schema; annotated functions

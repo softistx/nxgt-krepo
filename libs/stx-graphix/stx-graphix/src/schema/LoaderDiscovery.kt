@@ -13,18 +13,8 @@ internal fun collectDeclaredLoaders(instances: List<Any>): List<RegisteredLoader
     val result = mutableListOf<RegisteredLoader>()
     val seen = mutableSetOf<String>()
     instances.distinct().forEach { instance ->
-        instance::class.memberProperties.forEach { property ->
-            val value =
-                try {
-                    @Suppress("UNCHECKED_CAST")
-                    val typed = property as KProperty1<Any, *>
-                    typed.getter.isAccessible = true
-                    typed.get(instance)
-                } catch (_: Exception) {
-                    return@forEach
-                }
-            if (value !is Loader<*, *>) return@forEach
-            val loader = value.named(property.name)
+        instance.loaderProperties().forEach { (name, declared) ->
+            val loader = declared.named(name)
             if (loader.name.isEmpty()) {
                 throw GraphixException("a DataLoader on ${instance::class.qualifiedName} needs a name")
             }
@@ -36,6 +26,28 @@ internal fun collectDeclaredLoaders(instances: List<Any>): List<RegisteredLoader
     }
     return result
 }
+
+/**
+ * The `dataLoader { }` properties on this instance, by property name. Read through the getter and
+ * not off the declared type: a property's *value* is what registration uses, and a getter that
+ * throws is a property this is not interested in rather than a failed schema build.
+ */
+internal fun Any.loaderProperties(): List<Pair<String, Loader<*, *>>> =
+    this::class.memberProperties.mapNotNull { property ->
+        val value =
+            try {
+                @Suppress("UNCHECKED_CAST")
+                val typed = property as KProperty1<Any, *>
+                typed.getter.isAccessible = true
+                typed.get(this)
+            } catch (_: Exception) {
+                null
+            }
+        (value as? Loader<*, *>)?.let { property.name to it }
+    }
+
+/** Whether this instance declares any `dataLoader { }` — a class may hold only those. */
+internal fun Any.declaresLoader(): Boolean = loaderProperties().isNotEmpty()
 
 internal fun Loader<*, *>.toRegisteredLoader(): RegisteredLoader =
     RegisteredLoader(name) { keys, _, environment ->

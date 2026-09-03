@@ -17,7 +17,7 @@ class PolymorphicSchemaTest :
     FeatureSpec({
         feature("sealed hierarchies") {
             scenario("a sealed interface with no shared property becomes a union") {
-                val sdl = Graphix { query(MediaQueries()) }.sdl()
+                val sdl = Graphix { resolvers(MediaQueries()) }.sdl()
 
                 sdl shouldContain "union SearchHit = AuthorHit | BookHit"
                 sdl shouldContain "type BookHit"
@@ -26,7 +26,7 @@ class PolymorphicSchemaTest :
             }
 
             scenario("a sealed interface with shared properties becomes an interface") {
-                val sdl = Graphix { query(MediaQueries()) }.sdl()
+                val sdl = Graphix { resolvers(MediaQueries()) }.sdl()
 
                 sdl shouldContain "interface Media"
                 sdl shouldContain "type Film implements Media"
@@ -34,21 +34,21 @@ class PolymorphicSchemaTest :
             }
 
             scenario("@GraphQLUnion forces a union on a sealed type that has shared properties") {
-                val sdl = Graphix { query(MediaQueries()) }.sdl()
+                val sdl = Graphix { resolvers(MediaQueries()) }.sdl()
 
                 sdl shouldContain "union Payload"
                 sdl shouldNotContain "interface Payload"
             }
 
             scenario("a nested sealed level is Kotlin structure, not a member type") {
-                val sdl = Graphix { query(MediaQueries()) }.sdl()
+                val sdl = Graphix { resolvers(MediaQueries()) }.sdl()
 
                 sdl shouldContain "union Node = Folder | Leaf"
                 sdl shouldNotContain "Container"
             }
 
             scenario("union members are in the schema even though no field returns them directly") {
-                val graphql = Graphix { query(MediaQueries()) }
+                val graphql = Graphix { resolvers(MediaQueries()) }
                 val result = graphql.execute(GraphixRequest("""{ __type(name: "BookHit") { name kind } }"""))
 
                 result.isOk shouldBe true
@@ -58,8 +58,8 @@ class PolymorphicSchemaTest :
             scenario("an @SchemaMapping on an interface lands on the interface and on every implementor") {
                 val sdl =
                     Graphix {
-                        query(MediaQueries())
-                        type(MediaFields())
+                        resolvers(MediaQueries())
+                        resolvers(MediaFields())
                     }.sdl()
 
                 sdl shouldContain "slug: String!"
@@ -70,7 +70,7 @@ class PolymorphicSchemaTest :
 
         feature("a sealed level between an implementor and its interface") {
             scenario("the object declares every interface in the chain, and the middle one implements the top") {
-                val sdl = Graphix { query(TicketedQueries()) }.sdl()
+                val sdl = Graphix { resolvers(TicketedQueries()) }.sdl()
 
                 sdl shouldContain "interface Paper implements Ticketed"
                 sdl shouldContain "type Boarding implements Paper & Ticketed"
@@ -78,7 +78,7 @@ class PolymorphicSchemaTest :
             }
 
             scenario("and a value of the nested level still resolves") {
-                val graphql = Graphix { query(TicketedQueries()) }
+                val graphql = Graphix { resolvers(TicketedQueries()) }
                 val result = graphql.execute(GraphixRequest("{ ticketed { code __typename } }"))
 
                 result.isOk shouldBe true
@@ -92,20 +92,20 @@ class PolymorphicSchemaTest :
 
         feature("what a sealed type may not be") {
             scenario("a sealed type as an argument fails naming input unions") {
-                val failure = shouldThrow<GraphixException> { Graphix { query(ChoiceQueries()) } }
+                val failure = shouldThrow<GraphixException> { Graphix { resolvers(ChoiceQueries()) } }
 
                 failure.message shouldContain "GraphQL has no input unions"
             }
 
             scenario("a member with no fields fails naming the Kotlin object") {
-                val failure = shouldThrow<GraphixException> { Graphix { query(EmptyQueries()) } }
+                val failure = shouldThrow<GraphixException> { Graphix { resolvers(EmptyQueries()) } }
 
                 failure.message shouldContain "has no GraphQL fields"
                 failure.message shouldContain "Nothing"
             }
 
             scenario("an implementor may not rename a field its interface declares") {
-                val failure = shouldThrow<GraphixException> { Graphix { query(RenamedQueries()) } }
+                val failure = shouldThrow<GraphixException> { Graphix { resolvers(RenamedQueries()) } }
 
                 failure.message shouldContain "must keep the interface's field name"
             }

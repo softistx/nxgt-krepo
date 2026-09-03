@@ -110,9 +110,9 @@ private suspend fun session(
 ) {
     val engine =
         Graphix {
-            query(GreetingQueries())
-            subscription(TickSubscriptions())
-            subscription(HangSubscriptions())
+            resolvers(GreetingQueries())
+            resolvers(TickSubscriptions())
+            resolvers(HangSubscriptions())
         }
     coroutineScope {
         val outgoing = Channel<String>(Channel.BUFFERED)

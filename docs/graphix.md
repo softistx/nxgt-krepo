@@ -8,13 +8,26 @@ in the module README, which answers *why the library is shaped this way*.
 
 ## Roots
 
-| Annotation | Where | Becomes |
-| --- | --- | --- |
-| `@QueryMapping` | function on a class passed to `query(...)` | field on `Query` |
-| `@MutationMapping` | function on a class passed to `mutation(...)` | field on `Mutation` |
-| `@SubscriptionMapping` | function on a class passed to `subscription(...)` | field on `Subscription` |
-| `@SchemaMapping` | function on a class passed to `type(...)` | extra field on the parent type |
-| `@BatchMapping` | function on a class passed to `type(...)` | extra field, DataLoader — no SchemaMapping on the same field |
+Every class goes in through one call — `resolvers(...)` — and the annotation on each function says
+what it becomes:
+
+| Annotation | Becomes |
+| --- | --- |
+| `@QueryMapping` | field on `Query` |
+| `@MutationMapping` | field on `Mutation` |
+| `@SubscriptionMapping` | field on `Subscription` |
+| `@SchemaMapping` | extra field on the parent type |
+| `@BatchMapping` | extra field, DataLoader — no SchemaMapping on the same field |
+
+```kotlin
+Graphix {
+    resolvers(ProductQueries(store), ProductMutations(store), ProductFields(reviews))
+}
+```
+
+One class may carry several kinds; it is registered **once** and contributes to each. There is no
+`query(...)` / `mutation(...)` pair to keep in step with the annotations, because the annotations
+were already the answer. A class carrying no mapping at all is a build failure naming that class.
 
 The GraphQL field name is `@QueryMapping(name=…)` / `@MutationMapping(name=…)` /
 `@SubscriptionMapping(name=…)` if set, otherwise the Kotlin name. `@SchemaMapping(typeName, field)` and `@BatchMapping(typeName, field)` default
@@ -119,7 +132,7 @@ exception. Override the rule per type when the class name is not the GraphQL nam
 ```kotlin
 Graphix {
     typeResolver("SearchResult") { value -> if (value is Row) "Product" else "Review" }
-    query(SearchQueries(store))
+    resolvers(SearchQueries(store))
 }
 ```
 
@@ -223,7 +236,7 @@ source outright is one lambda, which is where `stx-i18n` goes:
 ```kotlin
 Graphix {
     messages { locale, key, args -> catalog.forLocale(locale).translate(key, args) }
-    query(ProductQueries(store))
+    resolvers(ProductQueries(store))
 }
 ```
 
@@ -266,7 +279,7 @@ Graphix {
         parseValue { input -> Money((input as String).toLong()) }
         parseLiteral { input -> Money((input as graphql.language.StringValue).value!!.toLong()) }
     }
-    query(PriceQueries())
+    resolvers(PriceQueries())
 }
 ```
 
@@ -285,7 +298,7 @@ Graphix {
         val value = proceed()
         (value as? String)?.uppercase() ?: value
     }
-    query(UpperQueries())
+    resolvers(UpperQueries())
 }
 
 class UpperQueries {
@@ -337,7 +350,7 @@ in `execute`'s context map — the same bag the `CoroutineScope` already lives i
 
 ```kotlin
 val graphql = Graphix {
-    query(ProductQueries(store))
+    resolvers(ProductQueries(store))
     validation {
         maxDepth = 8
         maxFields = 500
@@ -421,7 +434,7 @@ are its fields (`@SerialName` / `@GraphQLIgnore` still apply). A Kotlin default 
 `@Argument` parameter, or on an input-object property, is optional GraphQL.
 
 Nested object fields are the `@Serializable` properties already in memory. Extra fields that need
-I/O are `@SchemaMapping` or `@BatchMapping` on an instance passed to `type(...)`. **A given
+I/O are `@SchemaMapping` or `@BatchMapping` on a registered instance. **A given
 field is one or the other, not both.** `@BatchMapping` registers the field itself — no
 `@SchemaMapping` beside it.
 
@@ -674,6 +687,6 @@ Ktor: `schemaLocations` / `schemaFileExtensions` on `install(GraphQL)`. Spring:
 ```kotlin
 Graphix {
     schemaLocations("classpath:graphql/", "classpath:extra/")
-    query(ProductQueries(store))
+    resolvers(ProductQueries(store))
 }
 ```

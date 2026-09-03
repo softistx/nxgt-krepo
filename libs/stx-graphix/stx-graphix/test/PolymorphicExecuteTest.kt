@@ -14,7 +14,7 @@ class PolymorphicExecuteTest :
     FeatureSpec({
         feature("abstract types at execute time") {
             scenario("an inline fragment selects the fields of the runtime type") {
-                val graphql = Graphix { query(MediaQueries()) }
+                val graphql = Graphix { resolvers(MediaQueries()) }
                 val result =
                     graphql.execute(
                         GraphixRequest("{ search { ... on BookHit { title } ... on AuthorHit { name } } }"),
@@ -25,7 +25,7 @@ class PolymorphicExecuteTest :
             }
 
             scenario("__typename on a union is the runtime Kotlin class") {
-                val graphql = Graphix { query(MediaQueries()) }
+                val graphql = Graphix { resolvers(MediaQueries()) }
                 val result = graphql.execute(GraphixRequest("{ search { __typename } }"))
 
                 result.isOk shouldBe true
@@ -34,7 +34,7 @@ class PolymorphicExecuteTest :
             }
 
             scenario("__typename on an interface is the implementor, never the interface") {
-                val graphql = Graphix { query(MediaQueries()) }
+                val graphql = Graphix { resolvers(MediaQueries()) }
                 val result = graphql.execute(GraphixRequest("{ media { __typename } }"))
 
                 result.isOk shouldBe true
@@ -43,7 +43,7 @@ class PolymorphicExecuteTest :
             }
 
             scenario("interface fields are readable without a fragment, specific ones with one") {
-                val graphql = Graphix { query(MediaQueries()) }
+                val graphql = Graphix { resolvers(MediaQueries()) }
                 val result =
                     graphql.execute(GraphixRequest("{ media { id title ... on Film { minutes } } }"))
 
@@ -56,8 +56,8 @@ class PolymorphicExecuteTest :
             scenario("an interface-level @SchemaMapping runs for every implementor") {
                 val graphql =
                     Graphix {
-                        query(MediaQueries())
-                        type(MediaFields())
+                        resolvers(MediaQueries())
+                        resolvers(MediaFields())
                     }
                 val result = graphql.execute(GraphixRequest("{ media { slug } }"))
 
@@ -68,9 +68,9 @@ class PolymorphicExecuteTest :
             scenario("a mapping on the implementor wins over the one it inherits") {
                 val graphql =
                     Graphix {
-                        query(MediaQueries())
-                        type(FilmOverrideFields())
-                        type(MediaFields())
+                        resolvers(MediaQueries())
+                        resolvers(FilmOverrideFields())
+                        resolvers(MediaFields())
                     }
                 val result = graphql.execute(GraphixRequest("{ media { slug } }"))
 
@@ -81,9 +81,9 @@ class PolymorphicExecuteTest :
             scenario("and still wins when the interface mapping is registered first") {
                 val graphql =
                     Graphix {
-                        query(MediaQueries())
-                        type(MediaFields())
-                        type(FilmOverrideFields())
+                        resolvers(MediaQueries())
+                        resolvers(MediaFields())
+                        resolvers(FilmOverrideFields())
                     }
                 val result = graphql.execute(GraphixRequest("{ media { slug } }"))
 
@@ -94,7 +94,7 @@ class PolymorphicExecuteTest :
 
         feature("type resolution") {
             scenario("a value the schema never heard of is a GraphQL error, not a crash") {
-                val graphql = Graphix { query(StrayQueries()) }
+                val graphql = Graphix { resolvers(StrayQueries()) }
                 val result = graphql.execute(GraphixRequest("{ search { __typename } }"))
 
                 result.isOk shouldBe false
@@ -105,7 +105,7 @@ class PolymorphicExecuteTest :
                 val graphql =
                     Graphix {
                         typeResolver("SearchHit") { "AuthorHit" }
-                        query(MediaQueries())
+                        resolvers(MediaQueries())
                     }
                 val result = graphql.execute(GraphixRequest("{ search { __typename } }"))
 

@@ -19,8 +19,8 @@ class DeclaredLoaderTest :
             scenario("dataLoader SchemaMapping fields appear on the parent type") {
                 val sdl =
                     Graphix {
-                        query(BookQueries())
-                        type(BookFields())
+                        resolvers(BookQueries())
+                        resolvers(BookFields())
                     }.sdl()
                 sdl shouldContain "type Book"
                 sdl shouldContain "author: Author"
@@ -31,8 +31,8 @@ class DeclaredLoaderTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            query(BookQueries())
-                            type(DuplicateNamedLoaders())
+                            resolvers(BookQueries())
+                            resolvers(DuplicateNamedLoaders())
                         }
                     }
                 failure.message shouldContain "duplicate DataLoader 'authorsById'"
@@ -44,8 +44,8 @@ class DeclaredLoaderTest :
                 val fields = BookFields()
                 val graphql =
                     Graphix {
-                        query(BookQueries())
-                        type(fields)
+                        resolvers(BookQueries())
+                        resolvers(fields)
                     }
                 val one = graphql.execute(GraphixRequest("{ book { title author { name } } }"))
                 one.errors.shouldBeEmpty()
@@ -57,8 +57,8 @@ class DeclaredLoaderTest :
                 val fields = BookFields()
                 val graphql =
                     Graphix {
-                        query(BookQueries())
-                        type(fields)
+                        resolvers(BookQueries())
+                        resolvers(fields)
                     }
                 val result = graphql.execute(GraphixRequest("{ books { title author { name } } }"))
                 result.errors.shouldBeEmpty()
@@ -73,8 +73,8 @@ class DeclaredLoaderTest :
                 val fields = BookFields()
                 val graphql =
                     Graphix {
-                        query(BookQueries())
-                        type(fields)
+                        resolvers(BookQueries())
+                        resolvers(fields)
                     }
                 val result = graphql.execute(GraphixRequest("{ books { snippets(limit: 3) } }"))
                 result.errors.shouldBeEmpty()
@@ -87,8 +87,8 @@ class DeclaredLoaderTest :
                 val fields = EnvBookFields()
                 val graphql =
                     Graphix {
-                        query(BookQueries())
-                        type(fields)
+                        resolvers(BookQueries())
+                        resolvers(fields)
                     }
                 val result = graphql.execute(GraphixRequest("{ books { author { name } } }"))
                 result.errors.shouldBeEmpty()
@@ -101,8 +101,8 @@ class DeclaredLoaderTest :
                 val fields = DelayedBookFields()
                 val graphql =
                     Graphix {
-                        query(BookQueries())
-                        type(fields)
+                        resolvers(BookQueries())
+                        resolvers(fields)
                     }
                 val result = graphql.execute(GraphixRequest("{ books { author { name } } }"))
                 result.errors.shouldBeEmpty()

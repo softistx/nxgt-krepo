@@ -16,12 +16,15 @@ import graphql.schema.PropertyDataFetcher
 import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
 
-/** Builds the graphql-java schema from named roots and type fields. Needs at least one `@QueryMapping`. */
+/**
+ * Builds the graphql-java schema from the registered [instances]. Every one is offered to every
+ * root and to the type-field collector; the annotation on each function decides where it lands, so
+ * a class holding a query and a mutation is registered once and contributes to both.
+ *
+ * Needs at least one `@QueryMapping` among them — GraphQL has no schema without a query root.
+ */
 internal fun graphQLSchema(
-    queries: List<Any>,
-    mutations: List<Any>,
-    subscriptions: List<Any>,
-    typeInstances: List<Any>,
+    instances: List<Any>,
     json: Json,
     schemaFiles: List<SchemaFile> = emptyList(),
     customScalars: List<GraphQLScalarType> = emptyList(),
@@ -30,13 +33,10 @@ internal fun graphQLSchema(
     typeResolvers: Map<String, GraphixTypeName> = emptyMap(),
     builtInScalars: Boolean = true,
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
-    if (queries.isEmpty()) throw GraphixException("Graphix needs at least one query root")
+    if (instances.isEmpty()) throw GraphixException("Graphix needs at least one query root")
     if (schemaFiles.isNotEmpty()) {
         return schemaFiles.sdlSchema(
-            queries,
-            mutations,
-            subscriptions,
-            typeInstances,
+            instances,
             json,
             customScalars,
             fieldDirectives,
@@ -44,28 +44,22 @@ internal fun graphQLSchema(
             builtInScalars,
         )
     }
-    val typeFields = collectTypeFields(typeInstances)
+    val typeFields = collectTypeFields(instances)
     val types = TypeMapper(json.serializersModule, typeFields.groupBy { it.parentName }, kotlinScalars)
     val query =
-        root("Query", RootKind.QUERY, queries, types) { instance, function ->
+        root("Query", RootKind.QUERY, instances, types) { instance, function ->
             resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives)
         } ?: throw GraphixException("Graphix needs at least one query root")
+    // `null` from either is a schema without that root: no registered function was annotated for
+    // it. Query is the one GraphQL insists on, which is why only it turns null into a failure.
     val mutation =
-        if (mutations.isEmpty()) {
-            null
-        } else {
-            root("Mutation", RootKind.MUTATION, mutations, types) { instance, function ->
-                resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives)
-            }
+        root("Mutation", RootKind.MUTATION, instances, types) { instance, function ->
+            resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives)
         }
     val subscription =
-        if (subscriptions.isEmpty()) {
-            null
-        } else {
-            root("Subscription", RootKind.SUBSCRIPTION, subscriptions, types) { instance, function ->
-                subscriptionFetcher(instance, function) { env -> bindArguments(function, env, json) }
-                    .withDirectives(function, fieldDirectives)
-            }
+        root("Subscription", RootKind.SUBSCRIPTION, instances, types) { instance, function ->
+            subscriptionFetcher(instance, function) { env -> bindArguments(function, env, json) }
+                .withDirectives(function, fieldDirectives)
         }
     typeFields.forEach { types.output(it.parentType) }
     val registry =
@@ -123,7 +117,7 @@ internal fun graphQLSchema(
         } catch (failure: Exception) {
             throw GraphixException("cannot build GraphQL schema: ${failure.message}", failure)
         }
-    val declared = collectDeclaredLoaders(queries + mutations + subscriptions + typeInstances)
+    val declared = collectDeclaredLoaders(instances)
     val batched = typeFields.filter { it.batched }.map { it.toRegisteredLoader(json) }
     val names = mutableSetOf<String>()
     (declared + batched).forEach { loader ->

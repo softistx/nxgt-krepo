@@ -30,10 +30,6 @@ fun Application.oauth() {
     install(GraphQL) {
         sandbox = true
         builtInScalars = true
-        schema {
-            query(permission)
-            mutation(permission)
-            type(permission)
-        }
+        schema { resolvers(permission) }
     }
 }
