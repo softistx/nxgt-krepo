@@ -4,10 +4,15 @@ import com.softistx.common.serialization.lenientJson
 import com.softistx.graphix.*
 import com.softistx.graphix.http.SubscriptionProtocol
 import com.softistx.graphix.http.apolloSandboxPage
+import com.softistx.graphix.intercept.GraphixChain
+import com.softistx.graphix.intercept.GraphixInterceptor
+import com.softistx.graphix.intercept.intercept
+import com.softistx.graphix.schema.contextParameter
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.util.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import graphql.GraphQL as GraphQLEngine
 
@@ -30,18 +35,34 @@ import graphql.GraphQL as GraphQLEngine
  * [instance] adopts an engine built elsewhere and is not closed — there is nothing to close on
  * graphql-java. The plugin only registers routes.
  *
+ * **Every operation carries its [ApplicationCall]**, over POST, over SSE and over graphql-ws alike,
+ * so a resolver takes one as a parameter and an interceptor reads it as [GraphixChain.call]. See
+ * [GraphQLConfiguration.intercept].
+ *
  * **Installing it registers the engine with Ktor's DI**, so a class the container builds takes a
  * [Graphix] in its constructor. See [provideGraphix].
  */
 val GraphQL =
     createApplicationPlugin(name = "GraphQL", createConfiguration = ::GraphQLConfiguration) {
+        val adopted = pluginConfig.instance
+        // A configuration field the plugin quietly ignores is worse than one it refuses: nothing
+        // fails, and the interceptor in the file is not the interceptor in force. Interceptors live
+        // on the engine, so an adopted one carries whatever was registered where it was built.
+        if (adopted != null && pluginConfig.interceptors.isNotEmpty()) {
+            error("install(GraphQL) got both instance and intercept { } — register interceptors where that engine is built")
+        }
         val engine =
-            pluginConfig.instance
+            adopted
                 ?: Graphix(pluginConfig.json) {
                     schemaLocations(pluginConfig.schemaLocations)
                     schemaFileExtensions(pluginConfig.schemaFileExtensions)
                     introspection(pluginConfig.introspection)
                     builtInScalars(pluginConfig.builtInScalars)
+                    // The call is the framework parameter this plugin owns: every route puts one in
+                    // the operation context, so registering it here is what makes a resolver taking
+                    // an ApplicationCall build instead of being told it needs @Argument.
+                    contextParameter(ApplicationCall::class)
+                    pluginConfig.interceptors.forEach { intercept(it) }
                     val block = pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance")
                     block()
                     pluginConfig.customizeBlock?.invoke(this)
@@ -126,15 +147,16 @@ class GraphQLConfiguration {
     var schemaFileExtensions: List<String> = listOf(".graphqls", ".gqls")
 
     /**
-     * Pull [GraphixCustomizer], scalars and field directives from Ktor DI — the same
-     * beans Spring collects. Off by default: what shapes the schema should be visible in the
-     * `schema { }` block rather than assembled from whatever the container happens to hold.
+     * Pull [GraphixCustomizer], scalars, field directives and [GraphixInterceptor]s from Ktor DI —
+     * the same beans Spring collects. Off by default: what shapes the schema should be visible in
+     * the `schema { }` block rather than assembled from whatever the container happens to hold.
      */
     var fromDi: Boolean = false
 
     internal var schemaBlock: (GraphixBuilder.() -> Unit)? = null
     internal var customizeBlock: (GraphixBuilder.() -> Unit)? = null
     internal var engineBlock: GraphQLEngineCustomizer? = null
+    internal val interceptors = mutableListOf<GraphixInterceptor>()
 
     /**
      * Builds the engine at install. Query/mutation/subscription instances passed here are
@@ -148,6 +170,39 @@ class GraphQLConfiguration {
     /** Extra [GraphixBuilder] configuration after [schema], same role as a Spring [GraphixCustomizer] bean. */
     fun customize(block: GraphixBuilder.() -> Unit) {
         customizeBlock = block
+    }
+
+    /**
+     * Wraps every operation: read the [ApplicationCall], put something in the operation context,
+     * refuse the request, or shape the response.
+     *
+     * ```kotlin
+     * install(GraphQL) {
+     *     intercept {
+     *         val user = call.principal<UserIdPrincipal>()
+     *             ?: return@intercept flowOf(GraphixResult(null, listOf(GraphixError("unauthenticated"))))
+     *         put(user)
+     *         proceed()
+     *     }
+     *     schema { resolvers(ProductQueries(store)) }
+     * }
+     * ```
+     *
+     * Blocks run in the order they are written, outermost first, ahead of anything `schema { }` or
+     * [fromDi] registers. Each runs **once per operation** — so on a graphql-ws socket it sees every
+     * `subscribe` frame, not just the handshake, and a credential that expires mid-socket is seen to
+     * have expired.
+     *
+     * Cannot be combined with [instance]: interceptors live on the engine, and an adopted one
+     * carries whatever was registered where it was built. The install refuses rather than ignoring.
+     */
+    fun intercept(block: suspend GraphixChain.() -> Flow<GraphixResult>) {
+        interceptors += GraphixInterceptor { block() }
+    }
+
+    /** [intercept], with an interceptor written as a class. */
+    fun intercept(interceptor: GraphixInterceptor) {
+        interceptors += interceptor
     }
 
     /** graphql-java [GraphQLEngine.Builder] after the schema is built. */
