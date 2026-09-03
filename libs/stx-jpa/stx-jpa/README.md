@@ -324,6 +324,13 @@ Vert.x pool.
 
 So the shape of a read in this library is: mark it lazy, say what you want, and get one statement.
 
+The one exception is shaped like a DataLoader, and it is a mapping choice rather than a query one. A
+caller who cannot know at query time whether an association will be read — a GraphQL resolver, which
+loads the parents before the child field is resolved — maps the foreign key a second time as a
+read-only column and keys on that. It costs no statement, because the value is already in the row
+that loaded the owner. `docs/jpa-mapping.md` has the mapping and the two flags it cannot go
+without.
+
 ```kotlin
 val criteria = session.createQuery<Purchase>()
 val purchase = criteria.from(Purchase::class.java)

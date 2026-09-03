@@ -143,6 +143,12 @@ N+1 by another name: three rows pointing at three different owners cost **three 
 with JPA's `@ManyToOne` default and **none** with a fetch join, which is what `FetchJoinTest` counts
 off Hibernate's own `entityFetchCount`.
 
+A fetch join is the answer when the query knows what will be read. A GraphQL query does not — the
+parents are loaded before anything knows whether the child field was selected — so fetching always
+loads what nobody asked for. There the answer is a mapping rather than a query: the foreign key read
+a second time as a plain column, which costs no statement and is what a `@BatchMapping` keys its
+DataLoader on. [`docs/jpa-mapping.md`](jpa-mapping.md) has it, including the way it goes stale.
+
 The rules, each pinned by a spec:
 
 - **They default to `JoinType.LEFT`**, where `join`/`joinEach` default to `INNER`. A join is a

@@ -1,5 +1,6 @@
 package com.softistx.jpa.entity
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
@@ -42,6 +43,21 @@ class Purchase(
     /** Comparable, sortable by the DSL's types, and not a column — which `PagingTest` needs. */
     @Transient
     val label: String = ""
+
+    /**
+     * The association's own column, read a second time as a plain value.
+     *
+     * `insertable = false, updatable = false` is not decoration: it is what makes this a second
+     * *view* of one column rather than a second column, and [RepeatedPurchase] is what happens
+     * without it.
+     * `customer` stays the writable side; this one is never written back, which is the trap
+     * `ForeignKeyColumnTest` pins.
+     *
+     * It exists because reading `customer` to learn its id is exactly the throw a caller is trying
+     * to avoid — a `@BatchMapping` keying a DataLoader has nothing else to key on.
+     */
+    @Column(name = "customer_id", insertable = false, updatable = false)
+    var customerId: Long? = null
 }
 
 @Entity

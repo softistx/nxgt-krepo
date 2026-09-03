@@ -83,19 +83,6 @@ class FetchJoinTest :
                     }
             }
 
-        /**
-         * How many entities [block] made Hibernate go back for — the N+1, counted.
-         *
-         * `prepareStatementCount` is the obvious counter and reads zero: it is a JDBC metric and
-         * there is no JDBC under the Vert.x pool. `entityFetchCount` counts the loads a query did
-         * not ask for, which is the number this feature exists to move.
-         */
-        suspend fun <T> Jpa.secondaryFetches(block: suspend (Jpa) -> T): Long {
-            factory.statistics.clear()
-            block(this)
-            return factory.statistics.entityFetchCount
-        }
-
         feature("a to-one fetch").config(enabled = JpaTestDatabase.available) {
             scenario("costs no secondary fetch, where the eager default costs one per distinct owner") {
                 seeded { jpa ->
