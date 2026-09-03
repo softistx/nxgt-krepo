@@ -92,12 +92,12 @@ internal fun List<SchemaFile>.sdlSchema(
         wire(field.parentName, field.fieldName, fetcher)
         implementors.forEach { wire(it, field.fieldName, fetcher) }
     }
-    val wiring =
-        RuntimeWiring
-            .newRuntimeWiring()
-            .scalar(Scalars.Long)
-            .scalar(Scalars.Instant)
-            .scalar(Scalars.Uuid)
+    val wiring = RuntimeWiring.newRuntimeWiring()
+    // Every built-in is wired, so a document may declare `scalar LocalDate` and stop there. The
+    // application's own scalars are wired after, and a name it defines itself is its own: a schema
+    // that already has a `Locale` scalar keeps the meaning it gave that name.
+    val defined = customScalars.mapTo(mutableSetOf()) { it.name }
+    Scalars.All.filterNot { it.name in defined }.forEach { wiring.scalar(it) }
     customScalars.forEach { wiring.scalar(it) }
     fieldDirectives.forEach { (name, wrap) ->
         wiring.directive(name, GraphixDirective(name, wrap).toSchemaWiring())

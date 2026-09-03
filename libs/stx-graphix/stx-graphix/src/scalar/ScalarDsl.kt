@@ -100,6 +100,22 @@ fun graphQLScalar(
         ).build()
 }
 
+/**
+ * Registers the built-in scalars that are not reached by a Kotlin type — the bounded ones:
+ *
+ * ```kotlin
+ * Graphix {
+ *     scalars(Scalars.PositiveInt, Scalars.NonNegativeInt)
+ *     query(CatalogQueries(store))
+ * }
+ * ```
+ *
+ * A scalar a field already uses needs no call: `Instant` arrives with the first `Instant` field.
+ */
+fun GraphixBuilder.scalars(vararg types: GraphQLScalarType) {
+    types.forEach { scalar(it) }
+}
+
 /** Registers [type]. [kotlinType] is how an annotated field of that class becomes this scalar. */
 fun GraphixBuilder.scalar(
     type: GraphQLScalarType,
