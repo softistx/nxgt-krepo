@@ -5,6 +5,12 @@ type Permission @annotate(name: "Serializable", type: "serialization") {
     metadata: AuditMetadata!
 }
 
+type PermissionEvent @annotate(name: "Serializable", type: "serialization")  {
+    id: ID!
+    data: Permission
+    type: EventType!
+}
+
 input CreatePermissionInput @annotate(name: "Serializable", type: "serialization") {
     name: String!
     description: String
@@ -24,4 +30,8 @@ type Mutation {
     createPermission(input: CreatePermissionInput!): Permission!
     updatePermission(id: ID!, input: UpdatePermissionInput!): Permission!
     deletePermission(id: ID!): Boolean!
+}
+
+type Subscription {
+    permissionChanged: PermissionEvent!
 }

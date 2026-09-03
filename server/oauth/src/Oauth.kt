@@ -18,9 +18,9 @@ fun main() {
 fun Application.oauth() {
     configureDependencyInjection()
     configureDatabase()
+    configureSockets()
     configureGraphQL()
     configureValidation()
-    configureSockets()
     configureTemplating()
     configureSerialization()
     configureHTTP()
