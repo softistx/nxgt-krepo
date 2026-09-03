@@ -3,6 +3,12 @@ package com.softistx.graphix.spring
 import com.softistx.graphix.GraphQLEngineCustomizer
 import com.softistx.graphix.Graphix
 import com.softistx.graphix.GraphixCustomizer
+import com.softistx.graphix.GraphixError
+import com.softistx.graphix.error.GraphixErrorScope
+import com.softistx.graphix.error.GraphixErrorType.BAD_REQUEST
+import com.softistx.graphix.error.GraphixExceptionHandler
+import com.softistx.graphix.error.withErrorType
+import com.softistx.graphix.error.withMessage
 import com.softistx.graphix.intercept.GraphixInterceptor
 import com.softistx.graphix.intercept.get
 import com.softistx.graphix.intercept.put
@@ -131,6 +137,28 @@ class GraphixAutoConfigurationTest :
                     }
             }
 
+            scenario("GraphixExceptionHandler beans decide what a throw becomes") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true")
+                    .withUserConfiguration(ErrorConfiguration::class.java)
+                    .run { context ->
+                        WebTestClient
+                            .bindToRouterFunction(context.getBean("graphixRouter") as RouterFunction<*>)
+                            .build()
+                            .post()
+                            .uri("/graphql")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue("""{"query":"{ boom }"}""")
+                            .exchange()
+                            .expectBody<String>()
+                            .value {
+                                it shouldContain "handled by the bean: nope"
+                                // The classification reaches a client only through extensions.
+                                it shouldContain "BAD_REQUEST"
+                            }
+                    }
+            }
+
             scenario("GraphQLEngineCustomizer beans reach graphql-java's own builder") {
                 runner
                     .withPropertyValues("stx.graphix.enabled=true")
@@ -249,6 +277,28 @@ private object TaggedHandler : DataFetcherExceptionHandler {
         CompletableFuture.completedFuture(
             DataFetcherExceptionHandlerResult.newResult().error(TaggedError).build(),
         )
+}
+
+@Configuration
+private class ErrorConfiguration {
+    @Bean
+    fun boom() = BoomQueries()
+
+    @Bean
+    fun errors(): GraphixExceptionHandler = BeanErrors()
+}
+
+/**
+ * A bean implementing the interface, so `ObjectProvider<GraphixExceptionHandler>` has something to
+ * find. `@Order` decides which of several is asked first, exactly as it does for interceptors.
+ */
+private class BeanErrors : GraphixExceptionHandler {
+    override suspend fun GraphixErrorScope.handle(failure: Throwable): GraphixError? =
+        if (failure is IllegalStateException) {
+            error.withMessage("handled by the bean: ${failure.message}").withErrorType(BAD_REQUEST)
+        } else {
+            null
+        }
 }
 
 @Configuration

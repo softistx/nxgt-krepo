@@ -6,6 +6,8 @@ import com.softistx.graphix.Graphix
 import com.softistx.graphix.GraphixCustomizer
 import com.softistx.graphix.customize
 import com.softistx.graphix.engine
+import com.softistx.graphix.error.GraphixExceptionHandler
+import com.softistx.graphix.error.exceptionHandler
 import com.softistx.graphix.http.apolloSandboxPage
 import com.softistx.graphix.intercept.GraphixChain
 import com.softistx.graphix.intercept.GraphixInterceptor
@@ -62,6 +64,7 @@ class GraphixAutoConfiguration {
         customizers: ObjectProvider<GraphixCustomizer>,
         interceptors: ObjectProvider<GraphixInterceptor>,
         engines: ObjectProvider<GraphQLEngineCustomizer>,
+        exceptionHandlers: ObjectProvider<GraphixExceptionHandler>,
     ): Graphix {
         val controllers = applicationContext.getBeansWithAnnotation<GraphQLController>().values
         return Graphix {
@@ -79,6 +82,7 @@ class GraphixAutoConfiguration {
             customizers.orderedStream().forEach { customize(it) }
             interceptors.orderedStream().forEach { intercept(it) }
             engines.orderedStream().forEach { engine(it) }
+            exceptionHandlers.orderedStream().forEach { exceptionHandler(it) }
         }
     }
 

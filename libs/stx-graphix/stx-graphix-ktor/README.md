@@ -39,9 +39,26 @@ being the only request a socket has; what changes mid-socket arrives in the clie
 `connection_init` payload instead. [`docs/graphix.md`](../../../docs/graphix.md) has the full
 table of what a resolver may see and the interceptor reference.
 
-`instance` and `intercept { }` cannot both apply: interceptors live on the engine, so an adopted
-one carries whatever was registered where it was built. The install refuses rather than ignoring
-the blocks — a configuration field a framework quietly ignores is worse than one it refuses.
+`errors { }` says what a thrown exception becomes, and `exceptionHandler(...)` registers one
+written as a class:
+
+```kotlin
+install(GraphQL) {
+    errors {
+        on<ProductNotFound> { failure -> error.withMessage("No product ${failure.id}").withErrorType(NOT_FOUND) }
+        fallback { error.withMessage("Internal error").withErrorType(INTERNAL_ERROR) }
+    }
+    schema { resolvers(ProductQueries(store)) }
+}
+```
+
+Unlike Spring and Koin, nothing is collected here: Ktor DI answers *"give me the T"*, not *"give me
+every T"*, which is the same reason `fromDi` is gone. Handlers are written where the engine is.
+
+`instance` and `intercept { }` cannot both apply, and neither can `instance` and `errors { }`:
+interceptors and handlers live on the engine, so an adopted one carries whatever was registered
+where it was built. The install refuses rather than ignoring the blocks — a configuration field a
+framework quietly ignores is worse than one it refuses.
 
 **Whoever created it closes it** still holds, and here it is almost nothing: graphql-java has no
 socket. `instance` adopts an engine a container already built; the plugin does not close it.

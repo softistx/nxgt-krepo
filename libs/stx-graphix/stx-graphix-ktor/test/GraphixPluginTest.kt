@@ -1,6 +1,11 @@
 package com.softistx.graphix.ktor
 
+import com.softistx.graphix.Graphix
 import com.softistx.graphix.GraphixCustomizer
+import com.softistx.graphix.error.GraphixErrorType.BAD_REQUEST
+import com.softistx.graphix.error.on
+import com.softistx.graphix.error.withErrorType
+import com.softistx.graphix.error.withMessage
 import com.softistx.graphix.http.GRAPHQL_TRANSPORT_WS
 import com.softistx.graphix.http.SubscriptionProtocol
 import com.softistx.graphix.ktor.fixture.BoomQueries
@@ -9,6 +14,7 @@ import com.softistx.graphix.ktor.fixture.GreetingQueries
 import com.softistx.graphix.ktor.fixture.TickSubscriptions
 import com.softistx.graphix.scalar.graphQLScalar
 import com.softistx.graphix.scalar.scalar
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -251,10 +257,7 @@ class GraphixPluginTest :
 
         feature("instance") {
             scenario("an engine built elsewhere is the one the route uses") {
-                val engine =
-                    com.softistx.graphix.Graphix {
-                        resolvers(GreetingQueries())
-                    }
+                val engine = Graphix { resolvers(GreetingQueries()) }
                 testApplication {
                     application {
                         install(GraphQL) { instance = engine }
@@ -265,6 +268,50 @@ class GraphixPluginTest :
                             setBody("""{"query":"{ hello }"}""")
                         }.bodyAsText() shouldContain "world"
                 }
+            }
+        }
+
+        feature("errors { }") {
+            scenario("a handler installed with the plugin decides what a throw becomes") {
+                testApplication {
+                    application {
+                        install(GraphQL) {
+                            schema { resolvers(BoomQueries()) }
+                            errors {
+                                on<IllegalStateException> { failure ->
+                                    error.withMessage("caught ${failure.message}").withErrorType(BAD_REQUEST)
+                                }
+                            }
+                        }
+                    }
+                    val body =
+                        client
+                            .post("/graphql") {
+                                contentType(ContentType.Application.Json)
+                                setBody("""{"query":"{ boom }"}""")
+                            }.bodyAsText()
+
+                    body shouldContain "caught nope"
+                    // The classification reaches the wire through extensions, which is the only
+                    // place the GraphQL spec has for it.
+                    body shouldContain "BAD_REQUEST"
+                }
+            }
+
+            scenario("with an adopted instance it is refused, the way intercept { } is") {
+                val engine = Graphix { resolvers(GreetingQueries()) }
+
+                shouldThrow<IllegalStateException> {
+                    testApplication {
+                        application {
+                            install(GraphQL) {
+                                instance = engine
+                                errors { fallback { error.withMessage("never") } }
+                            }
+                        }
+                        client.get("/graphql")
+                    }
+                }.message shouldContain "register handlers where that engine is built"
             }
         }
 

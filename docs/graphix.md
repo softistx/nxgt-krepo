@@ -663,6 +663,100 @@ Each integration also ships accessors for the type it owns — `GraphixChain.cal
 Spring — so a field directive or a resolver holding a DFE reaches the request without going through
 `graphQlContext.get(...)` by hand.
 
+## Exception handlers
+
+A resolver that throws becomes an error in `errors[]` carrying the exception's own message. That is
+rarely what a client should read, and never what it should be *classified* as. An
+`errors { }` block is where an application says otherwise:
+
+```kotlin
+Graphix {
+    resolvers(ProductQueries(store))
+    errors {
+        on<ProductNotFound> { failure -> error.withMessage("No product ${failure.id}").withErrorType(NOT_FOUND) }
+        on<AccessDenied> { error.withErrorType(FORBIDDEN) }
+        fallback { error.withMessage("Internal error").withErrorType(INTERNAL_ERROR) }
+    }
+}
+```
+
+`error` is the error **as it already stands** — message from the unwrapped exception, `path` and
+`locations` already filled from the failing field — so a handler that only classifies restates
+nothing. It is a `data class`, and the `withX` extensions are names for its copies:
+`withMessage`, `withErrorType` (a `GraphixErrorType` or any string), `withExtension`,
+`withExtensions`, `withPath`, `withLocations`. This is Spring GraphQL's
+`@GraphQlExceptionHandler(GraphqlErrorBuilder<?>, Exception)` slot, in immutable form.
+
+Blocks are `suspend` and run on the operation's scope, so a handler that has to ask a service what
+the error should say can do it without blocking the engine thread. The receiver also carries
+`environment` (the `DataFetchingEnvironment`, `null` outside a field), `get<T>()` for the operation
+context, and `message(key, args)` for the operation's locale and `GraphixMessages` — a
+handler's message is localised the way a coercion error already is.
+
+**Returning `null` means *not mine*.** The next handler is asked. **Nothing changes until a handler
+claims it:** an exception nobody claims keeps exactly the answer it would have had, because
+registering a handler for one exception type is not a decision about every other one.
+`fallback { }` is how an application says it wants all of them, and it is asked last whatever the
+registration order — it has to be, since handlers arriving from a container have no order anyone
+controls.
+
+**Order decides**, the way it already does for interceptors: each handler is asked in turn and the
+first to answer wins. A handler for a specific exception goes in *before* a broader one that would
+also claim it — `on<SmallBoom>` before `on<Boom>`, not after.
+
+Written as a class rather than a block, a handler is a `GraphixExceptionHandler` — one interface,
+one function, branching on the exception itself:
+
+```kotlin
+@Singleton                                   // or a Spring @Component / @Bean
+class CatalogErrors : GraphixExceptionHandler {
+    override suspend fun GraphixErrorScope.handle(failure: Throwable): GraphixError? =
+        when (failure) {
+            is ProductNotFound -> error.withMessage("No product ${failure.id}").withErrorType(NOT_FOUND)
+            is AccessDenied -> error.withErrorType(FORBIDDEN)
+            else -> null
+        }
+}
+```
+
+There is one mechanism, not two: `on<T> { }` is sugar over a handler that declines anything but `T`.
+A single function is what a container can be asked for — `getAll<T>()`, `ObjectProvider<T>` — and it
+is what lets the same handler be registered by hand, from a block, or found as a bean.
+
+| Stack | How |
+| --- | --- |
+| Core | `errors { }` in the `Graphix { }` builder, or `exceptionHandler(…)` |
+| Ktor | `errors { }` / `exceptionHandler(…)` in `install(GraphQL) { }` — refused beside `instance`, since handlers live on the engine |
+| Spring | A `GraphixExceptionHandler` `@Bean`; `@Order` decides which is asked first |
+| Koin | A `GraphixExceptionHandler` single, collected by `fromKoin()` |
+
+`GraphixErrorType` is the vocabulary Spring GraphQL uses — `BAD_REQUEST`, `UNAUTHORIZED`,
+`FORBIDDEN`, `NOT_FOUND`, `INTERNAL_ERROR` — and `withErrorType(String)` takes anything else, since
+graphql-java's own classifications (`ValidationError`, `DataFetchingException`) are strings too. It
+reaches a client through `extensions.classification`, which is the only place the GraphQL spec has
+for it, and only when the key is not already there — the rule graphql-java's own serializer follows.
+
+### Where a throw is caught
+
+Three places, because a throw does not always have a field to fail:
+
+| Where | What reaches the handler |
+| --- | --- |
+| A resolver, a type field, a `@BatchMapping`, a subscription event | Yes — this is graphql-java's `DataFetcherExceptionHandler` seat. Both a plain function's `InvocationTargetException` and a `suspend` one's `CompletionException` are unwrapped first |
+| An interceptor, or `subscribe` before the flow is returned | Yes — there is no `DataFetchingEnvironment`, so `environment` is `null` and the operation context is read from the request. An unclaimed throw is rethrown, exactly as before |
+| A subscription `Flow` throwing **mid-stream** | Yes — the failing event becomes a `GraphixResult` with `errors[]`. Unclaimed, it still escapes the flow |
+
+`GraphixException` is deliberately never offered: it means the operation could not be submitted — a
+subscription sent to `execute`, a document that never reached the engine — which is the caller's bug,
+not a client's error, and hiding it under a `fallback { }` would keep it from the only person who
+can fix it. `CancellationException` is skipped for the same reason it always is.
+
+> **One trap.** graphql-java applies `defaultDataFetcherExceptionHandler` only to execution
+> strategies left null at build, so `engine { queryExecutionStrategy(…) }` silently defeats the first
+> seat. Nothing warns. An explicit `engine { defaultDataFetcherExceptionHandler(…) }` wins on
+> purpose — engine customizers run last, and writing one is a choice. `ExceptionHandlerTest` pins
+> both.
+
 ## From a Koin container
 
 `stx-graphix-koin` builds the whole schema from what Koin holds, in one call:
@@ -678,7 +772,7 @@ Graphix { fromKoin() }          // or, under Ktor: install(GraphQL) { schema { f
 ```
 
 It collects every `GraphixResolver`, `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`,
-`GraphixInterceptor` and `GraphQLEngineCustomizer` single. `fromKoin()` is a `GraphixBuilder`
+`GraphixInterceptor`, `GraphQLEngineCustomizer` and `GraphixExceptionHandler` single. `fromKoin()` is a `GraphixBuilder`
 extension, so it is the same call under Ktor, under Spring, and in a plain `Graphix { }`.
 
 The same boundary as Spring's applies: `getAll<T>()` enumerates the whole container, so a single a
@@ -686,7 +780,7 @@ The same boundary as Spring's applies: `getAll<T>()` enumerates the whole contai
 means the library ships a `@Module` the application names in `modules(…)` or reaches with
 `@ComponentScan("com.acme.billing")`. Collection cannot register what the container was never given.
 
-**Only resolvers need the marker.** The other five are already types, so the type *is* the marker
+**Only resolvers need the marker.** The other six are already types, so the type *is* the marker
 and a `@Singleton` binding it is found as it stands. A resolver is an ordinary class holding
 `@QueryMapping` functions, with nothing in common with the next one, and Koin — unlike Spring —
 cannot be queried by annotation: `getAll<T>()` answers *"every single bound to T"*, which is a
