@@ -66,7 +66,6 @@ val GraphQL =
                     val block = pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance")
                     block()
                     pluginConfig.customizeBlock?.invoke(this)
-                    if (pluginConfig.fromDi) application.applyGraphixDi(this)
                     pluginConfig.engineBlock?.let { engine(it) }
                 }
         application.attributes.put(GraphixKey, engine)
@@ -146,13 +145,6 @@ class GraphQLConfiguration {
     /** File suffixes under [schemaLocations]. Default `.graphqls` and `.gqls`. */
     var schemaFileExtensions: List<String> = listOf(".graphqls", ".gqls")
 
-    /**
-     * Pull [GraphixCustomizer], scalars, field directives and [GraphixInterceptor]s from Ktor DI —
-     * the same beans Spring collects. Off by default: what shapes the schema should be visible in
-     * the `schema { }` block rather than assembled from whatever the container happens to hold.
-     */
-    var fromDi: Boolean = false
-
     internal var schemaBlock: (GraphixBuilder.() -> Unit)? = null
     internal var customizeBlock: (GraphixBuilder.() -> Unit)? = null
     internal var engineBlock: GraphQLEngineCustomizer? = null
@@ -188,8 +180,8 @@ class GraphQLConfiguration {
      * }
      * ```
      *
-     * Blocks run in the order they are written, outermost first, ahead of anything `schema { }` or
-     * [fromDi] registers. Each runs **once per operation** — so on a graphql-ws socket it sees every
+     * Blocks run in the order they are written, outermost first, ahead of anything `schema { }`
+     * registers. Each runs **once per operation** — so on a graphql-ws socket it sees every
      * `subscribe` frame, not just the handshake, and a credential that expires mid-socket is seen to
      * have expired.
      *

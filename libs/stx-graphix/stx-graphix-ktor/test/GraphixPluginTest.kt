@@ -24,7 +24,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.install
-import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
@@ -246,29 +245,6 @@ class GraphixPluginTest :
                                 setBody("""{"query":"{ __type(name: \"Money\") { name } }"}""")
                             }.bodyAsText()
                     sdl shouldContain "Money"
-                }
-            }
-
-            scenario("fromDi applies a GraphixCustomizer") {
-                testApplication {
-                    application {
-                        dependencies {
-                            provide<GraphixCustomizer> {
-                                GraphixCustomizer {
-                                    scalar(graphQLScalar("Money") { serialize { value -> value.toString() } })
-                                }
-                            }
-                        }
-                        install(GraphQL) {
-                            fromDi = true
-                            schema { resolvers(GreetingQueries()) }
-                        }
-                    }
-                    client
-                        .post("/graphql") {
-                            contentType(ContentType.Application.Json)
-                            setBody("""{"query":"{ __type(name: \"Money\") { name } }"}""")
-                        }.bodyAsText() shouldContain "Money"
                 }
             }
         }

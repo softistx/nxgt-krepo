@@ -51,9 +51,13 @@ Without `instance`, `schema { }` builds one at install.
 An empty folder keeps the annotated schema.
 
 `customize { }` is extra `GraphixBuilder` configuration (scalars, field directives) after
-`schema { }`. `engine { }` customises graphql-java's builder. `fromDi = true` pulls
-`GraphixCustomizer`, `GraphQLScalarType`, `GraphixDirective` and engine customizers from
-Ktor DI — the same types Spring collects as beans.
+`schema { }`. `engine { }` customises graphql-java's builder.
+
+**Collecting those from a container is not this plugin's job.** It used to be, behind `fromDi`,
+reading Ktor DI. That is gone: assembling a schema asks *"give me every `GraphixInterceptor`"*, and
+Ktor DI answers only *"give me the T"* — a `List<T>` resolves only if somebody registered that exact
+list. `stx-graphix-koin`'s `fromKoin()` does the enumerating, in a container that supports it, and
+reads the same under Ktor, under Spring, or with no server at all.
 
 Installing the plugin registers that same engine with Ktor DI, so a class the container builds takes
 a `Graphix` in its constructor. It is not a flag.
