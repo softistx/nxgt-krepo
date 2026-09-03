@@ -8,9 +8,9 @@ import com.softistx.graphix.scalar.graphQLScalar
 import com.softistx.graphix.scalar.scalar
 import com.softistx.graphix.schema.Argument
 import com.softistx.graphix.schema.Directive
-import com.softistx.graphix.schema.GraphQLContext
 import com.softistx.graphix.schema.GraphixDirective
 import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.contextParameter
 
 class GreetingQueries : GraphixResolver {
     @QueryMapping
@@ -43,10 +43,14 @@ data class Caller(
 
 class CallerQueries : GraphixResolver {
     @QueryMapping
-    fun who(
-        @GraphQLContext caller: Caller,
-    ): String = caller.name
+    fun who(caller: Caller): String = caller.name
 }
+
+/**
+ * How an application registers its *own* context type: whoever fills the context registers it, and
+ * here that is the interceptor below. A `GraphixCustomizer` single is collected by `fromKoin()`.
+ */
+fun callerCustomizer() = GraphixCustomizer { contextParameter(Caller::class) }
 
 fun callerInterceptor(name: String) =
     GraphixInterceptor {

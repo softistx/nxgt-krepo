@@ -7,6 +7,7 @@ import com.softistx.graphix.fixture.GreetingQueries
 import com.softistx.graphix.fixture.Product
 import com.softistx.graphix.fixture.ProductMutations
 import com.softistx.graphix.fixture.ProductQueries
+import com.softistx.graphix.schema.contextParameter
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -80,8 +81,12 @@ class ExecuteTest :
                 result.errors.single().message shouldContain "nope"
             }
 
-            scenario("@GraphQLContext is taken from the execute context, not from arguments") {
-                val graphql = Graphix { resolvers(ContextQueries()) }
+            scenario("a registered context type is taken from the execute context, not from arguments") {
+                val graphql =
+                    Graphix {
+                        contextParameter(Caller::class)
+                        resolvers(ContextQueries())
+                    }
                 val result =
                     graphql.execute(
                         GraphixRequest("{ who }"),

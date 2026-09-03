@@ -38,7 +38,7 @@ class BatchLoadingTest :
         }
 
         feature("execute") {
-            scenario("@GraphQLContext DataFetchingEnvironment sees source and arguments") {
+            scenario("a DataFetchingEnvironment parameter sees source and arguments") {
                 val graphql =
                     Graphix {
                         resolvers(ProductQueries())

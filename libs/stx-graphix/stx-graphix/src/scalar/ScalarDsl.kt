@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 
 /**
  * A custom scalar. [serialize], [parseValue] and [parseLiteral] run with the operation's
- * [GraphQLContext] as receiver — the same bag `@GraphQLContext` reads.
+ * [GraphQLContext] as receiver — the same bag a context parameter reads.
  */
 class ScalarSpec {
     internal var serializeFn: GraphQLContext.(Any) -> Any = { it }
