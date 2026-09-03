@@ -1,0 +1,5 @@
+scalar PositiveInt
+
+type Query {
+  quantity(value: PositiveInt!): PositiveInt!
+}

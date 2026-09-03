@@ -1,6 +1,7 @@
 package com.softistx.graphix.execute
 
 import com.softistx.graphix.GraphixRequest
+import com.softistx.graphix.message.GraphixMessages
 import com.softistx.graphix.validation.GraphixLimits
 import com.softistx.graphix.validation.GraphixValidation
 import graphql.ExecutionInput
@@ -18,6 +19,7 @@ internal fun executionInput(
     loaders: List<RegisteredLoader> = emptyList(),
     validation: GraphixValidation? = null,
     introspection: Boolean = true,
+    messages: GraphixMessages = GraphixMessages.Bundled,
 ): ExecutionInput {
     val complexity =
         (context[GraphixLimits::class] as? GraphixLimits)?.toJava()
@@ -28,9 +30,13 @@ internal fun executionInput(
             .query(request.query)
             .variables(request.variables)
             .operationName(request.operationName)
+            // graphql-java hands this locale to every Coercing. Unset, it is the JVM's default,
+            // which is the host's environment deciding what language a client is answered in.
+            .apply { request.locale?.let { locale(it) } }
             .apply { if (request.extensions.isNotEmpty()) extensions(request.extensions) }
             .graphQLContext { graphQLContext ->
                 graphQLContext.put(OperationScope, scope)
+                graphQLContext.put(GraphixMessages::class, messages)
                 graphQLContext.put(SubscriptionExecutionStrategy.KEEP_SUBSCRIPTION_EVENTS_ORDERED, true)
                 // Per operation, not a JVM-wide switch: the schema still has __schema, it just refuses.
                 if (!introspection) graphQLContext.put(Introspection.INTROSPECTION_DISABLED, true)

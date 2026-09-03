@@ -27,8 +27,42 @@ com.softistx.graphix            Graphix, GraphixRequest, GraphixResult, GraphixE
 com.softistx.graphix.validation GraphixLimits and the `validation { }` builder
 com.softistx.graphix.schema     @QueryMapping / @MutationMapping / @SubscriptionMapping and the SerialDescriptor walk
 com.softistx.graphix.execute    the CompletableFuture bridge, argument binding, errors
-com.softistx.graphix.scalar     Long, Instant, Uuid, and the `scalar { }` DSL
+com.softistx.graphix.scalar     the built-in scalars, one file each, and the `scalar { }` DSL
+com.softistx.graphix.message    coercion-error text, by key and locale
+com.softistx.graphix.json       JsonElement ⇄ the Java values graphql-java speaks
 ```
+
+## A scalar is a file
+
+`Long`, `Instant`, `Uuid`, the widths, the decimals, the dates, `Url`, `Locale`, `Json` and the
+eight bounded numbers. Each is one file holding its `Coercing` and its `GraphQLScalarType`, and one
+line in `BuiltInScalars`. Nothing else in the library enumerates them: the `KType` lookup, the
+`SerialDescriptor` lookup, the SDL wiring and the schema's additional types all read that list, so
+the twenty-fifth scalar costs what the third did.
+
+They are not all in the schema. A scalar is added when a field uses it — a service with no dates
+does not advertise `scalar Instant` — because introspection is a contract and two dozen unused
+scalars in it is a contract nobody can read. The bounded ones (`PositiveInt` and its seven
+relatives) have no Kotlin type to be reached by, so they are opt-in and always explicit.
+
+What is *not* here is a `Money`. A scalar with a domain meaning belongs to the application, and
+`scalar { }` is how it says so — [`docs/graphix.md`](../../../docs/graphix.md) has that half.
+
+## An error message is a key
+
+A coercion error is the only message this library produces that reaches an API **client** — a
+schema that will not build throws at startup, in one language, at whoever wrote it. So it is looked
+up by key and by the operation's locale, and the locale is the client's: both HTTP integrations
+negotiate it from `Accept-Language`.
+
+The keys are generic, `{scalar}` carrying which scalar failed, so a new scalar needs no new key and
+no new translation. English and French ship in the jar; another language is a properties file on
+the application's classpath; another *source* — ICU, a database — is one lambda, which is where
+`stx-i18n` plugs in.
+
+It is not a dependency on `stx-i18n` for the same reason `stx-i18n` is not in `stx-common`: ICU4J
+is a 15 MB jar, and a service that never translates anything should not carry a message formatter
+to run GraphQL.
 
 ## Why not graphql-kotlin
 

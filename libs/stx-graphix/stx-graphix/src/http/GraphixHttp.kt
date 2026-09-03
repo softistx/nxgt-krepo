@@ -3,16 +3,15 @@ package com.softistx.graphix.http
 import com.softistx.graphix.GraphixError
 import com.softistx.graphix.GraphixRequest
 import com.softistx.graphix.GraphixResult
+import com.softistx.graphix.json.toJava
+import com.softistx.graphix.json.toJsonElement
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.longOrNull
+import java.util.Locale
 
 /**
  * The JSON envelope both HTTP integrations speak. Ktor and Spring parse this; they do not
@@ -71,14 +70,20 @@ class BadGraphixHttp(
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)
 
-/** Requires [GraphixHttpRequest.query]. Variables become the `Map` graphql-java expects. */
-fun GraphixHttpRequest.toGraphixRequest(): GraphixRequest {
+/**
+ * Requires [GraphixHttpRequest.query]. Variables become the `Map` graphql-java expects.
+ *
+ * [locale] is the operation's, which is what coercion errors are translated in — [acceptedLocale]
+ * off the request's `Accept-Language` is where both HTTP integrations get it.
+ */
+fun GraphixHttpRequest.toGraphixRequest(locale: Locale? = null): GraphixRequest {
     val query = query ?: throw BadGraphixHttp("a GraphQL request needs a query")
     return GraphixRequest(
         query = query,
         operationName = operationName,
         variables = variables?.mapValues { it.value.toJava() } ?: emptyMap(),
         extensions = extensions?.mapValues { it.value.toJava() } ?: emptyMap(),
+        locale = locale,
     )
 }
 
@@ -107,41 +112,5 @@ private fun Any.toJsonPrimitive(): JsonElement =
     when (this) {
         is Number -> JsonPrimitive(toLong())
         is Boolean -> JsonPrimitive(this)
-        else -> JsonPrimitive(toString())
-    }
-
-/** JsonElement as the Java values graphql-java wants: Map, List, Number, Boolean, String, null. */
-internal fun JsonElement.toJava(): Any? =
-    when (this) {
-        is JsonNull -> {
-            null
-        }
-
-        is JsonPrimitive -> {
-            if (isString) {
-                content
-            } else {
-                booleanOrNull ?: longOrNull ?: doubleOrNull ?: content
-            }
-        }
-
-        is JsonObject -> {
-            mapValues { it.value.toJava() }
-        }
-
-        is JsonArray -> {
-            map { it.toJava() }
-        }
-    }
-
-internal fun Any?.toJsonElement(): JsonElement =
-    when (this) {
-        null -> JsonNull
-        is JsonElement -> this
-        is Map<*, *> -> JsonObject(entries.associate { (key, value) -> key.toString() to value.toJsonElement() })
-        is List<*> -> JsonArray(map { it.toJsonElement() })
-        is Number -> JsonPrimitive(this)
-        is Boolean -> JsonPrimitive(this)
-        is String -> JsonPrimitive(this)
         else -> JsonPrimitive(toString())
     }
