@@ -6,8 +6,8 @@ apply:
 
 dependencies:
   # As published artifacts, not as modules of this project — see the template above.
-  - $libs.stx.graphix
   - $libs.stx.graphix.ktor
+  - $libs.stx.graphix.koin
   - $libs.stx.mongo.ktor
   - $ktor.server.core
   - $ktor.server.netty
