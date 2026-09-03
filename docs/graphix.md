@@ -35,7 +35,8 @@ The GraphQL field name is `@QueryMapping(name=…)` / `@MutationMapping(name=…
 
 At least one `@QueryMapping` function is required. GraphQL's spec has no schema without a query root.
 `@SubscriptionMapping` is optional. The Kotlin return type must be `Flow<T>` or a reactive-streams /
-JDK `Publisher<T>`; `T` is the GraphQL field type.
+JDK `Publisher<T>`; `T` is the GraphQL field type. The same types on a query or a mutation mean a
+**list**, not a stream — see *Types*.
 
 ## Types
 
@@ -62,12 +63,34 @@ ends in `Input` keeps it.
 | `java.util.Locale` | `Locale` (BCP 47 tag) |
 | `JsonElement` | `Json` (any JSON value) |
 | `List<T>` | `[T]` |
+| `Flow<T>`, `Publisher<T>` (a function return, not a property) | `[T]` — **collected**, not streamed |
 | `T?` | nullable `T` |
 | enum class | GraphQL enum, constant names from the serializer |
 | `sealed` with shared properties | GraphQL `interface` — see *Interfaces and unions* |
 | `sealed` with none, or `@GraphQLUnion` | GraphQL `union` |
 
 A type that is not `@Serializable` fails schema build, naming that type.
+
+**A `Flow` means two things, and the annotation decides which.** On `@SubscriptionMapping` it is a
+stream of *separate responses*, one per element. Anywhere else — a query, a mutation, a
+`@SchemaMapping` type field — it is one list inside a single response: the library collects it, on
+the operation's `CoroutineScope`, before graphql-java sees anything. That is the `.toList()` the
+resolver would otherwise write, and writing it in the library rather than in the resolver is what
+puts the collection under the request's cancellation and inside the seat where a throw becomes an
+`errors[]` entry. It is **not** incremental delivery — see *Documents* for why there is none.
+
+The reason it exists is that the answer should not depend on the store: `stx-mongo`'s `findAll`
+hands a resolver a `Flow` and `stx-jpa`'s a `List`, and a resolver body should not differ for that.
+A reactive-streams `Publisher` and a JDK `Flow.Publisher` collect the same way. A
+`CompletionStage<Flow<T>>` is refused at schema build naming both — a data fetcher has to hand a
+stage back untouched, and nobody writes that signature in Kotlin.
+
+`maxListElements(n)` on the builder bounds how many elements such a field may produce. Unset,
+nothing is bounded — a `List` return never was either. It exists because a `Flow` can be *infinite*
+where a `List` cannot: without a bound such a field does not fail, it never answers. Past it the
+field is a `TooManyElements` in `errors[]`, which an `errors { }` handler can edit like any other.
+It bounds emission, not silence: a flow that emits nothing and never completes still hangs, and that
+wants a request timeout, which is a different thing.
 
 **A field's name is `@SerialName`**, otherwise the Kotlin property name — the SerialDescriptor is
 the type system here, so it owns that name alone. The field still reads the Kotlin property it
@@ -806,10 +829,17 @@ annotation or a builder call, and `ConformanceTest` is what proves it.
 | `operationName` | Which operation runs when the document holds more than one |
 | `__typename`, `__schema`, `__type` | Introspection is on by default; `introspection(false)` turns `__schema`/`__type` off, and `__typename` keeps working |
 
-**Not supported.** `@defer` and `@stream` are `@ExperimentalApi` in graphql-java 26: they need
-incremental support switched on, an `IncrementalExecutionResult` path through `execute`, and
-`multipart/mixed` on both HTTP plugins. Automatic persisted queries, the multipart upload spec and
-Apollo Federation are outside graphql-java core and are not wrapped here.
+**Not supported.** `@defer` is `@ExperimentalApi` in graphql-java 26: it needs incremental support
+switched on, an `IncrementalExecutionResult` path through `execute`, and `multipart/mixed` on both
+HTTP plugins. `@stream` is not experimental there — it is **absent**: `graphql.Directives` defines
+`defer` and nothing else, and the `StreamedCall` in the incremental package has no directive to
+trigger it. Automatic persisted queries, the multipart upload spec and Apollo Federation are outside
+graphql-java core and are not wrapped here.
+
+That is why a `Flow` on a query is *collected* rather than streamed. The whole list is built before
+the response is written, exactly as for a `List` return, and a client waits the same either way —
+which is the opposite of `@stream`, and why accepting a `Flow` there does not reopen incremental
+delivery.
 
 ## Execute
 
