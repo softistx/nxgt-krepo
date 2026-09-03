@@ -2,7 +2,6 @@ package com.softistx.graphix.execute
 
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
-import kotlin.reflect.full.callSuspendBy
 import kotlin.reflect.full.instanceParameter
 
 /**
@@ -22,19 +21,4 @@ internal fun KFunction<*>.argumentsWith(
     arguments[instanceParameter] = instance
     arguments.putAll(bound)
     return arguments
-}
-
-/**
- * Calls a member function for its value, suspending if it is a suspend function.
- *
- * The data fetchers do **not** use this: they must hand a `CompletionStage` back to graphql-java
- * untouched rather than await it, which is a different shape and is why `suspendFetcher` keeps its
- * own branch. This is for the callers that want the value — an exception handler is one.
- */
-internal suspend fun KFunction<*>.invokeOn(
-    instance: Any,
-    bound: Map<KParameter, Any?>,
-): Any? {
-    val arguments = argumentsWith(instance, bound)
-    return if (isSuspend) callSuspendBy(arguments) else callBy(arguments)
 }

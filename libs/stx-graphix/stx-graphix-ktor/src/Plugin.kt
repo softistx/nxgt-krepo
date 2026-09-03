@@ -2,6 +2,10 @@ package com.softistx.graphix.ktor
 
 import com.softistx.common.serialization.lenientJson
 import com.softistx.graphix.*
+import com.softistx.graphix.error.GraphixErrorSpec
+import com.softistx.graphix.error.GraphixExceptionHandler
+import com.softistx.graphix.error.errors
+import com.softistx.graphix.error.exceptionHandler
 import com.softistx.graphix.http.SubscriptionProtocol
 import com.softistx.graphix.http.apolloSandboxPage
 import com.softistx.graphix.intercept.GraphixChain
@@ -51,6 +55,9 @@ val GraphQL =
         if (adopted != null && pluginConfig.interceptors.isNotEmpty()) {
             error("install(GraphQL) got both instance and intercept { } — register interceptors where that engine is built")
         }
+        if (adopted != null && (pluginConfig.errorBlocks.isNotEmpty() || pluginConfig.exceptionHandlers.isNotEmpty())) {
+            error("install(GraphQL) got both instance and errors { } — register handlers where that engine is built")
+        }
         val engine =
             adopted
                 ?: Graphix(pluginConfig.json) {
@@ -63,6 +70,8 @@ val GraphQL =
                     // an ApplicationCall build instead of being told it needs @Argument.
                     contextParameter(ApplicationCall::class)
                     pluginConfig.interceptors.forEach { intercept(it) }
+                    pluginConfig.errorBlocks.forEach { errors(it) }
+                    pluginConfig.exceptionHandlers.forEach { exceptionHandler(it) }
                     val block = pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance")
                     block()
                     pluginConfig.customizeBlock?.invoke(this)
@@ -149,6 +158,8 @@ class GraphQLConfiguration {
     internal var customizeBlock: (GraphixBuilder.() -> Unit)? = null
     internal var engineBlock: GraphQLEngineCustomizer? = null
     internal val interceptors = mutableListOf<GraphixInterceptor>()
+    internal val errorBlocks = mutableListOf<GraphixErrorSpec.() -> Unit>()
+    internal val exceptionHandlers = mutableListOf<GraphixExceptionHandler>()
 
     /**
      * Builds the engine at install. Query/mutation/subscription instances passed here are
@@ -200,6 +211,30 @@ class GraphQLConfiguration {
     /** graphql-java [GraphQLEngine.Builder] after the schema is built. */
     fun engine(block: GraphQLEngine.Builder.() -> Unit) {
         engineBlock = GraphQLEngineCustomizer(block)
+    }
+
+    /**
+     * What a thrown exception becomes.
+     *
+     * ```kotlin
+     * install(GraphQL) {
+     *     errors {
+     *         on<ProductNotFound> { failure -> error.withMessage("No product ${failure.id}").withErrorType(NOT_FOUND) }
+     *     }
+     *     schema { resolvers(ProductQueries(store)) }
+     * }
+     * ```
+     *
+     * Cannot be combined with [instance], for the same reason [intercept] cannot: handlers live on
+     * the engine, so an adopted one already carries whatever was registered where it was built.
+     */
+    fun errors(block: GraphixErrorSpec.() -> Unit) {
+        errorBlocks += block
+    }
+
+    /** [errors], with the handler already written as a class. Ktor's DI holds no beans to collect. */
+    fun exceptionHandler(handler: GraphixExceptionHandler) {
+        exceptionHandlers += handler
     }
 }
 
