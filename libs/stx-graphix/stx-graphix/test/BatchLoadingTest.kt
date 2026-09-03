@@ -19,8 +19,8 @@ class BatchLoadingTest :
             scenario("@BatchMapping registers the field without SchemaMapping") {
                 val sdl =
                     Graphix {
-                        query(ProductQueries())
-                        type(ReviewBatch())
+                        resolvers(ProductQueries())
+                        resolvers(ReviewBatch())
                     }.sdl()
                 sdl shouldContain "reviews: [Review!]!"
             }
@@ -29,8 +29,8 @@ class BatchLoadingTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            query(ProductQueries())
-                            type(SingularBatch())
+                            resolvers(ProductQueries())
+                            resolvers(SingularBatch())
                         }
                     }
                 failure.message shouldContain "List<T>"
@@ -41,8 +41,8 @@ class BatchLoadingTest :
             scenario("@GraphQLContext DataFetchingEnvironment sees source and arguments") {
                 val graphql =
                     Graphix {
-                        query(ProductQueries())
-                        type(DfeFields())
+                        resolvers(ProductQueries())
+                        resolvers(DfeFields())
                     }
                 val tagged = graphql.execute(GraphixRequest("""{ product(id: "p1") { tagged(prefix: "y") } }"""))
                 (tagged.data.shouldNotBeNull()["product"] as Map<*, *>)["tagged"] shouldBe "y-Mug"
@@ -52,8 +52,8 @@ class BatchLoadingTest :
                 val batch = DfeBatch()
                 val graphql =
                     Graphix {
-                        query(ProductQueries())
-                        type(batch)
+                        resolvers(ProductQueries())
+                        resolvers(batch)
                     }
                 graphql.sdl() shouldContain "notes: String!"
                 val result = graphql.execute(GraphixRequest("{ products { notes } }"))
@@ -67,8 +67,8 @@ class BatchLoadingTest :
                 val batch = LimitedSnippets()
                 val graphql =
                     Graphix {
-                        query(ProductQueries())
-                        type(batch)
+                        resolvers(ProductQueries())
+                        resolvers(batch)
                     }
                 val result = graphql.execute(GraphixRequest("{ products { snippets(limit: 2) } }"))
                 result.isOk shouldBe true
@@ -81,8 +81,8 @@ class BatchLoadingTest :
                 val batch = LimitedSnippets()
                 val graphql =
                     Graphix {
-                        query(ProductQueries())
-                        type(batch)
+                        resolvers(ProductQueries())
+                        resolvers(batch)
                     }
                 val result =
                     graphql.execute(
@@ -105,8 +105,8 @@ class BatchLoadingTest :
                 val batch = ReviewBatch()
                 val graphql =
                     Graphix {
-                        query(ProductQueries(mutableListOf(Product("p1", "Mug"), Product("p2", "Kettle"))))
-                        type(batch)
+                        resolvers(ProductQueries(mutableListOf(Product("p1", "Mug"), Product("p2", "Kettle"))))
+                        resolvers(batch)
                     }
                 val result = graphql.execute(GraphixRequest("{ products { name reviews { body } } }"))
                 result.isOk shouldBe true

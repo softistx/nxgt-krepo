@@ -14,7 +14,7 @@ import java.math.BigInteger
 
 class ExtendedScalarTest :
     FeatureSpec({
-        val graphix = Graphix { query(ExtendedScalarQueries()) }
+        val graphix = Graphix { resolvers(ExtendedScalarQueries()) }
 
         feature("extended scalars") {
             scenario("every one round-trips through a literal") {
@@ -97,7 +97,7 @@ class ExtendedScalarTest :
 
         feature("what the schema advertises") {
             scenario("every built-in is there by default, used or not") {
-                val small = Graphix { query(ScalarQueries()) }
+                val small = Graphix { resolvers(ScalarQueries()) }
                 Scalars.All.forEach { small.sdl() shouldContain "scalar ${it.name}" }
             }
 
@@ -105,7 +105,7 @@ class ExtendedScalarTest :
                 val small =
                     Graphix {
                         builtInScalars(false)
-                        query(ScalarQueries())
+                        resolvers(ScalarQueries())
                     }
                 small.sdl() shouldContain "scalar Instant"
                 small.sdl() shouldNotContain "scalar LocalDate"
@@ -118,7 +118,7 @@ class ExtendedScalarTest :
                         scalar("Locale", description = "ours") {
                             serialize { value -> value.toString() }
                         }
-                        query(ScalarQueries())
+                        resolvers(ScalarQueries())
                     }
                 engine.sdl() shouldContain "\"ours\"\nscalar Locale"
             }
@@ -128,7 +128,7 @@ class ExtendedScalarTest :
             val bounded =
                 Graphix {
                     schemaLocations("graphix-bounded")
-                    query(QuantityQueries())
+                    resolvers(QuantityQueries())
                 }
 
             scenario("an SDL document declares one and needs no wiring") {
@@ -154,7 +154,7 @@ class ExtendedScalarTest :
                     Graphix {
                         builtInScalars(false)
                         schemaLocations("graphix-bounded")
-                        query(QuantityQueries())
+                        resolvers(QuantityQueries())
                     }
                 narrow.sdl() shouldContain "scalar PositiveInt"
                 narrow.sdl() shouldNotContain "scalar LocalDate"

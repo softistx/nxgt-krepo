@@ -22,7 +22,7 @@ private val badVariable =
 
 class ScalarMessageTest :
     FeatureSpec({
-        val graphix = Graphix { query(ExtendedScalarQueries()) }
+        val graphix = Graphix { resolvers(ExtendedScalarQueries()) }
 
         feature("coercion errors are translated") {
             scenario("the operation's locale decides the language") {
@@ -54,7 +54,7 @@ class ScalarMessageTest :
                 val engine =
                     Graphix {
                         messages { _, key, args -> "$key/${args["scalar"]}" }
-                        query(ExtendedScalarQueries())
+                        resolvers(ExtendedScalarQueries())
                     }
                 // graphql-java wraps it in "Variable 'd' has an invalid value: ", its own text.
                 engine
@@ -68,7 +68,7 @@ class ScalarMessageTest :
                 val engine =
                     Graphix {
                         messages { _, _, _ -> "builder" }
-                        query(ExtendedScalarQueries())
+                        resolvers(ExtendedScalarQueries())
                     }
                 val messages = GraphixMessages { _, _, _ -> "operation" }
                 val result = engine.execute(badVariable, mapOf(GraphixMessages::class to messages))
@@ -82,7 +82,7 @@ class ScalarMessageTest :
                 val engine =
                     Graphix {
                         messages { _, _, _ -> "builder" }
-                        query(ExtendedScalarQueries())
+                        resolvers(ExtendedScalarQueries())
                     }
                 engine
                     .execute(badDate.copy(locale = Locale.FRENCH))

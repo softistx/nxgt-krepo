@@ -40,7 +40,7 @@ class CustomScalarDirectiveTest :
                                 Money(requireNotNull(literal.value).toLong())
                             }
                         }
-                        query(MoneyQueries())
+                        resolvers(MoneyQueries())
                     }
                 graphql.sdl() shouldContain "scalar Money"
                 val result = graphql.execute(GraphixRequest("{ price }"))
@@ -58,7 +58,7 @@ class CustomScalarDirectiveTest :
                             }
                             parseValue { input -> Money((input as String).toLong()) }
                         }
-                        query(MoneyQueries())
+                        resolvers(MoneyQueries())
                     }
                 val result =
                     graphql.execute(
@@ -77,7 +77,7 @@ class CustomScalarDirectiveTest :
                             val value = proceed()
                             (value as? String)?.uppercase() ?: value
                         }
-                        query(UpperQueries())
+                        resolvers(UpperQueries())
                     }
                 val result = graphql.execute(GraphixRequest("{ hello }"))
                 result.isOk shouldBe true
@@ -87,7 +87,7 @@ class CustomScalarDirectiveTest :
             scenario("GraphixCustomizer and engine() still execute") {
                 val graphql =
                     Graphix {
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                         customize(GraphixCustomizer { })
                         engine { }
                     }

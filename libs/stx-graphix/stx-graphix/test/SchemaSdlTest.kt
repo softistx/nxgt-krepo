@@ -19,7 +19,7 @@ class SchemaSdlTest :
                 val graphql =
                     Graphix {
                         schemaLocations("classpath:graphix-sdl/")
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                     }
                 graphql.sdl() shouldContain "hello: String!"
                 graphql.sdl() shouldContain "shout(name: String): String"
@@ -31,7 +31,7 @@ class SchemaSdlTest :
                 val result =
                     Graphix {
                         schemaLocations("classpath:graphix-sdl/")
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                     }.execute(GraphixRequest("{ __schema { queryType { name } types { name } } }"))
                 result.isOk shouldBe true
                 val schema = result.data.shouldNotBeNull()["__schema"] as Map<*, *>
@@ -43,7 +43,7 @@ class SchemaSdlTest :
                 val graphql =
                     Graphix {
                         schemaLocations("classpath:graphix-sdl/")
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                     }
                 val hello = graphql.execute(GraphixRequest("{ hello }"))
                 hello.errors.shouldBe(emptyList())
@@ -57,8 +57,8 @@ class SchemaSdlTest :
                 val graphql =
                     Graphix {
                         schemaLocations("classpath:graphix-sdl/")
-                        query(BookQueries())
-                        type(fields)
+                        resolvers(BookQueries())
+                        resolvers(fields)
                     }
                 val one = graphql.execute(GraphixRequest("{ book { title author { name } } }"))
                 one.errors.shouldBe(emptyList())
@@ -70,7 +70,7 @@ class SchemaSdlTest :
                 val graphql =
                     Graphix {
                         schemaLocations("classpath:does-not-exist-sdl/")
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                     }
                 graphql.execute(GraphixRequest("{ hello }")).data shouldBe mapOf("hello" to "world")
             }
@@ -82,7 +82,7 @@ class SchemaSdlTest :
                     shouldThrow<GraphixException> {
                         Graphix {
                             schemaLocations("file:${dir.toAbsolutePath()}")
-                            query(GreetingQueries())
+                            resolvers(GreetingQueries())
                         }
                     }
                 failure.message shouldContain "bad.graphqls"

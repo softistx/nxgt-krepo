@@ -20,7 +20,7 @@ class DirectiveLocationTest :
 
         feature("directive locations") {
             scenario("a directive on an object wraps every one of its fields") {
-                val graphql = audit { query(AuditQueries()) }
+                val graphql = audit { resolvers(AuditQueries()) }
                 val result = graphql.execute(GraphixRequest("{ ticket { title owner } }"))
 
                 result.isOk shouldBe true
@@ -28,14 +28,14 @@ class DirectiveLocationTest :
             }
 
             scenario("a type without the directive is untouched") {
-                val graphql = audit { query(AuditQueries()) }
+                val graphql = audit { resolvers(AuditQueries()) }
                 val result = graphql.execute(GraphixRequest("{ plain { title } }"))
 
                 result.data?.get("plain") shouldBe mapOf("title" to "dune")
             }
 
             scenario("the same directive on a single field still works") {
-                val graphql = audit { query(AuditQueries()) }
+                val graphql = audit { resolvers(AuditQueries()) }
 
                 graphql.execute(GraphixRequest("{ loud }")).data shouldBe mapOf("loud" to "QUIET")
             }
@@ -43,7 +43,7 @@ class DirectiveLocationTest :
 
         feature("introspection") {
             scenario("__schema answers by default") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
 
                 graphql.execute(GraphixRequest("{ __schema { queryType { name } } }")).isOk shouldBe true
             }
@@ -52,7 +52,7 @@ class DirectiveLocationTest :
                 val graphql =
                     Graphix {
                         introspection(false)
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                     }
                 val result = graphql.execute(GraphixRequest("{ __schema { queryType { name } } }"))
 
@@ -65,7 +65,7 @@ class DirectiveLocationTest :
                 val graphql =
                     Graphix {
                         introspection(false)
-                        query(ProductQueries())
+                        resolvers(ProductQueries())
                     }
 
                 graphql.execute(GraphixRequest("""{ __type(name: "Product") { name } }""")).isOk shouldBe false
@@ -75,7 +75,7 @@ class DirectiveLocationTest :
                 val graphql =
                     Graphix {
                         introspection(false)
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                     }
 
                 graphql.execute(GraphixRequest("{ hello }")).data shouldBe mapOf("hello" to "world")
@@ -85,7 +85,7 @@ class DirectiveLocationTest :
                 val graphql =
                     Graphix {
                         introspection(false)
-                        query(ProductQueries())
+                        resolvers(ProductQueries())
                     }
                 val result = graphql.execute(GraphixRequest("""{ product(id: "p1") { __typename } }"""))
 

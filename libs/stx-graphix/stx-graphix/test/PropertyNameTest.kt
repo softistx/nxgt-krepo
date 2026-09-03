@@ -20,14 +20,14 @@ class PropertyNameTest :
     FeatureSpec({
         feature("@SerialName on an object type") {
             scenario("the GraphQL field is the serial name, not the Kotlin name") {
-                val sdl = Graphix { query(TrackQueries()) }.sdl()
+                val sdl = Graphix { resolvers(TrackQueries()) }.sdl()
 
                 sdl shouldContain "track_id: String!"
                 sdl.substringAfter("type Track").substringBefore("}") shouldNotContain " id:"
             }
 
             scenario("and it resolves through the property it renamed") {
-                val graphql = Graphix { query(TrackQueries()) }
+                val graphql = Graphix { resolvers(TrackQueries()) }
                 val result = graphql.execute(GraphixRequest("{ track { track_id title } }"))
 
                 result.isOk shouldBe true
@@ -35,7 +35,7 @@ class PropertyNameTest :
             }
 
             scenario("an input object decodes by the same name the schema advertises") {
-                val graphql = Graphix { query(TrackQueries()) }
+                val graphql = Graphix { resolvers(TrackQueries()) }
                 val result =
                     graphql.execute(
                         GraphixRequest("""{ echo(filter: { track_id: "t9" }) }"""),
@@ -48,7 +48,7 @@ class PropertyNameTest :
 
         feature("@GraphQLName names a type, and only a type") {
             scenario("the object type is the annotation's name, in the schema and in __typename") {
-                val graphql = Graphix { query(RecordQueries()) }
+                val graphql = Graphix { resolvers(RecordQueries()) }
 
                 graphql.sdl() shouldContain "type Vinyl"
                 graphql.sdl() shouldNotContain "type Record"
@@ -61,7 +61,7 @@ class PropertyNameTest :
 
         feature("@SerialName on an interface's shared property") {
             scenario("the interface and its implementor agree on the field name") {
-                val graphql = Graphix { query(StampedQueries()) }
+                val graphql = Graphix { resolvers(StampedQueries()) }
 
                 graphql.sdl() shouldContain "type Receipt implements Stamped"
                 graphql.sdl() shouldContain "stamped_at: String!"
@@ -70,7 +70,7 @@ class PropertyNameTest :
             }
 
             scenario("an implementor that drops the rename fails schema build naming both") {
-                val failure = shouldThrow<GraphixException> { Graphix { query(SlippedQueries()) } }
+                val failure = shouldThrow<GraphixException> { Graphix { resolvers(SlippedQueries()) } }
 
                 failure.message shouldContain "Missed.at is 'at'"
                 failure.message shouldContain "'slipped_at'"

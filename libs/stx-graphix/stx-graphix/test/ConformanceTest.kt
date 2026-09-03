@@ -18,7 +18,7 @@ class ConformanceTest :
     FeatureSpec({
         feature("built-in directives") {
             scenario("@skip drops the field when its condition is true") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val query = "query Q(\$hide: Boolean!) { hello @skip(if: \$hide) }"
 
                 val skipped = graphql.execute(GraphixRequest(query, mapOf("hide" to true)))
@@ -30,7 +30,7 @@ class ConformanceTest :
             }
 
             scenario("@include keeps the field only when its condition is true") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val query = "query Q(\$show: Boolean!) { hello @include(if: \$show) }"
 
                 graphql.execute(GraphixRequest(query, mapOf("show" to true))).data shouldBe mapOf("hello" to "world")
@@ -44,7 +44,7 @@ class ConformanceTest :
 
         feature("selection sets") {
             scenario("a named fragment expands into the selection") {
-                val graphql = Graphix { query(ProductQueries()) }
+                val graphql = Graphix { resolvers(ProductQueries()) }
                 val result =
                     graphql.execute(
                         GraphixRequest(
@@ -62,7 +62,7 @@ class ConformanceTest :
             }
 
             scenario("an inline fragment on the field's own type expands too") {
-                val graphql = Graphix { query(ProductQueries()) }
+                val graphql = Graphix { resolvers(ProductQueries()) }
                 val result = graphql.execute(GraphixRequest("""{ product(id: "p1") { ... on Product { name } } }"""))
 
                 result.isOk shouldBe true
@@ -70,7 +70,7 @@ class ConformanceTest :
             }
 
             scenario("__typename is the GraphQL type name, at the root and on a field") {
-                val graphql = Graphix { query(ProductQueries()) }
+                val graphql = Graphix { resolvers(ProductQueries()) }
                 val result = graphql.execute(GraphixRequest("""{ __typename product(id: "p1") { __typename } }"""))
 
                 result.isOk shouldBe true
@@ -79,7 +79,7 @@ class ConformanceTest :
             }
 
             scenario("two aliases of one field with different arguments each keep their own value") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result =
                     graphql.execute(GraphixRequest("""{ ada: shout(name: "ada") grace: shout(name: "grace") }"""))
 
@@ -90,7 +90,7 @@ class ConformanceTest :
 
         feature("variables and operations") {
             scenario("operationName picks one operation out of a document that holds two") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val document =
                     """
                     query Greet { hello }
@@ -102,7 +102,7 @@ class ConformanceTest :
             }
 
             scenario("a variable's own default value applies when the request omits it") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result = graphql.execute(GraphixRequest("query Q(\$n: String = \"ada\") { shout(name: \$n) }"))
 
                 result.isOk shouldBe true
@@ -110,7 +110,7 @@ class ConformanceTest :
             }
 
             scenario("an explicit null variable falls through to the Kotlin default") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result =
                     graphql.execute(
                         GraphixRequest("query Q(\$n: String) { shout(name: \$n) }", mapOf("n" to null)),
@@ -121,7 +121,7 @@ class ConformanceTest :
             }
 
             scenario("a variable of the wrong type is a GraphQL error, not an exception") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result =
                     graphql.execute(
                         GraphixRequest("query Q(\$n: String) { shout(name: \$n) }", mapOf("n" to listOf("ada"))),
@@ -134,7 +134,7 @@ class ConformanceTest :
 
         feature("introspection meta-fields") {
             scenario("__type answers for a type the document never selects") {
-                val graphql = Graphix { query(ProductQueries()) }
+                val graphql = Graphix { resolvers(ProductQueries()) }
                 val result = graphql.execute(GraphixRequest("""{ __type(name: "Product") { name kind } }"""))
 
                 result.isOk shouldBe true
@@ -144,7 +144,7 @@ class ConformanceTest :
             }
 
             scenario("__schema names the query root") {
-                val graphql = Graphix { query(ProductQueries()) }
+                val graphql = Graphix { resolvers(ProductQueries()) }
                 val result = graphql.execute(GraphixRequest("{ __schema { queryType { name } } }"))
 
                 result.isOk shouldBe true

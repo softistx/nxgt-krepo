@@ -19,8 +19,8 @@ class SubscriptionTest :
             scenario("Flow<T> unwraps to T on the Subscription root") {
                 val sdl =
                     Graphix {
-                        query(GreetingQueries())
-                        subscription(TickSubscriptions())
+                        resolvers(GreetingQueries())
+                        resolvers(TickSubscriptions())
                     }.sdl()
                 sdl shouldContain "type Subscription"
                 sdl shouldContain "ticks: Int!"
@@ -30,8 +30,8 @@ class SubscriptionTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            query(GreetingQueries())
-                            subscription(BadSubscriptions())
+                            resolvers(GreetingQueries())
+                            resolvers(BadSubscriptions())
                         }
                     }
                 failure.message shouldContain "Flow<T> or Publisher<T>"
@@ -42,8 +42,8 @@ class SubscriptionTest :
             scenario("a Flow of scalars becomes one GraphixResult per event") {
                 val graphql =
                     Graphix {
-                        query(GreetingQueries())
-                        subscription(TickSubscriptions())
+                        resolvers(GreetingQueries())
+                        resolvers(TickSubscriptions())
                     }
                 val values =
                     graphql
@@ -56,8 +56,8 @@ class SubscriptionTest :
             scenario("a reactive-streams Publisher is accepted the same way") {
                 val graphql =
                     Graphix {
-                        query(GreetingQueries())
-                        subscription(TickPublisherSubscriptions())
+                        resolvers(GreetingQueries())
+                        resolvers(TickPublisherSubscriptions())
                     }
                 val values =
                     graphql
@@ -70,8 +70,8 @@ class SubscriptionTest :
             scenario("@GraphQLContext is taken from subscribe's context map") {
                 val graphql =
                     Graphix {
-                        query(GreetingQueries())
-                        subscription(ContextSubscriptions())
+                        resolvers(GreetingQueries())
+                        resolvers(ContextSubscriptions())
                     }
                 val values =
                     graphql
@@ -86,8 +86,8 @@ class SubscriptionTest :
             scenario("execute on a subscription throws rather than serialising the Publisher") {
                 val graphql =
                     Graphix {
-                        query(GreetingQueries())
-                        subscription(TickSubscriptions())
+                        resolvers(GreetingQueries())
+                        resolvers(TickSubscriptions())
                     }
                 val failure =
                     shouldThrow<GraphixException> {
@@ -97,7 +97,7 @@ class SubscriptionTest :
             }
 
             scenario("subscribe on a query throws rather than emitting one item") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val failure =
                     shouldThrow<GraphixException> {
                         graphql.subscribe(GraphixRequest("{ hello }")).toList()
