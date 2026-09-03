@@ -16,6 +16,7 @@ import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeDefinitionRegistry
 import graphql.schema.idl.TypeRuntimeWiring
 import kotlinx.serialization.json.Json
+import kotlin.reflect.KClass
 
 /**
  * graphql-java executable schema from SDL files. Annotated functions become DataFetchers
@@ -28,13 +29,14 @@ internal fun List<SchemaFile>.sdlSchema(
     fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
     typeResolvers: Map<String, GraphixTypeName> = emptyMap(),
     builtInScalars: Boolean = true,
+    contextTypes: Set<KClass<*>> = emptySet(),
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     val registry = typeRegistry()
     // A document is the schema here, so a built-in reaches it as a declaration. Declaring them all
     // is what lets `LocalDate` be used in SDL without the `scalar LocalDate` line above it; a name
     // the document or the application already defined is left exactly as it defined it.
     if (builtInScalars) registry.declareScalars(builtInScalarTypes(true, customScalars))
-    val typeFields = collectTypeFields(instances)
+    val typeFields = collectTypeFields(instances, contextTypes)
     val byType = linkedMapOf<String, TypeRuntimeWiring.Builder>()
     // RuntimeWiring is strict: a second fetcher for one coordinate throws rather than replacing.
     val wired = mutableSetOf<Pair<String, String>>()

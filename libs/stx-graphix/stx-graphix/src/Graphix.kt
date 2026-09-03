@@ -4,6 +4,8 @@ import com.softistx.common.serialization.lenientJson
 import com.softistx.graphix.execute.RegisteredLoader
 import com.softistx.graphix.execute.executionInput
 import com.softistx.graphix.execute.toGraphixResult
+import com.softistx.graphix.intercept.GraphixInterceptor
+import com.softistx.graphix.intercept.runChain
 import com.softistx.graphix.message.GraphixMessages
 import com.softistx.graphix.schema.DefaultSchemaExtensions
 import com.softistx.graphix.schema.DefaultSchemaLocations
@@ -24,6 +26,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.json.Json
 import org.reactivestreams.Publisher
@@ -59,6 +63,7 @@ class Graphix internal constructor(
     internal val validation: GraphixValidation? = null,
     internal val introspection: Boolean = true,
     internal val messages: GraphixMessages = GraphixMessages.Bundled,
+    internal val interceptors: List<GraphixInterceptor> = emptyList(),
 ) {
     /**
      * Runs one query or mutation. Field failures land in [GraphixResult.errors]; this call
@@ -68,17 +73,26 @@ class Graphix internal constructor(
      * A **subscription** is [subscribe] — graphql-java's result is a `Publisher`, which this
      * method refuses rather than serialising as a single JSON object.
      *
-     * [context] is the per-operation bag, keyed by `KClass`. A resolver parameter annotated
-     * `@GraphQLContext` is looked up there. A `CoroutineScope` is installed as well so `suspend`
-     * resolvers run; it is cancelled when this returns. HTTP plugins do not yet put the call
-     * or the security principal in [context] — whoever owns the HTTP request must, until they do.
+     * [context] is the per-operation bag, keyed by `KClass`, and it is what a resolver's
+     * `@GraphQLContext` parameter and its framework parameters are read from. A `CoroutineScope`
+     * is installed alongside it so `suspend` resolvers run; it is cancelled when this returns.
+     * An HTTP integration puts its call there — `ApplicationCall`, `ServerWebExchange` — and
+     * [GraphixInterceptor] is how an application adds to it without owning the call site.
      *
      * @param request the GraphQL document and already-decoded variables
-     * @param context per-operation values for `@GraphQLContext` parameters, not Spring beans
+     * @param context per-operation values, not Spring beans
      */
     suspend fun execute(
         request: GraphixRequest,
         context: Map<KClass<*>, Any> = emptyMap(),
+    ): GraphixResult =
+        runChain(interceptors, request, context) { operation, values ->
+            flow { emit(executeOnce(operation, values)) }
+        }.single()
+
+    private suspend fun executeOnce(
+        request: GraphixRequest,
+        context: Map<KClass<*>, Any>,
     ): GraphixResult {
         val job = SupervisorJob(currentCoroutineContext()[Job])
         val scope = CoroutineScope(currentCoroutineContext() + job + CoroutineName("graphql"))
@@ -118,6 +132,8 @@ class GraphixBuilder internal constructor(
     private var introspection = true
     private var builtInScalars = true
     private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
+    private val contextTypes = mutableSetOf<KClass<*>>()
+    private val interceptors = mutableListOf<GraphixInterceptor>()
     private var validation: GraphixValidation? = null
     private var messages: GraphixMessages = GraphixMessages.Bundled
 
@@ -237,6 +253,14 @@ class GraphixBuilder internal constructor(
         engineCustomizers += customizer
     }
 
+    internal fun addContextParameter(type: KClass<*>) {
+        contextTypes += type
+    }
+
+    internal fun addInterceptor(interceptor: GraphixInterceptor) {
+        interceptors += interceptor
+    }
+
     /**
      * Where coercion errors get their text. The default is the catalogues in this jar, English and
      * French; anything else is one lambda, and `stx-i18n` fits it directly:
@@ -289,11 +313,12 @@ class GraphixBuilder internal constructor(
                 fieldDirectives,
                 typeResolvers,
                 builtInScalars,
+                contextTypes,
             )
         val builder = GraphQL.newGraphQL(schema)
         validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }
         engineCustomizers.forEach { with(it) { builder.customize() } }
-        return Graphix(builder.build(), loaders, validation, introspection, messages)
+        return Graphix(builder.build(), loaders, validation, introspection, messages, interceptors.toList())
     }
 }
 

@@ -5,7 +5,6 @@ import com.softistx.graphix.json.toJsonElement
 import com.softistx.graphix.schema.GraphQLContext
 import com.softistx.graphix.schema.graphQLName
 import com.softistx.graphix.schema.isArgument
-import com.softistx.graphix.schema.isDataFetchingEnvironment
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
@@ -15,12 +14,17 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.valueParameters
+import graphql.GraphQLContext as OperationContext
 
 /**
- * Binds GraphQL arguments and `@GraphQLContext` parameters onto [function].
+ * Binds GraphQL arguments and framework parameters onto [function].
  *
  * An optional Kotlin parameter with no argument is omitted so `callBy` uses the default.
- * `@GraphQLContext` is looked up by `KClass` and is not a GraphQL argument.
+ * A GraphQL argument is always `@Argument`, so a parameter that is neither that nor the parent
+ * source is a framework parameter and is looked up by `KClass` in the operation's `GraphQLContext`
+ * — `@GraphQLContext` for an application type, and the plain type for the `DataFetchingEnvironment`,
+ * the `GraphQLContext` itself, or one an integration registered with `contextParameter(...)`.
+ * Schema build already refused anything else, so there is nothing left to classify here.
  */
 internal fun bindArguments(
     function: KFunction<*>,
@@ -31,15 +35,10 @@ internal fun bindArguments(
     val bound = LinkedHashMap<KParameter, Any?>()
     function.valueParameters.forEach { parameter ->
         if (parameter in skip) return@forEach
-        if (parameter.isDataFetchingEnvironment()) {
-            bound[parameter] = environment
-            return@forEach
-        }
-        if (parameter.findAnnotation<GraphQLContext>() != null) {
+        if (!parameter.isArgument()) {
             bound[parameter] = contextValue(parameter, environment)
             return@forEach
         }
-        if (!parameter.isArgument()) return@forEach
         val raw: Any? = environment.getArgument(parameter.graphQLName())
         if (raw == null && parameter.isOptional) return@forEach
         bound[parameter] = decode(raw, parameter, json)
@@ -47,15 +46,26 @@ internal fun bindArguments(
     return bound
 }
 
+/**
+ * One framework parameter. The `DataFetchingEnvironment` and graphql-java's `GraphQLContext` are
+ * the two this module knows by itself; everything else comes out of the operation context by
+ * `KClass`, which is where `Graphix.execute(..., context)` and the interceptors put it.
+ */
 internal fun contextValue(
     parameter: KParameter,
     environment: DataFetchingEnvironment,
 ): Any {
+    val annotated = parameter.findAnnotation<GraphQLContext>() != null
     val classifier =
         parameter.type.classifier as? KClass<*>
-            ?: throw GraphixException("@GraphQLContext ${parameter.name} needs a class type")
+            ?: throw GraphixException(
+                "${if (annotated) "@GraphQLContext " else ""}${parameter.name} needs a class type",
+            )
     if (classifier.isSubclassOf(DataFetchingEnvironment::class)) {
         return environment
+    }
+    if (classifier.isSubclassOf(OperationContext::class)) {
+        return environment.graphQlContext
     }
     return environment.graphQlContext.get<Any>(classifier)
         ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
