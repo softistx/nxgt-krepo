@@ -16,10 +16,32 @@ install(GraphQL) {
 ```
 
 `store` is closed over when the engine is built, the same way a Spring controller takes
-`OrderService` on its constructor. Per-request values (`ApplicationCall`, a principal) belong in
-`Graphix.execute(..., context)` and `@GraphQLContext`. The plugin does not yet forward the call
-into that map — [`docs/graphix.md`](../../../docs/graphix.md) has the three columns a resolver
-sees.
+`OrderService` on its constructor. What exists only for one request comes the other way: **the
+plugin puts the `ApplicationCall` on every operation**, so a resolver takes one as a plain
+parameter and an interceptor reads it as `call`.
+
+```kotlin
+install(GraphQL) {
+    intercept {
+        put(Caller(call.principal<UserIdPrincipal>()?.name ?: "anonymous"))
+        proceed()
+    }
+    schema { resolvers(ProductQueries(store)) }
+}
+
+@QueryMapping
+fun me(call: ApplicationCall): String = call.request.headers["X-User"] ?: "anonymous"
+```
+
+It is the same call over POST, over SSE and over graphql-ws — deliberately, so one resolver
+signature works without knowing which transport it is on. On a socket it is the handshake's, that
+being the only request a socket has; what changes mid-socket arrives in the client's
+`connection_init` payload instead. [`docs/graphix.md`](../../../docs/graphix.md) has the full
+table of what a resolver may see and the interceptor reference.
+
+`instance` and `intercept { }` cannot both apply: interceptors live on the engine, so an adopted
+one carries whatever was registered where it was built. The install refuses rather than ignoring
+the blocks — a configuration field a framework quietly ignores is worse than one it refuses.
 
 **Whoever created it closes it** still holds, and here it is almost nothing: graphql-java has no
 socket. `instance` adopts an engine a container already built; the plugin does not close it.
