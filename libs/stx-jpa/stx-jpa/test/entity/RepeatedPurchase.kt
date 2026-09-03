@@ -24,6 +24,6 @@ class RepeatedPurchase(
     @Id var id: Long = 0,
     @ManyToOne(fetch = FetchType.LAZY) var customer: Buyer? = null,
 ) {
-    @Column(name = "customer_id")
+    @Column
     var customerId: Long? = null
 }

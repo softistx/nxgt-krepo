@@ -55,8 +55,12 @@ class Purchase(
      *
      * It exists because reading `customer` to learn its id is exactly the throw a caller is trying
      * to avoid — a `@BatchMapping` keying a DataLoader has nothing else to key on.
+     *
+     * **No `name`.** `Naming.SNAKE_CASE` is an implicit strategy, so it still derives `customer_id`
+     * from the property: the two flags do not opt a column out of naming. `ForeignKeyColumnTest`
+     * asserts the column the server actually has, which is the only witness to an implicit name.
      */
-    @Column(name = "customer_id", insertable = false, updatable = false)
+    @Column(insertable = false, updatable = false)
     var customerId: Long? = null
 }
 

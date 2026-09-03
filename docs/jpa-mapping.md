@@ -34,10 +34,15 @@ class Purchase(
     @Id var id: Long = 0,
     @ManyToOne(fetch = FetchType.LAZY) var customer: Buyer? = null,
 ) {
-    @Column(name = "customer_id", insertable = false, updatable = false)
+    @Column(insertable = false, updatable = false)
     var customerId: Long? = null
 }
 ```
+
+**Naming is orthogonal.** The two flags say how the column may be *written*, not what it is called,
+so `Naming.SNAKE_CASE` still derives `customer_id` from `customerId` and the association's own join
+column lands on the same name — which is why the two mappings meet without either of them being
+told. Spell a `name` only where you would have spelled one anyway.
 
 **The two flags are not decoration.** Without them Hibernate refuses to build the factory at all,
 and names the remedy itself:

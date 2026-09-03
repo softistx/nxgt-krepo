@@ -13,6 +13,7 @@ import com.softistx.jpa.session.session
 import com.softistx.jpa.session.transaction
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 
@@ -107,6 +108,16 @@ class ForeignKeyColumnTest :
                             session.query<Purchase>("from Purchase").list().map { it.customer?.name }
                         }
                     }
+                }
+            }
+
+            scenario("takes its name from the implicit strategy, like any other column") {
+                // Neither entity names the column. The flags say how it may be written, not what it
+                // is called, so `Naming.SNAKE_CASE` still derives `customer_id` from `customerId` —
+                // and the association's own join column lands on the same name, which is the whole
+                // reason the two mappings meet. `information_schema` is the only honest witness.
+                seeded { jpa ->
+                    JpaTestDatabase.columns(jpa.config.schema!!, "purchases") shouldContain "customer_id"
                 }
             }
 
