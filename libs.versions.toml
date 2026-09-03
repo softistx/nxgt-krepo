@@ -49,7 +49,7 @@ swagger-parser = "2.1.48"
 kotlinpoet = "2.3.0"
 ktorfit = "2.7.5"
 koin = "4.2.2"
-koin-compiler = "1.0.1"
+koin-compiler = "1.1.0"
 kotest = "6.2.4"
 testcontainers = "2.0.5"
 lettuce = "7.7.0.RELEASE"
@@ -169,6 +169,7 @@ compose-destinations-ksp = { module = "io.github.raamcosta.compose-destinations:
 
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "material-kolor" }
 
+koin-compiler = { module = "io.insert-koin:koin-compiler-plugin", version.ref = "koin-compiler" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-androidx-workmanager = { module = "io.insert-koin:koin-androidx-workmanager" }
@@ -375,7 +376,3 @@ shared = [
 	"mongodb-bsonx"
 ]
 shared-test = ["kotlin-test-junit", "kotest-runner-junit5", "kotest-framework-engine"]
-
-
-[plugins]
-koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-compiler" }

@@ -5,6 +5,5 @@ import com.softistx.oauth.controllers.PermissionController
 
 fun GraphixBuilder.registerGraphQLOperations() {
     val permission = PermissionController()
-
     resolvers(permission)
 }
