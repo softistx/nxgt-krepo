@@ -9,12 +9,12 @@ dependencies:
   - $ktor.server.core: exported
   # graphql-ws on the GraphQL path. Not exported: the plugin installs the route.
   - $ktor.server.websockets
-  # Ktor DI, for `provideGraphix`. Compile-only so an application that never sets injectable
-  # never loads a class from it — the same rule as stx-ktor.
-  - $libs.ktor.server.di: compile-only
+  # Ktor DI. Installing the plugin registers the engine with the container, so this is on the
+  # runtime classpath of every application that installs it — and exported, because resolving what
+  # was registered is the point.
+  - $libs.ktor.server.di: exported
 
 test-dependencies:
-  - $libs.ktor.server.di
   - $ktor.server.testHost
   - $ktor.client.websockets
   - $libs.kotest.runner.junit5

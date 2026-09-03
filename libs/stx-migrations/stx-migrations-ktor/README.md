@@ -44,9 +44,8 @@ statement about this process and not a transaction across two servers.
 
 A runner holds a ledger, a ledger holds a connection somebody else opened, and none of the three is
 `AutoCloseable` — so this plugin uses `publish` and never `own`. What it puts on the application is
-the `List<MigrationRecord>` it read, for a health route; `injectable = true` puts the same list in
-Ktor's DI, and `ktor-server-di` is compile-only here so an application that never asks for it never
-loads a class from it.
+the `List<MigrationRecord>` it read, for a health route; the same list goes into Ktor's DI, so a
+class the container builds can report on it too. Neither is a flag.
 
 `call.migrations` is a **snapshot**, not a live read. Once the gate has passed, the ledger only
 changes when another process migrates — and a route re-reading it every request would be asking a

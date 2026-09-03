@@ -434,7 +434,6 @@ install(Migrations) {
     mongo(application.database) {
         migration(V1Seed(), V2Tags())
     }
-    injectable = true          // optional: the ledger through Ktor's DI
 }
 
 get("/health/migrations") { call.respond(call.migrations.map { "${it.version} ${it.status}" }) }

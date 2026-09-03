@@ -876,7 +876,6 @@ install(Workflows) {
     store = RedisWorkflowStore(application.redis)
     register(checkout)
     worker = true
-    injectable = true
 }
 
 post("/checkout") { call.respond(call.workflows.start(checkout, call.receive())) }
@@ -884,8 +883,8 @@ post("/checkout/{id}/approve") { call.workflows.signal(call.parameters["id"]!!, 
 ```
 
 `com.softistx.workflow.ktor`, in `stx-workflow-ktor` — a module beside the library rather than a package in `stx-ktor`. `call.workflows` and
-`Application.workflows` reach the engine; `injectable = true` registers it with Ktor's DI so a class
-the container builds can take a `WorkflowEngine` in its constructor.
+`Application.workflows` reach the engine; installing the plugin also registers it with Ktor's DI, so
+a class the container builds takes a `WorkflowEngine` in its constructor.
 
 The plugin **does not open a connection**. It takes a `WorkflowStore` that has one —
 `RedisWorkflowStore(application.redis)` shares what `install(RedisConnection)` opened — because a

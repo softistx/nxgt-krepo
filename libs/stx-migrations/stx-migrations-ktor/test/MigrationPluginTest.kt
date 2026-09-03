@@ -157,7 +157,6 @@ class MigrationPluginTest :
                     application {
                         install(Migrations) {
                             gate(runner(InMemoryLedger(), migration(1)))
-                            injectable = true
                         }
                         routing {
                             get("/") {

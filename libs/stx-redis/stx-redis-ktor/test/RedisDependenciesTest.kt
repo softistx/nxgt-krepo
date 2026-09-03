@@ -17,7 +17,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 
 /**
- * `injectable = true`, against a real server.
+ * What installing the plugin registers with Ktor's DI, against a real server.
  *
  * What Ktor's container does on its own — that `dependencies { }` needs no `install`, and that it
  * closes every `AutoCloseable` it hands out — is checked without a backend in `stx-ktor`'s own
@@ -30,14 +30,13 @@ class RedisDependenciesTest :
 
         val server = redisContainer()
 
-        feature("a plugin asked to make its resource injectable").config(enabled = server.available) {
+        feature("a plugin registering its resource with the container").config(enabled = server.available) {
             scenario("hands the container the one it opened rather than a second connection") {
                 lateinit var injected: Redis
                 testApplication {
                     application {
                         install(RedisConnection) {
                             config = RedisConfig(uri = server.requireEndpoint(), namespace = "di")
-                            injectable = true
                         }
 
                         injected = dependencies.resolve()
@@ -70,7 +69,6 @@ class RedisDependenciesTest :
                     application {
                         install(RedisConnection) {
                             config = RedisConfig(uri = server.requireEndpoint(), namespace = "twice")
-                            injectable = true
                         }
 
                         injected = dependencies.resolve()

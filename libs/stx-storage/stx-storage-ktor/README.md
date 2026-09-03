@@ -22,9 +22,10 @@ The client, and nothing else. Buckets and objects are asked of the client per ca
 is computed locally and reaches no network at all. `call.storage` is shared and safe to be — the
 MinIO SDK's client is a pool.
 
-## `injectable = true`
+## Injection
 
-Registers the client the plugin already opened rather than letting the container open a second. The
+Installing the plugin registers the client with Ktor's DI — the one it already opened, rather than
+letting the container open a second. It is not a flag. The
 container closes it as well at application stop, which is harmless because these clients close
 idempotently. A client that has to outlive the application belongs in `instance`, which this plugin
 adopts and does not close.

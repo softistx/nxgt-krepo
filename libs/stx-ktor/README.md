@@ -43,7 +43,8 @@ second argument, and it is why the function takes one.
 
 ## What the container does is not negotiable
 
-Every plugin's `injectable = true` hands Ktor's DI a second claim on closing the resource. Two facts
+Every plugin registers what it installed with Ktor's DI, which hands the container a second claim on
+closing the resource. That is unconditional — there is no flag to turn it off. Two facts
 decide whether that is safe, and neither is taken from documentation — `test/di/DependenciesTest.kt`
 pins both, with a `Probe` and no backend:
 

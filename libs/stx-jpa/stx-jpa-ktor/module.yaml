@@ -17,9 +17,10 @@ dependencies:
   # stays in stx-ktor because it belongs to no integration; this module is a caller of it.
   - //libs/stx-ktor
 
-  # Ktor DI, for `injectable = true`. Compile-only so an application that never sets it never loads
-  # a class from it — the same rule as stx-ktor and stx-workflow-ktor.
-  - $libs.ktor.server.di: compile-only
+  # Ktor DI. Installing the plugin registers the factory with the container, so this is on the
+  # runtime classpath of every application that installs it — and exported, because resolving what
+  # was registered is the point.
+  - $libs.ktor.server.di: exported
 
 test-dependencies:
   # the Postgres the plugin spec talks to, started for the run when the workspace's own is not named
@@ -27,7 +28,6 @@ test-dependencies:
   # the spec creates and drops its own schema with the Postgres client directly; stx-jpa keeps its
   # three drivers runtime-only, so nothing inherits a compile classpath for one
   - $libs.vertx.pg.client
-  - $libs.ktor.server.di
   - $ktor.server.testHost
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine

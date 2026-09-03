@@ -6,16 +6,15 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 
 /**
- * Makes the plugin's client, and the database over it, injectable — without opening a second one.
+ * Registers the plugin's client, and the database over it, with Ktor's DI — without opening a second one.
  *
  * ```kotlin
  * install(MongoDB) { uri = …; database = "orders" }
- * provideMongo()
  *
  * class OrderRepository(private val orders: MongoDatabase)   // built by the container, no ApplicationCall in sight
  * ```
  *
- * Or in one line, which is the same thing: `install(MongoDB) { uri = …; database = "orders"; injectable = true }`.
+ * Called by [MongoDB] at install — there is nothing to switch on.
  *
  * **The container closes it at application stop, and that is not a problem.** Ktor's DI closes every
  * `AutoCloseable` it hands out — one a provider merely passed through included, which a spec in
@@ -24,7 +23,7 @@ import io.ktor.server.plugins.di.dependencies
  * because these clients close idempotently: see `CloseGuard` in `stx-common`. What it does mean
  * is that a connection which has to outlive the application should not be registered here.
  */
-fun Application.provideMongo() {
+internal fun Application.provideMongo() {
     val client = mongo
     val orders = database
     dependencies {
