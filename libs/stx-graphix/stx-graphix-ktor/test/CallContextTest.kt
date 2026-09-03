@@ -11,6 +11,7 @@ import com.softistx.graphix.ktor.fixture.CallerQueries
 import com.softistx.graphix.ktor.fixture.CallerSubscriptions
 import com.softistx.graphix.ktor.fixture.ContextQueries
 import com.softistx.graphix.ktor.fixture.GreetingQueries
+import com.softistx.graphix.schema.contextParameter
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -112,7 +113,10 @@ class CallContextTest :
                                 put(Caller(call.request.headers["X-User"] ?: "anonymous"))
                                 proceed()
                             }
-                            schema { resolvers(ContextQueries()) }
+                            schema {
+                                contextParameter(Caller::class)
+                                resolvers(ContextQueries())
+                            }
                         }
                     }
                     client

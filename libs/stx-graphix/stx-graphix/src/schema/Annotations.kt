@@ -47,7 +47,7 @@ annotation class SubscriptionMapping(
  * [com.softistx.graphix.GraphixBuilder.type].
  *
  * [typeName] defaults to the simple name of the first argument's type. [field] defaults to
- * the Kotlin function name. The first parameter that is not DFE / `@GraphQLContext` is the
+ * the Kotlin function name. The first parameter the framework does not supply is the
  * parent (`env.source`). GraphQL arguments are `[Argument]` parameters.
  *
  * A field is either this or [BatchMapping], not both.
@@ -119,24 +119,10 @@ annotation class GraphQLDescription(
 annotation class GraphQLIgnore
 
 /**
- * Injects a value into a resolver parameter by `KClass`.
- *
- * [graphql.schema.DataFetchingEnvironment] is recognized by type and does not need this
- * annotation. Other types are looked up in [com.softistx.graphix.Graphix.execute]'s map.
- * Missing → [com.softistx.graphix.GraphixException].
- *
- * Not a GraphQL argument, and not how a Spring bean is reached — those stay on the controller
- * constructor.
- */
-@Target(AnnotationTarget.VALUE_PARAMETER)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class GraphQLContext
-
-/**
  * Marks a GraphQL argument. Required on every resolver parameter that is an argument.
- * The parent source, this field's [graphql.schema.DataFetchingEnvironment], and
- * `@GraphQLContext` do not take it. An input object's fields do not take it either — the
- * object is already the argument.
+ * The parent source, this field's [graphql.schema.DataFetchingEnvironment] and any type
+ * registered with `contextParameter(...)` do not take it. An input object's fields do not take it
+ * either — the object is already the argument.
  *
  * [name] defaults to the Kotlin parameter name (or `@GraphQLName`). Compile with parameter
  * names retained or this has nothing to read.
