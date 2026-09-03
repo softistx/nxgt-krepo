@@ -494,6 +494,20 @@ values, so two aliases of the same field with different arguments do not share a
 A DataLoader is **per GraphQL operation**, not per HTTP request — two concurrent operations
 do not batch together.
 
+**A property is read only when its field is selected.** Object fields are fetched one at a time by
+graphql-java's `PropertyDataFetcher`; nothing here serialises a source object wholesale, so a
+property outside the selection is never touched. And a property outside the `@Serializable`
+descriptor — `@GraphQLIgnore`, or `@Transient` — has no field to select at all, which is the stronger
+guarantee of the two. `UnselectedFieldTest` pins both against a property that throws when read.
+
+That matters when the parent is a JPA entity, because there a property that throws when read is not
+a fixture: an unfetched `LAZY` association is exactly that. So the DataLoader keys on the **foreign
+key column** beside the association rather than on the association itself, and `@GraphQLIgnore` on
+the association turns "nobody selected it" into "nobody can". `@BatchMapping` receives the parent
+instances, so it reads that column whether or not the column is itself a field.
+[`docs/jpa-mapping.md`](jpa-mapping.md) has the mapping, its two mandatory flags, and the one way it
+bites.
+
 A `@SchemaMapping` that needs this field's source or arguments takes
 `dfe: DataFetchingEnvironment` (no annotation). That DFE is **this field**, not an entry in
 `execute`'s context map.
