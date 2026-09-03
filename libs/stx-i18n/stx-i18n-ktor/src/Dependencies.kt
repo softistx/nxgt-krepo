@@ -5,16 +5,15 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 
 /**
- * Makes the catalogs the plugin installed injectable, without opening a second one.
+ * Registers the catalogs the plugin installed with Ktor's DI, without loading them a second time.
  *
  * ```kotlin
  * install(I18n) { messages = Messages.load(…) }
- * provideMessages()
  *
  * class WelcomeEmail(private val messages: Messages)   // built by the container, no ApplicationCall in sight
  * ```
  *
- * Or in one line, which is the same thing: `install(I18n) { messages = Messages.load(…); injectable = true }`.
+ * Called by [I18n] at install — there is nothing to switch on.
  *
  * **The container closes it at application stop, and that is not a problem.** Ktor's DI closes every
  * `AutoCloseable` it hands out — one a provider merely passed through included, which a spec in
@@ -23,7 +22,7 @@ import io.ktor.server.plugins.di.dependencies
  * because these clients close idempotently: see `CloseGuard` in `stx-common`. What it does mean
  * is that a connection which has to outlive the application should not be registered here.
  */
-fun Application.provideMessages() {
+internal fun Application.provideMessages() {
     val catalogs = messages
     dependencies {
         provide<Messages> { catalogs }

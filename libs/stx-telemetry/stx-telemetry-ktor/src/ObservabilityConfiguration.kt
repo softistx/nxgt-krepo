@@ -53,14 +53,6 @@ class ObservabilityConfiguration {
     var install: Boolean = true
 
     /**
-     * Registers the telemetry with Ktor's DI as well.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only here, so an application that
-     * never asks for this must not be made to carry it at runtime.
-     */
-    var injectable: Boolean = true
-
-    /**
      * What a request's span is called before routing has matched it.
      *
      * The default is the method and the raw path, and the plugin **renames it** to the matched route

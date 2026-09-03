@@ -46,6 +46,10 @@ import io.ktor.util.AttributeKey
  * type as well — `val telemetry: Telemetry = application.telemetry`. Two identifiers spelled the
  * same in one file is a name clash the application has to work around, so the plugin took the other
  * word: telemetry is the data, observability is what an application switches on.
+ *
+ * **Installing it registers the telemetry with Ktor's DI**, for the rare class that wants the root
+ * itself. Most need none of it: `logger<T>()` and `span { }` find the installed telemetry on their
+ * own. See [provideTelemetry].
  */
 val Observability =
     createApplicationPlugin(name = "Observability", createConfiguration = ::ObservabilityConfiguration) {
@@ -60,7 +64,7 @@ val Observability =
             }
 
         if (configuration.install) telemetry.install()
-        if (configuration.injectable) application.provideTelemetry()
+        application.provideTelemetry()
 
         // Routing resolves the template long after the span was named, and the event is the only
         // place it is public. Recorded on the call, read back when the span is about to be written.

@@ -26,9 +26,10 @@ server that accepts requests while its broker connection is still being made, an
 of them with a failure that looks like the broker's fault. `stx-jpa-ktor` makes the same call for
 the same reason.
 
-## `injectable = true`
+## Injection
 
-Registers the connection the plugin already opened, rather than letting the container open a second.
+Installing the plugin registers the connection with Ktor's DI — the one it already opened, rather
+than letting the container open a second. It is not a flag.
 The container then closes it as well, which is harmless — `Amqp` closes through `CloseGuard` — but a
 connection that has to outlive the application belongs in `instance`, which this plugin adopts and
 does not close.

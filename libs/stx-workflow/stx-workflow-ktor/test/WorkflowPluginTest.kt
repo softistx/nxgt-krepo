@@ -170,7 +170,6 @@ class WorkflowPluginTest :
                         install(Workflows) {
                             store = InMemoryStore()
                             register(flow)
-                            injectable = true
                         }
                         routing {
                             get("/") {

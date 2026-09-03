@@ -87,7 +87,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a stx-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
 | [`docs/graphix.md`](docs/graphix.md) | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, SDL scan, HTTP/SSE/graphql-ws |
 | [`libs/stx-graphix/stx-graphix/README.md`](libs/stx-graphix/stx-graphix/README.md) | The GraphQL engine — why SerialDescriptor and not Jackson, why there is no class scan in core |
-| [`libs/stx-graphix/stx-graphix-ktor/README.md`](libs/stx-graphix/stx-graphix-ktor/README.md) | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, `injectable` |
+| [`libs/stx-graphix/stx-graphix-ktor/README.md`](libs/stx-graphix/stx-graphix-ktor/README.md) | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, and the engine it registers with the container |
 | [`libs/stx-graphix/stx-graphix-spring/README.md`](libs/stx-graphix/stx-graphix-spring/README.md) | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
 | [`examples/graphix-shop/README.md`](examples/graphix-shop/README.md) | The GraphQL catalogue — how to run it, the split SDL under `resources/graphql/` |
 | [`plugins/dgs-codegen/README.md`](plugins/dgs-codegen/README.md) | DGS codegen plugin — schema to Kotlin types |
@@ -122,7 +122,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-migrations/stx-migrations-ktor/README.md`](libs/stx-migrations/stx-migrations-ktor/README.md) | The Ktor plugin — why `runBlocking` inside `install` is what makes it a gate, why it goes after the connection plugin, and why `sql { }` / `mongo { }` are sugar over the one `gate` that is the contract |
 | [`libs/stx-migrations/stx-migrations-spring/README.md`](libs/stx-migrations/stx-migrations-spring/README.md) | The Spring auto-configuration — why an `InitializingBean` and not a suspending listener, and why naming a store without its connection is an error rather than a shrug |
 | [`libs/stx-redis/stx-redis/README.md`](libs/stx-redis/stx-redis/README.md) | The Redis library — the cache, the lock, topics and streams, and what each one refuses to do |
-| [`libs/stx-redis/stx-redis-ktor/README.md`](libs/stx-redis/stx-redis-ktor/README.md) | The Ktor plugin — why one connection and not one per request, and what `injectable = true` costs and does not |
+| [`libs/stx-redis/stx-redis-ktor/README.md`](libs/stx-redis/stx-redis-ktor/README.md) | The Ktor plugin — why one connection and not one per request, and what handing it to the container costs and does not |
 | [`libs/stx-redis/stx-redis-spring/README.md`](libs/stx-redis/stx-redis-spring/README.md) | The Spring auto-configuration — why it is off unless asked for, and why `stx.redis` is not `spring.data.redis` |
 | [`libs/stx-storage/stx-storage/README.md`](libs/stx-storage/stx-storage/README.md) | The object storage library — objects, and what a presigned URL or upload form can promise |
 | [`libs/stx-storage/stx-storage-ktor/README.md`](libs/stx-storage/stx-storage-ktor/README.md) | The Ktor plugin — and why it is the one whose `config` is required rather than defaulted |

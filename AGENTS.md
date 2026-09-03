@@ -518,11 +518,13 @@ Lettuce still had to stay off the classpath of an application that only installe
 plugin at all — so the edge is `exported` and a consumer inherits it. The dependency stops being
 optional because it stopped being one.
 
-`compile-only` keeps its place for what an integration genuinely may not use: `ktor-server-di` in
-every plugin, so that an application which never sets `injectable = true` never loads a class from
-it, and the store libraries in `stx-migrations-ktor`, which offers two ledgers and expects a caller
-to want one. Verified the same way as before — `./kotlin show dependencies -m <module>`: a
-compile-only entry sits in COMPILE and is absent from RUNTIME.
+`compile-only` keeps its place for what an integration genuinely may not use: the store libraries in
+`stx-migrations-ktor`, which offers two ledgers and expects a caller to want one, and `ktor-server-cors`
+in `stx-ktor`, for the one function that calls it. `ktor-server-di` used to be on that list and is
+not any more — a plugin registers what it installed with the container unconditionally, so every
+application that installs one carries it. Verified the same way as before —
+`./kotlin show dependencies -m <module>`: a compile-only entry sits in COMPILE and is absent from
+RUNTIME.
 
 **The exception this rule used to have.** It said the line was not an integration's size but whether
 it had *a design of its own*: a module when it brought its own lifecycle and configuration surface —
@@ -558,11 +560,11 @@ reach it.** Three rules, and the next integration is built to them rather than r
   it on `ApplicationStopped`) and `publish` (someone else's, we leave it alone). A plugin that
   adopts a connection and also closes it is the second close.
 - **Reaching a resource only through `call.x` is a service locator.** A class a container builds
-  has no `ApplicationCall`, so each plugin can register what it installed —
-  `install(RedisConnection) { config = …; injectable = true }` — and the same connection is then
-  both `call.redis` and a constructor parameter. `injectable` is off by default because
-  `ktor-server-di` is compile-only, and each `provideX` lives in its own file so nothing loads a
-  class from Ktor's DI until it is switched on.
+  has no `ApplicationCall`, so each plugin registers what it installed with Ktor's DI —
+  `install(RedisConnection) { config = … }` and the same connection is then both `call.redis` and a
+  constructor parameter. That is not a flag: injection is what installing the plugin does, `provideX`
+  is `internal`, and `ktor-server-di` is an `exported` dependency of every integration module
+  because of it.
 
 **And close idempotently, through `CloseGuard`.** A resource that is handed around is closed more
 than once, and the rule above says who *should* close it, not what happens when two of them do.
@@ -935,7 +937,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-i18n/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
   | `libs/stx-i18n/stx-i18n-spring/README.md` | The Spring auto-configuration for it — why narrowing the locale resolver is the half that matters, and why Boot's own property wins |
   | `libs/stx-i18n/stx-i18n-ktor/README.md` | The Ktor plugin for it — the one that owns nothing and resolves per request, and why `?lang=` is a decision rather than a default |
-  | `libs/stx-ktor/README.md` | The Ktor seam — the four lifecycle verbs and the one rule behind them, the two facts about Ktor's container that `injectable = true` rests on, and why no integration lives here |
+  | `libs/stx-ktor/README.md` | The Ktor seam — the four lifecycle verbs and the one rule behind them, the two facts about Ktor's container that unconditional injection rests on, and why no integration lives here |
   | `libs/stx-jpa/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
   | `libs/stx-jpa/stx-jpa-ktor/README.md` | The Ktor plugin for it — the factory/session split, the blocking bootstrap, and why the `stx-jpa` edge is `exported` here where the hub had it `compile-only` |
   | `libs/stx-jpa/stx-jpa-spring/README.md` | The Spring auto-configuration for it — the two beans, the required `packages`, and why `SchemaMode` defers to stx-migrations |
@@ -943,7 +945,7 @@ the same each time, and the mistakes are the same each time too.
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, `@Argument`, `@GraphQLContext`). **This is where a new annotation, scalar or directive is documented** |
   | `libs/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no class scan in core |
-  | `libs/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, `injectable` |
+  | `libs/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, and the engine it registers with the container |
   | `libs/stx-graphix/stx-graphix-spring/README.md` | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
   | `docs/telemetry.md` | What a stx-telemetry call may say — the root's settings, every log and span verb, the severities, the attribute conversions, `traceparent` and the signal model. **This is where a new verb, severity, span kind or exporter is documented** |
   | `libs/stx-telemetry/stx-telemetry/README.md` | How the telemetry library is shaped — why a coroutine context element and not an MDC, why the thread-local mirror is not a contradiction, why writing a signal never waits |

@@ -5,16 +5,15 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 
 /**
- * Makes the AMQP connection the plugin installed injectable, without opening a second one.
+ * Registers the AMQP connection the plugin opened with Ktor's DI, without opening a second one.
  *
  * ```kotlin
  * install(AmqpConnection) { config = AmqpConfig(uri = …) }
- * provideAmqp()
  *
  * class OrderEvents(private val amqp: Amqp)   // built by the container, no ApplicationCall in sight
  * ```
  *
- * Or in one line, which is the same thing: `install(AmqpConnection) { config = AmqpConfig(uri = …); injectable = true }`.
+ * Called by [AmqpConnection] at install — there is nothing to switch on.
  *
  * **The container closes it at application stop, and that is not a problem.** Ktor's DI closes every
  * `AutoCloseable` it hands out — one a provider merely passed through included, which a spec in
@@ -23,7 +22,7 @@ import io.ktor.server.plugins.di.dependencies
  * because these clients close idempotently: see `CloseGuard` in `stx-common`. What it does mean
  * is that a connection which has to outlive the application should not be registered here.
  */
-fun Application.provideAmqp() {
+internal fun Application.provideAmqp() {
     val connection = amqp
     dependencies {
         provide<Amqp> { connection }
