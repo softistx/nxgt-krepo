@@ -35,7 +35,7 @@ class GraphixPluginTest :
             scenario("the header decides the language a coercion error comes back in") {
                 testApplication {
                     application {
-                        install(GraphQL) { schema { query(ExpiryQueries()) } }
+                        install(GraphQL) { schema { resolvers(ExpiryQueries()) } }
                     }
                     val response =
                         client.post("/graphql") {
@@ -51,7 +51,7 @@ class GraphixPluginTest :
             scenario("no header is the engine's own default, not a failed request") {
                 testApplication {
                     application {
-                        install(GraphQL) { schema { query(ExpiryQueries()) } }
+                        install(GraphQL) { schema { resolvers(ExpiryQueries()) } }
                     }
                     val response =
                         client.post("/graphql") {
@@ -68,7 +68,7 @@ class GraphixPluginTest :
             scenario("a JSON body executes and returns data") {
                 testApplication {
                     application {
-                        install(GraphQL) { schema { query(GreetingQueries()) } }
+                        install(GraphQL) { schema { resolvers(GreetingQueries()) } }
                     }
                     val response =
                         client.post("/graphql") {
@@ -83,7 +83,7 @@ class GraphixPluginTest :
             scenario("a field error is HTTP 200 with errors[]") {
                 testApplication {
                     application {
-                        install(GraphQL) { schema { query(BoomQueries()) } }
+                        install(GraphQL) { schema { resolvers(BoomQueries()) } }
                     }
                     val response =
                         client.post("/graphql") {
@@ -98,7 +98,7 @@ class GraphixPluginTest :
             scenario("malformed JSON is HTTP 400") {
                 testApplication {
                     application {
-                        install(GraphQL) { schema { query(GreetingQueries()) } }
+                        install(GraphQL) { schema { resolvers(GreetingQueries()) } }
                     }
                     val response =
                         client.post("/graphql") {
@@ -115,7 +115,7 @@ class GraphixPluginTest :
             scenario("POST { __schema } returns the query type") {
                 testApplication {
                     application {
-                        install(GraphQL) { schema { query(GreetingQueries()) } }
+                        install(GraphQL) { schema { resolvers(GreetingQueries()) } }
                     }
                     val response =
                         client.post("/graphql") {
@@ -130,7 +130,7 @@ class GraphixPluginTest :
             scenario("GET query={ __schema } is the same") {
                 testApplication {
                     application {
-                        install(GraphQL) { schema { query(GreetingQueries()) } }
+                        install(GraphQL) { schema { resolvers(GreetingQueries()) } }
                     }
                     val response = client.get("/graphql?query=%7B__schema%7BqueryType%7Bname%7D%7D%7D")
                     response.status shouldBe HttpStatusCode.OK
@@ -143,7 +143,7 @@ class GraphixPluginTest :
             scenario("the query parameter executes") {
                 testApplication {
                     application {
-                        install(GraphQL) { schema { query(GreetingQueries()) } }
+                        install(GraphQL) { schema { resolvers(GreetingQueries()) } }
                     }
                     val response = client.get("/graphql?query=%7Bhello%7D")
                     response.status shouldBe HttpStatusCode.OK
@@ -158,8 +158,8 @@ class GraphixPluginTest :
                     application {
                         install(GraphQL) {
                             schema {
-                                query(GreetingQueries())
-                                subscription(TickSubscriptions())
+                                resolvers(GreetingQueries())
+                                resolvers(TickSubscriptions())
                             }
                         }
                     }
@@ -185,8 +185,8 @@ class GraphixPluginTest :
                         install(GraphQL) {
                             subscriptions = SubscriptionProtocol.GraphqlWs
                             schema {
-                                query(GreetingQueries())
-                                subscription(TickSubscriptions())
+                                resolvers(GreetingQueries())
+                                resolvers(TickSubscriptions())
                             }
                         }
                     }
@@ -206,8 +206,8 @@ class GraphixPluginTest :
                         install(GraphQL) {
                             subscriptions = SubscriptionProtocol.GraphqlWs
                             schema {
-                                query(GreetingQueries())
-                                subscription(TickSubscriptions())
+                                resolvers(GreetingQueries())
+                                resolvers(TickSubscriptions())
                             }
                         }
                     }
@@ -231,7 +231,7 @@ class GraphixPluginTest :
                 testApplication {
                     application {
                         install(GraphQL) {
-                            schema { query(GreetingQueries()) }
+                            schema { resolvers(GreetingQueries()) }
                             customize {
                                 scalar(
                                     graphQLScalar("Money") { serialize { value -> value.toString() } },
@@ -261,7 +261,7 @@ class GraphixPluginTest :
                         }
                         install(GraphQL) {
                             fromDi = true
-                            schema { query(GreetingQueries()) }
+                            schema { resolvers(GreetingQueries()) }
                         }
                     }
                     client
@@ -277,7 +277,7 @@ class GraphixPluginTest :
             scenario("an engine built elsewhere is the one the route uses") {
                 val engine =
                     com.softistx.graphix.Graphix {
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                     }
                 testApplication {
                     application {
@@ -295,7 +295,7 @@ class GraphixPluginTest :
         feature("GET /sandbox") {
             scenario("is not served unless asked for") {
                 testApplication {
-                    application { install(GraphQL) { schema { query(GreetingQueries()) } } }
+                    application { install(GraphQL) { schema { resolvers(GreetingQueries()) } } }
 
                     client.get("/sandbox").status shouldBe HttpStatusCode.NotFound
                 }
@@ -306,7 +306,7 @@ class GraphixPluginTest :
                     application {
                         install(GraphQL) {
                             sandbox = true
-                            schema { query(GreetingQueries()) }
+                            schema { resolvers(GreetingQueries()) }
                         }
                     }
                     val response = client.get("/sandbox")
@@ -323,7 +323,7 @@ class GraphixPluginTest :
                         install(GraphQL) {
                             path = "/api/graphql"
                             sandbox = true
-                            schema { query(GreetingQueries()) }
+                            schema { resolvers(GreetingQueries()) }
                         }
                     }
 
@@ -339,7 +339,7 @@ class GraphixPluginTest :
                             sandbox = true
                             sandboxPath = "/explorer"
                             sandboxEndpoint = "https://api.example.test/graphql"
-                            schema { query(GreetingQueries()) }
+                            schema { resolvers(GreetingQueries()) }
                         }
                     }
 
@@ -352,7 +352,7 @@ class GraphixPluginTest :
 
             scenario("an adopted engine still gets the page: the plugin serves it, not the engine") {
                 testApplication {
-                    val engine = com.softistx.graphix.Graphix { query(GreetingQueries()) }
+                    val engine = com.softistx.graphix.Graphix { resolvers(GreetingQueries()) }
                     application {
                         install(GraphQL) {
                             instance = engine

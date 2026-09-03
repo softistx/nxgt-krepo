@@ -19,9 +19,7 @@ class GraphixHttpTest :
             subscriptions: SubscriptionProtocol = SubscriptionProtocol.Sse,
         ): WebTestClient {
             val engine =
-                Graphix {
-                    roots.forEach { addController(it) }
-                }
+                Graphix { resolvers(roots.asList()) }
             return WebTestClient
                 .bindToRouterFunction(
                     GraphixHandler(engine, lenientJson, "/graphql", subscriptions).router(),

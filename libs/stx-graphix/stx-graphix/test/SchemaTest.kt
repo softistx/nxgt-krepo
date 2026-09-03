@@ -15,7 +15,7 @@ class SchemaTest :
     FeatureSpec({
         feature("schema from annotations") {
             scenario("query functions become fields, and @Serializable types become objects") {
-                val sdl = Graphix { query(ProductQueries()) }.sdl()
+                val sdl = Graphix { resolvers(ProductQueries()) }.sdl()
                 sdl shouldContain "type Query"
                 sdl shouldContain "product(id: String!): Product"
                 sdl shouldContain "type Product"
@@ -24,24 +24,24 @@ class SchemaTest :
             }
 
             scenario("a @GraphQLIgnore property is not a GraphQL field") {
-                val sdl = Graphix { query(ProductQueries()) }.sdl()
+                val sdl = Graphix { resolvers(ProductQueries()) }.sdl()
                 sdl shouldNotContain "secret"
             }
 
             scenario("@QueryMapping(name) renames a root field") {
-                val sdl = Graphix { query(GreetingQueries()) }.sdl()
+                val sdl = Graphix { resolvers(GreetingQueries()) }.sdl()
                 sdl shouldContain "shout"
                 sdl shouldNotContain "loud"
             }
 
             scenario("enums and lists round-trip through SerialDescriptor") {
-                val sdl = Graphix { query(ProductQueries()) }.sdl()
+                val sdl = Graphix { resolvers(ProductQueries()) }.sdl()
                 sdl shouldContain "enum Size"
                 sdl shouldContain "sizes: [Size!]!"
             }
 
             scenario("a type that is not @Serializable fails naming that type") {
-                val failure = shouldThrow<GraphixException> { Graphix { query(BadQueries()) } }
+                val failure = shouldThrow<GraphixException> { Graphix { resolvers(BadQueries()) } }
                 failure.message shouldContain "NotSerializable"
                 failure.message shouldContain "not @Serializable"
             }
@@ -54,7 +54,7 @@ class SchemaTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            query(
+                            resolvers(
                                 object {
                                     @com.softistx.graphix.schema.QueryMapping
                                     fun product(id: String): String = id
@@ -69,7 +69,7 @@ class SchemaTest :
                 val failure =
                     shouldThrow<GraphixException> {
                         Graphix {
-                            query(
+                            resolvers(
                                 com.softistx.graphix.fixture
                                     .BadInputQueries(),
                             )
@@ -83,7 +83,7 @@ class SchemaTest :
         feature("introspection") {
             scenario("{ __schema } names the query type") {
                 val result =
-                    Graphix { query(GreetingQueries()) }
+                    Graphix { resolvers(GreetingQueries()) }
                         .execute(GraphixRequest("{ __schema { queryType { name } } }"))
                 result.isOk shouldBe true
                 ((result.data.shouldNotBeNull()["__schema"] as Map<*, *>)["queryType"] as Map<*, *>)["name"] shouldBe "Query"
@@ -91,7 +91,7 @@ class SchemaTest :
 
             scenario("{ __type } describes an annotated object") {
                 val result =
-                    Graphix { query(ProductQueries()) }
+                    Graphix { resolvers(ProductQueries()) }
                         .execute(GraphixRequest("""{ __type(name: "Product") { name fields { name } } }"""))
                 result.isOk shouldBe true
                 val type = result.data.shouldNotBeNull()["__type"] as Map<*, *>
@@ -101,7 +101,7 @@ class SchemaTest :
 
             scenario("the GraphQL introspection query completes") {
                 val result =
-                    Graphix { query(ProductQueries()) }
+                    Graphix { resolvers(ProductQueries()) }
                         .execute(GraphixRequest(graphql.introspection.IntrospectionQuery.INTROSPECTION_QUERY))
                 result.isOk shouldBe true
                 result.data.shouldNotBeNull().containsKey("__schema") shouldBe true
