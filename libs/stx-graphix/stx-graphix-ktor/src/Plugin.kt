@@ -101,7 +101,7 @@ class GraphQLConfiguration {
 
     /**
      * How subscriptions are served. [SubscriptionProtocol.Sse] (default) is
-     * `text/event-stream` on POST. [SubscriptionProtocol.GraphqlWs] is a WebSocket
+     * `text/event-stream` on POST and GET. [SubscriptionProtocol.GraphqlWs] is a WebSocket
      * on the same path; HTTP POST of a subscription is then 400.
      */
     var subscriptions: SubscriptionProtocol = SubscriptionProtocol.Sse

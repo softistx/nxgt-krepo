@@ -102,7 +102,9 @@ GraphQL should not also open an HTML page that advertises the schema — and the
 
 POST and GET share the same JSON envelope as the Ktor plugin. A field error is HTTP 200 plus
 `errors[]`. Malformed JSON is HTTP 400. Subscriptions default to `text/event-stream`;
-`stx.graphix.subscriptions=graphql-ws` is a WebSocket on the same path.
+`stx.graphix.subscriptions=graphql-ws` is a WebSocket on the same path — under which the sandbox
+cannot run a subscription, since the page is only ever given an endpoint and never told to open a
+socket.
 Keys live in
 [`docs/spring-configuration.md`](../../../docs/spring-configuration.md); the annotation vocabulary
 is [`docs/graphix.md`](../../../docs/graphix.md).

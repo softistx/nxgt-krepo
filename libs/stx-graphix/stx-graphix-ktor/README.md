@@ -89,5 +89,7 @@ A GraphQL field error is HTTP 200 plus `errors[]`. Malformed JSON is HTTP 400. I
 (`{ __schema }`, `{ __type(name: …) }`) is on — GraphiQL and the sandbox talk to this path — and
 `introspection = false` turns it off. Subscriptions
 default to `text/event-stream` on the same path. Set `subscriptions = GraphqlWs` for
-`graphql-ws` (`graphql-transport-ws` on that path); HTTP POST of a subscription is then 400.
+`graphql-ws` (`graphql-transport-ws` on that path); HTTP POST of a subscription is then 400 — which
+also means the sandbox cannot run a subscription under that protocol, since the page is only ever
+given an endpoint and never told to open a socket.
 The vocabulary is in [`docs/graphix.md`](../../../docs/graphix.md).
