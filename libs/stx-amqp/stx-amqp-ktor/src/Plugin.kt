@@ -20,6 +20,10 @@ import kotlinx.coroutines.runBlocking
  * else: channels, publishers and consumers are opened by whoever needs one and closed by them.
  * `Amqp.openChannel` and `withChannel` are how a route gets one.
  *
+ * **Installing it registers the connection with Ktor's DI**, so a class the container builds takes an
+ * [Amqp] in its constructor rather than reaching through a call. See [provideAmqp] for what the
+ * container's second claim on closing it means.
+ *
  * **The connect is blocking here, and on purpose.** `Amqp.connect` suspends and plugin installation
  * does not, so this is the one place in the module that calls `runBlocking` — at startup, on the
  * thread that is starting the application, before anything is serving. The alternative is a server
@@ -29,7 +33,7 @@ import kotlinx.coroutines.runBlocking
 val AmqpConnection =
     createApplicationPlugin(name = "Amqp", createConfiguration = ::AmqpConnectionConfiguration) {
         application.resource(AmqpKey, pluginConfig.instance) { runBlocking { Amqp.connect(pluginConfig.config) } }
-        if (pluginConfig.injectable) application.provideAmqp()
+        application.provideAmqp()
     }
 
 /** What [AmqpConnection] connects with. */
@@ -50,21 +54,6 @@ class AmqpConnectionConfiguration {
      * through `call.amqp`.
      */
     var instance: Amqp? = null
-
-    /**
-     * Registers the connection with Ktor's DI as well, so a class the container builds can take a
-     * [Amqp] in its constructor — the same one `call.amqp` hands a route.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime. Setting it
-     * calls [provideAmqp], which lives in its own file for that reason — nothing loads a class
-     * from Ktor's DI until the flag is true.
-     *
-     * The container closes what it hands out when the application stops, so this hands it a second
-     * claim on closing the connection. That is safe — these clients close idempotently — but a
-     * connection that has to outlive the application does not belong in it.
-     */
-    var injectable: Boolean = true
 }
 
 internal val AmqpKey = AttributeKey<Amqp>("com.softistx.amqp.Amqp")

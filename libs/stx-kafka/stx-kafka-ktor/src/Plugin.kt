@@ -24,6 +24,9 @@ import io.ktor.util.*
  * What this is worth is what it says: one place the bootstrap and the `Json` are configured, and a
  * route that reaches for them without threading a `Kafka` through every constructor.
  *
+ * **Installing it registers the cluster with Ktor's DI**, so a class the container builds takes a
+ * [Kafka] in its constructor rather than reaching through a call. See [provideKafka].
+ *
  * A long-lived publisher or a subscriber belongs to the application rather than to a request. Open
  * it once at startup and close it on `ApplicationStopped`, the way the other plugins here do with
  * their connections.
@@ -31,7 +34,7 @@ import io.ktor.util.*
 val KafkaCluster =
     createApplicationPlugin(name = "Kafka", createConfiguration = ::KafkaClusterConfiguration) {
         application.publish(KafkaKey, pluginConfig.instance ?: Kafka(pluginConfig.config))
-        if (pluginConfig.injectable) application.provideKafka()
+        application.provideKafka()
     }
 
 /** What [KafkaCluster] holds. */
@@ -45,21 +48,6 @@ class KafkaClusterConfiguration {
      * No ownership question here, unlike the other plugins: this one has never opened anything.
      */
     var instance: Kafka? = null
-
-    /**
-     * Registers the cluster with Ktor's DI as well, so a class the container builds can take a
-     * [Kafka] in its constructor — the same one `call.kafka` hands a route.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime. Setting it
-     * calls [provideKafka], which lives in its own file for that reason — nothing loads a class
-     * from Ktor's DI until the flag is true.
-     *
-     * The container closes what it hands out when the application stops, so this hands it a second
-     * claim on closing the cluster. That is safe — these clients close idempotently — but a
-     * cluster that has to outlive the application does not belong in it.
-     */
-    var injectable: Boolean = true
 }
 
 internal val KafkaKey = AttributeKey<Kafka>("com.softistx.kafka.Kafka")

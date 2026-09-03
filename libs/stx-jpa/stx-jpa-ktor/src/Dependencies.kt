@@ -5,17 +5,15 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 
 /**
- * Makes the session factory the plugin built injectable, without building a second one.
+ * Registers the session factory the plugin built with Ktor's DI, without building a second one.
  *
  * ```kotlin
  * install(JpaConnection) { config = JpaConfig(uri = …); entities(Order::class) }
- * provideJpa()
  *
  * class Orders(private val jpa: Jpa)   // built by the container, no ApplicationCall in sight
  * ```
  *
- * Or in one line, which is the same thing:
- * `install(JpaConnection) { config = JpaConfig(uri = …); injectable = true }`.
+ * Called by [JpaConnection] at install — there is nothing to switch on.
  *
  * **The container closes it at application stop, and that is not a problem.** Ktor's DI closes every
  * `AutoCloseable` it hands out — one a provider merely passed through included, which a spec in this
@@ -23,7 +21,7 @@ import io.ktor.server.plugins.di.dependencies
  * factory is closed by the container as well as by whoever created it, and both are safe because
  * `Jpa.close` goes through `CloseGuard`.
  */
-fun Application.provideJpa() {
+internal fun Application.provideJpa() {
     val factory = jpa
     dependencies {
         provide<Jpa> { factory }

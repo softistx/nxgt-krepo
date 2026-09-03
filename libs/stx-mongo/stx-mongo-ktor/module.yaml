@@ -16,14 +16,14 @@ dependencies:
   # shares. It stays in stx-ktor because it belongs to no integration; this module is a caller.
   - //libs/stx-ktor
 
-  # Ktor DI, for `injectable = true`. Compile-only so an application that never sets it never loads
-  # a class from it — the same rule as stx-ktor and stx-workflow-ktor.
-  - $libs.ktor.server.di: compile-only
+  # Ktor DI. Installing the plugin registers the client and the database with the container, so this
+  # is on the runtime classpath of every application that installs it — and exported, because
+  # resolving what was registered is the point.
+  - $libs.ktor.server.di: exported
 
 test-dependencies:
   # the replica set the spec talks to, started for the run when the workspace's own is not named
   - //libs/stx-testing
-  - $libs.ktor.server.di
   - $ktor.server.testHost
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine

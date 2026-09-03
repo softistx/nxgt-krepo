@@ -33,8 +33,8 @@ An empty folder keeps the annotated schema.
 `GraphixCustomizer`, `GraphQLScalarType`, `GraphixDirective` and engine customizers from
 Ktor DI — the same types Spring collects as beans.
 
-`injectable = true` registers that same engine with Ktor DI (`provideGraphix()`), off by default
-because `ktor-server-di` is compile-only.
+Installing the plugin registers that same engine with Ktor DI, so a class the container builds takes
+a `Graphix` in its constructor. It is not a flag.
 
 `sandbox = true` serves an Apollo Sandbox at `/sandbox` — off by default, because installing this
 plugin is a decision to open a GraphQL endpoint and not one to open a page advertising the schema.

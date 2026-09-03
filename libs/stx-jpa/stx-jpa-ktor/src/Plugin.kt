@@ -35,6 +35,10 @@ import kotlin.reflect.KClass
  * **Nothing connects at install.** The pool opens its first connection when a route asks for a
  * session, so a wrong password is a failed request rather than a failed startup. `SchemaMode.VALIDATE`
  * is the cheap way to turn that back into a startup failure, when the schema is managed elsewhere.
+ *
+ * **Installing it registers the factory with Ktor's DI**, so a class the container builds takes a
+ * [Jpa] in its constructor rather than reaching through a call. See [provideJpa] for what the
+ * container's second claim on closing it means.
  */
 val JpaConnection =
     createApplicationPlugin(name = "Jpa", createConfiguration = ::JpaConnectionConfiguration) {
@@ -49,7 +53,7 @@ val JpaConnection =
                 }
             }
         }
-        if (pluginConfig.injectable) application.provideJpa()
+        application.provideJpa()
     }
 
 /** What [JpaConnection] connects with, and what it maps. */
@@ -107,20 +111,6 @@ class JpaConnectionConfiguration {
      * stops: whoever created it closes it.
      */
     var instance: Jpa? = null
-
-    /**
-     * Registers the factory with Ktor's DI as well, so a class the container builds can take a [Jpa]
-     * in its constructor — the same one `call.jpa` hands a route.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime. Setting it calls
-     * [provideJpa], which lives in its own file for that reason.
-     *
-     * The container closes what it hands out when the application stops, so this hands it a second
-     * claim on closing the factory. That is safe — `Jpa.close` goes through `CloseGuard` — but a
-     * factory that has to outlive the application does not belong in it.
-     */
-    var injectable: Boolean = true
 }
 
 internal val JpaKey = AttributeKey<Jpa>("com.softistx.jpa.Jpa")

@@ -8,7 +8,7 @@ import io.ktor.server.plugins.di.resolve
 import io.ktor.server.testing.testApplication
 
 /**
- * What this module's `provideX` functions rest on, checked rather than assumed.
+ * What the integrations' `provideX` functions rest on, checked rather than assumed.
  *
  * Two claims come from Ktor's documentation and decide the design: that `dependencies { }` needs no
  * `install` of its own, and that Ktor's DI closes every `AutoCloseable` it created when the
@@ -18,8 +18,8 @@ import io.ktor.server.testing.testApplication
  *
  * Only [Probe] here, and that is the point: these are facts about Ktor's container, not about any
  * one integration, so they belong beside the idiom rather than beside a backend. The other half —
- * a plugin actually asked for `injectable = true` — moved out with its plugin, into
- * `stx-redis-ktor`'s own specs.
+ * a plugin actually handing the container what it opened — is in `stx-redis-ktor`'s own specs,
+ * beside the plugin it is about.
  */
 class DependenciesTest :
     FeatureSpec({

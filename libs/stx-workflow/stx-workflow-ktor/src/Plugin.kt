@@ -35,6 +35,9 @@ import kotlin.time.Duration.Companion.seconds
  * [worker] is off by default. Installing this plugin gives an application a way to *run* workflows;
  * it should not also, silently, enlist it in recovering everybody else's — that is a decision about
  * how a fleet is shaped, and it belongs to whoever is shaping it.
+ *
+ * **Installing it registers the engine with Ktor's DI**, so a class the container builds takes a
+ * [WorkflowEngine] in its constructor rather than reaching through a call. See [provideWorkflows].
  */
 val Workflows =
     createApplicationPlugin(name = "Workflows", createConfiguration = ::WorkflowsConfiguration) {
@@ -56,7 +59,7 @@ val Workflows =
             // close on ApplicationStopped never runs — a process killed rather than stopped.
             worker.start(application)
         }
-        if (pluginConfig.injectable) application.provideWorkflows()
+        application.provideWorkflows()
     }
 
 /** What [Workflows] runs with. Either [store] or [instance] must be set. */
@@ -94,15 +97,6 @@ class WorkflowsConfiguration {
 
     /** How many instances the worker advances at once. */
     var concurrency: Int = 8
-
-    /**
-     * Registers the engine with Ktor's DI as well, so a class the container builds can take a
-     * [WorkflowEngine] in its constructor — the same one `call.workflows` hands a route.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime.
-     */
-    var injectable: Boolean = true
 
     internal val registrations = mutableListOf<Workflow<*>>()
 

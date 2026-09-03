@@ -68,10 +68,10 @@ with a worker — belongs to whoever built it. Without one the plugin builds its
 and closes it on `ApplicationStopped`, which drains the queue. That is `stx-ktor`'s `resource`
 helper, unchanged.
 
-**`injectable` is off and compile-only.** `ktor-server-di` is a compile-only dependency here, so an
-application that never sets the flag never loads a class from it. Most applications need neither:
-`install = true` (the default) makes `logger<T>()` and `span { }` find the telemetry three layers
-below a route, with no `ApplicationCall` in sight.
+**The telemetry goes into Ktor's DI, and that is not a flag.** Installing the plugin registers it
+with the container, for the rare class that wants the root itself — to read its resource, or to
+close it deliberately. Most need none of that: `install = true` (the default) makes `logger<T>()`
+and `span { }` find the telemetry three layers below a route, with no `ApplicationCall` in sight.
 
 ## `traced`, for the health check
 

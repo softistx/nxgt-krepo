@@ -19,11 +19,15 @@ import io.ktor.util.*
  * spends a round trip on every call, and opening one per route leaves as many as there are routes.
  * Closing it is the half that gets forgotten, which costs nothing visible until a redeploy loop has
  * left a server holding connections nobody is on the other end of.
+ *
+ * **Installing it registers the connection with Ktor's DI**, so a class the container builds takes a
+ * [Redis] in its constructor rather than reaching through a call. See [provideRedis] for what the
+ * container's second claim on closing it means.
  */
 val RedisConnection =
     createApplicationPlugin(name = "Redis", createConfiguration = ::RedisConnectionConfiguration) {
         application.resource(RedisKey, pluginConfig.instance) { Redis.connect(pluginConfig.config) }
-        if (pluginConfig.injectable) application.provideRedis()
+        application.provideRedis()
     }
 
 /** What [RedisConnection] connects with. */
@@ -45,21 +49,6 @@ class RedisConnectionConfiguration {
      * through `call.redis`.
      */
     var instance: Redis? = null
-
-    /**
-     * Registers the connection with Ktor's DI as well, so a class the container builds can take a
-     * [Redis] in its constructor — the same one `call.redis` hands a route.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime. Setting it
-     * calls [provideRedis], which lives in its own file for that reason — nothing loads a class
-     * from Ktor's DI until the flag is true.
-     *
-     * The container closes what it hands out when the application stops, so this hands it a second
-     * claim on closing the connection. That is safe — these clients close idempotently — but a
-     * connection that has to outlive the application does not belong in it.
-     */
-    var injectable: Boolean = true
 }
 
 internal val RedisKey = AttributeKey<Redis>("com.softistx.redis.Redis")

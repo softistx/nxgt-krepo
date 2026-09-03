@@ -14,8 +14,8 @@ post("/checkout") { call.respond(call.workflows.start(checkout, call.receive()))
 post("/checkout/{id}/approve") { call.workflows.signal(call.parameters["id"]!!, APPROVAL, call.receive()) }
 ```
 
-`call.workflows` and `Application.workflows` reach the engine; `injectable = true` registers it with
-Ktor's DI so a class the container builds can take a `WorkflowEngine` in its constructor.
+`call.workflows` and `Application.workflows` reach the engine; installing the plugin also registers
+it with Ktor's DI, so a class the container builds takes a `WorkflowEngine` in its constructor.
 
 ## Why this is a module and not a package in stx-ktor
 

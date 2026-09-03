@@ -26,6 +26,10 @@ import io.ktor.util.*
  * **Resolved once per call**, at the start, and kept on the call. Negotiating in each handler that
  * needs a message would parse the same header several times and — worse — could answer two
  * questions in one response in two different languages.
+ *
+ * **Installing it registers the catalogs with Ktor's DI**, so a class the container builds — an
+ * email renderer, a report job — takes a [Messages] in its constructor. A route keeps using
+ * `call.translate`, which is per-request and is not what DI is for.
  */
 val I18n =
     createApplicationPlugin(name = "I18n", createConfiguration = ::I18nConfiguration) {
@@ -33,7 +37,7 @@ val I18n =
         val configuration = pluginConfig.copy()
 
         application.publish(MessagesKey, messages)
-        if (pluginConfig.injectable) application.provideMessages()
+        application.provideMessages()
 
         on(CallSetup) { call ->
             call.attributes.put(TranslatorKey, messages.forRequest(call.request, configuration))
@@ -54,18 +58,6 @@ data class I18nConfiguration(
      * the service has to be told about. Turn it on when you have decided that.
      */
     var queryParameter: String? = null,
-    /**
-     * Registers [messages] with Ktor's DI as well, so a class the container builds — an email
-     * renderer, a report job — can take a [Messages] in its constructor.
-     *
-     * Off by default, and it has to be: `ktor-server-di` is compile-only in this module, so an
-     * application that never asks for this must not be made to carry it at runtime. Setting it
-     * calls [provideMessages], which lives in its own file for that reason — nothing loads a class
-     * from Ktor's DI until the flag is true.
-     *
-     * A route keeps using `call.translate`, which is per-request and is not what DI is for.
-     */
-    var injectable: Boolean = true,
 )
 
 internal val TranslatorKey = AttributeKey<Translator>("com.softistx.i18n.Translator")
