@@ -54,7 +54,7 @@ class GraphixAutoConfiguration {
             schemaFileExtensions(properties.schemaFileExtensions)
             introspection(properties.introspection)
             builtInScalars(properties.builtInScalars)
-            controllers.forEach { addController(it) }
+            resolvers(controllers)
             scalars.forEach { scalar(it) }
             directives.forEach { fieldDirective(it) }
             customizers.forEach { customize(it) }

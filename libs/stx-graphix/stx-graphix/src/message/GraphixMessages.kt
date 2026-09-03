@@ -14,7 +14,7 @@ import java.util.Locale
  * ```kotlin
  * Graphix {
  *     messages { locale, key, args -> catalog.forLocale(locale).translate(key, args) }
- *     query(ProductQueries(store))
+ *     resolvers(ProductQueries(store))
  * }
  * ```
  *

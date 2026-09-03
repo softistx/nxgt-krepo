@@ -11,7 +11,7 @@ class ValidationTest :
     FeatureSpec({
         feature("complexity limits") {
             scenario("graphql-java 26's defaults still let a one-field query through") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result = graphql.execute(GraphixRequest("{ hello }"))
                 result.isOk shouldBe true
                 result.data shouldBe mapOf("hello" to "world")
@@ -20,7 +20,7 @@ class ValidationTest :
             scenario("maxDepth declared on the engine rejects a nested selection") {
                 val graphql =
                     Graphix {
-                        query(ProductQueries())
+                        resolvers(ProductQueries())
                         validation { maxDepth = 1 }
                     }
                 val result = graphql.execute(GraphixRequest("""{ product(id: "p1") { name } }"""))
@@ -31,7 +31,7 @@ class ValidationTest :
             scenario("a per-operation GraphixLimits overrides the engine") {
                 val graphql =
                     Graphix {
-                        query(ProductQueries())
+                        resolvers(ProductQueries())
                         validation { maxDepth = 1 }
                     }
                 val allowed =
@@ -45,7 +45,7 @@ class ValidationTest :
             scenario("maxFields declared on the engine rejects a two-field selection") {
                 val graphql =
                     Graphix {
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                         validation { maxFields = 1 }
                     }
                 val result = graphql.execute(GraphixRequest("""{ hello shout(name: "ada") }"""))
@@ -58,7 +58,7 @@ class ValidationTest :
             scenario("a complaint on a coerced argument aborts before the resolver") {
                 val graphql =
                     Graphix {
-                        query(GreetingQueries())
+                        resolvers(GreetingQueries())
                         validation {
                             field("/shout") {
                                 val name = argument("name") as? String

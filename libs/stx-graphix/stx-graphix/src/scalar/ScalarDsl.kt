@@ -106,7 +106,7 @@ fun graphQLScalar(
  * ```kotlin
  * Graphix {
  *     scalars(Scalars.PositiveInt, Scalars.NonNegativeInt)
- *     query(CatalogQueries(store))
+ *     resolvers(CatalogQueries(store))
  * }
  * ```
  *

@@ -21,7 +21,7 @@ class ErrorDetailTest :
     FeatureSpec({
         feature("a GraphQL error") {
             scenario("a resolver throw carries its location and its classification") {
-                val graphql = Graphix { query(BoomQueries()) }
+                val graphql = Graphix { resolvers(BoomQueries()) }
                 val result = graphql.execute(GraphixRequest("{ boom }"))
 
                 result.isOk shouldBe false
@@ -32,7 +32,7 @@ class ErrorDetailTest :
             }
 
             scenario("a validation error is classified as one") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result = graphql.execute(GraphixRequest("{ nope }"))
 
                 result.isOk shouldBe false
@@ -44,7 +44,7 @@ class ErrorDetailTest :
             }
 
             scenario("locations reach the HTTP envelope") {
-                val graphql = Graphix { query(BoomQueries()) }
+                val graphql = Graphix { resolvers(BoomQueries()) }
                 val http = graphql.execute(GraphixRequest("{ boom }")).toHttp()
 
                 val error = http.errors.shouldNotBeNull().first()
@@ -55,7 +55,7 @@ class ErrorDetailTest :
             }
 
             scenario("an error with no extensions omits them rather than sending an empty object") {
-                val graphql = Graphix { query(BoomQueries()) }
+                val graphql = Graphix { resolvers(BoomQueries()) }
                 val http = graphql.execute(GraphixRequest("{ boom }")).toHttp()
 
                 http.errors
@@ -74,7 +74,7 @@ class ErrorDetailTest :
             }
 
             scenario("an operation runs unchanged when they are present") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result =
                     graphql.execute(GraphixRequest("{ hello }", extensions = mapOf("trace" to "t1")))
 

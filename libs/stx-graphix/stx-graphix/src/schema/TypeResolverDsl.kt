@@ -24,7 +24,7 @@ fun interface GraphixTypeName {
  * ```kotlin
  * Graphix {
  *     typeResolver("SearchResult") { value -> if (value is Row) "Product" else "Review" }
- *     query(SearchQueries(store))
+ *     resolvers(SearchQueries(store))
  * }
  * ```
  */

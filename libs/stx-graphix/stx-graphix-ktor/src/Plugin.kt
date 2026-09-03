@@ -23,10 +23,12 @@ import graphql.GraphQL as GraphQLEngine
  * ```kotlin
  * install(GraphQL) {
  *     schema {
- *         query(ProductQueries(store))
- *         mutation(ProductMutations(store))
- *         subscription(ProductSubscriptions(store))
- *         type(ProductFields(reviews))
+ *         resolvers(
+ *             ProductQueries(store),
+ *             ProductMutations(store),
+ *             ProductSubscriptions(store),
+ *             ProductFields(reviews),
+ *         )
  *     }
  * }
  * ```

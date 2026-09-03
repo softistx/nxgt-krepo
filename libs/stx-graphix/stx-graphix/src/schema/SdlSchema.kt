@@ -22,10 +22,7 @@ import kotlinx.serialization.json.Json
  * on the types the documents already named — they do not grow the schema.
  */
 internal fun List<SchemaFile>.sdlSchema(
-    queries: List<Any>,
-    mutations: List<Any>,
-    subscriptions: List<Any>,
-    typeInstances: List<Any>,
+    instances: List<Any>,
     json: Json,
     customScalars: List<graphql.schema.GraphQLScalarType> = emptyList(),
     fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
@@ -37,7 +34,7 @@ internal fun List<SchemaFile>.sdlSchema(
     // is what lets `LocalDate` be used in SDL without the `scalar LocalDate` line above it; a name
     // the document or the application already defined is left exactly as it defined it.
     if (builtInScalars) registry.declareScalars(builtInScalarTypes(true, customScalars))
-    val typeFields = if (typeInstances.isEmpty()) emptyList() else collectTypeFields(typeInstances)
+    val typeFields = collectTypeFields(instances)
     val byType = linkedMapOf<String, TypeRuntimeWiring.Builder>()
     // RuntimeWiring is strict: a second fetcher for one coordinate throws rather than replacing.
     val wired = mutableSetOf<Pair<String, String>>()
@@ -50,21 +47,21 @@ internal fun List<SchemaFile>.sdlSchema(
         if (!wired.add(parent to field)) return
         byType.getOrPut(parent) { TypeRuntimeWiring.newTypeWiring(parent) }.dataFetcher(field, fetcher)
     }
-    queries.rootFunctions(RootKind.QUERY).forEach { (instance, function) ->
+    instances.rootFunctions(RootKind.QUERY).forEach { (instance, function) ->
         wire(
             "Query",
             function.graphQLName(RootKind.QUERY),
             resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives),
         )
     }
-    mutations.rootFunctions(RootKind.MUTATION).forEach { (instance, function) ->
+    instances.rootFunctions(RootKind.MUTATION).forEach { (instance, function) ->
         wire(
             "Mutation",
             function.graphQLName(RootKind.MUTATION),
             resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives),
         )
     }
-    subscriptions.rootFunctions(RootKind.SUBSCRIPTION).forEach { (instance, function) ->
+    instances.rootFunctions(RootKind.SUBSCRIPTION).forEach { (instance, function) ->
         wire(
             "Subscription",
             function.graphQLName(RootKind.SUBSCRIPTION),
@@ -120,7 +117,7 @@ internal fun List<SchemaFile>.sdlSchema(
         } catch (failure: Exception) {
             throw GraphixException("cannot build GraphQL schema from SDL: ${failure.message}", failure)
         }
-    val declared = collectDeclaredLoaders(queries + mutations + subscriptions + typeInstances)
+    val declared = collectDeclaredLoaders(instances)
     val batched = typeFields.filter { it.batched }.map { it.toRegisteredLoader(json) }
     val names = mutableSetOf<String>()
     (declared + batched).forEach { loader ->

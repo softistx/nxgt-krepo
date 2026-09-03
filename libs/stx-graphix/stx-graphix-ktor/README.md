@@ -5,10 +5,12 @@ The Ktor plugin for `stx-graphix`. One engine per application, `POST` and `GET` 
 ```kotlin
 install(GraphQL) {
     schema {
-        query(ProductQueries(store))
-        mutation(ProductMutations(store))
-        subscription(ProductSubscriptions(store))
-        type(ProductFields(reviews))
+        resolvers(
+            ProductQueries(store),
+            ProductMutations(store),
+            ProductSubscriptions(store),
+            ProductFields(reviews),
+        )
     }
 }
 ```

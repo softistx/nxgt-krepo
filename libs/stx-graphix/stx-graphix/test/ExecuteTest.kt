@@ -17,20 +17,20 @@ class ExecuteTest :
     FeatureSpec({
         feature("execute") {
             scenario("a query field returns its value") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 val result = graphql.execute(GraphixRequest("{ hello }"))
                 result.isOk shouldBe true
                 result.data shouldBe mapOf("hello" to "world")
             }
 
             scenario("arguments bind, and a Kotlin default is used when the argument is omitted") {
-                val graphql = Graphix { query(GreetingQueries()) }
+                val graphql = Graphix { resolvers(GreetingQueries()) }
                 graphql.execute(GraphixRequest("""{ shout(name: "ada") }""")).data shouldBe mapOf("shout" to "ADA")
                 graphql.execute(GraphixRequest("{ shout }")).data shouldBe mapOf("shout" to "STRANGER")
             }
 
             scenario("a nested @Serializable object is fetched through its properties") {
-                val graphql = Graphix { query(ProductQueries()) }
+                val graphql = Graphix { resolvers(ProductQueries()) }
                 val result = graphql.execute(GraphixRequest("""{ product(id: "p1") { name tags } }"""))
                 result.isOk shouldBe true
                 val product = (result.data?.get("product") as Map<*, *>).shouldNotBeNull()
@@ -42,8 +42,8 @@ class ExecuteTest :
                 val products = mutableListOf(Product("p1", "Mug"))
                 val graphql =
                     Graphix {
-                        query(ProductQueries(products))
-                        mutation(ProductMutations(products))
+                        resolvers(ProductQueries(products))
+                        resolvers(ProductMutations(products))
                     }
                 val created =
                     graphql.execute(
@@ -61,7 +61,7 @@ class ExecuteTest :
             scenario("a suspend resolver may delay and still return") {
                 val graphql =
                     Graphix {
-                        query(
+                        resolvers(
                             object {
                                 @com.softistx.graphix.schema.QueryMapping
                                 suspend fun later(): String {
@@ -75,13 +75,13 @@ class ExecuteTest :
             }
 
             scenario("a thrown resolver becomes a GraphQL error, not an execute exception") {
-                val result = Graphix { query(BoomQueries()) }.execute(GraphixRequest("{ boom }"))
+                val result = Graphix { resolvers(BoomQueries()) }.execute(GraphixRequest("{ boom }"))
                 result.isOk shouldBe false
                 result.errors.single().message shouldContain "nope"
             }
 
             scenario("@GraphQLContext is taken from the execute context, not from arguments") {
-                val graphql = Graphix { query(ContextQueries()) }
+                val graphql = Graphix { resolvers(ContextQueries()) }
                 val result =
                     graphql.execute(
                         GraphixRequest("{ who }"),

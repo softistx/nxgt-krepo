@@ -1,6 +1,7 @@
 package com.softistx.graphix.fixture
 
 import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.MutationMapping
 import com.softistx.graphix.schema.QueryMapping
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -85,4 +86,28 @@ class QuantityQueries {
     fun quantity(
         @Argument value: Int,
     ): Int = value
+}
+
+/**
+ * Queries and mutations on one class. Under the old builder this had to be registered twice, once
+ * as a query root and once as a mutation root, or half of it silently disappeared.
+ */
+class CounterResolvers {
+    private var count = 0
+
+    @QueryMapping
+    fun count(): Int = count
+
+    @MutationMapping
+    fun bump(
+        @Argument by: Int,
+    ): Int {
+        count += by
+        return count
+    }
+}
+
+/** No mapping of any kind. Registering it is a build failure naming this class. */
+class NotAResolver {
+    fun total(): Int = 0
 }
