@@ -145,8 +145,8 @@ on the mapping class. GraphQL arguments are `@Argument`. A field that needs this
 takes `dfe: DataFetchingEnvironment` by type. `@BatchMapping` may take `@Argument` too — the
 DataLoader key is the parent plus those values.
 
-Per-request state is the other bag. `@GraphQLContext` reads `Graphix.execute(..., context)` by
-`KClass`. Mixing the two is the usual mistake: looking up `ApplicationContext` from a resolver
+Per-request state is the other bag. A parameter whose type was registered with
+`contextParameter(...)` reads `Graphix.execute(..., context)` by `KClass`. Mixing the two is the usual mistake: looking up `ApplicationContext` from a resolver
 to find `OrderService`, or putting `OrderService` in the operation context because it "feels
 like DI". The first is a service locator. The second makes a singleton look request-scoped.
 

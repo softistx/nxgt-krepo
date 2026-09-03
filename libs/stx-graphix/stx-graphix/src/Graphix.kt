@@ -4,6 +4,7 @@ import com.softistx.common.serialization.lenientJson
 import com.softistx.graphix.execute.RegisteredLoader
 import com.softistx.graphix.execute.executionInput
 import com.softistx.graphix.execute.toGraphixResult
+import com.softistx.graphix.http.GraphqlWsInit
 import com.softistx.graphix.intercept.GraphixInterceptor
 import com.softistx.graphix.intercept.runChain
 import com.softistx.graphix.message.GraphixMessages
@@ -74,7 +75,7 @@ class Graphix internal constructor(
      * method refuses rather than serialising as a single JSON object.
      *
      * [context] is the per-operation bag, keyed by `KClass`, and it is what a resolver's
-     * `@GraphQLContext` parameter and its framework parameters are read from. A `CoroutineScope`
+     * framework parameters are read from. A `CoroutineScope`
      * is installed alongside it so `suspend` resolvers run; it is cancelled when this returns.
      * An HTTP integration puts its call there — `ApplicationCall`, `ServerWebExchange` — and
      * [GraphixInterceptor] is how an application adds to it without owning the call site.
@@ -132,7 +133,10 @@ class GraphixBuilder internal constructor(
     private var introspection = true
     private var builtInScalars = true
     private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
-    private val contextTypes = mutableSetOf<KClass<*>>()
+
+    // Whoever fills the operation context registers the type. The core fills exactly one:
+    // GraphqlWsSession puts the client's `connection_init` payload on every graphql-ws operation.
+    private val contextTypes = mutableSetOf<KClass<*>>(GraphqlWsInit::class)
     private val interceptors = mutableListOf<GraphixInterceptor>()
     private var validation: GraphixValidation? = null
     private var messages: GraphixMessages = GraphixMessages.Bundled

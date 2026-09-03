@@ -268,7 +268,7 @@ has no such split: the bundled catalogue answers in both phases.
 ## Custom scalars and field directives
 
 A scalar is declared on `GraphixBuilder` — lambdas run with the operation
-`GraphQLContext` as receiver, the same bag `@GraphQLContext` reads:
+`GraphQLContext` as receiver, the same bag a context parameter reads:
 
 ```kotlin
 data class Money(val cents: Long)
@@ -383,7 +383,6 @@ instead, see [From a Koin container](#from-a-koin-container).
 | `@GraphQLDescription("…")` | same | GraphQL description |
 | `@GraphQLIgnore` | property | omitted from the GraphQL type |
 | `@Argument("foo")` | parameter | **Required** on every GraphQL argument. [name] defaults to the Kotlin parameter name |
-| `@GraphQLContext` | parameter | other types from `execute`'s context map. `DataFetchingEnvironment` is this field **by type** and does not need the annotation |
 | `@Directive("name")` | mapping function | wraps the field with the `fieldDirective("name")` registered on the builder |
 | `@GraphQLDeprecated("why")` | function, property, parameter | GraphQL `@deprecated`. Kotlin's own `@Deprecated` is `BINARY`-retained and unreadable by reflection, hence a second annotation. An argument or input field may only carry it when it is **not required** — nullable, or non-null with a `@GraphQLDefault`; the spec forbids deprecating one a caller has no way to stop sending |
 | `@GraphQLOneOf` | class used as an input | GraphQL `@oneOf`: exactly one field, and not null |
@@ -428,7 +427,8 @@ a GraphQL error, enforced by graphql-java. An SDL `input X @oneOf` behaves ident
 
 `@Argument` is required on every GraphQL argument — a resolver parameter. Unmarked parameters
 are not arguments: the parent source (`SchemaMapping` / `BatchMapping` first parameter), this
-field's `DataFetchingEnvironment` (by type), and `@GraphQLContext` values. An input object's
+field's `DataFetchingEnvironment`, and any type registered with `contextParameter(...)` — all by
+type, see [Framework parameters](#framework-parameters). An input object's
 fields are not arguments either: `CreateProductInput` is the `@Argument`, `name` and `tags`
 are its fields (`@SerialName` / `@GraphQLIgnore` still apply). A Kotlin default on an
 `@Argument` parameter, or on an input-object property, is optional GraphQL.
@@ -512,8 +512,7 @@ already holds. What it can see is exactly four things:
 | --- | --- |
 | A Spring bean, a store, a client | The constructor (or property) of the query/mutation/type class. The data fetcher calls *that* instance |
 | Arguments from the GraphQL document | `@Argument` parameters, bound from `variables` / literals |
-| Who is calling, the locale, anything per request | `@GraphQLContext` on a parameter, filled from `execute`'s `context` map |
-| The HTTP request, the DFE, the context bag itself | A parameter of that type, with no annotation — see [Framework parameters](#framework-parameters) |
+| Who is calling, the HTTP request, anything per request | A parameter of that type, registered with `contextParameter(...)` and filled from `execute`'s `context` map — see [Framework parameters](#framework-parameters) |
 
 A Spring `OrderService` is not GraphQL context. It is injected when Spring builds the
 `@GraphQLController`, and Graphix keeps that bean:
@@ -540,10 +539,15 @@ missing key fails the field with `GraphixException`:
 ```kotlin
 data class Caller(val userId: String)
 
+Graphix {
+    contextParameter(Caller::class)      // the application registers its own context type
+    resolvers(OrderMutations(orders))
+}
+
 @MutationMapping
 suspend fun placeOrder(
     @Argument input: PlaceOrderInput,
-    @GraphQLContext caller: Caller,
+    caller: Caller,
 ): Order = orders.place(input, caller.userId)
 
 graphix.execute(
@@ -558,11 +562,13 @@ Both HTTP integrations fill that map on every operation — see
 
 ### Framework parameters
 
-`DataFetchingEnvironment` is not a constructor argument and not a GraphQL argument. A mapping
-that needs this field's source, arguments or DataLoader takes `dfe: DataFetchingEnvironment`
-by type — no `@GraphQLContext`.
+**There is one rule.** A resolver's value parameter is the parent source, an `@Argument`, or a type
+the builder registered — and the last kind is read from the operation context by `KClass`. No
+annotation marks a context parameter; the type does.
 
-Three more types work the same way, unannotated and by type:
+`DataFetchingEnvironment` is not a constructor argument and not a GraphQL argument. A mapping that
+needs this field's source, arguments or DataLoader takes `dfe: DataFetchingEnvironment` by type.
+Three more types work the same way:
 
 | Type | Registered by | What it is |
 | --- | --- | --- |
@@ -590,9 +596,10 @@ A type nobody registered is still an error at schema build, naming the parameter
 forgotten `@Argument` has always produced. That is what keeps a typo from being silently treated as
 context, and it is why a third stack needs one call rather than a change to Graphix.
 
-> The annotation `com.softistx.graphix.schema.GraphQLContext` and the type
-> `graphql.GraphQLContext` share a simple name. A file wanting both needs an import alias —
-> `import graphql.GraphQLContext as OperationContext` is what this repo's own sources use.
+**Whoever fills the context registers the type.** The core registers `GraphqlWsInit`, which it puts
+on every graphql-ws operation; `stx-graphix-ktor` registers `ApplicationCall`; `stx-graphix-spring`
+registers `ServerWebExchange`; an application registers its own `Caller`, because it is its own
+interceptor that puts one there.
 
 A framework parameter counts as *supplied*, which matters for `@SchemaMapping`: the parent source is
 the first parameter Graphix does not supply itself, so `fun reviews(call: ApplicationCall, product:

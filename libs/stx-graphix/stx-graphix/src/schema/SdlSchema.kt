@@ -49,6 +49,19 @@ internal fun List<SchemaFile>.sdlSchema(
         if (!wired.add(parent to field)) return
         byType.getOrPut(parent) { TypeRuntimeWiring.newTypeWiring(parent) }.dataFetcher(field, fetcher)
     }
+    // The same parameter rule as the annotation-derived path (`root`): a value parameter is
+    // `@Argument` or a registered context type. Without this the SDL path refused nothing, and a
+    // forgotten `@Argument` failed only at execution — against a schema the document had already
+    // declared with the argument, so the two disagreed.
+    instances.rootFunctions(RootKind.QUERY).forEach { (_, function) ->
+        function.requireArgumentAnnotations(contextTypes = contextTypes)
+    }
+    instances.rootFunctions(RootKind.MUTATION).forEach { (_, function) ->
+        function.requireArgumentAnnotations(contextTypes = contextTypes)
+    }
+    instances.rootFunctions(RootKind.SUBSCRIPTION).forEach { (_, function) ->
+        function.requireArgumentAnnotations(contextTypes = contextTypes)
+    }
     instances.rootFunctions(RootKind.QUERY).forEach { (instance, function) ->
         wire(
             "Query",

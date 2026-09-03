@@ -2,7 +2,6 @@ package com.softistx.graphix.execute
 
 import com.softistx.graphix.GraphixException
 import com.softistx.graphix.json.toJsonElement
-import com.softistx.graphix.schema.GraphQLContext
 import com.softistx.graphix.schema.graphQLName
 import com.softistx.graphix.schema.isArgument
 import graphql.schema.DataFetchingEnvironment
@@ -11,7 +10,6 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
-import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.valueParameters
 import graphql.GraphQLContext as OperationContext
@@ -22,8 +20,8 @@ import graphql.GraphQLContext as OperationContext
  * An optional Kotlin parameter with no argument is omitted so `callBy` uses the default.
  * A GraphQL argument is always `@Argument`, so a parameter that is neither that nor the parent
  * source is a framework parameter and is looked up by `KClass` in the operation's `GraphQLContext`
- * — `@GraphQLContext` for an application type, and the plain type for the `DataFetchingEnvironment`,
- * the `GraphQLContext` itself, or one an integration registered with `contextParameter(...)`.
+ * — the `DataFetchingEnvironment`, graphql-java's `GraphQLContext`, or any type registered with
+ * `contextParameter(...)`.
  * Schema build already refused anything else, so there is nothing left to classify here.
  */
 internal fun bindArguments(
@@ -50,17 +48,17 @@ internal fun bindArguments(
  * One framework parameter. The `DataFetchingEnvironment` and graphql-java's `GraphQLContext` are
  * the two this module knows by itself; everything else comes out of the operation context by
  * `KClass`, which is where `Graphix.execute(..., context)` and the interceptors put it.
+ *
+ * Schema build already refused any parameter that is neither `@Argument` nor a registered type, so
+ * reaching here with an absent key means nothing put the value there at run time.
  */
 internal fun contextValue(
     parameter: KParameter,
     environment: DataFetchingEnvironment,
 ): Any {
-    val annotated = parameter.findAnnotation<GraphQLContext>() != null
     val classifier =
         parameter.type.classifier as? KClass<*>
-            ?: throw GraphixException(
-                "${if (annotated) "@GraphQLContext " else ""}${parameter.name} needs a class type",
-            )
+            ?: throw GraphixException("${parameter.name} needs a class type")
     if (classifier.isSubclassOf(DataFetchingEnvironment::class)) {
         return environment
     }

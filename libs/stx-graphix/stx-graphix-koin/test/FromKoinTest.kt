@@ -9,6 +9,7 @@ import com.softistx.graphix.koin.fixture.EchoQueries
 import com.softistx.graphix.koin.fixture.GreetingQueries
 import com.softistx.graphix.koin.fixture.ShoutQueries
 import com.softistx.graphix.koin.fixture.UnmarkedQueries
+import com.softistx.graphix.koin.fixture.callerCustomizer
 import com.softistx.graphix.koin.fixture.callerInterceptor
 import com.softistx.graphix.koin.fixture.moneyCustomizer
 import com.softistx.graphix.koin.fixture.uppercaseDirective
@@ -102,6 +103,7 @@ class FromKoinTest :
                         modules(
                             module {
                                 single { CallerQueries() } bind GraphixResolver::class
+                                single<GraphixCustomizer> { callerCustomizer() }
                                 single<GraphixInterceptor> { callerInterceptor("ada") }
                             },
                         )

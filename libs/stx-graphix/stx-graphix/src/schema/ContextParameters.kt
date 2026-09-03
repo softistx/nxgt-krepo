@@ -15,8 +15,13 @@ import kotlin.reflect.KClass
  * @QueryMapping fun me(call: ApplicationCall): String = call.request.headers["X-User"] ?: "anonymous"
  * ```
  *
+ * **Whoever fills the operation context registers the type.** The core registers `GraphqlWsInit`,
+ * which `GraphqlWsSession` puts on every graphql-ws operation; `stx-graphix-ktor` registers
+ * `ApplicationCall`; `stx-graphix-spring` registers `ServerWebExchange`; an application registers
+ * its own `Caller`, because it is its own interceptor that puts one there.
+ *
  * `DataFetchingEnvironment` and graphql-java's `GraphQLContext` need no registration — they are
- * graphql-java's own and this module knows them. This is for the types a *framework* supplies:
+ * graphql-java's own and this module knows them. This is for the types someone else supplies:
  * `ApplicationCall` in Ktor, `ServerWebExchange` in Spring. Whoever registers the type is also
  * whoever puts the value in `execute`'s context map; registering it here only says that such a
  * parameter is not a GraphQL argument.

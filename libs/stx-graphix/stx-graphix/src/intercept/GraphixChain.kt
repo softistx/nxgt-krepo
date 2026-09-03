@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
  *
  * The context is one bag shared by the whole chain, so an interceptor sees what the ones before it
  * put there. It is keyed by `KClass` and lands in graphql-java's `GraphQLContext`, which is where a
- * resolver's `@GraphQLContext` parameter and its framework parameters are read from.
+ * resolver's framework parameters are read from.
  */
 class GraphixChain internal constructor(
     /** The operation. Assigning a new one is how an interceptor rewrites the document or variables. */

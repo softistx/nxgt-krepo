@@ -1,7 +1,6 @@
 package com.softistx.graphix.ktor.fixture
 
 import com.softistx.graphix.schema.Argument
-import com.softistx.graphix.schema.GraphQLContext
 import com.softistx.graphix.schema.QueryMapping
 import com.softistx.graphix.schema.SubscriptionMapping
 import io.ktor.server.application.ApplicationCall
@@ -50,7 +49,5 @@ data class Caller(
 
 class ContextQueries {
     @QueryMapping
-    fun who(
-        @GraphQLContext caller: Caller,
-    ): String = caller.name
+    fun who(caller: Caller): String = caller.name
 }

@@ -59,7 +59,7 @@ private fun typeField(
     // has to count here too, or `fun reviews(call: ApplicationCall, product: Product)` takes the
     // call for its parent and the schema is built against the wrong type.
     val parentParameter =
-        function.valueParameters.firstOrNull { !it.isGraphQLContext() && !it.isFrameworkParameter(contextTypes) }
+        function.valueParameters.firstOrNull { !it.isFrameworkParameter(contextTypes) }
             ?: throw GraphixException("@$kind ${function.name} needs a parent parameter")
     val parentType =
         if (batched) {

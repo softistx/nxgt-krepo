@@ -6,6 +6,7 @@ import com.softistx.graphix.fixture.ContextSubscriptions
 import com.softistx.graphix.fixture.GreetingQueries
 import com.softistx.graphix.fixture.TickPublisherSubscriptions
 import com.softistx.graphix.fixture.TickSubscriptions
+import com.softistx.graphix.schema.contextParameter
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -67,10 +68,11 @@ class SubscriptionTest :
                 values shouldBe listOf(1, 2)
             }
 
-            scenario("@GraphQLContext is taken from subscribe's context map") {
+            scenario("a registered context type is taken from subscribe's context map") {
                 val graphql =
                     Graphix {
                         resolvers(GreetingQueries())
+                        contextParameter(Caller::class)
                         resolvers(ContextSubscriptions())
                     }
                 val values =

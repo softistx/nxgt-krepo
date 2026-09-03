@@ -57,8 +57,6 @@ internal fun fieldDefinition(
     return builder.build()
 }
 
-internal fun KParameter.isGraphQLContext(): Boolean = hasAnnotation<GraphQLContext>()
-
 internal fun KParameter.isArgument(): Boolean = hasAnnotation<Argument>()
 
 internal fun KParameter.isDataFetchingEnvironment(): Boolean {
@@ -66,7 +64,7 @@ internal fun KParameter.isDataFetchingEnvironment(): Boolean {
     return classifier.isSubclassOf(DataFetchingEnvironment::class)
 }
 
-/** graphql-java's context bag itself, as a parameter. Not the `@GraphQLContext` annotation. */
+/** graphql-java's context bag itself, as a parameter. Needs no registration — it is graphql-java's. */
 internal fun KParameter.isOperationContext(): Boolean {
     val classifier = type.classifier as? KClass<*> ?: return false
     return classifier.isSubclassOf(OperationContext::class)
@@ -87,8 +85,12 @@ internal fun KParameter.isFrameworkParameter(contextTypes: Set<KClass<*>>): Bool
 }
 
 /**
- * Every value parameter is the parent source, a framework parameter, `@GraphQLContext`, or
- * `@Argument`. GraphQL arguments must be marked. Input-object fields are not arguments.
+ * Every value parameter is the parent source, a framework parameter, or `@Argument`. GraphQL
+ * arguments must be marked. Input-object fields are not arguments.
+ *
+ * The alternative — treating anything unmarked as a context read — was rejected: a forgotten
+ * `@Argument` would then publish a field with no argument at all, so the SDL a client reads would be
+ * wrong and only the execution would say so.
  */
 internal fun KFunction<*>.requireArgumentAnnotations(
     parent: KParameter? = null,
@@ -96,13 +98,11 @@ internal fun KFunction<*>.requireArgumentAnnotations(
 ) {
     valueParameters.forEach { parameter ->
         if (parameter == parent) return@forEach
-        if (parameter.isFrameworkParameter(contextTypes) || parameter.isGraphQLContext() || parameter.isArgument()) {
-            return@forEach
-        }
+        if (parameter.isFrameworkParameter(contextTypes) || parameter.isArgument()) return@forEach
         throw GraphixException(
-            "$name parameter '${parameter.name}' must be @Argument — or @GraphQLContext to read it " +
-                "from the operation context, or a type registered with contextParameter(...). " +
-                "The parent source, DataFetchingEnvironment and GraphQLContext take none of them.",
+            "$name parameter '${parameter.name}' must be @Argument, or a type registered with " +
+                "contextParameter(...) to read it from the operation context. " +
+                "The parent source, DataFetchingEnvironment and GraphQLContext take neither.",
         )
     }
 }

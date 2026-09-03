@@ -1,6 +1,5 @@
 package com.softistx.graphix.spring.fixture
 
-import com.softistx.graphix.schema.GraphQLContext
 import com.softistx.graphix.schema.QueryMapping
 import com.softistx.graphix.schema.SubscriptionMapping
 import com.softistx.graphix.spring.GraphQLController
@@ -47,7 +46,5 @@ data class Caller(
 @GraphQLController
 class ContextQueries {
     @QueryMapping
-    fun who(
-        @GraphQLContext caller: Caller,
-    ): String = caller.name
+    fun who(caller: Caller): String = caller.name
 }
