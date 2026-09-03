@@ -3,9 +3,8 @@ package com.softistx.jpa.ktor
 import com.softistx.jpa.Jpa
 import com.softistx.jpa.JpaConfig
 import com.softistx.ktor.resource
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.server.plugins.di.dependencies
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.util.*
 import jakarta.persistence.AttributeConverter
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KClass
@@ -121,7 +120,7 @@ class JpaConnectionConfiguration {
      * claim on closing the factory. That is safe — `Jpa.close` goes through `CloseGuard` — but a
      * factory that has to outlive the application does not belong in it.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 }
 
 internal val JpaKey = AttributeKey<Jpa>("com.softistx.jpa.Jpa")

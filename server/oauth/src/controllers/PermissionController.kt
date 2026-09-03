@@ -5,7 +5,9 @@ import com.softistx.graphix.schema.MutationMapping
 import com.softistx.graphix.schema.QueryMapping
 import com.softistx.oauth.graphql.types.CreatePermissionInput
 import com.softistx.oauth.models.Permission
+import org.koin.core.annotation.Singleton
 
+@Singleton
 class PermissionController {
     @QueryMapping
     suspend fun permissions(): List<Permission> =

@@ -1,19 +1,13 @@
 package com.softistx.graphix.ktor
 
 import com.softistx.common.serialization.lenientJson
-import com.softistx.graphix.GraphQLEngineCustomizer
-import com.softistx.graphix.Graphix
-import com.softistx.graphix.GraphixBuilder
-import com.softistx.graphix.GraphixCustomizer
-import com.softistx.graphix.engine
+import com.softistx.graphix.*
 import com.softistx.graphix.http.SubscriptionProtocol
 import com.softistx.graphix.http.apolloSandboxPage
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.server.application.install
-import io.ktor.server.application.pluginOrNull
-import io.ktor.server.routing.routing
-import io.ktor.server.websocket.WebSockets
-import io.ktor.util.AttributeKey
+import io.ktor.server.application.*
+import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
+import io.ktor.util.*
 import kotlinx.serialization.json.Json
 import graphql.GraphQL as GraphQLEngine
 
@@ -122,7 +116,7 @@ class GraphQLConfiguration {
     /**
      * Registers the engine with Ktor DI. Off by default: `ktor-server-di` is compile-only.
      */
-    var injectable: Boolean = false
+    var injectable: Boolean = true
 
     /**
      * Directories of `.graphqls` / `.gqls` files. Default `classpath:graphql/`, the same

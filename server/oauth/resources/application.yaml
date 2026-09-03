@@ -1,0 +1,4 @@
+stx:
+  mongo:
+    uri: "$MONGO_URI"
+    database: "$STX_OAUTH_DB:stx-oauth"
