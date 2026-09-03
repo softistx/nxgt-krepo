@@ -1,5 +1,6 @@
 package com.softistx.graphix
 
+import com.softistx.graphix.error.handleOutsideField
 import com.softistx.graphix.execute.executionInput
 import com.softistx.graphix.execute.toGraphixResult
 import com.softistx.graphix.intercept.runChain
@@ -10,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -27,7 +29,13 @@ import kotlin.reflect.KClass
 fun Graphix.subscribe(
     request: GraphixRequest,
     context: Map<KClass<*>, Any> = emptyMap(),
-): Flow<GraphixResult> = runChain(interceptors, request, context) { operation, values -> subscribeOnce(operation, values) }
+): Flow<GraphixResult> =
+    runChain(interceptors, request, context) { operation, values -> subscribeOnce(operation, values) }
+        .catch { failure ->
+            // Covers both throws that never reach graphql-java: an interceptor's, and a `Flow` that
+            // fails part-way through emitting. Unclaimed, it is rethrown and nothing changes.
+            handleOutsideField(failure, request, context)?.let { emit(it) } ?: throw failure
+        }
 
 private fun Graphix.subscribeOnce(
     request: GraphixRequest,

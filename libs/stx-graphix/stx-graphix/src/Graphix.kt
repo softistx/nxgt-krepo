@@ -4,6 +4,7 @@ import com.softistx.common.serialization.lenientJson
 import com.softistx.graphix.error.ErrorHandlers
 import com.softistx.graphix.error.ErrorHandling
 import com.softistx.graphix.error.GraphixExceptionHandler
+import com.softistx.graphix.error.handleOutsideField
 import com.softistx.graphix.error.handlerFunctions
 import com.softistx.graphix.error.handling
 import com.softistx.graphix.execute.RegisteredLoader
@@ -95,9 +96,15 @@ class Graphix internal constructor(
         request: GraphixRequest,
         context: Map<KClass<*>, Any> = emptyMap(),
     ): GraphixResult =
-        runChain(interceptors, request, context) { operation, values ->
-            flow { emit(executeOnce(operation, values)) }
-        }.single()
+        try {
+            runChain(interceptors, request, context) { operation, values ->
+                flow { emit(executeOnce(operation, values)) }
+            }.single()
+        } catch (failure: Throwable) {
+            // An interceptor throw never reached graphql-java, so it never reached the seat there.
+            // Unclaimed, it is rethrown and nothing changes.
+            handleOutsideField(failure, request, context) ?: throw failure
+        }
 
     private suspend fun executeOnce(
         request: GraphixRequest,
