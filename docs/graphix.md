@@ -158,8 +158,14 @@ service has fields of is one of these, all of them in `com.softistx.stx.graphix.
 | `Locale` | `java.util.Locale` | a BCP 47 tag, `fr-CA` |
 | `Json` | `JsonElement` | any JSON value |
 
-A field of one of those types **is** that scalar — nothing to register — and the scalar is added
-to the schema when a field uses it. A service with no dates does not advertise `scalar Instant`.
+A field of one of those types **is** that scalar — nothing to register.
+
+**Every built-in is in the schema by default**, used or not, so a client's code generator sees the
+whole vocabulary and a field can be retyped without the schema growing a scalar underneath it.
+`builtInScalars(false)` on the builder narrows that to the ones a field actually resolved to, for a
+schema whose introspection is a published contract; it is `stx.graphix.built-in-scalars` in Spring
+and `builtInScalars` on the Ktor plugin. A scalar the application defined under a built-in's name
+is unaffected either way — its own definition wins.
 
 `Url` is a `URI` and not a `URL` because `URL.equals` resolves the host through DNS. `Duration`
 travels as `PT1H30M` and not as Kotlin's `1h 30m`, because a wire format is parsed by something
@@ -173,25 +179,21 @@ Eight more say what they will accept: `PositiveInt`, `NegativeInt`, `NonPositive
 advertises and the engine enforces before a resolver runs; the same check inside the resolver is a
 runtime error the client's generated code never saw.
 
-There is no Kotlin type for "an `Int` above zero", so these are opt-in — in SDL, where declaring
-one is enough:
+There is no Kotlin type for "an `Int` above zero", so a bounded scalar is named rather than
+inferred — in SDL, where the type is simply used:
 
 ```graphql
-scalar PositiveInt
-
 type Query {
   quantity(value: PositiveInt!): PositiveInt!
 }
 ```
 
-or on the builder, for a schema that has no documents:
+The `scalar PositiveInt` line above it is optional: the built-ins the document did not declare are
+declared for it. Under `builtInScalars(false)` it is required, and still works — the wiring is
+registered whether or not the scalar is declared.
 
-```kotlin
-Graphix {
-    scalars(Scalars.PositiveInt, Scalars.NonNegativeInt)
-    query(CatalogQueries(store))
-}
-```
+`scalars(Scalars.PositiveInt)` on the builder is the same registration for a schema that has no
+documents, and is what `builtInScalars(false)` leaves you with there.
 
 The resolver behind a bounded field takes a plain `Int` or `Double`: the range was already checked.
 
@@ -659,10 +661,10 @@ By default Graphix scans `classpath:graphql/` the way Spring GraphQL does: every
 `union` and `interface` declarations need no wiring either: Graphix registers a type resolver for
 each, and `typeResolver(name) { }` overrides one.
 The documents are the GraphQL schema; `@QueryMapping` / `@SchemaMapping` / `@BatchMapping`
-are DataFetchers on those fields. Every built-in scalar is wired
-automatically — declare the ones a field uses in SDL (`scalar LocalDate`) and stop there. A scalar
-the application defines itself under a built-in's name keeps its own meaning: the document's
-wiring is registered last and wins.
+are DataFetchers on those fields. Every built-in scalar is declared and wired
+automatically, so a document may use `LocalDate` or `PositiveInt` without a `scalar` line of its
+own. A scalar the document or the application defines itself under a built-in's name keeps its own
+meaning: the built-in of that name is dropped rather than colliding with it.
 
 No files found: the annotated `@Serializable` types remain the schema, as before.
 

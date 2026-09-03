@@ -43,6 +43,13 @@
       "defaultValue": true
     },
     {
+      "name": "stx.graphix.built-in-scalars",
+      "type": "java.lang.Boolean",
+      "description": "Whether every built-in scalar is in the schema. On by default \u2014 LocalDate, BigDecimal and the bounded numbers are there whether or not a field uses one.",
+      "sourceType": "com.softistx.graphix.spring.GraphixProperties",
+      "defaultValue": true
+    },
+    {
       "name": "stx.graphix.sandbox",
       "type": "java.lang.Boolean",
       "description": "Serve an Apollo Sandbox page at sandbox-path. Off by default: enabling GraphQL must not also open an HTML page that advertises the schema.",

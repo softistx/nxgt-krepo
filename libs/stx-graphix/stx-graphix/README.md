@@ -40,10 +40,12 @@ line in `BuiltInScalars`. Nothing else in the library enumerates them: the `KTyp
 `SerialDescriptor` lookup, the SDL wiring and the schema's additional types all read that list, so
 the twenty-fifth scalar costs what the third did.
 
-They are not all in the schema. A scalar is added when a field uses it — a service with no dates
-does not advertise `scalar Instant` — because introspection is a contract and two dozen unused
-scalars in it is a contract nobody can read. The bounded ones (`PositiveInt` and its seven
-relatives) have no Kotlin type to be reached by, so they are opt-in and always explicit.
+They are all in the schema, used or not. A vocabulary is worth more whole: a client's generator
+sees every scalar the service can speak, a field can be retyped without the schema growing one
+underneath it, and a bounded scalar — `PositiveInt` and its seven relatives, which have no Kotlin
+type to be reached by — is usable the moment a document names it. `builtInScalars(false)` is the
+other answer, for a schema whose introspection is a published contract and whose size is part of
+it; the scalars a field resolved to are then the only ones there.
 
 What is *not* here is a `Money`. A scalar with a domain meaning belongs to the application, and
 `scalar { }` is how it says so — [`docs/graphix.md`](../../../docs/graphix.md) has that half.
