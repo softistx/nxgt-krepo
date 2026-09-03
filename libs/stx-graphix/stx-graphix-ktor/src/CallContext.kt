@@ -3,7 +3,7 @@ package com.softistx.graphix.ktor
 import com.softistx.graphix.intercept.GraphixChain
 import com.softistx.graphix.intercept.get
 import graphql.schema.DataFetchingEnvironment
-import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.*
 import graphql.GraphQLContext as OperationContext
 
 /**
@@ -15,7 +15,9 @@ import graphql.GraphQLContext as OperationContext
  * request to answer.
  */
 val GraphixChain.call: ApplicationCall
-    get() = get<ApplicationCall>() ?: error("no ApplicationCall in the operation context — this chain did not come from the GraphQL plugin")
+    get() =
+        get<ApplicationCall>()
+            ?: error("no ApplicationCall in the operation context — this chain did not come from the GraphQL plugin")
 
 /**
  * The same call, from a resolver that already holds a [DataFetchingEnvironment].
@@ -30,5 +32,5 @@ val DataFetchingEnvironment.call: ApplicationCall
 /** The call out of graphql-java's context bag, which is what a field directive is handed. */
 val OperationContext.call: ApplicationCall
     get() =
-        get<ApplicationCall>(ApplicationCall::class)
+        get(ApplicationCall::class)
             ?: error("no ApplicationCall in the operation context — the GraphQL plugin puts one on every request")
