@@ -3,8 +3,9 @@ package com.softistx.graphix
 import graphql.GraphQL
 
 /**
- * Customises [GraphixBuilder] after roots are registered. Spring collects every bean of this
- * type; Ktor `provide`s one (or a [List]).
+ * Customises [GraphixBuilder] after roots are registered. Spring collects every bean of this type
+ * through an `ObjectProvider`; `fromKoin()` every single bound to it. Under Ktor without Koin it is
+ * registered by hand, in `customize { }`.
  */
 fun interface GraphixCustomizer {
     fun GraphixBuilder.customize()
