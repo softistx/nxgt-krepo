@@ -372,8 +372,8 @@ suspend: graphql-java's field-validation hook is not a coroutine. A returned str
 error; `null` passes. A `GraphixLimits` in the context map **replaces** the engine's limits (both
 axes), it does not patch one of them.
 
-Ktor: `customize { }` / `engine { }` on `install(GraphQL)`, and `fromDi = true` pulls the
-same types from Ktor DI (`provide<GraphixCustomizer> { … }`).
+Ktor: `customize { }` / `engine { }` on `install(GraphQL)`. To take them from a container
+instead, see [From a Koin container](#from-a-koin-container).
 
 ## Fields and arguments
 
@@ -638,7 +638,7 @@ Registration differs by stack:
 | Stack | How |
 | --- | --- |
 | Core | `intercept { }` in the `Graphix { }` builder |
-| Ktor | `intercept { }` in `install(GraphQL) { }`, and `GraphixInterceptor` in the DI container with `fromDi = true` |
+| Ktor | `intercept { }` in `install(GraphQL) { }` |
 | Spring | A `GraphixInterceptor` `@Bean`; `@Order` decides which is outermost |
 | Koin | A `GraphixInterceptor` single, collected by `fromKoin()` — see [From a Koin container](#from-a-koin-container) |
 
