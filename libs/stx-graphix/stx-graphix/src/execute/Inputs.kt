@@ -20,6 +20,7 @@ internal fun executionInput(
     validation: GraphixValidation? = null,
     introspection: Boolean = true,
     messages: GraphixMessages = GraphixMessages.Bundled,
+    maxListElements: Int? = null,
 ): ExecutionInput {
     val complexity =
         (context[GraphixLimits::class] as? GraphixLimits)?.toJava()
@@ -47,6 +48,7 @@ internal fun executionInput(
                 graphQLContext.put(OperationScope, scope)
                 graphQLContext.put(GraphixMessages::class, operationMessages)
                 graphQLContext.put(SubscriptionExecutionStrategy.KEEP_SUBSCRIPTION_EVENTS_ORDERED, true)
+                if (maxListElements != null) graphQLContext.put(MaxListElements, maxListElements)
                 // Per operation, not a JVM-wide switch: the schema still has __schema, it just refuses.
                 if (!introspection) graphQLContext.put(Introspection.INTROSPECTION_DISABLED, true)
                 if (complexity != null) {

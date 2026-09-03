@@ -141,6 +141,21 @@ graphql-java wants a `Publisher`; `Flow.asPublisher` on the operation scope is t
 upstream. `execute` on a subscription throws — the engine result is a stream, not one JSON
 object.
 
+The same `Flow<T>` on a **query** is a list, not a stream, and the annotation is the whole of the
+difference. It is collected before graphql-java sees anything — sugar for the `.toList()` the
+resolver would otherwise write, because graphql-java 26 defines a `defer` directive and no `stream`
+one, so nothing could be delivered incrementally even if the shape suggested it.
+
+The reason to accept it at all is not keystrokes. It is that `stx-mongo`'s `findAll` returns a
+`Flow` and `stx-jpa`'s a `List`, so without this a resolver body differs by backing store for no
+GraphQL-level reason. And doing the collection here rather than in the resolver puts it on the
+operation's scope, where cancelling the request cancels the source, and inside the data fetcher,
+where a throw becomes an `errors[]` entry instead of escaping.
+
+`maxListElements(n)` bounds it, and is unset by default because a `List` return has always been
+unbounded too. What it buys is the one thing a `List` made impossible: a `Flow` can be infinite, and
+an infinite one does not fail — it never answers. It bounds emission, not silence.
+
 Field errors stay GraphQL errors. HTTP 200 plus `errors[]` is the spec; throwing out of `execute`
 is for a document that cannot even be submitted.
 

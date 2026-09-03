@@ -1,5 +1,6 @@
 package com.softistx.graphix.execute
 
+import com.softistx.graphix.schema.streamElement
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.coroutines.CoroutineScope
@@ -16,23 +17,45 @@ internal fun suspendFetcher(
     instance: Any,
     function: KFunction<*>,
     bind: (DataFetchingEnvironment) -> Map<kotlin.reflect.KParameter, Any?>,
-): DataFetcher<*> =
-    DataFetcher { environment ->
+): DataFetcher<*> {
+    // Decided once, from the declared type, rather than by looking at every value the resolver
+    // returns: a field that is not a stream keeps exactly the two branches below, and the two
+    // invariants they carry are untouched because a `CompletionStage` return is not a stream.
+    val collects = function.returnType.streamElement() != null
+    return DataFetcher { environment ->
         val scope =
             environment.graphQlContext.get<CoroutineScope>(OperationScope)
                 ?: error("no CoroutineScope in GraphQLContext — Graphix.execute must install one")
         val arguments = function.argumentsWith(instance, bind(environment))
-        if (function.isSuspend) {
+        when {
+            // A stream has to be collected, and collecting suspends — so this branch needs a
+            // coroutine whether or not the resolver itself has one. That is the case a developer
+            // here actually wrote: a plain `fun` returning `Flow`.
+            collects -> {
+                scope.future(
+                    context = DataFetchingEnvironmentElement(environment),
+                    start = CoroutineStart.UNDISPATCHED,
+                ) {
+                    val value = if (function.isSuspend) function.callSuspendBy(arguments) else function.callBy(arguments)
+                    collectStream(value, environment.field.name, environment.maxListElements())
+                }
+            }
+
             // UNDISPATCHED so Loader.load queues the key before DataFetcher.get returns —
             // otherwise the level dispatches an empty DataLoader and sibling fields do not batch.
-            scope.future(
-                context = DataFetchingEnvironmentElement(environment),
-                start = CoroutineStart.UNDISPATCHED,
-            ) {
-                function.callSuspendBy(arguments)
+            function.isSuspend -> {
+                scope.future(
+                    context = DataFetchingEnvironmentElement(environment),
+                    start = CoroutineStart.UNDISPATCHED,
+                ) {
+                    function.callSuspendBy(arguments)
+                }
             }
-        } else {
+
             // Return CompletionStage as-is — wrapping DataLoader.load in future { } never completes.
-            function.callBy(arguments)
+            else -> {
+                function.callBy(arguments)
+            }
         }
     }
+}

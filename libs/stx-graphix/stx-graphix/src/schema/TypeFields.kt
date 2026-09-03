@@ -81,7 +81,7 @@ private fun typeField(
         if (batched) {
             function.returnType.batchPayload()
         } else {
-            function.returnType.unwrapAsync()
+            function.returnType.resolverOutput()
         }
     return TypeFieldMeta(
         instance = instance,
