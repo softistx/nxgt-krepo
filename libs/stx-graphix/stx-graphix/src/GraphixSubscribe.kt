@@ -2,6 +2,7 @@ package com.softistx.graphix
 
 import com.softistx.graphix.execute.executionInput
 import com.softistx.graphix.execute.toGraphixResult
+import com.softistx.graphix.intercept.runChain
 import graphql.ExecutionResult
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,11 @@ import kotlin.reflect.KClass
 fun Graphix.subscribe(
     request: GraphixRequest,
     context: Map<KClass<*>, Any> = emptyMap(),
+): Flow<GraphixResult> = runChain(interceptors, request, context) { operation, values -> subscribeOnce(operation, values) }
+
+private fun Graphix.subscribeOnce(
+    request: GraphixRequest,
+    context: Map<KClass<*>, Any>,
 ): Flow<GraphixResult> =
     flow {
         val job = SupervisorJob(currentCoroutineContext()[Job])

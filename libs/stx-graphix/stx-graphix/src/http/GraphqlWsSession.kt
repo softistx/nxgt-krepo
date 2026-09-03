@@ -18,6 +18,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.util.Locale
+import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -28,7 +29,14 @@ import kotlin.time.Duration.Companion.seconds
  * Cancelling [scope] or calling [shutdown] drops every in-flight operation.
  *
  * [locale] is the socket's, not the operation's: a WebSocket negotiates `Accept-Language` once, at
- * the handshake, and every operation on it is answered in that language.
+ * the handshake, and every operation on it is answered in that language. [context] is the socket's
+ * too — the handshake call, which is the only request a socket has.
+ *
+ * **Interceptors still run per operation**, because every `subscribe` frame goes through
+ * `Graphix.execute` / `Graphix.subscribe` on its own. That is the difference that matters for a
+ * credential: the `connection_init` payload is carried in the context as [GraphqlWsInit], and an
+ * interceptor reads it once per operation rather than once per socket, so a token that expires
+ * mid-socket is seen to have expired.
  */
 class GraphqlWsSession(
     private val engine: Graphix,
@@ -38,11 +46,13 @@ class GraphqlWsSession(
     private val scope: CoroutineScope,
     initTimeout: Duration = 3.seconds,
     private val locale: Locale? = null,
+    private val context: Map<KClass<*>, Any> = emptyMap(),
 ) {
     private val mutex = Mutex()
     private val sendMutex = Mutex()
     private var acked = false
     private var closed = false
+    private var init: GraphqlWsInit = GraphqlWsInit(null)
     private val active = mutableMapOf<String, Job>()
     private val initJob: Job? =
         initTimeout.takeIf { it.isPositive() && it.isFinite() }?.let { timeout ->
@@ -64,7 +74,7 @@ class GraphqlWsSession(
                 return
             }
         when (frame.type) {
-            "connection_init" -> init()
+            "connection_init" -> init(frame.payload)
             "ping" -> emit("pong", payload = frame.payload)
             "pong" -> Unit
             "subscribe" -> startOperation(frame)
@@ -80,12 +90,15 @@ class GraphqlWsSession(
         active.clear()
     }
 
-    private suspend fun init() {
+    private suspend fun init(payload: JsonElement?) {
         mutex.withLock {
             if (acked) {
                 shut(GraphqlWsClose.TOO_MANY_INITS, "Too many initialisation requests")
                 return
             }
+            // Kept rather than dropped: this is where a graphql-ws client sends its credential,
+            // and a socket has no Authorization header of its own to send it in.
+            init = GraphqlWsInit(payload)
             acked = true
             initJob?.cancel()
         }
@@ -116,19 +129,22 @@ class GraphqlWsSession(
                 shut(GraphqlWsClose.SUBSCRIBER_EXISTS, "Subscriber for $id already exists")
                 return
             }
-            active[id] = scope.launch { run(id, request) }
+            // Read under the lock, with `init`, so the launched coroutine cannot race the ack.
+            val operationContext = context + (GraphqlWsInit::class to init)
+            active[id] = scope.launch { run(id, request, operationContext) }
         }
     }
 
     private suspend fun run(
         id: String,
         request: GraphixRequest,
+        context: Map<KClass<*>, Any>,
     ) {
         try {
             if (request.isSubscription()) {
-                engine.subscribe(request).collect { result -> emit("next", id, nextPayload(result.toHttp())) }
+                engine.subscribe(request, context).collect { result -> emit("next", id, nextPayload(result.toHttp())) }
             } else {
-                emit("next", id, nextPayload(engine.execute(request).toHttp()))
+                emit("next", id, nextPayload(engine.execute(request, context).toHttp()))
             }
             emit("complete", id)
         } catch (failure: kotlinx.coroutines.CancellationException) {
