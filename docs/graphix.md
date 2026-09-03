@@ -37,10 +37,17 @@ ends in `Input` keeps it.
 | `Int` | `Int` |
 | `Boolean` | `Boolean` |
 | `Float`, `Double` | `Float` |
-| `Long` | `Long` (custom scalar; GraphQL `Int` is 32-bit) |
+| `Long`, `Short`, `Byte` | `Long`, `Short`, `Byte` (GraphQL `Int` is 32-bit) |
+| `java.math.BigDecimal`, `java.math.BigInteger` | `BigDecimal`, `BigInteger` |
+| `Char` | `Char` (a one-character string) |
 | `@GraphQLId String` / `Uuid` / `Long` | `ID` |
 | `kotlin.time.Instant` | `Instant` (ISO-8601 string) |
+| `kotlin.time.Duration` | `Duration` (ISO-8601, `PT1H30M`) |
+| `kotlinx.datetime.LocalDate` / `LocalTime` / `LocalDateTime` | `LocalDate`, `LocalTime`, `LocalDateTime` |
 | `kotlin.uuid.Uuid` | `Uuid` (canonical string) |
+| `java.net.URI` | `Url` (absolute) |
+| `java.util.Locale` | `Locale` (BCP 47 tag) |
+| `JsonElement` | `Json` (any JSON value) |
 | `List<T>` | `[T]` |
 | `T?` | nullable `T` |
 | enum class | GraphQL enum, constant names from the serializer |
@@ -129,6 +136,119 @@ one field, so a `data object` member fails schema build naming the Kotlin object
 On the **SDL path** a resolver's Kotlin return type is never read — the document is the schema — so
 a union field is written `List<Any>`, which is the only way to say it in Kotlin. On the annotation
 path the same field is a sealed hierarchy.
+
+## Built-in scalars
+
+GraphQL's own five are `Int`, `Float`, `String`, `Boolean` and `ID`. Everything else a Kotlin
+service has fields of is one of these, all of them in `com.softistx.stx.graphix.messages.scalar.Scalars`:
+
+| Scalar | Kotlin type | Wire form |
+| --- | --- | --- |
+| `Long`, `Short`, `Byte` | `Long`, `Short`, `Byte` | a JSON number, or a quoted one from a client that cannot hold it |
+| `BigInteger` | `java.math.BigInteger` | an integer of any width |
+| `BigDecimal` | `java.math.BigDecimal` | an exact decimal — the scalar for money |
+| `Char` | `Char` | a one-character string |
+| `Instant` | `kotlin.time.Instant` | ISO-8601, `2026-09-02T14:30:05Z` |
+| `Duration` | `kotlin.time.Duration` | ISO-8601, `PT1H30M` |
+| `LocalDate` | `kotlinx.datetime.LocalDate` | `2026-09-02` |
+| `LocalTime` | `kotlinx.datetime.LocalTime` | `14:30:05` |
+| `LocalDateTime` | `kotlinx.datetime.LocalDateTime` | `2026-09-02T14:30:05` |
+| `Uuid` | `kotlin.uuid.Uuid` | the canonical hyphenated string |
+| `Url` | `java.net.URI` | an absolute URL |
+| `Locale` | `java.util.Locale` | a BCP 47 tag, `fr-CA` |
+| `Json` | `JsonElement` | any JSON value |
+
+A field of one of those types **is** that scalar — nothing to register — and the scalar is added
+to the schema when a field uses it. A service with no dates does not advertise `scalar Instant`.
+
+`Url` is a `URI` and not a `URL` because `URL.equals` resolves the host through DNS. `Duration`
+travels as `PT1H30M` and not as Kotlin's `1h 30m`, because a wire format is parsed by something
+that is not Kotlin. `Json` is for a field that genuinely holds a document — a webhook payload, a
+settings blob — and for nothing else: a `Json` field tells a client's code generator nothing.
+
+### Bounded scalars
+
+Eight more say what they will accept: `PositiveInt`, `NegativeInt`, `NonPositiveInt`,
+`NonNegativeInt` and the same four over `Float`. A range in the **type** is a range the schema
+advertises and the engine enforces before a resolver runs; the same check inside the resolver is a
+runtime error the client's generated code never saw.
+
+There is no Kotlin type for "an `Int` above zero", so these are opt-in — in SDL, where declaring
+one is enough:
+
+```graphql
+scalar PositiveInt
+
+type Query {
+  quantity(value: PositiveInt!): PositiveInt!
+}
+```
+
+or on the builder, for a schema that has no documents:
+
+```kotlin
+Graphix {
+    scalars(Scalars.PositiveInt, Scalars.NonNegativeInt)
+    query(CatalogQueries(store))
+}
+```
+
+The resolver behind a bounded field takes a plain `Int` or `Double`: the range was already checked.
+
+### Adding one
+
+A scalar is one file under `libs/stx-graphix/stx-graphix/src/scalar/` holding its `Coercing` and
+its `GraphQLScalarType`, and one line in `BuiltInScalars`. Nothing else enumerates them — the type
+lookup, the SDL wiring and the schema's additional types all read that list. Most of them are two
+lambdas over `StringCoercing` or a width over `IntegralCoercing`.
+
+## Coercion errors and their language
+
+A coercion error is the one message this library produces that reaches an API **client**, so it is
+looked up by key and locale rather than written in English at the throw site.
+
+`GraphixRequest.locale` is the operation's language. Both HTTP integrations negotiate it from
+`Accept-Language` — including the WebSocket, whose handshake settles it once for the socket — and
+`acceptedLocale(header)` is that negotiation on its own. Unset, graphql-java falls back to the
+**JVM's** default locale, which is the host's environment deciding what language a client is
+answered in.
+
+The text comes from `GraphixMessages`. The default is the catalogues in this jar, English and
+French; a language they do not ship is a `stx/graphix/messages_<locale>.properties` on the
+application's own classpath, and the lookup walks `fr-CA` → `fr` → base **per key**. Replacing the
+source outright is one lambda, which is where `stx-i18n` goes:
+
+```kotlin
+Graphix {
+    messages { locale, key, args -> catalog.forLocale(locale).translate(key, args) }
+    query(ProductQueries(store))
+}
+```
+
+The keys are generic, and that is deliberate: `{scalar}` carries which scalar failed, so a new
+scalar needs no new key and no new translation.
+
+| Key | Arguments |
+| --- | --- |
+| `stx.graphix.messages.scalar.serialize` | `scalar`, `actual` |
+| `stx.graphix.messages.scalar.parseValue` | `scalar`, `actual` |
+| `stx.graphix.messages.scalar.parseLiteral` | `scalar`, `expected`, `actual` |
+| `stx.graphix.messages.scalar.parse` | `scalar`, `value` |
+| `stx.graphix.messages.scalar.parseReason` | `scalar`, `value`, `reason` |
+| `stx.graphix.messages.scalar.range` | `scalar`, `constraint`, `value` |
+| `stx.graphix.messages.literal.string` / `.int` / `.float` / `.boolean` / `.enum` / `.object` / `.list` / `.null` | — |
+| `stx.graphix.messages.range.positive` / `.negative` / `.nonPositive` / `.nonNegative` | — |
+| `stx.graphix.messages.range.between` | `min`, `max` |
+
+`MessageKeys.All` is that list in code, and `ScalarMessageTest` asserts both bundled catalogues
+answer every one of them.
+
+**One thing a replaced source does not reach**, and it is graphql-java's doing: a **literal written
+in the document** is coerced during *validation*, where `ValidationContext` builds a
+`GraphQLContext` of its own carrying the locale and nothing else. Those errors come from the
+bundled catalogue — in the right language, because the locale does survive. A variable's value and
+a resolver's result are coerced during *execution* and see the declared source. Adding a language
+has no such split: the bundled catalogue answers in both phases.
 
 ## Custom scalars and field directives
 
@@ -539,8 +659,10 @@ By default Graphix scans `classpath:graphql/` the way Spring GraphQL does: every
 `union` and `interface` declarations need no wiring either: Graphix registers a type resolver for
 each, and `typeResolver(name) { }` overrides one.
 The documents are the GraphQL schema; `@QueryMapping` / `@SchemaMapping` / `@BatchMapping`
-are DataFetchers on those fields. Custom scalars `Long`, `Instant` and `Uuid` are wired
-automatically — declare them in SDL if a field uses them (`scalar Long`).
+are DataFetchers on those fields. Every built-in scalar is wired
+automatically — declare the ones a field uses in SDL (`scalar LocalDate`) and stop there. A scalar
+the application defines itself under a built-in's name keeps its own meaning: the document's
+wiring is registered last and wins.
 
 No files found: the annotated `@Serializable` types remain the schema, as before.
 

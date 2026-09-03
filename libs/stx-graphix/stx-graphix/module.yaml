@@ -12,6 +12,9 @@ dependencies:
   # DataLoaderRegistry is per execute. Not exported: Graphix never hands a DataLoader out.
   - $libs.java.dataloader
   - $libs.kotlinx.serialization: exported
+  # LocalDate/LocalTime/LocalDateTime are scalars here, and they are the types this repo already
+  # generates for an OpenAPI `format: date`. Exported: a field of one is in the caller's own code.
+  - $libs.kotlinx.datetime: exported
   - $libs.kotlinx.coroutines.core: exported
   # Annotated resolver functions are read reflectively at schema build. Not exported: an application
   # writes the annotations this module defines and never touches a KFunction.

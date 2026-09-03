@@ -6,7 +6,6 @@ import com.softistx.graphix.execute.batchFieldFetcher
 import com.softistx.graphix.execute.bindArguments
 import com.softistx.graphix.execute.resolverFetcher
 import com.softistx.graphix.execute.subscriptionFetcher
-import com.softistx.graphix.scalar.Scalars
 import graphql.schema.FieldCoordinates
 import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLInterfaceType
@@ -113,11 +112,10 @@ internal fun graphQLSchema(
                 .query(query.type)
                 .mutation(mutation?.type)
                 .subscription(subscription?.type)
-                .additionalTypes(types.additionalTypes())
-                .additionalType(Scalars.Long)
-                .additionalType(Scalars.Instant)
-                .additionalType(Scalars.Uuid)
-                .apply { customScalars.forEach { additionalType(it) } }
+                // The built-ins a field used, plus whatever the builder registered by hand. A
+                // scalar nothing refers to is not put in the schema — introspection is a contract,
+                // and two dozen unused scalars in it is a contract nobody can read.
+                .additionalTypes(types.additionalTypes() + customScalars)
                 .codeRegistry(registry.build())
                 .build()
         } catch (failure: Exception) {

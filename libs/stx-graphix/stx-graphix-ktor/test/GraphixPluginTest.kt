@@ -4,6 +4,7 @@ import com.softistx.graphix.GraphixCustomizer
 import com.softistx.graphix.http.GRAPHQL_TRANSPORT_WS
 import com.softistx.graphix.http.SubscriptionProtocol
 import com.softistx.graphix.ktor.fixture.BoomQueries
+import com.softistx.graphix.ktor.fixture.ExpiryQueries
 import com.softistx.graphix.ktor.fixture.GreetingQueries
 import com.softistx.graphix.ktor.fixture.TickSubscriptions
 import com.softistx.graphix.scalar.graphQLScalar
@@ -30,6 +31,39 @@ import io.ktor.websocket.readText
 
 class GraphixPluginTest :
     FeatureSpec({
+        feature("Accept-Language") {
+            scenario("the header decides the language a coercion error comes back in") {
+                testApplication {
+                    application {
+                        install(GraphQL) { schema { query(ExpiryQueries()) } }
+                    }
+                    val response =
+                        client.post("/graphql") {
+                            contentType(ContentType.Application.Json)
+                            header(HttpHeaders.AcceptLanguage, "fr-CA,fr;q=0.9,en;q=0.8")
+                            setBody("""{"query":"{ expiry(at: \"the 2nd\") }"}""")
+                        }
+                    response.status shouldBe HttpStatusCode.OK
+                    response.bodyAsText() shouldContain "ne peut pas analyser"
+                }
+            }
+
+            scenario("no header is the engine's own default, not a failed request") {
+                testApplication {
+                    application {
+                        install(GraphQL) { schema { query(ExpiryQueries()) } }
+                    }
+                    val response =
+                        client.post("/graphql") {
+                            contentType(ContentType.Application.Json)
+                            setBody("""{"query":"{ expiry(at: \"2026-09-02\") }"}""")
+                        }
+                    response.status shouldBe HttpStatusCode.OK
+                    response.bodyAsText() shouldContain """"expiry":"2026-09-02""""
+                }
+            }
+        }
+
         feature("POST /graphql") {
             scenario("a JSON body executes and returns data") {
                 testApplication {

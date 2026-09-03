@@ -3,6 +3,7 @@ package com.softistx.graphix.spring
 import com.softistx.graphix.Graphix
 import com.softistx.graphix.http.GRAPHQL_TRANSPORT_WS
 import com.softistx.graphix.http.GraphqlWsSession
+import com.softistx.graphix.http.acceptedLocale
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingleOrNull
@@ -37,6 +38,8 @@ class GraphixWebSocketHandler(
                             send = { text -> sink.emitNext(session.textMessage(text), Sinks.EmitFailureHandler.FAIL_FAST) },
                             close = { code, reason -> session.close(CloseStatus(code, reason)).awaitSingleOrNull() },
                             scope = this,
+                            // A socket negotiates its language once, at the handshake.
+                            locale = acceptedLocale(session.handshakeInfo.headers.getFirst(HttpHeaders.ACCEPT_LANGUAGE)),
                         )
                     try {
                         session.receive().asFlow().collect { message ->

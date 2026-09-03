@@ -7,6 +7,7 @@ import com.softistx.graphix.http.GraphixHttpError
 import com.softistx.graphix.http.GraphixHttpRequest
 import com.softistx.graphix.http.GraphixHttpResponse
 import com.softistx.graphix.http.SubscriptionProtocol
+import com.softistx.graphix.http.acceptedLocale
 import com.softistx.graphix.http.toGraphixRequest
 import com.softistx.graphix.http.toHttp
 import com.softistx.graphix.isSubscription
@@ -16,9 +17,11 @@ import kotlinx.coroutines.reactor.mono
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.server.*
 import reactor.core.publisher.Mono
+import java.util.Locale
 
 /** WebFlux adapter: the same JSON envelope as Ktor, over `RouterFunction`. */
 internal class GraphixHandler(
@@ -37,15 +40,18 @@ internal class GraphixHandler(
 
     private fun post(request: ServerRequest): Mono<ServerResponse> =
         request.bodyToMono<String>().defaultIfEmpty("").flatMap { body ->
-            mono { handlePost(body) }
+            mono { handlePost(body, request.preferredLocale()) }
         }
 
     private fun get(request: ServerRequest): Mono<ServerResponse> = mono { handleGet(request) }
 
-    private suspend fun handlePost(body: String): ServerResponse {
+    private suspend fun handlePost(
+        body: String,
+        locale: Locale?,
+    ): ServerResponse {
         val graphixRequest =
             try {
-                json.decodeFromString(GraphixHttpRequest.serializer(), body).toGraphixRequest()
+                json.decodeFromString(GraphixHttpRequest.serializer(), body).toGraphixRequest(locale)
             } catch (failure: SerializationException) {
                 return badRequest("malformed GraphQL JSON: ${failure.message}")
             } catch (failure: BadGraphixHttp) {
@@ -72,9 +78,12 @@ internal class GraphixHandler(
                 query = query,
                 operationName = request.queryParam("operationName").orElse(null),
                 variables = variables,
-            ).toGraphixRequest()
+            ).toGraphixRequest(request.preferredLocale())
         return respond(graphixRequest)
     }
+
+    /** The request's `Accept-Language`, as the locale its coercion errors are translated in. */
+    private fun ServerRequest.preferredLocale(): Locale? = acceptedLocale(headers().firstHeader(HttpHeaders.ACCEPT_LANGUAGE))
 
     private suspend fun respond(request: GraphixRequest): ServerResponse {
         if (request.isSubscription()) {
