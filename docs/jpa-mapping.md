@@ -12,7 +12,10 @@ the reasoning behind both.
 ## Associations are lazy
 
 Annotate every one of them — `@ManyToOne(fetch = FetchType.LAZY)`, `@OneToOne(fetch = LAZY)` — and
-leave `@OneToMany`/`@ManyToMany` at their lazy default. JPA's default for the to-ones is `EAGER`,
+leave `@OneToMany`/`@ManyToMany` at their lazy default. **`@ElementCollection` is one of these**, which
+is easy to miss because a `Set<String>` looks like a column: it is a plural attribute, it gets a table
+of its own, it is lazy, and reading it unfetched throws exactly like an association.
+`ValueMappingTest` measures all three. JPA's default for the to-ones is `EAGER`,
 which is a select per distinct owner behind any query returning more than one row.
 
 What makes this a rule rather than advice is that the reactive session has no transparent lazy
@@ -245,6 +248,43 @@ Hibernate 7.4 also has HQL `json_value`, `json_query` and `json_exists`, disable
 `hibernate.query.hql.json_functions_enabled` while they incubate. This library does not enable them
 and no spec here has run one — set it through `JpaConfig.properties` if you want them, or query a
 document through `nativeQuery` and the database's own operators.
+
+## Inheritance
+
+`SINGLE_TABLE` and `JOINED` both work, and a query on the base type is polymorphic — each row comes
+back as its own subclass. `InheritanceTest` pins both, including that the discriminator is a real
+column and that a `JOINED` subclass gets its own table holding only what it added.
+
+The Kotlin side is not free, and it is already paid for: an `@Entity` subclass needs its superclass
+open and every class needs a no-arg constructor, which the `allOpen` and `noArg` compiler plugins
+this module configures supply. Nothing extra is required of an entity author.
+
+## Soft delete
+
+**Use `@SoftDelete`.** Hibernate generates the statements, so the rewritten delete and the restriction
+on every read are its own SQL — schema-qualified, in the driver's own placeholder dialect, and
+portable across the databases here. `SoftDeleteTest` measures both halves: the entity is gone from
+every read, and the row is still in the table when counted with SQL that does not go through the
+mapping.
+
+**`@SQLDelete` and `@SQLRestriction` do not survive the trip**, and the two reasons compound:
+
+- the statement is handed to the driver **untouched**, so a JDBC `?` reaches the server literally —
+  there is no JDBC under the Vert.x pool to read it — and Postgres answers `syntax error at end of
+  input`;
+- correcting it to `$1` uncovers the second: the table name is not schema-qualified, and nothing can
+  qualify it, because `JpaConfig.schema` is a runtime value and an annotation is a compile-time
+  constant. The README records the same trap for `nativeMutate`.
+
+Both failures are pinned by specs rather than described, because the first one looks like the whole
+problem.
+
+## Optimistic locking
+
+`@Version` works, and the conflict surfaces where it should: a write built on a version the row has
+left behind is refused at flush, inside the session, as a thrown exception — not as a failed future
+a suspending call quietly drops. `OptimisticLockTest` pins the refusal and that the winner's value is
+the one that survived.
 
 ## Validation
 
