@@ -141,6 +141,14 @@ graphql-java wants a `Publisher`; `Flow.asPublisher` on the operation scope is t
 upstream. `execute` on a subscription throws — the engine result is a stream, not one JSON
 object.
 
+Under `graphql-ws` a socket has no per-request headers — it has one handshake, and nothing after
+it. So a credential arrives in the protocol's own `connection_init` frame, and Graphix hands the
+payload over as `GraphqlWsInit`. It is read per operation rather than per connection, which is what
+makes a credential expiring mid-socket observable instead of a socket keeping whatever it was
+authorised with at the upgrade. A field reachable from more than one transport reads it in an
+interceptor, not as a resolver parameter, because a resolver parameter of a socket-only type fails
+everywhere else. [`docs/graphix.md`](../../../docs/graphix.md) has the shape.
+
 The same `Flow<T>` on a **query** is a list, not a stream, and the annotation is the whole of the
 difference. It is collected before graphql-java sees anything — sugar for the `.toList()` the
 resolver would otherwise write, because graphql-java 26 defines a `defer` directive and no `stream`

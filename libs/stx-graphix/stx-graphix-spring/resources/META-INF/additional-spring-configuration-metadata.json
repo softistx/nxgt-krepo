@@ -24,7 +24,7 @@
     {
       "name": "stx.graphix.subscriptions",
       "type": "com.softistx.graphix.http.SubscriptionProtocol",
-      "description": "How subscriptions are served: sse (text/event-stream on POST) or graphql-ws (WebSocket on the same path).",
+      "description": "How subscriptions are served: sse (text/event-stream on POST and GET) or graphql-ws (WebSocket on the same path).",
       "sourceType": "com.softistx.graphix.spring.GraphixProperties",
       "defaultValue": "sse"
     },
