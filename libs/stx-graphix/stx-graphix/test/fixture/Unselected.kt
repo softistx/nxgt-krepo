@@ -3,6 +3,7 @@ package com.softistx.graphix.fixture
 import com.softistx.graphix.schema.GraphQLIgnore
 import com.softistx.graphix.schema.QueryMapping
 import kotlinx.serialization.Serializable
+import java.util.concurrent.atomic.AtomicInteger
 
 /*
  * Types carrying a property that **throws when read**, so a spec can prove what is never read.
@@ -39,10 +40,23 @@ class GuardedShelf(
         get() = error("read a property the client did not select")
 }
 
-class ShelfQueries {
+/**
+ * [calls] counts what actually ran, which is the only way to tell a validation failure from an
+ * execution one here: null-bubbling makes both of them answer `data: null` when the field that
+ * failed is non-nullable, so the response shape says nothing.
+ */
+class ShelfQueries(
+    val calls: AtomicInteger = AtomicInteger(),
+) {
     @QueryMapping
-    fun shelf(): Shelf = Shelf("Fiction")
+    fun shelf(): Shelf {
+        calls.incrementAndGet()
+        return Shelf("Fiction")
+    }
 
     @QueryMapping
-    fun guarded(): GuardedShelf = GuardedShelf("Fiction")
+    fun guarded(): GuardedShelf {
+        calls.incrementAndGet()
+        return GuardedShelf("Fiction")
+    }
 }
