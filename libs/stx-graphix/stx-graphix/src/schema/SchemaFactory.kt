@@ -28,6 +28,7 @@ internal fun graphQLSchema(
     kotlinScalars: Map<KClass<*>, GraphQLScalarType> = emptyMap(),
     fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
     typeResolvers: Map<String, GraphixTypeName> = emptyMap(),
+    builtInScalars: Boolean = true,
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     if (queries.isEmpty()) throw GraphixException("Graphix needs at least one query root")
     if (schemaFiles.isNotEmpty()) {
@@ -40,6 +41,7 @@ internal fun graphQLSchema(
             customScalars,
             fieldDirectives,
             typeResolvers,
+            builtInScalars,
         )
     }
     val typeFields = collectTypeFields(typeInstances)
@@ -112,10 +114,10 @@ internal fun graphQLSchema(
                 .query(query.type)
                 .mutation(mutation?.type)
                 .subscription(subscription?.type)
-                // The built-ins a field used, plus whatever the builder registered by hand. A
-                // scalar nothing refers to is not put in the schema — introspection is a contract,
-                // and two dozen unused scalars in it is a contract nobody can read.
-                .additionalTypes(types.additionalTypes() + customScalars)
+                // Every built-in, so a client generator sees the whole vocabulary and a bounded
+                // scalar needs no registration. `builtInScalars(false)` narrows that to the ones a
+                // field actually used, which TypeMapper collected on the way through.
+                .additionalTypes(types.additionalTypes() + builtInScalarTypes(builtInScalars, customScalars) + customScalars)
                 .codeRegistry(registry.build())
                 .build()
         } catch (failure: Exception) {

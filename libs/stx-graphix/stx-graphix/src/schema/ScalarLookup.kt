@@ -1,6 +1,7 @@
 package com.softistx.graphix.schema
 
 import com.softistx.graphix.GraphixException
+import com.softistx.graphix.scalar.Scalars
 import com.softistx.graphix.scalar.ScalarsByKotlinType
 import com.softistx.graphix.scalar.ScalarsBySerialName
 import graphql.Scalars.GraphQLBoolean
@@ -86,6 +87,23 @@ private fun byKind(descriptor: SerialDescriptor): GraphQLScalarType? =
         PrimitiveKind.CHAR -> ScalarsBySerialName.getValue("kotlin.Char")
         else -> null
     }
+
+/**
+ * The built-in scalars a schema advertises. All of them by default: a client's code generator sees
+ * the whole vocabulary, and a bounded scalar is usable without being registered first.
+ *
+ * A name the application defined itself is **its own** — `customScalars` wins, and the built-in of
+ * that name is dropped rather than colliding with it. [enabled] off is an empty list, and the
+ * schema then carries only the scalars a field actually used.
+ */
+internal fun builtInScalarTypes(
+    enabled: Boolean,
+    customScalars: List<GraphQLScalarType>,
+): List<GraphQLScalarType> {
+    if (!enabled) return emptyList()
+    val defined = customScalars.mapTo(mutableSetOf()) { it.name }
+    return Scalars.All.filterNot { it.name in defined }
+}
 
 /** Wraps in GraphQL NonNull when [nullable] is false. */
 internal fun wrapOutput(

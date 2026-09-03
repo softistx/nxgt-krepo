@@ -34,6 +34,12 @@ data class GraphixProperties(
      */
     val introspection: Boolean = true,
     /**
+     * Whether every built-in scalar is in the schema. On by default, so `LocalDate`, `BigDecimal`
+     * and the bounded numbers are there whether or not a field uses one. Off, the schema carries
+     * only what a field resolved to. Ignored when the application supplies its own `Graphix` bean.
+     */
+    val builtInScalars: Boolean = true,
+    /**
      * Serves an Apollo Sandbox at [sandboxPath]. Off by default: enabling GraphQL should not also
      * open an HTML page that advertises the schema.
      */
