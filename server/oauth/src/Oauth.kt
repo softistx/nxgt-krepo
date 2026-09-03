@@ -16,7 +16,7 @@ fun main() {
     embeddedServer(Netty, port = config.port, host = config.host, module = Application::oauth).start(wait = true)
 }
 
-/** Installs GraphQL at `/graphql`, and the Apollo Sandbox at `/sandbox`, over an in-memory [Catalog]. */
+/** Installs GraphQL at `/graphql`, and the Apollo Sandbox at `/sandbox`. */
 fun Application.oauth() {
     val permission = PermissionController()
     configureDependencyInjection()
@@ -29,6 +29,7 @@ fun Application.oauth() {
     configureRouting()
     install(GraphQL) {
         sandbox = true
+        builtInScalars = true
         schema {
             query(permission)
             mutation(permission)

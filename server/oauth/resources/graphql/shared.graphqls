@@ -12,6 +12,6 @@ type AuditMetadata @annotate(name: "Serializable", type: "serialization") {
 directive @annotate(
     name: String!
     type: String
-    inputs: JSON
+    inputs: Json
     target: String
 ) repeatable on OBJECT | FIELD_DEFINITION | INPUT_OBJECT | INPUT_FIELD_DEFINITION
