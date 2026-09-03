@@ -126,8 +126,8 @@ are the DataFetchers. No files, the `@Serializable` types stay the schema.
 Custom scalars and field directives are declared on the builder (`scalar { }`,
 `fieldDirective { }`). The lambdas see the operation `GraphQLContext`. Spring collects
 `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`, `GraphixInterceptor` and
-`GraphQLEngineCustomizer` beans; Ktor's `customize { }` / `intercept { }` / `fromDi = true` is
-the same list from DI.
+`GraphQLEngineCustomizer` beans; Ktor's `customize { }` / `intercept { }` declares them inline,
+and `stx-graphix-koin`'s `fromKoin()` collects the same list out of a Koin container.
 
 ## The data fetcher is not yours
 

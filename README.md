@@ -87,7 +87,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a stx-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
 | [`docs/graphix.md`](docs/graphix.md) | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, SDL scan, HTTP/SSE/graphql-ws |
 | [`libs/stx-graphix/stx-graphix/README.md`](libs/stx-graphix/stx-graphix/README.md) | The GraphQL engine — why SerialDescriptor and not Jackson, why there is no class scan in core |
-| [`libs/stx-graphix/stx-graphix-ktor/README.md`](libs/stx-graphix/stx-graphix-ktor/README.md) | The Ktor plugin — path, `instance` vs `schema { }`, `fromDi`, and the engine it registers with the container |
+| [`libs/stx-graphix/stx-graphix-ktor/README.md`](libs/stx-graphix/stx-graphix-ktor/README.md) | The Ktor plugin — path, `instance` vs `schema { }`, the call on every operation, and the engine it registers with the container |
 | [`libs/stx-graphix/stx-graphix-spring/README.md`](libs/stx-graphix/stx-graphix-spring/README.md) | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
 | [`libs/stx-graphix/stx-graphix-koin/README.md`](libs/stx-graphix/stx-graphix-koin/README.md) | Building the schema from a Koin container — `fromKoin()`, `GraphixResolver` |
 | [`examples/graphix-shop/README.md`](examples/graphix-shop/README.md) | The GraphQL catalogue — how to run it, the split SDL under `resources/graphql/` |
