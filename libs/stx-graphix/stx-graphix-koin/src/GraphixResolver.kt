@@ -23,7 +23,8 @@ package com.softistx.graphix.koin
  * Koin 4.2.2 with koin-compiler-plugin 1.1.0.
  *
  * Everything else this module collects is already a type — `GraphixCustomizer`, `GraphixDirective`,
- * `GraphixInterceptor`, `GraphQLScalarType` — and needs no marker at all. Only a resolver, which is
- * an ordinary class carrying `@QueryMapping` functions, has nothing in common with the next one.
+ * `GraphixInterceptor`, `GraphixExceptionHandler`, `GraphQLScalarType`, `GraphQLEngineCustomizer` —
+ * and needs no marker at all. Only a resolver, which is an ordinary class carrying `@QueryMapping`
+ * functions, has nothing in common with the next one.
  */
 interface GraphixResolver
