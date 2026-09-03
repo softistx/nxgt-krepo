@@ -24,6 +24,9 @@ internal fun executionInput(
     val complexity =
         (context[GraphixLimits::class] as? GraphixLimits)?.toJava()
             ?: validation?.complexityLimits
+    // A single operation may bring its own message source. Read out of the bag rather than left to
+    // win by insertion order, so that the engine's keys can go in last without silencing it.
+    val operationMessages = (context[GraphixMessages::class] as? GraphixMessages) ?: messages
     val builder =
         ExecutionInput
             .newExecutionInput()
@@ -35,8 +38,14 @@ internal fun executionInput(
             .apply { request.locale?.let { locale(it) } }
             .apply { if (request.extensions.isNotEmpty()) extensions(request.extensions) }
             .graphQLContext { graphQLContext ->
+                // The caller's bag goes in first and the engine's own keys after it: every data
+                // fetcher errors without `OperationScope`, and an interceptor contributing to the
+                // context must not be able to unmake the operation by reusing the key. What is
+                // genuinely per-operation — the message source, the complexity limits — is read out
+                // of the bag above instead of winning by insertion order.
+                context.forEach { (key, value) -> graphQLContext.put(key, value) }
                 graphQLContext.put(OperationScope, scope)
-                graphQLContext.put(GraphixMessages::class, messages)
+                graphQLContext.put(GraphixMessages::class, operationMessages)
                 graphQLContext.put(SubscriptionExecutionStrategy.KEEP_SUBSCRIPTION_EVENTS_ORDERED, true)
                 // Per operation, not a JVM-wide switch: the schema still has __schema, it just refuses.
                 if (!introspection) graphQLContext.put(Introspection.INTROSPECTION_DISABLED, true)
@@ -47,7 +56,6 @@ internal fun executionInput(
                     .unusualConfiguration(graphQLContext)
                     .dataloaderConfig()
                     .enableDataLoaderExhaustedDispatching(true)
-                context.forEach { (key, value) -> graphQLContext.put(key, value) }
             }
     if (loaders.isNotEmpty()) {
         builder.dataLoaderRegistry(dataLoaderRegistry(loaders, scope, context))

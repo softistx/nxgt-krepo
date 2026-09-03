@@ -6,6 +6,7 @@ import graphql.schema.FieldCoordinates
 import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLObjectType
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.instanceParameter
@@ -29,6 +30,7 @@ internal fun root(
     kind: RootKind,
     instances: List<Any>,
     types: TypeMapper,
+    contextTypes: Set<KClass<*>> = emptySet(),
     fetcher: (Any, KFunction<*>) -> DataFetcher<*>,
 ): Root? {
     val fields = mutableListOf<GraphQLFieldDefinition>()
@@ -48,7 +50,7 @@ internal fun root(
                     },
                     function.isGraphQLId(),
                 )
-            function.requireArgumentAnnotations()
+            function.requireArgumentAnnotations(contextTypes = contextTypes)
             fields +=
                 fieldDefinition(
                     function,

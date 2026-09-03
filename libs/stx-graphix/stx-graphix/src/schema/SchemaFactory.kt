@@ -32,6 +32,7 @@ internal fun graphQLSchema(
     fieldDirectives: Map<String, FieldDirectiveWrap> = emptyMap(),
     typeResolvers: Map<String, GraphixTypeName> = emptyMap(),
     builtInScalars: Boolean = true,
+    contextTypes: Set<KClass<*>> = emptySet(),
 ): Pair<GraphQLSchema, List<RegisteredLoader>> {
     if (instances.isEmpty()) throw GraphixException("Graphix needs at least one query root")
     if (schemaFiles.isNotEmpty()) {
@@ -42,22 +43,23 @@ internal fun graphQLSchema(
             fieldDirectives,
             typeResolvers,
             builtInScalars,
+            contextTypes,
         )
     }
-    val typeFields = collectTypeFields(instances)
+    val typeFields = collectTypeFields(instances, contextTypes)
     val types = TypeMapper(json.serializersModule, typeFields.groupBy { it.parentName }, kotlinScalars)
     val query =
-        root("Query", RootKind.QUERY, instances, types) { instance, function ->
+        root("Query", RootKind.QUERY, instances, types, contextTypes) { instance, function ->
             resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives)
         } ?: throw GraphixException("Graphix needs at least one query root")
     // `null` from either is a schema without that root: no registered function was annotated for
     // it. Query is the one GraphQL insists on, which is why only it turns null into a failure.
     val mutation =
-        root("Mutation", RootKind.MUTATION, instances, types) { instance, function ->
+        root("Mutation", RootKind.MUTATION, instances, types, contextTypes) { instance, function ->
             resolverFetcher(instance, function, json).withDirectives(function, fieldDirectives)
         }
     val subscription =
-        root("Subscription", RootKind.SUBSCRIPTION, instances, types) { instance, function ->
+        root("Subscription", RootKind.SUBSCRIPTION, instances, types, contextTypes) { instance, function ->
             subscriptionFetcher(instance, function) { env -> bindArguments(function, env, json) }
                 .withDirectives(function, fieldDirectives)
         }
