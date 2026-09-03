@@ -15,7 +15,8 @@ Annotate every one of them — `@ManyToOne(fetch = FetchType.LAZY)`, `@OneToOne(
 leave `@OneToMany`/`@ManyToMany` at their lazy default. **`@ElementCollection` is one of these**, which
 is easy to miss because a `Set<String>` looks like a column: it is a plural attribute, it gets a table
 of its own, it is lazy, and reading it unfetched throws exactly like an association.
-`ValueMappingTest` measures all three. JPA's default for the to-ones is `EAGER`,
+`ValueMappingTest` measures all three, and `RelationshipTest` measures that `@OneToOne` and
+`@ManyToMany` behave the same way — there is no association shape here that is exempt. JPA's default for the to-ones is `EAGER`,
 which is a select per distinct owner behind any query returning more than one row.
 
 What makes this a rule rather than advice is that the reactive session has no transparent lazy
@@ -240,6 +241,21 @@ whole thing with `JpaConfig(json = …)`.
 mutation *is* noticed, at the cost of serializing the document to find out. Keep such a column small,
 and prefer a mapped column for anything you filter or sort on.
 
+**Or a converter instead of the mapper.** An `AttributeConverter<T, String>` doing the serialization
+itself bypasses the `FormatMapper` entirely, and `@Convert` composes with `@JdbcTypeCode(SqlTypes.JSON)`
+— the column is still `jsonb` and the converter is what wrote it, which `ConvertedJsonTest` measures
+both ways. Without the JSON code it is a `character varying` column instead, which costs the operators
+and the indexes.
+
+It is a real alternative, with a real trade. What it buys is control — a per-attribute `Json`, a
+custom shape, a migration between two document versions — and a dirty check on the domain value
+rather than the `fromString(toString(value))` round trip below. What it costs is that the converter
+is named on each attribute instead of applying to every `@Serializable` type at once, and that HQL
+still cannot see inside the document either way. **It is not a way to drop this module's mapper**:
+Hibernate has no JSON formatter of its own to fall back to — it looks for Jackson, then Jackson 3,
+then JSON-B, and throws when it finds none — so removing the kotlinx one means adding Jackson or
+converting every JSON attribute by hand.
+
 **Not on DB2.** `DB2Dialect` registers no DDL type for `SqlTypes.JSON`, so schema export fails with
 *No type mapping for org.hibernate.type.SqlTypes code: 3001 (JSON)*. Postgres gives `jsonb`, MySQL
 `json`, and both are pinned by a scenario asking `information_schema` what the column really is.
@@ -278,6 +294,27 @@ mapping.
 
 Both failures are pinned by specs rather than described, because the first one looks like the whole
 problem.
+
+## Cascade and orphan removal
+
+Both work, and `RelationshipTest` pins the two that matter: a child dropped from a collection with
+`orphanRemoval = true` is **deleted** rather than merely detached, and removing an owner removes what
+it owned. `cascade = [CascadeType.ALL]` on a `@OneToOne` persists the held entity with its owner.
+
+The reason it is measured rather than assumed is that cascade is the persistence context doing work
+at flush, and a reactive session is a different persistence context. Note the collection has to be
+loaded for either to happen — `fetchEach` it first, or Hibernate has nothing to compare against.
+
+## Composite keys
+
+`@EmbeddedId` works, and the identifier reaches `find`/`get` intact even though their parameter is
+`Any`. Its parts are a path in HQL — `where key.stream = :stream` — which is the reason to embed one
+rather than reach for `@IdClass`. Give the embeddable `equals` and `hashCode`; the persistence
+context needs them and Kotlin will not write them for a non-`data` class.
+
+`@Formula` is the read-only twin: a SQL fragment spliced into every select, computed by the database,
+never written, and — as `CompositeKeyTest` confirms against `information_schema` — not a column at
+all.
 
 ## Optimistic locking
 
