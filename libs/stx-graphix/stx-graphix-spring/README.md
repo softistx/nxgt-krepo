@@ -33,9 +33,10 @@ class OrderMutations(
 
 The application still creates the controller bean (component scan, or an `@Bean`). This module
 collects every bean annotated `@GraphQLController` and builds one `Graphix` from them, plus
-`GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`, `GraphixInterceptor` and
-`GraphQLEngineCustomizer` beans. Those arrive as `ObjectProvider.orderedStream()`, so `@Order`
-decides which interceptor is outermost. An application's own `Graphix` bean wins
+`GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`, `GraphixInterceptor`,
+`GraphQLEngineCustomizer` and `GraphixExceptionHandler` beans. Those arrive as
+`ObjectProvider.orderedStream()`, so `@Order` decides which interceptor is outermost and which
+exception handler is asked first. An application's own `Graphix` bean wins
 (`@ConditionalOnMissingBean`).
 
 **Collection reads the whole bean factory, so a dependency's beans count** — `ObjectProvider` and
@@ -70,8 +71,27 @@ fun authentication() = GraphixInterceptor {
 fun me(exchange: ServerWebExchange): String = exchange.request.headers.getFirst("X-User") ?: "anonymous"
 ```
 
-An interceptor is a bean, not a property, so there is no new `stx.graphix.*` key for it — see
-[`docs/graphix.md`](../../../docs/graphix.md) for the reference.
+A `GraphixExceptionHandler` bean is what turns a thrown exception into the error a client should
+see — the same slot as Spring GraphQL's `@ControllerAdvice` + `@GraphQlExceptionHandler`, as one
+function rather than a set of them:
+
+```kotlin
+@Component
+@Order(1)
+class CatalogErrors : GraphixExceptionHandler {
+    override suspend fun GraphixErrorScope.handle(failure: Throwable): GraphixError? =
+        when (failure) {
+            is ProductNotFound -> error.withMessage("No product ${failure.id}").withErrorType(NOT_FOUND)
+            else -> null
+        }
+}
+```
+
+Returning `null` means *not mine*, and an exception nobody claims keeps the answer it would have
+had.
+
+An interceptor and a handler are beans, not properties, so there is no new `stx.graphix.*` key for
+either — see [`docs/graphix.md`](../../../docs/graphix.md) for the reference.
 
 Introspection (`{ __schema }`, `{ __type }`) is on the same path; `stx.graphix.introspection=false`
 turns it off.

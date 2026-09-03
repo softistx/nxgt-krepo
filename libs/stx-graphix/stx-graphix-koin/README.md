@@ -35,9 +35,9 @@ interfaces it implements, so a `@Singleton` needs nothing else to be found.
 
 ## Why a marker interface and not `@GraphQLController`
 
-Four of the five things collected here are **already types** — `GraphixCustomizer`,
-`GraphixDirective`, `GraphixInterceptor`, `GraphQLScalarType` — so the type is the marker and no
-annotation would add anything. Only a resolver is an ordinary class carrying `@QueryMapping`
+Six of the seven things collected here are **already types** — `GraphixCustomizer`,
+`GraphixDirective`, `GraphixInterceptor`, `GraphixExceptionHandler`, `GraphQLScalarType`,
+`GraphQLEngineCustomizer` — so the type is the marker and no annotation would add anything. Only a resolver is an ordinary class carrying `@QueryMapping`
 functions, with nothing in common with the next one, and Koin cannot be queried by annotation.
 Hence `GraphixResolver`, implemented rather than annotated.
 
@@ -55,5 +55,10 @@ sees only what is written on the class.
 they were added — so an interceptor declared before another in the Koin module wraps it. Mixing
 `fromKoin()` with explicit registration is ordinary; whichever call comes first is outermost.
 
-[`docs/graphix.md`](../../../docs/graphix.md) has the interceptor reference and the table of what a
-resolver may see.
+The same order decides among `GraphixExceptionHandler` singles: each is asked in turn and the first
+to answer wins, so a handler for a specific exception is declared before a broader one that would
+also claim it. A `fallback { }` is asked last whatever the order — it has to be, since nothing
+decides the order a container's singles were declared in across modules.
+
+[`docs/graphix.md`](../../../docs/graphix.md) has the interceptor and exception-handler reference,
+and the table of what a resolver may see.

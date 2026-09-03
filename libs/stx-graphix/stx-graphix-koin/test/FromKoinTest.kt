@@ -1,17 +1,22 @@
 package com.softistx.graphix.koin
 
+import com.softistx.graphix.GraphQLEngineCustomizer
 import com.softistx.graphix.Graphix
 import com.softistx.graphix.GraphixCustomizer
 import com.softistx.graphix.GraphixRequest
+import com.softistx.graphix.error.GraphixExceptionHandler
 import com.softistx.graphix.intercept.GraphixInterceptor
+import com.softistx.graphix.koin.fixture.BoomQueries
 import com.softistx.graphix.koin.fixture.CallerQueries
 import com.softistx.graphix.koin.fixture.EchoQueries
 import com.softistx.graphix.koin.fixture.GreetingQueries
+import com.softistx.graphix.koin.fixture.KoinErrors
 import com.softistx.graphix.koin.fixture.ShoutQueries
 import com.softistx.graphix.koin.fixture.UnmarkedQueries
 import com.softistx.graphix.koin.fixture.callerCustomizer
 import com.softistx.graphix.koin.fixture.callerInterceptor
 import com.softistx.graphix.koin.fixture.moneyCustomizer
+import com.softistx.graphix.koin.fixture.taggedEngine
 import com.softistx.graphix.koin.fixture.uppercaseDirective
 import com.softistx.graphix.scalar.graphQLScalar
 import com.softistx.graphix.schema.GraphixDirective
@@ -113,6 +118,51 @@ class FromKoinTest :
                     .execute(GraphixRequest("{ who }"))
                     .data
                     ?.get("who") shouldBe "ada"
+            }
+
+            scenario("a GraphixExceptionHandler single decides what a throw becomes") {
+                val koin =
+                    koinApplication {
+                        modules(
+                            module {
+                                single { BoomQueries() } bind GraphixResolver::class
+                                single<GraphixExceptionHandler> { KoinErrors() }
+                            },
+                        )
+                    }.koin
+                val error =
+                    Graphix { fromKoin(koin) }
+                        .execute(GraphixRequest("{ bang }"))
+                        .errors
+                        .single()
+
+                error.message shouldBe "from koin: boom"
+                error.errorType shouldBe "NOT_FOUND"
+            }
+
+            scenario("a GraphQLEngineCustomizer single reaches graphql-java itself") {
+                val koin =
+                    koinApplication {
+                        modules(
+                            module {
+                                single { BoomQueries() } bind GraphixResolver::class
+                                single<GraphQLEngineCustomizer> { taggedEngine() }
+                            },
+                        )
+                    }.koin
+
+                // Nothing this one does shows in the SDL, so it is the collectable a getAll
+                // regression could drop with every other spec here still green.
+                val messages =
+                    Graphix { fromKoin(koin) }
+                        .execute(GraphixRequest("{ bang }"))
+                        .errors
+                        .map { it.message }
+
+                // `single()` would be wrong here: this handler answers without a path, so
+                // graphql-java cannot attach the error to `bang` and adds its own null-bubbling one
+                // beside it. That is the customizer's business, not the collection's.
+                messages.first() shouldBe "handled by the engine customizer single"
             }
         }
     })
