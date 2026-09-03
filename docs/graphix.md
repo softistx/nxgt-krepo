@@ -336,10 +336,19 @@ which field it is on through `environment.field`, and the directive's own argume
 every field. `@Directive` on a Kotlin function is `FIELD_DEFINITION` only; a code-first schema
 has no type-level equivalent.
 
-Spring collects `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer` and
-`GraphQLEngineCustomizer` beans the way it collects `@GraphQLController`.
+Spring collects `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`, `GraphixInterceptor`
+and `GraphQLEngineCustomizer` beans the way it collects `@GraphQLController` — as
+`ObjectProvider.orderedStream()`, so `@Order` decides which interceptor is outermost.
 `GraphixCustomizer` is `fun GraphixBuilder.customize()`; `GraphQLEngineCustomizer` is
 `fun GraphQL.Builder.customize()` (instrumentation, execution strategy).
+
+Collection reads the whole bean factory, so a bean a **dependency** contributes is collected exactly
+like a local one — neither `ObjectProvider` nor `getBeansWithAnnotation` knows which jar a class came
+from. Registering it is the application's problem, not this module's: Spring Boot's component scan
+starts at the `@SpringBootApplication` package, so a library's `@GraphQLController` or interceptor in
+another package needs the library's own auto-configuration
+(`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`), an explicit
+`@ComponentScan`/`@Import`, or an `@Bean`. A bean that does not exist cannot be collected.
 
 ## Validation
 
@@ -671,6 +680,11 @@ Graphix { fromKoin() }          // or, under Ktor: install(GraphQL) { schema { f
 It collects every `GraphixResolver`, `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`,
 `GraphixInterceptor` and `GraphQLEngineCustomizer` single. `fromKoin()` is a `GraphixBuilder`
 extension, so it is the same call under Ktor, under Spring, and in a plain `Graphix { }`.
+
+The same boundary as Spring's applies: `getAll<T>()` enumerates the whole container, so a single a
+**dependency** contributes is collected like a local one — but only once its module is loaded, which
+means the library ships a `@Module` the application names in `modules(…)` or reaches with
+`@ComponentScan("com.acme.billing")`. Collection cannot register what the container was never given.
 
 **Only resolvers need the marker.** The other five are already types, so the type *is* the marker
 and a `@Singleton` binding it is found as it stands. A resolver is an ordinary class holding

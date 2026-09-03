@@ -1,17 +1,29 @@
 package com.softistx.graphix.spring
 
+import com.softistx.graphix.GraphQLEngineCustomizer
 import com.softistx.graphix.Graphix
 import com.softistx.graphix.GraphixCustomizer
 import com.softistx.graphix.intercept.GraphixInterceptor
 import com.softistx.graphix.intercept.get
 import com.softistx.graphix.intercept.put
 import com.softistx.graphix.scalar.graphQLScalar
+import com.softistx.graphix.scalar.scalar
+import com.softistx.graphix.schema.Directive
 import com.softistx.graphix.schema.GraphixDirective
 import com.softistx.graphix.schema.QueryMapping
 import com.softistx.graphix.schema.contextParameter
+import com.softistx.graphix.spring.fixture.BoomQueries
 import com.softistx.graphix.spring.fixture.Caller
 import com.softistx.graphix.spring.fixture.ContextQueries
 import com.softistx.graphix.spring.fixture.GreetingQueries
+import graphql.ErrorClassification
+import graphql.ErrorType
+import graphql.GraphQL
+import graphql.GraphQLError
+import graphql.execution.DataFetcherExceptionHandler
+import graphql.execution.DataFetcherExceptionHandlerParameters
+import graphql.execution.DataFetcherExceptionHandlerResult
+import graphql.language.SourceLocation
 import graphql.schema.GraphQLScalarType
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -25,6 +37,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.web.reactive.function.server.RouterFunction
+import java.util.concurrent.CompletableFuture
 
 class GraphixAutoConfigurationTest :
     FeatureSpec({
@@ -74,6 +87,27 @@ class GraphixAutoConfigurationTest :
                         context.getBeansOfType(Graphix::class.java).size shouldBe 1
                         val sdl = context.getBean(Graphix::class.java).sdl()
                         sdl shouldContain "scalar Money"
+                        sdl shouldContain "scalar Weight"
+                    }
+            }
+
+            scenario("a directive bean runs, it is not printed in the SDL") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true")
+                    .withUserConfiguration(WiringConfiguration::class.java)
+                    .run { context ->
+                        // An annotation-derived field directive never reaches the printed schema —
+                        // it wraps the fetcher. So the SDL cannot witness the bean; the value can.
+                        WebTestClient
+                            .bindToRouterFunction(context.getBean("graphixRouter") as RouterFunction<*>)
+                            .build()
+                            .post()
+                            .uri("/graphql")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue("""{"query":"{ shout }"}""")
+                            .exchange()
+                            .expectBody<String>()
+                            .value { it shouldContain """"shout":"QUIET"""" }
                     }
             }
 
@@ -94,6 +128,27 @@ class GraphixAutoConfigurationTest :
                             .exchange()
                             .expectBody<String>()
                             .value { it shouldContain """"who":"ab"""" }
+                    }
+            }
+
+            scenario("GraphQLEngineCustomizer beans reach graphql-java's own builder") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true")
+                    .withUserConfiguration(EngineConfiguration::class.java)
+                    .run { context ->
+                        // The fifth provider, and the only one that customises graphql-java rather
+                        // than the Graphix builder — so it is the one a `getBeansOfType` regression
+                        // would drop without any schema changing shape.
+                        WebTestClient
+                            .bindToRouterFunction(context.getBean("graphixRouter") as RouterFunction<*>)
+                            .build()
+                            .post()
+                            .uri("/graphql")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue("""{"query":"{ boom }"}""")
+                            .exchange()
+                            .expectBody<String>()
+                            .value { it shouldContain "handled by the engine customizer bean" }
                     }
             }
 
@@ -163,15 +218,56 @@ private class InterceptorConfiguration {
 }
 
 @Configuration
+private class EngineConfiguration {
+    @Bean
+    fun boom() = BoomQueries()
+
+    @Bean
+    fun handler(): GraphQLEngineCustomizer =
+        object : GraphQLEngineCustomizer {
+            override fun GraphQL.Builder.customize() {
+                defaultDataFetcherExceptionHandler(TaggedHandler)
+            }
+        }
+}
+
+/**
+ * Written out rather than built with `GraphqlErrorBuilder`/`DataFetcherExceptionHandlerResult`'s
+ * fluent builders: both are F-bounded (`B extends GraphqlErrorBuilder<B>`), and inferring that
+ * type argument here puts the Kotlin compiler into a `StackOverflowError` with no file pointer.
+ */
+private object TaggedError : GraphQLError {
+    override fun getMessage(): String = "handled by the engine customizer bean"
+
+    override fun getLocations(): List<SourceLocation> = emptyList()
+
+    override fun getErrorType(): ErrorClassification = ErrorType.DataFetchingException
+}
+
+private object TaggedHandler : DataFetcherExceptionHandler {
+    override fun handleException(parameters: DataFetcherExceptionHandlerParameters): CompletableFuture<DataFetcherExceptionHandlerResult> =
+        CompletableFuture.completedFuture(
+            DataFetcherExceptionHandlerResult.newResult().error(TaggedError).build(),
+        )
+}
+
+@Configuration
 private class OwnEngineConfiguration {
     @Bean
     fun mine(): Graphix = Graphix { resolvers(GreetingQueries()) }
 }
 
+// Not `private`: kotlin-reflect cannot call a member of a private class, so a resolver only ever
+// printed into the SDL passes while the same class fails the moment a field is executed.
 @GraphQLController
-private class PriceQueries {
+class PriceQueries {
     @QueryMapping
     fun hello(): String = "world"
+
+    /** Carries the directive, so the SDL prints it and executing the field proves it ran. */
+    @QueryMapping
+    @Directive("uppercase")
+    fun shout(): String = "quiet"
 }
 
 @Configuration
@@ -189,6 +285,11 @@ private class WiringConfiguration {
             (value as? String)?.uppercase() ?: value
         }
 
+    // Registers a second scalar rather than doing nothing, so a customizer bean that was collected
+    // and one that was silently dropped stop looking the same in the SDL.
     @Bean
-    fun extra(): GraphixCustomizer = GraphixCustomizer { }
+    fun extra(): GraphixCustomizer =
+        GraphixCustomizer {
+            scalar(graphQLScalar("Weight") { serialize { value -> value.toString() } })
+        }
 }

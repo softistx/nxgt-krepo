@@ -38,6 +38,21 @@ collects every bean annotated `@GraphQLController` and builds one `Graphix` from
 decides which interceptor is outermost. An application's own `Graphix` bean wins
 (`@ConditionalOnMissingBean`).
 
+**Collection reads the whole bean factory, so a dependency's beans count** — `ObjectProvider` and
+`getBeansWithAnnotation` know nothing about which jar a class came from, and a library that
+contributes an interceptor or a scalar is collected exactly like a local `@Bean`. What it does not
+do is *find* that library's classes: Spring Boot's component scan starts at the
+`@SpringBootApplication` package and goes down, so a `@GraphQLController` in
+`com.acme.billing.graphql` is invisible to an application rooted at `com.example.shop` until
+something registers it — the library ships an auto-configuration (an entry in
+`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`), or the
+application adds `@ComponentScan("com.acme.billing")`, `@Import`, or a plain `@Bean`. That is
+Spring's rule and this module cannot widen it: a bean that does not exist cannot be collected.
+
+Shipping resolvers in a library for both stacks means carrying both marks — `@GraphQLController`
+for Spring, `GraphixResolver` for [`stx-graphix-koin`](../stx-graphix-koin/README.md) — because
+Spring can be asked for an annotation and Koin can only be asked for a type.
+
 **A Spring bean is the controller's constructor, not GraphQL context.** `OrderService` is injected
 when Boot builds `OrderMutations`. Graphix keeps that instance and the data fetcher calls it.
 What exists only for one operation comes the other way: **every operation carries its
