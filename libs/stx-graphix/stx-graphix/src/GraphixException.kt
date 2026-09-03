@@ -5,7 +5,7 @@ package com.softistx.graphix
  *
  * A resolver that throws is **not** this: that becomes a [GraphixError] on [GraphixResult].
  * This is a missing `@Serializable`, a duplicate field name, no query root, or a
- * `@GraphQLContext` parameter whose type was not in `execute`'s context map.
+ * context parameter whose type was not in `execute`'s context map.
  */
 class GraphixException(
     message: String,

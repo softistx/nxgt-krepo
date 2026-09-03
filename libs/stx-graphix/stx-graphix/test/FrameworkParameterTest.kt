@@ -1,5 +1,7 @@
 package com.softistx.graphix
 
+import com.softistx.graphix.fixture.BadgeBatch
+import com.softistx.graphix.fixture.BadgeContextBatch
 import com.softistx.graphix.fixture.BadgeFields
 import com.softistx.graphix.fixture.Caller
 import com.softistx.graphix.fixture.CallerSubscriptions
@@ -7,6 +9,7 @@ import com.softistx.graphix.fixture.ContextBagQueries
 import com.softistx.graphix.fixture.FakeCall
 import com.softistx.graphix.fixture.FrameworkParameterQueries
 import com.softistx.graphix.fixture.GreetingQueries
+import com.softistx.graphix.fixture.UnregisteredQueries
 import com.softistx.graphix.schema.contextParameter
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
@@ -111,6 +114,50 @@ class FrameworkParameterTest :
                 val graphix = Graphix { resolvers(ContextBagQueries()) }
                 val result = graphix.execute(GraphixRequest("{ who }"), mapOf(Caller::class to Caller("fr")))
                 result.data shouldBe mapOf("who" to "fr")
+            }
+        }
+
+        feature("@BatchMapping, which used to classify parameters by itself") {
+            scenario("binds a registered type declared ahead of the parents") {
+                val graphix =
+                    Graphix {
+                        resolvers(FrameworkParameterQueries())
+                        resolvers(BadgeBatch())
+                        contextParameter(FakeCall::class)
+                    }
+                val result =
+                    graphix.execute(GraphixRequest("{ badge { stamp } }"), mapOf(FakeCall::class to call))
+
+                result.errors shouldBe emptyList()
+                (result.data?.get("badge") as Map<*, *>)["stamp"] shouldBe "ada/t1"
+            }
+
+            scenario("binds graphql-java's context bag too") {
+                val graphix =
+                    Graphix {
+                        resolvers(FrameworkParameterQueries())
+                        resolvers(BadgeContextBatch())
+                        // Only so the `me` root in the same class builds; the batch needs nothing.
+                        contextParameter(FakeCall::class)
+                    }
+                val result =
+                    graphix.execute(GraphixRequest("{ badge { tag } }"), mapOf(Caller::class to Caller("fr")))
+
+                result.errors shouldBe emptyList()
+                (result.data?.get("badge") as Map<*, *>)["tag"] shouldBe "fr"
+            }
+        }
+
+        feature("the SDL path validates like the annotation path") {
+            scenario("a root parameter that is neither @Argument nor registered is refused at build") {
+                val failure =
+                    shouldThrow<GraphixException> {
+                        Graphix {
+                            schemaLocations(emptyList())
+                            resolvers(UnregisteredQueries())
+                        }
+                    }
+                failure.message shouldContain "must be @Argument"
             }
         }
     })

@@ -1,11 +1,9 @@
 package com.softistx.graphix.execute
 
 import com.softistx.graphix.GraphixException
-import com.softistx.graphix.schema.GraphQLContext
 import com.softistx.graphix.schema.TypeFieldMeta
 import com.softistx.graphix.schema.graphQLName
 import com.softistx.graphix.schema.isArgument
-import com.softistx.graphix.schema.isDataFetchingEnvironment
 import graphql.schema.DataFetchingEnvironment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.future.future
@@ -14,10 +12,12 @@ import org.dataloader.BatchLoaderEnvironment
 import org.dataloader.DataLoaderFactory
 import org.dataloader.DataLoaderRegistry
 import kotlin.reflect.KClass
+import kotlin.reflect.KParameter
 import kotlin.reflect.full.callSuspendBy
-import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.valueParameters
+import graphql.GraphQLContext as OperationContext
 
 internal data class RegisteredLoader(
     val name: String,
@@ -43,6 +43,31 @@ internal fun dataLoaderRegistry(
         )
     }
     return registry
+}
+
+/**
+ * One framework parameter of a `@BatchMapping`.
+ *
+ * A batch has no field of its own, so its `DataFetchingEnvironment` is the representative one taken
+ * from the keys — and there may be none. With it, this is exactly [contextValue]. Without it, the
+ * two graphql-java types cannot be produced at all and say so, while an application type still comes
+ * out of the operation context the loader was built with.
+ */
+private fun batchContextValue(
+    parameter: KParameter,
+    environment: DataFetchingEnvironment?,
+    context: Map<KClass<*>, Any>,
+    functionName: String,
+): Any {
+    if (environment != null) return contextValue(parameter, environment)
+    val classifier =
+        parameter.type.classifier as? KClass<*>
+            ?: throw GraphixException("${parameter.name} needs a class type")
+    if (classifier.isSubclassOf(DataFetchingEnvironment::class) || classifier.isSubclassOf(OperationContext::class)) {
+        throw GraphixException("@BatchMapping $functionName needs a DataFetchingEnvironment")
+    }
+    return context[classifier]
+        ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
 }
 
 private fun BatchLoaderEnvironment.representativeDfe(keys: Set<Any>): DataFetchingEnvironment? {
@@ -94,29 +119,17 @@ private suspend fun invokeBatchMapping(
     arguments[field.parentParameter] = parents
     function.valueParameters.forEach { parameter ->
         if (parameter == field.parentParameter) return@forEach
-        if (parameter.isDataFetchingEnvironment()) {
-            arguments[parameter] = environment
-                ?: throw GraphixException("@BatchMapping ${function.name} needs a DataFetchingEnvironment")
-            return@forEach
-        }
-        if (parameter.findAnnotation<GraphQLContext>() != null) {
-            arguments[parameter] =
-                if (environment != null) {
-                    contextValue(parameter, environment)
-                } else {
-                    val classifier =
-                        parameter.type.classifier as? KClass<*>
-                            ?: throw GraphixException("@GraphQLContext ${parameter.name} needs a class type")
-                    context[classifier]
-                        ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
-                }
-            return@forEach
-        }
         if (parameter.isArgument()) {
             val raw = argumentValues[parameter.graphQLName()]
             if (raw == null && parameter.isOptional) return@forEach
             arguments[parameter] = decode(raw, parameter, json)
+            return@forEach
         }
+        // The same rule as `bindArguments`: not the parent and not `@Argument` means the context
+        // supplies it. This used to key off `@GraphQLContext` alone, which let a registered context
+        // type pass schema build and then be dropped here, since there was no branch for it and no
+        // `else` — `callBy` was simply handed a map without it.
+        arguments[parameter] = batchContextValue(parameter, environment, context, function.name)
     }
     val raw =
         if (function.isSuspend) {

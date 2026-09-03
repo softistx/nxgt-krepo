@@ -8,6 +8,7 @@ import com.softistx.graphix.intercept.put
 import com.softistx.graphix.scalar.graphQLScalar
 import com.softistx.graphix.schema.GraphixDirective
 import com.softistx.graphix.schema.QueryMapping
+import com.softistx.graphix.schema.contextParameter
 import com.softistx.graphix.spring.fixture.Caller
 import com.softistx.graphix.spring.fixture.ContextQueries
 import com.softistx.graphix.spring.fixture.GreetingQueries
@@ -138,6 +139,11 @@ private class GreetingConfiguration {
 private class InterceptorConfiguration {
     @Bean
     fun who() = ContextQueries()
+
+    // The application's own context type, registered the way an application would: a customizer
+    // bean, since the engine here is the auto-configured one.
+    @Bean
+    fun callerContext(): GraphixCustomizer = GraphixCustomizer { contextParameter(Caller::class) }
 
     @Bean
     @Order(1)

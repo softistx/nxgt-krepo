@@ -2,7 +2,6 @@ package com.softistx.graphix.fixture
 
 import com.softistx.graphix.schema.Argument
 import com.softistx.graphix.schema.BatchMapping
-import com.softistx.graphix.schema.GraphQLContext
 import com.softistx.graphix.schema.GraphQLDescription
 import com.softistx.graphix.schema.GraphQLIgnore
 import com.softistx.graphix.schema.MutationMapping
@@ -134,9 +133,7 @@ data class Caller(
 
 class ContextQueries {
     @QueryMapping
-    fun who(
-        @GraphQLContext caller: Caller,
-    ): String = caller.locale
+    fun who(caller: Caller): String = caller.locale
 }
 
 class BoomQueries {
@@ -161,9 +158,7 @@ class TickPublisherSubscriptions {
 
 class ContextSubscriptions {
     @SubscriptionMapping
-    fun who(
-        @GraphQLContext caller: Caller,
-    ): Flow<String> = flowOf(caller.locale)
+    fun who(caller: Caller): Flow<String> = flowOf(caller.locale)
 }
 
 class BadSubscriptions {

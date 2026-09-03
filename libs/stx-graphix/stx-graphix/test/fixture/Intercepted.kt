@@ -2,7 +2,7 @@ package com.softistx.graphix.fixture
 
 import com.softistx.graphix.http.GraphqlWsInit
 import com.softistx.graphix.schema.Argument
-import com.softistx.graphix.schema.GraphQLContext
+import com.softistx.graphix.schema.BatchMapping
 import com.softistx.graphix.schema.QueryMapping
 import com.softistx.graphix.schema.SchemaMapping
 import com.softistx.graphix.schema.SubscriptionMapping
@@ -65,9 +65,7 @@ class BadgeFields {
 /** Reads what the graphql-ws client sent with `connection_init`, and the socket's own context. */
 class SocketQueries {
     @QueryMapping
-    fun token(
-        @GraphQLContext init: GraphqlWsInit,
-    ): String = (init.payload as? JsonObject)?.get("authToken")?.jsonPrimitive?.content ?: "none"
+    fun token(init: GraphqlWsInit): String = (init.payload as? JsonObject)?.get("authToken")?.jsonPrimitive?.content ?: "none"
 
     @QueryMapping
     fun handshake(call: FakeCall): String = call.headers["X-User"] ?: "anonymous"
@@ -81,4 +79,33 @@ class CountSubscriptions {
 class CallerSubscriptions {
     @SubscriptionMapping
     fun callers(call: FakeCall): Flow<String> = flowOf(call.headers["X-User"] ?: "anonymous")
+}
+
+/**
+ * A `@BatchMapping` taking a registered context type, with the framework parameter **first**.
+ *
+ * This is the shape that used to pass schema build and then be dropped: the batch path keyed off
+ * `@GraphQLContext` alone and had no branch — and no `else` — for a registered type.
+ */
+class BadgeBatch {
+    @BatchMapping
+    fun stamp(
+        call: FakeCall,
+        badges: List<Badge>,
+    ): Map<Badge, String> = badges.associateWith { "${call.headers["X-User"] ?: "anonymous"}/${it.id}" }
+}
+
+/** The same, for graphql-java's own context bag, which the batch path never checked either. */
+class BadgeContextBatch {
+    @BatchMapping
+    fun tag(
+        context: OperationContext,
+        badges: List<Badge>,
+    ): Map<Badge, String> = badges.associateWith { context.get<Caller>(Caller::class)?.locale ?: "none" }
+}
+
+/** A root parameter that is neither `@Argument` nor a registered type — refused at schema build. */
+class UnregisteredQueries {
+    @QueryMapping
+    fun product(id: String): String = id
 }

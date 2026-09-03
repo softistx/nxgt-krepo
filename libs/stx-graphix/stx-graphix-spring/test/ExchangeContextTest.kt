@@ -40,6 +40,7 @@ class ExchangeContextTest :
             val engine =
                 Graphix {
                     contextParameter(ServerWebExchange::class)
+                    contextParameter(Caller::class)
                     resolvers(roots.asList())
                     interceptors.forEach { intercept(it) }
                 }
