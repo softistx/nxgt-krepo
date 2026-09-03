@@ -1,17 +1,13 @@
 package com.softistx.graphix.error
 
 import com.softistx.graphix.GraphixError
-import com.softistx.graphix.GraphixException
 import com.softistx.graphix.message.GraphixMessages
 import graphql.schema.DataFetchingEnvironment
 import java.util.Locale
 import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
-import kotlin.reflect.full.isSubclassOf
-import graphql.GraphQLContext as OperationContext
 
 /**
- * What a handler may read, and where its framework parameters come from.
+ * What a handler may read.
  *
  * The seats differ in exactly one thing: on a data fetcher there is a [DataFetchingEnvironment] to
  * read, around the interceptor chain there is only the operation context map. Everything else about
@@ -22,36 +18,7 @@ internal class ErrorContext(
     val messages: GraphixMessages,
     val locale: Locale,
     val lookup: (KClass<*>) -> Any?,
-) {
-    /**
-     * One framework parameter of a handler function.
-     *
-     * The same three branches as a resolver's — the environment, graphql-java's context bag, then the
-     * operation context by `KClass` — with the first two answering "not here" rather than null when
-     * the seat has no environment, since a handler asking for a `DataFetchingEnvironment` around the
-     * interceptor chain is a mistake worth naming.
-     */
-    fun frameworkValue(parameter: KParameter): Any {
-        val classifier =
-            parameter.type.classifier as? KClass<*>
-                ?: throw GraphixException("${parameter.name} needs a class type")
-        if (classifier.isSubclassOf(DataFetchingEnvironment::class)) {
-            return environment ?: throw GraphixException(noEnvironment(parameter, "DataFetchingEnvironment"))
-        }
-        if (classifier.isSubclassOf(OperationContext::class)) {
-            return environment?.graphQlContext ?: throw GraphixException(noEnvironment(parameter, "GraphQLContext"))
-        }
-        return lookup(classifier)
-            ?: throw GraphixException("no ${classifier.qualifiedName} in the operation context")
-    }
-
-    private fun noEnvironment(
-        parameter: KParameter,
-        type: String,
-    ): String =
-        "'${parameter.name}' is a $type, and this failure happened outside a field — an interceptor " +
-            "throw has no field to describe. Read the operation context instead."
-}
+)
 
 /**
  * The receiver of an `errors { on<T> { } }` block: the error so far, plus what the operation knows.
