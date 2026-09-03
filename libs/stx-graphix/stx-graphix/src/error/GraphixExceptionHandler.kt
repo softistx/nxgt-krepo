@@ -3,43 +3,33 @@ package com.softistx.graphix.error
 import com.softistx.graphix.GraphixError
 
 /**
- * Marks a class holding [ExceptionMapping] functions, so a container can be asked for every one.
+ * Turns a thrown exception into the error a client should see, or declines it.
  *
  * ```kotlin
  * @Singleton
  * class CatalogErrors : GraphixExceptionHandler {
- *     @ExceptionMapping
- *     fun notFound(error: GraphixError, failure: ProductNotFound): GraphixError =
- *         error.withMessage("No product ${failure.id}").withErrorType(NOT_FOUND)
- *
- *     @ExceptionMapping
- *     suspend fun denied(failure: AccessDenied, call: ApplicationCall): GraphixError? =
- *         if (audit.isInternal(call)) null else error.withErrorType(FORBIDDEN)
+ *     override suspend fun GraphixErrorScope.handle(failure: Throwable): GraphixError? =
+ *         when (failure) {
+ *             is ProductNotFound -> error.withMessage("No product ${failure.id}").withErrorType(NOT_FOUND)
+ *             is AccessDenied -> error.withErrorType(FORBIDDEN)
+ *             else -> null
+ *         }
  * }
  * ```
  *
- * **Why an interface as well as an annotation.** The annotation says which *functions* are handlers;
- * the interface is what lets a container enumerate the *classes*. Spring can be asked for either,
- * but Koin's `getAll<T>()` answers only "every single bound to T" — a question only a type can ask.
- * It is the same split `GraphixResolver` makes in `stx-graphix-koin`, for the same reason.
+ * `error` is the error as it stands — message from the unwrapped exception, `path` and `locations`
+ * already filled from the failing field — so a handler that only classifies restates nothing. That
+ * is the `GraphqlErrorBuilder<?>` slot of Spring GraphQL's `@GraphQlExceptionHandler`, in immutable
+ * form: [GraphixError] is a `data class`, so `copy()` is the builder and
+ * [withMessage]/[withErrorType]/[withExtension] are names for the copies.
  *
- * Registered on the builder with `exceptionHandler(...)`, or collected: a Spring bean, a Koin single,
- * an `errors { }` block under Ktor.
+ * **`null` means *not mine*.** The next handler is asked, and if none claims it the exception keeps
+ * exactly the answer it would have had.
+ *
+ * One interface and one function, because the type is the only thing a container can be asked for —
+ * `Koin.getAll<T>()`, Spring's `ObjectProvider<T>`. Narrowing to a single exception type is the
+ * `on<T> { }` block rather than a second mechanism.
  */
-interface GraphixExceptionHandler
-
-/**
- * One exception type, handled.
- *
- * The **exception parameter** is the first parameter that is a `Throwable` and is not something the
- * framework supplies — the same election the parent source gets on a `@SchemaMapping`, so parameter
- * order is free. Every other parameter is either [GraphixError] (the error as it stands, to edit) or
- * a framework parameter: a `DataFetchingEnvironment`, graphql-java's `GraphQLContext`, or a type
- * registered with `contextParameter(...)`. There are no `@Argument`s here — a handler is not a field.
- *
- * The function may be `suspend`. Returning `null` means *not mine*: dispatch carries on to the next
- * less specific handler, then to `fallback { }`, then to what would have happened anyway.
- */
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class ExceptionMapping
+fun interface GraphixExceptionHandler {
+    suspend fun GraphixErrorScope.handle(failure: Throwable): GraphixError?
+}
