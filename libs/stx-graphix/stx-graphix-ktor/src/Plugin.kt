@@ -42,6 +42,7 @@ val GraphQL =
                     schemaLocations(pluginConfig.schemaLocations)
                     schemaFileExtensions(pluginConfig.schemaFileExtensions)
                     introspection(pluginConfig.introspection)
+                    builtInScalars(pluginConfig.builtInScalars)
                     val block = pluginConfig.schemaBlock ?: error("install(GraphQL) needs schema { … } or instance")
                     block()
                     pluginConfig.customizeBlock?.invoke(this)
@@ -82,6 +83,13 @@ class GraphQLConfiguration {
      * them. Ignored when [instance] is set: that engine already decided.
      */
     var introspection: Boolean = true
+
+    /**
+     * Whether every built-in scalar is in the schema. On by default, so `LocalDate`, `BigDecimal`
+     * and the bounded numbers are there whether or not a field uses one. Off, the schema carries
+     * only what a field resolved to. Ignored when [instance] is set: that engine already decided.
+     */
+    var builtInScalars: Boolean = true
 
     /**
      * Serves an Apollo Sandbox at [sandboxPath]. **Off by default** — installing this plugin opens a
