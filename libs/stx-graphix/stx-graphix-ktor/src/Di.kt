@@ -5,6 +5,8 @@ import com.softistx.graphix.GraphixBuilder
 import com.softistx.graphix.GraphixCustomizer
 import com.softistx.graphix.customize
 import com.softistx.graphix.engine
+import com.softistx.graphix.intercept.GraphixInterceptor
+import com.softistx.graphix.intercept.intercept
 import com.softistx.graphix.scalar.scalar
 import com.softistx.graphix.schema.GraphixDirective
 import com.softistx.graphix.schema.fieldDirective
@@ -17,7 +19,7 @@ import io.ktor.server.plugins.di.getBlocking
 
 /**
  * Collects the same types Spring collects as beans: [GraphixCustomizer], [GraphQLScalarType],
- * [GraphixDirective], [GraphQLEngineCustomizer] — singles or lists.
+ * [GraphixDirective], [GraphixInterceptor], [GraphQLEngineCustomizer] — singles or lists.
  */
 internal fun Application.applyGraphixDi(builder: GraphixBuilder) {
     diGet<GraphixCustomizer>()?.let { builder.customize(it) }
@@ -26,6 +28,8 @@ internal fun Application.applyGraphixDi(builder: GraphixBuilder) {
     diGet<List<GraphQLScalarType>>()?.forEach { builder.scalar(it) }
     diGet<GraphixDirective>()?.let { builder.fieldDirective(it) }
     diGet<List<GraphixDirective>>()?.forEach { builder.fieldDirective(it) }
+    diGet<GraphixInterceptor>()?.let { builder.intercept(it) }
+    diGet<List<GraphixInterceptor>>()?.forEach { builder.intercept(it) }
     diGet<GraphQLEngineCustomizer>()?.let { builder.engine(it) }
     diGet<List<GraphQLEngineCustomizer>>()?.forEach { builder.engine(it) }
 }

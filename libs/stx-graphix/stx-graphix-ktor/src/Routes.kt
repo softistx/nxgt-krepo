@@ -30,6 +30,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import java.util.Locale
+import kotlin.reflect.KClass
 
 /**
  * The Apollo Sandbox page. A **sibling** of the GraphQL path, not a child, so it is its own
@@ -108,19 +109,22 @@ private suspend fun ApplicationCall.respondResult(
     request: GraphixRequest,
     subscriptions: SubscriptionProtocol,
 ) {
+    // The call *is* the operation's context here. `contextParameter(ApplicationCall::class)` at
+    // install is what lets a resolver take it as a parameter; an interceptor reads it as `call`.
+    val context: Map<KClass<*>, Any> = mapOf(ApplicationCall::class to this)
     if (request.isSubscription()) {
         if (subscriptions == SubscriptionProtocol.GraphqlWs) {
             return respondBadRequest(json, "subscriptions use graphql-ws")
         }
         respondTextWriter(ContentType.Text.EventStream) {
-            engine.subscribe(request).collect { result ->
+            engine.subscribe(request, context).collect { result ->
                 append(result.toHttp().toSse(json))
                 flush()
             }
         }
         return
     }
-    val result = engine.execute(request).toHttp()
+    val result = engine.execute(request, context).toHttp()
     respondText(
         json.encodeToString(GraphixHttpResponse.serializer(), result),
         ContentType.Application.Json,
