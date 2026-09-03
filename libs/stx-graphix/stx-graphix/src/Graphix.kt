@@ -1,7 +1,13 @@
 package com.softistx.graphix
 
 import com.softistx.common.serialization.lenientJson
+import com.softistx.graphix.error.ErrorHandlers
+import com.softistx.graphix.error.ErrorHandling
+import com.softistx.graphix.error.GraphixExceptionHandler
+import com.softistx.graphix.error.handlerFunctions
+import com.softistx.graphix.error.handling
 import com.softistx.graphix.execute.RegisteredLoader
+import com.softistx.graphix.execute.errorDispatch
 import com.softistx.graphix.execute.executionInput
 import com.softistx.graphix.execute.toGraphixResult
 import com.softistx.graphix.http.GraphqlWsInit
@@ -65,6 +71,8 @@ class Graphix internal constructor(
     internal val introspection: Boolean = true,
     internal val messages: GraphixMessages = GraphixMessages.Bundled,
     internal val interceptors: List<GraphixInterceptor> = emptyList(),
+    /** Kept past `build()` because the seats outside graphql-java need it too. */
+    internal val errorHandlers: ErrorHandlers = ErrorHandlers(emptyMap(), null),
 ) {
     /**
      * Runs one query or mutation. Field failures land in [GraphixResult.errors]; this call
@@ -140,6 +148,11 @@ class GraphixBuilder internal constructor(
     private val interceptors = mutableListOf<GraphixInterceptor>()
     private var validation: GraphixValidation? = null
     private var messages: GraphixMessages = GraphixMessages.Bundled
+
+    // Insertion-ordered, but order is not what picks a handler: the thrown class's own hierarchy is.
+    // The map exists so a second registration for one exception type is refused rather than shadowed.
+    private val errorHandlers = LinkedHashMap<KClass<out Throwable>, ErrorHandling>()
+    private var errorFallback: ErrorHandling? = null
 
     /**
      * Registers [instances]. Each one's annotated functions say what they are: `@QueryMapping`
@@ -265,6 +278,32 @@ class GraphixBuilder internal constructor(
         interceptors += interceptor
     }
 
+    internal fun addErrorHandler(
+        type: KClass<out Throwable>,
+        handler: ErrorHandling,
+    ) {
+        if (errorHandlers.putIfAbsent(type, handler) != null) {
+            throw GraphixException("two handlers for ${type.qualifiedName} — one exception type, one answer")
+        }
+    }
+
+    internal fun addErrorFallback(handler: ErrorHandling) {
+        if (errorFallback != null) throw GraphixException("the error fallback is already set")
+        errorFallback = handler
+    }
+
+    /**
+     * Reflects [handler]'s `@ExceptionMapping` functions now, so a parameter it cannot fill is a
+     * schema-build failure rather than a second failure on the day the first one happens.
+     */
+    internal fun addExceptionHandler(handler: GraphixExceptionHandler) {
+        val functions = handler.handlerFunctions(contextTypes)
+        if (functions.isEmpty()) {
+            throw GraphixException("${handler::class.qualifiedName} has no @ExceptionMapping function")
+        }
+        functions.forEach { addErrorHandler(it.exceptionType, it.handling()) }
+    }
+
     /**
      * Where coercion errors get their text. The default is the catalogues in this jar, English and
      * French; anything else is one lambda, and `stx-i18n` fits it directly:
@@ -321,8 +360,15 @@ class GraphixBuilder internal constructor(
             )
         val builder = GraphQL.newGraphQL(schema)
         validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }
+        val handlers = ErrorHandlers(errorHandlers.toMap(), errorFallback)
+        // Before the customizers, not after: `engine { defaultDataFetcherExceptionHandler(…) }` is an
+        // explicit choice and should still win. What it cannot survive is
+        // `engine { queryExecutionStrategy(…) }` — graphql-java only applies the default handler to
+        // strategies left null at build, so setting one silently drops this seat. Documented, not
+        // guessable from the API.
+        if (!handlers.isEmpty()) builder.defaultDataFetcherExceptionHandler(errorDispatch(handlers, messages))
         engineCustomizers.forEach { with(it) { builder.customize() } }
-        return Graphix(builder.build(), loaders, validation, introspection, messages, interceptors.toList())
+        return Graphix(builder.build(), loaders, validation, introspection, messages, interceptors.toList(), handlers)
     }
 }
 

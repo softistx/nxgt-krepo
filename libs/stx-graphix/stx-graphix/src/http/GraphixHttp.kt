@@ -103,8 +103,26 @@ private fun GraphixError.toHttp(): GraphixHttpError =
         message = message,
         path = path.map { it.toJsonPrimitive() },
         locations = locations.takeIf { it.isNotEmpty() }?.map { GraphixHttpErrorLocation(it.line, it.column) },
-        extensions = extensions.takeIf { it.isNotEmpty() }?.toJsonObject(),
+        extensions = wireExtensions().takeIf { it.isNotEmpty() }?.toJsonObject(),
     )
+
+/**
+ * `extensions` plus the classification, which the spec has no field for.
+ *
+ * The GraphQL spec gives an error a `message`, a `path` and `locations`, and leaves everything else
+ * to `extensions`. graphql-java's own spec serializer answers that by writing the classification
+ * under `extensions.classification`, and only when the key is absent — a handler that wrote its own
+ * meant it. This library never calls `toSpecification()`, so until now `errorType` was read off
+ * graphql-java, kept on [GraphixError], and then dropped on the way out: no client could see it.
+ */
+private fun GraphixError.wireExtensions(): Map<String, Any?> =
+    when {
+        errorType == null -> extensions
+        extensions.containsKey(CLASSIFICATION) -> extensions
+        else -> extensions + (CLASSIFICATION to errorType)
+    }
+
+private const val CLASSIFICATION = "classification"
 
 private fun Map<String, Any?>.toJsonObject(): JsonObject = JsonObject(mapValues { it.value.toJsonElement() })
 
