@@ -55,7 +55,7 @@ internal class ErrorHandlers(
 }
 
 private fun Map<KClass<out Throwable>, ErrorHandling>.entriesFor(thrown: KClass<*>): List<ErrorHandling> =
-    generateSequence(thrown.java as Class<*>) { it.superclass }
+    generateSequence(thrown.java) { it.superclass }
         .mapNotNull { this[it.kotlin] }
         .toList()
 
