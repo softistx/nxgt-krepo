@@ -20,7 +20,10 @@ internal data class TypeFieldMeta(
     val graphqlType: KType,
 )
 
-internal fun collectTypeFields(instances: List<Any>): List<TypeFieldMeta> {
+internal fun collectTypeFields(
+    instances: List<Any>,
+    contextTypes: Set<KClass<*>> = emptySet(),
+): List<TypeFieldMeta> {
     if (instances.isEmpty()) return emptyList()
     val result = mutableListOf<TypeFieldMeta>()
     val seen = mutableSetOf<Pair<String, String>>()
@@ -38,7 +41,7 @@ internal fun collectTypeFields(instances: List<Any>): List<TypeFieldMeta> {
                     "@${if (function.hasAnnotation<BatchMapping>()) "BatchMapping" else "SchemaMapping"} ${function.name} is not a member function",
                 )
             }
-            result += typeField(instance, function, seen)
+            result += typeField(instance, function, seen, contextTypes)
         }
     }
     return result
@@ -48,11 +51,15 @@ private fun typeField(
     instance: Any,
     function: KFunction<*>,
     seen: MutableSet<Pair<String, String>>,
+    contextTypes: Set<KClass<*>>,
 ): TypeFieldMeta {
     val batched = function.hasAnnotation<BatchMapping>()
     val kind = if (batched) "BatchMapping" else "SchemaMapping"
+    // The parent is the first parameter the framework does not supply. A registered context type
+    // has to count here too, or `fun reviews(call: ApplicationCall, product: Product)` takes the
+    // call for its parent and the schema is built against the wrong type.
     val parentParameter =
-        function.valueParameters.firstOrNull { !it.isGraphQLContext() && !it.isDataFetchingEnvironment() }
+        function.valueParameters.firstOrNull { !it.isGraphQLContext() && !it.isFrameworkParameter(contextTypes) }
             ?: throw GraphixException("@$kind ${function.name} needs a parent parameter")
     val parentType =
         if (batched) {
@@ -69,7 +76,7 @@ private fun typeField(
     if (!seen.add(parentName to fieldName)) {
         throw GraphixException("duplicate field '$fieldName' on $parentName — use @SchemaMapping or @BatchMapping, not both")
     }
-    function.requireArgumentAnnotations(parentParameter)
+    function.requireArgumentAnnotations(parentParameter, contextTypes)
     val graphqlType =
         if (batched) {
             function.returnType.batchPayload()

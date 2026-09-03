@@ -14,6 +14,7 @@ import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.valueParameters
+import graphql.GraphQLContext as OperationContext
 
 internal fun fieldDefinition(
     function: KFunction<*>,
@@ -65,19 +66,43 @@ internal fun KParameter.isDataFetchingEnvironment(): Boolean {
     return classifier.isSubclassOf(DataFetchingEnvironment::class)
 }
 
+/** graphql-java's context bag itself, as a parameter. Not the `@GraphQLContext` annotation. */
+internal fun KParameter.isOperationContext(): Boolean {
+    val classifier = type.classifier as? KClass<*> ?: return false
+    return classifier.isSubclassOf(OperationContext::class)
+}
+
 /**
- * Every value parameter is the parent source, this field's DFE, `@GraphQLContext`, or `@Argument`.
- * GraphQL arguments must be marked. Input-object fields are not arguments.
+ * A parameter the framework supplies rather than the document: the DFE, the operation context, or
+ * a type an integration registered with `contextParameter(...)` — `ApplicationCall` in Ktor,
+ * `ServerWebExchange` in Spring.
+ *
+ * Registered rather than guessed. The core names no framework type, and a resolver that asks for
+ * one the running stack did not register fails saying so instead of being handed nothing.
  */
-internal fun KFunction<*>.requireArgumentAnnotations(parent: KParameter? = null) {
+internal fun KParameter.isFrameworkParameter(contextTypes: Set<KClass<*>>): Boolean {
+    if (isDataFetchingEnvironment() || isOperationContext()) return true
+    val classifier = type.classifier as? KClass<*> ?: return false
+    return contextTypes.any { classifier.isSubclassOf(it) }
+}
+
+/**
+ * Every value parameter is the parent source, a framework parameter, `@GraphQLContext`, or
+ * `@Argument`. GraphQL arguments must be marked. Input-object fields are not arguments.
+ */
+internal fun KFunction<*>.requireArgumentAnnotations(
+    parent: KParameter? = null,
+    contextTypes: Set<KClass<*>> = emptySet(),
+) {
     valueParameters.forEach { parameter ->
         if (parameter == parent) return@forEach
-        if (parameter.isDataFetchingEnvironment() || parameter.isGraphQLContext() || parameter.isArgument()) {
+        if (parameter.isFrameworkParameter(contextTypes) || parameter.isGraphQLContext() || parameter.isArgument()) {
             return@forEach
         }
         throw GraphixException(
-            "$name parameter '${parameter.name}' must be @Argument — " +
-                "DataFetchingEnvironment, the parent source, and @GraphQLContext do not take it",
+            "$name parameter '${parameter.name}' must be @Argument — or @GraphQLContext to read it " +
+                "from the operation context, or a type registered with contextParameter(...). " +
+                "The parent source, DataFetchingEnvironment and GraphQLContext take none of them.",
         )
     }
 }
