@@ -305,6 +305,18 @@ The reason it is measured rather than assumed is that cascade is the persistence
 at flush, and a reactive session is a different persistence context. Note the collection has to be
 loaded for either to happen — `fetchEach` it first, or Hibernate has nothing to compare against.
 
+**Or let the schema do it, which here is usually better.** `stx-migrations` owns the DDL in anything
+real and `SchemaMode` is `NONE`, so an `on delete cascade` on the foreign key is yours to write. Then
+`@OnDelete(action = OnDeleteAction.CASCADE)` on the collection tells Hibernate about it, and removing
+a parent is **one statement with nothing loaded** — no `fetchEach`, no per-child round trip.
+
+**Telling it is not optional.** A plain `@OneToMany(mappedBy = …)` means Hibernate owns the
+dissociation: on remove it nulls each child's foreign key *before* deleting the parent. Against a
+column that refuses null that is a constraint violation, and `DatabaseCascadeTest` measures the whole
+of it — the removal fails, and both rows survive, because the transaction takes the parent's delete
+down with it. A half-cascade is what that rules out. The schema would have handled the delete
+perfectly well; nothing had asked it to.
+
 ## Composite keys
 
 `@EmbeddedId` works, and the identifier reaches `find`/`get` intact even though their parameter is
