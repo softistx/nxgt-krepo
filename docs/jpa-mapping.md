@@ -335,6 +335,113 @@ left behind is refused at flush, inside the session, as a thrown exception — n
 a suspending call quietly drops. `OptimisticLockTest` pins the refusal and that the winner's value is
 the one that survived.
 
+## Filters, and multi-tenancy
+
+`@FilterDef` / `@Filter` work through the reactive session, and the API is on `session.raw`:
+`enableFilter`, `disableFilter` and `getEnabledFilter` are all on `Stage.Session`. Nothing wraps
+them, because there is nothing to wrap — `Filter.setParameter` is synchronous and returns a `Filter`.
+
+```kotlin
+@Entity
+@FilterDef(name = "byTenant", parameters = [ParamDef(name = "tenant", type = String::class)])
+@Filter(name = "byTenant", condition = "tenant = :tenant")
+class Lease(@Id var id: Long = 0, var tenant: String = "", var label: String = "")
+
+jpa.session { session ->
+    session.raw.enableFilter("byTenant").setParameter("tenant", currentTenant)
+    session.findAll<Lease>()          // one tenant's rows
+}
+```
+
+**A filter is off until somebody turns it on, and that is the trap rather than the feature.** A
+mapping that looks like it enforces isolation enforces nothing: a query on a session where nobody
+called `enableFilter` returns every tenant's rows, with no error and no warning. `RestrictionTest`
+pins that first, before it pins the filter working.
+
+**It is session state, so it does not outlive the block.** `session { }` opens a new session every
+time, which means enabling a filter once at startup is not a thing that can be done — every entry
+point has to do it.
+
+`@FilterDef(autoEnabled = true)` moves the failure rather than removing it: the filter is on for
+every session, but the parameter is still unset, and a filter with an unset parameter throws. That
+is the better trade — a loud failure instead of a silent over-read — and the parameter is then set
+through `getEnabledFilter` rather than `enableFilter`.
+
+## Immutable entities
+
+`@Immutable` takes an entity out of dirty checking. It does not refuse a write:
+
+```kotlin
+jpa.transaction { session -> session.get<Postmark>(1L).stamp = "second" }   // no error
+jpa.session { session -> session.get<Postmark>(1L).stamp }                 // still "first"
+```
+
+The assignment succeeds, the transaction commits, and the row is unchanged. Nothing anywhere says
+no, which is the failure mode to know about — use it for reference data nobody writes, not as a
+guard against code that might.
+
+## Natural ids
+
+`@NaturalId` gives you a unique constraint here and nothing else. Its point in blocking Hibernate is
+`session.byNaturalId(…)`, a first-class lookup with a cache of its own, and **`Stage.Session` has no
+such method** — `NaturalId` does not appear anywhere in `Stage.java`. So the lookup is an ordinary
+query, and `@Column(unique = true)` would have bought the same thing:
+
+```kotlin
+session.query<Isbn>("from Isbn where code = :code").parameter("code", code).single()
+```
+
+## Dynamic update
+
+Hibernate's `update` names **every** column by default, not the ones that changed — one prepared
+statement per entity caches better than one per set of dirty fields. The cost is a lost update
+between two transactions that touched different columns of the same row: the second writes all
+columns from the snapshot it loaded, putting the first one's column back.
+
+`@DynamicUpdate` on the entity is the fix, and `SpreadTest` measures both halves against two
+genuinely separate factories — see the note under *Four ways in* in the README for why a nested
+`jpa.transaction { }` cannot stand in for the second one.
+
+It is not free: the statement varies with what is dirty, so the plan cache holds more of them. Reach
+for it on wide entities that several writers touch, not everywhere.
+
+## Secondary tables
+
+`@SecondaryTable` splits an entity across two tables joined on the identifier, and works. The cost is
+that **there is no `LAZY` for it**: the join is inside the entity's own select, paid on every read
+whether the second table's columns were wanted or not. `SpreadTest` shows the join arriving with no
+secondary fetch, which is the same fact from the other side — nothing goes back for it because it was
+never left behind.
+
+## @Any
+
+`@Any` maps an association whose target *table* is a column. It works, and it is lazier than it
+looks:
+
+```kotlin
+@Any(fetch = FetchType.LAZY)
+@AnyDiscriminator(DiscriminatorType.STRING)
+@AnyDiscriminatorValue(discriminator = "buyer", entity = Buyer::class)
+@AnyDiscriminatorValue(discriminator = "thing", entity = Thing::class)
+@AnyKeyJavaClass(Long::class)
+@Column(name = "target_type")
+@JoinColumn(name = "target_id")
+var target: Any? = null
+```
+
+Reading the property gives back a **proxy of the class the discriminator names** — the discriminator
+comes with the owner, which is exactly enough for Hibernate to know what to proxy. Touching the
+proxy is the usual `HR000037`, inside the session as much as outside, and `session.raw.fetch(target)`
+is the only thing that resolves it: there is no `fetch`/`fetchEach` and no entity graph for it,
+because a join needs a table and there is none until the row has been read. **An `@Any` is always a
+second statement.**
+
+Two more costs, both in the schema and both permanent: nothing can constrain `target_id`, so there is
+no foreign key; and every class named by an `@AnyDiscriminatorValue` must be a mapped entity. The
+second one is noticed late — the discriminator converter is built lazily from the whole list, so a
+missing class fails on the first statement touching the association, on a row that has nothing to do
+with it.
+
 ## Validation
 
 Hibernate Validator is on the classpath and exported, so constraints on an entity are checked before
