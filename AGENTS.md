@@ -22,6 +22,7 @@ What exists:
 | `libs/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
 | `libs/stx-ktor` | The Ktor seam, and only the seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the one CORS policy `stx-spring-boot` builds Spring's from. No integration lives here — each is a module beside its own library — and the tell is that no spec in this module talks to a backend |
 | `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
+| `libs/stx-r2jdbc` | SQL for a Kotlin coroutine service, over the same Vert.x client `stx-jpa` runs on — and deliberately with none of the ORM above it: no persistence context, no dirty checking, no cascade, no lazy loading, no entity mapping. A pool, three scopes that differ only in *where* a statement runs, parameters bound rather than interpolated, and one spelling of a statement that runs on PostgreSQL and MySQL alike. It owns the two things a hand-written statement cannot: the placeholder (`?` everywhere, rewritten to `$1` on Postgres by a scanner that steps over literals and comments) and the schema (set on every connection as it opens, and proved to exist at connect, because Postgres accepts `set search_path` to a schema that is not there). Both are the `@SQLDelete` wound in `stx-jpa`, which cannot be healed where it happens |
 | `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
 | `libs/stx-spring-boot` | The Spring seam, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, security, CORS, the JSON codec, and the Spring Data Mongo layer. Each `stx-*` library's own auto-configuration is a module beside that library, not a package here |
 | `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
@@ -665,6 +666,7 @@ collections, and a run leaves it as it found it.
 | `stx-jpa` | `POSTGRES_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `postgres:18-alpine` |
 | `stx-jpa` | `MYSQL_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `mysql:8.4` |
 | `stx-jpa` | `DB2_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | nothing — the DB2 specs skip |
+| `stx-r2jdbc` | the same two Postgres and MySQL triples | `postgres:18-alpine` and `mysql:8.4` |
 
 **The credentials rule is unchanged; what it costs is not.** `AMQP_TEST_URI` and the MinIO key pair
 still have no defaults and must never gain any — a credential with a default is a credential in
@@ -956,6 +958,8 @@ the same each time, and the mistakes are the same each time too.
   | `libs/stx-jpa/stx-jpa-spring/README.md` | The Spring auto-configuration for it — the two beans, the required `packages`, and why `SchemaMode` defers to stx-migrations |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
+  | `libs/stx-r2jdbc/stx-r2jdbc/README.md` | Why a SQL library exists beside the ORM — the one cause behind six of stx-jpa's seven traps, why Vert.x and not R2DBC or JDBC, and what the missing feature list buys |
+  | `docs/r2jdbc.md` | What a stx-r2jdbc statement may say — the config, the backends, the four methods, the placeholder rules, the three scopes and the two type differences between the servers. **This is where a new method, backend or type conversion is documented** |
   | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, `@Argument`, registered context types). **This is where a new annotation, scalar or directive is documented** |
   | `libs/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no class scan in core |
   | `libs/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, the call on every operation, and the engine it registers with the container |

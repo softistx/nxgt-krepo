@@ -1,0 +1,44 @@
+product: jvm/lib
+description: SQL over the Vert.x client — a pool, a transaction scope and parameter binding, with no persistence context and nothing it maps behind your back
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # CloseGuard, so a second close is harmless — Ktor's DI closes what it hands out and cannot be
+  # told not to. Exported for the same reason stx-jpa exports it: Page and PageInfo reach this
+  # module's own API.
+  - //libs/stx-common: exported
+
+  # `R2jdbc.connect` takes a Vert.x and holds one, so the loop is part of this API rather than an
+  # implementation detail arriving with a driver.
+  - $libs.vertx.core: exported
+  # Pool, SqlConnection, Row and Tuple are this module's vocabulary and appear in its signatures —
+  # `sql { }` hands the caller a Row. Exported, because a caller writing a row mapper names them.
+  - $libs.vertx.sql.client: exported
+
+  # The two drivers, and neither runtime-only — which is where this module differs from stx-jpa.
+  # Hibernate Reactive picks its driver reflectively from the URI scheme and never exposes one; this
+  # module does the picking itself, in `Backend`, so it imports `PgBuilder` and `MySQLBuilder`. Not
+  # exported: choosing a builder is exactly the job a caller delegates here, and a `PgBuilder` in
+  # application code is a second pool nobody is managing.
+  #
+  # DB2 is absent on purpose. stx-jpa names it because Hibernate speaks it for free; here every
+  # database costs a placeholder dialect and a pair of specs that prove it, and nothing has asked.
+  - $libs.vertx.pg.client
+  - $libs.vertx.mysql.client
+
+  - $libs.kotlinx.coroutines.core: exported
+  # `@Language("SQL")` on the query parameters, so the IDE injects SQL into a caller's string.
+  # Compile-only: the annotation is CLASS-retained and read by tooling, never loaded.
+  - $libs.jetbrains.annotations: compile-only
+
+test-dependencies:
+  # the Postgres and the MySQL the specs talk to, started for the run when the workspace's own are
+  # not named — test-only, so nothing here reaches a consumer
+  - //libs/stx-testing
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # Vert.x logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop

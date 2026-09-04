@@ -282,6 +282,10 @@ vertx-core = { module = "io.vertx:vertx-core", version.ref = "vertx" }
 vertx-pg-client = { module = "io.vertx:vertx-pg-client", version.ref = "vertx" }
 vertx-mysql-client = { module = "io.vertx:vertx-mysql-client", version.ref = "vertx" }
 vertx-db2-client = { module = "io.vertx:vertx-db2-client", version.ref = "vertx" }
+# The database-agnostic half of the drivers above — `Pool`, `SqlConnection`, `Row`, `Tuple`. It
+# arrives transitively with any of them, and is named because `stx-r2jdbc` writes those types into
+# its own signatures: an inherited edge is one the IDE does not follow.
+vertx-sql-client = { module = "io.vertx:vertx-sql-client", version.ref = "vertx" }
 hibernate-validator = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator" }
 jakarta-validation = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
 # Hibernate Validator interpolates a message like "must be between {min} and {max}" through Jakarta
@@ -312,6 +316,9 @@ stx-migrations-db = { module = "com.softistx:stx-migrations-db", version.ref = "
 stx-migrations-spring = { module = "com.softistx:stx-migrations-spring", version.ref = "stx" }
 stx-mongo = { module = "com.softistx:stx-mongo", version.ref = "stx" }
 stx-mongo-ktor = { module = "com.softistx:stx-mongo-ktor", version.ref = "stx" }
+stx-r2jdbc = { module = "com.softistx:stx-r2jdbc", version.ref = "stx" }
+stx-r2jdbc-ktor = { module = "com.softistx:stx-r2jdbc-ktor", version.ref = "stx" }
+stx-r2jdbc-spring = { module = "com.softistx:stx-r2jdbc-spring", version.ref = "stx" }
 stx-redis = { module = "com.softistx:stx-redis", version.ref = "stx" }
 stx-spring-boot = { module = "com.softistx:stx-spring-boot", version.ref = "stx" }
 stx-telemetry-mongo = { module = "com.softistx:stx-telemetry-mongo", version.ref = "stx" }
