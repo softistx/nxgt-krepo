@@ -177,8 +177,20 @@ there is a transaction, so a `persist` or a change to a loaded entity inside a p
 discarded without a word: no error, no warning, no row. It is Hibernate's rule and it is quiet enough
 that `SessionsTest` pins both halves of it. Read in `session`, write in `transaction`.
 
-There is a fifth, below all four: `jpa.connection { }` borrows a raw connection for the statements a
-session cannot send at all. See *Below the session*.
+**A `transaction { }` inside a `transaction { }` is not a second one.** It hands back *the same
+session* — `inner.raw === outer.raw` — because `Stage.SessionFactory.withTransaction` joins the
+transaction already in scope. That is reasonable behaviour, and it is what makes a service method
+that opens a transaction safe to call from another that already has one. But it means nesting is not
+a way to get a second connection: the inner block commits nothing of its own, and an outer block that
+throws afterwards takes the inner block's writes with it.
+
+Anything that genuinely needs two transactions at once needs two `Jpa` instances. `NestedTransactionTest`
+pins both halves, and it exists because the fact cost a wrong measurement: a `@DynamicUpdate` spec
+written with a nested `transaction { }` as the competing writer failed *by passing*, with the dynamic
+and the static mapping agreeing because there had only ever been one transaction.
+
+There is a fifth way in, below all four: `jpa.connection { }` borrows a raw connection for the
+statements a session cannot send at all. See *Below the session*.
 
 ## Queries
 
