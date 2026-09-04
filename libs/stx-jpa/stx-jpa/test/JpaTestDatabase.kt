@@ -155,6 +155,29 @@ internal object JpaTestDatabase {
                 .map { it.getString("column_name") }
         }
 
+    /**
+     * How many rows a table actually holds, asked without going through the mapping.
+     *
+     * The only witness to a soft delete. A mapping that hides a row hides it from the session too, so
+     * a spec that counts through Hibernate cannot tell "still there, filtered out" from "gone".
+     *
+     * [table] is interpolated rather than bound: an identifier cannot be a parameter, and every
+     * caller here passes a literal from an entity in this source tree.
+     */
+    suspend fun rows(
+        schema: String,
+        table: String,
+    ): Int =
+        withClient { client ->
+            client
+                .preparedQuery("select count(*) as total from $schema.$table")
+                .execute()
+                .toCompletionStage()
+                .await()
+                .first()
+                .getInteger("total")
+        }
+
     /** How wide Postgres made a character column, or null when it is not one. */
     suspend fun columnMaxLength(
         schema: String,
