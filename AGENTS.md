@@ -376,17 +376,21 @@ Five things about it that are not guessable:
                   print("NO VERSION:", os.path.basename(p), v["name"], x["module"])'
   ```
 
-`mavenLocal` needs no credentials. **A real repository is not one more block in the same template**,
-and that is the sixth non-guessable thing: the toolchain resolves `credentials.file` when it reads
-the *project model*, not when it publishes. Committing the GitHub Packages block into
-`publishing.module-template.yaml` makes a `creds.properties` mandatory for `./kotlin build`,
-`./kotlin test`, even `./kotlin show modules` — for everyone, contributors included. So it lives in
-`publishing-github.repository.yaml` and the release workflow appends it, which is why
-`repositories:` must stay the last key of the template.
+**Maven Central is where these go, and it is not enabled in the template** — that is the sixth
+non-guessable thing, and there is no third option. Measured:
 
-The same measurement settled the path: `credentials.file` is relative to the file that *declares*
-it, not to the module — so both module depths under `libs/` need no special handling, and
-`creds.properties` means the repository root.
+| committed | `build` / `test` | `publish mavenLocal`, no PGP key |
+| --- | --- | --- |
+| `mavenCentral` + `signArtifacts: true` | fine | **fails**, wants `KOTLIN_TOOLCHAIN_SIGNING_KEY` |
+| `mavenCentral` + `signArtifacts: false` | **fails at model load** | fails |
+| neither | fine | fine |
+
+The middle row breaks everyone; the top row breaks the mavenLocal publish every contributor makes on
+every change under `libs/`. So the template ships with neither, and `scripts/enable-central.mjs`
+adds both in the release job — tested, and refusing to guess if the template is reshaped. Credentials
+for Central come from the environment; a *custom* repository would instead need a `.properties` file,
+resolved relative to the file that declares it and read when the project model loads, not when it
+publishes.
 
 The feature is a preview in the toolchain and its docs say it is likely to change.
 

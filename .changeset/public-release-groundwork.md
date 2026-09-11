@@ -10,6 +10,6 @@ Every artifact now publishes a **sources jar**, and its POM carries the project 
 and a developer — so an IDE shows the source, and the metadata Maven Central requires is already
 there.
 
-The libraries are released under **Apache-2.0**, and published to **GitHub Packages** at
-`https://maven.pkg.github.com/softistx/nxgt-krepo`. See `docs/consuming.md` for the repository block
-and the token GitHub's Maven registry requires even for a public read.
+The libraries are released under **Apache-2.0** and published to **Maven Central**: no repository
+block, no credentials, PGP-signed. `docs/consuming.md` has the Gradle, Maven and Kotlin Toolchain
+forms.

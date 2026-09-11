@@ -22,9 +22,23 @@ settings:
     # show why a function is shaped the way it is rather than a decompiled signature.
     publishSources: true
 
+    # Maven Central and artifact signing are NOT enabled here. `scripts/enable-central.mjs` adds
+    # them in the release job and the change is never committed, because the two settings are
+    # coupled and every committed combination breaks someone — both measured:
+    #
+    #   signArtifacts: true    →  `./kotlin publish mavenLocal` fails without
+    #                             KOTLIN_TOOLCHAIN_SIGNING_KEY, and that local publish is what every
+    #                             contributor does on every change under libs/. (build/test are fine.)
+    #   signArtifacts: false   →  the toolchain refuses the project at model-load time — "Maven
+    #      + mavenCentral         Central requires artifact signatures" — so even `./kotlin build`
+    #                             fails, for everyone.
+    #
+    # Committing neither breaks no one.
+
     # `name` defaults to the module's name and `description` to the module's own `description:` key,
     # which every library here has — so neither is repeated. The rest is the metadata Maven Central
-    # will require, added now so that enabling `mavenCentral:` later is a two-line change.
+    # will require of every artifact. Unlike signing, none of it breaks anything locally, so it is
+    # committed rather than injected.
     pom:
       url: https://github.com/softistx/nxgt-krepo
       # Shorthand for pom.scm.url; connection and developerConnection derive as `scm:git:$url`.
@@ -36,12 +50,10 @@ settings:
         - name: Steve Tsala
           url: https://github.com/SteveGT96
 
-# `repositories:` MUST stay the last key in this file.
-#
-# The release workflow appends `publishing-github.repository.yaml` to this list before publishing.
-# That block cannot be committed here: the toolchain resolves `credentials.file` when it reads the
-# project model, not when it publishes, so a `creds.properties` that does not exist breaks
-# `./kotlin show modules` — and therefore every command — for anyone without a token. Verified.
+# `mavenCentral` is a built-in repository id and needs no entry here — it is reached through
+# `settings.publishing.mavenCentral`, with credentials taken from the environment. This list is the
+# local loop only: publish to mavenLocal in the same change that touches a library, so an example
+# builds against what you just wrote rather than against a stale artifact.
 repositories:
   - url: mavenLocal
     publish: true

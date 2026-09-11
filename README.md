@@ -73,11 +73,10 @@ dependencies {
 }
 ```
 
-They are published to **GitHub Packages**, whose Maven registry requires a token even to read a
-public package — a GitHub limitation, not a choice made here. A classic token with the single scope
-`read:packages` is enough. [`docs/consuming.md`](docs/consuming.md) has the repository block for
-Gradle, Maven and the Kotlin Toolchain, where each credential goes, and which artifact you actually
-want. Maven Central is the destination, and the artifacts already carry the metadata it requires.
+On **Maven Central** — no repository block, no token, PGP-signed, with a sources jar.
+[`docs/consuming.md`](docs/consuming.md) has the Maven and Kotlin Toolchain forms, and which
+artifact you actually want: a library and its framework integration are separate, so depending on
+`stx-jpa` drags in neither Ktor nor Spring.
 
 All of them carry the same version and release together; the
 [release notes](https://github.com/softistx/nxgt-krepo/releases) name which ones actually changed.
@@ -100,7 +99,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 
 | | |
 | --- | --- |
-| [`docs/consuming.md`](docs/consuming.md) | How to depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain — the token GitHub Packages needs, which artifact to pick, and why they share one version |
+| [`docs/consuming.md`](docs/consuming.md) | How to depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain, which artifact to pick, and why all 46 share one version |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to set up, what a pull request needs, and what a reviewer will look for |
 | [`docs/releasing.md`](docs/releasing.md) | The release circuit — a changeset per PR, the Version Packages PR, and the five things about publishing here that are not guessable |
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |

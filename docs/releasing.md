@@ -1,8 +1,9 @@
 # Releasing
 
-A release publishes all 46 libraries under one version to GitHub Packages, tags it, and cuts a
-GitHub release. Almost all of it is automatic; the two human decisions are *what a change is worth*
-and *when to cut*.
+A release publishes all 46 libraries under one version to **Maven Central**, tags it, and cuts a
+GitHub release. Almost all of it is automatic; the three human decisions are *what a change is
+worth*, *when to cut*, and — because the Portal runs in `manual` mode — *whether to actually
+release what was uploaded*.
 
 ## The circuit
 
@@ -51,11 +52,20 @@ The PR updates itself as more changesets land. Leaving it open is how you batch 
 
 The same workflow re-runs with no changesets left and, in **one job**:
 
-1. appends `publishing-github.repository.yaml` to the template's `repositories:` list and writes
-   `creds.properties` from `GITHUB_TOKEN`;
-2. `rm -rf build/incremental.state`;
-3. `./kotlin publish github` with an explicit `-m` for every library;
-4. tags `vX.Y.Z`, pushes it, and cuts a GitHub release from that version's CHANGELOG section.
+1. checks the three Central secrets are non-empty and fails in seconds if not;
+2. runs `scripts/enable-central.mjs`, which turns on `mavenCentral` and `signArtifacts`;
+3. `rm -rf build/incremental.state`;
+4. `./kotlin publish mavenCentral` with an explicit `-m` for every library;
+5. tags `vX.Y.Z`, pushes it, and cuts a GitHub release from that version's CHANGELOG section.
+
+### 4. You release it from the Portal
+
+`publishingMode` is `manual`, so the job uploads a bundle, waits for Sonatype to validate it, and
+stops. Nothing is public until someone opens
+[central.sonatype.com/publishing/deployments](https://central.sonatype.com/publishing/deployments)
+and releases it. That is deliberate: **Sonatype does not let artifacts be removed from Central.**
+Switching to `auto` is a one-word change in `scripts/enable-central.mjs`, and its test asserts
+`manual` so that the change has to be intentional.
 
 ## Five things that are not guessable
 
@@ -63,33 +73,71 @@ The same workflow re-runs with no changesets left and, in **one job**:
   `on: push: tags` publisher would simply never run. Publishing where the tag is made sidesteps it.
 - **`rm -rf build/incremental.state` is load-bearing.** The publish task caches, and its
   up-to-date check does *not* notice a `module.yaml` edit — it reuses
-  `build/tasks/_<module>_prepareMavenPublishables/`. The job has just rewritten `version:`, so
-  without that line it republishes the previous version and reports success. Deleting artifacts
-  from the repository does not help; the task will not regenerate them either.
-- **A bare `./kotlin publish github` fails**, and not on a library: it walks every module in the
-  project and stops at the first without that repository id — `Module 'demo-api' does not have
-  repository with id 'github'`. An explicit `-m` selection is always passed. The three
-  `jvm/amper-plugin` modules are not in it: the toolchain cannot publish a plugin yet.
-- **The GitHub Packages block is not committed into the template.** `credentials.file` is resolved
-  when the toolchain reads the *project model*, not when it publishes — committing it would make a
-  token mandatory for `./kotlin show modules`, for everyone. Hence the fragment, and hence the rule
-  that `repositories:` stays the last key of that file.
+  `build/tasks/_<module>_prepareMavenPublishables/`. The job has just rewritten `version:` *and*
+  enabled signing, so without that line it republishes the previous version, unsigned, and reports
+  success. Deleting artifacts from the repository does not help; the task will not regenerate them.
+- **A bare `./kotlin publish mavenCentral` fails**, and not on a library: it walks every module in
+  the project and stops at the first that does not publish — an example. An explicit `-m` selection
+  is always passed. The three `jvm/amper-plugin` modules are not in it: the toolchain cannot
+  publish a plugin yet.
+- **Maven Central and signing are not committed enabled**, and there is no third option. Both were
+  measured:
+
+  | committed | `./kotlin build` / `test` | `./kotlin publish mavenLocal`, no PGP key |
+  | --- | --- | --- |
+  | `mavenCentral` + `signArtifacts: true` | fine | **fails** — *"Artifact signing is enabled, but the KOTLIN_TOOLCHAIN_SIGNING_KEY environment variable is not provided"* |
+  | `mavenCentral` + `signArtifacts: false` | **fails at model load** — *"Maven Central requires artifact signatures, but signing is disabled"* | fails |
+  | neither | fine | fine |
+
+  The middle row breaks everyone, and the top row breaks the mavenLocal publish that every
+  contributor does on every change under `libs/`. So the template ships with neither and
+  `scripts/enable-central.mjs` adds both in the release job, with a test pinning where it inserts
+  and that it refuses when the template no longer matches.
 - **`stx-material`'s two Apple targets are silently skipped on Linux.** Releases are cut on
-  `ubuntu-latest`, so `stx-material-iosarm64` and `-iossimulatorarm64` are published from a host
-  that cannot build them. A green release says nothing about them. Its Compose resources are not in
-  the publication either (KTC-5698).
+  `ubuntu-latest`, so `stx-material-iosarm64` and `-iossimulatorarm64` go out from a host that
+  cannot build them. A green release says nothing about them. Its Compose resources are not in the
+  publication either (KTC-5698).
+
+## Secrets
+
+Three, as organisation secrets on `softistx`:
+
+| | |
+| --- | --- |
+| `KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME` | the username half of a Central Portal user token |
+| `KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_PASSWORD` | the password half |
+| `KOTLIN_TOOLCHAIN_SIGNING_KEY` | the PGP private key, ASCII-armored — `gpg --export-secret-keys --armor <KEY_ID>` |
+
+`KOTLIN_TOOLCHAIN_SIGNING_KEY_PASSPHRASE` is optional and unset: the key has no passphrase.
+
+**An organisation secret whose repository access does not include this repository arrives as an
+empty string, not as an error.** The job therefore checks all three are non-empty before doing
+anything, so that misconfiguration costs seconds rather than a 401 at the end of a long build.
 
 ## Releasing by hand
 
-If the workflow is unavailable. You need a token with `write:packages`.
+If the workflow is unavailable. You need the Central Portal token and the PGP key in your
+environment.
 
 ```bash
-cat publishing-github.repository.yaml >> publishing.module-template.yaml
-printf 'gpr.user=%s\ngpr.token=%s\n' "$USER" "$TOKEN" > creds.properties
+export KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME=... KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_PASSWORD=...
+export KOTLIN_TOOLCHAIN_SIGNING_KEY="$(gpg --export-secret-keys --armor <KEY_ID>)"
+
+bun scripts/enable-central.mjs
 rm -rf build/incremental.state
-./kotlin publish github $(grep -rl publishing.module-template.yaml libs \
+./kotlin publish mavenCentral $(grep -rl publishing.module-template.yaml libs \
   --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
-git checkout publishing.module-template.yaml && rm -f creds.properties
+git checkout publishing.module-template.yaml
+```
+
+Then release the deployment from the Portal.
+
+To check what you are about to publish *without* signing or a token, publish to mavenLocal instead
+and read the result:
+
+```bash
+./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs \
+  --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
 ```
 
 Then check the result rather than the exit code — a dependency published with no version is the
@@ -117,18 +165,9 @@ Nothing. A release happens entirely on `develop`. `main` is aligned when someone
 with the branch rule in AGENTS.md, where `main` is never a pull request target. Releasing from
 `main` would need a "Version Packages" PR opened against it, which this repository does not allow.
 
-## Maven Central
+## Why Maven Central and not GitHub Packages
 
-Not yet enabled, and everything it needs is already in place: the POM carries url, scm, licences and
-a developer, and `publishSources: true` publishes a sources jar. What remains is a Central Portal
-account, a PGP key, and:
-
-```yaml
-    mavenCentral: enabled
-    signArtifacts: true
-```
-
-with `KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME`, `..._PASSWORD` and `KOTLIN_TOOLCHAIN_SIGNING_KEY` in
-the workflow. `io.github.softistx` is verified by owning the `softistx` GitHub organisation, so no
-domain has to be proven and no coordinate changes. Publishing mode stays `manual` until the first
-deployment has been looked at: Sonatype does not let artifacts be removed.
+GitHub's Maven registry requires a token even to *read* a public package — there is no anonymous
+read. For a repository whose point is that other people use the libraries, that is a tax on every
+consumer. Central has none, and `io.github.softistx` is verified by owning the `softistx` GitHub
+organisation, so no domain had to be proven and no coordinate changed to get there.

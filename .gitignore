@@ -11,10 +11,10 @@ node_modules
 .grok/config.toml
 .claude/settings.local.json
 
-# Credentials. The toolchain reads only a .properties file — it does not read
-# ~/.m2/settings.xml and has no env-var form — so creds.properties is the one the
-# release workflow writes. settings.xml is listed anyway: docs/consuming.md tells
-# Maven consumers to put a token in one, and nothing stops a copy landing here.
+# Credentials. Maven Central takes its own from the environment, so nothing here needs
+# a credentials file today — these patterns are the guard for the day a custom Maven
+# repository is added, where the toolchain reads a .properties file and nothing else
+# (no env-var form, and it does not read ~/.m2/settings.xml).
 # `assets` held Font Awesome Pro icons that may not be redistributed; see NOTICE.
 creds.properties
 *.creds.properties
