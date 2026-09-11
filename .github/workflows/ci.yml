@@ -25,7 +25,7 @@ jobs:
       # The wrapper downloads the Kotlin CLI and a JRE on first use, then the compiler and every
       # dependency. Without this the first step of every run is a multi-minute download.
       - name: Cache the toolchain and the dependency cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/JetBrains/Kotlin
