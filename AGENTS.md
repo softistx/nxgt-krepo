@@ -309,7 +309,15 @@ library pulls in with `apply: [ //publishing.module-template.yaml ]`; nothing ab
 written per module. `artifactId` is deliberately not set, because it defaults to the module's name —
 so the directory name *is* the artifact name and there is no second place to keep in sync. The
 module's `description:` becomes the POM `<description>`, which is the other reason every library has
-one.
+one. The POM also carries the project URL, the SCM, Apache-2.0 and a developer — everything Maven
+Central will require — and `publishSources: true` ships a sources jar beside each artifact.
+
+**The version in that template is written by a script, not by hand.** `scripts/sync-version.mjs`
+takes it from `package.json` and propagates it there *and* to `stx = "…"` in `libs.versions.toml`,
+because the examples resolve published coordinates rather than module paths and the two must move
+together. Changesets drives it: a changeset per pull request that touches `libs/`, a
+"Version Packages" PR, then one workflow that publishes, tags and releases.
+`docs/releasing.md` owns the circuit and the five things about it that are not guessable.
 
 **`stx-spring-boot` is the one library not named `stx-<technology>`, and the suffix is deliberate.**
 Spring reserves the `spring-boot*` prefix for itself and asks a third party for its own namespace,
@@ -368,9 +376,19 @@ Five things about it that are not guessable:
                   print("NO VERSION:", os.path.basename(p), v["name"], x["module"])'
   ```
 
-`mavenLocal` needs no credentials, no PGP key and no POM metadata. A real repository is one more
-block in the same template, changing nothing in any module. The feature is a preview in the
-toolchain and its docs say it is likely to change.
+`mavenLocal` needs no credentials. **A real repository is not one more block in the same template**,
+and that is the sixth non-guessable thing: the toolchain resolves `credentials.file` when it reads
+the *project model*, not when it publishes. Committing the GitHub Packages block into
+`publishing.module-template.yaml` makes a `creds.properties` mandatory for `./kotlin build`,
+`./kotlin test`, even `./kotlin show modules` — for everyone, contributors included. So it lives in
+`publishing-github.repository.yaml` and the release workflow appends it, which is why
+`repositories:` must stay the last key of the template.
+
+The same measurement settled the path: `credentials.file` is relative to the file that *declares*
+it, not to the module — so both module depths under `libs/` need no special handling, and
+`creds.properties` means the repository root.
+
+The feature is a preview in the toolchain and its docs say it is likely to change.
 
 ### The examples and the servers consume published artifacts, not modules
 
@@ -938,6 +956,9 @@ the same each time, and the mistakes are the same each time too.
   | File | Answers |
   | --- | --- |
   | `README.md` | What is this repo, and where do I read next? Stays short. |
+  | `CONTRIBUTING.md` | How does someone who is not a maintainer set up, open a pull request, and pass review? The short form of this file. |
+  | `docs/consuming.md` | How do I depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain? **This is where a new repository, credential mechanism or packaging caveat is documented.** |
+  | `docs/releasing.md` | How is a version cut and published? The changeset circuit, and the publishing behaviours that are not guessable. |
   | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
   | `libs/stx-openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
@@ -1058,6 +1079,12 @@ the same each time, and the mistakes are the same each time too.
   classes it expects to find, which is why those fixtures sit in `test/entity/scan/` instead of
   beside the rest.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.
+- **A pull request that touches `libs/` carries a changeset.** `pnpm changeset`, pick
+  patch/minor/major, write one sentence a *reader* of the release notes will see — not a restatement
+  of the commit subject — and commit the `.changeset/*.md`. CI fails the PR without one, because it
+  is the only step of the release circuit nobody can automate. There is one package and it is the
+  repository, so a `minor` is a minor for all 46 artifacts; name the library in the prose instead.
+  `.changeset/README.md` has why the line versions in lockstep.
 - **`develop` is where work lands and every PR targets it.** Branch off `develop`, open the
   pull request against `develop`, and merge it there. Nothing is merged directly into `main`, however
   small and however green — a PR opened against `main` has the wrong base and wants recreating, not

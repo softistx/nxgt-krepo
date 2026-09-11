@@ -1,11 +1,22 @@
 # nxgt-krepo
 
-A multi-module Kotlin repository built with the **JetBrains Kotlin Toolchain** (the `kotlin` CLI,
-formerly Amper) — no Gradle, no Maven, no `gradlew`. A module is a directory with a `module.yaml`,
-registered by path in `project.yaml`.
+[![CI](https://github.com/softistx/nxgt-krepo/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/softistx/nxgt-krepo/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-Its first subject is an **OpenAPI-to-Kotlin client generator**, built as four modules that form one
-chain:
+**Seventeen Kotlin libraries, forty-six published artifacts**, under `io.github.softistx:stx-*` — a Ktor and Spring
+Boot foundation, Postgres and MongoDB, Redis, Kafka and AMQP, object storage, GraphQL, workflows
+that survive a restart, schema migrations, telemetry, i18n, and a Compose Multiplatform component
+library. Each one publishes as its own artifact, with its framework integration beside it, so
+depending on `stx-jpa` drags in neither Ktor nor Spring.
+
+They are built with the **JetBrains Kotlin Toolchain** (the `kotlin` CLI, formerly Amper) — no
+Gradle, no Maven, no `gradlew`. A module is a directory with a `module.yaml`, registered by path in
+`project.yaml`. **Consuming them needs none of that**: they are ordinary Maven artifacts with
+Gradle metadata, and [`docs/consuming.md`](docs/consuming.md) has the snippet for Gradle, Maven and
+the toolchain.
+
+Alongside the libraries is an **OpenAPI-to-Kotlin client generator**, built as four modules that
+form one chain:
 
 ```
 examples/demo-api/openapi.yaml     one document
@@ -53,7 +64,28 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/stx-telemetry-spring` | The Spring Boot auto-configuration: one telemetry behind `stx.telemetry.enabled`, every `Exporter` bean added to it, and a `CoWebFilter` — not a `WebFilter` — so a suspending `@RestController` method is inside the request's span |
 | `libs/stx-testing` | What the integration specs run against: a backing service reused from the environment when one is named, and started as a container for the run when it is not |
 
-## Getting started
+## Using these libraries
+
+```kotlin
+dependencies {
+    implementation("io.github.softistx:stx-jpa:0.1.0")
+    implementation("io.github.softistx:stx-jpa-ktor:0.1.0")
+}
+```
+
+They are published to **GitHub Packages**, whose Maven registry requires a token even to read a
+public package — a GitHub limitation, not a choice made here. A classic token with the single scope
+`read:packages` is enough. [`docs/consuming.md`](docs/consuming.md) has the repository block for
+Gradle, Maven and the Kotlin Toolchain, where each credential goes, and which artifact you actually
+want. Maven Central is the destination, and the artifacts already carry the metadata it requires.
+
+All of them carry the same version and release together; the
+[release notes](https://github.com/softistx/nxgt-krepo/releases) name which ones actually changed.
+
+## Building the repository
+
+For working *on* the libraries rather than with them. You need no JDK and no Kotlin compiler — the
+wrapper provisions both.
 
 ```bash
 ./kotlin build          # compile everything
@@ -62,11 +94,15 @@ Alongside them are the shared service libraries, which have nothing to do with t
 ```
 
 Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) is the rest.
 
 ## Where to read next
 
 | | |
 | --- | --- |
+| [`docs/consuming.md`](docs/consuming.md) | How to depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain — the token GitHub Packages needs, which artifact to pick, and why they share one version |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to set up, what a pull request needs, and what a reviewer will look for |
+| [`docs/releasing.md`](docs/releasing.md) | The release circuit — a changeset per PR, the Version Packages PR, and the five things about publishing here that are not guessable |
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |
 | [`libs/stx-openapi-generator/README.md`](libs/stx-openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
 | [`libs/stx-common/README.md`](libs/stx-common/README.md) | The shared module — what belongs in it, which concurrency type a given caller wants, why `getOrPut` on a `ConcurrentHashMap` is not atomic, and what the standard library already covers |
@@ -131,3 +167,17 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-testing/README.md`](libs/stx-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |
 | [`plugins/openapi/README.md`](plugins/openapi/README.md) | The build plugin: settings, and what each choice needs on the consuming module's classpath |
 | [`AGENTS.md`](AGENTS.md) | Build commands, module layout, and the conventions this repo holds itself to |
+
+## Contributing
+
+Pull requests target `develop`, never `main`. Anything touching `libs/` needs a changeset
+(`pnpm changeset`) and a publish to `mavenLocal` before a consumer is built against it —
+[`CONTRIBUTING.md`](CONTRIBUTING.md) explains why that second step is the one that catches a broken
+POM. Be civil: [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Found a vulnerability? Not an issue — [SECURITY.md](SECURITY.md).
+
+## Licence
+
+[Apache-2.0](LICENSE). Third-party documentation cached under `.agents/skills/*/references/` is
+attributed in [NOTICE](NOTICE).
