@@ -11,13 +11,37 @@ settings:
   publishing:
     enabled: true
     group: io.github.softistx
+    # Written by `scripts/sync-version.mjs` from package.json. Do not edit it by hand: the same
+    # version lives in `libs.versions.toml` as `stx = "…"`, and the two must move together or every
+    # example resolves a coordinate nobody published. `docs/releasing.md` has the circuit.
     version: 0.1.0
     # `artifactId` is deliberately absent: it defaults to the module's name, so the directory name
     # *is* the artifact name and there is no second place to keep in sync.
 
+    # A sources jar per platform. Maven Central requires one, and it is what makes a consumer's IDE
+    # show why a function is shaped the way it is rather than a decompiled signature.
+    publishSources: true
+
+    # `name` defaults to the module's name and `description` to the module's own `description:` key,
+    # which every library here has — so neither is repeated. The rest is the metadata Maven Central
+    # will require, added now so that enabling `mavenCentral:` later is a two-line change.
+    pom:
+      url: https://github.com/softistx/nxgt-krepo
+      # Shorthand for pom.scm.url; connection and developerConnection derive as `scm:git:$url`.
+      scm: https://github.com/softistx/nxgt-krepo.git
+      licenses:
+        - name: Apache-2.0
+          url: https://www.apache.org/licenses/LICENSE-2.0
+      developers:
+        - name: Steve Tsala
+          url: https://github.com/SteveGT96
+
+# `repositories:` MUST stay the last key in this file.
+#
+# The release workflow appends `publishing-github.repository.yaml` to this list before publishing.
+# That block cannot be committed here: the toolchain resolves `credentials.file` when it reads the
+# project model, not when it publishes, so a `creds.properties` that does not exist breaks
+# `./kotlin show modules` — and therefore every command — for anyone without a token. Verified.
 repositories:
-  # No credentials, no PGP key and no POM metadata rules — and enough to consume
-  # `io.github.softistx:stx-mongo:0.1.0` from another project on this machine. A real repository is one
-  # more block here, changing nothing in any module.
   - url: mavenLocal
     publish: true

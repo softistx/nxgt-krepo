@@ -1,0 +1,29 @@
+# The GitHub Packages publication repository, appended to `publishing.module-template.yaml`'s
+# `repositories:` list by `.github/workflows/release.yml` — never committed into it.
+#
+# Why it lives in its own file: `credentials.file` is resolved when the toolchain reads the project
+# model, not when it publishes. Committing this block into the shared template would make a
+# `creds.properties` mandatory for `./kotlin build`, `./kotlin test`, even `./kotlin show modules` —
+# so a contributor without a publishing token could not use the repository at all.
+#
+# The path is relative to *the file that declares it*, not to the module and not to the project
+# root. Both happen to be the repository root here, which is why the two module depths under
+# `libs/` — `libs/stx-common/` and `libs/stx-jpa/stx-jpa/` — need no special handling.
+#
+# To publish by hand, do what the workflow does, from the repository root:
+#
+#   cat publishing-github.repository.yaml >> publishing.module-template.yaml
+#   printf 'gpr.user=%s\ngpr.token=%s\n' "$USER" "$TOKEN" > creds.properties   # needs write:packages
+#   rm -rf build/incremental.state
+#   ./kotlin publish github $(grep -rl publishing.module-template.yaml libs \
+#     --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+#
+# then `git checkout publishing.module-template.yaml` and delete `creds.properties`.
+
+  - id: github
+    url: https://maven.pkg.github.com/softistx/nxgt-krepo
+    publish: true
+    credentials:
+      file: creds.properties
+      usernameKey: gpr.user
+      passwordKey: gpr.token
