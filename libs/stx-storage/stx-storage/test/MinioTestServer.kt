@@ -9,16 +9,15 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * The MinIO the integration specs talk to: one started for this run, unless
- * `MINIO_TEST_ACCESS_KEY` and `MINIO_TEST_SECRET_KEY` name a store that is already up — the
- * workspace's own on port 9000, or one CI provisioned.
+ * `MINIO_TEST_ACCESS_KEY` and `MINIO_TEST_SECRET_KEY` name a store that is already up — a
+ * long-running one on a development machine, or one CI provisioned.
  *
  * Those two still have **no defaults**, which is the rule [StorageConfig] follows and for the same
- * reason: a credential with a default is a credential in source control. They live in
- * `~/workspace/docker/apps/minio/.env` and are exported for a run, never committed:
+ * reason: a credential with a default is a credential in source control. They are exported for a
+ * run, from wherever that store keeps its own, and never committed:
  *
  * ```bash
- * set -a; . ~/workspace/docker/apps/minio/.env; set +a
- * MINIO_TEST_ACCESS_KEY=$MINIO_ROOT_USER MINIO_TEST_SECRET_KEY=$MINIO_ROOT_PASSWORD ./kotlin test -m stx-storage
+ * MINIO_TEST_ACCESS_KEY=… MINIO_TEST_SECRET_KEY=… ./kotlin test -m stx-storage
  * ```
  *
  * What changed is that their absence no longer means skipping: a container comes with its own key

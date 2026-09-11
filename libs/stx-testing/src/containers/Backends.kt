@@ -114,8 +114,8 @@ data class MinioEndpoint(
  * no way in, which fails later and less clearly than falling through to a container.
  *
  * `MINIO_TEST_ACCESS_KEY` and `MINIO_TEST_SECRET_KEY` still have no defaults, and still must not be
- * committed — they live in `~/workspace/docker/apps/minio/.env`. What has changed is that not having
- * them is no longer a reason to skip.
+ * committed — they are exported for a run, from wherever the store being reused keeps its own. What
+ * has changed is that not having them is no longer a reason to skip.
  */
 fun minioContainer(image: String = MINIO_IMAGE): ContainerService<MinIOContainer, MinioEndpoint> =
     ContainerService.declare(

@@ -14,11 +14,10 @@ import java.util.concurrent.atomic.AtomicInteger
  * no longer a reason to skip: a container hands out credentials of its own, so these specs now run
  * on a machine where nobody exported anything. Before, they quietly proved nothing there.
  *
- * To point them at the broker this workspace runs instead:
+ * To point them at a broker that is already running instead:
  *
  * ```bash
- * set -a; . ~/workspace/docker/apps/rabbitmq/.env; set +a
- * AMQP_TEST_URI="amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@localhost:5672/%2F" ./kotlin test -m stx-amqp
+ * AMQP_TEST_URI="amqp://user:password@localhost:5672/%2F" ./kotlin test -m stx-amqp
  * ```
  *
  * The `%2F` is the default vhost and not decoration — a plain trailing `/` is the *empty* vhost,
