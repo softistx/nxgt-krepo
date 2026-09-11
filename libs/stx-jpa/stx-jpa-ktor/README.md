@@ -3,6 +3,8 @@
 `install(JpaConnection)` — one Hibernate Reactive session factory for the application, built when it
 starts and closed when it stops.
 
+**`io.github.softistx:stx-jpa-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(JpaConnection) {
     config = JpaConfig(uri = System.getenv("POSTGRES_URI"), username = …, password = …)
@@ -59,3 +61,7 @@ other integrations were; here it is what the module is made of.
 
 `own`, `publish`, `resource` and `required` stay in `stx-ktor`: they belong to no integration, and
 this module is a caller of them.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

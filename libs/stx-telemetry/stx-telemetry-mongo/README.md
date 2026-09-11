@@ -2,6 +2,8 @@
 
 Logs and traces into a MongoDB collection.
 
+**`io.github.softistx:stx-telemetry-mongo`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 Telemetry("checkout") {
     export(MongoExporter.connecting("mongodb://localhost:27017", retention = 30.days))
@@ -79,3 +81,7 @@ build over something that is not the code.
 ./kotlin test -m stx-telemetry-mongo                                  # container for the run
 MONGO_TEST_URI=mongodb://localhost:27017 ./kotlin test -m stx-telemetry-mongo   # a server already up
 ```
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

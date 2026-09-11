@@ -112,6 +112,6 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      # scripts/sync-version.mjs decides what version 46 artifacts publish under. It gets a test.
+      # scripts/sync-version.mjs decides what version 45 modules publish under. It gets a test.
       # The spec imports node:test, which bun's runner reads — so it runs under either.
       - run: bun test scripts/

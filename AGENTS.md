@@ -1096,7 +1096,7 @@ the same each time, and the mistakes are the same each time too.
   patch/minor/major, write one sentence a *reader* of the release notes will see — not a restatement
   of the commit subject — and commit the `.changeset/*.md`. CI fails the PR without one, because it
   is the only step of the release circuit nobody can automate. There is one package and it is the
-  repository, so a `minor` is a minor for all 46 artifacts; name the library in the prose instead.
+  repository, so a `minor` is a minor for all 45 modules; name the library in the prose instead.
   `.changeset/README.md` has why the line versions in lockstep.
 - **`develop` is where work lands and every PR targets it.** Branch off `develop`, open the
   pull request against `develop`, and merge it there. Nothing is merged directly into `main`, however

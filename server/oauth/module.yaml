@@ -1,5 +1,5 @@
 product: jvm/app
-description: A Ktor GraphQL catalogue showing for user managements
+description: A Ktor GraphQL service for permissions and roles, on stx-graphix and stx-mongo
 
 apply:
   - //stx-artifacts.module-template.yaml
@@ -57,5 +57,5 @@ settings:
         dependency: $libs.koin.compiler
   jvm:
     # Stated rather than left to detection. The toolchain auto-detects a `main` only in a file named
-    # `main.kt`; this one is `Shop.kt`, next to the `Catalog` it serves.
+    # `main.kt`; this one is `Oauth.kt`.
     mainClass: com.softistx.oauth.OauthKt

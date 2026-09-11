@@ -2,6 +2,8 @@
 
 One telemetry per application, and a server span per request.
 
+**`io.github.softistx:stx-telemetry-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(Observability) {
     service = "checkout"
@@ -86,3 +88,7 @@ install(Observability) {
 ```
 
 A request the filter refuses runs normally and produces nothing.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

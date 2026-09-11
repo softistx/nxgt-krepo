@@ -2,6 +2,8 @@
 
 Spring Boot auto-configuration for `stx-graphix`. Off until `stx.graphix.enabled=true`.
 
+**`io.github.softistx:stx-graphix-spring`** — [how to depend on it](../../../docs/consuming.md).
+
 ```yaml
 stx:
   graphix:
@@ -108,3 +110,7 @@ socket.
 Keys live in
 [`docs/spring-configuration.md`](../../../docs/spring-configuration.md); the annotation vocabulary
 is [`docs/graphix.md`](../../../docs/graphix.md).
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

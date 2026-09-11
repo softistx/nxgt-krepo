@@ -2,6 +2,8 @@
 
 One `stx-redis` connection for a Spring Boot application, behind one property.
 
+**`io.github.softistx:stx-redis-spring`** — [how to depend on it](../../../docs/consuming.md).
+
 ```yaml
 stx:
   redis: { enabled: true, uri: redis://localhost:6379, namespace: orders }
@@ -46,3 +48,7 @@ auto-configuration, the library is not optional.
 
 It depends on `stx-spring-boot` for nothing at all: an auto-configuration needs Spring Boot, not
 this repo's Spring seam.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

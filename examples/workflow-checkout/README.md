@@ -88,3 +88,7 @@ which is what `RedisWorkflowStore`'s lease is for, and why the third run waits b
 The workflow is a function of its collaborators — `checkoutWorkflow(warehouse, payments, …)` — so the
 declaration is built once at startup and a step body closes over what it needs. Nothing in it belongs
 to one run; that is what the context is for.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

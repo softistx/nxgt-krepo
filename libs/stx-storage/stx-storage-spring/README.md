@@ -2,6 +2,8 @@
 
 One `stx-storage` client for a Spring Boot application, behind one property.
 
+**`io.github.softistx:stx-storage-spring`** — [how to depend on it](../../../docs/consuming.md).
+
 ```yaml
 stx:
   storage: { enabled: true, endpoint: http://localhost:9000, access-key: …, secret-key: … }
@@ -42,3 +44,7 @@ Spring hub. Beside its own library it can be published and versioned on its own,
 
 It depends on `stx-spring-boot` for nothing: an auto-configuration needs Spring Boot, not this
 repo's Spring seam.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

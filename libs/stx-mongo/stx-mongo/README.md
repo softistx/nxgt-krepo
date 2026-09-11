@@ -4,6 +4,8 @@ Reusable MongoDB pieces for a Kotlin coroutine service: session-aware collection
 the create/read/update/delete shape every collection-backed service repeats, a cursor-paginated
 `find`, the codecs the driver does not ship, and an audit trail a document can opt into.
 
+**`io.github.softistx:stx-mongo`** — [how to depend on it](../../../docs/consuming.md).
+
 They are extensions on `MongoCollection<T>` rather than a repository class to inherit from — see
 [Writing a collection-backed service](#writing-a-collection-backed-service) for why.
 
@@ -204,3 +206,7 @@ session it passes everywhere else. Three things the API shape is deliberate abou
 One thing to know before writing into a transaction: the first upload into a bucket creates its
 indexes, and an index cannot be created inside a transaction. Warm the bucket with one upload
 outside first.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

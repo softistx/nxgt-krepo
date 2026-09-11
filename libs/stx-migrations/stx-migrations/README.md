@@ -5,6 +5,8 @@ what has run; a **lock** keeps two processes from running the same one twice; an
 **gate** at startup — nothing serves until the migrations are done, and a failure is an application
 that does not start.
 
+**`io.github.softistx:stx-migrations`** — [how to depend on it](../../../docs/consuming.md).
+
 This module holds none of that ledger. `MigrationLedger` is an interface here and nothing in this
 module knows what a database is; the implementations live in `stx-migrations-db`, one package per
 store, and `stx-migrations-ktor` / `stx-migrations-spring` are the two framework integrations.
@@ -169,3 +171,7 @@ a Mongo driver and a Hibernate it has no use for.
 Writing a migration, the statuses and their transitions, the ledger contract in detail, what a killed
 process leaves behind per store, and what a migration is required to be. That file is the half that
 grows; this one stays roughly the size it is.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

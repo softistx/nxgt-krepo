@@ -3,6 +3,8 @@
 A Compose Multiplatform component library: a token layer over Material 3, components that need one
 line for their common case, and motion that is on by default rather than opt-in.
 
+**`io.github.softistx:stx-material`** — [how to depend on it](../../docs/consuming.md).
+
 It is the repo's first client-side module — the first `kmp/lib`, the first `settings.compose`, the
 first `android` target. `examples/material-demo` is its catalogue and its test bench.
 
@@ -159,3 +161,7 @@ consumer. Nothing here does today — worth knowing before the first one is adde
 | [`../../examples/material-demo/`](../../examples/material-demo) | The catalogue: `./kotlin run -m md-desktop` |
 
 [material-kolor]: https://github.com/jordond/MaterialKolor
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

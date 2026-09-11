@@ -3,6 +3,8 @@
 Test-only support the libraries here share. Today: the backing services their integration specs
 talk to, declared rather than assumed.
 
+**`io.github.softistx:stx-testing`** — [how to depend on it](../../docs/consuming.md).
+
 ```kotlin
 private val mongo = mongoContainer()
 
@@ -152,3 +154,7 @@ Because the next library needs the same three-way resolution, the same shutdown 
 image pins, and the version of this that lives in two modules is the version that drifts. It is a
 `jvm/lib` consumed through `test-dependencies`, so nothing here reaches a consumer of the libraries
 it supports.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

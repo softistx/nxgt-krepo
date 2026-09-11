@@ -2,6 +2,8 @@
 
 Ships `stx-telemetry`'s logs and traces to an OTLP collector over HTTP, in JSON.
 
+**`io.github.softistx:stx-telemetry-otlp`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 Telemetry("checkout") {
     environment = "production"
@@ -74,3 +76,7 @@ leaves it open, on the rule the rest of the repository follows: close only what 
 application with a tuned `HttpClient` — a proxy, a truststore, a connection budget — should not get a
 second one because it turned telemetry on, and should not lose the first one when telemetry shuts
 down.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

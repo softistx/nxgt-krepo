@@ -3,7 +3,7 @@
 [![CI](https://github.com/softistx/nxgt-krepo/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/softistx/nxgt-krepo/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-**Seventeen Kotlin libraries, forty-six published artifacts**, under `io.github.softistx:stx-*` — a Ktor and Spring
+**Seventeen Kotlin libraries in forty-five published modules**, under `io.github.softistx:stx-*` — a Ktor and Spring
 Boot foundation, Postgres and MongoDB, Redis, Kafka and AMQP, object storage, GraphQL, workflows
 that survive a restart, schema migrations, telemetry, i18n, and a Compose Multiplatform component
 library. Each one publishes as its own artifact, with its framework integration beside it, so
@@ -99,11 +99,14 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 
 | | |
 | --- | --- |
-| [`docs/consuming.md`](docs/consuming.md) | How to depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain, which artifact to pick, and why all 46 share one version |
+| [`docs/consuming.md`](docs/consuming.md) | How to depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain, which artifact to pick, and why all 45 share one version |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to set up, what a pull request needs, and what a reviewer will look for |
 | [`docs/releasing.md`](docs/releasing.md) | The release circuit — a changeset per PR, the Version Packages PR, and the five things about publishing here that are not guessable |
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |
 | [`libs/stx-openapi-generator/README.md`](libs/stx-openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
+| [`examples/demo-api/README.md`](examples/demo-api/README.md) | The document and the hand-written server behind it — and why the server is hand-written |
+| [`examples/demo-client/README.md`](examples/demo-client/README.md) | The kotlinx client — security, failures, `oneOf` with and without a discriminator |
+| [`examples/demo-spring-client/README.md`](examples/demo-spring-client/README.md) | The Spring client — two documents in one module, and why it repeats the other client's tests |
 | [`libs/stx-common/README.md`](libs/stx-common/README.md) | The shared module — what belongs in it, which concurrency type a given caller wants, why `getOrPut` on a `ConcurrentHashMap` is not atomic, and what the standard library already covers |
 | [`libs/stx-amqp/stx-amqp/README.md`](libs/stx-amqp/stx-amqp/README.md) | The AMQP library — exchanges and queues, what a confirm promises, and what prefetch is for |
 | [`libs/stx-amqp/stx-amqp-ktor/README.md`](libs/stx-amqp/stx-amqp-ktor/README.md) | The Ktor plugin — why it owns the connection and not the channel, and why the connect blocks |
@@ -165,6 +168,9 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/stx-storage/stx-storage-spring/README.md`](libs/stx-storage/stx-storage-spring/README.md) | The Spring auto-configuration — why no credential has a default, and why its spec points at a dead port |
 | [`libs/stx-testing/README.md`](libs/stx-testing/README.md) | The test support — where a spec's server comes from, and what cleans a container up afterwards |
 | [`plugins/openapi/README.md`](plugins/openapi/README.md) | The build plugin: settings, and what each choice needs on the consuming module's classpath |
+| [`examples/jpa-shop/README.md`](examples/jpa-shop/README.md) | The Postgres catalogue — `stx-jpa`'s CRUD extensions, transaction guard and audit layer end to end |
+| [`examples/spring-orders/README.md`](examples/spring-orders/README.md) | The order book — a spec-first REST API, keyset paging, an audit trail and two migrations |
+| [`server/oauth/README.md`](server/oauth/README.md) | The work in progress, not an example — a GraphQL service where the SDL owns the types |
 | [`AGENTS.md`](AGENTS.md) | Build commands, module layout, and the conventions this repo holds itself to |
 
 ## Contributing

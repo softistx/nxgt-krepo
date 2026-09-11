@@ -3,6 +3,8 @@
 Spring Boot auto-configuration for [`stx-workflow`](../stx-workflow/README.md). One engine for the
 application, over the store `stx.workflow.store` names, with every `Workflow` bean registered on it.
 
+**`io.github.softistx:stx-workflow-spring`** — [how to depend on it](../../../docs/consuming.md).
+
 ```yaml
 stx:
   redis: { enabled: true, uri: redis://localhost:6379, namespace: orders }
@@ -69,3 +71,7 @@ ones are different jobs, and usually different pods.
 that exposes it. A route that lists instances and restarts them is exactly the route that must not be
 open, and who may call it is a question about your application. `docs/workflow.md` has the four
 lines; put them behind whatever your other admin routes are behind.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

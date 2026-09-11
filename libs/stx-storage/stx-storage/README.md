@@ -3,6 +3,8 @@
 S3-compatible object storage for a Kotlin coroutine service, over the
 [MinIO Java SDK](https://min.io/docs/minio/linux/developers/java/API.html).
 
+**`io.github.softistx:stx-storage`** — [how to depend on it](../../../docs/consuming.md).
+
 The SDK is half asynchronous and half not: `putObject` and friends answer with a `CompletableFuture`,
 while `listObjects` and `removeObjects` hand back an `Iterable` that does network I/O as you walk it,
 and a `getObject` response is an `InputStream` that blocks on read. Called from a coroutine, the
@@ -115,3 +117,7 @@ val form = avatars.presignedPost(
   region lookup, which is why these are `suspend`.
 - **Seven days is the ceiling**, and one second the floor — SigV4's limits. Asking for more throws
   `InvalidExpiryException` here rather than producing a URL the store will reject.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

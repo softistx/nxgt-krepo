@@ -3,6 +3,8 @@
 GraphQL for a Kotlin coroutine service, over graphql-java 26. Annotated functions are the schema,
 `@Serializable` types are the GraphQL types, and a resolver is a suspend function.
 
+**`io.github.softistx:stx-graphix`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 val graphql = Graphix {
     resolvers(ProductQueries(store), ProductMutations(store), ProductSubscriptions(store))
@@ -230,3 +232,7 @@ the interceptor reference.
 ## What this slice does not do
 
 Code generation, a GraphQL skill, Federation, a client. Those are later phases.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

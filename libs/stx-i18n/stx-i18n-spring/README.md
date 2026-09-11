@@ -3,6 +3,8 @@
 Message catalogs for a Spring Boot application, behind one property — and a locale resolver narrowed
 to the languages the catalogs actually cover.
 
+**`io.github.softistx:stx-i18n-spring`** — [how to depend on it](../../../docs/consuming.md).
+
 ```yaml
 stx:
   i18n: { enabled: true, languages: [en, fr], fallback: fr }
@@ -56,3 +58,7 @@ after it, `stx-spring-boot` has no `integration/` package at all.
 The hub still depends on `stx-i18n`, and that is not a leftover: `RequestTranslator` and the
 translated error body are `stx-spring-boot`'s own features, and `Messages` is a constructor
 parameter of its exception handler. What moved is the auto-configuration, not the use.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

@@ -3,6 +3,8 @@
 The Ktor plugin for [`stx-workflow`](../stx-workflow/README.md): one engine per application, and the
 worker on the application's own scope.
 
+**`io.github.softistx:stx-workflow-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(Workflows) {
     store = RedisWorkflowStore(application.redis)
@@ -53,3 +55,7 @@ loop that outlives the redeploy it should have died with.
 So a module installing this plugin needs `settings.kotlin.serialization: json` in its own
 `module.yaml`. Nothing in `src/` here is serializable; the setting is the one the *caller* needs, and
 forgetting it is a `SerializationException` at the first `start`.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

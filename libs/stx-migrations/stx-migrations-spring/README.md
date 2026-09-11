@@ -2,6 +2,8 @@
 
 Spring Boot auto-configuration for `stx-migrations`, opt-in behind `stx.migrations.enabled`.
 
+**`io.github.softistx:stx-migrations-spring`** — [how to depend on it](../../../docs/consuming.md).
+
 ```yaml
 stx:
   jpa: { enabled: true, uri: postgresql://localhost:5432/orders, username: …, password: … }
@@ -97,3 +99,7 @@ gate, `enabled=false`, and a named store whose connection is missing failing by 
 That a ledger works against a real server is `stx-migrations-db`'s question, asked there against
 MongoDB, PostgreSQL and MySQL. That the whole path works in a real application is
 `examples/spring-orders`.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

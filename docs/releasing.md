@@ -1,6 +1,6 @@
 # Releasing
 
-A release publishes all 46 libraries under one version to **Maven Central**, tags it, and cuts a
+A release publishes all 45 libraries under one version to **Maven Central**, tags it, and cuts a
 GitHub release. Almost all of it is automatic; the three human decisions are *what a change is
 worth*, *when to cut*, and — because the Portal runs in `manual` mode — *whether to actually
 release what was uploaded*.
@@ -39,7 +39,7 @@ library in the prose instead: `stx-graphix: exception handlers that reach the cl
 
 Those last two are the whole reason that script exists. The toolchain cannot be told a version from
 the command line — no `-P`, no environment variable, no `${...}` in a `module.yaml` — so the version
-is a literal line in the template all 46 libraries share. And `libs.versions.toml` carries it again
+is a literal line in the template all 45 libraries share. And `libs.versions.toml` carries it again
 as `stx = "…"`, because the examples and the servers resolve *published coordinates*, not module
 paths. Move one without the other and every example resolves something nobody published.
 

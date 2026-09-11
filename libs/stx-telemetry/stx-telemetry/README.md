@@ -2,6 +2,8 @@
 
 Logs and traces for a Kotlin service that is made of coroutines.
 
+**`io.github.softistx:stx-telemetry`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 @Serializable
 @SerialName("checkout.charged")
@@ -140,3 +142,7 @@ what happened. The `traceId` is attached either way, so an unsampled trace's log
 - **No global to log through.** `logger<T>()` resolves its telemetry at each call: the one in scope
   first, the installed default second. That order is what lets two specs in one JVM collect their own
   signals, and it is why `withTelemetry` exists.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

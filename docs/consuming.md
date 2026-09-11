@@ -62,7 +62,7 @@ and so on.
 ## They all carry the same version
 
 `io.github.softistx:stx-common` and `io.github.softistx:stx-workflow-db` are always the same
-version, and a release moves all 46 at once. That is not laziness:
+version, and a release moves all 45 at once. That is not laziness:
 
 - the toolchain has no way to override a publication version per module — it is one literal line in
   a template every library shares;

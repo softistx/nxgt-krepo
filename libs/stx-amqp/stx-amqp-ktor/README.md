@@ -2,6 +2,8 @@
 
 `install(AmqpConnection)` — one AMQP connection for the application, closed when it stops.
 
+**`io.github.softistx:stx-amqp-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(AmqpConnection) { config = AmqpConfig(uri = System.getenv("AMQP_URI"), connectionName = "orders-api") }
 
@@ -41,3 +43,7 @@ beside its library is what the other families here already do, and it lets the `
 be `exported` instead of `compile-only`.
 
 `own`, `publish`, `resource` and `required` stay in `stx-ktor`: they belong to no integration.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

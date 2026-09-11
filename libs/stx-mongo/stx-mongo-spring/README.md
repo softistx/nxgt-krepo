@@ -2,6 +2,8 @@
 
 One `stx-mongo` client for a Spring Boot application and one database over it, behind one property.
 
+**`io.github.softistx:stx-mongo-spring`** — [how to depend on it](../../../docs/consuming.md).
+
 ```yaml
 stx:
   mongo: { enabled: true, uri: mongodb://localhost:27017, database: orders }
@@ -53,3 +55,7 @@ cannot pin.
 It used to be `com.softistx.spring.integration.mongo`, one of seven auto-configurations in the
 Spring hub. Beside its own library it can be published and versioned on its own, and its `stx-mongo`
 edge becomes `exported` rather than `compile-only`.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

@@ -3,6 +3,8 @@
 `install(MongoDB)` — one Mongo client for the application, one database handle over it, both closed
 when it stops.
 
+**`io.github.softistx:stx-mongo-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(MongoDB) { uri = System.getenv("MONGO_URI"); database = "orders" }
 
@@ -45,3 +47,7 @@ other integrations were; here it is what the module is made of.
 
 `own`, `publish`, `resource` and `required` stay in `stx-ktor`: they belong to no integration, and
 this module is a caller of them.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

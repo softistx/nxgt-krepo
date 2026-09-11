@@ -2,6 +2,8 @@
 
 Builds a `stx-graphix` schema from what a Koin container holds.
 
+**`io.github.softistx:stx-graphix-koin`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 @Singleton
 class ProductQueries(private val store: Store) : GraphixResolver {
@@ -62,3 +64,7 @@ decides the order a container's singles were declared in across modules.
 
 [`docs/graphix.md`](../../../docs/graphix.md) has the interceptor and exception-handler reference,
 and the table of what a resolver may see.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

@@ -5,6 +5,8 @@ optionally a typed HTTP client over them. It has no dependency on the build syst
 [`plugins/openapi`](../../plugins/openapi/README.md) is what wires it into a build, and this module
 is a plain `jvm/lib` you can call from anywhere and test without compiling anything.
 
+**`io.github.softistx:stx-openapi-generator`** — [how to depend on it](../../docs/consuming.md).
+
 ```kotlin
 val model = OpenApiParser(Grouping.Tag, InterfaceNaming(suffix = "Api")).parse(Path("openapi.yaml"))
 val files = KtorfitEmitter().emit(model, EmitOptions("com.softistx.demo.client.api"))
@@ -197,3 +199,7 @@ inherit — so a parser change that breaks on a real document fails here rather
 than in a consuming module. It finds
 the spec by walking up to the directory holding `project.yaml`, so it does not care what the working
 directory is.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

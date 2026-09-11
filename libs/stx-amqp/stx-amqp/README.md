@@ -6,6 +6,8 @@ blocking, callback-driven API with a thread pool of its own. This module is the 
 it: a publish that suspends until the broker confirms it, deliveries that arrive as a `Flow`,
 acknowledgements that happen after the handler returned, and a retry path that is a real one.
 
+**`io.github.softistx:stx-amqp`** — [how to depend on it](../../../docs/consuming.md).
+
 It is a plain `jvm/lib`. Nothing here knows about a server framework, so the same code serves a Ktor
 route, a background worker or a CLI.
 
@@ -175,3 +177,7 @@ credentials, and a credential with a default is a credential in source control. 
 exchanges and queues they delete, under names unique per run. See the local services section of
 [AGENTS.md](../../../AGENTS.md) for the broker this workspace runs and the line that points the specs
 at it.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

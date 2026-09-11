@@ -2,6 +2,8 @@
 
 `install(KafkaCluster)` — the bootstrap servers and the `Json` in one place, reachable from a route.
 
+**`io.github.softistx:stx-kafka-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(KafkaCluster) { config = KafkaConfig(bootstrap = System.getenv("KAFKA_BOOTSTRAP")) }
 
@@ -36,3 +38,7 @@ beside its library is what the other families here already do, and it lets the `
 dependency be `exported` instead of `compile-only`.
 
 `own`, `publish`, `resource` and `required` stay in `stx-ktor`: they belong to no integration.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

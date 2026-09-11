@@ -3,6 +3,8 @@
 Where the `stx-migrations` ledger lives. One module, a package per store: `mongo/` for MongoDB
 through `stx-mongo`, `sql/` for PostgreSQL and MySQL through `stx-jpa`.
 
+**`io.github.softistx:stx-migrations-db`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 MongoMigrations(database, listOf(V1Seed(), V2Tags())).run()
 SqlMigrations(jpa, listOf(V1Orders(), V2OrderIndex())).run()
@@ -141,3 +143,7 @@ write to the lock row can make.
 Servers come from `//libs/stx-testing` — the workspace's own when `MONGO_TEST_URI`, `POSTGRES_TEST_*`
 or `MYSQL_TEST_*` name them, containers for the run otherwise, and skipped when neither. A database
 per Mongo spec, a schema per Postgres spec, a database per MySQL spec.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)
