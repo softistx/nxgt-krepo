@@ -112,6 +112,12 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
-      # scripts/sync-version.mjs decides what version 45 modules publish under. It gets a test.
-      # The spec imports node:test, which bun's runner reads — so it runs under either.
+
+      # bun strips types, it does not check them — so TypeScript under `bun scripts/*.ts` buys
+      # nothing at all unless something runs tsc. This is that something, and it runs before the
+      # tests because a type error is the cheaper failure to read.
+      - run: bun run typecheck
+
+      # scripts/sync-version.ts decides what version 45 modules publish under, in a job nobody
+      # watches. It gets a test.
       - run: bun test scripts/

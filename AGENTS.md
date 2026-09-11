@@ -312,12 +312,20 @@ module's `description:` becomes the POM `<description>`, which is the other reas
 one. The POM also carries the project URL, the SCM, Apache-2.0 and a developer — everything Maven
 Central will require — and `publishSources: true` ships a sources jar beside each artifact.
 
-**The version in that template is written by a script, not by hand.** `scripts/sync-version.mjs`
+**The version in that template is written by a script, not by hand.** `scripts/sync-version.ts`
 takes it from `package.json` and propagates it there *and* to `stx = "…"` in `libs.versions.toml`,
 because the examples resolve published coordinates rather than module paths and the two must move
 together. Changesets drives it: a changeset per pull request that touches `libs/`, a
 "Version Packages" PR, then one workflow that publishes, tags and releases.
 `docs/releasing.md` owns the circuit and the five things about it that are not guessable.
+
+**Everything under `scripts/` is TypeScript, run by bun and checked by `tsc`.** Bun executes `.ts`
+directly — no build step, no emitted JavaScript — but it *strips* types rather than checking them,
+so `bun run typecheck` (`tsc --noEmit`, `strict`) is what makes the annotations mean anything, and
+CI runs it before the tests. The specs are `bun:test` rather than kotest for the obvious reason:
+the kotest convention in this repo is about Kotlin. Both scripts edit files that decide how 45
+modules publish, in a job nobody watches, so each one asserts its anchor matches **exactly once**
+and throws otherwise — `scripts/*.test.ts` pins that, including the failure modes.
 
 **`stx-spring-boot` is the one library not named `stx-<technology>`, and the suffix is deliberate.**
 Spring reserves the `spring-boot*` prefix for itself and asks a third party for its own namespace,
@@ -386,7 +394,7 @@ non-guessable thing, and there is no third option. Measured:
 | neither | fine | fine |
 
 The middle row breaks everyone; the top row breaks the mavenLocal publish every contributor makes on
-every change under `libs/`. So the template ships with neither, and `scripts/enable-central.mjs`
+every change under `libs/`. So the template ships with neither, and `scripts/enable-central.ts`
 adds both in the release job — tested, and refusing to guess if the template is reshaped. Credentials
 for Central come from the environment; a *custom* repository would instead need a `.properties` file,
 resolved relative to the file that declares it and read when the project model loads, not when it

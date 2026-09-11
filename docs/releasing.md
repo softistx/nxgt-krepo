@@ -35,7 +35,7 @@ library in the prose instead: `stx-graphix: exception handlers that reach the cl
 - `CHANGELOG.md`, one section per release, grouped major/minor/patch;
 - `package.json`, the version Changesets owns;
 - **`publishing.module-template.yaml` and `libs.versions.toml`**, written by
-  `scripts/sync-version.mjs`.
+  `scripts/sync-version.ts`.
 
 Those last two are the whole reason that script exists. The toolchain cannot be told a version from
 the command line — no `-P`, no environment variable, no `${...}` in a `module.yaml` — so the version
@@ -53,7 +53,7 @@ The PR updates itself as more changesets land. Leaving it open is how you batch 
 The same workflow re-runs with no changesets left and, in **one job**:
 
 1. checks the three Central secrets are non-empty and fails in seconds if not;
-2. runs `scripts/enable-central.mjs`, which turns on `mavenCentral` and `signArtifacts`;
+2. runs `scripts/enable-central.ts`, which turns on `mavenCentral` and `signArtifacts`;
 3. `rm -rf build/incremental.state`;
 4. `./kotlin publish mavenCentral` with an explicit `-m` for every library;
 5. tags `vX.Y.Z`, pushes it, and cuts a GitHub release from that version's CHANGELOG section.
@@ -64,7 +64,7 @@ The same workflow re-runs with no changesets left and, in **one job**:
 stops. Nothing is public until someone opens
 [central.sonatype.com/publishing/deployments](https://central.sonatype.com/publishing/deployments)
 and releases it. That is deliberate: **Sonatype does not let artifacts be removed from Central.**
-Switching to `auto` is a one-word change in `scripts/enable-central.mjs`, and its test asserts
+Switching to `auto` is a one-word change in `scripts/enable-central.ts`, and its test asserts
 `manual` so that the change has to be intentional.
 
 ## Five things that are not guessable
@@ -91,7 +91,7 @@ Switching to `auto` is a one-word change in `scripts/enable-central.mjs`, and it
 
   The middle row breaks everyone, and the top row breaks the mavenLocal publish that every
   contributor does on every change under `libs/`. So the template ships with neither and
-  `scripts/enable-central.mjs` adds both in the release job, with a test pinning where it inserts
+  `scripts/enable-central.ts` adds both in the release job, with a test pinning where it inserts
   and that it refuses when the template no longer matches.
 - **`stx-material`'s two Apple targets are silently skipped on Linux.** Releases are cut on
   `ubuntu-latest`, so `stx-material-iosarm64` and `-iossimulatorarm64` go out from a host that
@@ -123,7 +123,7 @@ environment.
 export KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME=... KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_PASSWORD=...
 export KOTLIN_TOOLCHAIN_SIGNING_KEY="$(gpg --export-secret-keys --armor <KEY_ID>)"
 
-bun scripts/enable-central.mjs
+bun scripts/enable-central.ts
 rm -rf build/incremental.state
 ./kotlin publish mavenCentral $(grep -rl publishing.module-template.yaml libs \
   --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')

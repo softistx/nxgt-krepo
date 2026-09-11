@@ -25,7 +25,7 @@ const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const FILE = "publishing.module-template.yaml";
 
 /** Inserted directly after the `publishSources:` line, at its indentation. */
-const BLOCK = [
+const BLOCK: readonly string[] = [
     "signArtifacts: true",
     "mavenCentral:",
     "  enabled: true",
@@ -34,7 +34,8 @@ const BLOCK = [
 
 const ANCHOR = /^([ \t]*)publishSources:[ \t]*true[ \t]*$/m;
 
-export function enableCentral(root = ROOT) {
+/** @returns `true` if the block was inserted, `false` if the template already had it. */
+export function enableCentral(root: string = ROOT): boolean {
     const path = root + FILE;
     const before = readFileSync(path, "utf8");
 
@@ -48,13 +49,13 @@ export function enableCentral(root = ROOT) {
         );
     }
 
-    const after = before.replace(ANCHOR, (line, indent) =>
+    const after = before.replace(ANCHOR, (line: string, indent: string) =>
         [line, ...BLOCK.map((l) => indent + l)].join("\n"),
     );
     writeFileSync(path, after);
     return true;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main) {
     console.log(enableCentral() ? `enabled Maven Central in ${FILE}` : `${FILE} already has it`);
 }

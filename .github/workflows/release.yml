@@ -40,7 +40,7 @@ jobs:
           restore-keys: kotlin-${{ runner.os }}-
 
       # Opens or updates a "Version Packages" pull request against develop, carrying CHANGELOG.md,
-      # package.json, and the two lines scripts/sync-version.mjs propagates into the Kotlin build.
+      # package.json, and the two lines scripts/sync-version.ts propagates into the Kotlin build.
       # Merging that PR is the decision to release.
       #
       # Only `version:` is given. The publish is the step below, in this same job, because a tag
@@ -88,7 +88,7 @@ jobs:
           # Maven Central and signing are not committed enabled — signArtifacts breaks
           # `./kotlin publish mavenLocal` for anyone without a PGP key, and enabling Central with
           # signing off is refused at model load. docs/releasing.md has both measurements.
-          bun scripts/enable-central.mjs
+          bun scripts/enable-central.ts
 
           # The publish task caches, and its up-to-date check does not notice a module.yaml edit —
           # it reuses build/tasks/_<module>_prepareMavenPublishables/. This job has just rewritten

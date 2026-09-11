@@ -91,6 +91,17 @@ repository, an example is what found it.
 So a green `./kotlin build -m <example>` says nothing about your change unless the publish came
 first. Say which of the two you actually ran.
 
+**If you touched `scripts/`**, run both checks:
+
+```bash
+bun run typecheck     # tsc --noEmit; bun strips types, it never checks them
+bun test scripts/
+```
+
+Those two files decide what version 45 modules publish under and whether the release job signs its
+artifacts, in a job nobody is watching while it runs — which is why they are typed and pinned rather
+than left as the three-line scripts they look like.
+
 ## What reviewers will look for
 
 - **Documentation in the same change as the code.** Not collected at the end. AGENTS.md has a table

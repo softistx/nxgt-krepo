@@ -76,9 +76,12 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - New code goes under `com.softistx.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.
 - **A change under `libs/` carries a changeset**: `bun changeset`, and commit the `.changeset/*.md`
   it writes. CI fails a PR without one. Never edit `version:` in `publishing.module-template.yaml`
-  or `stx = "…"` in `libs.versions.toml` by hand — `scripts/sync-version.mjs` writes both from
+  or `stx = "…"` in `libs.versions.toml` by hand — `scripts/sync-version.ts` writes both from
   `package.json`, and moving one without the other leaves every example resolving a coordinate
   nobody published. `docs/releasing.md` owns the circuit.
 - The Maven group is `io.github.softistx`; the Kotlin package prefix is `com.softistx`. They are
   independent and both are correct — do not "fix" one to match the other.
+- **`scripts/` is TypeScript, run by bun.** No build step and no emitted JavaScript — but bun strips
+  types rather than checking them, so run `bun run typecheck` as well as `bun test scripts/` before
+  committing a change there. CI runs both.
 - Add dependencies by adding a catalog alias to `libs.versions.toml` and referencing `$libs.<alias>` from the module — never paste raw versioned coordinates into a `module.yaml`, and remember `$libs.bundles.*` does not work here.

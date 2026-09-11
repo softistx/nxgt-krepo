@@ -16,11 +16,27 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 
+/** One place a version literal lives, and how to rewrite it. */
+export interface Anchor {
+    /** Path relative to the repository root. */
+    readonly file: string;
+    /** Must match exactly once in `file`; the capture groups feed `replacement`. */
+    readonly pattern: RegExp;
+    /** A `String.replace` template, built for the version being written. */
+    readonly replacement: (version: string) => string;
+}
+
+/** What one anchor did. */
+export interface Written {
+    readonly file: string;
+    readonly changed: boolean;
+}
+
 /** The two anchors, each of which must match exactly once. */
-export const ANCHORS = [
+export const ANCHORS: readonly Anchor[] = [
     {
         file: "publishing.module-template.yaml",
-        // The only `version:` line in the file; it is what all 46 libraries publish under.
+        // The only `version:` line in the file; it is what all 45 libraries publish under.
         pattern: /^([ \t]*version:[ \t]*)\S+$/m,
         replacement: (version) => `$1${version}`,
     },
@@ -32,8 +48,8 @@ export const ANCHORS = [
     },
 ];
 
-export function syncVersion(version, root = ROOT) {
-    const written = [];
+export function syncVersion(version: string, root: string = ROOT): Written[] {
+    const written: Written[] = [];
     for (const { file, pattern, replacement } of ANCHORS) {
         const path = root + file;
         const before = readFileSync(path, "utf8");
@@ -51,8 +67,8 @@ export function syncVersion(version, root = ROOT) {
     return written;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-    const { version } = JSON.parse(readFileSync(ROOT + "package.json", "utf8"));
+if (import.meta.main) {
+    const { version } = JSON.parse(readFileSync(ROOT + "package.json", "utf8")) as { version: string };
     for (const { file, changed } of syncVersion(version)) {
         console.log(`${changed ? "updated" : "unchanged"}  ${file}  -> ${version}`);
     }

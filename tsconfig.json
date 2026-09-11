@@ -1,0 +1,26 @@
+{
+  // The repository is Kotlin. TypeScript is here only for `scripts/`, the release tooling that
+  // Changesets drives — so this config typechecks and emits nothing: bun runs the sources directly.
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext"],
+    "types": ["bun", "node"],
+
+    // bun strips types rather than checking them, so `tsc --noEmit` is the only thing that ever
+    // reads these settings. `bun run typecheck` is what CI calls, and what a contributor should.
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["scripts/**/*.ts"]
+}

@@ -27,7 +27,7 @@ instead — `stx-graphix: …` — the way the commit subjects already do.
 
 ## What happens next
 
-`changeset version` bumps `package.json`, writes `CHANGELOG.md`, and runs `scripts/sync-version.mjs`
+`changeset version` bumps `package.json`, writes `CHANGELOG.md`, and runs `scripts/sync-version.ts`
 to carry the new version into the two files the Kotlin build reads. CI opens that as a
 "Version Packages" pull request against `develop`. Merging it is the decision to release: the same
 workflow then tags `vX.Y.Z` and publishes the 46 artifacts to Maven Central.

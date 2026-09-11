@@ -11,7 +11,7 @@ settings:
   publishing:
     enabled: true
     group: io.github.softistx
-    # Written by `scripts/sync-version.mjs` from package.json. Do not edit it by hand: the same
+    # Written by `scripts/sync-version.ts` from package.json. Do not edit it by hand: the same
     # version lives in `libs.versions.toml` as `stx = "…"`, and the two must move together or every
     # example resolves a coordinate nobody published. `docs/releasing.md` has the circuit.
     version: 0.1.0
@@ -22,7 +22,7 @@ settings:
     # show why a function is shaped the way it is rather than a decompiled signature.
     publishSources: true
 
-    # Maven Central and artifact signing are NOT enabled here. `scripts/enable-central.mjs` adds
+    # Maven Central and artifact signing are NOT enabled here. `scripts/enable-central.ts` adds
     # them in the release job and the change is never committed, because the two settings are
     # coupled and every committed combination breaks someone — both measured:
     #
