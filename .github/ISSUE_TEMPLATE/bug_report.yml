@@ -1,0 +1,61 @@
+name: Bug report
+description: Something in a published library does not behave as documented.
+labels: [bug]
+body:
+  - type: dropdown
+    id: library
+    attributes:
+      label: Library
+      options:
+        - stx-amqp
+        - stx-common
+        - stx-graphix
+        - stx-i18n
+        - stx-jpa
+        - stx-kafka
+        - stx-ktor
+        - stx-material
+        - stx-migrations
+        - stx-mongo
+        - stx-openapi-generator
+        - stx-redis
+        - stx-spring-boot
+        - stx-storage
+        - stx-telemetry
+        - stx-testing
+        - stx-workflow
+        - the toolchain plugins (openapi, dgs-codegen, apollo)
+        - something else
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The version of io.github.softistx:stx-* you are on.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened
+      description: Quote the documentation you were following, if there is any.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce it
+      description: >
+        The smallest form that shows it. A failing kotest FeatureSpec is ideal — the specs here
+        resolve their backing service from an environment variable or a container, so one usually
+        runs anywhere.
+      render: kotlin
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: JDK, OS, and the framework you wire this into (Ktor, Spring Boot, neither).

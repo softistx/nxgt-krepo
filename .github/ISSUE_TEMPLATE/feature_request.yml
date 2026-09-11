@@ -1,0 +1,24 @@
+name: Feature request
+description: Something a library should be able to do and cannot.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you are trying to do
+      description: The problem, not the solution. What does your code look like today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like to write instead
+      render: kotlin
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried
+      description: >
+        Including the case where the answer is that it already exists — these libraries lean on
+        Material 3, Ktor, Hibernate and graphql-java rather than wrapping them, so the feature may
+        belong to one of those.

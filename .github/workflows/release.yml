@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+env:
+  KOTLIN_CLI_NO_WELCOME_BANNER: 1
+
+jobs:
+  release:
+    name: Version or publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Cache the toolchain and the dependency cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/JetBrains/Kotlin
+            ~/.m2/repository
+          key: kotlin-${{ runner.os }}-${{ hashFiles('kotlin', 'libs.versions.toml') }}
+          restore-keys: kotlin-${{ runner.os }}-
+
+      # Opens or updates a "Version Packages" pull request against develop, carrying CHANGELOG.md,
+      # package.json, and the two lines scripts/sync-version.mjs propagates into the Kotlin build.
+      # Merging that PR is the decision to release.
+      #
+      # Only `version:` is given. The publish is the step below, in this same job, because a tag
+      # pushed with GITHUB_TOKEN does not trigger another workflow — a separate `on: push: tags`
+      # workflow would simply never run, or would need a PAT to exist at all.
+      - name: Version Packages PR
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm run version
+          title: "chore(release): version packages"
+          commit: "chore(release): version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to GitHub Packages
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        env:
+          GPR_USER: ${{ github.actor }}
+          GPR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+
+          # Idempotent: re-running the workflow on an already released commit publishes nothing.
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "v$VERSION is already released."
+            exit 0
+          fi
+
+          # The GitHub Packages repository cannot be committed into the shared template: the
+          # toolchain resolves credentials.file when it reads the project model, so it would make a
+          # token mandatory for every command, for everyone. Append it here instead.
+          cat publishing-github.repository.yaml >> publishing.module-template.yaml
+          printf 'gpr.user=%s\ngpr.token=%s\n' "$GPR_USER" "$GPR_TOKEN" > creds.properties
+
+          # The publish task caches, and its up-to-date check does not notice a module.yaml edit —
+          # it reuses build/tasks/_<module>_prepareMavenPublishables/. This job has just rewritten
+          # `version:`, so without this line it republishes the previous version and reports success.
+          rm -rf build/incremental.state
+
+          # An explicit -m selection is required: a bare `kotlin publish <id>` walks every module in
+          # the project and stops at the first one without that repository — an example, not a
+          # library. Only libs/ publishes; the three jvm/amper-plugin modules cannot be published at
+          # all yet.
+          ./kotlin publish github $(grep -rl publishing.module-template.yaml libs \
+            --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+
+          git checkout publishing.module-template.yaml
+          rm -f creds.properties
+
+      - name: Tag and release
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "v$VERSION is already tagged."
+            exit 0
+          fi
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+
+          # The CHANGELOG section for this version is the release body.
+          awk -v v="## $VERSION" '
+            $0 == v { on = 1; next }
+            on && /^## / { exit }
+            on { print }
+          ' CHANGELOG.md > release-notes.md
+          gh release create "v$VERSION" --title "v$VERSION" --notes-file release-notes.md
+          rm -f release-notes.md

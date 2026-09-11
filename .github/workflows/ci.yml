@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, "integration/**"]
+  push:
+    branches: [develop, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The wrapper prints a welcome banner the first time it provisions a distribution.
+  KOTLIN_CLI_NO_WELCOME_BANNER: 1
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+
+      # The wrapper downloads the Kotlin CLI and a JRE on first use, then the compiler and every
+      # dependency. Without this the first step of every run is a multi-minute download.
+      - name: Cache the toolchain and the dependency cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/JetBrains/Kotlin
+            ~/.m2/repository
+          key: kotlin-${{ runner.os }}-${{ hashFiles('kotlin', 'libs.versions.toml') }}
+          restore-keys: kotlin-${{ runner.os }}-
+
+      # Never pipe ./kotlin into tail or grep: the pipeline reports the filter's exit code, so a
+      # failed build reads as success. These run bare.
+      - run: ./kotlin build
+
+      # The integration specs resolve each backing service in one order: an environment variable if
+      # it names a server, otherwise a container started once for the run, otherwise the spec skips.
+      # Nothing is exported here, so everything runs against Testcontainers. If this runs out of
+      # memory on a standard runner, the fix is to provision the services as `services:` and export
+      # POSTGRES_TEST_URI and friends — that seam is what libs/stx-testing was built around.
+      - run: ./kotlin test
+
+  lint:
+    name: ktlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      # Pinned, and the pin must match what CONTRIBUTING.md tells a contributor to install: two
+      # ktlint versions disagree about formatting, and the disagreement surfaces as a CI failure
+      # nobody can reproduce locally.
+      - name: Install ktlint 1.8.0
+        run: |
+          curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.8.0/ktlint
+          chmod +x ktlint
+      # `!build/**` is not optional: without it ktlint lints KSP and plugin output and reports
+      # thousands of violations in files nobody edits.
+      - run: ./ktlint --relative "**/*.kt" "!build/**"
+
+  changeset:
+    name: Changeset declared
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: A PR that touches libs/ must declare what it does to the published artifacts
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          changed=$(git diff --name-only "origin/$BASE...HEAD")
+          if ! echo "$changed" | grep -q '^libs/'; then
+            echo "No change under libs/ — no changeset needed."
+            exit 0
+          fi
+          if echo "$changed" | grep -qE '^\.changeset/[^/]+\.md$'; then
+            echo "Changeset found."
+            exit 0
+          fi
+          echo "::error::This PR changes libs/ but adds no changeset."
+          echo "Run 'pnpm changeset', pick patch/minor/major, and commit the file it writes."
+          echo "See .changeset/README.md for why the package is the repository itself."
+          exit 1
+
+  scripts:
+    name: Release scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # scripts/sync-version.mjs decides what version 46 artifacts publish under. It gets a test.
+      - run: pnpm test
