@@ -48,7 +48,7 @@ jobs:
       # workflow would simply never run, or would need a PAT to exist at all.
       - name: Version Packages PR
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
           version: bun run version
           title: "chore(release): version packages"
