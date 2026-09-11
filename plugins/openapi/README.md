@@ -282,3 +282,7 @@ Redirect to a file and check `$?`.
 
 See [the generator README](../../libs/stx-openapi-generator/README.md#adding-a-client-style). On this
 side it is one value in `ClientKind` and one branch in `ClientKind.emitter()`, both in `src/`.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

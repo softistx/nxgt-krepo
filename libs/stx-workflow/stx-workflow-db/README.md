@@ -3,6 +3,8 @@
 Where [`stx-workflow`](../stx-workflow/README.md) instances live. One package per backing store,
 one module for all of them.
 
+**`io.github.softistx:stx-workflow-db`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 val engine = WorkflowEngine(RedisWorkflowStore(redis)) { register(checkout) }
 ```
@@ -234,3 +236,7 @@ did, and it was already gone.
 What *is* here is the half that makes it work, once per store: an index that answers "what is due"
 in one round trip, and a lease that lets several workers pull the same id without a claim protocol
 between them.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

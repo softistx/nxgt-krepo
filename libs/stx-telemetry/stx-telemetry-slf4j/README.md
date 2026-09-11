@@ -2,6 +2,8 @@
 
 The bridge between `stx-telemetry` and SLF4J, in both directions. Pick one.
 
+**`io.github.softistx:stx-telemetry-slf4j`** — [how to depend on it](../../../docs/consuming.md).
+
 | Direction | What it is for |
 | --- | --- |
 | **Inbound** — `TelemetryServiceProvider` | Third-party libraries' logs enter this pipeline, carrying the current span |
@@ -74,3 +76,7 @@ message says how to choose a direction.
 That guard is tested against the real configuration rather than a contrived one: in this module's own
 test runtime the bound provider *is* `TelemetryServiceProvider`, which is also what proves the SPI
 resource survives packaging.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

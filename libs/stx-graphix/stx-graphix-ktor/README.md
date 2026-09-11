@@ -2,6 +2,8 @@
 
 The Ktor plugin for `stx-graphix`. One engine per application, `POST` and `GET` at `/graphql`.
 
+**`io.github.softistx:stx-graphix-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(GraphQL) {
     schema {
@@ -93,3 +95,7 @@ default to `text/event-stream` on the same path. Set `subscriptions = GraphqlWs`
 also means the sandbox cannot run a subscription under that protocol, since the page is only ever
 given an endpoint and never told to open a socket.
 The vocabulary is in [`docs/graphix.md`](../../../docs/graphix.md).
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

@@ -76,3 +76,7 @@ assume.
 The library's behaviour is covered where it lives — `libs/stx-jpa` has integration specs against a
 real Postgres, each in a schema of its own. Repeating that here would mean a second container or
 writing into the workspace server, and neither belongs in an example.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

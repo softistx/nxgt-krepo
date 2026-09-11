@@ -1,5 +1,36 @@
-.idea
-.jbeval
+# Build output
 build
 __pycache__
+node_modules
+
+# IDE and agent-local state
+.idea
+*.iml
+.vscode
+.jbeval
 .grok/config.toml
+.claude/settings.local.json
+
+# Credentials. Maven Central takes its own from the environment, so nothing here needs
+# a credentials file today — these patterns are the guard for the day a custom Maven
+# repository is added, where the toolchain reads a .properties file and nothing else
+# (no env-var form, and it does not read ~/.m2/settings.xml).
+# `assets` held Font Awesome Pro icons that may not be redistributed; see NOTICE.
+creds.properties
+*.creds.properties
+creds*.properties
+secrets.properties
+local.properties
+settings.xml
+*.settings.xml
+.env
+.env.*
+*.jks
+*.p12
+*.keystore
+*.pem
+*.key
+assets
+
+# OS
+.DS_Store

@@ -303,13 +303,29 @@ The toolchain finds the project by walking up from the working directory, so the
 
 ## Publishing
 
-The `libs/*` modules publish as `com.softistx:<module-name>:<version>` — `com.softistx:stx-mongo:0.1.0`
+The `libs/*` modules publish as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:0.1.0`
 today. The configuration lives once in `publishing.module-template.yaml` at the repo root, which each
 library pulls in with `apply: [ //publishing.module-template.yaml ]`; nothing about publishing is
 written per module. `artifactId` is deliberately not set, because it defaults to the module's name —
 so the directory name *is* the artifact name and there is no second place to keep in sync. The
 module's `description:` becomes the POM `<description>`, which is the other reason every library has
-one.
+one. The POM also carries the project URL, the SCM, Apache-2.0 and a developer — everything Maven
+Central will require — and `publishSources: true` ships a sources jar beside each artifact.
+
+**The version in that template is written by a script, not by hand.** `scripts/sync-version.ts`
+takes it from `package.json` and propagates it there *and* to `stx = "…"` in `libs.versions.toml`,
+because the examples resolve published coordinates rather than module paths and the two must move
+together. Changesets drives it: a changeset per pull request that touches `libs/`, a
+"Version Packages" PR, then one workflow that publishes, tags and releases.
+`docs/releasing.md` owns the circuit and the five things about it that are not guessable.
+
+**Everything under `scripts/` is TypeScript, run by bun and checked by `tsc`.** Bun executes `.ts`
+directly — no build step, no emitted JavaScript — but it *strips* types rather than checking them,
+so `bun run typecheck` (`tsc --noEmit`, `strict`) is what makes the annotations mean anything, and
+CI runs it before the tests. The specs are `bun:test` rather than kotest for the obvious reason:
+the kotest convention in this repo is about Kotlin. Both scripts edit files that decide how 45
+modules publish, in a job nobody watches, so each one asserts its anchor matches **exactly once**
+and throws otherwise — `scripts/*.test.ts` pins that, including the failure modes.
 
 **`stx-spring-boot` is the one library not named `stx-<technology>`, and the suffix is deliberate.**
 Spring reserves the `spring-boot*` prefix for itself and asks a third party for its own namespace,
@@ -360,7 +376,7 @@ Five things about it that are not guessable:
 
   ```bash
   python3 -c 'import json,glob,os
-  for p in glob.glob(os.path.expanduser("~/.m2/repository/com/softistx/*/*/*.module")):
+  for p in glob.glob(os.path.expanduser("~/.m2/repository/io/github/softistx/*/*/*.module")):
       d = json.load(open(p))
       for v in d.get("variants", []):
           for x in v.get("dependencies", []):
@@ -368,15 +384,29 @@ Five things about it that are not guessable:
                   print("NO VERSION:", os.path.basename(p), v["name"], x["module"])'
   ```
 
-`mavenLocal` needs no credentials, no PGP key and no POM metadata. A real repository is one more
-block in the same template, changing nothing in any module. The feature is a preview in the
-toolchain and its docs say it is likely to change.
+**Maven Central is where these go, and it is not enabled in the template** — that is the sixth
+non-guessable thing, and there is no third option. Measured:
+
+| committed | `build` / `test` | `publish mavenLocal`, no PGP key |
+| --- | --- | --- |
+| `mavenCentral` + `signArtifacts: true` | fine | **fails**, wants `KOTLIN_TOOLCHAIN_SIGNING_KEY` |
+| `mavenCentral` + `signArtifacts: false` | **fails at model load** | fails |
+| neither | fine | fine |
+
+The middle row breaks everyone; the top row breaks the mavenLocal publish every contributor makes on
+every change under `libs/`. So the template ships with neither, and `scripts/enable-central.ts`
+adds both in the release job — tested, and refusing to guess if the template is reshaped. Credentials
+for Central come from the environment; a *custom* repository would instead need a `.properties` file,
+resolved relative to the file that declares it and read when the project model loads, not when it
+publishes.
+
+The feature is a preview in the toolchain and its docs say it is likely to change.
 
 ### The examples and the servers consume published artifacts, not modules
 
 **No module under `examples/` or `server/` may name a `//libs/...` dependency.** Each applies
 `//stx-artifacts.module-template.yaml`, which adds `mavenLocal` on top of the default repositories,
-and names each library through a `$libs.stx.*` catalog alias — `com.softistx:stx-jpa:0.1.0` and not
+and names each library through a `$libs.stx.*` catalog alias — `io.github.softistx:stx-jpa:0.1.0` and not
 `//libs/stx-jpa/stx-jpa`.
 
 That is the whole point of having examples. A module reference proves the sources compile together,
@@ -386,7 +416,7 @@ times a published artifact was wrong in this repo, an example is what found it �
 `kotlinx-coroutines-reactor` had to become `exported` because `spring-orders` could not compile an
 inline function without it, and the split of the two hubs into per-library integration modules left
 `stx-spring-boot` exporting `Messages` the *type* while the auto-configuration that builds one had
-moved to `com.softistx:stx-i18n-spring`, so `spring-orders` started failing its context refresh with
+moved to `io.github.softistx:stx-i18n-spring`, so `spring-orders` started failing its context refresh with
 *"required a bean of type 'com.softistx.i18n.Messages' that could not be found"*. On module
 references that defect is invisible, because a module reference carries the whole `libs/` graph.
 
@@ -400,7 +430,7 @@ as soon as its own specs are green.
 ```
 
 Do it even when no consumer is being built in this session. `~/.m2` is what the IDE resolves, what
-the user's next `./kotlin run -m oauth` reads, and what any other checkout on this machine sees — so
+the next `./kotlin run -m oauth` reads, and what every other checkout on the same machine sees — so
 skipping the publish leaves everyone but this session looking at the previous version of a library
 that has already been merged. That gap is silent: the build stays green against the stale jar and
 reports a signature nobody has written for hours.
@@ -615,13 +645,27 @@ weakening the condition.
 
 ### Local services
 
-The databases this workspace runs against are **already containerised and usually already up** —
-`~/workspace/docker/apps/` holds one compose file per service: `database/mongo` is an `rs0` replica
-set on `localhost:27017`, transactions included, `database/redis` is Redis Stack on
-`localhost:6379`, `minio` is an S3-compatible store on `localhost:9000`, `kafka` is a three-broker
-KRaft cluster, and `rabbitmq` is on `localhost:5672` with its management UI on `15672`. Check `docker ps` before pulling an image or starting a Testcontainers container:
-the pull costs a gigabyte and the second container either clashes on the port or silently tests a
-different server than the one everything else uses.
+**Nothing here needs a service to be running, and nothing here finds one by guessing.** The
+resolution order is in the next paragraph; its consequence is that a fresh clone with Docker starts
+its own containers, a machine that exports the variables reuses long-running servers, and a machine
+with neither skips those specs while everything else still runs.
+
+A server you already have is therefore used only if you say so — a `mongod` on the default port is
+invisible to a spec until `MONGO_TEST_URI` names it. The variable per backend is in `Backends.kt`
+(`MONGO_TEST_URI`, `REDIS_TEST_URI`, `AMQP_TEST_URI`, …) and exporting one points every spec in the
+repo at that server. Mongo is the one worth exporting on a development machine: it has to be an
+`rs0` replica set, because `startTransaction` fails outright against a standalone `mongod`, and
+initiating one per run is the slowest container start here.
+
+**CI is the second case, and it has to be.** `ci.yml` starts one of each server, exports the
+variables, and then runs the tests **one module at a time** — the CLI has no parallelism setting, so
+`-m` in a loop is the only way to stop several module JVMs competing for four vCPUs. Each of those
+invocations is a fresh JVM that shares nothing with the last, so without the exports every one of
+the fifty-seven would start its own Postgres and its own Mongo. The two halves only work together.
+
+**Check `docker ps` before pulling an image or starting a container.** The pull costs a gigabyte,
+and a second container either clashes on the port or silently tests a different server than the one
+everything else is pointed at.
 
 **A spec must not depend on the host having the right daemon up.** `libs/stx-testing` declares
 each backing service and resolves it in one order: the environment variable if it names a server,
@@ -668,8 +712,8 @@ collections, and a run leaves it as it found it.
 
 **The credentials rule is unchanged; what it costs is not.** `AMQP_TEST_URI` and the MinIO key pair
 still have no defaults and must never gain any — a credential with a default is a credential in
-source control, and they live in `~/workspace/docker/apps/*/.env`, exported for a run and never
-committed. But their absence is no longer a reason to skip: a container hands out credentials of its
+source control. They are exported for a run, from wherever the server being reused keeps its own,
+and never committed. But their absence is no longer a reason to skip: a container hands out credentials of its
 own, so the 78 specs in those two libraries now run on a machine where nobody exported anything.
 They used to report skipped there and prove nothing.
 
@@ -681,24 +725,24 @@ authentication in a way that reads like a network problem.
 **Each `stx-jpa` spec gets a schema of its own**, created before it and dropped `cascade` after
 it — the per-spec Mongo database and Redis namespace, in the shape Postgres has for it. It earns its
 keep against a real server: a spec creating its tables in `public` would be working among whatever
-else lives there, and Hibernate's `create-drop` would take that with it on the way out. The workspace
-runs `postgis/postgis:latest` on 5432, which is exactly such a server.
+else lives there, and Hibernate's `create-drop` would take that with it on the way out. Any Postgres
+a developer already runs is exactly such a server.
 
 The reuse path is still the fast local loop, and still the seam CI uses to point at a service it
 provisioned. A reused server is shared, so everything below about leaving it as you found it applies
 to it exactly as before.
 
-**Kafka's container is one broker, and that costs something worth knowing.** The workspace cluster
-is three brokers with `min.insync.replicas = 2`, so a topic there has three replicas and
+**Kafka's container is one broker, and that costs something worth knowing.** A production-shaped
+cluster is three brokers with `min.insync.replicas = 2`, so a topic there has three replicas and
 `acks = all` really waits for a quorum; a container gives one replica, so it waits for one broker.
 The ack path is exercised either way, the quorum only on the real cluster. Nothing asks for a hard
 three any more — `KafkaTestCluster.replicationFactor` asks the cluster what it has, capped at three,
 because a topic asking for more replicas than there are brokers is not a weaker test but a refused
 `createTopics`.
 
-To exercise the quorum, point at the workspace cluster. Its brokers advertise container hostnames
-and publish no host ports, so the names have to resolve first — an address the host can reach is not
-enough on its own:
+To exercise the quorum, point at a real cluster. Brokers in a compose network typically advertise
+container hostnames and publish no host ports, so the names have to resolve first — an address the
+host can reach is not enough on its own:
 
 ```
 # /etc/hosts
@@ -715,14 +759,12 @@ KAFKA_TEST_BOOTSTRAP="kafka1:9092,kafka2:9094,kafka3:9096" ./kotlin test -m stx-
 getting a container instead would be worse than skipping: the run would look green and would have
 tested something else. This holds for all five backends.
 
-To take the override and run against the workspace's own broker or object store:
+To take the override and run against a broker or object store that is already up:
 
 ```bash
-set -a; . ~/workspace/docker/apps/rabbitmq/.env; set +a
-AMQP_TEST_URI="amqp://$RABBITMQ_DEFAULT_USER:$RABBITMQ_DEFAULT_PASS@localhost:5672/%2F" ./kotlin test -m stx-amqp
+AMQP_TEST_URI="amqp://user:password@localhost:5672/%2F" ./kotlin test -m stx-amqp
 
-set -a; . ~/workspace/docker/apps/minio/.env; set +a
-MINIO_TEST_ACCESS_KEY=$MINIO_ROOT_USER MINIO_TEST_SECRET_KEY=$MINIO_ROOT_PASSWORD ./kotlin test -m stx-storage
+MINIO_TEST_ACCESS_KEY=… MINIO_TEST_SECRET_KEY=… ./kotlin test -m stx-storage
 ```
 
 The `%2F` there is the default virtual host and not decoration — a plain trailing `/` is the *empty*
@@ -782,7 +824,7 @@ own; the library itself is `libs/<name>/<name>/`, and each framework integration
 it — `libs/stx-jpa/stx-jpa`, `libs/stx-jpa/stx-jpa-ktor`, `libs/stx-jpa/stx-jpa-spring`. That is what
 lets an integration be published, versioned and depended on without the hub it used to live in.
 A module's name is still its own directory name, so the leaf keeps the artifact: `libs/stx-jpa/stx-jpa`
-publishes as `com.softistx:stx-jpa`, exactly as `libs/stx-jpa` did. Nesting a library one level down
+publishes as `io.github.softistx:stx-jpa`, exactly as `libs/stx-jpa` did. Nesting a library one level down
 changes no coordinate.
 
 Rules that are easy to get wrong:
@@ -909,10 +951,11 @@ the same each time, and the mistakes are the same each time too.
   `MockConsumer`/`MockProducer` and run in about two seconds. A real server is for behaviour that
   *is* the server's: an acknowledgement removing a message, a TTL expiring one. Those specs skip
   when the server is unreachable, so a machine without it reports skipped rather than red.
-- **Watch what the machine is carrying.** The workspace's containers do not all fit at once: the
-  three-broker Kafka cluster is around 1.9 GiB, and starting it alongside everything else once drove
-  this machine into the OOM killer, which chose the running IDE. Check `docker ps` first, stop what
-  you started, and prefer the specs that need nothing running.
+- **Watch what the machine is carrying.** These containers do not all fit at once on a 16 GiB
+  laptop: the three-broker Kafka cluster alone is around 1.9 GiB, and starting it alongside
+  everything else once drove one into the OOM killer, which chose the running IDE rather than
+  anything of ours. Check `docker ps` first, stop what you started, and prefer the specs that need
+  nothing running.
 
 ## Conventions
 
@@ -938,6 +981,9 @@ the same each time, and the mistakes are the same each time too.
   | File | Answers |
   | --- | --- |
   | `README.md` | What is this repo, and where do I read next? Stays short. |
+  | `CONTRIBUTING.md` | How does someone who is not a maintainer set up, open a pull request, and pass review? The short form of this file. |
+  | `docs/consuming.md` | How do I depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain? **This is where a new repository, credential mechanism or packaging caveat is documented.** |
+  | `docs/releasing.md` | How is a version cut and published? The changeset circuit, and the publishing behaviours that are not guessable. |
   | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
   | `libs/stx-openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
@@ -1058,6 +1104,12 @@ the same each time, and the mistakes are the same each time too.
   classes it expects to find, which is why those fixtures sit in `test/entity/scan/` instead of
   beside the rest.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.
+- **A pull request that touches `libs/` carries a changeset.** `bun changeset`, pick
+  patch/minor/major, write one sentence a *reader* of the release notes will see — not a restatement
+  of the commit subject — and commit the `.changeset/*.md`. CI fails the PR without one, because it
+  is the only step of the release circuit nobody can automate. There is one package and it is the
+  repository, so a `minor` is a minor for all 45 modules; name the library in the prose instead.
+  `.changeset/README.md` has why the line versions in lockstep.
 - **`develop` is where work lands and every PR targets it.** Branch off `develop`, open the
   pull request against `develop`, and merge it there. Nothing is merged directly into `main`, however
   small and however green — a PR opened against `main` has the wrong base and wants recreating, not

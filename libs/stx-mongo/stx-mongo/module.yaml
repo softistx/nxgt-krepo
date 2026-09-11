@@ -15,7 +15,7 @@ dependencies:
   # metadata as an ordinary `requires` — not as a platform, and with no `dependencyConstraints`. The
   # result is a published module whose dependencies carry no version and no constraint, which no
   # consumer can resolve. `examples/spring-orders` is what found that, on the day it started
-  # depending on `com.softistx:stx-mongo:0.1.0` rather than on this module's sources.
+  # depending on `io.github.softistx:stx-mongo:0.1.0` rather than on this module's sources.
   #
   # One version number still, because `version.ref = "mongodb"` in the catalog is what they all
   # point at — the BOM was never the only thing keeping them aligned.

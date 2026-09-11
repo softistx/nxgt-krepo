@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # The Kotlin dependencies live in libs.versions.toml, which Dependabot cannot read: this is not a
+  # Gradle project. `./kotlin show dependencies -m <module>` shows the upgrade arrows instead.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "build(ci)"
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "build"

@@ -1,0 +1,41 @@
+nxgt-krepo
+Copyright 2026 Steve Tsala
+
+This product includes software developed at nxgt-krepo
+(https://github.com/SteveGT96/nxgt-krepo), licensed under the Apache License 2.0.
+
+--------------------------------------------------------------------------------
+Third-party documentation vendored under .agents/skills/*/references/
+--------------------------------------------------------------------------------
+
+The Agent Skills in this repository cache the documentation they are built over,
+so that they work offline and from a fresh clone. Those cached pages are verbatim
+copies of third-party documentation and remain the property of their authors. Each
+page carries a generated header naming the URL it came from.
+
+  .agents/skills/kotlin-toolchain/references/
+  .agents/skills/compose-multiplatform/references/
+      Kotlin Toolchain and Kotlin Multiplatform documentation
+      Copyright 2000-2026 JetBrains s.r.o. and contributors
+      Licensed under the Apache License, Version 2.0
+      https://kotlin-toolchain.org/ and https://kotlinlang.org/
+
+  .agents/skills/adaptive/references/android/
+  .agents/skills/styles/references/android/
+      Android developer documentation
+      Copyright Google LLC
+      Licensed under the Creative Commons Attribution 2.5 license
+      https://developer.android.com/
+
+  .agents/skills/ktorfit/references/
+      Ktorfit documentation
+      Copyright Jens Klingenberg
+      Licensed under the Apache License, Version 2.0
+      https://foso.github.io/Ktorfit/
+
+  .agents/skills/material3-compose/references/
+      Generated from the resolved Compose Material 3 artifact rather than fetched.
+      Describes APIs copyright The Android Open Source Project, Apache License 2.0.
+
+These pages are regenerated, not edited: each skill carries a docs-source.json and
+.agents/skills/skill-from-docs/scripts/fetch_docs.py refetches them.

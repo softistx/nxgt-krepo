@@ -17,9 +17,9 @@ import com.mongodb.reactivestreams.client.MongoClient as ReactiveMongoClient
  * `MONGO_TEST_URI` names one that is already up.
  *
  * A replica set is not a preference here — `startTransaction` fails outright against a standalone
- * `mongod`, so anything touching [withTransaction] needs one. `MongoDBContainer` initiates one; so
- * does `~/workspace/docker/apps/database/mongo`, which is what the override points at on a machine
- * where it is already running.
+ * `mongod`, so anything touching [withTransaction] needs one. `MongoDBContainer` initiates one, and
+ * so must whatever `MONGO_TEST_URI` points at — a standalone reports itself to the driver as not
+ * supporting retryable writes, which is how that mistake usually surfaces.
  *
  * The default is the container, and that is the change worth naming: a suite that only passes on a
  * machine with the right daemons already up passes for the wrong reason, and says nothing to anyone

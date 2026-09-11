@@ -2,6 +2,8 @@
 
 One `stx-telemetry` root for the application, and a server span per request.
 
+**`io.github.softistx:stx-telemetry-spring`** — [how to depend on it](../../../docs/consuming.md).
+
 ```yaml
 spring:
   application: { name: checkout }
@@ -69,3 +71,7 @@ status code at all; the failure on the span says what happened. Both halves are 
 - **The metadata is hand-written**, because `spring-boot-configuration-processor` is a Java
   annotation processor and this toolchain has no kapt. `ConfigurationMetadataTest` keeps it honest
   against the code and `ConfigurationDocsTest` keeps the reference page honest against it.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

@@ -335,3 +335,7 @@ No `stx-mongo`, `stx-jpa`, `stx-redis`, `stx-kafka`, `stx-amqp` or `stx-storage`
 `integration/` package — one auto-configuration each, opt-in the same way — and each needs its own
 server to demonstrate. `libs/stx-spring-boot/README.md` has the list and
 `docs/spring-configuration.md` every key.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

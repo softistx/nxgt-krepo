@@ -225,7 +225,7 @@ kotlinx-rpc-krpc-ktor-server = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krp
 # same number. They must: a `bom:` entry reaches the published POM as an ordinary dependency and the
 # Gradle metadata as an ordinary `requires`, not as a platform — so a versionless alias publishes a
 # dependency with no version and no constraint, which no consumer can resolve. `examples/spring-orders`
-# is what found that, on the day it started depending on `com.softistx:stx-mongo:0.1.0` instead of on
+# is what found that, on the day it started depending on `io.github.softistx:stx-mongo:0.1.0` instead of on
 # `//libs/stx-mongo/stx-mongo`. The BOM entry stays: it still aligns any other org.mongodb artifact
 # that arrives transitively.
 mongodb-driver-bom = { module = "org.mongodb:mongodb-driver-bom", version.ref = "mongodb" }
@@ -300,25 +300,25 @@ icu4j = { module = "com.ibm.icu:icu4j", version = "78.3" }
 # ---- This repository's own artifacts -------------------------------------------------------------
 # The examples depend on these as *published* coordinates rather than as `//libs/...` modules, so
 # that what they exercise is the POM a consumer actually gets. See `stx-artifacts.module-template.yaml`.
-stx-graphix = { module = "com.softistx:stx-graphix", version.ref = "stx" }
-stx-graphix-ktor = { module = "com.softistx:stx-graphix-ktor", version.ref = "stx" }
-stx-graphix-koin = { module = "com.softistx:stx-graphix-koin", version.ref = "stx" }
-stx-jpa = { module = "com.softistx:stx-jpa", version.ref = "stx" }
-stx-jpa-ktor = { module = "com.softistx:stx-jpa-ktor", version.ref = "stx" }
-stx-jpa-spring = { module = "com.softistx:stx-jpa-spring", version.ref = "stx" }
-stx-i18n-spring = { module = "com.softistx:stx-i18n-spring", version.ref = "stx" }
-stx-material = { module = "com.softistx:stx-material", version.ref = "stx" }
-stx-migrations-db = { module = "com.softistx:stx-migrations-db", version.ref = "stx" }
-stx-migrations-spring = { module = "com.softistx:stx-migrations-spring", version.ref = "stx" }
-stx-mongo = { module = "com.softistx:stx-mongo", version.ref = "stx" }
-stx-mongo-ktor = { module = "com.softistx:stx-mongo-ktor", version.ref = "stx" }
-stx-redis = { module = "com.softistx:stx-redis", version.ref = "stx" }
-stx-spring-boot = { module = "com.softistx:stx-spring-boot", version.ref = "stx" }
-stx-telemetry-mongo = { module = "com.softistx:stx-telemetry-mongo", version.ref = "stx" }
-stx-telemetry-spring = { module = "com.softistx:stx-telemetry-spring", version.ref = "stx" }
-stx-testing = { module = "com.softistx:stx-testing", version.ref = "stx" }
-stx-workflow = { module = "com.softistx:stx-workflow", version.ref = "stx" }
-stx-workflow-db = { module = "com.softistx:stx-workflow-db", version.ref = "stx" }
+stx-graphix = { module = "io.github.softistx:stx-graphix", version.ref = "stx" }
+stx-graphix-ktor = { module = "io.github.softistx:stx-graphix-ktor", version.ref = "stx" }
+stx-graphix-koin = { module = "io.github.softistx:stx-graphix-koin", version.ref = "stx" }
+stx-jpa = { module = "io.github.softistx:stx-jpa", version.ref = "stx" }
+stx-jpa-ktor = { module = "io.github.softistx:stx-jpa-ktor", version.ref = "stx" }
+stx-jpa-spring = { module = "io.github.softistx:stx-jpa-spring", version.ref = "stx" }
+stx-i18n-spring = { module = "io.github.softistx:stx-i18n-spring", version.ref = "stx" }
+stx-material = { module = "io.github.softistx:stx-material", version.ref = "stx" }
+stx-migrations-db = { module = "io.github.softistx:stx-migrations-db", version.ref = "stx" }
+stx-migrations-spring = { module = "io.github.softistx:stx-migrations-spring", version.ref = "stx" }
+stx-mongo = { module = "io.github.softistx:stx-mongo", version.ref = "stx" }
+stx-mongo-ktor = { module = "io.github.softistx:stx-mongo-ktor", version.ref = "stx" }
+stx-redis = { module = "io.github.softistx:stx-redis", version.ref = "stx" }
+stx-spring-boot = { module = "io.github.softistx:stx-spring-boot", version.ref = "stx" }
+stx-telemetry-mongo = { module = "io.github.softistx:stx-telemetry-mongo", version.ref = "stx" }
+stx-telemetry-spring = { module = "io.github.softistx:stx-telemetry-spring", version.ref = "stx" }
+stx-testing = { module = "io.github.softistx:stx-testing", version.ref = "stx" }
+stx-workflow = { module = "io.github.softistx:stx-workflow", version.ref = "stx" }
+stx-workflow-db = { module = "io.github.softistx:stx-workflow-db", version.ref = "stx" }
 
 [bundles]
 compose = [

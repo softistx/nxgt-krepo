@@ -2,6 +2,8 @@
 
 `install(I18n)` — the locale for each request, negotiated once and handed to the route.
 
+**`io.github.softistx:stx-i18n-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(I18n) { messages = Messages.load(locales = listOf(Locale.ENGLISH, Locale.FRENCH)) }
 
@@ -50,3 +52,7 @@ neither has to know both.
 It used to live in `stx-ktor` as `com.softistx.ktor.i18n`, alongside six other integrations.
 Publishing it beside its own library is what the other families here already do, and it lets the
 `stx-i18n` dependency be `exported` instead of `compile-only`.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

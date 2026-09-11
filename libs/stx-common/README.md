@@ -2,6 +2,8 @@
 
 What more than one module here needs, and nothing else.
 
+**`io.github.softistx:stx-common`** — [how to depend on it](../../docs/consuming.md).
+
 It is a plain `jvm/lib` depending on kotlinx-coroutines and kotlinx-serialization and on nothing
 else — no broker, no database, no wire format. That constraint is the module's whole design: the
 moment something in here knows what a topic or a collection is, every library that depends on it
@@ -267,3 +269,7 @@ written out three times before it was written down once.
 
 Nothing that names a broker, a database, a wire format or a framework. If a type here would need
 `import org.apache.kafka`, it belongs in `stx-kafka`.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

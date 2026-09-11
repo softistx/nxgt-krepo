@@ -2,6 +2,8 @@
 
 Message catalogs, loaded once at startup and immutable afterwards.
 
+**`io.github.softistx:stx-i18n`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 val messages = Messages.load(locales = listOf(Locale.ENGLISH, Locale.FRENCH))
 
@@ -102,3 +104,7 @@ default locale** when the requested bundle is absent. Asking for `es` on a machi
 
 ICU4J is a 15 MB jar. `stx-common`'s rule is kotlinx-and-nothing-else, and putting message
 formatting in it would make `stx-kafka` carry a formatting library it will never call.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

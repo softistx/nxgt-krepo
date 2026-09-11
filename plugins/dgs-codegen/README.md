@@ -59,3 +59,7 @@ build/tasks/_<module>_generate@dgs-codegen/
 
 The task deletes that directory before writing, so a renamed type does not leave a stale file
 behind. Failures name the reason and fail the build rather than emitting a partial result.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

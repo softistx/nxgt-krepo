@@ -3,6 +3,8 @@
 The Spring Boot seam — the same job `stx-ktor` does for Ktor, and the same shape: what belongs to
 the framework rather than to any one library, one package per concern.
 
+**`io.github.softistx:stx-spring-boot`** — [how to depend on it](../../docs/consuming.md).
+
 ```
 com.softistx.spring.error    ApiException, ErrorResponse, the advices that connect them
 com.softistx.spring.i18n     the request's locale, and the catalogs bound to it
@@ -652,3 +654,7 @@ COMPILE scope and absent from RUNTIME.
 | [`../stx-ktor/README.md`](../stx-ktor/README.md) | The Ktor seam — the same split, drawn the same way, and the resource idiom its plugins are built on |
 | [`../stx-i18n/stx-i18n/README.md`](../stx-i18n/stx-i18n/README.md) | What `Messages` loads, how a key falls back, and what `Accept-Language` negotiation matches |
 | [`../../AGENTS.md`](../../AGENTS.md) | The repo's conventions, including publishing and the catalog |
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

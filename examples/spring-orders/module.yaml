@@ -5,7 +5,7 @@ apply:
   - //stx-artifacts.module-template.yaml
 
 dependencies:
-  # Every `com.softistx` line below is a **published artifact**, resolved from mavenLocal rather
+  # Every `io.github.softistx` line below is a **published artifact**, resolved from mavenLocal rather
   # than from this project's own sources — which is what makes this example the check on the POMs.
   # See the template above.
   #

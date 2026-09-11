@@ -3,6 +3,8 @@
 Hibernate Reactive for a Kotlin coroutine service — JPA mapping over the Vert.x Postgres client,
 with no thread parked on a query.
 
+**`io.github.softistx:stx-jpa`** — [how to depend on it](../../../docs/consuming.md).
+
 ```
 com.softistx.jpa            Jpa, JpaConfig, JpaException — connect, close, and what this module throws
 com.softistx.jpa.session    session / transaction / stateless, and the confinement bridge underneath
@@ -601,3 +603,7 @@ There is no query builder of this module's own at all. What a query may say is w
 HQL say — subqueries, set operations, window functions, `insert … select` included — and this module
 contributes the names, the terminals, the exceptions, and the handful of criteria every entity would
 otherwise repeat.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

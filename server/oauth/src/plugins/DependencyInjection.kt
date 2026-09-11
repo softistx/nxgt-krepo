@@ -1,7 +1,7 @@
 package com.softistx.oauth.plugins
 
 import com.softistx.oauth.di.KtorApplication
-import com.strange.api.di.Properties
+import com.softistx.oauth.di.Properties
 import io.ktor.server.application.*
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.core.logger.Level

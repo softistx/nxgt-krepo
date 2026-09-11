@@ -1,4 +1,4 @@
-package com.strange.api.di
+package com.softistx.oauth.di
 
 object Properties {
     const val APPLICATION = "application"

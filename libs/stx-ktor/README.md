@@ -3,6 +3,8 @@
 The Ktor foundation the plugins in this repo are built on. Two things live here, and both are here
 because they belong to **no** integration:
 
+**`io.github.softistx:stx-ktor`** — [how to depend on it](../../docs/consuming.md).
+
 ```
 com.softistx.ktor         own / publish / resource / required   the resource-lifecycle idiom
 com.softistx.ktor.cors    cors(policy)                          one CORS policy, shared with Spring
@@ -91,3 +93,7 @@ is not optional. It only looked optional in a hub that also held six others.
 
 What is left here is what genuinely belongs to no library, and this module's own specs show it:
 there is no backend in any of them.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

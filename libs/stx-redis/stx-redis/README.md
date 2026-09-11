@@ -5,6 +5,8 @@ suspending command interface for the whole protocol, so this module is not anoth
 `GET` and `SET`. It is the four things every service builds on top of one: a typed cache, a lock,
 a topic, and a stream consumer.
 
+**`io.github.softistx:stx-redis`** — [how to depend on it](../../../docs/consuming.md).
+
 It is a plain `jvm/lib`. Nothing here knows about a server framework, so the same code serves a Ktor
 route, a background worker or a CLI.
 
@@ -180,3 +182,7 @@ orders.process(group = "billing", consumer = "worker-1") { event -> charge(event
 - **`claimStale` is the recovery path**, and there is no free one: an entry handed to a worker that
   then died stays pending forever, because the group has already delivered it. Run it on an interval
   with a `minIdle` comfortably longer than a normal handler takes.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

@@ -6,6 +6,8 @@ callback-and-`Future` API written for a thread per consumer. This module is the 
 them: a send that suspends until the broker acknowledges it, records that arrive as a `Flow`, and
 offsets that are committed after the handler returned rather than on a timer.
 
+**`io.github.softistx:stx-kafka`** — [how to depend on it](../../../docs/consuming.md).
+
 It is a plain `jvm/lib`. Nothing here knows about a server framework, so the same code serves a Ktor
 route, a background worker or a CLI.
 
@@ -153,3 +155,7 @@ when it is unreachable, so a machine without one reports skipped tests rather th
 create only the topics and groups they delete and never touch one they did not create — see the
 local services section of [AGENTS.md](../../../AGENTS.md) for the cluster this workspace runs and the
 `/etc/hosts` entries its advertised listeners need.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

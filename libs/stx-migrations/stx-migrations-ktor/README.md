@@ -2,6 +2,8 @@
 
 `install(Migrations)`, and the server does not bind until they pass.
 
+**`io.github.softistx:stx-migrations-ktor`** — [how to depend on it](../../../docs/consuming.md).
+
 ```kotlin
 install(JpaConnection) { config = JpaConfig(uri = …, username = …, password = …) }
 
@@ -100,3 +102,7 @@ that ledger works against a server is `stx-migrations-db`'s question, asked ther
 one means starting Hibernate against a real database, and what that would assert is six lines of
 pass-through whose mirror image is already asserted. The part with logic is the collector, and the
 two builders share it.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)

@@ -64,3 +64,7 @@ build/tasks/_<module>_generate@apollo/
 
 The task deletes that directory before writing. Failures from the compiler (invalid document,
 missing field) fail the build rather than emitting a partial result.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

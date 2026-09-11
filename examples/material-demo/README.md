@@ -100,3 +100,7 @@ from `$compose.desktop.currentOs`, which is why they are jvm-only.
   group that does not exist.
 
 Run them with `./kotlin test -m md-catalog`.
+
+---
+
+Apache-2.0 · [Contributing](../../CONTRIBUTING.md) · [All the libraries](../../README.md)

@@ -45,7 +45,7 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - Verify load-bearing toolchain claims against the CLI before writing them into docs or skills. Build a throwaway project in the session scratchpad — never inside `libs/` or `plugins/` — and confirm with `./kotlin show`.
 - The same rule applies to a library's runtime behaviour, and it is cheaper than it sounds: when a design turns on how a client behaves — which thread a callback arrives on, whether two calls may overlap — write the spec that asks it before writing the design. `ConsumerConfinementTest` and `ConfirmThreadsTest` each need no server, run in milliseconds, and each replaced a confident wrong answer. AGENTS.md has the two they corrected.
 - Never pipe a `./kotlin` command into `tail`/`grep` — the pipeline reports the filter's exit code, so a failed build reads as success. Redirect to a file, echo `$?`, then read the file. A KSP or compile failure was masked this way twice in this repo.
-- Check `docker ps` before starting a container, and stop what you start. The workspace's services do not all fit at once — the Kafka cluster alone is ~1.9 GiB, and starting it alongside the rest once put this machine into the OOM killer, which killed the user's IDE rather than anything of ours. AGENTS.md has the rest under Performance.
+- Check `docker ps` before starting a container, and stop what you start. These services do not all fit at once on a 16 GiB laptop — the Kafka cluster alone is ~1.9 GiB, and starting it alongside the rest once put one into the OOM killer, which killed the running IDE rather than anything of ours. AGENTS.md has the rest under Performance.
 - Give build and test commands a generous timeout. The first `./kotlin build`/`./kotlin test` after a toolchain change downloads the compiler, a JRE, and dependencies into `~/.cache/JetBrains/Kotlin`, which can far exceed the default two-minute Bash timeout.
 - Never introduce Gradle files to "fix" a build. If something needs a build feature this repo lacks, it belongs in a toolchain plugin module under `plugins/`, not in a `build.gradle.kts`.
 - Run `ktlint -F --relative "**/*.kt" "!build/**"` before committing Kotlin changes. The exclusion matters — without it ktlint lints generated output and reports thousands of violations in files nobody edits.
@@ -74,4 +74,14 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - Look in `libs/stx-common` before writing a helper, and move one there when a second module wants it — it holds what is reusable across libraries and apps, and depends on nothing but kotlinx. AGENTS.md explains which of its three concurrency types fits a given caller; the short version is that a Java callback cannot take a `Mutex`, so it gets a `Mailbox`.
 - A Ktor integration assumes the resource is not its own: it takes an `instance` as well as a config, closes only what it opened, and registers what it installed with the DI container — unconditionally, no flag, `provideX` is `internal` — so a class built by that container is not forced through `call.x`. Anything `AutoCloseable` closes through `CloseGuard` — Ktor's DI closes what it hands out and cannot be told not to, so a second close has to be harmless. AGENTS.md's *Shared code* section has all three rules.
 - New code goes under `com.softistx.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.
+- **A change under `libs/` carries a changeset**: `bun changeset`, and commit the `.changeset/*.md`
+  it writes. CI fails a PR without one. Never edit `version:` in `publishing.module-template.yaml`
+  or `stx = "…"` in `libs.versions.toml` by hand — `scripts/sync-version.ts` writes both from
+  `package.json`, and moving one without the other leaves every example resolving a coordinate
+  nobody published. `docs/releasing.md` owns the circuit.
+- The Maven group is `io.github.softistx`; the Kotlin package prefix is `com.softistx`. They are
+  independent and both are correct — do not "fix" one to match the other.
+- **`scripts/` is TypeScript, run by bun.** No build step and no emitted JavaScript — but bun strips
+  types rather than checking them, so run `bun run typecheck` as well as `bun test scripts/` before
+  committing a change there. CI runs both.
 - Add dependencies by adding a catalog alias to `libs.versions.toml` and referencing `$libs.<alias>` from the module — never paste raw versioned coordinates into a `module.yaml`, and remember `$libs.bundles.*` does not work here.

@@ -20,9 +20,9 @@ import kotlin.time.Duration.Companion.seconds
  * The Kafka the integration specs talk to: a single-broker container started for this run, unless
  * `KAFKA_TEST_BOOTSTRAP` names a cluster that is already up.
  *
- * **One broker is not free, and the cost is [replicationFactor].** The workspace cluster at
- * `~/workspace/docker/apps/kafka` is three brokers with `min.insync.replicas = 2`, so a topic there
- * has three replicas and `acks = all` genuinely waits for a quorum. A container can only give one
+ * **One broker is not free, and the cost is [replicationFactor].** A production-shaped cluster is
+ * three brokers with `min.insync.replicas = 2`, so a topic there has three replicas and
+ * `acks = all` genuinely waits for a quorum. A container can only give one
  * replica, so there `acks = all` waits for one broker: the ack path is exercised, the quorum is not.
  * Every spec asks for [replicationFactor] rather than a hard three, so both run — and the one that
  * checks the replication factor checks the number it actually asked for.

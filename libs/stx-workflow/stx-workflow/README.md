@@ -4,6 +4,8 @@ Workflows for a Kotlin coroutine service: an ordered declaration of steps, a com
 and state written down after each one so a process that dies mid-run can be picked up where it
 stopped.
 
+**`io.github.softistx:stx-workflow`** — [how to depend on it](../../../docs/consuming.md).
+
 It is a plain `jvm/lib` with no store in it. The engine talks to a `WorkflowStore`, and which one it
 is gets decided once, by the application — `stx-workflow-db` is where the real ones are, and `InMemoryStore` is here for tests and for a worker that has nothing to survive.
 
@@ -269,3 +271,7 @@ library exists not to be.
 There is no recurrence, deliberately. A schedule outlives every run of it, is paused and edited
 independently of them, and wants a store of its own; an instance that re-books the next one is a
 chain whose first lost link ends the series in silence.
+
+---
+
+Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)
