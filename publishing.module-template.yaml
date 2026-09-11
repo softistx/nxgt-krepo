@@ -10,14 +10,14 @@
 settings:
   publishing:
     enabled: true
-    group: com.softistx
+    group: io.github.softistx
     version: 0.1.0
     # `artifactId` is deliberately absent: it defaults to the module's name, so the directory name
     # *is* the artifact name and there is no second place to keep in sync.
 
 repositories:
   # No credentials, no PGP key and no POM metadata rules — and enough to consume
-  # `com.softistx:stx-mongo:0.1.0` from another project on this machine. A real repository is one
+  # `io.github.softistx:stx-mongo:0.1.0` from another project on this machine. A real repository is one
   # more block here, changing nothing in any module.
   - url: mavenLocal
     publish: true

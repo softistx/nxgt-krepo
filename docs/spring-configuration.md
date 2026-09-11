@@ -502,7 +502,7 @@ observability problem into an outage, and this also works in an application that
 
 ## `stx-graphix-spring`
 
-Not this module — `com.softistx:stx-graphix-spring`. The keys follow the same opt-in rule, and the
+Not this module — `io.github.softistx:stx-graphix-spring`. The keys follow the same opt-in rule, and the
 metadata lives in that module's `additional-spring-configuration-metadata.json`.
 
 ### `stx.graphix`

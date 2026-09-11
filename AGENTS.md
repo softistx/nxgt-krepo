@@ -303,7 +303,7 @@ The toolchain finds the project by walking up from the working directory, so the
 
 ## Publishing
 
-The `libs/*` modules publish as `com.softistx:<module-name>:<version>` — `com.softistx:stx-mongo:0.1.0`
+The `libs/*` modules publish as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:0.1.0`
 today. The configuration lives once in `publishing.module-template.yaml` at the repo root, which each
 library pulls in with `apply: [ //publishing.module-template.yaml ]`; nothing about publishing is
 written per module. `artifactId` is deliberately not set, because it defaults to the module's name —
@@ -360,7 +360,7 @@ Five things about it that are not guessable:
 
   ```bash
   python3 -c 'import json,glob,os
-  for p in glob.glob(os.path.expanduser("~/.m2/repository/com/softistx/*/*/*.module")):
+  for p in glob.glob(os.path.expanduser("~/.m2/repository/io/github/softistx/*/*/*.module")):
       d = json.load(open(p))
       for v in d.get("variants", []):
           for x in v.get("dependencies", []):
@@ -376,7 +376,7 @@ toolchain and its docs say it is likely to change.
 
 **No module under `examples/` or `server/` may name a `//libs/...` dependency.** Each applies
 `//stx-artifacts.module-template.yaml`, which adds `mavenLocal` on top of the default repositories,
-and names each library through a `$libs.stx.*` catalog alias — `com.softistx:stx-jpa:0.1.0` and not
+and names each library through a `$libs.stx.*` catalog alias — `io.github.softistx:stx-jpa:0.1.0` and not
 `//libs/stx-jpa/stx-jpa`.
 
 That is the whole point of having examples. A module reference proves the sources compile together,
@@ -386,7 +386,7 @@ times a published artifact was wrong in this repo, an example is what found it �
 `kotlinx-coroutines-reactor` had to become `exported` because `spring-orders` could not compile an
 inline function without it, and the split of the two hubs into per-library integration modules left
 `stx-spring-boot` exporting `Messages` the *type* while the auto-configuration that builds one had
-moved to `com.softistx:stx-i18n-spring`, so `spring-orders` started failing its context refresh with
+moved to `io.github.softistx:stx-i18n-spring`, so `spring-orders` started failing its context refresh with
 *"required a bean of type 'com.softistx.i18n.Messages' that could not be found"*. On module
 references that defect is invisible, because a module reference carries the whole `libs/` graph.
 
@@ -782,7 +782,7 @@ own; the library itself is `libs/<name>/<name>/`, and each framework integration
 it — `libs/stx-jpa/stx-jpa`, `libs/stx-jpa/stx-jpa-ktor`, `libs/stx-jpa/stx-jpa-spring`. That is what
 lets an integration be published, versioned and depended on without the hub it used to live in.
 A module's name is still its own directory name, so the leaf keeps the artifact: `libs/stx-jpa/stx-jpa`
-publishes as `com.softistx:stx-jpa`, exactly as `libs/stx-jpa` did. Nesting a library one level down
+publishes as `io.github.softistx:stx-jpa`, exactly as `libs/stx-jpa` did. Nesting a library one level down
 changes no coordinate.
 
 Rules that are easy to get wrong:
