@@ -1,5 +1,31 @@
-.idea
-.jbeval
+# Build output
 build
 __pycache__
+node_modules
+
+# IDE and agent-local state
+.idea
+*.iml
+.vscode
+.jbeval
 .grok/config.toml
+.claude/settings.local.json
+
+# Credentials — creds.properties is written by the release workflow, never committed.
+# `assets` held Font Awesome Pro icons that may not be redistributed; see NOTICE.
+creds.properties
+*.creds.properties
+creds*.properties
+secrets.properties
+local.properties
+.env
+.env.*
+*.jks
+*.p12
+*.keystore
+*.pem
+*.key
+assets
+
+# OS
+.DS_Store
