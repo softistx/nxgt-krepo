@@ -1079,7 +1079,7 @@ the same each time, and the mistakes are the same each time too.
   classes it expects to find, which is why those fixtures sit in `test/entity/scan/` instead of
   beside the rest.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.
-- **A pull request that touches `libs/` carries a changeset.** `pnpm changeset`, pick
+- **A pull request that touches `libs/` carries a changeset.** `bun changeset`, pick
   patch/minor/major, write one sentence a *reader* of the release notes will see — not a restatement
   of the commit subject — and commit the `.changeset/*.md`. CI fails the PR without one, because it
   is the only step of the release circuit nobody can automate. There is one package and it is the

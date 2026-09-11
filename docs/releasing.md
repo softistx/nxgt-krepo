@@ -7,7 +7,7 @@ and *when to cut*.
 ## The circuit
 
 ```
-a PR touching libs/          →  pnpm changeset           the author says patch/minor/major, and why
+a PR touching libs/          →  bun changeset           the author says patch/minor/major, and why
 merged into develop          →  Release workflow         opens or updates "Version Packages"
 "Version Packages" merged    →  Release workflow         propagates, publishes, tags, releases
 ```
@@ -15,7 +15,7 @@ merged into develop          →  Release workflow         opens or updates "Ver
 ### 1. Every PR that touches `libs/` declares itself
 
 ```bash
-pnpm changeset
+bun changeset
 ```
 
 Pick a bump, write one sentence a *reader* will see in the release notes, commit the

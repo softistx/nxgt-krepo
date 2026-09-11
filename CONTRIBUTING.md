@@ -11,7 +11,7 @@ what you need to open a pull request.
 
 ## Getting set up
 
-You need **git**, **Docker** (for the integration specs), **Node 22 + pnpm** (for the release
+You need **git**, **Docker** (for the integration specs), **bun** (for the release
 tooling only), and **ktlint 1.8.0** — pinned, because two ktlint versions disagree about formatting
 and CI runs that one.
 
@@ -20,7 +20,7 @@ You do **not** need a JDK or a Kotlin compiler: the `./kotlin` wrapper provision
 ```bash
 git clone https://github.com/softistx/nxgt-krepo.git
 cd nxgt-krepo
-pnpm install          # release tooling; the Kotlin build does not need it
+bun install          # release tooling; the Kotlin build does not need it
 ./kotlin build        # the first run downloads a CLI, a JRE and every dependency — be patient
 ./kotlin test
 ```
@@ -76,7 +76,7 @@ nobody edits. `./kotlin check` does *not* run ktlint — it runs tests only.
 **If you touched `libs/`**, two more things:
 
 ```bash
-pnpm changeset                                          # CI fails the PR without one
+bun changeset                                          # CI fails the PR without one
 ./kotlin publish mavenLocal -m <library> --non-transitive
 ./kotlin build -m <an-example-that-uses-it>
 ```

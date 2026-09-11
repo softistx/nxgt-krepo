@@ -74,7 +74,7 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - Look in `libs/stx-common` before writing a helper, and move one there when a second module wants it — it holds what is reusable across libraries and apps, and depends on nothing but kotlinx. AGENTS.md explains which of its three concurrency types fits a given caller; the short version is that a Java callback cannot take a `Mutex`, so it gets a `Mailbox`.
 - A Ktor integration assumes the resource is not its own: it takes an `instance` as well as a config, closes only what it opened, and registers what it installed with the DI container — unconditionally, no flag, `provideX` is `internal` — so a class built by that container is not forced through `call.x`. Anything `AutoCloseable` closes through `CloseGuard` — Ktor's DI closes what it hands out and cannot be told not to, so a second close has to be harmless. AGENTS.md's *Shared code* section has all three rules.
 - New code goes under `com.softistx.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.
-- **A change under `libs/` carries a changeset**: `pnpm changeset`, and commit the `.changeset/*.md`
+- **A change under `libs/` carries a changeset**: `bun changeset`, and commit the `.changeset/*.md`
   it writes. CI fails a PR without one. Never edit `version:` in `publishing.module-template.yaml`
   or `stx = "…"` in `libs.versions.toml` by hand — `scripts/sync-version.mjs` writes both from
   `package.json`, and moving one without the other leaves every example resolving a coordinate

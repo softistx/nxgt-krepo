@@ -84,7 +84,7 @@ jobs:
             exit 0
           fi
           echo "::error::This PR changes libs/ but adds no changeset."
-          echo "Run 'pnpm changeset', pick patch/minor/major, and commit the file it writes."
+          echo "Run 'bun changeset', pick patch/minor/major, and commit the file it writes."
           echo "See .changeset/README.md for why the package is the repository itself."
           exit 1
 
@@ -94,11 +94,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          bun-version: latest
+      - run: bun install --frozen-lockfile
       # scripts/sync-version.mjs decides what version 46 artifacts publish under. It gets a test.
-      - run: pnpm test
+      # The spec imports node:test, which bun's runner reads — so it runs under either.
+      - run: bun test scripts/

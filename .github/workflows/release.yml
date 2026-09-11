@@ -26,12 +26,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          bun-version: latest
+      - run: bun install --frozen-lockfile
 
       - name: Cache the toolchain and the dependency cache
         uses: actions/cache@v4
@@ -53,7 +51,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: pnpm run version
+          version: bun run version
           title: "chore(release): version packages"
           commit: "chore(release): version packages"
         env:
@@ -66,7 +64,7 @@ jobs:
           GPR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION=$(bun --print "require('./package.json').version")
 
           # Idempotent: re-running the workflow on an already released commit publishes nothing.
           if git rev-parse "v$VERSION" >/dev/null 2>&1; then
@@ -101,7 +99,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION=$(bun --print "require('./package.json').version")
           if git rev-parse "v$VERSION" >/dev/null 2>&1; then
             echo "v$VERSION is already tagged."
             exit 0

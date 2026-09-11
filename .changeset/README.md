@@ -3,7 +3,7 @@
 Every pull request that touches `libs/` declares what it does to the published artifacts:
 
 ```bash
-pnpm changeset
+bun changeset
 ```
 
 Pick `patch`, `minor` or `major`, write one sentence a *reader* will see in the release notes —

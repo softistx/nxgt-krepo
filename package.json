@@ -3,13 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Release tooling for the io.github.softistx:stx-* libraries. This repository is Kotlin; npm is here only to run Changesets.",
+  "description": "Release tooling for the io.github.softistx:stx-* libraries. This repository is Kotlin; bun is here only to run Changesets.",
   "license": "Apache-2.0",
-  "packageManager": "pnpm@11.3.0",
   "scripts": {
     "changeset": "changeset",
-    "version": "changeset version && node scripts/sync-version.mjs",
-    "test": "node --test scripts/*.test.mjs"
+    "version": "changeset version && bun scripts/sync-version.mjs",
+    "test": "bun test scripts/"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",

@@ -11,7 +11,7 @@ Base: develop. A PR opened against `main` has the wrong base — `main` is only 
 
 - [ ] `./kotlin build` and `./kotlin test` pass
 - [ ] `ktlint -F --relative "**/*.kt" "!build/**"` is clean (ktlint 1.8.0, same as CI)
-- [ ] Touching `libs/`? `pnpm changeset` — CI fails this PR without one
+- [ ] Touching `libs/`? `bun changeset` — CI fails this PR without one
 - [ ] Touching `libs/`? `./kotlin publish mavenLocal -m <library> --non-transitive`, then build a
       consumer. The examples resolve published coordinates, so this is what proves the POM names
       what a consumer needs

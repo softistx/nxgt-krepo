@@ -171,7 +171,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 ## Contributing
 
 Pull requests target `develop`, never `main`. Anything touching `libs/` needs a changeset
-(`pnpm changeset`) and a publish to `mavenLocal` before a consumer is built against it —
+(`bun changeset`) and a publish to `mavenLocal` before a consumer is built against it —
 [`CONTRIBUTING.md`](CONTRIBUTING.md) explains why that second step is the one that catches a broken
 POM. Be civil: [Code of Conduct](CODE_OF_CONDUCT.md).
 
