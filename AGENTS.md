@@ -422,7 +422,7 @@ as soon as its own specs are green.
 ```
 
 Do it even when no consumer is being built in this session. `~/.m2` is what the IDE resolves, what
-the user's next `./kotlin run -m oauth` reads, and what any other checkout on this machine sees — so
+the next `./kotlin run -m oauth` reads, and what every other checkout on the same machine sees — so
 skipping the publish leaves everyone but this session looking at the previous version of a library
 that has already been merged. That gap is silent: the build stays green against the stale jar and
 reports a signature nobody has written for hours.
@@ -637,13 +637,21 @@ weakening the condition.
 
 ### Local services
 
-The databases this workspace runs against are **already containerised and usually already up** —
-`~/workspace/docker/apps/` holds one compose file per service: `database/mongo` is an `rs0` replica
-set on `localhost:27017`, transactions included, `database/redis` is Redis Stack on
-`localhost:6379`, `minio` is an S3-compatible store on `localhost:9000`, `kafka` is a three-broker
-KRaft cluster, and `rabbitmq` is on `localhost:5672` with its management UI on `15672`. Check `docker ps` before pulling an image or starting a Testcontainers container:
-the pull costs a gigabyte and the second container either clashes on the port or silently tests a
-different server than the one everything else uses.
+**Nothing here needs a service to be running, and nothing here finds one by guessing.** The
+resolution order is in the next paragraph; its consequence is that a fresh clone with Docker starts
+its own containers, a machine that exports the variables reuses long-running servers, and a machine
+with neither skips those specs while everything else still runs.
+
+A server you already have is therefore used only if you say so — a `mongod` on the default port is
+invisible to a spec until `MONGO_TEST_URI` names it. The variable per backend is in `Backends.kt`
+(`MONGO_TEST_URI`, `REDIS_TEST_URI`, `AMQP_TEST_URI`, …) and exporting one points every spec in the
+repo at that server. Mongo is the one worth exporting on a development machine: it has to be an
+`rs0` replica set, because `startTransaction` fails outright against a standalone `mongod`, and
+initiating one per run is the slowest container start here.
+
+**Check `docker ps` before pulling an image or starting a container.** The pull costs a gigabyte,
+and a second container either clashes on the port or silently tests a different server than the one
+everything else is pointed at.
 
 **A spec must not depend on the host having the right daemon up.** `libs/stx-testing` declares
 each backing service and resolves it in one order: the environment variable if it names a server,
@@ -931,10 +939,11 @@ the same each time, and the mistakes are the same each time too.
   `MockConsumer`/`MockProducer` and run in about two seconds. A real server is for behaviour that
   *is* the server's: an acknowledgement removing a message, a TTL expiring one. Those specs skip
   when the server is unreachable, so a machine without it reports skipped rather than red.
-- **Watch what the machine is carrying.** The workspace's containers do not all fit at once: the
-  three-broker Kafka cluster is around 1.9 GiB, and starting it alongside everything else once drove
-  this machine into the OOM killer, which chose the running IDE. Check `docker ps` first, stop what
-  you started, and prefer the specs that need nothing running.
+- **Watch what the machine is carrying.** These containers do not all fit at once on a 16 GiB
+  laptop: the three-broker Kafka cluster alone is around 1.9 GiB, and starting it alongside
+  everything else once drove one into the OOM killer, which chose the running IDE rather than
+  anything of ours. Check `docker ps` first, stop what you started, and prefer the specs that need
+  nothing running.
 
 ## Conventions
 
