@@ -51,12 +51,103 @@ jobs:
       # failed build reads as success. These run bare.
       - run: ./kotlin build
 
-      # The integration specs resolve each backing service in one order: an environment variable if
-      # it names a server, otherwise a container started once for the run, otherwise the spec skips.
-      # Nothing is exported here, so everything runs against Testcontainers. If this runs out of
-      # memory on a standard runner, the fix is to provision the services as `services:` and export
-      # POSTGRES_TEST_URI and friends — that seam is what libs/stx-testing was built around.
-      - run: ./kotlin test
+      # A spec resolves its backend in one order: the environment variable if it names a server,
+      # otherwise a container started once *per test JVM*, otherwise it skips. That last distinction
+      # is what this step is for. The toolchain runs several modules' test JVMs at once, and each one
+      # that finds no variable starts its own Postgres, its own Redis, its own RabbitMQ — so a bare
+      # `./kotlin test` had a four-vCPU runner booting the same six servers several times over.
+      # Nothing ran out of memory; everything ran out of CPU. vert.x reported its event loop blocked
+      # for eight seconds, and the failures were all timeouts and wall-clock assertions.
+      #
+      # One server each, started once here, is what libs/stx-testing's environment seam exists for.
+      # `docker run` rather than `services:` because two of these need arguments a service block
+      # cannot pass: MySQL needs `--mysql-native-password=ON` for the ALTER one spec is built around,
+      # and Mongo needs `--replSet` plus an `rs.initiate` — `startTransaction` fails against a
+      # standalone mongod, and a driver that reaches one reports it as "does not support retryable
+      # writes", which is what this run actually saw.
+      #
+      # Kafka is deliberately left to Testcontainers: only one module starts it, and the KRaft
+      # bootstrap a single broker needs is a dozen environment variables that ConfluentKafkaContainer
+      # already gets right.
+      - name: One of each backing service, for the whole run
+        run: |
+          docker run -d --name postgres -p 5432:5432 \
+            -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=test postgres:18-alpine
+          docker run -d --name mysql -p 3306:3306 \
+            -e MYSQL_ROOT_PASSWORD=test -e MYSQL_DATABASE=test mysql:8.4 --mysql-native-password=ON
+          docker run -d --name redis -p 6379:6379 redis:8-alpine
+          docker run -d --name rabbitmq -p 5672:5672 rabbitmq:4-management
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data
+          docker run -d --name mongo -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
+
+          # A replica set is not up when the process is: `available` in MongoTestCluster sends a
+          # `hello` for exactly this reason, and an uninitiated set answers as a standalone.
+          for _ in $(seq 1 90); do
+            docker exec mongo mongosh --quiet --eval 'db.adminCommand({ping:1}).ok' >/dev/null 2>&1 && break
+            sleep 2
+          done
+          docker exec mongo mongosh --quiet --eval \
+            'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'
+          for _ in $(seq 1 60); do
+            [ "$(docker exec mongo mongosh --quiet --eval 'rs.status().myState' 2>/dev/null)" = "1" ] && break
+            sleep 2
+          done
+          docker exec mongo mongosh --quiet --eval 'rs.status().myState'
+
+      # Each of these is refused unless it is complete — Postgres, MySQL and MinIO need their
+      # credentials alongside the endpoint, or stx-testing falls through to a container rather than
+      # sending the run at half of somebody's server. The AMQP URI carries no trailing slash: a bare
+      # one asks for the *empty* vhost, which the broker refuses with a message about permissions.
+      - name: Point the specs at them
+        run: |
+          {
+            echo "POSTGRES_TEST_URI=postgresql://localhost:5432/test"
+            echo "POSTGRES_TEST_USER=test"
+            echo "POSTGRES_TEST_PASSWORD=test"
+            echo "MYSQL_TEST_URI=mysql://localhost:3306/test"
+            echo "MYSQL_TEST_USER=root"
+            echo "MYSQL_TEST_PASSWORD=test"
+            echo "REDIS_TEST_URI=redis://localhost:6379/15"
+            echo "AMQP_TEST_URI=amqp://guest:guest@localhost:5672"
+            echo "MINIO_TEST_ENDPOINT=http://localhost:9000"
+            echo "MINIO_TEST_ACCESS_KEY=minioadmin"
+            echo "MINIO_TEST_SECRET_KEY=minioadmin"
+            echo "MONGO_TEST_URI=mongodb://localhost:27017/?replicaSet=rs0"
+          } >> "$GITHUB_ENV"
+
+      # **One module's test JVM at a time.** The CLI has no parallelism setting — `./kotlin test`
+      # decides for itself how many module JVMs to run at once, and on a four-vCPU runner that is
+      # what produced the failures: vert.x reporting its event loop blocked for eight seconds,
+      # coroutine tests giving up after a minute, a wall-clock assertion reading 697 where it allows
+      # 600. None of them were about the code. `-m` is the only lever the CLI offers, so the loop is
+      # the lever.
+      #
+      # This is also what makes the step above load-bearing rather than an optimisation: each
+      # invocation is a fresh JVM, so without the environment variables every one of these
+      # fifty-seven would start its own Postgres, its own Mongo, its own RabbitMQ.
+      #
+      # The list is derived from the filesystem rather than written down, so a module that gains a
+      # test tree is picked up by the change that adds it. Every module runs even after one fails:
+      # "which of the fifty-seven" is the useful answer, and fail-fast gives the first one only.
+      - name: Test, one module at a time
+        run: |
+          modules=$(find libs examples plugins server -type d \( -name test -o -name 'test@*' \) \
+            -not -path '*/build/*' | sed 's|/test[^/]*$||' | xargs -n1 basename | sort -u)
+          echo "$(echo "$modules" | wc -l) modules with tests"
+
+          failed=""
+          for m in $modules; do
+            echo "::group::$m"
+            ./kotlin test -m "$m" || failed="$failed $m"
+            echo "::endgroup::"
+          done
+
+          if [ -n "$failed" ]; then
+            echo "::error::tests failed in:$failed"
+            exit 1
+          fi
 
   lint:
     name: ktlint

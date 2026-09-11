@@ -657,6 +657,12 @@ repo at that server. Mongo is the one worth exporting on a development machine: 
 `rs0` replica set, because `startTransaction` fails outright against a standalone `mongod`, and
 initiating one per run is the slowest container start here.
 
+**CI is the second case, and it has to be.** `ci.yml` starts one of each server, exports the
+variables, and then runs the tests **one module at a time** — the CLI has no parallelism setting, so
+`-m` in a loop is the only way to stop several module JVMs competing for four vCPUs. Each of those
+invocations is a fresh JVM that shares nothing with the last, so without the exports every one of
+the fifty-seven would start its own Postgres and its own Mongo. The two halves only work together.
+
 **Check `docker ps` before pulling an image or starting a container.** The pull costs a gigabyte,
 and a second container either clashes on the port or silently tests a different server than the one
 everything else is pointed at.
