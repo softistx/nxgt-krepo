@@ -33,6 +33,20 @@ jobs:
           key: kotlin-${{ runner.os }}-${{ hashFiles('kotlin', 'libs.versions.toml') }}
           restore-keys: kotlin-${{ runner.os }}-
 
+      # The examples and the servers may not name a `//libs/...` dependency: they resolve
+      # `io.github.softistx:stx-*` as published coordinates, from mavenLocal. That is the whole
+      # point of them — a module path proves the sources compile, a coordinate proves the POM — but
+      # it means a runner's empty ~/.m2 cannot build anything under examples/ until the libraries
+      # are published into it. This step is the CI form of the loop every contributor runs.
+      #
+      # The stx artifacts are dropped first rather than trusted from the cache: a stale one is
+      # exactly the failure this arrangement exists to expose, and a cache hit would hide it.
+      - name: Publish the libraries to mavenLocal
+        run: |
+          rm -rf ~/.m2/repository/io/github/softistx
+          ./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs \
+            --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+
       # Never pipe ./kotlin into tail or grep: the pipeline reports the filter's exit code, so a
       # failed build reads as success. These run bare.
       - run: ./kotlin build
