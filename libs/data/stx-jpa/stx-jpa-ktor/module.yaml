@@ -1,0 +1,55 @@
+product: jvm/lib
+description: "Ktor plugin for stx-jpa: one session factory per application, opened with it and closed with it"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Jpa is what the plugin builds and what `call.jpa` returns, and JpaConfig is the only way to
+  # configure the plugin at all — so a consumer of this module already depends on stx-jpa. Exported
+  # rather than compile-only for exactly that reason: the dependency this module could not have been
+  # written without is not optional, and the hub this came out of only made it look that way because
+  # it held six other integrations that were.
+  - //libs/data/stx-jpa/stx-jpa: exported
+  - $ktor.server.core: exported
+
+  # `resource` and `required` — the resource-lifecycle idiom every plugin in this repo shares. It
+  # stays in stx-ktor because it belongs to no integration; this module is a caller of it.
+  - //libs/core/stx-ktor
+
+  # Ktor DI. Installing the plugin registers the factory with the container, so this is on the
+  # runtime classpath of every application that installs it — and exported, because resolving what
+  # was registered is the point.
+  - $libs.ktor.server.di: exported
+
+test-dependencies:
+  # the Postgres the plugin spec talks to, started for the run when the workspace's own is not named
+  - //libs/core/stx-testing
+  # the spec creates and drops its own schema with the Postgres client directly; stx-jpa keeps its
+  # three drivers runtime-only, so nothing inherits a compile classpath for one
+  - $libs.vertx.pg.client
+  - $ktor.server.testHost
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    # For the one entity in `test/entity/`. Every module that *holds* entities needs these two, and
+    # an application installing this plugin will need the same block in its own module.yaml —
+    # nothing in `src/` carries a JPA annotation, so the plugin itself has nothing to do there.
+    noArg:
+      enabled: true
+      presets: [ jpa ]
+    allOpen:
+      enabled: true
+      annotations:
+        - jakarta.persistence.Entity
+        - jakarta.persistence.MappedSuperclass
+        - jakarta.persistence.Embeddable
+  ktor:
+    enabled: true
+    # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is
+    # the same number today by coincidence.
+    version: 3.5.2

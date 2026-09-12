@@ -1,6 +1,6 @@
 # material-demo
 
-The catalogue for `libs/stx-material`: every component, with typed controls beside it, and one
+The catalogue for `libs/ui/stx-material`: every component, with typed controls beside it, and one
 whole screen at the end.
 
 ```bash

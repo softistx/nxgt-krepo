@@ -9,7 +9,7 @@ describes it.
 
 ## Why a hand-written server
 
-`openapi.yaml` is the input to [`libs/stx-openapi-generator`](../../libs/stx-openapi-generator/README.md),
+`openapi.yaml` is the input to [`libs/api/stx-openapi-generator`](../../libs/api/stx-openapi-generator/README.md),
 and `src/` is a server written by hand to match it. Nothing generates the server from the document —
 that is deliberate, and it is what makes the pair worth having. If both sides came from the same
 generator, a misreading of the document would be symmetric and no test could see it. Here the

@@ -26,8 +26,8 @@ here as a compile error.
 The GraphQL SDL under `resources/graphql/` is the source of truth, and the
 [`dgs-codegen`](../../plugins/dgs-codegen/README.md) plugin generates the Kotlin types from it at
 build time into `com.softistx.oauth.graphql`. Resolvers are Koin singletons implementing
-`GraphixResolver`, discovered by [`stx-graphix-koin`](../../libs/stx-graphix/stx-graphix-koin/README.md)
-and served by [`stx-graphix-ktor`](../../libs/stx-graphix/stx-graphix-ktor/README.md):
+`GraphixResolver`, discovered by [`stx-graphix-koin`](../../libs/api/stx-graphix/stx-graphix-koin/README.md)
+and served by [`stx-graphix-ktor`](../../libs/api/stx-graphix/stx-graphix-ktor/README.md):
 
 ```kotlin
 @Singleton
@@ -51,7 +51,7 @@ would test the wiring instead.
 
 `resources/application.yaml`, read through Ktor's `ApplicationConfig` — including
 `stx.mongo.uri` and `stx.mongo.database`, which `configureDatabase()` hands to
-[`stx-mongo-ktor`](../../libs/stx-mongo/stx-mongo-ktor/README.md)'s `install(MongoDB)`.
+[`stx-mongo-ktor`](../../libs/data/stx-mongo/stx-mongo-ktor/README.md)'s `install(MongoDB)`.
 
 ---
 

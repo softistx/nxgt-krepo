@@ -1,0 +1,23 @@
+product: jvm/lib
+description: "Logs and traces for a Kotlin coroutine service: the current span is a CoroutineContext element, an event is a @Serializable type, and export is a background drain"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Mailbox for the export queue, CloseGuard for a close the DI container may call twice
+  - //libs/core/stx-common: exported
+  # ThreadContextElement, CoroutineScope and the primitives the pipeline is built from — and
+  # `span { }` is a suspending function, so this is in the public API
+  - $libs.kotlinx.coroutines.core: exported
+  # an event is a @Serializable type and an attribute is a JsonElement, both in the public API
+  - $libs.kotlinx.serialization: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  kotlin:
+    serialization: json

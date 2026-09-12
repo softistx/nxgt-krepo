@@ -1,0 +1,30 @@
+product: jvm/lib
+description: "MongoDB exporter for stx-telemetry: a batch is one insertMany, and retention is a TTL index rather than a job"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Exporter, Signal and signalJson — what this module implements and encodes through
+  - //libs/observability/stx-telemetry/stx-telemetry: exported
+  # No `bom:` entry — the catalog gives the alias below an explicit `version.ref`, for the reason
+  # stx-mongo's manifest spells out: a BOM does not survive publication, and a published module whose
+  # dependencies carry no version is one no consumer can resolve.
+  # MongoDatabase is a constructor parameter, so a consumer has to see it to build one of these.
+  # Deliberately *not* //libs/data/stx-mongo/stx-mongo: that library is sessions, pagination, GridFS and auditing,
+  # and an exporter needs a collection and an insert. Depending on it would pull the Reactive Streams
+  # driver into every application that wants telemetry in a database.
+  - $libs.mongodb.driver: exported
+
+test-dependencies:
+  # mongoContainer(), which reuses MONGO_TEST_URI when the workspace's own replica set is up
+  - //libs/core/stx-testing
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # the driver logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    serialization: json

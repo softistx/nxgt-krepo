@@ -1,0 +1,38 @@
+product: jvm/lib
+description: "Ktor plugin for stx-kafka: the cluster configuration in one place, reachable from a route — and nothing opened"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Kafka is what the plugin publishes and what `call.kafka` returns, and KafkaConfig is the only
+  # way to configure it. Exported, where the hub had it compile-only: a consumer of this module
+  # cannot install the plugin without the library.
+  - //libs/messaging/stx-kafka/stx-kafka: exported
+  - $ktor.server.core: exported
+
+  # `publish` and `required` — the resource-lifecycle idiom every plugin in this repo shares, of
+  # which this module uses the half that does not own anything. It stays in stx-ktor because it
+  # belongs to no integration; this module is a caller of it.
+  - //libs/core/stx-ktor
+
+  # Ktor DI. Installing the plugin registers the cluster with the container, so this is on the
+  # runtime classpath of every application that installs it — and exported, because resolving what
+  # was registered is the point.
+  - $libs.ktor.server.di: exported
+
+test-dependencies:
+  # the broker the spec talks to, started for the run when the workspace's own is not named
+  - //libs/core/stx-testing
+  - $ktor.server.testHost
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  ktor:
+    enabled: true
+    # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is
+    # the same number today by coincidence.
+    version: 3.5.2

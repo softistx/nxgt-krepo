@@ -1,0 +1,23 @@
+product: jvm/lib
+description: S3-compatible object storage over the MinIO SDK — buckets, objects and presigned URLs, all suspending
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # CloseGuard, so closing this twice is not an error
+  - //libs/core/stx-common
+
+  # MinioAsyncClient and the SDK's argument types are part of this module's public API
+  - $libs.minio: exported
+  - $libs.kotlinx.coroutines.core: exported
+
+test-dependencies:
+  # the object store the integration specs talk to, started for the run when no credentials name
+  # one — test-only, so nothing here reaches a consumer of this library
+  - //libs/core/stx-testing
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # the SDK logs through SLF4J; a no-op provider keeps the test output readable
+  - $libs.slf4j.nop

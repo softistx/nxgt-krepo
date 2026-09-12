@@ -1,6 +1,6 @@
 # Telemetry reference
 
-What a `stx-telemetry` call may say. The [module README](../libs/stx-telemetry/stx-telemetry/README.md)
+What a `stx-telemetry` call may say. The [module README](../libs/observability/stx-telemetry/stx-telemetry/README.md)
 is why the library is shaped this way; this page is the vocabulary;
 [`examples/spring-orders`](../examples/spring-orders/README.md) is an application using it — a server
 span per request, one `span { }` in the service, typed events in a file of their own, and the whole

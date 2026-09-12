@@ -1,2 +1,16 @@
 # Every change is reviewed by the maintainers.
-*       @SteveGT96
+*                     @SteveGT96
+
+# One line per role folder under libs/, and one per top-level area. Each repeats the default today;
+# they exist so that a maintainer who takes over a role is added on that role's line, not by
+# rewriting this file. The last matching pattern wins, so a line here overrides `*` for its folder.
+/libs/core/           @SteveGT96
+/libs/data/           @SteveGT96
+/libs/messaging/      @SteveGT96
+/libs/api/            @SteveGT96
+/libs/observability/  @SteveGT96
+/libs/ui/             @SteveGT96
+/examples/            @SteveGT96
+/plugins/             @SteveGT96
+/server/              @SteveGT96
+/.github/             @SteveGT96

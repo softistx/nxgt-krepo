@@ -1,6 +1,6 @@
 # workflow-checkout
 
-A checkout as a compensating workflow, showing [`stx-workflow`](../../libs/stx-workflow/stx-workflow/README.md):
+A checkout as a compensating workflow, showing [`stx-workflow`](../../libs/messaging/stx-workflow/stx-workflow/README.md):
 a step with a compensation, a fan-out whose legs are undone independently, a fork that stays decided,
 and a run that outlives the process that started it.
 

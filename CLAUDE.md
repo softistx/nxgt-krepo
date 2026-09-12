@@ -17,15 +17,15 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   controllers implement. Its two `references/` pages are hand-written, not fetched — read
   `spring-api.md` before writing a controller or its spec. `plugins/openapi/README.md` is what each
   `client` needs on the classpath; `docs/openapi-support.md` is what the generator makes of a document.
-- **`compose-multiplatform`** before touching `libs/stx-material` or `examples/material-demo`, and **`material3-compose`** before theming or extending a Material 3 component. The first records what this host actually verifies — Apple targets are *silently skipped* on Linux, so a green local build proves nothing about them — and the second is generated from the resolved jar, because `$compose.material3` sits on its own alpha version line and the androidx docs describe a different artifact.
-- **Check Material 3 before writing a `libs/stx-material` component.** M3 already has `Button`,
+- **`compose-multiplatform`** before touching `libs/ui/stx-material` or `examples/material-demo`, and **`material3-compose`** before theming or extending a Material 3 component. The first records what this host actually verifies — Apple targets are *silently skipped* on Linux, so a green local build proves nothing about them — and the second is generated from the resolved jar, because `$compose.material3` sits on its own alpha version line and the androidx docs describe a different artifact.
+- **Check Material 3 before writing a `libs/ui/stx-material` component.** M3 already has `Button`,
   `IconButton`, `ButtonGroup`, `Card`, the chips, `Badge`, `ListItem`, `Text`, `Icon`, `Surface`
   and the dividers — reuse and customise through its `*Defaults`/`*Colors` parameters rather than
   rebuilding from `Row` and `Modifier.background`, which throws away the ripple, the touch target
   and the semantics. `material3-compose`'s `references/components.md` is the list. AGENTS.md's
   *Building a component* has the rule and the shape of a wrapper — including that a claim about
   pixels is measured in pixels: `ImageComposeScene` renders a composable headlessly in
-  milliseconds, and `libs/stx-material/test@jvm/` holds the two specs that caught what the eye
+  milliseconds, and `libs/ui/stx-material/test@jvm/` holds the two specs that caught what the eye
   did not.
 - **`styles`** is the pattern for what Material 3 cannot express, not background reading: a component's look is a `Style` in its own file, its interaction states are `pressed`/`hovered`/`disabled` blocks with `animate` inside them, and its signature carries one `style: Style = Style` instead of colour and shape parameters. AGENTS.md's *Styling a component* has the rules. **`adaptive`** and **`edge-to-edge`** come from the same catalogue and describe *Jetpack* Compose — check any API they name against `material3-compose`'s `references/components.md`, and read the two ways that search goes wrong before concluding something is missing.
 - **`skill-from-docs`** to add a skill for another library or tool, or to refresh a cached one. It owns the token budget rules that every skill here follows. To pull one from Google's catalogue instead, `android skills add <name> --project=. --agent=common` — the `--agent=common` is what puts it in `.agents/skills/` rather than in your home directory. AGENTS.md's *Finding and installing a skill* has the three sources.
@@ -71,7 +71,7 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   and an extension can — `session.findAll<Purchase>()` needs no `KClass` and no object to construct.
   What a base class used to earn is kept explicitly, in `insertAndRead`, the transaction guard on
   every JPA write verb, and `stampedBy`/`touchedBy`. AGENTS.md's *Shared code* section has the rest.
-- Look in `libs/stx-common` before writing a helper, and move one there when a second module wants it — it holds what is reusable across libraries and apps, and depends on nothing but kotlinx. AGENTS.md explains which of its three concurrency types fits a given caller; the short version is that a Java callback cannot take a `Mutex`, so it gets a `Mailbox`.
+- Look in `libs/core/stx-common` before writing a helper, and move one there when a second module wants it — it holds what is reusable across libraries and apps, and depends on nothing but kotlinx. AGENTS.md explains which of its three concurrency types fits a given caller; the short version is that a Java callback cannot take a `Mutex`, so it gets a `Mailbox`.
 - A Ktor integration assumes the resource is not its own: it takes an `instance` as well as a config, closes only what it opened, and registers what it installed with the DI container — unconditionally, no flag, `provideX` is `internal` — so a class built by that container is not forced through `call.x`. Anything `AutoCloseable` closes through `CloseGuard` — Ktor's DI closes what it hands out and cannot be told not to, so a second close has to be harmless. AGENTS.md's *Shared code* section has all three rules.
 - New code goes under `com.softistx.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.
 - **A change under `libs/` carries a changeset**: `bun changeset`, and commit the `.changeset/*.md`

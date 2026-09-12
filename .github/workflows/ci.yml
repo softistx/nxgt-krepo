@@ -71,7 +71,7 @@ jobs:
       # Nothing ran out of memory; everything ran out of CPU. vert.x reported its event loop blocked
       # for eight seconds, and the failures were all timeouts and wall-clock assertions.
       #
-      # One server each, started once here, is what libs/stx-testing's environment seam exists for.
+      # One server each, started once here, is what libs/core/stx-testing's environment seam exists for.
       # `docker run` rather than `services:` because two of these need arguments a service block
       # cannot pass: MySQL needs `--mysql-native-password=ON` for the ALTER one spec is built around,
       # and Mongo needs `--replSet` plus an `rs.initiate` — `startTransaction` fails against a
@@ -156,7 +156,7 @@ jobs:
       # invocation is a fresh JVM, so without the environment variables every one of these
       # fifty-seven would start its own Postgres, its own Mongo, its own RabbitMQ. Sharing them is
       # safe for data: every spec works in a namespace of its own — a schema, a database, a key
-      # prefix, a queue or a bucket named through libs/stx-testing's TestNames, which carries a
+      # prefix, a queue or a bucket named through libs/core/stx-testing's TestNames, which carries a
       # per-JVM run id — and removes only that.
       #
       # The list is derived from the filesystem rather than written down, so a module that gains a

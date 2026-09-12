@@ -1,0 +1,34 @@
+product: jvm/lib
+description: "Spring Boot auto-configuration for stx-i18n, opt-in behind stx.i18n — and it narrows the locale resolver to the catalogs it loaded"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Messages is the bean this module registers and its properties are what the catalogs are loaded
+  # from. Exported, where the hub had it compile-only for the integration's sake: a consumer of this
+  # module cannot use the auto-configuration without the library.
+  - //libs/api/stx-i18n/stx-i18n: exported
+  # WebFlux and not just spring-boot-starter, unlike its six siblings: this is the one integration
+  # that replaces a framework bean rather than only adding its own. `LocaleContextResolver` and
+  # `AcceptHeaderLocaleContextResolver` are Spring Web types, and `WebFluxAutoConfiguration` is what
+  # this orders itself before.
+  - $spring.boot.starter.webflux: exported
+  # Spring binds Kotlin configuration properties through the primary constructor only when reflect
+  # is present — the same line stx-spring-boot and stx-workflow-spring carry.
+  - $libs.kotlin.reflect
+
+test-dependencies:
+  # No backend: catalogs are files and a locale resolver is a bean. What the specs here ask is which
+  # of two auto-configurations owns `localeContextResolver`, which needs a context and nothing else.
+  - $spring.boot.starter.test
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  springBoot: enabled
+  kotlin:
+    # ConfigurationMetadataTest and ConfigurationDocsTest read the metadata JSON with kotlinx
+    serialization: json
