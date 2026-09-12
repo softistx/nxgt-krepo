@@ -704,7 +704,7 @@ collections, and a run leaves it as it found it.
 | `stx-mongo` | `MONGO_TEST_URI` | `mongo:8`, a single-node replica set |
 | `stx-redis` | `REDIS_TEST_URI` | `redis:8-alpine`, on db 15 |
 | `stx-amqp` | `AMQP_TEST_URI` | `rabbitmq:4-management` |
-| `stx-storage` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `minio/minio:latest` |
+| `stx-storage` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `quay.io/minio/minio:latest` |
 | `stx-kafka` | `KAFKA_TEST_BOOTSTRAP` | `confluentinc/cp-kafka:latest`, one broker |
 | `stx-jpa` | `POSTGRES_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `postgres:18-alpine` |
 | `stx-jpa` | `MYSQL_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `mysql:8.4` |
