@@ -24,14 +24,27 @@ jobs:
 
       # The wrapper downloads the Kotlin CLI and a JRE on first use, then the compiler and every
       # dependency. Without this the first step of every run is a multi-minute download.
+      #
+      # ~/.gradle is the Android half. The toolchain packages examples/material-demo/md-android by
+      # delegating to a Gradle build, and fetches that Gradle distribution and the Android Gradle
+      # plugin's dependencies into ~/.gradle — not into its own cache. Uncached, that was three of
+      # the build step's six minutes, spent before the first Gradle task ran.
+      #
+      # `v2` because an exact key hit never saves: without a new key the entry that predates the
+      # ~/.gradle paths would be restored forever. The old prefix is still a restore key, so the
+      # first v2 run starts from it rather than from nothing.
       - name: Cache the toolchain and the dependency cache
         uses: actions/cache@v6
         with:
           path: |
             ~/.cache/JetBrains/Kotlin
             ~/.m2/repository
-          key: kotlin-${{ runner.os }}-${{ hashFiles('kotlin', 'libs.versions.toml') }}
-          restore-keys: kotlin-${{ runner.os }}-
+            ~/.gradle/wrapper/dists
+            ~/.gradle/caches/modules-2
+          key: kotlin-v2-${{ runner.os }}-${{ hashFiles('kotlin', 'libs.versions.toml') }}
+          restore-keys: |
+            kotlin-v2-${{ runner.os }}-
+            kotlin-${{ runner.os }}-
 
       # The examples and the servers may not name a `//libs/...` dependency: they resolve
       # `io.github.softistx:stx-*` as published coordinates, from mavenLocal. That is the whole
