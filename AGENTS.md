@@ -658,13 +658,14 @@ repo at that server. Mongo is the one worth exporting on a development machine: 
 initiating one per run is the slowest container start here.
 
 **CI is the second case, and it has to be.** `ci.yml` starts one of each server, exports the
-variables, and then runs `./kotlin test` for every module at once. The CLI runs several module JVMs
-concurrently and has no setting for how many; without the exports each of them would start its own
-Postgres and its own Mongo, which is what a bare run did on a four-vCPU runner — and it failed on CPU
-starvation, not on the code. The two halves only work together. Sharing a server is safe for data
-because every spec names its schema, database, key prefix, queue or bucket through `TestNames`,
-whose run id differs per JVM; the specs that bound a duration from above are the ones that notice
-contention.
+variables, and then runs the tests **two modules at a time** — `./kotlin test -m` under
+`xargs -P 2`, because the CLI picks its own concurrency and has no setting for it. Each invocation is
+a fresh JVM, so without the exports every one of the fifty-seven would start its own Postgres and
+its own Mongo. The two halves only work together. Sharing a server is safe for data because every
+spec names its schema, database, key prefix, queue or bucket through `TestNames`, whose run id
+differs per JVM. What is not safe is the CPU: a bare `./kotlin test` against the shared servers was
+twice as fast and stalled two JVMs past a harness timeout, and the specs that bound a duration from
+above are the next to notice. `ci.yml` has the three measurements.
 
 **Check `docker ps` before pulling an image or starting a container.** The pull costs a gigabyte,
 and a second container either clashes on the port or silently tests a different server than the one
