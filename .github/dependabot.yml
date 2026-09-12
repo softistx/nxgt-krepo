@@ -1,22 +1,11 @@
 version: 2
 updates:
   # The Kotlin dependencies live in libs.versions.toml, which Dependabot cannot read: this is not a
-  # Gradle project. `./kotlin show dependencies -m <module>` shows the upgrade arrows instead.
+  # Gradle project. `./kotlin show dependencies -m <module>` shows the upgrade arrows instead. The
+  # release tooling's JavaScript dependencies are bumped by hand, deliberately.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
     commit-message:
       prefix: "build(ci)"
-  # `bun`, not `npm`: the npm ecosystem rewrites package.json and leaves bun.lock behind, so every
-  # PR it opened failed `bun install --frozen-lockfile` — all four of the first batch did.
-  - package-ecosystem: bun
-    directory: /
-    schedule:
-      interval: monthly
-    commit-message:
-      prefix: "build"
-    ignore:
-      # TypeScript is held at 6.x on purpose: moving to 7 is a decision to make, not a monthly bump.
-      - dependency-name: typescript
-        update-types: ["version-update:semver-major"]
