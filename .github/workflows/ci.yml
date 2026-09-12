@@ -117,54 +117,33 @@ jobs:
             echo "MONGO_TEST_URI=mongodb://localhost:27017/?replicaSet=rs0"
           } >> "$GITHUB_ENV"
 
-      # **Two modules' test JVMs at a time, against the servers above.** Three shapes were measured
-      # on this four-vCPU runner:
+      # **One `./kotlin test` for everything, against the servers above.** Measured on this
+      # four-vCPU runner:
       #
-      # - bare `./kotlin test`, each JVM starting its own servers: CPU starvation — vert.x reporting
-      #   its event loop blocked for eight seconds, a wall-clock assertion reading 697 where it
-      #   allows 600;
-      # - bare `./kotlin test` against the shared servers: 232 s, but two JVMs still stalled past a
-      #   harness timeout (RedisDependenciesTest's 10 s, WebTestClient's 5 s). The CLI decides how
-      #   many module JVMs to run at once and has no setting for it;
-      # - one module at a time: 426 s, green.
+      # | shape                                   | test step | JUnit time, summed |
+      # | --------------------------------------- | --------- | ------------------ |
+      # | `-m` in a loop, one module at a time    | 426 s     | 169 s              |
+      # | `-m` under `xargs -P 2`                 | 419 s     | 312 s              |
+      # | bare `./kotlin test`                    | 167–232 s | 2600–3700 s        |
       #
-      # So the step bounds it itself, with `-m` under `xargs -P 2`. Two concurrent invocations on one
-      # project were checked not to trip over each other in build/; the build step above has already
-      # compiled everything, so each one only runs. If this turns flaky, lower -P rather than loosen
-      # a timeout: four specs bound a duration from above (AmqpConsumerTest, KafkaSubscriberTest,
-      # KeyedMutexTest, PipelineTest), and each bound is what proves the behaviour it tests.
+      # The gain is not parallelism — two invocations at once already saturate the CPU, which is why
+      # -P 2 bought nothing — but paying the CLI's start-up once instead of fifty-seven times, about
+      # four seconds each. The CLI then runs module JVMs as wide as it likes (some sixteen at once;
+      # it has no setting for it), so every spec's start-up is slower. Two specs expired a harness
+      # timeout because of it, in both bare runs, and now carry a longer one: ExchangeContextTest
+      # (WebTestClient's 5 s) and RedisDependenciesTest (Ktor's 10 s module-loading limit).
+      #
+      # A harness timeout proves nothing and may be raised. Four specs bound a duration from above
+      # to prove a behaviour — AmqpConsumerTest, KafkaSubscriberTest, KeyedMutexTest, PipelineTest —
+      # and passed in every run. If one of them turns flaky, go back to the loop rather than loosen
+      # the bound. Before the step above existed, this same bare run had every JVM booting its own
+      # servers, and that starved the runner outright.
       #
       # Sharing the servers is safe for data: every spec works in a namespace of its own — a schema,
       # a database, a key prefix, a queue or a bucket named through libs/stx-testing's TestNames,
       # which carries a per-JVM run id — and removes only that.
-      #
-      # The list is derived from the filesystem, so a module that gains a test tree is picked up by
-      # the change that adds it. Each module's output goes to its own file and is replayed in one
-      # group afterwards, since two interleaved JVMs are unreadable; every module runs even after
-      # one fails, because "which of the fifty-seven" is the useful answer.
-      - name: Test, two modules at a time
-        run: |
-          modules=$(find libs examples plugins server -type d \( -name test -o -name 'test@*' \) \
-            -not -path '*/build/*' | sed 's|/test[^/]*$||' | xargs -n1 basename | sort -u)
-          echo "$(echo "$modules" | wc -l) modules with tests"
-
-          logs="$RUNNER_TEMP/test-logs"
-          mkdir -p "$logs"
-          echo "$modules" | xargs -P 2 -I{} \
-            sh -c "./kotlin test -m {} > '$logs/{}.log' 2>&1 || touch '$logs/{}.failed'"
-
-          failed=""
-          for m in $modules; do
-            echo "::group::$m"
-            cat "$logs/$m.log"
-            echo "::endgroup::"
-            [ -e "$logs/$m.failed" ] && failed="$failed $m"
-          done
-
-          if [ -n "$failed" ]; then
-            echo "::error::tests failed in:$failed"
-            exit 1
-          fi
+      - name: Test
+        run: ./kotlin test
 
   lint:
     name: ktlint

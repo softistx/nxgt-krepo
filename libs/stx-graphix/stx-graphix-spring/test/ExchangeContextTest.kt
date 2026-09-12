@@ -21,6 +21,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.web.server.ServerWebExchange
+import java.time.Duration
 
 /**
  * What a `@GraphQLController` method and a [GraphixInterceptor] can see of the HTTP request behind a
@@ -44,10 +45,15 @@ class ExchangeContextTest :
                     resolvers(roots.asList())
                     interceptors.forEach { intercept(it) }
                 }
+            // 30 s rather than WebTestClient's 5: the first request of the spec is also the one
+            // that warms graphql-java up, and on a CI runner shared with other test JVMs that alone
+            // took longer than five seconds. The timeout proves nothing about the exchange.
             return WebTestClient
                 .bindToRouterFunction(
                     GraphixHandler(engine, lenientJson, "/graphql", subscriptions).router(),
-                ).build()
+                ).configureClient()
+                .responseTimeout(Duration.ofSeconds(30))
+                .build()
         }
 
         feature("the exchange as a resolver parameter") {
