@@ -8,7 +8,9 @@ updates:
       interval: monthly
     commit-message:
       prefix: "build(ci)"
-  - package-ecosystem: npm
+  # `bun`, not `npm`: the npm ecosystem rewrites package.json and leaves bun.lock behind, so every
+  # PR it opened failed `bun install --frozen-lockfile` — all four of the first batch did.
+  - package-ecosystem: bun
     directory: /
     schedule:
       interval: monthly
