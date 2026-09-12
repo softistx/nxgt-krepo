@@ -1,5 +1,13 @@
 # nxgt-krepo
 
+## 0.2.1
+
+### Patch Changes
+
+- [#216](https://github.com/softistx/nxgt-krepo/pull/216) [`e391075`](https://github.com/softistx/nxgt-krepo/commit/e3910753d501327282cedcc0c2d233b87beb6e89) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Specs only, nothing published changes: two harness timeouts now allow a slow start when CI runs every module's tests at once — `stx-graphix-spring`'s WebTestClient and the Ktor plugin specs' module-loading limit.
+
+- [#219](https://github.com/softistx/nxgt-krepo/pull/219) [`4eecdef`](https://github.com/softistx/nxgt-krepo/commit/4eecdefc3e95f762f991beaee4200ba700899f63) Thanks [@SteveGT96](https://github.com/SteveGT96)! - The libraries now live in role folders — `libs/core`, `libs/data`, `libs/messaging`, `libs/api`, `libs/observability`, `libs/ui` — so that ownership is readable from the tree. No coordinate changes: every artifact keeps its `io.github.softistx:stx-*` name, because a module's name is still its own directory name.
+
 ## 0.2.0
 
 ### Minor Changes
