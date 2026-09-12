@@ -117,37 +117,21 @@ jobs:
             echo "MONGO_TEST_URI=mongodb://localhost:27017/?replicaSet=rs0"
           } >> "$GITHUB_ENV"
 
-      # **One module's test JVM at a time.** The CLI has no parallelism setting — `./kotlin test`
-      # decides for itself how many module JVMs to run at once, and on a four-vCPU runner that is
-      # what produced the failures: vert.x reporting its event loop blocked for eight seconds,
-      # coroutine tests giving up after a minute, a wall-clock assertion reading 697 where it allows
-      # 600. None of them were about the code. `-m` is the only lever the CLI offers, so the loop is
-      # the lever.
+      # **Every module at once, against the servers above.** `./kotlin test` decides for itself how
+      # many module JVMs run at a time — the CLI has no setting for it. Run bare, before the step
+      # above existed, that meant each JVM booting its own servers on a four-vCPU runner, and the
+      # failures were CPU starvation: vert.x reporting its event loop blocked for eight seconds, a
+      # wall-clock assertion reading 697 where it allows 600. With one shared server each, a JVM
+      # starts nothing, and what is left to share is the CPU.
       #
-      # This is also what makes the step above load-bearing rather than an optimisation: each
-      # invocation is a fresh JVM, so without the environment variables every one of these
-      # fifty-seven would start its own Postgres, its own Mongo, its own RabbitMQ.
-      #
-      # The list is derived from the filesystem rather than written down, so a module that gains a
-      # test tree is picked up by the change that adds it. Every module runs even after one fails:
-      # "which of the fifty-seven" is the useful answer, and fail-fast gives the first one only.
-      - name: Test, one module at a time
-        run: |
-          modules=$(find libs examples plugins server -type d \( -name test -o -name 'test@*' \) \
-            -not -path '*/build/*' | sed 's|/test[^/]*$||' | xargs -n1 basename | sort -u)
-          echo "$(echo "$modules" | wc -l) modules with tests"
-
-          failed=""
-          for m in $modules; do
-            echo "::group::$m"
-            ./kotlin test -m "$m" || failed="$failed $m"
-            echo "::endgroup::"
-          done
-
-          if [ -n "$failed" ]; then
-            echo "::error::tests failed in:$failed"
-            exit 1
-          fi
+      # Sharing the servers is safe for data: every spec works in a namespace of its own — a schema,
+      # a database, a key prefix, a queue or a bucket named through libs/stx-testing's TestNames,
+      # which carries a per-JVM run id — and removes only that. Four specs bound a duration from
+      # above (AmqpConsumerTest, KafkaSubscriberTest, KeyedMutexTest, PipelineTest). They are the
+      # ones to watch if this step turns flaky, and the answer is fewer JVMs at once, not a looser
+      # bound: each bound is what proves the behaviour it tests.
+      - name: Test
+        run: ./kotlin test
 
   lint:
     name: ktlint
