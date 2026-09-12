@@ -129,37 +129,33 @@ jobs:
             echo "MONGO_TEST_URI=mongodb://localhost:27017/?replicaSet=rs0"
           } >> "$GITHUB_ENV"
 
-      # **One module's test JVM at a time.** The CLI has no parallelism setting — `./kotlin test`
-      # decides for itself how many module JVMs to run at once, and on a four-vCPU runner that is
-      # what produced the failures: vert.x reporting its event loop blocked for eight seconds,
-      # coroutine tests giving up after a minute, a wall-clock assertion reading 697 where it allows
-      # 600. None of them were about the code. `-m` is the only lever the CLI offers, so the loop is
-      # the lever.
+      # **One `./kotlin test` for everything, against the servers above.** Measured on this
+      # four-vCPU runner:
       #
-      # This is also what makes the step above load-bearing rather than an optimisation: each
-      # invocation is a fresh JVM, so without the environment variables every one of these
-      # fifty-seven would start its own Postgres, its own Mongo, its own RabbitMQ.
+      # | shape                                   | test step | JUnit time, summed |
+      # | --------------------------------------- | --------- | ------------------ |
+      # | `-m` in a loop, one module at a time    | 426 s     | 169 s              |
+      # | `-m` under `xargs -P 2`                 | 419 s     | 312 s              |
+      # | bare `./kotlin test`                    | 167–232 s | 2600–3700 s        |
       #
-      # The list is derived from the filesystem rather than written down, so a module that gains a
-      # test tree is picked up by the change that adds it. Every module runs even after one fails:
-      # "which of the fifty-seven" is the useful answer, and fail-fast gives the first one only.
-      - name: Test, one module at a time
-        run: |
-          modules=$(find libs examples plugins server -type d \( -name test -o -name 'test@*' \) \
-            -not -path '*/build/*' | sed 's|/test[^/]*$||' | xargs -n1 basename | sort -u)
-          echo "$(echo "$modules" | wc -l) modules with tests"
-
-          failed=""
-          for m in $modules; do
-            echo "::group::$m"
-            ./kotlin test -m "$m" || failed="$failed $m"
-            echo "::endgroup::"
-          done
-
-          if [ -n "$failed" ]; then
-            echo "::error::tests failed in:$failed"
-            exit 1
-          fi
+      # The gain is not parallelism — two invocations at once already saturate the CPU, which is why
+      # -P 2 bought nothing — but paying the CLI's start-up once instead of fifty-seven times, about
+      # four seconds each. The CLI then runs module JVMs as wide as it likes (some sixteen at once;
+      # it has no setting for it), so every spec's start-up is slower. Two specs expired a harness
+      # timeout because of it, in both bare runs, and now carry a longer one: ExchangeContextTest
+      # (WebTestClient's 5 s) and RedisDependenciesTest (Ktor's 10 s module-loading limit).
+      #
+      # A harness timeout proves nothing and may be raised. Four specs bound a duration from above
+      # to prove a behaviour — AmqpConsumerTest, KafkaSubscriberTest, KeyedMutexTest, PipelineTest —
+      # and passed in every run. If one of them turns flaky, go back to the loop rather than loosen
+      # the bound. Before the step above existed, this same bare run had every JVM booting its own
+      # servers, and that starved the runner outright.
+      #
+      # Sharing the servers is safe for data: every spec works in a namespace of its own — a schema,
+      # a database, a key prefix, a queue or a bucket named through libs/stx-testing's TestNames,
+      # which carries a per-JVM run id — and removes only that.
+      - name: Test
+        run: ./kotlin test
 
   lint:
     name: ktlint

@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.application.install
+import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.resolve
 import io.ktor.server.response.respondText
@@ -30,10 +31,19 @@ class RedisDependenciesTest :
 
         val server = redisContainer()
 
+        // Ktor abandons module loading after `ktor.application.startupTimeoutMillis` — ten seconds
+        // unless set (ktor-server-core 3.5.2, `getStartupTimeout`) — and the plugin connects to
+        // Redis while the module loads. On a CI runner shared with every other module's test JVMs
+        // that took longer than ten seconds, in two runs out of two. The limit proves nothing about
+        // the plugin, so it is a minute here. It has to be set in code: `testApplication` does not
+        // read an `application.conf` from the test resources, which was tried.
+        val slowStart = MapApplicationConfig("ktor.application.startupTimeoutMillis" to "60000")
+
         feature("a plugin registering its resource with the container").config(enabled = server.available) {
             scenario("hands the container the one it opened rather than a second connection") {
                 lateinit var injected: Redis
                 testApplication {
+                    environment { config = slowStart }
                     application {
                         install(RedisConnection) {
                             config = RedisConfig(uri = server.requireEndpoint(), namespace = "di")
@@ -66,6 +76,7 @@ class RedisDependenciesTest :
                 // guarded — the reason `CloseGuard` exists.
                 lateinit var injected: Redis
                 testApplication {
+                    environment { config = slowStart }
                     application {
                         install(RedisConnection) {
                             config = RedisConfig(uri = server.requireEndpoint(), namespace = "twice")
