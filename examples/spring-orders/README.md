@@ -333,7 +333,7 @@ exporter is the one whose destination this repository's workspace already has.
 
 No `stx-mongo`, `stx-jpa`, `stx-redis`, `stx-kafka`, `stx-amqp` or `stx-storage`. Those are the
 `integration/` package — one auto-configuration each, opt-in the same way — and each needs its own
-server to demonstrate. `libs/stx-spring-boot/README.md` has the list and
+server to demonstrate. `libs/core/stx-spring-boot/README.md` has the list and
 `docs/spring-configuration.md` every key.
 
 ---

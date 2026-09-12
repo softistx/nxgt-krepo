@@ -1,11 +1,11 @@
 # What a stx-spring-boot application may configure
 
-Every `stx.*` key, what it switches on, and what it costs. This is the half of `libs/stx-spring-boot`
+Every `stx.*` key, what it switches on, and what it costs. This is the half of `libs/core/stx-spring-boot`
 that gains an entry every phase — a key per capability, and roughly five per new integration — so it
 lives here rather than in the module README, which answers *why the integration is shaped this way*
 and stays roughly the size it is.
 
-[`libs/stx-spring-boot/README.md`](../libs/stx-spring-boot/README.md) has the reasoning.
+[`libs/core/stx-spring-boot/README.md`](../libs/core/stx-spring-boot/README.md) has the reasoning.
 [`docs/spring-mongo-queries.md`](spring-mongo-queries.md) is the other half of this one — what a
 query may say.
 
@@ -403,7 +403,7 @@ test one that never saw the harness's per-run database suffix.
 ## `stx-telemetry-spring`
 
 Logs and traces. The vocabulary is [`docs/telemetry.md`](telemetry.md); the reasoning is
-[the library's README](../libs/stx-telemetry/stx-telemetry/README.md);
+[the library's README](../libs/observability/stx-telemetry/stx-telemetry/README.md);
 [`examples/spring-orders`](../examples/spring-orders/README.md) is these keys running — the yaml, a
 `span { }` in the service, typed events in `service/OrderEvents.kt`, and a spec that asserts on the
 signals rather than on the configuration.
@@ -528,7 +528,7 @@ is [`docs/graphix.md`](graphix.md).
 ## Where these keys come from
 
 The IDE completes them from
-`libs/stx-spring-boot/resources/META-INF/additional-spring-configuration-metadata.json`, which is
+`libs/core/stx-spring-boot/resources/META-INF/additional-spring-configuration-metadata.json`, which is
 written by hand.
 
 It has to be. `spring-boot-configuration-processor` is a *Java* annotation processor, this toolchain

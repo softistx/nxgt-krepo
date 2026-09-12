@@ -44,7 +44,7 @@ a container started once for the run, otherwise the spec skips and says so. You 
 export anything or start anything — `./kotlin test` works on a machine where nothing is running.
 
 If you already have one of these up, point at it (`MONGO_TEST_URI`, `POSTGRES_TEST_URI`, …) and the
-specs will use it instead of pulling an image. `libs/stx-testing/README.md` has the list.
+specs will use it instead of pulling an image. `libs/core/stx-testing/README.md` has the list.
 
 ## Opening a pull request
 
@@ -114,7 +114,7 @@ than left as the three-line scripts they look like.
 - **Specs are kotest `FeatureSpec`**, `feature("…")` naming the behaviour and `scenario("…")` one
   case of it. One spec class per file, named after the file. Fixtures live in a package named for
   what they are, not beside the spec that needed them first.
-- **Check Material 3 before writing a `libs/stx-material` component**, and reuse the catalog before
+- **Check Material 3 before writing a `libs/ui/stx-material` component**, and reuse the catalog before
   adding a dependency — `libs.versions.toml` is the single place a version lives, referenced as
   `$libs.<alias>`. Never paste a versioned coordinate into a `module.yaml`.
 - **Everything new is `com.softistx.*`.** That is the Kotlin package. The Maven *group* is

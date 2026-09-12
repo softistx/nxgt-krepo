@@ -226,13 +226,13 @@ kotlinx-rpc-krpc-ktor-server = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krp
 # Gradle metadata as an ordinary `requires`, not as a platform — so a versionless alias publishes a
 # dependency with no version and no constraint, which no consumer can resolve. `examples/spring-orders`
 # is what found that, on the day it started depending on `io.github.softistx:stx-mongo:0.1.0` instead of on
-# `//libs/stx-mongo/stx-mongo`. The BOM entry stays: it still aligns any other org.mongodb artifact
+# `//libs/data/stx-mongo/stx-mongo`. The BOM entry stays: it still aligns any other org.mongodb artifact
 # that arrives transitively.
 mongodb-driver-bom = { module = "org.mongodb:mongodb-driver-bom", version.ref = "mongodb" }
 mongodb-driver = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version.ref = "mongodb" }
 mongodb-driver-extensions = { module = "org.mongodb:mongodb-driver-kotlin-extensions", version.ref = "mongodb" }
 mongodb-bsonx = { module = "org.mongodb:bson-kotlinx", version.ref = "mongodb" }
-# GridFS has no Kotlin coroutine driver of its own; libs/stx-mongo wraps the Reactive Streams one
+# GridFS has no Kotlin coroutine driver of its own; libs/data/stx-mongo wraps the Reactive Streams one
 mongodb-driver-reactivestreams = { module = "org.mongodb:mongodb-driver-reactivestreams", version.ref = "mongodb" }
 rxrelay = { module = "com.jakewharton.rxrelay3:rxrelay", version = "3.0.1" }
 kasechange = { module = "net.pearx.kasechange:kasechange", version = "1.4.1" }

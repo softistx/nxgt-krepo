@@ -1,6 +1,6 @@
 # What a stx-workflow declaration may say
 
-The vocabulary of [`stx-workflow`](../libs/stx-workflow/stx-workflow/README.md): every verb, what it
+The vocabulary of [`stx-workflow`](../libs/messaging/stx-workflow/stx-workflow/README.md): every verb, what it
 takes, and what the engine does with it. The module README explains *why* the library is shaped this
 way; this file is what you may write.
 
@@ -817,7 +817,7 @@ What ships:
 | `JpaWorkflowStore` | In `stx-workflow-db`. One row per instance, over `stx-jpa`. Postgres, DB2 or MySQL — the URI's scheme picks |
 | `MongoWorkflowStore` | In `stx-workflow-db`. One document per instance, with a TTL index doing the retention |
 
-All three persistent stores are described in [the module's README](../libs/stx-workflow/stx-workflow-db/README.md),
+All three persistent stores are described in [the module's README](../libs/messaging/stx-workflow/stx-workflow-db/README.md),
 and all three run the same shared contract spec, so the rules above are checked rather than intended.
 
 ```kotlin

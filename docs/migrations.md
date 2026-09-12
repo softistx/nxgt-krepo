@@ -1,6 +1,6 @@
 # What a stx-migrations migration may say
 
-The vocabulary of [`stx-migrations`](../libs/stx-migrations/stx-migrations/README.md): what a migration
+The vocabulary of [`stx-migrations`](../libs/data/stx-migrations/stx-migrations/README.md): what a migration
 is, what the runner does with it, and what each store's ledger holds. The module README explains *why*
 the library is shaped this way; this file is what you may write.
 

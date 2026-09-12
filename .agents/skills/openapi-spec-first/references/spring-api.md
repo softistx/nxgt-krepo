@@ -191,8 +191,8 @@ is the four settings such a client needs and nothing else. A spec that assembled
 would be asserting against a transport no caller uses.
 
 The application is Spring's to start, and **none of that bootstrap is written per application** —
-`stx-spring-boot`'s `com.softistx.spring.testing` ships it. Add `//libs/stx-spring-boot` and
-`//libs/stx-testing` to `test-dependencies`, along with `$libs.kotest.extensions.spring`, and write
+`stx-spring-boot`'s `com.softistx.spring.testing` ships it. Add `//libs/core/stx-spring-boot` and
+`//libs/core/stx-testing` to `test-dependencies`, along with `$libs.kotest.extensions.spring`, and write
 these two files:
 
 ```kotlin

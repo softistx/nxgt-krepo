@@ -28,7 +28,7 @@ KSP generates `_ExampleApiImpl` plus a `createExampleApi()` extension, in the in
 This project builds with the Kotlin Toolchain, which has **no Gradle plugin support** — and Ktorfit's documented install starts with its Gradle plugin. It still works, through KSP alone. Verified against toolchain 0.12.0 with Ktorfit 2.7.5:
 
 ```yaml
-# libs/<name>/module.yaml
+# libs/<role>/<name>/module.yaml
 product: jvm/lib            # or kmp/lib — Ktorfit targets JVM, Android, JS, iOS, Linux
 
 dependencies:

@@ -8,7 +8,7 @@ which lets us discuss and fix the problem before it is visible.
 
 Tell us which library and version, what an attacker can do, and the smallest way to reproduce it.
 A failing spec is the clearest form of that — this repository's specs run against real backing
-services through `libs/stx-testing`, so a reproduction usually fits in one `FeatureSpec`.
+services through `libs/core/stx-testing`, so a reproduction usually fits in one `FeatureSpec`.
 
 You should get a first reply within a week. If a report is accepted, we will agree a disclosure
 date with you and credit you in the advisory and the release notes unless you ask us not to.

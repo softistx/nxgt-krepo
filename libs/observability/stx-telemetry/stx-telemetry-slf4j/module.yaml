@@ -1,0 +1,20 @@
+product: jvm/lib
+description: "The SLF4J bridge for stx-telemetry, in both directions: third-party logs into the pipeline, or this library's signals out to an existing logback"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Logger, Telemetry and the signal model — all of it in the public API
+  - //libs/observability/stx-telemetry/stx-telemetry: exported
+  # This module *implements* SLF4J's provider SPI, so the API is part of its surface
+  - $libs.slf4j.api: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  kotlin:
+    serialization: json

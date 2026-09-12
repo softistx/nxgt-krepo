@@ -5,7 +5,7 @@ description: Compose Multiplatform for this repo's UI library — targets and wh
 
 # Compose Multiplatform
 
-`libs/stx-material` is the repo's Compose Multiplatform library and
+`libs/ui/stx-material` is the repo's Compose Multiplatform library and
 `examples/material-demo` its catalogue. Both are built by the **Kotlin Toolchain**, not Gradle,
 so every `kotlin { sourceSets { … } }` snippet in `references/` describes the Gradle spelling of
 something a `module.yaml` says differently. Translate it; do not copy it.
@@ -34,7 +34,7 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
 - **No icon pack is reachable through the toolchain.** Beyond the missing keys above,
   `$compose.material` does **not** carry `material-icons-core` in 1.11 — `androidx.compose.material.icons`
   is simply unresolved — and the AndroidX icon artifacts in `libs.versions.toml` are Android-only,
-  so they cannot serve a `kmp/lib`. `libs/stx-material` defines its own vectors in
+  so they cannot serve a `kmp/lib`. `libs/ui/stx-material` defines its own vectors in
   `icon/StxIcons.kt` from Material path data via `addPathNodes`; a caller that needs a full pack
   passes its own `ImageVector` in.
 - **M3 1.11 has its own `MotionScheme`, and `MaterialTheme` takes it.** There is a
@@ -91,7 +91,7 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
 
 ## The module shape
 
-`libs/stx-material/module.yaml` is the worked example, comment by comment. The three things a
+`libs/ui/stx-material/module.yaml` is the worked example, comment by comment. The three things a
 new Compose module gets wrong: `platforms` must omit `iosX64`; `settings.compose.version` should be
 pinned the way `ktor` is, so a toolchain bump is a visible change; and a `$compose.*` dependency
 whose types appear in the public API needs `: exported`.

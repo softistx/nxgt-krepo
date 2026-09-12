@@ -1,7 +1,7 @@
 # Using these libraries
 
 The libraries publish to **Maven Central** as `io.github.softistx:<module-name>:<version>` — the
-directory name under `libs/` *is* the artifact name, so `libs/stx-jpa/stx-jpa` is
+directory name under `libs/` *is* the artifact name, so `libs/data/stx-jpa/stx-jpa` is
 `io.github.softistx:stx-jpa`. They are ordinary Maven artifacts with Gradle module metadata beside
 the POM: **you do not need the Kotlin Toolchain to consume them**, and you need no credentials.
 

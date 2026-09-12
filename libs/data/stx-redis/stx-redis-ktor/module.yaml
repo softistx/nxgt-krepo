@@ -1,0 +1,38 @@
+product: jvm/lib
+description: "Ktor plugin for stx-redis: one namespaced connection per application, opened with it and closed with it"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Redis is what the plugin opens and what `call.redis` returns, and RedisConfig is the only way to
+  # configure it — so a consumer of this module already depends on stx-redis. Exported for that
+  # reason; the hub this came out of had it compile-only because six other integrations were
+  # optional, which was a fact about the hub rather than about this integration.
+  - //libs/data/stx-redis/stx-redis: exported
+  - $ktor.server.core: exported
+
+  # `resource` and `required` — the resource-lifecycle idiom every plugin in this repo shares. It
+  # stays in stx-ktor because it belongs to no integration; this module is a caller of it.
+  - //libs/core/stx-ktor
+
+  # Ktor DI. Installing the plugin registers the connection with the container, so this is on the
+  # runtime classpath of every application that installs it — and exported, because resolving what
+  # was registered is the point.
+  - $libs.ktor.server.di: exported
+
+test-dependencies:
+  # the server both specs talk to, started for the run when the workspace's own is not named
+  - //libs/core/stx-testing
+  - $ktor.server.testHost
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.slf4j.nop
+
+settings:
+  ktor:
+    enabled: true
+    # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is
+    # the same number today by coincidence.
+    version: 3.5.2

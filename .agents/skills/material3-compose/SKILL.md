@@ -5,7 +5,7 @@ description: The Material 3 API surface that actually compiles here — colour r
 
 # Material 3 (Compose Multiplatform)
 
-`libs/stx-material` builds *on top of* Material 3: `StxTheme` installs a `MaterialTheme`
+`libs/ui/stx-material` builds *on top of* Material 3: `StxTheme` installs a `MaterialTheme`
 underneath so ordinary M3 components and third-party M3 libraries keep working inside it.
 
 ## Why this skill has no fetched documentation

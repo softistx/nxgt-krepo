@@ -1,0 +1,18 @@
+product: jvm/lib
+description: "OTLP/HTTP export for stx-telemetry, in JSON over the JDK's own HttpClient — kotlinx.serialization and no OpenTelemetry SDK"
+
+apply:
+  - //publishing.module-template.yaml
+
+dependencies:
+  # Exporter, Signal and the records this translates — all of it in the public API
+  - //libs/observability/stx-telemetry/stx-telemetry: exported
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  kotlin:
+    serialization: json

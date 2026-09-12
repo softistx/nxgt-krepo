@@ -1,10 +1,10 @@
 # What a stx-graphix schema may say
 
-The annotation and scalar vocabulary. This is the half of `libs/stx-graphix` that gains an entry
+The annotation and scalar vocabulary. This is the half of `libs/api/stx-graphix` that gains an entry
 every phase — a new annotation, a new scalar, a new mapping rule — so it lives here rather than
 in the module README, which answers *why the library is shaped this way*.
 
-`libs/stx-graphix/stx-graphix/README.md` has the reasoning.
+`libs/api/stx-graphix/stx-graphix/README.md` has the reasoning.
 
 ## Roots
 
@@ -235,7 +235,7 @@ The resolver behind a bounded field takes a plain `Int` or `Double`: the range w
 
 ### Adding one
 
-A scalar is one file under `libs/stx-graphix/stx-graphix/src/scalar/` holding its `Coercing` and
+A scalar is one file under `libs/api/stx-graphix/stx-graphix/src/scalar/` holding its `Coercing` and
 its `GraphQLScalarType`, and one line in `BuiltInScalars`. Nothing else enumerates them — the type
 lookup, the SDL wiring and the schema's additional types all read that list. Most of them are two
 lambdas over `StringCoercing` or a width over `IntegralCoercing`.

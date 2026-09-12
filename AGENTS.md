@@ -13,28 +13,28 @@ What exists:
 | `project.yaml` | Project manifest — lists the modules, and registers local toolchain plugins |
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
-| `libs/stx-openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
-| `libs/stx-common` | What more than one module needs and nothing else. Two concurrency packages, split by whether the caller can suspend: `coroutines/` has `CoroutineSafeMap`, `KeyedMutex` and `Mailbox`; `concurrent/` has `Memo`, `Guarded`, the `ConcurrentMap` extensions and the `BlockingQueue` bridge, for the Hibernate binders and SLF4J initialisers that cannot. Plus `CloseGuard`, the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
-| `libs/stx-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
-| `libs/stx-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
-| `libs/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
-| `libs/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StxTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
-| `libs/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
-| `libs/stx-ktor` | The Ktor seam, and only the seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the one CORS policy `stx-spring-boot` builds Spring's from. No integration lives here — each is a module beside its own library — and the tell is that no spec in this module talks to a backend |
-| `libs/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
-| `libs/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
-| `libs/stx-spring-boot` | The Spring seam, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, security, CORS, the JSON codec, and the Spring Data Mongo layer. Each `stx-*` library's own auto-configuration is a module beside that library, not a package here |
-| `libs/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
-| `libs/stx-graphix` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphix-ktor` and `stx-graphix-spring` are the HTTP integrations, `stx-graphix-koin` builds the schema from a Koin container |
-| `libs/stx-workflow` | Compensable workflows for a Kotlin coroutine service: a DSL of steps each with its own compensation, one `@Serializable` context threaded through them, and state checkpointed after every node so a process that dies mid-run is picked up where it stopped. `await` and `sleep` stop an instance for a signal or a deadline by writing it down rather than by holding a coroutine, and `workflowOf` reads the same declaration off an annotated class. `engine.find(Failed)` is the operator's inbox for the one outcome the engine refuses to resolve. Four modules in the group: the engine, `stx-workflow-db` for where instances live (Redis, SQL through `stx-jpa`, or MongoDB), and `stx-workflow-ktor` / `stx-workflow-spring` for the two framework integrations |
-| `libs/stx-migrations` | Schema migrations written in Kotlin, on neither Flyway nor Liquibase: a migration is a class with a declared `version`, a ledger records what ran, a renewing lease keeps two processes apart, and the runner is a **gate** — it runs in the process that is about to serve and every way it fails leaves `run()`. `RUNNING` is the status the prior art lacked, and it is what makes a process killed mid-migration fail closed instead of being silently re-applied. Four modules: the core (no store in it, specs run in under a second with no container), `stx-migrations-db` for MongoDB and SQL, and `stx-migrations-ktor` / `stx-migrations-spring` |
-| `libs/stx-telemetry` | Logs and traces for a Kotlin coroutine service. The current span and the inherited fields are a `CoroutineContext.Element`, not a `ThreadLocal` — the same argument `RequestTranslator` makes about `LocaleContextHolder`, applied to the tool that is supposed to make such bugs visible. `TelemetryContext` is also a `ThreadContextElement`, so the runtime keeps a thread-local mirror in step and `log.info(…)` needs not suspend. An event is a `@Serializable` type; `Mailbox` is the queue and one coroutine drains it to the exporters |
+| `libs/api/stx-openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
+| `libs/core/stx-common` | What more than one module needs and nothing else. Two concurrency packages, split by whether the caller can suspend: `coroutines/` has `CoroutineSafeMap`, `KeyedMutex` and `Mailbox`; `concurrent/` has `Memo`, `Guarded`, the `ConcurrentMap` extensions and the `BlockingQueue` bridge, for the Hibernate binders and SLF4J initialisers that cannot. Plus `CloseGuard`, the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
+| `libs/messaging/stx-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
+| `libs/api/stx-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
+| `libs/data/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
+| `libs/ui/stx-material` | The repo's one client-side library — Compose Multiplatform components over Material 3: `StxTheme` takes M3's own four inputs and wraps `MaterialExpressiveTheme`, component looks are declared as Compose `Style`s with their interaction states animated, and every curve comes from M3's `MotionScheme` rather than a hand-written `tween` |
+| `libs/messaging/stx-kafka` | Kafka for a Kotlin coroutine service: suspending sends, records as a `Flow`, offsets committed after the handler, and an admin client |
+| `libs/core/stx-ktor` | The Ktor seam, and only the seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the one CORS policy `stx-spring-boot` builds Spring's from. No integration lives here — each is a module beside its own library — and the tell is that no spec in this module talks to a backend |
+| `libs/data/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
+| `libs/data/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
+| `libs/core/stx-spring-boot` | The Spring seam, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, security, CORS, the JSON codec, and the Spring Data Mongo layer. Each `stx-*` library's own auto-configuration is a module beside that library, not a package here |
+| `libs/data/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
+| `libs/api/stx-graphix` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphix-ktor` and `stx-graphix-spring` are the HTTP integrations, `stx-graphix-koin` builds the schema from a Koin container |
+| `libs/messaging/stx-workflow` | Compensable workflows for a Kotlin coroutine service: a DSL of steps each with its own compensation, one `@Serializable` context threaded through them, and state checkpointed after every node so a process that dies mid-run is picked up where it stopped. `await` and `sleep` stop an instance for a signal or a deadline by writing it down rather than by holding a coroutine, and `workflowOf` reads the same declaration off an annotated class. `engine.find(Failed)` is the operator's inbox for the one outcome the engine refuses to resolve. Four modules in the group: the engine, `stx-workflow-db` for where instances live (Redis, SQL through `stx-jpa`, or MongoDB), and `stx-workflow-ktor` / `stx-workflow-spring` for the two framework integrations |
+| `libs/data/stx-migrations` | Schema migrations written in Kotlin, on neither Flyway nor Liquibase: a migration is a class with a declared `version`, a ledger records what ran, a renewing lease keeps two processes apart, and the runner is a **gate** — it runs in the process that is about to serve and every way it fails leaves `run()`. `RUNNING` is the status the prior art lacked, and it is what makes a process killed mid-migration fail closed instead of being silently re-applied. Four modules: the core (no store in it, specs run in under a second with no container), `stx-migrations-db` for MongoDB and SQL, and `stx-migrations-ktor` / `stx-migrations-spring` |
+| `libs/observability/stx-telemetry` | Logs and traces for a Kotlin coroutine service. The current span and the inherited fields are a `CoroutineContext.Element`, not a `ThreadLocal` — the same argument `RequestTranslator` makes about `LocaleContextHolder`, applied to the tool that is supposed to make such bugs visible. `TelemetryContext` is also a `ThreadContextElement`, so the runtime keeps a thread-local mirror in step and `log.info(…)` needs not suspend. An event is a `@Serializable` type; `Mailbox` is the queue and one coroutine drains it to the exporters |
 | `libs/stx-telemetry-otlp` | OTLP/HTTP+JSON export for `stx-telemetry`, on `java.net.http.HttpClient` with hand-written `@Serializable` documents. No OpenTelemetry SDK — it would bring its own `ThreadLocal` `Context`. `OtlpExporterTest` pins the document against a JDK `HttpServer`; a second spec gated on `OTLP_TEST_ENDPOINT` asks a real collector, because a stub agrees with whatever we wrote |
 | `libs/stx-telemetry-slf4j` | The SLF4J bridge for `stx-telemetry`, both ways. Inbound is an `SLF4JServiceProvider` found by SPI, so a third-party library's logs enter the pipeline carrying the current span; it reads the caller's MDC, which is correct because it is read on the very thread that wrote the line and never carried across a hop. Outbound is an `Slf4jExporter` for an application that keeps logback. Both at once is a loop, and the exporter refuses to be built when the bound provider is this module's own |
 | `libs/stx-telemetry-mongo` | MongoDB export for `stx-telemetry`. A batch is one unordered `insertMany`, and the document is what `signalJson` produces plus the resource, with the three instants written back as BSON dates — JSON has no date, and a string is not something Mongo will expire or index. Retention is a TTL index built on the first batch, because building it suspends and nothing that constructs an exporter does; a changed retention drops and rebuilds it rather than leaving the old window silently in place. It depends on the driver and deliberately not on `stx-mongo`, which is sessions, pagination and GridFS |
 | `libs/stx-telemetry-ktor` | Ktor plugin for `stx-telemetry`: `install(Observability)`. Unlike every other plugin here it intercepts `ApplicationCallPipeline.Monitoring` rather than using `on(CallSetup)` — a `CoroutineContext.Element` is only in scope inside the `withContext` that installed it, so the span has to wrap `proceed()`. The span is renamed to the matched route on `RoutingRoot.RoutingCallStarted`, which is why `SpanScope.name` is settable |
 | `libs/stx-telemetry-spring` | Spring Boot auto-configuration for `stx-telemetry`, opt-in behind `stx.telemetry.enabled`. The server span is a `CoWebFilter` and not a `WebFilter`: a `WebFilter` returns a `Mono`, so what it puts in scope lives in the Reactor context, which a suspending `@RestController` method does not read. Needs `kotlinx-coroutines-reactor`, which the WebFlux starter does not bring — found by specs that hung, not by reading a manifest |
-| `libs/stx-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
+| `libs/core/stx-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `plugins/dgs-codegen` | Toolchain adapter of Netflix DGS codegen — GraphQL schema to Kotlin types |
 | `plugins/apollo` | Toolchain adapter of Apollo Kotlin codegen — schema and documents to Kotlin models |
@@ -62,7 +62,7 @@ Two modules and one reference document — read those before changing either mod
 - [`docs/openapi-support.md`](docs/openapi-support.md) — what the generator understands of a
   document, and what each part becomes in Kotlin. This is the file that grows.
 
-- [`libs/stx-openapi-generator`](libs/stx-openapi-generator/README.md) — the generator. swagger-parser reads
+- [`libs/api/stx-openapi-generator`](libs/api/stx-openapi-generator/README.md) — the generator. swagger-parser reads
   the spec into an intermediate representation, and a `SourceEmitter` turns that into KotlinPoet
   files. The root package holds only that IR; `parser` reads, `emit` holds the emitter contract and
   what every emitter shares, `models` emits the schemas, and `ktorfit` and `spring` are the two
@@ -148,7 +148,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 
 - **`kotlin-toolchain`** — manifest schema, catalog and template rules, commands, plus `references/`: a markdown cache of the full official documentation (50 pages, version recorded in `references/INDEX.md`).
 - **`ktorfit`** — the Ktorfit HTTP client, including how it is wired up here through KSP alone, without its Gradle plugin.
-- **`compose-multiplatform`** — the UI stack behind `libs/stx-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 59 pages of the official documentation.
+- **`compose-multiplatform`** — the UI stack behind `libs/ui/stx-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 59 pages of the official documentation.
 - **`material3-compose`** — the Material 3 API surface that actually compiles here. Its `references/` are *not* fetched: `$compose.material3` resolves to its own alpha version line, so the pages are generated from the resolved jar by `scripts/extract_api.py`.
 - **`skill-from-docs`** — builds and refreshes docs-backed skills. Each such skill declares its source in a `docs-source.json`; refresh one with:
   ```bash
@@ -158,9 +158,9 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 - **`openapi-spec-first`** — how a REST API is authored here: a Redocly-split OpenAPI document under `<module>/openapi/`, the file and naming conventions the generator reads, and the repository → service → controller layering over the generated `@HttpExchange` interface. Read it before adding or changing an endpoint. Its `references/` are written by hand rather than fetched — `document-layout.md` for the split document and the redocly config, `spring-api.md` for the five files a Spring API is made of — and they stay in step with `examples/spring-orders`, which is the same thing running.
 - **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on one integration branch, which then lands on `develop` as the feature.
 
-Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
+Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/ui/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
 
-- **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/stx-material`**, not background reading; see *Styling a component* below.
+- **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/ui/stx-material`**, not background reading; see *Styling a component* below.
 - **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
 - **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
 
@@ -192,7 +192,7 @@ The shape of a wrapper:
 
 A claim about **pixels is measured in pixels.** `ImageComposeScene` renders a composable into a
 bitmap with no window, in milliseconds, on a headless host, and `sendPointerEvent` drives hover and
-press. `libs/stx-material/test@jvm/` holds the two specs that exist, and both were written
+press. `libs/ui/stx-material/test@jvm/` holds the two specs that exist, and both were written
 because something looked right and was not: a hover state that was invisible on *selected* chips
 because they already wear the focus layer, and a collapsed `ResponsiveButton` that kept the padding
 its label had left behind. Rendering specs are jvm-only — skiko's native library comes from
@@ -303,7 +303,7 @@ The toolchain finds the project by walking up from the working directory, so the
 
 ## Publishing
 
-The `libs/*` modules publish as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:0.1.0`
+Every module under `libs/` publishes as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:0.1.0`
 today. The configuration lives once in `publishing.module-template.yaml` at the repo root, which each
 library pulls in with `apply: [ //publishing.module-template.yaml ]`; nothing about publishing is
 written per module. `artifactId` is deliberately not set, because it defaults to the module's name —
@@ -339,7 +339,7 @@ Spring Boot.
 
 ```bash
 ./kotlin publish -m stx-mongo --transitive mavenLocal   # one library and what it depends on
-# all of them — `ls libs` lists family *directories*, so the selection comes from the manifests
+# all of them — `ls libs` lists role folders, not modules, so the selection comes from the manifests
 ./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs plugins \
   --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
 ```
@@ -355,7 +355,7 @@ Five things about it that are not guessable:
 - **Publishing is all-or-nothing across a dependency chain.** The toolchain refuses a module
   configured for publishing that depends on one that is not — `ERROR: Module 'stx-mongo' is
   configured for publishing but depends on module 'stx-common' which is not` — with a pointer at the
-  offending dependency line. That is why every `libs/*` module publishes, `stx-testing` included.
+  offending dependency line. That is why every module under `libs/` publishes, `stx-testing` included.
 - **A `kmp/lib` publishes one artifact per platform** plus a root one: `stx-material`,
   `stx-material-jvm`, `stx-material-android`, `stx-material-iosarm64`,
   `stx-material-iossimulatorarm64`. Its `composeResources` are *not* in the publication yet
@@ -365,8 +365,8 @@ Five things about it that are not guessable:
   managing publishes with **no version at all** and a consumer fails with *"its version could not be
   resolved"*. The POM does get a `<dependencyManagement>` import, and the resolver does not honour
   that from a transitive POM. So a published library pins its own versions: give the catalog alias a
-  `version.ref` and drop the `bom:` line. `libs/stx-mongo/stx-mongo` and
-  `libs/stx-telemetry/stx-telemetry-mongo` both carry a comment saying so.
+  `version.ref` and drop the `bom:` line. `libs/data/stx-mongo/stx-mongo` and
+  `libs/observability/stx-telemetry/stx-telemetry-mongo` both carry a comment saying so.
 - **The publish task caches, and its up-to-date check does not notice a `module.yaml` edit.** It
   copies `build/tasks/_<module>_prepareMavenPublishables/`, so a manifest change can be rebuilt,
   republished and reported successful while the installed `.pom` and `.module` are the *old* ones —
@@ -407,7 +407,7 @@ The feature is a preview in the toolchain and its docs say it is likely to chang
 **No module under `examples/` or `server/` may name a `//libs/...` dependency.** Each applies
 `//stx-artifacts.module-template.yaml`, which adds `mavenLocal` on top of the default repositories,
 and names each library through a `$libs.stx.*` catalog alias — `io.github.softistx:stx-jpa:0.1.0` and not
-`//libs/stx-jpa/stx-jpa`.
+`//libs/data/stx-jpa/stx-jpa`.
 
 That is the whole point of having examples. A module reference proves the sources compile together,
 which the libraries' own specs already prove. A **published coordinate** proves the thing no other
@@ -466,7 +466,7 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 
 ### Shared code
 
-`libs/stx-common` holds what **more than one module** needs, expressed without knowing anything
+`libs/core/stx-common` holds what **more than one module** needs, expressed without knowing anything
 about any of them. It depends on kotlinx-coroutines and kotlinx-serialization and on nothing else,
 ever: the moment something in there knows what a topic or a collection is, every library depending
 on it inherits that, and a shared module that depends on everything is a cycle waiting for its
@@ -483,7 +483,7 @@ key should wait, `Mailbox` when a producer is not a coroutine at all and must no
 `concurrent/` is for the callers that genuinely cannot suspend — a Hibernate binder, an SLF4J static
 initialiser, a shutdown hook — and holds `Memo` for a value computed once per key, `Guarded` for an
 object that is not thread-safe, and the `ConcurrentMap` and `BlockingQueue` extensions.
-`libs/stx-common/README.md` has the reasoning; the short version is that reaching for `runBlocking`
+`libs/core/stx-common/README.md` has the reasoning; the short version is that reaching for `runBlocking`
 to move from the second package to the first is how a client deadlocks against its own I/O thread.
 
 **`getOrPut` on a `ConcurrentHashMap` is not atomic**, and this repository shipped that mistake in
@@ -505,7 +505,7 @@ reusable part of either module. What a base class earned and an extension still 
 kept explicitly: `insertAndRead`, the transaction guard on every JPA write verb, and the audit
 stamps. When a new store is added, follow the same shape.
 
-**Shared does not mean everything shared goes there.** `libs/stx-i18n` is used by more than
+**Shared does not mean everything shared goes there.** `libs/api/stx-i18n` is used by more than
 one module and is still its own library, because ICU4J is a 15 MB jar and `stx-common`'s rule
 is kotlinx-and-nothing-else — putting message formatting in it would make `stx-kafka` carry a
 formatting library it will never call. The same test applies to the next candidate: if it brings
@@ -536,12 +536,12 @@ now pointing from the things that must stay light to the heavy ones.
 A sibling module has neither problem: `stx-jpa-ktor` compiles against Ktor and `stx-jpa` does not,
 and the two test suites still fail independently.
 
-`libs/stx-ktor` keeps what belongs to no library and is the same for all of them: the
+`libs/core/stx-ktor` keeps what belongs to no library and is the same for all of them: the
 resource-lifecycle idiom (`own`, `publish`, `resource`, `required`) and the one CORS policy shared
 with Spring. It is the **seam**, not the switchboard, and its own specs are the tell — there is no
 backend in any of them. Those four verbs are public rather than internal for exactly this reason:
 they are the contract between the seam and every integration built on it, and a contract cannot be
-internal. `libs/stx-spring-boot` is the same seam for Spring, and it has no `src/integration/`
+internal. `libs/core/stx-spring-boot` is the same seam for Spring, and it has no `src/integration/`
 either: what is left there is error handling, security, CORS, the JSON and web conventions, and the
 Spring Data Mongo layer — none of which belongs to a `stx-*` library.
 
@@ -617,7 +617,7 @@ a library cannot opt out. The drivers do not agree here either: Lettuce and the 
 a second close, the RabbitMQ client throws. Any new `AutoCloseable` in these libraries closes through
 the guard, so that all of it stays a question of tidiness rather than of correctness.
 
-`libs/stx-spring-boot` is the same seam for Spring that `stx-ktor` is for Ktor, and it follows the
+`libs/core/stx-spring-boot` is the same seam for Spring that `stx-ktor` is for Ktor, and it follows the
 same `compile-only` rule for the same reason. Two things about it are specific to this toolchain and
 neither is guessable:
 
@@ -672,7 +672,7 @@ nothing, may be. `ci.yml` has the measurements.
 and a second container either clashes on the port or silently tests a different server than the one
 everything else is pointed at.
 
-**A spec must not depend on the host having the right daemon up.** `libs/stx-testing` declares
+**A spec must not depend on the host having the right daemon up.** `libs/core/stx-testing` declares
 each backing service and resolves it in one order: the environment variable if it names a server,
 otherwise a container started once for the run, otherwise `available == false` and the spec skips.
 Mongo, Redis, AMQP and MinIO all work this way. Declare a new backend in `Backends.kt`, never in a
@@ -687,7 +687,7 @@ bucket or key prefix of its own inside it: `TestNames("stx_mongo_test", separato
 carries a per-run suffix, so a crashed run's leftovers cannot collide with the next run's names. The
 thing it replaced was a prefix *sweep* before the first spec, which could not tell a crashed run's
 databases from a concurrent run's and so had two suites deleting each other's data. Never reintroduce
-a sweep; name what cannot collide. `libs/stx-testing/README.md` has both.
+a sweep; name what cannot collide. `libs/core/stx-testing/README.md` has both.
 
 **A Spring application gets its MongoDB as a bean, not as a property.** `stx-spring-boot`'s
 `com.softistx.spring.testing` ships `MongoSpec` — `@SpringBootTest` plus a `MongoConnectionDetails`
@@ -696,7 +696,7 @@ is not only about repetition: a property name can be wrong and say nothing, and 
 the driver's settings from `spring.data.mongodb` to **`spring.mongodb`**, and `examples/spring-orders`
 spent a phase talking to `mongodb://localhost/test` — the workspace's own replica set — with a
 container running beside it and a green suite. A bean is asked for by type and cannot be misspelled.
-`libs/stx-spring-boot/README.md` has the four lines an application writes.
+`libs/core/stx-spring-boot/README.md` has the four lines an application writes.
 
 `spring.mongodb.database` there names a *prefix*, not a database: the test support appends the run
 suffix — the `TestNames` rule above, reached through a `BeanPostProcessor` because
@@ -792,14 +792,14 @@ that visible, and `FLUSHDB` is what would hide it.
 Sources in `src/`, tests in `test/`, test-only resources in `testResources/`:
 
 ```yaml
-# libs/<name>/module.yaml
+# libs/<role>/<name>/module.yaml
 product: jvm/lib          # or kmp/lib, jvm/app, ...
 
 apply:
   - //common.module-template.yaml   # shared config, see below
 
 dependencies:
-  - //libs/core                     # another module — path from the project root
+  - //libs/core/stx-common          # another module — path from the project root
   - $libs.kotlinx.serialization     # project catalog alias
 
 test-dependencies:
@@ -811,31 +811,51 @@ A module's own composition — what it is built out of — reads before what it 
 outside, and a `//libs/` entry buried between two catalog aliases is the one a reader misses when
 asking what a module actually depends on.
 
-Modules are registered in `project.yaml`, and this repo registers them **by glob**, so a new module under `libs/`, `libs/<group>/`, `plugins/`, `examples/<name>/` or `examples/<group>/<name>/` is picked up without editing the file:
+Modules are registered in `project.yaml`, and this repo registers them **by glob**, so a new module under `libs/<role>/`, `libs/<role>/<family>/`, `plugins/`, `examples/<name>/` or `examples/<group>/<name>/` is picked up without editing the file:
 
 ```yaml
 modules:
   - examples/*
   - examples/*/*
-  - libs/*
   - libs/*/*
+  - libs/*/*/*
   - plugins/*
 ```
 
-Only directories that directly contain a `module.yaml` are matched, so grouping directories such as `examples/material-demo` and `libs/stx-graphix` and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported as an error, so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
+Only directories that directly contain a `module.yaml` are matched, so grouping directories — `examples/material-demo`, the role folders under `libs/`, a family such as `libs/api/stx-graphix` — and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported (a weak warning on toolchain 0.12.0, seen when `libs/*` outlived the last module directly under `libs/`), so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
 
-**Every published library is a family directory.** `libs/<name>/` contains no `module.yaml` of its
-own; the library itself is `libs/<name>/<name>/`, and each framework integration is a sibling beside
-it — `libs/stx-jpa/stx-jpa`, `libs/stx-jpa/stx-jpa-ktor`, `libs/stx-jpa/stx-jpa-spring`. That is what
-lets an integration be published, versioned and depended on without the hub it used to live in.
-A module's name is still its own directory name, so the leaf keeps the artifact: `libs/stx-jpa/stx-jpa`
-publishes as `io.github.softistx:stx-jpa`, exactly as `libs/stx-jpa` did. Nesting a library one level down
-changes no coordinate.
+**`libs/` is grouped by role, and a role folder is ownership, not a build boundary.** Six folders,
+each with its own line in `.github/CODEOWNERS`:
+
+| folder | libraries |
+| --- | --- |
+| `libs/core` | stx-common, stx-testing, stx-ktor, stx-spring-boot |
+| `libs/data` | stx-jpa, stx-mongo, stx-redis, stx-storage, stx-migrations |
+| `libs/messaging` | stx-amqp, stx-kafka, stx-workflow |
+| `libs/api` | stx-graphix, stx-openapi-generator, stx-i18n |
+| `libs/observability` | stx-telemetry |
+| `libs/ui` | stx-material |
+
+Nothing in the build knows about them. A module in `libs/data` depends on one in `libs/core` by `//`
+path exactly as before, and families cross roles freely — `stx-workflow-db` needs jpa, mongo and
+redis, `stx-spring-boot` needs i18n and mongo-spring. That is also why this is one repository:
+splitting by role was weighed and rejected, because every such edge would become a published-version
+hop and a change to `stx-common` a release in every other repository. A new library goes in the
+folder of the role it serves; if none fits, add a folder, a `CODEOWNERS` line and a row here.
+
+**A library with framework integrations is a family directory.** `libs/<role>/<name>/` then contains
+no `module.yaml` of its own; the library itself is `libs/<role>/<name>/<name>/`, and each framework
+integration is a sibling beside it — `libs/data/stx-jpa/stx-jpa`, `…/stx-jpa-ktor`,
+`…/stx-jpa-spring`. That is what lets an integration be published, versioned and depended on without
+the hub it used to live in. A library with none — `stx-common`, `stx-testing`, `stx-ktor`,
+`stx-spring-boot`, `stx-openapi-generator`, `stx-material` — sits directly at `libs/<role>/<name>/`.
+Either way a module's name is its own directory name, so neither the family nor the role folder
+changes a coordinate: `libs/data/stx-jpa/stx-jpa` publishes as `io.github.softistx:stx-jpa`.
 
 Rules that are easy to get wrong:
 
 - **A module's name is its directory name, and it must be unique across the whole project.** There is no `name:` property in `module.yaml` (it fails with `Unknown property`), and a `modules:` entry is a path string, not a mapping — so two directories called `android` under different parents abort *every* command with `Module name 'android' is not unique`. `-m` takes the bare name only, never a path, so there is no way to disambiguate after the fact. Hence `md-catalog`/`md-desktop`/`md-android` rather than `catalog`/`desktop`/`android`: prefix a demo's modules so the next demo can have the same shapes. `description:` gives a module a readable label in `kotlin show modules`, but does not change its name.
-- **Module dependency paths start with `//`** and are relative to the project root. A bare `libs/core` is read as an *external* Maven coordinate; relative forms (`./nested`, `../sibling`) work but the docs warn they may be deprecated.
+- **Module dependency paths start with `//`** and are relative to the project root. A bare `libs/core/stx-common` is read as an *external* Maven coordinate; relative forms (`./nested`, `../sibling`) work but the docs warn they may be deprecated.
 - `module.yaml` is schema-validated: an unknown property fails the command with a pointer to the offending line, so a passing `kotlin show modules` is a cheap syntax check after editing a manifest.
 - Dependencies are **not transitive at compile time** — a dependent module sees a library only if the producing module marks it `exported: true` (Gradle's `api()`).
 - Tests use kotlin-test with **JUnit 5** by default on JVM/Android; change via `settings.junit`.
@@ -990,74 +1010,74 @@ the same each time, and the mistakes are the same each time too.
   | `docs/consuming.md` | How do I depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain? **This is where a new repository, credential mechanism or packaging caveat is documented.** |
   | `docs/releasing.md` | How is a version cut and published? The changeset circuit, and the publishing behaviours that are not guessable. |
   | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
-  | `libs/stx-openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
+  | `libs/api/stx-openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
   | `plugins/dgs-codegen/README.md` | How do I generate DGS types from SDL in a toolchain module |
   | `plugins/apollo/README.md` | How do I generate Apollo models and `OPERATION_DOCUMENT` from schema + documents |
-  | `libs/stx-common/README.md` | What belongs in the shared module, which concurrency type a given caller wants, the `getOrPut` trap, and the table of what the standard library already covers so nothing here wraps it twice |
-  | `libs/stx-amqp/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
-  | `libs/stx-amqp/stx-amqp-ktor/README.md` | The Ktor plugin for it — the connection/channel split that decides its shape, and the blocking connect |
-  | `libs/stx-amqp/stx-amqp-spring/README.md` | The Spring auto-configuration for it — the same connection/channel split, from the container's side |
-  | `libs/stx-i18n/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
-  | `libs/stx-i18n/stx-i18n-spring/README.md` | The Spring auto-configuration for it — why narrowing the locale resolver is the half that matters, and why Boot's own property wins |
-  | `libs/stx-i18n/stx-i18n-ktor/README.md` | The Ktor plugin for it — the one that owns nothing and resolves per request, and why `?lang=` is a decision rather than a default |
-  | `libs/stx-ktor/README.md` | The Ktor seam — the four lifecycle verbs and the one rule behind them, the two facts about Ktor's container that unconditional injection rests on, and why no integration lives here |
-  | `libs/stx-jpa/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
-  | `libs/stx-jpa/stx-jpa-ktor/README.md` | The Ktor plugin for it — the factory/session split, the blocking bootstrap, and why the `stx-jpa` edge is `exported` here where the hub had it `compile-only` |
-  | `libs/stx-jpa/stx-jpa-spring/README.md` | The Spring auto-configuration for it — the two beans, the required `packages`, and why `SchemaMode` defers to stx-migrations |
+  | `libs/core/stx-common/README.md` | What belongs in the shared module, which concurrency type a given caller wants, the `getOrPut` trap, and the table of what the standard library already covers so nothing here wraps it twice |
+  | `libs/messaging/stx-amqp/stx-amqp/README.md` | The same, for AMQP — topology, confirms, prefetch, and why a retry is a queue nobody consumes |
+  | `libs/messaging/stx-amqp/stx-amqp-ktor/README.md` | The Ktor plugin for it — the connection/channel split that decides its shape, and the blocking connect |
+  | `libs/messaging/stx-amqp/stx-amqp-spring/README.md` | The Spring auto-configuration for it — the same connection/channel split, from the container's side |
+  | `libs/api/stx-i18n/stx-i18n/README.md` | The same, for i18n — the locale walk, what eager compilation buys, and why `ResourceBundle` is not underneath it |
+  | `libs/api/stx-i18n/stx-i18n-spring/README.md` | The Spring auto-configuration for it — why narrowing the locale resolver is the half that matters, and why Boot's own property wins |
+  | `libs/api/stx-i18n/stx-i18n-ktor/README.md` | The Ktor plugin for it — the one that owns nothing and resolves per request, and why `?lang=` is a decision rather than a default |
+  | `libs/core/stx-ktor/README.md` | The Ktor seam — the four lifecycle verbs and the one rule behind them, the two facts about Ktor's container that unconditional injection rests on, and why no integration lives here |
+  | `libs/data/stx-jpa/stx-jpa/README.md` | The same, for Postgres — the confinement rule the library is built around, and why entities need two compiler plugins. Roughly constant in size |
+  | `libs/data/stx-jpa/stx-jpa-ktor/README.md` | The Ktor plugin for it — the factory/session split, the blocking bootstrap, and why the `stx-jpa` edge is `exported` here where the hub had it `compile-only` |
+  | `libs/data/stx-jpa/stx-jpa-spring/README.md` | The Spring auto-configuration for it — the two beans, the required `packages`, and why `SchemaMode` defers to stx-migrations |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
   | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, `@Argument`, registered context types). **This is where a new annotation, scalar or directive is documented** |
-  | `libs/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no class scan in core |
-  | `libs/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, the call on every operation, and the engine it registers with the container |
-  | `libs/stx-graphix/stx-graphix-spring/README.md` | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
-  | `libs/stx-graphix/stx-graphix-koin/README.md` | Building the schema from a Koin container — `fromKoin()`, `GraphixResolver` |
+  | `libs/api/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no class scan in core |
+  | `libs/api/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, the call on every operation, and the engine it registers with the container |
+  | `libs/api/stx-graphix/stx-graphix-spring/README.md` | The Spring Boot plugin — `stx.graphix.enabled`, `@GraphQLController` scan |
+  | `libs/api/stx-graphix/stx-graphix-koin/README.md` | Building the schema from a Koin container — `fromKoin()`, `GraphixResolver` |
   | `docs/telemetry.md` | What a stx-telemetry call may say — the root's settings, every log and span verb, the severities, the attribute conversions, `traceparent` and the signal model. **This is where a new verb, severity, span kind or exporter is documented** |
-  | `libs/stx-telemetry/stx-telemetry/README.md` | How the telemetry library is shaped — why a coroutine context element and not an MDC, why the thread-local mirror is not a contradiction, why writing a signal never waits |
-  | `libs/stx-telemetry/stx-telemetry-otlp/README.md` | The OTLP exporter — why not the Java SDK, the encoding details a receiver is strict about, what is retried and why a partial success is not |
-  | `libs/stx-telemetry/stx-telemetry-slf4j/README.md` | The SLF4J bridge — which direction to pick, why reading a third-party MDC is not a contradiction, and why both at once is refused |
-  | `libs/stx-telemetry/stx-telemetry-mongo/README.md` | The MongoDB exporter — the document's shape, the dates, and retention as a TTL index |
-  | `libs/stx-telemetry/stx-telemetry-ktor/README.md` | The Ktor plugin — why the span wraps the pipeline, why the name is fixed after routing, and why a thrown handler leaves no status code |
-  | `libs/stx-telemetry/stx-telemetry-spring/README.md` | The Spring auto-configuration — why `CoWebFilter` and not `WebFilter`, and the 200 WebFlux never sets |
+  | `libs/observability/stx-telemetry/stx-telemetry/README.md` | How the telemetry library is shaped — why a coroutine context element and not an MDC, why the thread-local mirror is not a contradiction, why writing a signal never waits |
+  | `libs/observability/stx-telemetry/stx-telemetry-otlp/README.md` | The OTLP exporter — why not the Java SDK, the encoding details a receiver is strict about, what is retried and why a partial success is not |
+  | `libs/observability/stx-telemetry/stx-telemetry-slf4j/README.md` | The SLF4J bridge — which direction to pick, why reading a third-party MDC is not a contradiction, and why both at once is refused |
+  | `libs/observability/stx-telemetry/stx-telemetry-mongo/README.md` | The MongoDB exporter — the document's shape, the dates, and retention as a TTL index |
+  | `libs/observability/stx-telemetry/stx-telemetry-ktor/README.md` | The Ktor plugin — why the span wraps the pipeline, why the name is fixed after routing, and why a thrown handler leaves no status code |
+  | `libs/observability/stx-telemetry/stx-telemetry-spring/README.md` | The Spring auto-configuration — why `CoWebFilter` and not `WebFilter`, and the 200 WebFlux never sets |
   | `docs/workflow.md` | What a stx-workflow declaration may say — every verb and every annotation, the step scope, the statuses and their transitions, the persisted record, the store contract. **This is where a new verb, annotation, retry policy or status is documented** |
-  | `libs/stx-workflow/stx-workflow/README.md` | How the workflow engine is shaped — why checkpointing and not replay, what at-least-once asks of a step, why a fan-out needs an explicit merge |
-  | `libs/stx-workflow/stx-workflow-db/README.md` | Where instances live — why one module and not three, and per store: the index, the conditional write, the lease and retention |
+  | `libs/messaging/stx-workflow/stx-workflow/README.md` | How the workflow engine is shaped — why checkpointing and not replay, what at-least-once asks of a step, why a fan-out needs an explicit merge |
+  | `libs/messaging/stx-workflow/stx-workflow-db/README.md` | Where instances live — why one module and not three, and per store: the index, the conditional write, the lease and retention |
   | `docs/migrations.md` | What a stx-migrations migration may say — the version, the statuses and their transitions, the runner's order, the ledger contract, the lock, and what a killed process leaves per store. **This is where a new status, ledger method or store is documented** |
-  | `libs/stx-migrations/stx-migrations/README.md` | How the migration library is shaped — why the version is declared and not parsed, why a gate throws where the prior art logged, and why neither Flyway nor Liquibase is underneath it |
-  | `libs/stx-migrations/stx-migrations-db/README.md` | Where the ledger lives — why one module and not two, and per store: the uniqueness, the lock, the instants, and how DDL reaches the database |
-  | `libs/stx-migrations/stx-migrations-ktor/README.md` | The Ktor plugin — why `runBlocking` in `install` is the gate, why it goes after the connection plugin, why it owns and closes nothing, and why the `sql { }` / `mongo { }` DSL ends in `gate` |
-  | `libs/stx-migrations/stx-migrations-spring/README.md` | The Spring auto-configuration — `stx.migrations.*`, why an `InitializingBean` and not a suspending listener, and why nothing is inferred about where the ledger goes |
-  | `libs/stx-kafka/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
-  | `libs/stx-kafka/stx-kafka-ktor/README.md` | The Ktor plugin for it — why it owns nothing, and why that is the correct shape rather than a gap |
-  | `libs/stx-kafka/stx-kafka-spring/README.md` | The Spring auto-configuration for it — the one whose context holds no open resource, and why |
-  | `libs/stx-mongo/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
-  | `libs/stx-mongo/stx-mongo-ktor/README.md` | The Ktor plugin for it — why construction stays in the library and only the lifecycle is here, and why two handles rather than one |
-  | `libs/stx-mongo/stx-mongo-spring/README.md` | The Spring auto-configuration for it — and the cross-module ordering that decides which `MongoDatabase` an application gets |
-  | `libs/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
+  | `libs/data/stx-migrations/stx-migrations/README.md` | How the migration library is shaped — why the version is declared and not parsed, why a gate throws where the prior art logged, and why neither Flyway nor Liquibase is underneath it |
+  | `libs/data/stx-migrations/stx-migrations-db/README.md` | Where the ledger lives — why one module and not two, and per store: the uniqueness, the lock, the instants, and how DDL reaches the database |
+  | `libs/data/stx-migrations/stx-migrations-ktor/README.md` | The Ktor plugin — why `runBlocking` in `install` is the gate, why it goes after the connection plugin, why it owns and closes nothing, and why the `sql { }` / `mongo { }` DSL ends in `gate` |
+  | `libs/data/stx-migrations/stx-migrations-spring/README.md` | The Spring auto-configuration — `stx.migrations.*`, why an `InitializingBean` and not a suspending listener, and why nothing is inferred about where the ledger goes |
+  | `libs/messaging/stx-kafka/stx-kafka/README.md` | The same, for Kafka — the publisher, the poll loop, and why the loop is shaped the way it is |
+  | `libs/messaging/stx-kafka/stx-kafka-ktor/README.md` | The Ktor plugin for it — why it owns nothing, and why that is the correct shape rather than a gap |
+  | `libs/messaging/stx-kafka/stx-kafka-spring/README.md` | The Spring auto-configuration for it — the one whose context holds no open resource, and why |
+  | `libs/data/stx-mongo/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
+  | `libs/data/stx-mongo/stx-mongo-ktor/README.md` | The Ktor plugin for it — why construction stays in the library and only the lifecycle is here, and why two handles rather than one |
+  | `libs/data/stx-mongo/stx-mongo-spring/README.md` | The Spring auto-configuration for it — and the cross-module ordering that decides which `MongoDatabase` an application gets |
+  | `libs/core/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
   | `docs/spring-mongo-queries.md` | What a stx-spring-boot Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
   | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
-  | `libs/stx-redis/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
-  | `libs/stx-redis/stx-redis-ktor/README.md` | The Ktor plugin for it — why the connection is shared, why `config` is defaulted where `MongoDB`'s `uri` is not, and the double close |
-  | `libs/stx-redis/stx-redis-spring/README.md` | The Spring auto-configuration for it — the opt-in rule, and what deliberately is not a property |
-  | `libs/stx-storage/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
-  | `libs/stx-storage/stx-storage-ktor/README.md` | The Ktor plugin for it — and why a credential with a default is a credential in source control |
-  | `libs/stx-storage/stx-storage-spring/README.md` | The Spring auto-configuration for it — the same credential rule, asserted from both sides by its wiring spec |
-  | `libs/stx-material/README.md` | How is the UI library shaped, how does `StxTheme` slot into an application that already uses Material 3, and how do I add a component? |
-  | `libs/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
-  | `libs/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
-  | `libs/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
+  | `libs/data/stx-redis/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
+  | `libs/data/stx-redis/stx-redis-ktor/README.md` | The Ktor plugin for it — why the connection is shared, why `config` is defaulted where `MongoDB`'s `uri` is not, and the double close |
+  | `libs/data/stx-redis/stx-redis-spring/README.md` | The Spring auto-configuration for it — the opt-in rule, and what deliberately is not a property |
+  | `libs/data/stx-storage/stx-storage/README.md` | The same, for object storage — and what a presigned URL can and cannot promise |
+  | `libs/data/stx-storage/stx-storage-ktor/README.md` | The Ktor plugin for it — and why a credential with a default is a credential in source control |
+  | `libs/data/stx-storage/stx-storage-spring/README.md` | The Spring auto-configuration for it — the same credential rule, asserted from both sides by its wiring spec |
+  | `libs/ui/stx-material/README.md` | How is the UI library shaped, how does `StxTheme` slot into an application that already uses Material 3, and how do I add a component? |
+  | `libs/ui/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
+  | `libs/ui/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
+  | `libs/ui/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
   | `examples/spring-orders/README.md` | What each file in the Spring demo is there to show, how to run it, and what it deliberately leaves out |
   | `examples/graphix-shop/README.md` | What the GraphQL catalogue shows — split SDL, annotated DataFetchers, how to run it |
   | `examples/graphix-codegen/README.md` | The two GraphQL codegen plugins on one schema |
   | `examples/workflow-checkout/README.md` | What the checkout saga shows — the journal each run leaves, and the window between an effect and its checkpoint that the idempotency key exists to cover |
   | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
-  | `libs/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
+  | `libs/core/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 
   When a README section starts growing every phase, that is the signal it belongs in `docs/`, not
-  the signal to keep appending. `libs/stx-openapi-generator/README.md` reached 394 lines before its
+  the signal to keep appending. `libs/api/stx-openapi-generator/README.md` reached 394 lines before its
   reference half moved out; splitting on *audience* rather than on length is what made the seam
-  obvious. `libs/stx-jpa/stx-jpa/README.md` reached 921 and split the same way, into the query vocabulary
+  obvious. `libs/data/stx-jpa/stx-jpa/README.md` reached 921 and split the same way, into the query vocabulary
   and the mapping vocabulary — the two halves that grow — leaving the reasoning behind.
 - **Keep files short and single-purpose.** One file holds one concern; when two things could be
   separated cleanly, separate them. A file growing past roughly 150 lines is a signal to split it,
@@ -1090,7 +1110,7 @@ the same each time, and the mistakes are the same each time too.
   telling you the feature names are missing, not that grouping does not apply. Nest a `feature`
   inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
   to the other spec styles. One spec class per file, named after the file.
-- **Every module's packages start with `com.softistx`.** The rest follows the module: `com.softistx.openapi` for `libs/stx-openapi-generator`, `com.softistx.openapi.plugin` for `plugins/openapi`, `com.softistx.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
+- **Every module's packages start with `com.softistx`.** The rest follows the module: `com.softistx.openapi` for `libs/api/stx-openapi-generator`, `com.softistx.openapi.plugin` for `plugins/openapi`, `com.softistx.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
 - **Organise by package, not as a flat pile of files — `test/` exactly as much as `src/`.** A module
   with more than one concern gets a directory per concern, and the directory matches the package —
   `src/parser/` is `com.softistx.openapi.parser`. The root package holds only what every package
