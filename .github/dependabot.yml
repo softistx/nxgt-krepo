@@ -16,3 +16,7 @@ updates:
       interval: monthly
     commit-message:
       prefix: "build"
+    ignore:
+      # TypeScript is held at 6.x on purpose: moving to 7 is a decision to make, not a monthly bump.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
