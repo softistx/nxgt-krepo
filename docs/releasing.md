@@ -55,7 +55,8 @@ The same workflow re-runs with no changesets left and, in **one job**:
 1. checks the three Central secrets are non-empty and fails in seconds if not;
 2. runs `scripts/enable-central.ts`, which turns on `mavenCentral` and `signArtifacts`;
 3. `rm -rf build/incremental.state`;
-4. `./kotlin publish mavenCentral` with an explicit `-m` for every library;
+4. `./kotlin task :<library>:publishToMavenCentral` for every library — not `kotlin publish`, see
+   below;
 5. tags `vX.Y.Z`, pushes it, and cuts a GitHub release from that version's CHANGELOG section.
 
 ### 4. You release it from the Portal
@@ -76,10 +77,14 @@ Switching to `auto` is a one-word change in `scripts/enable-central.ts`, and its
   `build/tasks/_<module>_prepareMavenPublishables/`. The job has just rewritten `version:` *and*
   enabled signing, so without that line it republishes the previous version, unsigned, and reports
   success. Deleting artifacts from the repository does not help; the task will not regenerate them.
-- **A bare `./kotlin publish mavenCentral` fails**, and not on a library: it walks every module in
-  the project and stops at the first that does not publish — an example. An explicit `-m` selection
-  is always passed. The three `jvm/amper-plugin` modules are not in it: the toolchain cannot
-  publish a plugin yet.
+- **`kotlin publish mavenCentral` does not work on toolchain 0.12.0**, so the job runs the Portal
+  upload task directly. The command refuses — *"Cannot publish to repository 'mavenCentral' because
+  it's not marked as publishable"* — because it checks the repositories list, where the built-in
+  `mavenCentral` is resolve-only; an entry giving it `publish: true` registers a second
+  `publishToMavenCentral` task and crashes the CLI with *"Task … already exists"*.
+  `settings.publishing.mavenCentral` still registers that task per module, and `./kotlin task` —
+  not in `--help` — runs it. The three `jvm/amper-plugin` modules are not in the list: the
+  toolchain cannot publish a plugin yet.
 - **Maven Central and signing are not committed enabled**, and there is no third option. Both were
   measured:
 
@@ -112,7 +117,9 @@ Three, as organisation secrets on `softistx`:
 
 **An organisation secret whose repository access does not include this repository arrives as an
 empty string, not as an error.** The job therefore checks all three are non-empty before doing
-anything, so that misconfiguration costs seconds rather than a 401 at the end of a long build.
+anything, so that misconfiguration costs seconds rather than a 401 at the end of a long build. On
+the Free plan the same goes for any *private* repository: organisation secrets are not passed to it
+at all. That is how the first 0.2.0 run failed, before this repository went public.
 
 ## Releasing by hand
 
@@ -125,8 +132,8 @@ export KOTLIN_TOOLCHAIN_SIGNING_KEY="$(gpg --export-secret-keys --armor <KEY_ID>
 
 bun scripts/enable-central.ts
 rm -rf build/incremental.state
-./kotlin publish mavenCentral $(grep -rl publishing.module-template.yaml libs \
-  --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+./kotlin task $(grep -rl publishing.module-template.yaml libs \
+  --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/.*/:&:publishToMavenCentral/')
 git checkout publishing.module-template.yaml
 ```
 

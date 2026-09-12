@@ -95,12 +95,19 @@ jobs:
           # unsigned, and report success.
           rm -rf build/incremental.state
 
-          # An explicit -m selection is required: a bare `kotlin publish <id>` walks every module in
-          # the project and stops at the first one that does not publish — an example, not a
-          # library. The three jvm/amper-plugin modules are excluded too; the toolchain cannot
-          # publish a plugin yet.
-          ./kotlin publish mavenCentral $(grep -rl publishing.module-template.yaml libs \
-            --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+          # Not `kotlin publish mavenCentral`: on toolchain 0.12.0 it refuses — "Cannot publish to
+          # repository 'mavenCentral' because it's not marked as publishable" — because it checks
+          # the repositories list, where the built-in mavenCentral is resolve-only. Giving it an
+          # entry with `publish: true` does not help: that registers a second publishToMavenCentral
+          # task and the CLI crashes with "Task … already exists". settings.publishing.mavenCentral
+          # still registers the Portal upload as a task per module, and `kotlin task` (not listed in
+          # --help) runs it directly — measured to get as far as asking for the signing key. Go back
+          # to `kotlin publish mavenCentral` once the toolchain accepts it.
+          #
+          # The three jvm/amper-plugin modules are not in the list; the toolchain cannot publish a
+          # plugin yet.
+          ./kotlin task $(grep -rl publishing.module-template.yaml libs \
+            --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/.*/:&:publishToMavenCentral/')
 
           git checkout publishing.module-template.yaml
 
