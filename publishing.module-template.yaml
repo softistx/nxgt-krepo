@@ -14,7 +14,7 @@ settings:
     # Written by `scripts/sync-version.ts` from package.json. Do not edit it by hand: the same
     # version lives in `libs.versions.toml` as `stx = "…"`, and the two must move together or every
     # example resolves a coordinate nobody published. `docs/releasing.md` has the circuit.
-    version: 0.1.0
+    version: 0.2.0
     # `artifactId` is deliberately absent: it defaults to the module's name, so the directory name
     # *is* the artifact name and there is no second place to keep in sync.
 
