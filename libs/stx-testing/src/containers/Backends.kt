@@ -92,8 +92,11 @@ fun rabbitContainer(image: String = RABBITMQ_IMAGE): ContainerService<RabbitMQCo
         endpointOf = { "amqp://${it.adminUsername}:${it.adminPassword}@${it.host}:${it.amqpPort}" },
     )
 
-/** Already on this machine, and the same server the workspace publishes on 9000. */
-private const val MINIO_IMAGE = "minio/minio:latest"
+/**
+ * Quay, not Docker Hub: MinIO stopped publishing there, and `minio/minio` no longer pulls at all.
+ * The compatible-substitute call below is what lets Testcontainers accept the registry prefix.
+ */
+private const val MINIO_IMAGE = "quay.io/minio/minio:latest"
 
 /**
  * Where an object store is and what opens it — the three together, because two of them are useless

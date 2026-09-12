@@ -84,7 +84,7 @@ databases, `-` for topics and buckets, `:` for Redis keys.
 | `mongoContainer()` | `mongo:8` | `MONGO_TEST_URI` | the replica-set URI |
 | `redisContainer()` | `redis:8-alpine` | `REDIS_TEST_URI` | `redis://host:port/15` |
 | `rabbitContainer()` | `rabbitmq:4-management` | `AMQP_TEST_URI` | `amqp://user:pass@host:port` |
-| `minioContainer()` | `minio/minio:latest` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `MinioEndpoint(url, accessKey, secretKey)` |
+| `minioContainer()` | `quay.io/minio/minio:latest` | `MINIO_TEST_ACCESS_KEY` **and** `..._SECRET_KEY` | `MinioEndpoint(url, accessKey, secretKey)` |
 | `kafkaContainer()` | `confluentinc/cp-kafka:latest` | `KAFKA_TEST_BOOTSTRAP` | the bootstrap servers |
 | `postgresContainer()` | `postgres:18-alpine` | `POSTGRES_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `PostgresEndpoint(uri, username, password, database)` |
 | `mysqlContainer()` | `mysql:8.4` | `MYSQL_TEST_URI` **and** `..._USER` **and** `..._PASSWORD` | `MysqlEndpoint(uri, username, password, database)` |

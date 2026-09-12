@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -31,7 +31,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - name: Cache the toolchain and the dependency cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/JetBrains/Kotlin
@@ -43,21 +43,20 @@ jobs:
       # package.json, and the two lines scripts/sync-version.ts propagates into the Kotlin build.
       # Merging that PR is the decision to release.
       #
-      # Only `version:` is given. The publish is the step below, in this same job, because a tag
+      # Only `version-script:` is given. The publish is the step below, in this same job, because a tag
       # pushed with GITHUB_TOKEN does not trigger another workflow — a separate `on: push: tags`
       # workflow would simply never run, or would need a PAT to exist at all.
       - name: Version Packages PR
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
-          version: bun run version
-          title: "chore(release): version packages"
-          commit: "chore(release): version packages"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          version-script: bun run version
+          pr-title: "chore(release): version packages"
+          commit-message: "chore(release): version packages"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to Maven Central
-        if: steps.changesets.outputs.hasChangesets == 'false'
+        if: steps.changesets.outputs.has-changesets == 'false'
         env:
           # Organisation secrets on `softistx`. An org secret whose repository access does not
           # include this repository arrives as an EMPTY string, not as an error — hence the guard
@@ -109,7 +108,7 @@ jobs:
           echo "https://central.sonatype.com/publishing/deployments — nothing is public until you do."
 
       - name: Tag and release
-        if: steps.changesets.outputs.hasChangesets == 'false'
+        if: steps.changesets.outputs.has-changesets == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
