@@ -129,33 +129,56 @@ jobs:
             echo "MONGO_TEST_URI=mongodb://localhost:27017/?replicaSet=rs0"
           } >> "$GITHUB_ENV"
 
-      # **One `./kotlin test` for everything, against the servers above.** Measured on this
-      # four-vCPU runner:
+      # **One module's test JVM at a time, against the servers above.** Measured on this four-vCPU
+      # runner, 2026-09-12:
       #
-      # | shape                                   | test step | JUnit time, summed |
-      # | --------------------------------------- | --------- | ------------------ |
-      # | `-m` in a loop, one module at a time    | 426 s     | 169 s              |
-      # | `-m` under `xargs -P 2`                 | 419 s     | 312 s              |
-      # | bare `./kotlin test`                    | 167–232 s | 2600–3700 s        |
+      # | shape                                   | test step | green                             |
+      # | --------------------------------------- | --------- | --------------------------------- |
+      # | `-m` in a loop, one module at a time    | 426 s     | every run                         |
+      # | `-m` under `xargs -P 2`                 | 419 s     | 1 of 1                            |
+      # | bare `./kotlin test`                    | 167–233 s | 3 of 5, harness timeouts raised   |
       #
-      # The gain is not parallelism — two invocations at once already saturate the CPU, which is why
-      # -P 2 bought nothing — but paying the CLI's start-up once instead of fifty-seven times, about
-      # four seconds each. The CLI then runs module JVMs as wide as it likes (some sixteen at once;
-      # it has no setting for it), so every spec's start-up is slower. Two specs expired a harness
-      # timeout because of it, in both bare runs, and now carry a longer one: ExchangeContextTest
-      # (WebTestClient's 5 s) and RedisDependenciesTest (Ktor's 10 s module-loading limit).
+      # The bare run is faster because it pays the CLI's start-up once instead of fifty-seven times
+      # (about four seconds each), not because of parallelism: two invocations at once already
+      # saturate the CPU, which is why -P 2 bought nothing. But the CLI then runs module JVMs as wide
+      # as it likes — some sixteen at once, and it has no setting for it — and that starved the specs
+      # this repo relies on to prove a behaviour. On develop and on the next PR: KafkaSubscriberTest's
+      # bound read 763 ms where it allows 700, AmqpConsumerTest's 10 s wait expired and its
+      # concurrency scenario failed, JpaPluginTest's body did not finish within a minute. A bound
+      # that proves a behaviour is not loosened to buy speed, so the loop it is. The bare run is
+      # worth retrying only if the CLI gains a concurrency setting.
       #
-      # A harness timeout proves nothing and may be raised. Four specs bound a duration from above
-      # to prove a behaviour — AmqpConsumerTest, KafkaSubscriberTest, KeyedMutexTest, PipelineTest —
-      # and passed in every run. If one of them turns flaky, go back to the loop rather than loosen
-      # the bound. Before the step above existed, this same bare run had every JVM booting its own
-      # servers, and that starved the runner outright.
+      # The two harness timeouts raised for the bare run stay raised — ExchangeContextTest's
+      # WebTestClient and RedisDependenciesTest's Ktor module-loading limit — since they prove
+      # nothing either way.
       #
-      # Sharing the servers is safe for data: every spec works in a namespace of its own — a schema,
-      # a database, a key prefix, a queue or a bucket named through libs/stx-testing's TestNames,
-      # which carries a per-JVM run id — and removes only that.
-      - name: Test
-        run: ./kotlin test
+      # This is also what makes the step above load-bearing rather than an optimisation: each
+      # invocation is a fresh JVM, so without the environment variables every one of these
+      # fifty-seven would start its own Postgres, its own Mongo, its own RabbitMQ. Sharing them is
+      # safe for data: every spec works in a namespace of its own — a schema, a database, a key
+      # prefix, a queue or a bucket named through libs/stx-testing's TestNames, which carries a
+      # per-JVM run id — and removes only that.
+      #
+      # The list is derived from the filesystem rather than written down, so a module that gains a
+      # test tree is picked up by the change that adds it. Every module runs even after one fails:
+      # "which of the fifty-seven" is the useful answer, and fail-fast gives the first one only.
+      - name: Test, one module at a time
+        run: |
+          modules=$(find libs examples plugins server -type d \( -name test -o -name 'test@*' \) \
+            -not -path '*/build/*' | sed 's|/test[^/]*$||' | xargs -n1 basename | sort -u)
+          echo "$(echo "$modules" | wc -l) modules with tests"
+
+          failed=""
+          for m in $modules; do
+            echo "::group::$m"
+            ./kotlin test -m "$m" || failed="$failed $m"
+            echo "::endgroup::"
+          done
+
+          if [ -n "$failed" ]; then
+            echo "::error::tests failed in:$failed"
+            exit 1
+          fi
 
   lint:
     name: ktlint
