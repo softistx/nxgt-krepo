@@ -1,6 +1,6 @@
 [versions]
 # This repo's own published artifacts, which the examples consume from mavenLocal.
-stx = "0.2.0"
+stx = "0.2.1"
 agp = "9.0.1"
 kotlin = "2.4.0"
 ksp = "2.3.7"
