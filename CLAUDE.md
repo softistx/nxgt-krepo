@@ -85,7 +85,9 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   published. A new `module.yaml` under `libs/` applies its **family** template, never
   `//publishing.module-template.yaml` directly — that one carries no `version:` on purpose, so a
   module wired wrong fails at publish rather than publishing under someone else's version.
-  `docs/releasing.md` owns the circuit.
+  `docs/releasing.md` owns the circuit. And **a new `//libs/...` dependency across families is also
+  an edit to that family's `package.json`** — those `dependencies` are the propagation graph, and
+  `bun scripts/graph.ts --check` derives it from the manifests and fails when the two disagree.
 - The Maven group is `io.github.softistx`; the Kotlin package prefix is `com.softistx`. They are
   independent and both are correct — do not "fix" one to match the other.
 - **`scripts/` is TypeScript, run by bun.** No build step and no emitted JavaScript — but bun strips

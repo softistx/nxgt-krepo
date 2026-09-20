@@ -254,3 +254,9 @@ jobs:
       # builds fine and only fails at `kotlin publish` — in the release job, after the version has
       # been bumped and a release is expected. This is that failure, moved to the pull request.
       - run: bun scripts/sync-version.ts --check
+
+      # And the propagation graph, against the manifests that produce the POMs. A family's
+      # package.json dependencies are what make a bump travel, they are written by hand, and a
+      # missing edge is invisible: it builds, tests and publishes, and only stops releasing a
+      # library whose POM names a version that moved.
+      - run: bun scripts/graph.ts --check

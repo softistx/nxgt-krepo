@@ -338,6 +338,16 @@ without a fallback is a hard failure at `kotlin publish` — *"Missing 'version'
 of fragment 'main'"* — which `bun scripts/sync-version.ts --check` moves forward to the pull
 request.
 
+**A family's `package.json` `dependencies` are the propagation graph, and `scripts/graph.ts` checks
+them against the manifests.** They name only *runtime* edges: a plain dependency (POM scope
+`runtime`) and an `exported` one (scope `compile`) propagate a bump; `compile-only` (scope
+`provided`) and `test-dependencies` (absent from the POM) do not, because neither reaches a consumer
+transitively. The list is hand-written and nothing about it is checked by building — a missing edge
+compiles, tests and publishes, and only stops releasing a library whose POM names a version that
+moved — so `bun scripts/graph.ts --check` derives it again from every `module.yaml` and fails on any
+disagreement. **Adding a `//libs/...` dependency across families means editing that family's
+`package.json` in the same change.**
+
 `scripts/sync-version.ts` propagates each family's `package.json` version to its template *and* to
 that family's key in `[versions]` of `libs.versions.toml`, because the examples resolve published
 coordinates rather than module paths and the two must move together — 34 anchors, each asserted to

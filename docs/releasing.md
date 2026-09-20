@@ -56,6 +56,13 @@ Changesets bumps the dependents itself, through the `dependencies` in each famil
 `test-dependencies` (absent from the POM) are deliberately not declared: they cannot reach a
 consumer, so they must not move a version.
 
+That list is written by hand, so `bun scripts/graph.ts --check` derives it again from the
+`module.yaml` files the POMs are generated from and fails on any disagreement. It is worth a CI job
+of its own because neither failure shows up anywhere else: a **missing** edge builds, tests and
+publishes perfectly well, and merely stops releasing a library whose POM names a version that
+moved; an **extra** one releases a library that nothing obliged to move. `bun scripts/graph.ts`
+with no argument prints the graph.
+
 `.changeset/README.md` has the reasoning, including the one rule the tool cannot enforce — a
 `major` has to name its own dependents. `docs/consuming.md` has the consumer's half.
 
