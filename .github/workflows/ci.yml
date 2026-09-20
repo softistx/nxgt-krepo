@@ -205,30 +205,28 @@ jobs:
 
   changeset:
     name: Changeset declared
-    if: github.event_name == 'pull_request'
+    # The "Version Packages" pull request is exempt, and has to be: it rewrites
+    # libs/**/package.json, libs/**/CHANGELOG.md and the family templates — so it touches libs/ by
+    # definition — while *deleting* every changeset. Without this it would block itself forever.
+    if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/develop'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: A PR that touches libs/ must declare what it does to the published artifacts
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Not "libs/ changed and no .changeset/*.md exists" any more. A version is now per family, so
+      # a changeset naming the wrong family is worse than none: it releases a library nobody
+      # touched and leaves the touched one behind. The guard maps the changed paths to families and
+      # names the ones that are missing. scripts/changeset-guard.test.ts pins the wording.
+      - name: A PR that changes a library must declare which family it releases
         env:
           BASE: ${{ github.base_ref }}
-        run: |
-          changed=$(git diff --name-only "origin/$BASE...HEAD")
-          if ! echo "$changed" | grep -q '^libs/'; then
-            echo "No change under libs/ — no changeset needed."
-            exit 0
-          fi
-          if echo "$changed" | grep -qE '^\.changeset/[^/]+\.md$'; then
-            echo "Changeset found."
-            exit 0
-          fi
-          echo "::error::This PR changes libs/ but adds no changeset."
-          echo "Run 'bun changeset', pick patch/minor/major, and commit the file it writes."
-          echo "See .changeset/README.md for why the package is the repository itself."
-          exit 1
+        run: bun scripts/changeset-guard.ts --base "origin/$BASE"
 
   scripts:
     name: Release scripts
