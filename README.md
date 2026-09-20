@@ -57,19 +57,19 @@ Alongside them are the shared service libraries, which have nothing to do with t
 | `libs/messaging/stx-workflow` | Workflows that survive a restart: steps declared in order, each with the compensation that undoes it, one typed context threaded through them, and the state written down after every node — so a crash resumes rather than restarts. A workflow can also stop on purpose, for a person's approval, for a clock, or for another workflow it delegated to, and outlive the process it stopped in. Declared as a DSL or as annotations on a class — the two produce the same object — and wired into Ktor or Spring Boot by `stx-workflow-ktor` and `stx-workflow-spring`. `stx-workflow-db` keeps them in Redis, in SQL through `stx-jpa`, or in MongoDB |
 | `libs/data/stx-migrations` | Schema migrations that are Kotlin all the way down, on neither Flyway nor Liquibase: a migration is a class with a version it declares, the ledger records what ran and who ran it, and a renewing lease keeps two instances of the application from running the same one twice. It is a **gate** — it runs in the process about to serve, before it serves, and a failure is an application that does not start. `stx-migrations-db` holds the ledger for MongoDB and for SQL through `stx-jpa`; `stx-migrations-ktor` and `stx-migrations-spring` are the two integrations |
 | `libs/observability/stx-telemetry` | Logs and traces for a service made of coroutines: the current span is a `CoroutineContext` element rather than a `ThreadLocal`, so it is still right after a suspension moves the work — which is exactly what an MDC gets wrong. An event is a `@Serializable` type, whose serial name names it and whose fields are its attributes, so choosing what is logged is the same act as declaring a type. Signals queue without ever making a caller wait and drain to the exporters in one coroutine |
-| `libs/stx-telemetry-otlp` | Ships those logs and traces to an OTLP collector over HTTP in JSON, with kotlinx.serialization and the JDK's own `HttpClient` — no OpenTelemetry SDK, and no dependency but the core module |
-| `libs/stx-telemetry-slf4j` | The SLF4J bridge, both ways: an SPI provider that puts every third-party library's logs into the pipeline carrying the current span, or an exporter that writes this library's signals out to a logback an application already has |
-| `libs/stx-telemetry-mongo` | Those same logs and traces into a MongoDB collection, with the field names the JSON-lines format uses and retention as a TTL index — so the deleting is Mongo's background task rather than a job somebody has to own. It opens a pool of its own, because a burst of telemetry must not exhaust the one business requests are queueing for |
-| `libs/stx-telemetry-ktor` | The Ktor plugin: one telemetry per application and a server span per request, continuing an incoming `traceparent` and renamed to the matched route once Ktor knows it |
-| `libs/stx-telemetry-spring` | The Spring Boot auto-configuration: one telemetry behind `stx.telemetry.enabled`, every `Exporter` bean added to it, and a `CoWebFilter` — not a `WebFilter` — so a suspending `@RestController` method is inside the request's span |
+| `libs/observability/stx-telemetry/stx-telemetry-otlp` | Ships those logs and traces to an OTLP collector over HTTP in JSON, with kotlinx.serialization and the JDK's own `HttpClient` — no OpenTelemetry SDK, and no dependency but the core module |
+| `libs/observability/stx-telemetry/stx-telemetry-slf4j` | The SLF4J bridge, both ways: an SPI provider that puts every third-party library's logs into the pipeline carrying the current span, or an exporter that writes this library's signals out to a logback an application already has |
+| `libs/observability/stx-telemetry/stx-telemetry-mongo` | Those same logs and traces into a MongoDB collection, with the field names the JSON-lines format uses and retention as a TTL index — so the deleting is Mongo's background task rather than a job somebody has to own. It opens a pool of its own, because a burst of telemetry must not exhaust the one business requests are queueing for |
+| `libs/observability/stx-telemetry/stx-telemetry-ktor` | The Ktor plugin: one telemetry per application and a server span per request, continuing an incoming `traceparent` and renamed to the matched route once Ktor knows it |
+| `libs/observability/stx-telemetry/stx-telemetry-spring` | The Spring Boot auto-configuration: one telemetry behind `stx.telemetry.enabled`, every `Exporter` bean added to it, and a `CoWebFilter` — not a `WebFilter` — so a suspending `@RestController` method is inside the request's span |
 | `libs/core/stx-testing` | What the integration specs run against: a backing service reused from the environment when one is named, and started as a container for the run when it is not |
 
 ## Using these libraries
 
 ```kotlin
 dependencies {
-    implementation("io.github.softistx:stx-jpa:0.1.0")
-    implementation("io.github.softistx:stx-jpa-ktor:0.1.0")
+    implementation("io.github.softistx:stx-jpa:0.2.1")
+    implementation("io.github.softistx:stx-jpa-ktor:0.2.1")
 }
 ```
 
@@ -78,8 +78,12 @@ On **Maven Central** — no repository block, no token, PGP-signed, with a sourc
 artifact you actually want: a library and its framework integration are separate, so depending on
 `stx-jpa` drags in neither Ktor nor Spring.
 
-All of them carry the same version and release together; the
-[release notes](https://github.com/softistx/nxgt-krepo/releases) name which ones actually changed.
+**Each library family has its own version.** A library and its framework integrations —
+`stx-jpa`, `stx-jpa-ktor`, `stx-jpa-spring` — are one release line and move together; separate
+libraries do not. So a bump you see is a bump that concerns you.
+[`docs/consuming.md`](docs/consuming.md#versions-move-per-family-not-all-at-once) says what that
+promises, and the one thing it does not. Everything through `0.2.1` was released in lockstep; from
+there each family moves on its own.
 
 ## Building the repository
 
@@ -101,7 +105,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | --- | --- |
 | [`docs/consuming.md`](docs/consuming.md) | How to depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain, which artifact to pick, and why all 45 share one version |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to set up, what a pull request needs, and what a reviewer will look for |
-| [`docs/releasing.md`](docs/releasing.md) | The release circuit — a changeset per PR, the Version Packages PR, and the five things about publishing here that are not guessable |
+| [`docs/releasing.md`](docs/releasing.md) | The release circuit — one version per library family, a changeset per PR, the Version Packages PR, and the six things about publishing here that are not guessable |
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |
 | [`libs/api/stx-openapi-generator/README.md`](libs/api/stx-openapi-generator/README.md) | The generator itself — its shape, what each client emitter produces, how to add one |
 | [`examples/demo-api/README.md`](examples/demo-api/README.md) | The document and the hand-written server behind it — and why the server is hand-written |
