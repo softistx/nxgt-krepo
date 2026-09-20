@@ -22,6 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # For `scripts/modules.ts`, which is what selects the modules to publish below. No
+      # `bun install`: that script imports nothing but node builtins, so the dependencies this
+      # repository has for Changesets are not needed here and downloading them would be waste.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       # The wrapper downloads the Kotlin CLI and a JRE on first use, then the compiler and every
       # dependency. Without this the first step of every run is a multi-minute download.
       #
@@ -56,8 +63,7 @@ jobs:
       - name: Publish the libraries to mavenLocal
         run: |
           rm -rf ~/.m2/repository/io/github/softistx
-          ./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs \
-            --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+          ./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)
 
       # Never pipe ./kotlin into tail or grep: the pipeline reports the filter's exit code, so a
       # failed build reads as success. These run bare.

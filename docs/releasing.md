@@ -55,8 +55,8 @@ The same workflow re-runs with no changesets left and, in **one job**:
 1. checks the three Central secrets are non-empty and fails in seconds if not;
 2. runs `scripts/enable-central.ts`, which turns on `mavenCentral` and `signArtifacts`;
 3. `rm -rf build/incremental.state`;
-4. `./kotlin task :<library>:publishToMavenCentral` for every library — not `kotlin publish`, see
-   below;
+4. `./kotlin task :<library>:publishToMavenCentral` for every library `scripts/modules.ts` names —
+   not `kotlin publish`, see below;
 5. tags `vX.Y.Z`, pushes it, and cuts a GitHub release from that version's CHANGELOG section.
 
 ### 4. You release it from the Portal
@@ -132,8 +132,7 @@ export KOTLIN_TOOLCHAIN_SIGNING_KEY="$(gpg --export-secret-keys --armor <KEY_ID>
 
 bun scripts/enable-central.ts
 rm -rf build/incremental.state
-./kotlin task $(grep -rl publishing.module-template.yaml libs \
-  --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/.*/:&:publishToMavenCentral/')
+./kotlin task $(bun scripts/modules.ts --tasks)
 git checkout publishing.module-template.yaml
 ```
 
@@ -143,8 +142,7 @@ To check what you are about to publish *without* signing or a token, publish to 
 and read the result:
 
 ```bash
-./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs \
-  --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)
 ```
 
 Then check the result rather than the exit code — a dependency published with no version is the
