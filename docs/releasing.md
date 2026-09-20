@@ -261,13 +261,23 @@ had landed in the deployments list. The seventeen `stx-*@0.2.1` tags were theref
 before the split reached `develop`:
 
 ```bash
-bun x changeset git-tag        # tags every package at its current version
-git tag -l 'stx-*@0.2.1' | wc -l
+bun x changeset git-tag                    # 17 tags at the current version, on HEAD
+for t in $(git tag -l 'stx-*@0.2.1'); do   # move them to where 0.2.1 was released
+  git tag -d "$t" && git tag "$t" v0.2.1^{commit}
+done
 git push origin --tags
 ```
 
+The second step matters for reading, not for working: `publish-plan` only asks whether a tag
+*exists*, but a tag saying `stx-jpa@0.2.1` should point at the commit that released 0.2.1, not at
+whatever was checked out when the command ran. `changeset git-tag` has no way to be told otherwise.
+With all 17 in place the plan comes back empty, which is the assertion the migration rests on: the
+first run under this regime publishes nothing.
+
 It is written down because the same thing happens to any family added later: give it a tag at the
-version it starts from, or its first release tries to publish a version that is already out.
+version it starts from, or its first release tries to publish a version that is already out. A
+family created at `0.0.0` and first released at `0.1.0` needs none — it is only a family starting at
+a version already on Central that does.
 
 ## And `main`
 
