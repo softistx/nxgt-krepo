@@ -106,9 +106,18 @@ The same workflow re-runs with no changesets left and, in **one job**:
    that family's own `CHANGELOG.md`.
 
 **The tags come after the upload, not before**, so a failed publish cannot leave a tag claiming a
-version went out. `changeset git-tag` skips tags that already exist, which is what lets a run that
-died halfway be replayed: the families already up are no longer ahead of their tag, so they are not
-in the next plan, and Central is never asked to take the same version twice.
+version went out. `changeset git-tag` skips tags that already exist, which is what lets a run whose
+*plan* was partly consumed be replayed: the families already tagged are no longer ahead of their
+tag, so they are not in the next plan, and Central is never asked to take the same version twice.
+
+What that does **not** cover is a failure inside the publish step itself. The 45 uploads run as one
+`./kotlin task` invocation, so if the twentieth fails, nineteen bundles are in the Portal and
+nothing is tagged — and a re-run would offer Central versions it already holds, which it refuses.
+The atomic unit of "already uploaded" is the artifact, not the family, so no tagging scheme fixes
+this; the escape hatch is that **nothing is released until a human releases it**. Drop the
+deployments the failed run left in
+[the deployments list](https://central.sonatype.com/publishing/deployments), then re-run the job
+from the Actions tab. It is the same drop-and-retry as below, done before anything was public.
 
 **One release for the run, not one per family.** The family tags stay bare. Seventeen release
 entries for one merge would make `/releases` unreadable, and the notes are the same notes either
