@@ -323,9 +323,18 @@ together. Changesets drives it: a changeset per pull request that touches `libs/
 directly — no build step, no emitted JavaScript — but it *strips* types rather than checking them,
 so `bun run typecheck` (`tsc --noEmit`, `strict`) is what makes the annotations mean anything, and
 CI runs it before the tests. The specs are `bun:test` rather than kotest for the obvious reason:
-the kotest convention in this repo is about Kotlin. Both scripts edit files that decide how 45
-modules publish, in a job nobody watches, so each one asserts its anchor matches **exactly once**
-and throws otherwise — `scripts/*.test.ts` pins that, including the failure modes.
+the kotest convention in this repo is about Kotlin. The two editing scripts rewrite files that
+decide how 45 modules publish, in a job nobody watches, so each one asserts its anchor matches
+**exactly once** and throws otherwise — `scripts/*.test.ts` pins that, including the failure modes.
+
+**`scripts/modules.ts` is where the list of published libraries comes from**, and every command
+that publishes takes it from there — `kotlin publish mavenLocal $(bun scripts/modules.ts
+--publish-args)`, `kotlin task $(bun scripts/modules.ts --tasks)`. It is every `module.yaml` under
+`libs/`, and the module's name is its directory's name. It replaced a `grep -rl
+publishing.module-template.yaml` repeated in five places, whose criterion was "applies the
+publishing template" — true only while every manifest named that template directly, and silently
+empty otherwise: `kotlin publish` with no `-m` publishes nothing and exits 0, so the examples would
+then build against whatever stale artifacts the runner's `~/.m2` happened to hold.
 
 **`stx-spring-boot` is the one library not named `stx-<technology>`, and the suffix is deliberate.**
 Spring reserves the `spring-boot*` prefix for itself and asks a third party for its own namespace,
@@ -340,8 +349,7 @@ Spring Boot.
 ```bash
 ./kotlin publish -m stx-mongo --transitive mavenLocal   # one library and what it depends on
 # all of them — `ls libs` lists role folders, not modules, so the selection comes from the manifests
-./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs plugins \
-  --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)
 ```
 
 Five things about it that are not guessable:

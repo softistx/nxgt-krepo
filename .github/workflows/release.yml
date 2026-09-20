@@ -104,10 +104,10 @@ jobs:
           # --help) runs it directly — measured to get as far as asking for the signing key. Go back
           # to `kotlin publish mavenCentral` once the toolchain accepts it.
           #
-          # The three jvm/amper-plugin modules are not in the list; the toolchain cannot publish a
-          # plugin yet.
-          ./kotlin task $(grep -rl publishing.module-template.yaml libs \
-            --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/.*/:&:publishToMavenCentral/')
+          # The list comes from `scripts/modules.ts`, which is every `module.yaml` under `libs/`.
+          # The three jvm/amper-plugin modules are not in it — they are under `plugins/`, and the
+          # toolchain cannot publish a plugin yet.
+          ./kotlin task $(bun scripts/modules.ts --tasks)
 
           git checkout publishing.module-template.yaml
 
