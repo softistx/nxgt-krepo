@@ -5,7 +5,11 @@ directory name under `libs/` *is* the artifact name, so `libs/data/stx-jpa/stx-j
 `io.github.softistx:stx-jpa`. They are ordinary Maven artifacts with Gradle module metadata beside
 the POM: **you do not need the Kotlin Toolchain to consume them**, and you need no credentials.
 
-The current version is the latest [release](https://github.com/softistx/nxgt-krepo/releases).
+**Each library family carries its own version** — the snippets below use `0.2.1`, the version
+everything shared before the split. For a given artifact's current version, look at its
+`<family>@<version>` [tag](https://github.com/softistx/nxgt-krepo/tags) or at Maven Central.
+[*Versions move per family*](#versions-move-per-family-not-all-at-once) below says what that
+does and does not promise.
 
 ## Gradle
 
@@ -15,8 +19,8 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.softistx:stx-jpa:0.2.0")
-    implementation("io.github.softistx:stx-jpa-ktor:0.2.0")
+    implementation("io.github.softistx:stx-jpa:0.2.1")
+    implementation("io.github.softistx:stx-jpa-ktor:0.2.1")
 }
 ```
 
@@ -26,7 +30,7 @@ dependencies {
 <dependency>
   <groupId>io.github.softistx</groupId>
   <artifactId>stx-jpa</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 
@@ -36,7 +40,7 @@ dependencies {
 product: jvm/app
 
 dependencies:
-  - io.github.softistx:stx-jpa:0.2.0
+  - io.github.softistx:stx-jpa:0.2.1
 ```
 
 Maven Central is a default repository, so there is no `repositories:` block to write.
@@ -59,19 +63,33 @@ do — [`jpa-criteria.md`](jpa-criteria.md) for what a query may say, [`graphix.
 what a schema may say, [`spring-configuration.md`](spring-configuration.md) for every `stx.*` key,
 and so on.
 
-## They all carry the same version
+## Versions move per family, not all at once
 
-`io.github.softistx:stx-common` and `io.github.softistx:stx-workflow-db` are always the same
-version, and a release moves all 45 at once. That is not laziness:
+A **family** is a library and its framework integrations. `io.github.softistx:stx-jpa`,
+`stx-jpa-ktor` and `stx-jpa-spring` are one release line: they always carry the same version, they
+are released together, and mixing versions *within* a family is not something that is tested here.
+Take a family at one version.
 
-- the toolchain has no way to override a publication version per module — it is one literal line in
-  a template every library shares;
-- publishing is all-or-nothing across a dependency chain, so a change to `stx-common` republishes
-  everything that depends on it regardless;
-- mixing versions across the set is therefore never something that gets tested here, and the Gradle
-  metadata will not stop you.
+Across families, versions diverge on purpose. There are 17 of them, and each moves when its own
+code changes — or when a family it depends on **at runtime** changes, because the POM names that
+dependency at an exact version, so a new `stx-common` really does mean a new `stx-jpa`. What this
+buys you is the ability to read a version bump: `stx-material 0.4.0` after `0.3.1` means something
+about `stx-material` changed. It no longer means someone fixed a typo in the Kafka client.
 
-Take them at one version. The release notes name which libraries actually changed.
+Two consequences worth knowing:
+
+- **a dependency bump looks like a patch, and may not be one.** Changesets gives a dependent a
+  `patch` whatever the dependency did, so a family that moved only because `stx-common` went `major`
+  arrives as a patch with a breaking transitive dependency behind it. The release notes say so — the
+  family's section names the dependency that moved. Read them before taking a bump you did not ask
+  for;
+- **everything up to and including 0.2.1 was released in lockstep.** All 45 artifacts share that
+  history, which is in the [root `CHANGELOG.md`](../CHANGELOG.md). From 0.2.1 on, each family has
+  its own, next to its sources under `libs/<role>/<family>/CHANGELOG.md`.
+
+Every artifact of every family still comes from one build, so the set as a whole is consistent at
+any commit. What is no longer promised is that two coordinates you pick at random carry the same
+number.
 
 ## Sources, signatures, and what is missing
 

@@ -1,4 +1,10 @@
-# nxgt-krepo
+# nxgt-krepo — the lockstep history
+
+Up to and including **0.2.1** every library in this repository shared one version, and this is its
+changelog. From 0.2.1 on, each of the 17 library families has its own, next to its sources at
+`libs/<role>/<family>/CHANGELOG.md` — `libs/data/stx-jpa/CHANGELOG.md` covers `stx-jpa`,
+`stx-jpa-ktor` and `stx-jpa-spring`. This file is kept as the archive and is no longer written to;
+[`docs/releasing.md`](docs/releasing.md) explains why the split happened and what it changes.
 
 ## 0.2.1
 

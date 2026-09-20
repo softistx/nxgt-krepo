@@ -53,6 +53,11 @@ stx-testing, stx-openapi-generator, stx-material  ←  nothing
 republish. That is why a change to `stx-testing` — which 20 modules use in their specs — moves
 nothing at all.
 
+That graph lives in the families' `package.json` files, and `bun scripts/graph.ts --check` derives
+it again from every `module.yaml` and fails if the two disagree — so **adding a `//libs/...`
+dependency across families means editing that family's `package.json` in the same change**.
+`bun scripts/graph.ts` prints it.
+
 **A `major` needs a human.** Changesets only ever gives a dependent a `patch`, whatever the
 dependency did. So a `major` on `stx-common` leaves `stx-jpa` on a patch bump whose POM now points
 at a new major — a consumer taking that patch gets the breaking change transitively. When you bump a
