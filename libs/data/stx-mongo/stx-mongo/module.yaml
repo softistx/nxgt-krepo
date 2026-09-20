@@ -2,7 +2,7 @@ product: jvm/lib
 description: "The MongoDB coroutine driver made reusable: a codec registry, session-aware CRUD, a cursor-paged find and GridFS"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-mongo/stx-mongo.module-template.yaml
 
 dependencies:
   # Page and PageInfo, which are not Mongo's — stx-jpa returns the same two. Exported because

@@ -2,7 +2,7 @@ product: jvm/lib
 description: Hibernate Reactive over the Vert.x Postgres client — JPA mapping and a typed Criteria API with no thread parked on a query
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-jpa/stx-jpa.module-template.yaml
 
 dependencies:
   # CloseGuard, and Page/PageInfo — which are stx-mongo's answer too, and are part of this

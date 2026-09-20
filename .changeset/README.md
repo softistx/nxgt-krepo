@@ -6,30 +6,67 @@ Every pull request that touches `libs/` declares what it does to the published a
 bun changeset
 ```
 
-Pick `patch`, `minor` or `major`, write one sentence a *reader* will see in the release notes —
-not a restatement of the commit subject — and commit the `.changeset/*.md` file it writes. CI fails
-a PR that touches `libs/` without one.
+Pick `patch`, `minor` or `major`, **pick the families your change affects**, write one sentence a
+*reader* will see in the release notes — not a restatement of the commit subject — and commit the
+`.changeset/*.md` file it writes. CI fails a PR that touches `libs/` without one.
 
-## Why the package is called `nxgt-krepo`
+If your change genuinely publishes nothing different — a spec, a comment, a harness timeout — say so
+explicitly rather than inventing a bump:
 
-There is one "package" here and it is the repository itself, declared private in the root
-`package.json`. It stands for the whole `io.github.softistx:stx-*` line, which releases in lockstep:
+```bash
+bun changeset --empty
+```
 
-- the toolchain cannot override `settings.publishing.version` from the command line, so the version
-  is a literal line in `publishing.module-template.yaml`, shared by all 46 libraries;
-- publishing is all-or-nothing across a dependency chain — `stx-jpa` depends on `stx-common`, so
-  bumping one republishes the other regardless;
-- the 19 `$libs.stx.*` catalog aliases resolve a single `stx = "…"`, which is what lets the examples
-  consume published artifacts instead of module paths.
+## One version per family
 
-So a changeset's `minor` is a minor for the whole line. Name the affected library in the prose
-instead — `stx-graphix: …` — the way the commit subjects already do.
+A **family** is a directory `libs/<role>/<name>/`: the library and its framework integrations.
+`stx-jpa`, `stx-jpa-ktor` and `stx-jpa-spring` are three artifacts and one release line — they ship
+together and are tested together, so they carry one version between them. There are 17 of them,
+covering 45 artifacts, and each has a `package.json` that Changesets versions and a
+`<name>.module-template.yaml` that carries that version into the build.
+
+A changeset therefore names a family, never an artifact and never the repository:
+
+```markdown
+---
+"stx-graphix": minor
+---
+
+Exception handlers that reach the client.
+```
+
+## What a bump drags with it
+
+Changesets bumps the families you named **and the families that depend on them at runtime**, because
+a published POM names its dependencies at an exact version — `stx-jpa`'s POM says
+`io.github.softistx:stx-common:0.2.1` — so a dependent really does have to be republished.
+
+```
+stx-common  ←  13 families
+stx-ktor    ←  10
+stx-i18n    ←  stx-spring-boot
+stx-testing, stx-openapi-generator, stx-material  ←  nothing
+```
+
+`compile-only` and `test-dependencies` are deliberately **not** in that graph. The first is
+`provided` in the POM and the second is not in the POM at all, so neither obliges anyone to
+republish. That is why a change to `stx-testing` — which 20 modules use in their specs — moves
+nothing at all.
+
+**A `major` needs a human.** Changesets only ever gives a dependent a `patch`, whatever the
+dependency did. So a `major` on `stx-common` leaves `stx-jpa` on a patch bump whose POM now points
+at a new major — a consumer taking that patch gets the breaking change transitively. When you bump a
+family with dependents to `major`, name those dependents in the same changeset with the bump they
+actually deserve. The CI guard warns when you have not.
 
 ## What happens next
 
-`changeset version` bumps `package.json`, writes `CHANGELOG.md`, and runs `scripts/sync-version.ts`
-to carry the new version into the two files the Kotlin build reads. CI opens that as a
+`changeset version` bumps each affected `package.json`, writes that family's `CHANGELOG.md`, and
+runs `scripts/sync-version.ts` to carry the new versions into the two files the Kotlin build reads —
+the family's own template and its key in `libs.versions.toml`. CI opens that as a
 "Version Packages" pull request against `develop`. Merging it is the decision to release: the same
-workflow then tags `vX.Y.Z` and publishes the 46 artifacts to Maven Central.
+workflow then publishes **only the families whose version has moved**, tags each one
+`<family>@<version>`, and cuts a release.
 
-`docs/releasing.md` has the whole circuit.
+[`docs/releasing.md`](../docs/releasing.md) has the whole circuit;
+[`docs/consuming.md`](../docs/consuming.md) has the consumer's half of it.

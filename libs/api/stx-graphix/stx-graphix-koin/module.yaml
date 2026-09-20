@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Koin collection for stx-graphix: resolvers, scalars, directives, customizers and interceptors as singles"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/api/stx-graphix/stx-graphix.module-template.yaml
 
 dependencies:
   - //libs/api/stx-graphix/stx-graphix: exported

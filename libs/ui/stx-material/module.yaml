@@ -8,7 +8,7 @@ product:
 description: "A Compose Multiplatform component library: a token layer over Material 3, and motion that is on by default"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/ui/stx-material/stx-material.module-template.yaml
 
 dependencies:
   # Material 3 is the foundation this library sits on rather than replaces: StxTheme installs

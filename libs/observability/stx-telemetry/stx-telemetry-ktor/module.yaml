@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-telemetry: one telemetry per application, and a server span per request that continues the incoming traceparent"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/observability/stx-telemetry/stx-telemetry.module-template.yaml
 
 dependencies:
   # Telemetry is what the plugin publishes and what call.telemetry returns

@@ -2,7 +2,7 @@ product: jvm/lib
 description: Message catalogues loaded once at startup, with ICU formatting, per-key fallback and Accept-Language negotiation
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/api/stx-i18n/stx-i18n.module-template.yaml
 
 dependencies:
   # ICU's MessageFormat: named arguments, plurals and selects, which java.text's cannot do

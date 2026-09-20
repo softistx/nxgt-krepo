@@ -2,7 +2,7 @@ product: jvm/lib
 description: "The Spring Boot seam for the stx libraries: WebFlux helpers, translated errors, security and Spring Data Mongo — each library's own auto-configuration is a module beside it"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/core/stx-spring-boot/stx-spring-boot.module-template.yaml
 
 dependencies:
   # `Messages` is a constructor parameter of the exception handler and `Translator` is what its

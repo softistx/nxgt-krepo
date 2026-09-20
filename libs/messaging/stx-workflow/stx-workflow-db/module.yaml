@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Where stx-workflow instances live: the WorkflowStore on Redis, on SQL through stx-jpa, and on MongoDB — one package each"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-workflow/stx-workflow.module-template.yaml
 
 dependencies:
   # WorkflowStore, WorkflowRecord and WorkflowEngine are all over this module's public API.

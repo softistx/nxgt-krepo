@@ -1,0 +1,10 @@
+{
+  "name": "stx-spring-boot",
+  "version": "0.2.1",
+  "private": true,
+  "description": "The Spring Boot seam for the stx libraries: WebFlux helpers, translated errors, security and Spring Data Mongo — each library's own auto-configuration is a module beside it",
+  "dependencies": {
+    "stx-common": "workspace:*",
+    "stx-i18n": "workspace:*"
+  }
+}

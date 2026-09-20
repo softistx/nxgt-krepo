@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-storage: one object-storage client per application, opened with it and closed with it"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-storage/stx-storage.module-template.yaml
 
 dependencies:
   # ObjectStorage is what the plugin opens and what `call.storage` returns, and StorageConfig is the

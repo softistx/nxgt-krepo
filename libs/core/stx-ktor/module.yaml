@@ -2,7 +2,7 @@ product: jvm/lib
 description: The Ktor foundation the stx plugins are built on — the resource-lifecycle idiom, and one CORS policy shared with Spring
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/core/stx-ktor/stx-ktor.module-template.yaml
 
 dependencies:
   # `CorsPolicy` is what `cors(policy)` takes, so a caller has to see it.

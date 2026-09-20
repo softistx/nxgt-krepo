@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-i18n: one negotiated locale per request, resolved once at call setup"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/api/stx-i18n/stx-i18n.module-template.yaml
 
 dependencies:
   # Messages is what the plugin is installed with and Translator is what `call.translator` returns.

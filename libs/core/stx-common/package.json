@@ -1,0 +1,6 @@
+{
+  "name": "stx-common",
+  "version": "0.2.1",
+  "private": true,
+  "description": "What more than one stx library needs and nothing else: pages, coroutine primitives, the shared JSON and CloseGuard"
+}

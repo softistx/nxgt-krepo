@@ -2,7 +2,7 @@ product: jvm/lib
 description: "What more than one stx library needs and nothing else: pages, coroutine primitives, the shared JSON and CloseGuard"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/core/stx-common/stx-common.module-template.yaml
 
 dependencies:
   # Mutex, Channel and the rest of the coroutine primitives these are built from

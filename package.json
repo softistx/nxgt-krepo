@@ -2,12 +2,15 @@
   "name": "nxgt-krepo",
   "version": "0.2.1",
   "private": true,
+  "workspaces": [
+    "libs/*/*"
+  ],
   "type": "module",
   "description": "Release tooling for the io.github.softistx:stx-* libraries. This repository is Kotlin; bun is here only to run Changesets.",
   "license": "Apache-2.0",
   "scripts": {
     "changeset": "changeset",
-    "version": "changeset version && bun scripts/sync-version.ts",
+    "version": "changeset version && bun scripts/sync-version.ts && bun install --lockfile-only",
     "typecheck": "tsc --noEmit",
     "test": "bun test scripts/"
   },

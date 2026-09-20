@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-redis: one namespaced connection per application, opened with it and closed with it"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-redis/stx-redis.module-template.yaml
 
 dependencies:
   # Redis is what the plugin opens and what `call.redis` returns, and RedisConfig is the only way to

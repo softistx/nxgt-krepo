@@ -12,6 +12,124 @@
         "typescript": "6.0.3",
       },
     },
+    "libs/api/stx-graphix": {
+      "name": "stx-graphix",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+      },
+    },
+    "libs/api/stx-i18n": {
+      "name": "stx-i18n",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/api/stx-openapi-generator": {
+      "name": "stx-openapi-generator",
+      "version": "0.2.1",
+    },
+    "libs/core/stx-common": {
+      "name": "stx-common",
+      "version": "0.2.1",
+    },
+    "libs/core/stx-ktor": {
+      "name": "stx-ktor",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+      },
+    },
+    "libs/core/stx-spring-boot": {
+      "name": "stx-spring-boot",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-i18n": "workspace:*",
+      },
+    },
+    "libs/core/stx-testing": {
+      "name": "stx-testing",
+      "version": "0.2.1",
+    },
+    "libs/data/stx-jpa": {
+      "name": "stx-jpa",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/data/stx-migrations": {
+      "name": "stx-migrations",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/data/stx-mongo": {
+      "name": "stx-mongo",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/data/stx-redis": {
+      "name": "stx-redis",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/data/stx-storage": {
+      "name": "stx-storage",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/messaging/stx-amqp": {
+      "name": "stx-amqp",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/messaging/stx-kafka": {
+      "name": "stx-kafka",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/messaging/stx-workflow": {
+      "name": "stx-workflow",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/observability/stx-telemetry": {
+      "name": "stx-telemetry",
+      "version": "0.2.1",
+      "dependencies": {
+        "stx-common": "workspace:*",
+        "stx-ktor": "workspace:*",
+      },
+    },
+    "libs/ui/stx-material": {
+      "name": "stx-material",
+      "version": "0.2.1",
+    },
   },
   "packages": {
     "@changesets/apply-release-plan": ["@changesets/apply-release-plan@8.1.0", "", { "dependencies": { "@changesets/config": "^4.0.0", "@changesets/format": "^0.1.2", "@changesets/git": "^4.0.1", "@changesets/should-skip-package": "^1.0.0", "@changesets/types": "^7.0.0", "import-meta-resolve": "^4.2.0", "jsonc-parser": "^3.3.1", "semver": "^7.8.1" } }, "sha512-M93HOGyX3ssg6He3b5NotaHtQVu6uajHS6UIQ28xKt2RzskCy73ayX4I914qBKjTJmrE4YFlELQjfcqxbmGLJw=="],
@@ -99,6 +217,40 @@
     "shell-quote": ["shell-quote@1.10.0", "", {}, "sha512-w1aiOKwKuRgtwAReIIj89puqg+I7GvX4IbLrvmhXbzQsj1+Zwi4VO3+fa6ZF91TWSjIxoEkKnMeHcLEODK5ZXA=="],
 
     "sisteransi": ["sisteransi@1.0.5", "", {}, "sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg=="],
+
+    "stx-amqp": ["stx-amqp@workspace:libs/messaging/stx-amqp"],
+
+    "stx-common": ["stx-common@workspace:libs/core/stx-common"],
+
+    "stx-graphix": ["stx-graphix@workspace:libs/api/stx-graphix"],
+
+    "stx-i18n": ["stx-i18n@workspace:libs/api/stx-i18n"],
+
+    "stx-jpa": ["stx-jpa@workspace:libs/data/stx-jpa"],
+
+    "stx-kafka": ["stx-kafka@workspace:libs/messaging/stx-kafka"],
+
+    "stx-ktor": ["stx-ktor@workspace:libs/core/stx-ktor"],
+
+    "stx-material": ["stx-material@workspace:libs/ui/stx-material"],
+
+    "stx-migrations": ["stx-migrations@workspace:libs/data/stx-migrations"],
+
+    "stx-mongo": ["stx-mongo@workspace:libs/data/stx-mongo"],
+
+    "stx-openapi-generator": ["stx-openapi-generator@workspace:libs/api/stx-openapi-generator"],
+
+    "stx-redis": ["stx-redis@workspace:libs/data/stx-redis"],
+
+    "stx-spring-boot": ["stx-spring-boot@workspace:libs/core/stx-spring-boot"],
+
+    "stx-storage": ["stx-storage@workspace:libs/data/stx-storage"],
+
+    "stx-telemetry": ["stx-telemetry@workspace:libs/observability/stx-telemetry"],
+
+    "stx-testing": ["stx-testing@workspace:libs/core/stx-testing"],
+
+    "stx-workflow": ["stx-workflow@workspace:libs/messaging/stx-workflow"],
 
     "tinyexec": ["tinyexec@1.3.1", "", {}, "sha512-GCvB3aoys96IuDFBMcTB46JOR6mdMtAToqwiW8JlWhsoh1mhHi/xn9ss/Dg7N555GiJyEt2qzoG/NHCwM6h1EA=="],
 
