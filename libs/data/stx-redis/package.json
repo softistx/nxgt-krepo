@@ -1,0 +1,10 @@
+{
+  "name": "stx-redis",
+  "version": "0.2.1",
+  "private": true,
+  "description": "Redis over Lettuce's coroutine commands — values, keys, scans and locks, without wrapping the protocol again",
+  "dependencies": {
+    "stx-common": "workspace:*",
+    "stx-ktor": "workspace:*"
+  }
+}

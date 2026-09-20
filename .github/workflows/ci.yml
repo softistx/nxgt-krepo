@@ -249,3 +249,10 @@ jobs:
       # scripts/sync-version.ts decides what version 45 modules publish under, in a job nobody
       # watches. It gets a test.
       - run: bun test scripts/
+
+      # And the repository itself is checked, not just the script: every module wired to its
+      # family's template, every family template chained to the shared one, and all 34 version
+      # anchors agreeing with the families' package.json. A module wired to no family template
+      # builds fine and only fails at `kotlin publish` — in the release job, after the version has
+      # been bumped and a release is expected. This is that failure, moved to the pull request.
+      - run: bun scripts/sync-version.ts --check

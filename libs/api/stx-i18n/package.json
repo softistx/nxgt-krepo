@@ -1,0 +1,10 @@
+{
+  "name": "stx-i18n",
+  "version": "0.2.1",
+  "private": true,
+  "description": "Message catalogues loaded once at startup, with ICU formatting, per-key fallback and Accept-Language negotiation",
+  "dependencies": {
+    "stx-common": "workspace:*",
+    "stx-ktor": "workspace:*"
+  }
+}

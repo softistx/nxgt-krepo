@@ -11,10 +11,14 @@ settings:
   publishing:
     enabled: true
     group: io.github.softistx
-    # Written by `scripts/sync-version.ts` from package.json. Do not edit it by hand: the same
-    # version lives in `libs.versions.toml` as `stx = "…"`, and the two must move together or every
-    # example resolves a coordinate nobody published. `docs/releasing.md` has the circuit.
-    version: 0.2.1
+    # `version` is deliberately NOT here. Each library family sets its own, in
+    # `libs/<role>/<family>/<family>.module-template.yaml`, which applies this file — so the family
+    # template has precedence and there is exactly one place a version lives per family.
+    #
+    # No fallback either, and that is the point: a module wired to no family template would
+    # otherwise publish silently under someone else's version. Without one, `./kotlin publish` fails
+    # with "Missing 'version' in publishing settings of fragment 'main' of module '<name>'" —
+    # measured — and `scripts/sync-version.ts --check` catches it before a release ever gets there.
     # `artifactId` is deliberately absent: it defaults to the module's name, so the directory name
     # *is* the artifact name and there is no second place to keep in sync.
 

@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-i18n, opt-in behind stx.i18n — and it narrows the locale resolver to the catalogs it loaded"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/api/stx-i18n/stx-i18n.module-template.yaml
 
 dependencies:
   # Messages is the bean this module registers and its properties are what the catalogs are loaded

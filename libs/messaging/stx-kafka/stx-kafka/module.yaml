@@ -2,7 +2,7 @@ product: jvm/lib
 description: Kafka over the Apache clients, made suspending — typed publishers and a poll loop, serialized with kotlinx.serialization
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-kafka/stx-kafka.module-template.yaml
 
 dependencies:
   # the shared Json every record is read through, and the decode over it

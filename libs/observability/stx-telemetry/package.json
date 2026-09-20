@@ -1,0 +1,10 @@
+{
+  "name": "stx-telemetry",
+  "version": "0.2.1",
+  "private": true,
+  "description": "Logs and traces for a Kotlin coroutine service: the current span is a CoroutineContext element, an event is a @Serializable type, and export is a background drain",
+  "dependencies": {
+    "stx-common": "workspace:*",
+    "stx-ktor": "workspace:*"
+  }
+}

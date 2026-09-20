@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-mongo, opt-in behind stx.mongo — a client with the codec registry, and a database over it"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-mongo/stx-mongo.module-template.yaml
 
 dependencies:
   # MongoClient and MongoDatabase are the beans this module registers, and `mongoClient` is what builds the first. Exported, where the hub had it compile-only: a consumer of this module cannot use the

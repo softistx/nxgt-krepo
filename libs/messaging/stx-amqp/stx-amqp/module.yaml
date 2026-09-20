@@ -2,7 +2,7 @@ product: jvm/lib
 description: AMQP over the RabbitMQ client, made suspending — publishing, consuming, and the confirm and ack rules
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-amqp/stx-amqp.module-template.yaml
 
 dependencies:
   # the shared Json every body is read through, and the decode over it

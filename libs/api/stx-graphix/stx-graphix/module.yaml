@@ -2,7 +2,7 @@ product: jvm/lib
 description: "GraphQL for a Kotlin coroutine service: annotations, kotlinx.serialization, suspending execution over graphql-java"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/api/stx-graphix/stx-graphix.module-template.yaml
 
 dependencies:
   # Json and CloseGuard — variables decode through the same lenient Json the rest of the stack uses

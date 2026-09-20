@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-workflow: one engine per application, and the worker on its scope"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-workflow/stx-workflow.module-template.yaml
 
 dependencies:
   # WorkflowEngine is what the plugin publishes and what call.workflows returns

@@ -1,0 +1,9 @@
+{
+  "name": "stx-ktor",
+  "version": "0.2.1",
+  "private": true,
+  "description": "The Ktor foundation the stx plugins are built on — the resource-lifecycle idiom, and one CORS policy shared with Spring",
+  "dependencies": {
+    "stx-common": "workspace:*"
+  }
+}

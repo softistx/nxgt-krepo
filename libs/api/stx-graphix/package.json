@@ -1,0 +1,9 @@
+{
+  "name": "stx-graphix",
+  "version": "0.2.1",
+  "private": true,
+  "description": "GraphQL for a Kotlin coroutine service: annotations, kotlinx.serialization, suspending execution over graphql-java",
+  "dependencies": {
+    "stx-common": "workspace:*"
+  }
+}

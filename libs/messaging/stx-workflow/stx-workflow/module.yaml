@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Compensable workflows in Kotlin: a DSL of steps, a compensation per step, and state checkpointed after each one"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-workflow/stx-workflow.module-template.yaml
 
 dependencies:
   # the shared lenient Json a persisted context is read back through, and CloseGuard

@@ -1,0 +1,10 @@
+{
+  "name": "stx-mongo",
+  "version": "0.2.1",
+  "private": true,
+  "description": "The MongoDB coroutine driver made reusable: a codec registry, session-aware CRUD, a cursor-paged find and GridFS",
+  "dependencies": {
+    "stx-common": "workspace:*",
+    "stx-ktor": "workspace:*"
+  }
+}

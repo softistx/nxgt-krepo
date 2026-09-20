@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-migrations: install(Migrations) is a gate, and the server does not bind until it passes"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-migrations/stx-migrations.module-template.yaml
 
 dependencies:
   # MigrationRunner is what the configuration takes and MigrationRecord is what call.migrations

@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-kafka, opt-in behind stx.kafka — a cluster handle, and no connection"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-kafka/stx-kafka.module-template.yaml
 
 dependencies:
   # Kafka is the bean this module registers and KafkaConfig is what it is built from. Exported, where the hub had it compile-only: a consumer of this module cannot use the

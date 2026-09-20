@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-kafka: the cluster configuration in one place, reachable from a route — and nothing opened"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-kafka/stx-kafka.module-template.yaml
 
 dependencies:
   # Kafka is what the plugin publishes and what `call.kafka` returns, and KafkaConfig is the only

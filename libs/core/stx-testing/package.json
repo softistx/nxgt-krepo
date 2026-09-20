@@ -1,0 +1,6 @@
+{
+  "name": "stx-testing",
+  "version": "0.2.1",
+  "private": true,
+  "description": "Test-only support the stx libraries share: the backing services their integration specs talk to, declared rather than assumed"
+}

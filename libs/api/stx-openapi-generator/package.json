@@ -1,0 +1,6 @@
+{
+  "name": "stx-openapi-generator",
+  "version": "0.2.1",
+  "private": true,
+  "description": "Reads an OpenAPI 3 document and emits Kotlin models and a typed HTTP client, with no dependency on the build system"
+}

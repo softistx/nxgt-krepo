@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-jpa, opt-in behind stx.jpa — a session factory, and a scan that must find something"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-jpa/stx-jpa.module-template.yaml
 
 dependencies:
   # Jpa is the bean this module registers, Stage.SessionFactory is the second bean it exposes, and JpaConfig is what both are built from. Exported, where the hub had it compile-only: a consumer of this module cannot use the

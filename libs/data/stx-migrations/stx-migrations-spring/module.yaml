@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-migrations, opt-in behind stx.migrations — and a gate, not a listener"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-migrations/stx-migrations.module-template.yaml
 
 dependencies:
   # MigrationRunner is the bean this module registers and the type the gate collects.
