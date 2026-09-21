@@ -1192,9 +1192,11 @@ the same each time, and the mistakes are the same each time too.
   changeset for the wrong family is worse than none: it releases a library nobody touched and leaves
   the touched one behind. `bun changeset --empty` is the explicit "nothing published changes" and
   satisfies the guard. A name that is not one of the 17 families is refused. A `major` whose
-  dependents are not named warns: Changesets only ever gives a dependent a `patch`, and the POM pins
-  an exact version, so a consumer would take the break on a patch. `.changeset/README.md` has the
-  rest.
+  dependents are not named **fails**, naming them and printing the lines to paste: Changesets only
+  ever gives a dependent a `patch`, and the POM pins an exact version, so a consumer would take the
+  break on a patch. The escape hatch is an `unaffected: <names>` line in the changeset's prose, for
+  a break that genuinely cannot reach that dependent's own consumers; a name on it that depends on
+  no `major` in the changeset is refused as the typo it is. `.changeset/README.md` has the rest.
 - **`develop` is where work lands and every PR targets it.** Branch off `develop`, open the
   pull request against `develop`, and merge it there. Nothing is merged directly into `main`, however
   small and however green — a PR opened against `main` has the wrong base and wants recreating, not

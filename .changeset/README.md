@@ -58,11 +58,35 @@ it again from every `module.yaml` and fails if the two disagree — so **adding 
 dependency across families means editing that family's `package.json` in the same change**.
 `bun scripts/graph.ts` prints it.
 
-**A `major` needs a human.** Changesets only ever gives a dependent a `patch`, whatever the
-dependency did. So a `major` on `stx-common` leaves `stx-jpa` on a patch bump whose POM now points
-at a new major — a consumer taking that patch gets the breaking change transitively. When you bump a
-family with dependents to `major`, name those dependents in the same changeset with the bump they
-actually deserve. The CI guard warns when you have not.
+**A `major` must say what happens to its dependents, and CI enforces it.** Changesets only ever
+gives a dependent a `patch`, whatever the dependency did. So a `major` on `stx-common` would leave
+`stx-jpa` on a patch bump whose POM points at a new major — a consumer taking that patch gets the
+breaking change transitively, which is the one thing a patch promises not to do.
+
+So the guard fails the pull request, names every dependent, and prints the lines to paste:
+
+```
+"stx-jpa": major
+"stx-mongo": major
+```
+
+If the break genuinely cannot reach a consumer of a dependent — it is behind a type that dependent
+never exposes — say so in the changeset's prose instead, naming each one:
+
+```markdown
+---
+"stx-common": major
+---
+
+Reworked the paging cursor. The two callers below never expose it.
+
+unaffected: stx-redis, stx-storage
+```
+
+A name on that line that depends on no `major` in the changeset is refused, because it is a typo in
+the name it was meant to excuse and would otherwise excuse nothing silently. The rule is an error
+and not a warning on purpose: the cost is paid by a consumer who is not in the room, and a warning
+on a rare event is one people learn to scroll past.
 
 ## What happens next
 

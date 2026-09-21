@@ -63,8 +63,12 @@ publishes perfectly well, and merely stops releasing a library whose POM names a
 moved; an **extra** one releases a library that nothing obliged to move. `bun scripts/graph.ts`
 with no argument prints the graph.
 
-`.changeset/README.md` has the reasoning, including the one rule the tool cannot enforce — a
-`major` has to name its own dependents. `docs/consuming.md` has the consumer's half.
+A **`major` has to name its own dependents**, and the guard fails the pull request until it does,
+printing the lines to paste. Changesets gives a dependent only a `patch` however far the dependency
+moved, and the POM pins an exact version, so a consumer would take the break on a patch. An
+`unaffected: <names>` line in the changeset's prose is the escape hatch, for a break that genuinely
+cannot reach that dependent's own consumers. `.changeset/README.md` has the shape of both;
+`docs/consuming.md` has the consumer's half.
 
 ### 2. Merging to `develop` opens a "Version Packages" PR
 

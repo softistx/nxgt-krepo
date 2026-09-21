@@ -78,7 +78,9 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   changeset`, pick the families, commit the `.changeset/*.md` it writes. A *family* is a directory
   under `libs/<role>/` — a library and its framework integrations share one version, so a change to
   `stx-jpa-spring` releases `stx-jpa`. CI fails a PR without one, naming the families you changed
-  and did not declare; `bun changeset --empty` is the explicit "nothing published changes". Never
+  and did not declare; `bun changeset --empty` is the explicit "nothing published changes". A
+  `major` also has to name its dependents — the guard prints the lines, and `unaffected: <names>`
+  in the prose is the way out when the break cannot reach them. Never
   edit a family's `version:` in its `<family>.module-template.yaml` or its key in `[versions]` of
   `libs.versions.toml` by hand — `scripts/sync-version.ts` writes both from the family's
   `package.json`, and moving one without the other leaves an example resolving a coordinate nobody
