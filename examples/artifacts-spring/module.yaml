@@ -1,0 +1,46 @@
+product: jvm/app
+description: "Resolves the nine io.github.softistx coordinates no other module here consumes — the Spring Boot half"
+
+apply:
+  - //stx-artifacts.module-template.yaml
+
+# The Spring twin of `artifacts-ktor`, and the same reasoning: `stx-amqp`, `stx-kafka` and
+# `stx-storage` were the three families nothing in this repository resolved as published
+# coordinates, so a POM of theirs could break with the whole build still green.
+#
+# What this half proves that the other cannot: each `-spring` artifact ships an
+# `AutoConfiguration.imports` entry, and Spring reads those from the classpath at context startup.
+# The spec here boots the application, which is the only way to find out that the file is in the
+# jar, that the class it names exists, and that loading it does not throw. All three
+# auto-configurations sit behind `@ConditionalOnProperty(stx.<name>.enabled)` and nothing here turns
+# them on — a context that starts with them present and inert is exactly the claim being checked.
+dependencies:
+  # Each of these exports its own library and `spring-boot-starter`, so a consumer writes nothing
+  # else. The libraries are named anyway: standing alone, they are three of the nine coordinates.
+  - $libs.stx.amqp
+  - $libs.stx.kafka
+  - $libs.stx.storage
+
+  - $libs.stx.amqp.spring
+  - $libs.stx.kafka.spring
+  - $libs.stx.storage.spring
+
+test-dependencies:
+  # `@SpringBootTest`, which is what boots the context and therefore what reads the three
+  # `AutoConfiguration.imports` entries.
+  - $spring.boot.starter.test
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  # Kotest driving Spring's harness — the same arrangement `spring-orders` uses.
+  - $libs.kotest.extensions.spring
+  # No SLF4J no-op provider here, unlike `artifacts-ktor`: `spring-boot-starter` brings Logback, and
+  # a second binding makes the context refuse to start — "LoggerFactory is not a Logback
+  # LoggerContext but Logback is on the classpath".
+
+settings:
+  # The Spring Boot BOM and the `spring` all-open preset.
+  springBoot: enabled
+  jvm:
+    # Stated rather than detected: the toolchain finds a `main` on its own only in `main.kt`.
+    mainClass: com.softistx.example.artifacts.spring.ArtifactsApplicationKt

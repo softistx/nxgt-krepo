@@ -1,0 +1,47 @@
+product: jvm/lib
+description: "Resolves the nine io.github.softistx coordinates no other module here consumes — the Ktor half"
+
+apply:
+  - //stx-artifacts.module-template.yaml
+
+# Why this module exists, and why it is not a demonstration.
+#
+# Every other module under `examples/` earns its place twice: it shows a library being used, and —
+# because it resolves published coordinates rather than `//libs/...` paths — it proves the POM names
+# what a consumer needs, at the scope a consumer needs it. Both times a published artifact was wrong
+# in this repository, an example is what found it.
+#
+# `stx-amqp`, `stx-kafka` and `stx-storage` had neither. Nine artifacts, across three families, that
+# nothing in this repository resolved as published coordinates — so a POM of theirs could break and
+# the whole build would stay green. This module and its Spring twin close exactly that gap and claim
+# nothing more: they are not demonstrations, and a real example for these three libraries is still
+# worth writing.
+#
+# The compile *is* most of the check. Naming these types at a call site fails unless the POM carries
+# what the signatures reach for — `AmqpConfig`'s `configure` parameter, for instance, is typed
+# `(ConnectionFactory) -> Unit`, so constructing one at all requires `stx-amqp` to have exported the
+# RabbitMQ client rather than kept it to itself.
+dependencies:
+  # The libraries themselves, named even though the `-ktor` artifacts below export them. That is the
+  # point: `stx-amqp` standing alone is one of the nine coordinates being proved.
+  - $libs.stx.amqp
+  - $libs.stx.kafka
+  - $libs.stx.storage
+
+  # The Ktor integrations. Each exports its own library and `ktor-server-core`, so installing the
+  # plugin is all a consumer writes.
+  - $libs.stx.amqp.ktor
+  - $libs.stx.kafka.ktor
+  - $libs.stx.storage.ktor
+
+test-dependencies:
+  - $libs.kotest.runner.junit5
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+
+settings:
+  ktor:
+    enabled: true
+    version: 3.5.2
+  kotlin:
+    serialization: json
