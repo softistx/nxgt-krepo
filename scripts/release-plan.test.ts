@@ -6,7 +6,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { releases, tasks } from "./release-plan.ts";
+import { batches, releases, tasks } from "./release-plan.ts";
 import { section } from "./changelog-section.ts";
 
 /** Writes a publish plan as `changeset publish-plan --output` writes one. */
@@ -74,6 +74,38 @@ describe("releases", () => {
         const file = plan([[["stx-jpa-ktor", "0.3.0"]]]);
         try {
             expect(() => releases(file)).toThrow(/not a family under libs\//);
+        } finally {
+            rmSync(file, { force: true });
+        }
+    });
+
+    test("keeps the batches, because they are the unit that gets published and tagged", () => {
+        // Flattening these would be the whole difference between a failure costing one batch and a
+        // failure costing the run: what is tagged after a batch is what a re-run no longer offers
+        // to a repository that refuses a version it already holds.
+        const file = plan([[["stx-common", "0.3.0"]], [["stx-ktor", "0.2.2"], ["stx-jpa", "0.2.2"]]]);
+        try {
+            expect(batches(file).map((b) => b.map((r) => r.tag))).toEqual([
+                ["stx-common@0.3.0"],
+                ["stx-ktor@0.2.2", "stx-jpa@0.2.2"],
+            ]);
+            // And the flat view is still the same list, in the same order.
+            expect(releases(file).map((r) => r.tag)).toEqual([
+                "stx-common@0.3.0",
+                "stx-ktor@0.2.2",
+                "stx-jpa@0.2.2",
+            ]);
+        } finally {
+            rmSync(file, { force: true });
+        }
+    });
+
+    test("an empty plan has no batches to loop over", () => {
+        // `--batch-count` of 0 makes the workflow's `seq 0 -1` loop run zero times, which is the
+        // only reason the publish step is allowed to be reached with nothing to do.
+        const file = plan([]);
+        try {
+            expect(batches(file)).toEqual([]);
         } finally {
             rmSync(file, { force: true });
         }

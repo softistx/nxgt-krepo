@@ -68,7 +68,17 @@ jobs:
           bun scripts/release-plan.ts release-plan.json
           echo "count=$(bun scripts/release-plan.ts release-plan.json --count)" >> "$GITHUB_OUTPUT"
 
+      # Batch by batch: publish a batch's modules, then tag its families, then the next. The
+      # batches come from `changeset publish-plan` and are in dependency order — a family is never
+      # in the same batch as anything it depends on.
+      #
+      # Publishing all of them in one invocation would be shorter and strictly worse. Maven Central
+      # refuses a version it already holds, so a failure partway through is not something a re-run
+      # can retry: everything already uploaded has to be dropped in the Portal by hand first. Tagging
+      # after each batch shrinks that to the batch that failed — every earlier one is now behind a
+      # tag, so the next plan no longer contains it and Central is never offered it twice.
       - name: Publish to Maven Central
+        id: publish
         if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count != '0'
         env:
           # Organisation secrets on `softistx`. An org secret whose repository access does not
@@ -106,34 +116,60 @@ jobs:
           # without this it would republish the previous versions, unsigned, and report success.
           rm -rf build/incremental.state
 
-          # Not `kotlin publish mavenCentral`: on toolchain 0.12.0 it refuses — "Cannot publish to
-          # repository 'mavenCentral' because it's not marked as publishable" — because it checks
-          # the repositories list, where the built-in mavenCentral is resolve-only. Giving it an
-          # entry with `publish: true` does not help: that registers a second publishToMavenCentral
-          # task and the CLI crashes with "Task … already exists". settings.publishing.mavenCentral
-          # still registers the Portal upload as a task per module, and `kotlin task` (not listed in
-          # --help) runs it directly. Go back to `kotlin publish mavenCentral` once the toolchain
-          # accepts it.
-          ./kotlin task $(bun scripts/release-plan.ts release-plan.json --tasks)
+          # An annotated tag carries a message, so it needs an author. changesets/action sets one
+          # for its own commit; this does not rely on that having happened in this job.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          total=$(bun scripts/release-plan.ts release-plan.json --batch-count)
+          for i in $(seq 0 $((total - 1))); do
+            echo "::group::Batch $((i + 1)) of $total"
+            bun scripts/release-plan.ts release-plan.json --fields "$i"
+
+            # Not `kotlin publish mavenCentral`: on toolchain 0.12.0 it refuses — "Cannot publish to
+            # repository 'mavenCentral' because it's not marked as publishable" — because it checks
+            # the repositories list, where the built-in mavenCentral is resolve-only. Giving it an
+            # entry with `publish: true` does not help: that registers a second
+            # publishToMavenCentral task and the CLI crashes with "Task … already exists".
+            # settings.publishing.mavenCentral still registers the Portal upload as a task per
+            # module, and `kotlin task` (not listed in --help) runs it directly. Go back to
+            # `kotlin publish mavenCentral` once the toolchain accepts it.
+            ./kotlin task $(bun scripts/release-plan.ts release-plan.json --tasks "$i")
+
+            # Tags AFTER this batch's upload, so a failed publish cannot leave a tag claiming a
+            # version went out. Annotated, not lightweight: the tag then carries that family's
+            # release notes, which is what `git show stx-jpa@0.5.2` and the tag list display. That
+            # is why the tagging is here rather than in `changeset git-tag`, which only makes
+            # lightweight tags — and the `rev-parse` below is the idempotency that command gave for
+            # free, restored: a replayed run leaves an existing tag alone.
+            created=()
+            while read -r name version dir; do
+              tag="$name@$version"
+              if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
+                echo "::notice::$tag already exists — left as it is."
+                continue
+              fi
+              {
+                echo "$name $version"
+                echo
+                bun scripts/changelog-section.ts "$dir/CHANGELOG.md" "$version" \
+                  || echo "Released because a family it depends on moved."
+              } > tag-message.txt
+              git tag -a -F tag-message.txt "$tag"
+              created+=("$tag")
+            done < <(bun scripts/release-plan.ts release-plan.json --fields "$i")
+
+            if [ ${#created[@]} -gt 0 ]; then
+              git push origin "${created[@]}"
+            fi
+            echo "::endgroup::"
+          done
+
+          rm -f tag-message.txt
           git checkout publishing.module-template.yaml
 
           echo "::notice::Uploaded to the Central Portal in manual mode. Release it at"
           echo "https://central.sonatype.com/publishing/deployments — nothing is public until you do."
-
-      # Tags AFTER the upload, so that a failed publish does not leave a tag claiming a version went
-      # out. `changeset git-tag` creates `<family>@<version>` for every package and skips the ones
-      # that already exist, which is what makes a re-run skip what is already up.
-      #
-      # A tag records that a bundle was *uploaded*, not that it was released — the Portal is in
-      # manual mode. If a deployment is dropped afterwards, delete that family's tag, or the next
-      # run will skip it. `docs/releasing.md` has the repair.
-      - name: Tag each family
-        if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count != '0'
-        run: |
-          set -euo pipefail
-          bun x changeset git-tag
-          git push origin --tags
 
       - name: One release for the run
         if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count != '0'
