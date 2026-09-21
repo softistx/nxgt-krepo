@@ -9,6 +9,12 @@ import { readFileSync } from "node:fs";
 /**
  * The body of `## <version>` in `text`, without the heading, trimmed.
  *
+ * A section ends at the next `## ` heading — or at the footer, which every family `CHANGELOG.md`
+ * carries and which opens with an HTML comment in the first column. That second stop is not
+ * decoration: the *newest* section has no heading after it, so without it the newest release — the
+ * one always being cut — took the footer with it into the tag message and the GitHub release body.
+ * Measured on `stx-material@0.2.2`, the first release under this circuit.
+ *
  * @returns `null` when the changelog has no such section — which is a real answer, not a failure: a
  * family bumped only because a dependency moved has a section, but a caller may ask for a version
  * that was never written, and an empty string would hide the difference.
@@ -19,7 +25,7 @@ export function section(text: string, version: string): string | null {
     if (start < 0) return null;
 
     const rest = lines.slice(start + 1);
-    const end = rest.findIndex((l) => l.startsWith("## "));
+    const end = rest.findIndex((l) => l.startsWith("## ") || l.startsWith("<!--"));
     const body = (end < 0 ? rest : rest.slice(0, end)).join("\n").trim();
     return body;
 }
