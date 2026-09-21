@@ -26,6 +26,20 @@ export function report(pending: readonly Changeset[]): Report {
     const real = pending.filter((c) => !isEmpty(c)).length;
     const empty = pending.length - real;
 
+    // The workflow never reaches this step with nothing pending — `has-changesets` would be false
+    // and the publish path would have run instead. Someone reading the state by hand does, though,
+    // and "0 pending, all empty" is not a description of an empty directory.
+    if (pending.length === 0) {
+        return {
+            real,
+            empty,
+            level: "notice",
+            message:
+                "No changesets pending. The next push to develop goes straight to the publish " +
+                "path, which releases whatever family is ahead of its tag — usually none.",
+        };
+    }
+
     if (real > 0) {
         return {
             real,
