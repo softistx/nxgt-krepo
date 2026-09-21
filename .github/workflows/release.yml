@@ -206,3 +206,11 @@ jobs:
       - name: Nothing to release
         if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count == '0'
         run: echo "::notice::No family is ahead of its tag. Nothing was published."
+
+      # The third outcome, and the one that used to be silent. `has-changesets` is true whenever
+      # `.changeset/` holds anything at all, so every step above is skipped — including the one that
+      # says nothing was released. When the pending changesets are all *empty* the action does not
+      # open a pull request either, and the run ends green having explained nothing.
+      - name: Changesets are pending
+        if: steps.changesets.outputs.has-changesets == 'true'
+        run: bun scripts/pending.ts

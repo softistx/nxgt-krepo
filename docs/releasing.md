@@ -124,6 +124,14 @@ The same workflow re-runs with no changesets left and, in **one job**:
 8. one GitHub release on a `release-<YYYY-MM-DD>` tag, its body one section per family, taken from
    that family's own `CHANGELOG.md`.
 
+A run therefore ends in one of three ways, and **each of them says so in the log**: it opened or
+updated the "Version Packages" pull request, it published, or it did neither. The third case has two
+shapes — no family ahead of its tag, which is the normal outcome of most pushes to `develop`; or
+pending changesets that are *all empty*, for which `changesets/action` opens no pull request and the
+publish path never runs. That one is a `::warning::`, because a half-finished release is replayed by
+re-running this job and an unrelated empty changeset left in the directory turns the replay into the
+same no-op. `bun scripts/pending.ts` is what says it.
+
 **The tags come after the upload, not before**, so a failed publish cannot leave a tag claiming a
 version went out. And they come after *each batch* rather than after all of them, which is the
 difference between a failure costing the run and a failure costing one batch.
