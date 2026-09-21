@@ -22,6 +22,15 @@ describe("report", () => {
         expect(r.message).toContain("replay");
     });
 
+    test("nothing pending is not the same as pending and empty", () => {
+        // What `bun scripts/pending.ts` printed by hand on a clean develop: "0 pending
+        // changeset(s), all empty". The workflow never calls it in this state, a reader does.
+        const r = report([]);
+        expect(r).toMatchObject({ real: 0, empty: 0, level: "notice" });
+        expect(r.message).toContain("No changesets pending");
+        expect(r.message).not.toContain("empty");
+    });
+
     test("counts them, so the log says how many are in the way", () => {
         expect(report([blank("a"), blank("b"), blank("c")]).message).toContain("3 pending");
     });
