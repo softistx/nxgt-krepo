@@ -1119,6 +1119,8 @@ the same each time, and the mistakes are the same each time too.
   | `libs/ui/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
   | `libs/ui/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
   | `libs/ui/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
+  | `examples/artifacts-ktor/README.md` | Why two modules exist that demonstrate nothing: the nine coordinates of `stx-amqp`, `stx-kafka` and `stx-storage` that no other module resolves, and what the compile and the spec each prove about a POM |
+  | `examples/artifacts-spring/README.md` | What booting a context proves that loading a class cannot — and the two things that bit while writing it |
   | `examples/spring-orders/README.md` | What each file in the Spring demo is there to show, how to run it, and what it deliberately leaves out |
   | `examples/graphix-shop/README.md` | What the GraphQL catalogue shows — split SDL, annotated DataFetchers, how to run it |
   | `examples/graphix-codegen/README.md` | The two GraphQL codegen plugins on one schema |
