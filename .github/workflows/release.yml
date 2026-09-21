@@ -55,8 +55,21 @@ jobs:
           commit-message: "chore(release): version packages"
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to Maven Central
+      # What this run releases: the families whose version has moved past their `<family>@<version>`
+      # tag. `changeset publish-plan` answers exactly that, in dependency order, and
+      # `scripts/release-plan.ts` translates its family names into the module names the toolchain
+      # publishes. An empty plan is the normal outcome of a run with nothing to release.
+      - name: What is being released
+        id: plan
         if: steps.changesets.outputs.has-changesets == 'false'
+        run: |
+          set -euo pipefail
+          bun x changeset publish-plan --output release-plan.json
+          bun scripts/release-plan.ts release-plan.json
+          echo "count=$(bun scripts/release-plan.ts release-plan.json --count)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Maven Central
+        if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count != '0'
         env:
           # Organisation secrets on `softistx`. An org secret whose repository access does not
           # include this repository arrives as an EMPTY string, not as an error — hence the guard
@@ -66,13 +79,11 @@ jobs:
           KOTLIN_TOOLCHAIN_SIGNING_KEY: ${{ secrets.KOTLIN_TOOLCHAIN_SIGNING_KEY }}
         run: |
           set -euo pipefail
-          VERSION=$(bun --print "require('./package.json').version")
 
-          # Idempotent: re-running the workflow on an already released commit publishes nothing.
-          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
-            echo "v$VERSION is already released."
-            exit 0
-          fi
+          # Before anything is touched: every family's template and catalog key must agree with its
+          # package.json. A second here is a much cheaper failure than a half-finished upload to a
+          # repository that does not allow a version to be replaced.
+          bun scripts/sync-version.ts --check
 
           for v in KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME \
                    KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_PASSWORD \
@@ -89,10 +100,10 @@ jobs:
           # signing off is refused at model load. docs/releasing.md has both measurements.
           bun scripts/enable-central.ts
 
-          # The publish task caches, and its up-to-date check does not notice a module.yaml edit —
-          # it reuses build/tasks/_<module>_prepareMavenPublishables/. This job has just rewritten
-          # `version:` and enabled signing, so without this it would republish the previous version,
-          # unsigned, and report success.
+          # The publish task caches, and its up-to-date check does not notice a manifest edit — it
+          # reuses build/tasks/_<module>_prepareMavenPublishables/. The "Version Packages" commit
+          # has just rewritten the family templates and this job has just enabled signing, so
+          # without this it would republish the previous versions, unsigned, and report success.
           rm -rf build/incremental.state
 
           # Not `kotlin publish mavenCentral`: on toolchain 0.12.0 it refuses — "Cannot publish to
@@ -101,38 +112,61 @@ jobs:
           # entry with `publish: true` does not help: that registers a second publishToMavenCentral
           # task and the CLI crashes with "Task … already exists". settings.publishing.mavenCentral
           # still registers the Portal upload as a task per module, and `kotlin task` (not listed in
-          # --help) runs it directly — measured to get as far as asking for the signing key. Go back
-          # to `kotlin publish mavenCentral` once the toolchain accepts it.
-          #
-          # The three jvm/amper-plugin modules are not in the list; the toolchain cannot publish a
-          # plugin yet.
-          ./kotlin task $(grep -rl publishing.module-template.yaml libs \
-            --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/.*/:&:publishToMavenCentral/')
+          # --help) runs it directly. Go back to `kotlin publish mavenCentral` once the toolchain
+          # accepts it.
+          ./kotlin task $(bun scripts/release-plan.ts release-plan.json --tasks)
 
           git checkout publishing.module-template.yaml
 
           echo "::notice::Uploaded to the Central Portal in manual mode. Release it at"
           echo "https://central.sonatype.com/publishing/deployments — nothing is public until you do."
 
-      - name: Tag and release
-        if: steps.changesets.outputs.has-changesets == 'false'
+      # Tags AFTER the upload, so that a failed publish does not leave a tag claiming a version went
+      # out. `changeset git-tag` creates `<family>@<version>` for every package and skips the ones
+      # that already exist, which is what makes a re-run skip what is already up.
+      #
+      # A tag records that a bundle was *uploaded*, not that it was released — the Portal is in
+      # manual mode. If a deployment is dropped afterwards, delete that family's tag, or the next
+      # run will skip it. `docs/releasing.md` has the repair.
+      - name: Tag each family
+        if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          bun x changeset git-tag
+          git push origin --tags
+
+      - name: One release for the run
+        if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count != '0'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION=$(bun --print "require('./package.json').version")
-          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
-            echo "v$VERSION is already tagged."
-            exit 0
-          fi
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
 
-          # The CHANGELOG section for this version is the release body.
-          awk -v v="## $VERSION" '
-            $0 == v { on = 1; next }
-            on && /^## / { exit }
-            on { print }
-          ' CHANGELOG.md > release-notes.md
-          gh release create "v$VERSION" --title "v$VERSION" --notes-file release-notes.md
-          rm -f release-notes.md
+          # `gh release create` needs a tag of its own, and the family tags are one to seventeen —
+          # picking one of them arbitrarily to hang the whole run's notes on would be worse than a
+          # date. A suffix keeps two releases on one day apart.
+          TAG="release-$(date -u +%Y-%m-%d)"
+          n=1
+          while git rev-parse --verify "refs/tags/$TAG" >/dev/null 2>&1; do
+            n=$((n + 1)); TAG="release-$(date -u +%Y-%m-%d)-$n"
+          done
+
+          # One section per family, from that family's own CHANGELOG.
+          : > release-notes.md
+          while read -r name version dir; do
+            {
+              echo "## $name $version"
+              echo
+              bun scripts/changelog-section.ts "$dir/CHANGELOG.md" "$version" || echo "_No notes._"
+              echo
+            } >> release-notes.md
+          done < <(bun scripts/release-plan.ts release-plan.json --fields)
+
+          git tag "$TAG"
+          git push origin "$TAG"
+          gh release create "$TAG" --title "$TAG" --notes-file release-notes.md
+          rm -f release-notes.md release-plan.json
+
+      - name: Nothing to release
+        if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count == '0'
+        run: echo "::notice::No family is ahead of its tag. Nothing was published."

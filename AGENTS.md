@@ -29,11 +29,11 @@ What exists:
 | `libs/messaging/stx-workflow` | Compensable workflows for a Kotlin coroutine service: a DSL of steps each with its own compensation, one `@Serializable` context threaded through them, and state checkpointed after every node so a process that dies mid-run is picked up where it stopped. `await` and `sleep` stop an instance for a signal or a deadline by writing it down rather than by holding a coroutine, and `workflowOf` reads the same declaration off an annotated class. `engine.find(Failed)` is the operator's inbox for the one outcome the engine refuses to resolve. Four modules in the group: the engine, `stx-workflow-db` for where instances live (Redis, SQL through `stx-jpa`, or MongoDB), and `stx-workflow-ktor` / `stx-workflow-spring` for the two framework integrations |
 | `libs/data/stx-migrations` | Schema migrations written in Kotlin, on neither Flyway nor Liquibase: a migration is a class with a declared `version`, a ledger records what ran, a renewing lease keeps two processes apart, and the runner is a **gate** — it runs in the process that is about to serve and every way it fails leaves `run()`. `RUNNING` is the status the prior art lacked, and it is what makes a process killed mid-migration fail closed instead of being silently re-applied. Four modules: the core (no store in it, specs run in under a second with no container), `stx-migrations-db` for MongoDB and SQL, and `stx-migrations-ktor` / `stx-migrations-spring` |
 | `libs/observability/stx-telemetry` | Logs and traces for a Kotlin coroutine service. The current span and the inherited fields are a `CoroutineContext.Element`, not a `ThreadLocal` — the same argument `RequestTranslator` makes about `LocaleContextHolder`, applied to the tool that is supposed to make such bugs visible. `TelemetryContext` is also a `ThreadContextElement`, so the runtime keeps a thread-local mirror in step and `log.info(…)` needs not suspend. An event is a `@Serializable` type; `Mailbox` is the queue and one coroutine drains it to the exporters |
-| `libs/stx-telemetry-otlp` | OTLP/HTTP+JSON export for `stx-telemetry`, on `java.net.http.HttpClient` with hand-written `@Serializable` documents. No OpenTelemetry SDK — it would bring its own `ThreadLocal` `Context`. `OtlpExporterTest` pins the document against a JDK `HttpServer`; a second spec gated on `OTLP_TEST_ENDPOINT` asks a real collector, because a stub agrees with whatever we wrote |
-| `libs/stx-telemetry-slf4j` | The SLF4J bridge for `stx-telemetry`, both ways. Inbound is an `SLF4JServiceProvider` found by SPI, so a third-party library's logs enter the pipeline carrying the current span; it reads the caller's MDC, which is correct because it is read on the very thread that wrote the line and never carried across a hop. Outbound is an `Slf4jExporter` for an application that keeps logback. Both at once is a loop, and the exporter refuses to be built when the bound provider is this module's own |
-| `libs/stx-telemetry-mongo` | MongoDB export for `stx-telemetry`. A batch is one unordered `insertMany`, and the document is what `signalJson` produces plus the resource, with the three instants written back as BSON dates — JSON has no date, and a string is not something Mongo will expire or index. Retention is a TTL index built on the first batch, because building it suspends and nothing that constructs an exporter does; a changed retention drops and rebuilds it rather than leaving the old window silently in place. It depends on the driver and deliberately not on `stx-mongo`, which is sessions, pagination and GridFS |
-| `libs/stx-telemetry-ktor` | Ktor plugin for `stx-telemetry`: `install(Observability)`. Unlike every other plugin here it intercepts `ApplicationCallPipeline.Monitoring` rather than using `on(CallSetup)` — a `CoroutineContext.Element` is only in scope inside the `withContext` that installed it, so the span has to wrap `proceed()`. The span is renamed to the matched route on `RoutingRoot.RoutingCallStarted`, which is why `SpanScope.name` is settable |
-| `libs/stx-telemetry-spring` | Spring Boot auto-configuration for `stx-telemetry`, opt-in behind `stx.telemetry.enabled`. The server span is a `CoWebFilter` and not a `WebFilter`: a `WebFilter` returns a `Mono`, so what it puts in scope lives in the Reactor context, which a suspending `@RestController` method does not read. Needs `kotlinx-coroutines-reactor`, which the WebFlux starter does not bring — found by specs that hung, not by reading a manifest |
+| `libs/observability/stx-telemetry/stx-telemetry-otlp` | OTLP/HTTP+JSON export for `stx-telemetry`, on `java.net.http.HttpClient` with hand-written `@Serializable` documents. No OpenTelemetry SDK — it would bring its own `ThreadLocal` `Context`. `OtlpExporterTest` pins the document against a JDK `HttpServer`; a second spec gated on `OTLP_TEST_ENDPOINT` asks a real collector, because a stub agrees with whatever we wrote |
+| `libs/observability/stx-telemetry/stx-telemetry-slf4j` | The SLF4J bridge for `stx-telemetry`, both ways. Inbound is an `SLF4JServiceProvider` found by SPI, so a third-party library's logs enter the pipeline carrying the current span; it reads the caller's MDC, which is correct because it is read on the very thread that wrote the line and never carried across a hop. Outbound is an `Slf4jExporter` for an application that keeps logback. Both at once is a loop, and the exporter refuses to be built when the bound provider is this module's own |
+| `libs/observability/stx-telemetry/stx-telemetry-mongo` | MongoDB export for `stx-telemetry`. A batch is one unordered `insertMany`, and the document is what `signalJson` produces plus the resource, with the three instants written back as BSON dates — JSON has no date, and a string is not something Mongo will expire or index. Retention is a TTL index built on the first batch, because building it suspends and nothing that constructs an exporter does; a changed retention drops and rebuilds it rather than leaving the old window silently in place. It depends on the driver and deliberately not on `stx-mongo`, which is sessions, pagination and GridFS |
+| `libs/observability/stx-telemetry/stx-telemetry-ktor` | Ktor plugin for `stx-telemetry`: `install(Observability)`. Unlike every other plugin here it intercepts `ApplicationCallPipeline.Monitoring` rather than using `on(CallSetup)` — a `CoroutineContext.Element` is only in scope inside the `withContext` that installed it, so the span has to wrap `proceed()`. The span is renamed to the matched route on `RoutingRoot.RoutingCallStarted`, which is why `SpanScope.name` is settable |
+| `libs/observability/stx-telemetry/stx-telemetry-spring` | Spring Boot auto-configuration for `stx-telemetry`, opt-in behind `stx.telemetry.enabled`. The server span is a `CoWebFilter` and not a `WebFilter`: a `WebFilter` returns a `Mono`, so what it puts in scope lives in the Reactor context, which a suspending `@RestController` method does not read. Needs `kotlinx-coroutines-reactor`, which the WebFlux starter does not bring — found by specs that hung, not by reading a manifest |
 | `libs/core/stx-testing` | Test-only support the libraries share: the backing services their integration specs need, reused from the environment or started as containers for the run |
 | `plugins/openapi` | Toolchain plugin wrapping the generator as a build task |
 | `plugins/dgs-codegen` | Toolchain adapter of Netflix DGS codegen — GraphQL schema to Kotlin types |
@@ -303,29 +303,75 @@ The toolchain finds the project by walking up from the working directory, so the
 
 ## Publishing
 
-Every module under `libs/` publishes as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:0.1.0`
-today. The configuration lives once in `publishing.module-template.yaml` at the repo root, which each
-library pulls in with `apply: [ //publishing.module-template.yaml ]`; nothing about publishing is
-written per module. `artifactId` is deliberately not set, because it defaults to the module's name —
-so the directory name *is* the artifact name and there is no second place to keep in sync. The
-module's `description:` becomes the POM `<description>`, which is the other reason every library has
-one. The POM also carries the project URL, the SCM, Apache-2.0 and a developer — everything Maven
-Central will require — and `publishSources: true` ships a sources jar beside each artifact.
+Every module under `libs/` publishes as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:0.2.1`
+today. The configuration lives once in `publishing.module-template.yaml` at the repo root; nothing
+about publishing is written per module. `artifactId` is deliberately not set, because it defaults to
+the module's name — so the directory name *is* the artifact name and there is no second place to
+keep in sync. The module's `description:` becomes the POM `<description>`, which is the other reason
+every library has one. The POM also carries the project URL, the SCM, Apache-2.0 and a developer —
+everything Maven Central will require — and `publishSources: true` ships a sources jar beside each
+artifact.
 
-**The version in that template is written by a script, not by hand.** `scripts/sync-version.ts`
-takes it from `package.json` and propagates it there *and* to `stx = "…"` in `libs.versions.toml`,
-because the examples resolve published coordinates rather than module paths and the two must move
-together. Changesets drives it: a changeset per pull request that touches `libs/`, a
-"Version Packages" PR, then one workflow that publishes, tags and releases.
-`docs/releasing.md` owns the circuit and the five things about it that are not guessable.
+**The version is per family, and it is written by a script, not by hand.** A *family* is a directory
+under `libs/<role>/`: a library and its framework integrations, one release line, one version —
+`stx-jpa`, `stx-jpa-ktor` and `stx-jpa-spring` are `stx-jpa`. There are 17 of them for 45 artifacts.
+Each owns a `package.json` (the version, and its runtime dependencies on other families), a
+`CHANGELOG.md`, and a six-line `<family>.module-template.yaml` that every `module.yaml` of the
+family applies:
+
+```yaml
+# libs/data/stx-jpa/stx-jpa.module-template.yaml
+apply:
+  - //publishing.module-template.yaml
+
+settings:
+  publishing:
+    version: 0.2.1   # written by scripts/sync-version.ts from package.json
+```
+
+A manifest applies **the family template, never the shared one directly** — the family template is
+what applies the shared one, and precedence exists only between a file and what it applies. Two
+templates applied side by side, with no `apply` relation between them, setting the same property, is
+a *conflict*. The shared template deliberately carries **no `version:` fallback**: a module wired to
+no family would otherwise publish silently under someone else's version, and the measured behaviour
+without a fallback is a hard failure at `kotlin publish` — *"Missing 'version' in publishing settings
+of fragment 'main'"* — which `bun scripts/sync-version.ts --check` moves forward to the pull
+request.
+
+**A family's `package.json` `dependencies` are the propagation graph, and `scripts/graph.ts` checks
+them against the manifests.** They name only *runtime* edges: a plain dependency (POM scope
+`runtime`) and an `exported` one (scope `compile`) propagate a bump; `compile-only` (scope
+`provided`) and `test-dependencies` (absent from the POM) do not, because neither reaches a consumer
+transitively. The list is hand-written and nothing about it is checked by building — a missing edge
+compiles, tests and publishes, and only stops releasing a library whose POM names a version that
+moved — so `bun scripts/graph.ts --check` derives it again from every `module.yaml` and fails on any
+disagreement. **Adding a `//libs/...` dependency across families means editing that family's
+`package.json` in the same change.**
+
+`scripts/sync-version.ts` propagates each family's `package.json` version to its template *and* to
+that family's key in `[versions]` of `libs.versions.toml`, because the examples resolve published
+coordinates rather than module paths and the two must move together — 34 anchors, each asserted to
+match exactly once. Changesets drives it: a changeset naming the families a pull request releases, a
+"Version Packages" PR, then one workflow that publishes **what moved**, tags each family
+`<family>@<version>`, and cuts one release for the run. `docs/releasing.md` owns the circuit and the
+six things about it that are not guessable.
 
 **Everything under `scripts/` is TypeScript, run by bun and checked by `tsc`.** Bun executes `.ts`
 directly — no build step, no emitted JavaScript — but it *strips* types rather than checking them,
 so `bun run typecheck` (`tsc --noEmit`, `strict`) is what makes the annotations mean anything, and
 CI runs it before the tests. The specs are `bun:test` rather than kotest for the obvious reason:
-the kotest convention in this repo is about Kotlin. Both scripts edit files that decide how 45
-modules publish, in a job nobody watches, so each one asserts its anchor matches **exactly once**
-and throws otherwise — `scripts/*.test.ts` pins that, including the failure modes.
+the kotest convention in this repo is about Kotlin. The two editing scripts rewrite files that
+decide how 45 modules publish, in a job nobody watches, so each one asserts its anchor matches
+**exactly once** and throws otherwise — `scripts/*.test.ts` pins that, including the failure modes.
+
+**`scripts/modules.ts` is where the list of published libraries comes from**, and every command
+that publishes takes it from there — `kotlin publish mavenLocal $(bun scripts/modules.ts
+--publish-args)`, `kotlin task $(bun scripts/modules.ts --tasks)`. It is every `module.yaml` under
+`libs/`, and the module's name is its directory's name. It replaced a `grep -rl
+publishing.module-template.yaml` repeated in five places, whose criterion was "applies the
+publishing template" — true only while every manifest named that template directly, and silently
+empty otherwise: `kotlin publish` with no `-m` publishes nothing and exits 0, so the examples would
+then build against whatever stale artifacts the runner's `~/.m2` happened to hold.
 
 **`stx-spring-boot` is the one library not named `stx-<technology>`, and the suffix is deliberate.**
 Spring reserves the `spring-boot*` prefix for itself and asks a third party for its own namespace,
@@ -340,8 +386,7 @@ Spring Boot.
 ```bash
 ./kotlin publish -m stx-mongo --transitive mavenLocal   # one library and what it depends on
 # all of them — `ls libs` lists role folders, not modules, so the selection comes from the manifests
-./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs plugins \
-  --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)
 ```
 
 Five things about it that are not guessable:
@@ -406,7 +451,7 @@ The feature is a preview in the toolchain and its docs say it is likely to chang
 
 **No module under `examples/` or `server/` may name a `//libs/...` dependency.** Each applies
 `//stx-artifacts.module-template.yaml`, which adds `mavenLocal` on top of the default repositories,
-and names each library through a `$libs.stx.*` catalog alias — `io.github.softistx:stx-jpa:0.1.0` and not
+and names each library through a `$libs.stx.*` catalog alias — `io.github.softistx:stx-jpa:0.2.1` and not
 `//libs/data/stx-jpa/stx-jpa`.
 
 That is the whole point of having examples. A module reference proves the sources compile together,
@@ -866,6 +911,14 @@ Rules that are easy to get wrong:
 
 **The toolchain does not read `[bundles]`** — `$libs.bundles.<name>` fails with `No catalog value for the key`. The bundles in this catalog still document which stack a dependency belongs to and serve Gradle-based consumers, but modules must list individual aliases.
 
+**The 17 `stx-*` keys in `[versions]` are one per library family, and a script owns them.** Every
+`stx-*` alias in `[libraries]` takes `version.ref = "<its family>"` — `stx-jpa-ktor` and
+`stx-jpa-spring` both point at `stx-jpa` — so that an example resolves the same version the family
+publishes under. `scripts/sync-version.ts` writes all 17 from the families' `package.json`; never
+edit one by hand, and when you add an alias for an artifact that had none, give it its **family's**
+ref rather than a version of its own. A family's name is also a `[libraries]` alias, which is why
+the script scopes its rewrite to the `[versions]` table.
+
 To share a dependency *set* or settings across modules, use a **module template**: a `<name>.module-template.yaml` with the same shape as `module.yaml` (minus `product:`), pulled in with `apply: [ //name.module-template.yaml ]`. Templates merge dependencies, settings, and repositories, and can apply other templates; check the result with `kotlin show settings -m <module>`.
 
 The catalog's `[bundles]` groupings map to the intended consumer surfaces of this library, which is the fastest way to see which stack a new module belongs to:
@@ -1008,7 +1061,7 @@ the same each time, and the mistakes are the same each time too.
   | `README.md` | What is this repo, and where do I read next? Stays short. |
   | `CONTRIBUTING.md` | How does someone who is not a maintainer set up, open a pull request, and pass review? The short form of this file. |
   | `docs/consuming.md` | How do I depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain? **This is where a new repository, credential mechanism or packaging caveat is documented.** |
-  | `docs/releasing.md` | How is a version cut and published? The changeset circuit, and the publishing behaviours that are not guessable. |
+  | `docs/releasing.md` | How is a version cut and published? The per-family circuit, the changeset rules, and the publishing behaviours that are not guessable. |
   | `docs/openapi-support.md` | What does the generator understand of an OpenAPI document? **This is where support for a new keyword, format or extension is documented** — it is the part that grows every phase. |
   | `libs/api/stx-openapi-generator/README.md` | How is the module shaped, what does each emitter produce, how do I add one? Roughly constant in size. |
   | `plugins/openapi/README.md` | How do I turn this on in a module, and what does that need on its classpath? |
@@ -1129,12 +1182,17 @@ the same each time, and the mistakes are the same each time too.
   classes it expects to find, which is why those fixtures sit in `test/entity/scan/` instead of
   beside the rest.
 - `.gitignore` excludes `build`, `.idea`, and `.jbeval`; build output goes to `build/` under the project root unless `--build-dir` overrides it.
-- **A pull request that touches `libs/` carries a changeset.** `bun changeset`, pick
-  patch/minor/major, write one sentence a *reader* of the release notes will see — not a restatement
-  of the commit subject — and commit the `.changeset/*.md`. CI fails the PR without one, because it
-  is the only step of the release circuit nobody can automate. There is one package and it is the
-  repository, so a `minor` is a minor for all 45 modules; name the library in the prose instead.
-  `.changeset/README.md` has why the line versions in lockstep.
+- **A pull request that changes a library carries a changeset, and the changeset names the
+  family.** `bun changeset`, pick the families, pick patch/minor/major, write one sentence a
+  *reader* of the release notes will see — not a restatement of the commit subject — and commit the
+  `.changeset/*.md`. CI fails the PR without one, **naming the families you changed and did not
+  declare**, because it is the only step of the release circuit nobody can automate — and because a
+  changeset for the wrong family is worse than none: it releases a library nobody touched and leaves
+  the touched one behind. `bun changeset --empty` is the explicit "nothing published changes" and
+  satisfies the guard. A name that is not one of the 17 families is refused. A `major` whose
+  dependents are not named warns: Changesets only ever gives a dependent a `patch`, and the POM pins
+  an exact version, so a consumer would take the break on a patch. `.changeset/README.md` has the
+  rest.
 - **`develop` is where work lands and every PR targets it.** Branch off `develop`, open the
   pull request against `develop`, and merge it there. Nothing is merged directly into `main`, however
   small and however green — a PR opened against `main` has the wrong base and wants recreating, not

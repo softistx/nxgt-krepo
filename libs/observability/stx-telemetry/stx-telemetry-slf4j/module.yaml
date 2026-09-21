@@ -2,7 +2,7 @@ product: jvm/lib
 description: "The SLF4J bridge for stx-telemetry, in both directions: third-party logs into the pipeline, or this library's signals out to an existing logback"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/observability/stx-telemetry/stx-telemetry.module-template.yaml
 
 dependencies:
   # Logger, Telemetry and the signal model — all of it in the public API

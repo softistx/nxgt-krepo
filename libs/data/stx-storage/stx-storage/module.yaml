@@ -2,7 +2,7 @@ product: jvm/lib
 description: S3-compatible object storage over the MinIO SDK — buckets, objects and presigned URLs, all suspending
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-storage/stx-storage.module-template.yaml
 
 dependencies:
   # CloseGuard, so closing this twice is not an error

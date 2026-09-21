@@ -22,6 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # For `scripts/modules.ts`, which is what selects the modules to publish below. No
+      # `bun install`: that script imports nothing but node builtins, so the dependencies this
+      # repository has for Changesets are not needed here and downloading them would be waste.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       # The wrapper downloads the Kotlin CLI and a JRE on first use, then the compiler and every
       # dependency. Without this the first step of every run is a multi-minute download.
       #
@@ -56,8 +63,7 @@ jobs:
       - name: Publish the libraries to mavenLocal
         run: |
           rm -rf ~/.m2/repository/io/github/softistx
-          ./kotlin publish mavenLocal $(grep -rl publishing.module-template.yaml libs \
-            --include=module.yaml | xargs -n1 dirname | xargs -n1 basename | sed 's/^/-m /')
+          ./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)
 
       # Never pipe ./kotlin into tail or grep: the pipeline reports the filter's exit code, so a
       # failed build reads as success. These run bare.
@@ -199,30 +205,28 @@ jobs:
 
   changeset:
     name: Changeset declared
-    if: github.event_name == 'pull_request'
+    # The "Version Packages" pull request is exempt, and has to be: it rewrites
+    # libs/**/package.json, libs/**/CHANGELOG.md and the family templates — so it touches libs/ by
+    # definition — while *deleting* every changeset. Without this it would block itself forever.
+    if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/develop'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: A PR that touches libs/ must declare what it does to the published artifacts
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Not "libs/ changed and no .changeset/*.md exists" any more. A version is now per family, so
+      # a changeset naming the wrong family is worse than none: it releases a library nobody
+      # touched and leaves the touched one behind. The guard maps the changed paths to families and
+      # names the ones that are missing. scripts/changeset-guard.test.ts pins the wording.
+      - name: A PR that changes a library must declare which family it releases
         env:
           BASE: ${{ github.base_ref }}
-        run: |
-          changed=$(git diff --name-only "origin/$BASE...HEAD")
-          if ! echo "$changed" | grep -q '^libs/'; then
-            echo "No change under libs/ — no changeset needed."
-            exit 0
-          fi
-          if echo "$changed" | grep -qE '^\.changeset/[^/]+\.md$'; then
-            echo "Changeset found."
-            exit 0
-          fi
-          echo "::error::This PR changes libs/ but adds no changeset."
-          echo "Run 'bun changeset', pick patch/minor/major, and commit the file it writes."
-          echo "See .changeset/README.md for why the package is the repository itself."
-          exit 1
+        run: bun scripts/changeset-guard.ts --base "origin/$BASE"
 
   scripts:
     name: Release scripts
@@ -243,3 +247,16 @@ jobs:
       # scripts/sync-version.ts decides what version 45 modules publish under, in a job nobody
       # watches. It gets a test.
       - run: bun test scripts/
+
+      # And the repository itself is checked, not just the script: every module wired to its
+      # family's template, every family template chained to the shared one, and all 34 version
+      # anchors agreeing with the families' package.json. A module wired to no family template
+      # builds fine and only fails at `kotlin publish` — in the release job, after the version has
+      # been bumped and a release is expected. This is that failure, moved to the pull request.
+      - run: bun scripts/sync-version.ts --check
+
+      # And the propagation graph, against the manifests that produce the POMs. A family's
+      # package.json dependencies are what make a bump travel, they are written by hand, and a
+      # missing edge is invisible: it builds, tests and publishes, and only stops releasing a
+      # library whose POM names a version that moved.
+      - run: bun scripts/graph.ts --check

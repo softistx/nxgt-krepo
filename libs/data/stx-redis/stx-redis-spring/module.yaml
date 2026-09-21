@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-redis, opt-in behind stx.redis"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-redis/stx-redis.module-template.yaml
 
 dependencies:
   # Redis is the bean this module registers and RedisConfig is what it is built from. Exported,

@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-workflow, opt-in behind stx.workflow"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-workflow/stx-workflow.module-template.yaml
 
 dependencies:
   # WorkflowEngine is the bean this module registers, so it is in its API

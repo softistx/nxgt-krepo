@@ -1,12 +1,22 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
-  "changelog": ["@changesets/changelog-github", { "repo": "softistx/nxgt-krepo" }],
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "softistx/nxgt-krepo"
+    }
+  ],
   "commit": false,
   "fixed": [],
   "linked": [],
   "access": "restricted",
   "baseBranch": "develop",
   "updateInternalDependencies": "patch",
-  "ignore": [],
-  "privatePackages": { "version": true, "tag": true }
+  "ignore": [
+    "nxgt-krepo"
+  ],
+  "privatePackages": {
+    "version": true,
+    "tag": true
+  }
 }

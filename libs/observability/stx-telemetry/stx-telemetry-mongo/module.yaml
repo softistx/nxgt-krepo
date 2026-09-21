@@ -2,7 +2,7 @@ product: jvm/lib
 description: "MongoDB exporter for stx-telemetry: a batch is one insertMany, and retention is a TTL index rather than a job"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/observability/stx-telemetry/stx-telemetry.module-template.yaml
 
 dependencies:
   # Exporter, Signal and signalJson — what this module implements and encodes through

@@ -74,11 +74,20 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - Look in `libs/core/stx-common` before writing a helper, and move one there when a second module wants it — it holds what is reusable across libraries and apps, and depends on nothing but kotlinx. AGENTS.md explains which of its three concurrency types fits a given caller; the short version is that a Java callback cannot take a `Mutex`, so it gets a `Mailbox`.
 - A Ktor integration assumes the resource is not its own: it takes an `instance` as well as a config, closes only what it opened, and registers what it installed with the DI container — unconditionally, no flag, `provideX` is `internal` — so a class built by that container is not forced through `call.x`. Anything `AutoCloseable` closes through `CloseGuard` — Ktor's DI closes what it hands out and cannot be told not to, so a second close has to be harmless. AGENTS.md's *Shared code* section has all three rules.
 - New code goes under `com.softistx.*` — see the package rule in AGENTS.md. Nothing new should use the old `dev.nxgt` prefix.
-- **A change under `libs/` carries a changeset**: `bun changeset`, and commit the `.changeset/*.md`
-  it writes. CI fails a PR without one. Never edit `version:` in `publishing.module-template.yaml`
-  or `stx = "…"` in `libs.versions.toml` by hand — `scripts/sync-version.ts` writes both from
-  `package.json`, and moving one without the other leaves every example resolving a coordinate
-  nobody published. `docs/releasing.md` owns the circuit.
+- **A change under `libs/` carries a changeset, and the changeset names the family**: `bun
+  changeset`, pick the families, commit the `.changeset/*.md` it writes. A *family* is a directory
+  under `libs/<role>/` — a library and its framework integrations share one version, so a change to
+  `stx-jpa-spring` releases `stx-jpa`. CI fails a PR without one, naming the families you changed
+  and did not declare; `bun changeset --empty` is the explicit "nothing published changes". Never
+  edit a family's `version:` in its `<family>.module-template.yaml` or its key in `[versions]` of
+  `libs.versions.toml` by hand — `scripts/sync-version.ts` writes both from the family's
+  `package.json`, and moving one without the other leaves an example resolving a coordinate nobody
+  published. A new `module.yaml` under `libs/` applies its **family** template, never
+  `//publishing.module-template.yaml` directly — that one carries no `version:` on purpose, so a
+  module wired wrong fails at publish rather than publishing under someone else's version.
+  `docs/releasing.md` owns the circuit. And **a new `//libs/...` dependency across families is also
+  an edit to that family's `package.json`** — those `dependencies` are the propagation graph, and
+  `bun scripts/graph.ts --check` derives it from the manifests and fails when the two disagree.
 - The Maven group is `io.github.softistx`; the Kotlin package prefix is `com.softistx`. They are
   independent and both are correct — do not "fix" one to match the other.
 - **`scripts/` is TypeScript, run by bun.** No build step and no emitted JavaScript — but bun strips

@@ -15,9 +15,11 @@ date with you and credit you in the advisory and the release notes unless you as
 
 ## Supported versions
 
-The libraries are pre-1.0 and release in lockstep: `io.github.softistx:stx-*` all carry the same
-version. **Only the latest release is supported** — a fix ships in the next version, never as a
-patch to an older one. See `docs/releasing.md` for how a version is cut.
+The libraries are pre-1.0 and each **family** — a library and its framework integrations, such as
+`stx-jpa`, `stx-jpa-ktor` and `stx-jpa-spring` — carries its own version. **Only the latest release
+of the affected family is supported**: a fix ships in that family's next version, never as a patch
+to an older one. Tell us the version of the artifact you are on; `docs/releasing.md` explains how
+one is cut and `docs/consuming.md` how the versions relate.
 
 ## What is in scope
 

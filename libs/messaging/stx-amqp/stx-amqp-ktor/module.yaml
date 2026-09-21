@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-amqp: one broker connection per application, opened with it and closed with it"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-amqp/stx-amqp.module-template.yaml
 
 dependencies:
   # Amqp is what the plugin opens and what `call.amqp` returns, and AmqpConfig is the only way to

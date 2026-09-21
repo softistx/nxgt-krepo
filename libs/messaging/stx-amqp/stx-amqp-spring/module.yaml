@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-amqp, opt-in behind stx.amqp"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/messaging/stx-amqp/stx-amqp.module-template.yaml
 
 dependencies:
   # Amqp is the bean this module registers and AmqpConfig is what it is built from. Exported, where the hub had it compile-only: a consumer of this module cannot use the

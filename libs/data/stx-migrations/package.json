@@ -1,0 +1,10 @@
+{
+  "name": "stx-migrations",
+  "version": "0.2.1",
+  "private": true,
+  "description": "Schema migrations written in Kotlin: a version, a ledger and a lock, with no store in this module",
+  "dependencies": {
+    "stx-common": "workspace:*",
+    "stx-ktor": "workspace:*"
+  }
+}

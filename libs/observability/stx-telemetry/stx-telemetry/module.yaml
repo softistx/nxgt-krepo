@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Logs and traces for a Kotlin coroutine service: the current span is a CoroutineContext element, an event is a @Serializable type, and export is a background drain"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/observability/stx-telemetry/stx-telemetry.module-template.yaml
 
 dependencies:
   # Mailbox for the export queue, CloseGuard for a close the DI container may call twice

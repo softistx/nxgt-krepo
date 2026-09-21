@@ -1,0 +1,10 @@
+{
+  "name": "stx-jpa",
+  "version": "0.2.1",
+  "private": true,
+  "description": "Hibernate Reactive over the Vert.x Postgres client — JPA mapping and a typed Criteria API with no thread parked on a query",
+  "dependencies": {
+    "stx-common": "workspace:*",
+    "stx-ktor": "workspace:*"
+  }
+}

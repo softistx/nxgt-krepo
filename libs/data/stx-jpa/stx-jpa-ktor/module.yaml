@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Ktor plugin for stx-jpa: one session factory per application, opened with it and closed with it"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-jpa/stx-jpa.module-template.yaml
 
 dependencies:
   # Jpa is what the plugin builds and what `call.jpa` returns, and JpaConfig is the only way to

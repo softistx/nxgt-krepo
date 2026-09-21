@@ -1,0 +1,10 @@
+{
+  "name": "stx-storage",
+  "version": "0.2.1",
+  "private": true,
+  "description": "S3-compatible object storage over the MinIO SDK — buckets, objects and presigned URLs, all suspending",
+  "dependencies": {
+    "stx-common": "workspace:*",
+    "stx-ktor": "workspace:*"
+  }
+}

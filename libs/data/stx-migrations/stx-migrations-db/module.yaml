@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Where the stx-migrations ledger lives: MongoDB and SQL through stx-jpa, one package each"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-migrations/stx-migrations.module-template.yaml
 
 dependencies:
   # Migration, MigrationLedger, MigrationRunner and MigrationRecord are all over this module's API.

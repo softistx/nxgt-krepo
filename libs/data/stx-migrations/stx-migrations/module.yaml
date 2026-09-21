@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Schema migrations written in Kotlin: a version, a ledger and a lock, with no store in this module"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/data/stx-migrations/stx-migrations.module-template.yaml
 
 dependencies:
   # CoroutineSafeMap, behind InMemoryLedger. Lease is not used here — an in-process holder is a live

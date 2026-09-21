@@ -81,6 +81,13 @@ bun changeset                                          # CI fails the PR without
 ./kotlin build -m <an-example-that-uses-it>
 ```
 
+`bun changeset` asks which **family** you are releasing. A family is a directory under
+`libs/<role>/` — a library and its framework integrations, one version between them, so a change to
+`stx-jpa-ktor` releases `stx-jpa`. Pick the family you changed, not the artifact. If nothing
+published changes — a test, a comment — say so with `bun changeset --empty`, which satisfies the
+guard. CI fails the PR **naming the families you changed and did not declare**: a changeset for the
+wrong family releases a library nobody touched and leaves yours behind.
+
 The second pair is not ceremony. No module under `examples/` or `server/` may name a `//libs/...`
 dependency: they resolve `io.github.softistx:stx-*` from mavenLocal through the catalog. A module
 reference proves the sources compile together, which the library's own specs already prove; a
@@ -98,9 +105,9 @@ bun run typecheck     # tsc --noEmit; bun strips types, it never checks them
 bun test scripts/
 ```
 
-Those two files decide what version 45 modules publish under and whether the release job signs its
-artifacts, in a job nobody is watching while it runs — which is why they are typed and pinned rather
-than left as the three-line scripts they look like.
+Those files decide what version 45 modules publish under, which of them a release publishes at all,
+and whether the job signs its artifacts — in a job nobody is watching while it runs. That is why
+they are typed and tested rather than left as the three-line scripts they look like.
 
 ## What reviewers will look for
 

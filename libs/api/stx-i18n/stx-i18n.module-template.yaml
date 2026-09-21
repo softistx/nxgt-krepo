@@ -1,0 +1,18 @@
+# The version `stx-i18n` publishes under, and the rest of the publishing configuration by way of
+# the shared template below.
+#
+# It applies `publishing.module-template.yaml` rather than sitting beside it: only a file and what
+# it *applies* have a precedence between them. Two templates applied side by side by one
+# `module.yaml`, each setting `settings.publishing.version`, are a conflict. Chained like this, this
+# file wins, and the question does not arise.
+#
+# `version:` is written by `scripts/sync-version.ts` from `package.json` next to this file. Do not
+# edit it by hand: `libs.versions.toml` carries it a second time for the examples, and the two must
+# move together. `docs/releasing.md` has the circuit.
+#
+apply:
+  - //publishing.module-template.yaml
+
+settings:
+  publishing:
+    version: 0.2.1

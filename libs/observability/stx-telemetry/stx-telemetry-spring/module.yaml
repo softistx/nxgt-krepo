@@ -2,7 +2,7 @@ product: jvm/lib
 description: "Spring Boot auto-configuration for stx-telemetry, opt-in behind stx.telemetry, with a CoWebFilter that makes each request a server span"
 
 apply:
-  - //publishing.module-template.yaml
+  - //libs/observability/stx-telemetry/stx-telemetry.module-template.yaml
 
 dependencies:
   # Telemetry is the bean this module registers, so it is in its API
