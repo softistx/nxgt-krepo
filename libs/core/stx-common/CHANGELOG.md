@@ -1,11 +1,5 @@
 # stx-common
 
-## 0.3.0
-
-### Minor Changes
-
-- First.
-
 <!-- Everything below the title is written by Changesets, newest first; this note is a footer
      because anything between the title and the first section would be pushed down by every
      release. -->
