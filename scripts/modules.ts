@@ -67,15 +67,15 @@ export function modules(root: string = ROOT): Module[] {
 export const FORMATS = {
     /** One name per line — for reading, and for `wc -l`. */
     names: (ms: Module[]) => ms.map((m) => m.name).join("\n"),
-    /** `-m stx-common -m stx-jpa …`, for `kotlin publish` / `kotlin build`. */
-    "publish-args": (ms: Module[]) => ms.map((m) => `-m ${m.name}`).join(" "),
     /**
-     * `:stx-common:publishToMavenCentral …`, for `kotlin task`.
+     * `-m stx-common -m stx-jpa …`, for `kotlin publish` / `kotlin build`.
      *
-     * Not `kotlin publish mavenCentral`: on toolchain 0.12.0 it refuses, because the built-in
-     * `mavenCentral` repository is resolve-only. `docs/releasing.md` has the whole measurement.
+     * This is now the only publish form. Until toolchain 0.12.2 there was a second one, a list of
+     * `:<module>:publishToMavenCentral` for `kotlin task`, because `kotlin publish mavenCentral`
+     * refused on 0.12.0 — the built-in `mavenCentral` repository is resolve-only. 0.12.2 accepts
+     * it, and the two forms were measured to write the same artifacts. `docs/releasing.md` has it.
      */
-    tasks: (ms: Module[]) => ms.map((m) => `:${m.name}:publishToMavenCentral`).join(" "),
+    "publish-args": (ms: Module[]) => ms.map((m) => `-m ${m.name}`).join(" "),
 } as const;
 
 export type Format = keyof typeof FORMATS;

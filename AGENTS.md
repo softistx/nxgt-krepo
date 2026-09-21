@@ -366,7 +366,7 @@ decide how 45 modules publish, in a job nobody watches, so each one asserts its 
 
 **`scripts/modules.ts` is where the list of published libraries comes from**, and every command
 that publishes takes it from there — `kotlin publish mavenLocal $(bun scripts/modules.ts
---publish-args)`, `kotlin task $(bun scripts/modules.ts --tasks)`. It is every `module.yaml` under
+--publish-args)`, and the same `--publish-args` against `mavenCentral`. It is every `module.yaml` under
 `libs/`, and the module's name is its directory's name. It replaced a `grep -rl
 publishing.module-template.yaml` repeated in five places, whose criterion was "applies the
 publishing template" — true only while every manifest named that template directly, and silently
@@ -507,7 +507,7 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 
 ### Toolchain wrapper
 
-`./kotlin` and `kotlin.bat` are committed wrappers pinning the toolchain to the `kotlin_cli_version` at the top of the script (0.12.0). **Use `./kotlin <command>`, not a bare `kotlin`**, so everyone builds with the same version regardless of what is on `PATH`. Regenerate with `kotlin update -c` (add `--target-version=<v>` to move the pin).
+`./kotlin` and `kotlin.bat` are committed wrappers pinning the toolchain to the `kotlin_cli_version` at the top of the script (0.12.2). **Use `./kotlin <command>`, not a bare `kotlin`**, so everyone builds with the same version regardless of what is on `PATH`. Regenerate with `kotlin update -c` (add `--target-version=<v>` to move the pin).
 
 ### Shared code
 
@@ -867,7 +867,7 @@ modules:
   - plugins/*
 ```
 
-Only directories that directly contain a `module.yaml` are matched, so grouping directories — `examples/material-demo`, the role folders under `libs/`, a family such as `libs/api/stx-graphix` — and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported (a weak warning on toolchain 0.12.0, seen when `libs/*` outlived the last module directly under `libs/`), so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
+Only directories that directly contain a `module.yaml` are matched, so grouping directories — `examples/material-demo`, the role folders under `libs/`, a family such as `libs/api/stx-graphix` — and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported (a weak warning, re-measured on 0.12.2, seen when `libs/*` outlived the last module directly under `libs/`), so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
 
 **`libs/` is grouped by role, and a role folder is ownership, not a build boundary.** Six folders,
 each with its own line in `.github/CODEOWNERS`:
@@ -945,7 +945,7 @@ settings:
 `# default` when the toolchain is choosing. Sixteen modules enable it — `stx-ktor`, every `*-ktor`
 integration beside its library, and the four Ktor examples — and every one of them carries the pin.
 
-The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.10 with CLI 0.12.0), so that entry does not control what this repo compiles with.
+The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.10 with CLI 0.12.2), so that entry does not control what this repo compiles with.
 
 ## Coroutine-first Kotlin
 

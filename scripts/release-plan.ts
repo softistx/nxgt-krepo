@@ -71,15 +71,22 @@ export function batches(planPath: string, root: string = ROOT): Release[][] {
 export const releases = (planPath: string, root: string = ROOT): Release[] =>
     batches(planPath, root).flat();
 
-/** The `./kotlin task` arguments that publish every module of every selected family. */
-export const tasks = (rs: readonly Release[]) =>
-    rs.flatMap((r) => r.family.modules.map((m) => `:${m.name}:publishToMavenCentral`)).join(" ");
+/**
+ * The `./kotlin publish mavenCentral` arguments for every module of every selected family.
+ *
+ * `kotlin task :<module>:publishToMavenCentral` was used here until toolchain 0.12.2, because
+ * `kotlin publish mavenCentral` refused — *"Cannot publish to repository 'mavenCentral' because
+ * it's not marked as publishable"*. 0.12.2 accepts it; measured, and measured equivalent: the two
+ * forms write the same seven files for `stx-testing`, byte-for-byte the same artifact set.
+ */
+export const publishArgs = (rs: readonly Release[]) =>
+    rs.flatMap((r) => r.family.modules.map((m) => `-m ${m.name}`)).join(" ");
 
 if (import.meta.main) {
     const [path, format, which] = process.argv.slice(2);
     if (!path) {
         console.error(
-            "usage: release-plan.ts <plan.json> [--tasks|--tags|--fields [batch] " +
+            "usage: release-plan.ts <plan.json> [--publish-args|--tags|--fields [batch] " +
                 "|--count|--batch-count]",
         );
         process.exit(2);
@@ -97,7 +104,7 @@ if (import.meta.main) {
     }
     const rs = i === undefined ? all.flat() : all[i]!;
 
-    if (format === "--tasks") console.log(tasks(rs));
+    if (format === "--publish-args") console.log(publishArgs(rs));
     else if (format === "--tags") console.log(rs.map((r) => r.tag).join("\n"));
     else if (format === "--count") console.log(String(rs.length));
     else if (format === "--batch-count") console.log(String(all.length));

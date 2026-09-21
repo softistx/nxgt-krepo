@@ -118,8 +118,8 @@ The same workflow re-runs with no changesets left and, in **one job**:
 4. checks the three Central secrets are non-empty and fails in seconds if not;
 5. runs `scripts/enable-central.ts`, which turns on `mavenCentral` and `signArtifacts`;
 6. `rm -rf build/incremental.state`;
-7. then, **one batch at a time**: `./kotlin task :<module>:publishToMavenCentral` for every module
-   of that batch's families — not `kotlin publish`, see below — and, once they are up, an annotated
+7. then, **one batch at a time**: `./kotlin publish mavenCentral -m <module> …` for every module
+   of that batch's families, and, once they are up, an annotated
    `<family>@<version>` tag for each, pushed;
 8. one GitHub release on a `release-<YYYY-MM-DD>` tag, its body one section per family, taken from
    that family's own `CHANGELOG.md`.
@@ -177,13 +177,18 @@ Switching to `auto` is a one-word change in `scripts/enable-central.ts`, and its
   `build/tasks/_<module>_prepareMavenPublishables/`. The job has just rewritten up to seventeen
   family templates *and* enabled signing, so without that line it republishes the previous version, unsigned, and reports
   success. Deleting artifacts from the repository does not help; the task will not regenerate them.
-- **`kotlin publish mavenCentral` does not work on toolchain 0.12.0**, so the job runs the Portal
-  upload task directly. The command refuses — *"Cannot publish to repository 'mavenCentral' because
-  it's not marked as publishable"* — because it checks the repositories list, where the built-in
-  `mavenCentral` is resolve-only; an entry giving it `publish: true` registers a second
-  `publishToMavenCentral` task and crashes the CLI with *"Task … already exists"*.
-  `settings.publishing.mavenCentral` still registers that task per module, and `./kotlin task` —
-  not in `--help` — runs it. The three `jvm/amper-plugin` modules are not in the list: the
+- **`kotlin publish mavenCentral` was refused until toolchain 0.12.2.** On 0.12.0 it answered
+  *"Cannot publish to repository 'mavenCentral' because it's not marked as publishable"*, because
+  it checks the repositories list where the built-in `mavenCentral` is resolve-only; an entry
+  giving it `publish: true` registered a second `publishToMavenCentral` task and crashed the CLI
+  with *"Task … already exists"*. The job therefore ran the upload task directly, through
+  `./kotlin task` — a command not listed in `--help`.
+
+  **0.12.2 accepts it**, re-measured on the bump: the command passes that check and stops only on
+  the missing `KOTLIN_TOOLCHAIN_SIGNING_KEY`, which is what any form does without a key. The two
+  forms were also measured equivalent in what they produce — publishing `stx-testing` each way
+  wrote the same seven files — so the job now uses the ordinary command and `kotlin task` is gone
+  from this repository. The three `jvm/amper-plugin` modules are still not in the list: the
   toolchain cannot publish a plugin yet.
 - **Maven Central and signing are not committed enabled**, and there is no third option. Both were
   measured:
@@ -256,11 +261,11 @@ bun scripts/sync-version.ts --check
 bun scripts/enable-central.ts
 rm -rf build/incremental.state
 
-# Batch by batch, as the workflow does — `--tasks` and `--fields` take a batch index, and with none
-# they answer for the whole plan, which is what you want if you would rather do it in one go.
+# Batch by batch, as the workflow does — `--publish-args` and `--fields` take a batch index, and
+# with none they answer for the whole plan, if you would rather do it in one go.
 total=$(bun scripts/release-plan.ts plan.json --batch-count)
 for i in $(seq 0 $((total - 1))); do
-  ./kotlin task $(bun scripts/release-plan.ts plan.json --tasks "$i")
+  ./kotlin publish mavenCentral $(bun scripts/release-plan.ts plan.json --publish-args "$i")
   while read -r name version dir; do
     bun scripts/changelog-section.ts "$dir/CHANGELOG.md" "$version" > /tmp/msg
     git tag -a -F /tmp/msg "$name@$version" && git push origin "$name@$version"
@@ -271,8 +276,8 @@ git checkout publishing.module-template.yaml
 ```
 
 Then release the deployment from the Portal. To publish *everything* regardless of what moved —
-which you want only when rebuilding a line from scratch — `bun scripts/modules.ts --tasks` names all
-45.
+which you want only when rebuilding a line from scratch — `bun scripts/modules.ts --publish-args`
+names all 45.
 
 To check what you are about to publish *without* signing or a token, publish to mavenLocal instead
 and read the result:
