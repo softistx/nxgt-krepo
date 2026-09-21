@@ -21,6 +21,14 @@ export type Bump = "major" | "minor" | "patch";
 export interface Changeset {
     readonly file: string;
     readonly bumps: ReadonlyMap<string, Bump>;
+    /**
+     * Dependents the author states a `major` cannot reach, from an `unaffected:` line in the prose.
+     *
+     * The escape hatch for the rule below, and deliberately a list of names rather than a blanket
+     * opt-out: the author has to look at each dependent and say so. A name that is not a dependent
+     * of a major in this changeset is a typo, and reported as one.
+     */
+    readonly unaffected: ReadonlySet<string>;
 }
 
 /** `true` when a changeset declares that nothing published changes. */
@@ -38,6 +46,18 @@ export function parse(file: string, text: string): Changeset {
     const match = text.match(/^---\r?\n([\s\S]*?)\r?\n?---/);
     if (!match) throw new Error(`${file}: no --- front matter. Write it with \`bun changeset\`.`);
 
+    // `unaffected: stx-jpa, stx-mongo` anywhere in the prose. One line, so a changeset that needs
+    // it says so once rather than annotating each name.
+    const unaffected = new Set<string>();
+    for (const line of text.slice(match[0].length).split("\n")) {
+        const hatch = line.match(/^\s*unaffected:\s*(.+?)\s*$/i);
+        if (!hatch) continue;
+        for (const name of (hatch[1] ?? "").split(",")) {
+            const trimmed = name.trim();
+            if (trimmed) unaffected.add(trimmed);
+        }
+    }
+
     const bumps = new Map<string, Bump>();
     for (const line of (match[1] ?? "").split("\n")) {
         if (!line.trim()) continue;
@@ -49,7 +69,7 @@ export function parse(file: string, text: string): Changeset {
         }
         bumps.set(name, bump as Bump);
     }
-    return { file, bumps };
+    return { file, bumps, unaffected };
 }
 
 /** Every changeset currently in `.changeset/`, README excluded. */
@@ -68,8 +88,6 @@ export function familyOf(path: string, all: readonly Family[]): Family | undefin
 export interface Verdict {
     /** Why the pull request fails. Empty means it passes. */
     readonly errors: readonly string[];
-    /** Worth saying, but not worth blocking on. */
-    readonly warnings: readonly string[];
 }
 
 /**
@@ -83,7 +101,6 @@ export function judge(
     all: readonly Family[],
 ): Verdict {
     const errors: string[] = [];
-    const warnings: string[] = [];
 
     // A name that is not a family releases nothing. `ignore` in .changeset/config.json already stops
     // the repository itself from being versioned, but it does so silently — this is the loud half.
@@ -100,15 +117,22 @@ export function judge(
         }
     }
 
+    const declared = new Set(present.flatMap((c) => [...c.bumps.keys()]));
+
+    // Before anything about changed paths: what a `major` obliges is a property of the changesets
+    // alone. A pull request can declare one while touching no library at all — reverting a
+    // changeset's prose, say — and the obligation is the same either way.
+    errors.push(...majors(present, declared, all));
+
     const touched = new Map<string, Family>();
     for (const path of changed) {
         const family = familyOf(path, all);
         if (family) touched.set(family.name, family);
     }
-    if (touched.size === 0) return { errors, warnings };
+    if (touched.size === 0) return { errors };
 
     // An empty changeset is the explicit "nothing published changes", and it covers everything.
-    if (present.some(isEmpty)) return { errors, warnings };
+    if (present.some(isEmpty)) return { errors };
 
     if (present.length === 0) {
         errors.push(
@@ -116,10 +140,9 @@ export function judge(
                 `changeset. Run \`bun changeset\`, or \`bun changeset --empty\` if nothing ` +
                 `published changes.`,
         );
-        return { errors, warnings };
+        return { errors };
     }
 
-    const declared = new Set(present.flatMap((c) => [...c.bumps.keys()]));
     const missing = [...touched.keys()].filter((n) => !declared.has(n)).sort();
     if (missing.length) {
         errors.push(
@@ -128,28 +151,69 @@ export function judge(
         );
     }
 
-    // Changesets only ever gives a dependent a `patch`, whatever the dependency did. Since a POM
-    // pins its dependencies at an exact version, a consumer taking that patch gets the major
-    // transitively — so a major has to name its dependents itself.
+    return { errors };
+}
+
+/**
+ * A `major` has to say what happens to the families that depend on it.
+ *
+ * Changesets only ever gives a dependent a `patch`, whatever the dependency did. Since a POM pins
+ * its dependencies at an exact version, a consumer who takes that patch gets the major
+ * transitively — so the author names each dependent with the bump it deserves, or states on an
+ * `unaffected:` line that the break cannot reach that dependent's own consumers.
+ *
+ * This is an error and not a warning because the cost is paid by someone who is not in the room.
+ * A warning on a rare event is a warning people learn to scroll past; the hatch is what keeps it
+ * from being a wall.
+ */
+function majors(
+    present: readonly Changeset[],
+    declared: ReadonlySet<string>,
+    all: readonly Family[],
+): string[] {
+    const problems: string[] = [];
+    const excused = new Set(present.flatMap((c) => [...c.unaffected]));
+    const everyDependent = new Set<string>();
+
     for (const c of present) {
         for (const [name, bump] of c.bumps) {
             if (bump !== "major") continue;
             const dependents = all.filter((f) => f.deps.includes(name)).map((f) => f.name);
-            const unnamed = dependents.filter((d) => !declared.has(d)).sort();
-            if (unnamed.length) {
-                warnings.push(
-                    `${c.file} is a major for '${name}', but ${unnamed.join(", ")} depend${
-                        unnamed.length === 1 ? "s" : ""
-                    } on it and ${unnamed.length === 1 ? "is" : "are"} not named. They will be ` +
-                        `bumped a patch — Changesets never gives a dependent more — and their POMs ` +
-                        `will point at the new major, so a consumer takes the break on a patch. ` +
-                        `Name them with the bump they deserve.`,
-                );
-            }
+            for (const d of dependents) everyDependent.add(d);
+
+            const unnamed = dependents.filter((d) => !declared.has(d) && !excused.has(d)).sort();
+            if (!unnamed.length) continue;
+
+            problems.push(
+                `${c.file} is a major for '${name}', and ${unnamed.join(", ")} depend${
+                    unnamed.length === 1 ? "s" : ""
+                } on it at runtime. Changesets would give ${
+                    unnamed.length === 1 ? "it" : "them"
+                } a patch — it never gives a dependent more — while the POM points at the new ` +
+                    `major, so a consumer takes the break on a patch.\n` +
+                    `Add to ${c.file}'s front matter:\n` +
+                    unnamed.map((d) => `  "${d}": major`).join("\n") +
+                    `\nOr, if the break genuinely cannot reach a consumer of ${
+                        unnamed.length === 1 ? "that family" : "those families"
+                    }, say so in the prose:\n  unaffected: ${unnamed.join(", ")}`,
+            );
         }
     }
 
-    return { errors, warnings };
+    // A name on an `unaffected:` line that depends on no major in this changeset excuses nothing,
+    // and is almost always a typo in the name it was meant to excuse.
+    for (const c of present) {
+        for (const name of c.unaffected) {
+            if (everyDependent.has(name)) continue;
+            problems.push(
+                `${c.file} says '${name}' is unaffected, but it does not depend on any family this ` +
+                    `changeset bumps to major. Check the spelling: the line excuses a *dependent*, ` +
+                    `not the family being broken.`,
+            );
+        }
+    }
+
+    return problems;
 }
 
 if (import.meta.main) {
@@ -168,9 +232,10 @@ if (import.meta.main) {
     }
     const changed = diff.stdout.toString().split("\n").filter(Boolean);
 
-    const { errors, warnings } = judge(changed, changesets(), families());
-    for (const w of warnings) console.log(`::warning::${w}`);
-    for (const e of errors) console.log(`::error::${e}`);
+    const { errors } = judge(changed, changesets(), families());
+    // A multi-line annotation needs its newlines escaped, or Actions keeps only the first line —
+    // which for the major rule would drop the lines the author is meant to paste.
+    for (const e of errors) console.log(`::error::${e.replaceAll("\n", "%0A")}`);
     if (errors.length) process.exit(1);
     console.log("Every changed family is declared.");
 }
