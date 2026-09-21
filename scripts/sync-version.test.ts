@@ -50,6 +50,7 @@ function fixture(
         readonly pkg?: Record<string, string>;
         readonly tpl?: Record<string, string>;
         readonly cat?: readonly [string, string];
+        readonly changelog?: Record<string, string>;
         readonly applyShared?: boolean;
         readonly dropApply?: boolean;
     } = {},
@@ -73,6 +74,7 @@ function fixture(
             JSON.stringify({ name, version: pkg[name], private: true }) + "\n",
         );
         writeFileSync(`${root}${dir}/${name}.module-template.yaml`, template(tpl[name]!));
+        writeFileSync(`${root}${dir}/CHANGELOG.md`, opts.changelog?.[name] ?? `# ${name}\n`);
         for (const m of mods) {
             mkdirSync(root + m, { recursive: true });
             const applied = [
@@ -246,6 +248,42 @@ describe("structure", () => {
             expect(structure(root)).toEqual([
                 expect.stringContaining("applies //publishing.module-template.yaml directly"),
             ]);
+        } finally {
+            clean(root);
+        }
+    });
+
+    test("catches a CHANGELOG section for a version the family has not reached", () => {
+        // How fourteen of these were left behind: a `changeset version` dry run reverted by halves,
+        // package.json back at its old version and the CHANGELOG still carrying the new section.
+        // The day the family really reaches it, Changesets prepends a second section with the same
+        // heading and the release note takes whichever comes first.
+        const root = fixture({ changelog: { "stx-jpa": "# stx-jpa\n\n## 1.1.0\n\n- never released\n" } });
+        try {
+            expect(structure(root)).toEqual([
+                expect.stringContaining("has a '## 1.1.0' section, but stx-jpa is at 1.0.0"),
+            ]);
+        } finally {
+            clean(root);
+        }
+    });
+
+    test("says nothing about a section at or below the family's version", () => {
+        const root = fixture({
+            changelog: { "stx-jpa": "# stx-jpa\n\n## 1.0.0\n\n- released\n\n## 0.9.0\n\n- older\n" },
+        });
+        try {
+            expect(structure(root)).toEqual([]);
+        } finally {
+            clean(root);
+        }
+    });
+
+    test("catches a family with no CHANGELOG at all", () => {
+        const root = fixture();
+        try {
+            rmSync(root + "libs/data/stx-mongo/CHANGELOG.md");
+            expect(structure(root)).toEqual([expect.stringContaining("has no CHANGELOG.md")]);
         } finally {
             clean(root);
         }

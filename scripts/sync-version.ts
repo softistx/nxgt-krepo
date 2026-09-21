@@ -16,7 +16,7 @@
 // request, and the release job runs it before touching anything, because a second is a cheaper
 // failure than a half-finished upload to a repository that does not allow deletions.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { type Family, families, templateOf } from "./families.ts";
 
@@ -130,6 +130,18 @@ export function syncVersions(root: string = ROOT, check = false): Written[] {
     return written;
 }
 
+/** A `## 1.2.3` heading's version, or null for a heading that is not a release. */
+function headingVersion(line: string): readonly number[] | null {
+    const m = line.trimEnd().match(/^##[ \t]+(\d+)\.(\d+)\.(\d+)$/);
+    return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
+}
+
+/** `a > b`, on the numeric triples `headingVersion` produces. */
+function ahead(a: readonly number[], b: readonly number[]): boolean {
+    const i = a.findIndex((n, j) => n !== b[j]);
+    return i >= 0 && a[i]! > b[i]!;
+}
+
 /**
  * The structural assertions that the anchors above take for granted.
  *
@@ -152,6 +164,34 @@ export function structure(root: string = ROOT): string[] {
                     `with no group, no POM metadata and no sources jar.`,
             );
         }
+        // A CHANGELOG section for a version the family has not reached. Changesets writes the
+        // section and the `package.json` version in the same breath, so the only way to have one
+        // without the other is a hand edit or a `changeset version` run that was reverted by
+        // halves — which is exactly how fourteen of these were left behind by a dry run. Nothing
+        // notices until the family genuinely reaches that version: `changeset version` then
+        // prepends a *second* section with the same heading, and the release note and the
+        // annotated tag take whichever one comes first.
+        const changelog = `${family.dir}/CHANGELOG.md`;
+        const at = headingVersion(`## ${family.version}`);
+        if (!existsSync(root + changelog)) {
+            problems.push(
+                `${family.dir} has no CHANGELOG.md. It is where a release note comes from, so the ` +
+                    `family would be released with an empty one.`,
+            );
+            continue;
+        }
+        for (const line of readFileSync(root + changelog, "utf8").split("\n")) {
+            const v = headingVersion(line);
+            if (v && at && ahead(v, at)) {
+                problems.push(
+                    `${changelog} has a '${line.trim()}' section, but ${family.name} is at ` +
+                        `${family.version}. A section for a version that was never released will ` +
+                        `be duplicated the day it is, and the release notes take the first of the ` +
+                        `two. Remove it, or move the family's package.json to that version.`,
+                );
+            }
+        }
+
         for (const module of family.modules) {
             const manifest = readFileSync(`${root}${module.dir}/module.yaml`, "utf8");
             const applied = [...manifest.matchAll(/^[ \t]*-[ \t]*\/\/(\S*\.module-template\.yaml)/gm)]

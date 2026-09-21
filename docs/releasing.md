@@ -88,9 +88,17 @@ example resolves something nobody published.
 The script asserts each anchor matches exactly once and throws otherwise. If you reshape either file
 and the release fails with *"found 0"*, that is it telling you the truth. It also checks the
 *structure*: every `module.yaml` under `libs/` applies exactly one family template, every family
-template chains to the shared one, and every family has a `package.json`. A module wired to no
-family template builds fine and fails only at `kotlin publish` — `bun scripts/sync-version.ts
---check` in CI is that failure, moved to the pull request.
+template chains to the shared one, and every family has a `package.json` and a `CHANGELOG.md`. A
+module wired to no family template builds fine and fails only at `kotlin publish` — `bun
+scripts/sync-version.ts --check` in CI is that failure, moved to the pull request.
+
+One more, learned the hard way: **a family's `CHANGELOG.md` may not carry a `## <version>` section
+for a version ahead of its `package.json`.** Changesets writes the two together, so the only way to
+have one without the other is a hand edit or a `changeset version` run reverted by halves — which is
+how fourteen of these were left behind by a dry run of the migration itself, sat in `develop`
+unnoticed, and were found by rehearsing the tag messages. Nothing notices until the family really
+reaches that version: `changeset version` then prepends a *second* section with the same heading,
+and the release note and the annotated tag take whichever comes first.
 
 The PR updates itself as more changesets land. Leaving it open is how you batch a release.
 
