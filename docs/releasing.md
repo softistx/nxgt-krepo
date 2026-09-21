@@ -118,25 +118,34 @@ The same workflow re-runs with no changesets left and, in **one job**:
 4. checks the three Central secrets are non-empty and fails in seconds if not;
 5. runs `scripts/enable-central.ts`, which turns on `mavenCentral` and `signArtifacts`;
 6. `rm -rf build/incremental.state`;
-7. `./kotlin task :<module>:publishToMavenCentral` for every module of every selected family — not
-   `kotlin publish`, see below;
-8. **then** `bun x changeset git-tag`, which creates `<family>@<version>` for each and pushes them;
-9. one GitHub release on a `release-<YYYY-MM-DD>` tag, its body one section per family, taken from
+7. then, **one batch at a time**: `./kotlin task :<module>:publishToMavenCentral` for every module
+   of that batch's families — not `kotlin publish`, see below — and, once they are up, an annotated
+   `<family>@<version>` tag for each, pushed;
+8. one GitHub release on a `release-<YYYY-MM-DD>` tag, its body one section per family, taken from
    that family's own `CHANGELOG.md`.
 
 **The tags come after the upload, not before**, so a failed publish cannot leave a tag claiming a
-version went out. `changeset git-tag` skips tags that already exist, which is what lets a run whose
-*plan* was partly consumed be replayed: the families already tagged are no longer ahead of their
-tag, so they are not in the next plan, and Central is never asked to take the same version twice.
+version went out. And they come after *each batch* rather than after all of them, which is the
+difference between a failure costing the run and a failure costing one batch.
 
-What that does **not** cover is a failure inside the publish step itself. The 45 uploads run as one
-`./kotlin task` invocation, so if the twentieth fails, nineteen bundles are in the Portal and
-nothing is tagged — and a re-run would offer Central versions it already holds, which it refuses.
-The atomic unit of "already uploaded" is the artifact, not the family, so no tagging scheme fixes
-this; the escape hatch is that **nothing is released until a human releases it**. Drop the
-deployments the failed run left in
-[the deployments list](https://central.sonatype.com/publishing/deployments), then re-run the job
-from the Actions tab. It is the same drop-and-retry as below, done before anything was public.
+Maven Central refuses a version it already holds, so a half-finished run is not something a re-run
+can simply retry — whatever is already up has to be dropped in the Portal by hand first. What the
+per-batch tagging changes is how much "whatever is already up" is: every batch that completed is now
+behind a tag, so it is no longer ahead of it, so it is not in the next plan at all. Only the batch
+that failed has to be untangled. With `stx-common` first and everything that depends on it after,
+that is usually the difference between one deployment to drop and seventeen.
+
+It is not free of edges. The atomic unit of "already uploaded" is the *artifact*, not the family, so
+a family whose second of three modules fails leaves one bundle up and takes no tag. The escape hatch
+is the same one as always: **nothing is released until a human releases it.** Drop what the failed
+run left in [the deployments list](https://central.sonatype.com/publishing/deployments), then re-run
+the job from the Actions tab.
+
+**The tags are annotated, and carry that family's release notes.** `git show stx-jpa@0.5.2` and
+`git tag -n` then say what went out, without a round trip to GitHub. That is why the workflow
+creates them itself instead of calling `bun x changeset git-tag`, which makes lightweight tags and
+cannot be told otherwise; the `git rev-parse --verify` before each one is the idempotency that
+command gave for free, put back by hand, so a replayed run leaves an existing tag alone.
 
 **One release for the run, not one per family.** The family tags stay bare. Seventeen release
 entries for one merge would make `/releases` unreadable, and the notes are the same notes either
@@ -238,10 +247,19 @@ bun scripts/release-plan.ts plan.json          # read it before doing anything
 bun scripts/sync-version.ts --check
 bun scripts/enable-central.ts
 rm -rf build/incremental.state
-./kotlin task $(bun scripts/release-plan.ts plan.json --tasks)
-git checkout publishing.module-template.yaml
 
-bun x changeset git-tag && git push origin --tags
+# Batch by batch, as the workflow does — `--tasks` and `--fields` take a batch index, and with none
+# they answer for the whole plan, which is what you want if you would rather do it in one go.
+total=$(bun scripts/release-plan.ts plan.json --batch-count)
+for i in $(seq 0 $((total - 1))); do
+  ./kotlin task $(bun scripts/release-plan.ts plan.json --tasks "$i")
+  while read -r name version dir; do
+    bun scripts/changelog-section.ts "$dir/CHANGELOG.md" "$version" > /tmp/msg
+    git tag -a -F /tmp/msg "$name@$version" && git push origin "$name@$version"
+  done < <(bun scripts/release-plan.ts plan.json --fields "$i")
+done
+
+git checkout publishing.module-template.yaml
 ```
 
 Then release the deployment from the Portal. To publish *everything* regardless of what moved —
@@ -299,6 +317,27 @@ It is written down because the same thing happens to any family added later: giv
 version it starts from, or its first release tries to publish a version that is already out. A
 family created at `0.0.0` and first released at `0.1.0` needs none — it is only a family starting at
 a version already on Central that does.
+
+## Make the first real release a small one
+
+Everything above has been verified a piece at a time — template precedence, the POM's cross
+versions, the propagation graph read back out of 49 published POMs, a `changeset version` dry run,
+the bootstrap tags, and a no-op release run that really happened. The one thing that cannot be
+rehearsed is the assembled job, because rehearsing it means publishing.
+
+So do not let the first genuine release under this regime be a `stx-common` change. That one moves
+fourteen families, 38 artifacts and several batches, all on a path nothing has ever run end to end.
+
+Pick a family with **no runtime dependents** — `stx-material`, `stx-testing` or
+`stx-openapi-generator`. The plan is then one batch of one family, the publish is one to five
+coordinates, and every part of the circuit runs for real: the selection, the batch loop, the
+annotated tag, the aggregated release, and the Portal deployment sitting there in `manual` mode
+waiting to be looked at. If something is wrong, it is wrong about one library, and dropping one
+deployment is the whole repair.
+
+`bun scripts/graph.ts` prints the graph. The column on the right is what a family *depends on*, so
+the leaves are the names that appear nowhere in it — today, those three. They also happen to depend
+on nothing themselves, which is why their plan is one batch.
 
 ## And `main`
 

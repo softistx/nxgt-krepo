@@ -41,53 +41,82 @@ export interface Release {
 }
 
 /**
- * Reads `changeset publish-plan --output`, flattening its batches.
+ * Reads `changeset publish-plan --output`, keeping its batches.
  *
- * The batches are in dependency order and that order is kept, because it is free and it makes a
- * partially failed run easier to read: everything before the failure is a family whose
- * dependencies were already uploaded.
+ * A batch is a set of families that can be published together because none of them depends on
+ * another in the same batch, and every family they do depend on is in an earlier one. The release
+ * publishes and tags one batch at a time, so the batches are the unit of "already up" that a
+ * re-run gets to skip — flattening them would throw that away.
  */
-export function releases(planPath: string, root: string = ROOT): Release[] {
+export function batches(planPath: string, root: string = ROOT): Release[][] {
     const raw = JSON.parse(readFileSync(planPath, "utf8")) as { plan?: PlanEntry[][] };
     const byName = new Map(families(root).map((f) => [f.name, f]));
 
-    return (raw.plan ?? []).flat().map(({ name, version }) => {
-        const family = byName.get(name);
-        if (!family) {
-            throw new Error(
-                `the publish plan names '${name}', which is not a family under libs/. Either a ` +
-                    `family directory was renamed without its package.json, or the plan is stale.`,
-            );
-        }
-        return { family, version, tag: `${name}@${version}` };
-    });
+    return (raw.plan ?? []).map((batch) =>
+        batch.map(({ name, version }) => {
+            const family = byName.get(name);
+            if (!family) {
+                throw new Error(
+                    `the publish plan names '${name}', which is not a family under libs/. Either ` +
+                        `a family directory was renamed without its package.json, or the plan is ` +
+                        `stale.`,
+                );
+            }
+            return { family, version, tag: `${name}@${version}` };
+        }),
+    );
 }
+
+/** The same plan as one list, in the same order — for counting and for reading. */
+export const releases = (planPath: string, root: string = ROOT): Release[] =>
+    batches(planPath, root).flat();
 
 /** The `./kotlin task` arguments that publish every module of every selected family. */
 export const tasks = (rs: readonly Release[]) =>
     rs.flatMap((r) => r.family.modules.map((m) => `:${m.name}:publishToMavenCentral`)).join(" ");
 
 if (import.meta.main) {
-    const [path, format] = process.argv.slice(2);
+    const [path, format, which] = process.argv.slice(2);
     if (!path) {
-        console.error("usage: release-plan.ts <plan.json> [--tasks|--tags|--count|--fields]");
+        console.error(
+            "usage: release-plan.ts <plan.json> [--tasks|--tags|--fields [batch] " +
+                "|--count|--batch-count]",
+        );
         process.exit(2);
     }
-    const rs = releases(path);
+    const all = batches(path);
+
+    // Every format but `--batch-count` takes an optional batch index, because the release publishes
+    // one batch at a time and asks this script the same questions per batch as it used to ask once.
+    // Without an index the answer covers the whole plan, which is what a human reading the plan and
+    // `docs/releasing.md`'s by-hand procedure want.
+    const i = which === undefined ? undefined : Number(which);
+    if (i !== undefined && (!Number.isInteger(i) || i < 0 || i >= all.length)) {
+        console.error(`'${which}' is not a batch of this plan — it has ${all.length}.`);
+        process.exit(2);
+    }
+    const rs = i === undefined ? all.flat() : all[i]!;
 
     if (format === "--tasks") console.log(tasks(rs));
     else if (format === "--tags") console.log(rs.map((r) => r.tag).join("\n"));
     else if (format === "--count") console.log(String(rs.length));
-    // `<name> <version> <dir>`, one per line, for the release-notes loop: it needs the family's
-    // directory to find its CHANGELOG, and looking that up from the name with a grep would be one
-    // more thing that silently matches nothing.
+    else if (format === "--batch-count") console.log(String(all.length));
+    // `<name> <version> <dir>`, one per line, for the tagging and release-notes loops: they need the
+    // family's directory to find its CHANGELOG, and looking that up from the name with a grep would
+    // be one more thing that silently matches nothing.
     else if (format === "--fields") {
         console.log(rs.map((r) => `${r.family.name} ${r.version} ${r.family.dir}`).join("\n"));
-    }
-    else {
-        for (const r of rs) {
-            console.log(`${r.tag.padEnd(32)} ${r.family.modules.map((m) => m.name).join(", ")}`);
-        }
-        console.log(`\n${rs.length} families, ${rs.flatMap((r) => r.family.modules).length} artifacts.`);
+    } else {
+        all.forEach((batch, n) => {
+            console.log(`batch ${n + 1} of ${all.length}`);
+            for (const r of batch) {
+                console.log(`  ${r.tag.padEnd(32)} ${r.family.modules.map((m) => m.name).join(", ")}`);
+            }
+        });
+        const rels = all.flat();
+        console.log(
+            `\n${rels.length} families, ${rels.flatMap((r) => r.family.modules).length} artifacts, ` +
+                `in ${all.length} ${all.length === 1 ? "batch" : "batches"}.`,
+        );
     }
 }
