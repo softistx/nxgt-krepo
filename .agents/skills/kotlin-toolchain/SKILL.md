@@ -86,7 +86,7 @@ Key rules that are easy to get wrong:
 
 **The toolchain does not support `[bundles]`.** `$libs.bundles.<name>` fails with `No catalog value for the key`; only `[versions]` and `[libraries]` are read. The bundles in this repo's catalog are inert for toolchain modules — treat them as documentation of which stack a dependency belongs to, and as the contract for Gradle-based consumers.
 
-`settings.ktor: enabled` contributes a `$ktor.*` catalog whose keys are **not** a mechanical dashes-to-dots mapping of the artifact ids — verify a key with `./kotlin show dependencies -m <module>` before relying on it. Confirmed on 0.12.0:
+`settings.ktor: enabled` contributes a `$ktor.*` catalog whose keys are **not** a mechanical dashes-to-dots mapping of the artifact ids — verify a key with `./kotlin show dependencies -m <module>` before relying on it. Confirmed on 0.12.0 and re-checked on 0.12.2, where the default `ktor.version` is still 3.5.2:
 
 | Key | Artifact |
 | --- | --- |

@@ -15,7 +15,15 @@ Compose Multiplatform moves faster than memory does.
 
 ## What this repo verified against the CLI
 
-Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a toolchain bump.
+Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64, and re-checked on **0.12.2**, where
+the findings below still hold. Re-check after a toolchain bump.
+
+**The toolchain's default Compose version is 1.11.1, and this repo does not use it.**
+`libs/ui/stx-material` and the `examples/material-demo` modules pin `settings.compose.version:
+1.12.0` — *ahead* of the default, not equal to it, because the library is built against the 1.12
+expressive APIs. Measured on a throwaway project that sets no version: 1.11.1 on 0.12.0 and 1.11.1
+on 0.12.2. So **raising the toolchain does not raise Compose here**, and a comment in
+`stx-material`'s manifest saying the pin tracked the 0.12.0 default was wrong — it never did.
 
 - **`iosX64` is not a valid platform for a Compose library.** The Compose artifacts publish for
   `[android, iosArm64, iosSimulatorArm64, js, jvm, macosArm64, wasmJs]` and nothing else, so

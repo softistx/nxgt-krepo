@@ -126,15 +126,14 @@ jobs:
             echo "::group::Batch $((i + 1)) of $total"
             bun scripts/release-plan.ts release-plan.json --fields "$i"
 
-            # Not `kotlin publish mavenCentral`: on toolchain 0.12.0 it refuses — "Cannot publish to
-            # repository 'mavenCentral' because it's not marked as publishable" — because it checks
-            # the repositories list, where the built-in mavenCentral is resolve-only. Giving it an
-            # entry with `publish: true` does not help: that registers a second
-            # publishToMavenCentral task and the CLI crashes with "Task … already exists".
-            # settings.publishing.mavenCentral still registers the Portal upload as a task per
-            # module, and `kotlin task` (not listed in --help) runs it directly. Go back to
-            # `kotlin publish mavenCentral` once the toolchain accepts it.
-            ./kotlin task $(bun scripts/release-plan.ts release-plan.json --tasks "$i")
+            # This was `kotlin task :<module>:publishToMavenCentral` until toolchain 0.12.2,
+            # because `kotlin publish mavenCentral` refused on 0.12.0 — "Cannot publish to
+            # repository 'mavenCentral' because it's not marked as publishable", the built-in
+            # mavenCentral being resolve-only. 0.12.2 accepts it: the command now gets past that
+            # check and stops only on the missing signing key, which is what any form does without
+            # a key. The two were also measured to be equivalent in what they write — publishing
+            # stx-testing each way produced the same seven files.
+            ./kotlin publish mavenCentral $(bun scripts/release-plan.ts release-plan.json --publish-args "$i")
 
             # Tags AFTER this batch's upload, so a failed publish cannot leave a tag claiming a
             # version went out. Annotated, not lightweight: the tag then carries that family's

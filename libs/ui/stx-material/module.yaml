@@ -96,8 +96,12 @@ settings:
       - androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
   compose:
     enabled: true
-    # Pinned to the toolchain 0.12.0 default, the way `ktor` is pinned in the modules that enable
-    # it: a toolchain upgrade should move this line visibly rather than silently.
+    # Pinned the way `ktor` is pinned in the modules that enable it, so a toolchain upgrade moves
+    # this line visibly rather than silently. It is *ahead* of the toolchain default rather than
+    # equal to it — measured 1.11.1 on both 0.12.0 and 0.12.2 — because $compose.material3 sits on
+    # its own alpha line and this library is built against the 1.12 expressive APIs. Raising the
+    # toolchain does not raise this; check `kotlin show settings` on a module that sets no version
+    # before assuming the two have met.
     version: 1.12.0
   android:
     namespace: com.softistx.material

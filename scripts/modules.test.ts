@@ -108,11 +108,6 @@ describe("formats", () => {
         expect(FORMATS["publish-args"](ms)).toBe("-m stx-common -m stx-jpa");
     });
 
-    test("tasks names the Portal upload task per module, which is what kotlin task runs", () => {
-        expect(FORMATS.tasks(ms)).toBe(
-            ":stx-common:publishToMavenCentral :stx-jpa:publishToMavenCentral",
-        );
-    });
 });
 
 describe("this repository", () => {

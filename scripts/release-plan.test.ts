@@ -6,7 +6,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { batches, releases, tasks } from "./release-plan.ts";
+import { batches, publishArgs, releases } from "./release-plan.ts";
 import { section } from "./changelog-section.ts";
 
 /** Writes a publish plan as `changeset publish-plan --output` writes one. */
@@ -111,12 +111,11 @@ describe("releases", () => {
         }
     });
 
-    test("produces one publish task per module, not per family", () => {
+    test("selects one module per artifact, not one per family", () => {
         const file = plan([[["stx-jpa", "0.3.0"], ["stx-common", "0.3.0"]]]);
         try {
-            expect(tasks(releases(file))).toBe(
-                ":stx-jpa:publishToMavenCentral :stx-jpa-ktor:publishToMavenCentral " +
-                    ":stx-jpa-spring:publishToMavenCentral :stx-common:publishToMavenCentral",
+            expect(publishArgs(releases(file))).toBe(
+                "-m stx-jpa -m stx-jpa-ktor -m stx-jpa-spring -m stx-common",
             );
         } finally {
             rmSync(file, { force: true });
