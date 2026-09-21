@@ -138,6 +138,12 @@ Preamble that is not a release.
 ## 0.2.1
 
 - older
+
+<!-- the footer every family CHANGELOG carries -->
+
+---
+
+This is the release line for \`io.github.softistx:stx-jpa\`.
 `;
 
     test("takes one version's body, without its heading", () => {
@@ -150,6 +156,14 @@ Preamble that is not a release.
 
     test("reads the last section, which has no next heading to stop at", () => {
         expect(section(CHANGELOG, "0.2.1")).toBe("- older");
+    });
+
+    test("stops at the footer, which only the newest section is ever next to", () => {
+        // The one that got through: the newest release has no `## ` heading after it, so the
+        // footer went into `stx-material@0.2.2`'s tag message and the GitHub release body.
+        const body = section(CHANGELOG, "0.2.1")!;
+        expect(body).not.toContain("release line");
+        expect(body).not.toContain("<!--");
     });
 
     test("answers null for a version that was never written, rather than an empty note", () => {
