@@ -2,8 +2,10 @@ product:
   type: kmp/lib
   # iosX64 is deliberately absent: the Compose artifacts publish for
   # [android, iosArm64, iosSimulatorArm64, js, jvm, macosArm64, wasmJs] and nothing else, so
-  # naming it fails dependency resolution. The two Apple targets that are named compile only on
-  # an Apple host — on Linux `./kotlin build` skips them silently and still exits 0.
+  # naming it fails dependency resolution. The two Apple targets that are named are skipped by
+  # `./kotlin build` on Linux — it prints [jvm] and [android] and exits 0 — but *not* by
+  # `./kotlin publish`, which cross-compiles both and writes real klibs. README.md has the
+  # measurement and what that does and does not cover.
   platforms: [ jvm, android, iosArm64, iosSimulatorArm64 ]
 description: "A Compose Multiplatform component library: a token layer over Material 3, and motion that is on by default"
 

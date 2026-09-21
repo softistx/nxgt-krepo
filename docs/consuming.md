@@ -104,8 +104,10 @@ yet offer control over it.
 - its Compose resources are **not** in the publication yet
   ([KTC-5698](https://youtrack.jetbrains.com/issue/KTC-5698/Support-publication-of-composeResources-as-a-part-of-KMP-library-publication)) —
   the jar publishes, the resources do not;
-- the two Apple targets are built only on an Apple host, and releases are cut on Linux, where the
-  toolchain **skips them silently**. Treat them as untested until that changes.
+- the two Apple targets **are** compiled, including on the Linux host releases are cut from —
+  `./kotlin publish` cross-compiles them even though `./kotlin build` does not, and the published
+  klibs are real. What is not covered is linking: a klib is compiled, never linked into a framework
+  by anything here, and there are no iOS tests. Treat them as compiled but unexercised.
 
 ## Pre-1.0
 

@@ -65,6 +65,33 @@ jobs:
           rm -rf ~/.m2/repository/io/github/softistx
           ./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)
 
+      # The step above is also the only thing here that compiles `stx-material` for iOS, and that is
+      # worth asserting rather than assuming.
+      #
+      # `./kotlin build` on Linux prints `[jvm]` and `[android]` and exits 0 — the Apple targets are
+      # resolved into the dependency graph and never compiled. `./kotlin publish` is different: it
+      # cross-compiles both and writes real klibs. Measured on this repository at 0.2.1 —
+      # `stx-material-iosarm64-0.2.1.klib` is 840 KB with 213 entries and real IR bodies, produced on
+      # Linux x86_64.
+      #
+      # So a pull request does cover the Apple targets, through the publish and not through the
+      # build. If a toolchain bump ever makes `publish` skip them the way `build` does, nothing else
+      # here would notice and a release would start shipping artifacts nobody compiled.
+      - name: The Apple targets were compiled, not skipped
+        run: |
+          set -euo pipefail
+          for target in iosarm64 iossimulatorarm64; do
+            klib=$(find ~/.m2/repository/io/github/softistx/stx-material-"$target" \
+                     -name '*.klib' -size +100k -print -quit 2>/dev/null || true)
+            if [ -z "$klib" ]; then
+              echo "::error::stx-material-$target published no klib of any substance. The publish"
+              echo "skipped the target the way \`kotlin build\` does, and a release cut from here"
+              echo "would ship an artifact nobody compiled."
+              exit 1
+            fi
+            echo "::notice::stx-material-$target -> $(basename "$klib")"
+          done
+
       # Never pipe ./kotlin into tail or grep: the pipeline reports the filter's exit code, so a
       # failed build reads as success. These run bare.
       - run: ./kotlin build

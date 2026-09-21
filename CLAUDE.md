@@ -17,7 +17,7 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   controllers implement. Its two `references/` pages are hand-written, not fetched — read
   `spring-api.md` before writing a controller or its spec. `plugins/openapi/README.md` is what each
   `client` needs on the classpath; `docs/openapi-support.md` is what the generator makes of a document.
-- **`compose-multiplatform`** before touching `libs/ui/stx-material` or `examples/material-demo`, and **`material3-compose`** before theming or extending a Material 3 component. The first records what this host actually verifies — Apple targets are *silently skipped* on Linux, so a green local build proves nothing about them — and the second is generated from the resolved jar, because `$compose.material3` sits on its own alpha version line and the androidx docs describe a different artifact.
+- **`compose-multiplatform`** before touching `libs/ui/stx-material` or `examples/material-demo`, and **`material3-compose`** before theming or extending a Material 3 component. The first records what this host actually verifies — `./kotlin build` skips the Apple targets on Linux, so a green local build proves nothing about them, while `./kotlin publish` cross-compiles both and writes real klibs — and the second is generated from the resolved jar, because `$compose.material3` sits on its own alpha version line and the androidx docs describe a different artifact.
 - **Check Material 3 before writing a `libs/ui/stx-material` component.** M3 already has `Button`,
   `IconButton`, `ButtonGroup`, `Card`, the chips, `Badge`, `ListItem`, `Text`, `Icon`, `Surface`
   and the dividers — reuse and customise through its `*Defaults`/`*Colors` parameters rather than

@@ -20,11 +20,15 @@ Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64. Re-check after a 
 - **`iosX64` is not a valid platform for a Compose library.** The Compose artifacts publish for
   `[android, iosArm64, iosSimulatorArm64, js, jvm, macosArm64, wasmJs]` and nothing else, so
   declaring `iosX64` fails dependency resolution with a pointer at the offending dependency line.
-- **Apple targets are silently skipped on a non-Apple host.** With `iosArm64` and
-  `iosSimulatorArm64` declared, `./kotlin build` on Linux prints only `[jvm]` and `[android]`
-  compilations and exits 0. The iOS variants *are* resolved into the dependency graph, so the
-  declaration is meaningful — but **a green local build says nothing about the Apple targets.**
-  Only a macOS host or CI can break on them.
+- **`build` skips the Apple targets on a non-Apple host; `publish` does not.** With `iosArm64`
+  and `iosSimulatorArm64` declared, `./kotlin build` on Linux prints only `[jvm]` and `[android]`
+  compilations and exits 0 — the iOS variants are resolved into the dependency graph and never
+  compiled, so **a green local build says nothing about them.**
+  `./kotlin publish` on the same host *does* cross-compile both and writes real klibs
+  (`stx-material-iosarm64-0.2.1.klib`: 840 KB, 213 entries, real IR bodies). So no Apple host is
+  needed to produce the published artifacts, and `publish mavenLocal` is what covers these targets
+  in CI. An earlier version of this page said only a macOS host could break on them; that was
+  wrong, and the correction is what the measurement above is for.
 - **`$compose` catalog keys that exist:** `runtime`, `foundation`, `ui`, `material`, `material3`,
   `animation`, `animationGraphics`, `components.resources`, `uiTooling`, `uiTest`,
   `desktop.currentOs` (jvm only), `hotReload.runtimeApi` (jvm only).
