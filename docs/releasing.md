@@ -183,10 +183,19 @@ Switching to `auto` is a one-word change in `scripts/enable-central.ts`, and its
   ```
 
   The hole existed before, with a single `vX.Y.Z`; it now exists seventeen times over.
-- **`stx-material`'s two Apple targets are silently skipped on Linux.** Releases are cut on
-  `ubuntu-latest`, so `stx-material-iosarm64` and `-iossimulatorarm64` go out from a host that
-  cannot build them. A green release says nothing about them. Its Compose resources are not in the
-  publication either (KTC-5698).
+- **`stx-material`'s two Apple targets are compiled by `publish`, not by `build`** — and this
+  repository said the opposite for a long time. `./kotlin build` on Linux prints `[jvm]` and
+  `[android]` and exits 0, having never touched them; `./kotlin publish` cross-compiles both and
+  writes real klibs. Measured at 0.2.1: `stx-material-iosarm64-0.2.1.klib` is 840 KB with 213
+  entries and real IR bodies, produced on Linux x86_64. So a release cut on `ubuntu-latest` ships
+  artifacts that were genuinely compiled from source, and no Apple host is needed to produce them.
+
+  What remains true is narrower and still worth knowing: **a green `./kotlin build` says nothing
+  about the Apple targets**, so the coverage comes from the `publish mavenLocal` step in CI rather
+  than from the build. `ci.yml` asserts both klibs exist afterwards, because if a toolchain bump
+  ever made `publish` skip them the way `build` does, nothing else would notice. What no host here
+  covers is *linking* — a klib is compiled, never linked into a framework — and the Compose
+  resources, which are not in the publication at all (KTC-5698).
 
 ## Secrets
 

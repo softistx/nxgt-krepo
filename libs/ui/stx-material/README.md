@@ -133,10 +133,16 @@ Card(style = StxTheme.styles.card then { alpha(0.6f) })
 `[ jvm, android, iosArm64, iosSimulatorArm64 ]`. `iosX64` is not a valid target — the Compose
 artifacts do not publish for it.
 
-**A green build on this Linux host says nothing about the Apple targets**: they are resolved into
-the dependency graph but silently skipped at compile time. Only a macOS host or CI can break on
-them. The `compose-multiplatform` skill records this and the rest of what the toolchain actually
-does here.
+**A green `./kotlin build` on this Linux host says nothing about the Apple targets**: they are
+resolved into the dependency graph and never compiled — the build prints `[jvm]` and `[android]` and
+exits 0.
+
+**`./kotlin publish` is a different matter, and this file used to get it wrong.** It cross-compiles
+both targets on Linux and writes real klibs — measured at 0.2.1, `stx-material-iosarm64-0.2.1.klib`
+is 840 KB with 213 entries and real IR bodies. So no Apple host is needed to produce the published
+artifacts, and CI covers the Apple targets through its `publish mavenLocal` step rather than through
+the build. What is still uncovered is linking, and there are no iOS tests. The
+`compose-multiplatform` skill records the rest of what the toolchain actually does here.
 
 ## Publishing
 
