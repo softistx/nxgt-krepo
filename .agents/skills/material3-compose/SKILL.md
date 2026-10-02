@@ -10,7 +10,7 @@ underneath so ordinary M3 components and third-party M3 libraries keep working i
 
 ## Why this skill has no fetched documentation
 
-`$compose.material3` resolves to **1.11.0-alpha07** while `foundation` and `ui` are `1.11.1` —
+`$compose.material3` resolves to **1.12.0-alpha03** while `foundation` and `ui` are `1.12.0` —
 Material 3 in Compose Multiplatform is on its own alpha line. The androidx documentation on the web
 describes a *different artifact at a different version*, and its component list, colour roles and
 shape slots do not all agree with what compiles here.

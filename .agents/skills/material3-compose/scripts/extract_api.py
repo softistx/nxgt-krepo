@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Regenerate references/ from the Compose Material 3 jar this repo actually resolves.
 
-Material 3 in Compose Multiplatform ships on its own version line — 1.11.0-alpha07
-while foundation and ui are 1.11.1 — so the androidx documentation on the web
+Material 3 in Compose Multiplatform ships on its own version line — 1.12.0-alpha03
+while foundation and ui are 1.12.0 — so the androidx documentation on the web
 describes a different artifact than the one that compiles here. The jar is the
 only source that cannot be out of date, so the reference pages are read off it
 with `javap` rather than fetched.

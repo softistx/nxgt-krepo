@@ -126,7 +126,7 @@ test-dependencies:
   - $libs.kotest.extensions.spring
 
 settings:
-  # Applies the Spring Boot BOM (4.1.0), the all-open and no-arg compiler plugins with the `spring`
+  # Applies the Spring Boot BOM (4.1.1), the all-open and no-arg compiler plugins with the `spring`
   # and `jpa` presets, and `-java-parameters` — so every Spring dependency below is unversioned and
   # a @Configuration class does not have to be written `open`.
   springBoot: enabled

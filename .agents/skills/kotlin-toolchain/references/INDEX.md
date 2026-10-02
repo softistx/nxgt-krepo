@@ -44,14 +44,13 @@ Each page's own source URL is in its first line. Generated — do not hand-edit.
 | `user-guide-product-types-android-app.md` | Android application _(13KB)_ |
 | `user-guide-product-types-ios-app.md` | iOS application _(8KB)_ |
 | `user-guide-product-types-js-app.md` | Kotlin/JS application |
-| `user-guide-product-types-jvm-app.md` | - Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.        JVM application |
-| `user-guide-product-types-jvm-lib.md` | - Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.        JVM library |
-| `user-guide-product-types-kmp-lib.md` | - Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.             Kotlin Multiplatform library |
-| `user-guide-product-types-native-app.md` | ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc. Kotlin/Native application |
+| `user-guide-product-types-jvm-app.md` | JVM application |
+| `user-guide-product-types-jvm-lib.md` | JVM library |
+| `user-guide-product-types-kmp-lib.md` | Kotlin Multiplatform library |
+| `user-guide-product-types-native-app.md` | Kotlin/Native application |
 | `user-guide-product-types-overview.md` | Product types |
 | `user-guide-product-types-wasm-js-app.md` | Kotlin/Wasm web application |
 | `user-guide-product-types-wasm-wasi-app.md` | Kotlin/Wasm WASI application |
-| `user-guide-product-types.md` | Product types _(stale: v0.12)_ |
 | `user-guide-publishing.md` | Publishing libraries _(9KB)_ |
 | `user-guide-templates.md` | Templates |
 | `user-guide-testing.md` | Testing |

@@ -71,9 +71,9 @@ publishes, made on its own and with its own changeset.
   `compose.enabled`, which is misleading when Compose is already on: it means the key is not in
   the catalog. Check the list above before chasing the setting.
 - **`$compose.material3` resolves to its own version line, and to a different artifact per
-  platform** — `org.jetbrains.compose…material3-desktop:1.11.0-alpha07` on jvm,
-  `androidx.compose.material3:material3-android:1.5.0-alpha17` on android, while `foundation` and
-  `ui` are `1.11.1`. It being an alpha is what `settings.compose.version` gives, not a mistake to
+  platform** — `org.jetbrains.compose.material3:material3-desktop:1.12.0-alpha03` on jvm,
+  `androidx.compose.material3:material3-android:1.5.0-alpha22` on android, while `foundation` and
+  `ui` are `1.12.0` (the pin). It being an alpha is what `settings.compose.version` gives, not a mistake to
   correct. Check an API against *both* artifacts before using it in common code;
   `dynamicLightColorScheme(Context)` is android-only and belongs behind `expect`/`actual`. The
   `material3-compose` skill has the real surface.
