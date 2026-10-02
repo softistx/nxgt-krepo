@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/basics/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/basics/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Basic concepts
 
@@ -268,7 +268,7 @@ settings: #(3)!
    type: jvm/app
 ```
 
- The `jvm/app` product type means that the module produces a [JVM application](../product-types/jvm-app/). Read more about other product types in the [Product types](../product-types/) section.
+ The `jvm/app` product type means that the module produces a [JVM application](../product-types/jvm-app/). Read more about other product types in the [Product types](../product-types/overview/) section.
 2. The `dependencies` section contains the list of dependencies for this module. Here `io.ktor:ktor-client-java:2.3.0` are the [Maven coordinates ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.](https://maven.apache.org/pom.html#Maven_Coordinates) of the Ktor client library (with Java engine). Read more about dependencies in general in the [Dependencies](../dependencies/) section.
 3. The `settings` section contains the configuration of different toolchains.
 4. An example setting: the Kotlin compiler version used for this module.
@@ -298,7 +298,7 @@ settings@ios: #(9)!
     allWarningsAsErrors: false #(10)!
 ```
 
-1. The `kmp/lib` product type means that the module produces a [- Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.             Kotlin Multiplatform library](../product-types/kmp-lib/). Read more about other product types in the [Product types](../product-types/) section.
+1. The `kmp/lib` product type means that the module produces a [- Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.             Kotlin Multiplatform library](../product-types/kmp-lib/). Read more about other product types in the [Product types](../product-types/overview/) section.
 2. The `platforms` list contains the platforms that this module is built for.
 3. The `dependencies` section contains the list of common dependencies for this module. Here `io.ktor:ktor-client-core:2.3.0` are the [Maven coordinates ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.](https://maven.apache.org/pom.html#Maven_Coordinates) of the Ktor client core library. Read more about dependencies in general in the [Dependencies](../dependencies/) section. Read more about multiplatform dependencies in the [Multiplatform dependencies](../multiplatform/#multiplatform-dependencies) section.
 4. The `dependencies@android` section contains the list of dependencies that are only used when building the module for the Android target. Here the `io.ktor:ktor-client-android:2.3.0` will not be present when building the module for the iOS targets. Read more about dependencies in general in the [Dependencies](../dependencies/) section. Read more about multiplatform dependencies in the [Multiplatform dependencies](../multiplatform/#multiplatform-dependencies) section.
@@ -313,7 +313,7 @@ settings@ios: #(9)!
 
 The **product type** describes what is created when building the module: a JVM application (`jvm/app`), Android application (`android/app`), Kotlin Multiplatform library (`kmp/lib`), etc. It actually tells us both the target platform and the type of the module at the same time.
 
-All modules generally work the same way, but each product type may add its own set of rules and capabilities. Check out the [Product types](../product-types/) section and subsections to see details about each of them.
+All modules generally work the same way, but each product type may add its own set of rules and capabilities. Check out the [Product types](../product-types/overview/) section and subsections to see details about each of them.
 
 ### Dependencies
 

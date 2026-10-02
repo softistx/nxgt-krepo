@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/plugins/topics/tasks/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/plugins/topics/tasks/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Tasks
 
@@ -102,7 +102,7 @@ Use `@Input(inferTaskDependency = false)` on a path parameter when you do not wa
 
 This is needed for “baseline” files where an “update” task writes the baseline and a “check” task reads and compares it. If a dependency were inferred, “update” would always run before “check”, hiding problems.
 
-A good example of this case could be seen in the [Binary Compatibility Validator](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/build-sources/binary-compatibility-validator/plugin.yaml).
+A good example of this case could be seen in the [Binary Compatibility Validator](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/build-sources/binary-compatibility-validator/plugin.yaml).
 
 > **Note**
 

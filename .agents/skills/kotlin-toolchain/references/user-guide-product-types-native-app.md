@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/product-types/native-app/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/product-types/native-app/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc. Kotlin/Native application
 
@@ -32,7 +32,7 @@ my-module/
 
 By default, the entry point of a Kotlin native application is expected to be a top-level `main` function in a `main.kt` file (case-insensitive) in the `src` folder.
 
-If you don't want to follow this convention, you can specifty the fully qualified name of the entry point function explicitly in the module settings:
+If you don't want to follow this convention, you can specify the fully qualified name of the entry point function explicitly in the module settings:
 
 ```yaml
 product: linux/app
@@ -45,6 +45,17 @@ settings:
 1. The fully qualified name of the entry point function.
 
 The entry point function must either have **no parameters or one `Array<String>` parameter** (representing the command line arguments).
+
+## Running your application
+
+You can run your application using the `kotlin run` command.
+
+There are no prerequisites for this command. It will automatically:
+
+- download dependencies
+- compile the module and its local dependencies
+- link your application into a binary executable (see the entry point section above)
+- launch your executable
 
 ## Packaging
 

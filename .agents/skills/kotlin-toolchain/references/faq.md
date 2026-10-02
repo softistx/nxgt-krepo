@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/faq/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/faq/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # FAQ
 
@@ -83,7 +83,7 @@ We recommend using the latest [IntelliJ IDEA EAP](https://www.jetbrains.com/idea
 You have several options:
 
 - Open IntelliJ IDEA and create a new Kotlin project with the Kotlin Toolchain
-- Kick-start your project using one of the [examples](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples)
+- Kick-start your project using one of the [examples](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples)
 - Download Kotlin CLI by following the [CLI instructions](../cli/), and generate a project from a template using the `./kotlin init` command.
 
 ### How do I create a multi-module project in the Kotlin Toolchain?

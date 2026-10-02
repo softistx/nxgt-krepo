@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/product-types/jvm-app/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/product-types/jvm-app/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # - Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.        JVM application
 
@@ -52,6 +52,17 @@ settings:
 In Kotlin, unlike Java, the `main` function doesn't have to be declared in a class, and is usually at the top level of the file. However, the JVM still expects a main class when running any application. Kotlin always compiles top-level declarations to a class, and the name of that class is derived from the name of the file by capitalizing the name and turning the `.kt` extension into a `Kt` suffix.
 
 For example, the top-level declarations of `myMain.kt` will be in a class named `MyMainKt`.
+
+## Running your application
+
+You can run your application using the `kotlin run` command.
+
+There are no prerequisites for this command. It will automatically:
+
+- download dependencies
+- provision a JDK (see how to configure this in the [JDK provisioning](../../advanced/jdk-provisioning/) section)
+- compile the module and its local dependencies
+- start the JVM with your main class (see the entry point section above)
 
 ## Packaging
 

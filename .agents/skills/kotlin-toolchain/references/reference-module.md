@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/reference/module/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/reference/module/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Module file reference
 
@@ -55,8 +55,8 @@ Supported dependency types:
 | `- $<catalog.key>` | Dependency from [a dependency catalog](../../user-guide/dependencies/#library-catalogs). |
 | `- bom: <groupId>:<artifactId>:<version>` | Dependency on [a BOM](../../user-guide/dependencies/#using-a-maven-bom). |
 | `- bom: $<catalog.key>` | Dependency on [a BOM from a dependency catalog](../../user-guide/dependencies/#library-catalogs). |
-| `- swiftPackage: ...` | Dependency on a remote Swift package, only for [iOS apps](../../user-guide/product-types/ios-app/). |
-| `- localSwiftPackage: <path>` | Dependency on a local Swift package, only for [iOS apps](../../user-guide/product-types/ios-app/). |
+| `- swiftPackage: ...` | Dependency on a remote Swift package, only for [multiplatform modules with Apple platforms](../../user-guide/dependencies/#swiftpm-dependencies). |
+| `- localSwiftPackage: ...` | Dependency on a local Swift package, only for [multiplatform modules with Apple platforms](../../user-guide/dependencies/#swiftpm-dependencies). |
 
 Each dependency (except BOM) has the following attributes:
 
@@ -123,10 +123,10 @@ This description is used by the CLI and by IDEs to show information about the mo
 
 The `layout` defines the module file structure. Valid values:
 
-- `amper`: place your files in `src`, `test`, and `resources` directories
+- `default`: place your files in `src`, `test`, and `resources` directories
 - `maven-like`: just like Maven (`src/main/kotlin`, `src/main/java`, `src/test/kotlin`, `src/main/resources`)
 
-The default value is `amper`.
+The default value is `default`.
 
 > **The `maven-like` layout is only supported in modules with `jvm/app` or `jvm/lib` product type.**
 
@@ -291,7 +291,7 @@ The `test-settings` section controls building and running the module tests. Read
 
 | Attribute | Default | Description |
 | --- | --- | --- |
-| `applicationId: string` | (set from `namespace`) | The ID for the application on a device and in the Google Play Store. [Read more](https://developer.android.com/build/configure-app-module#set-namespace). |
+| `applicationId: string` | (set from `namespace`) | The ID for the application on a device and in the Google Play Store. [Read more](https://developer.android.com/build/configure-app-module#set-application-id). |
 | `namespace: string` | `org.example.namespace` | A Kotlin or Java package name for the generated `R` and `BuildConfig` classes. [Read more](https://developer.android.com/build/configure-app-module#set-namespace). |
 | `compileSdk: object \| int` | 37 | The Android SDK version to compile the code against. The code can use only the Android APIs up to that API level. [Read more](https://developer.android.com/reference/tools/gradle-api/com/android/build/api/dsl/CommonExtension#compileSdk()). |
 | `targetSdk: int` | (set from `compileSdk`) | The target API level for the application. [Read more](https://developer.android.com/guide/topics/manifest/uses-sdk-element.html). |
@@ -300,6 +300,7 @@ The `test-settings` section controls building and running the module tests. Read
 | `versionCode: int` | 1 | Version code. [Read more](https://developer.android.com/studio/publish/versioning). |
 | `versionName: string` | `unspecified` | Version name. [Read more](https://developer.android.com/studio/publish/versioning). |
 | `resourcePackaging: object` | (empty) | Configure how duplicate Java resources from dependencies are packaged in an Android app. See [Resolving duplicate Java resources](../../user-guide/product-types/android-app/#resolving-duplicate-java-resources). |
+| `abiFilters: string list` | (all ABIs) | The Android ABIs to package native libraries for. When unset, all ABIs are packaged. See [Filtering native library ABIs](../../user-guide/product-types/android-app/#filtering-native-library-abis). |
 | `parcelize: object \| string` | (disabled) | Configure [Parcelize](https://developer.android.com/kotlin/parcelize). |
 | `buildToolsVersion: string` | 37.0.0 | Version of [SDK Build Tools](https://developer.android.com/tools/releases/build-tools) to use. |
 
@@ -397,7 +398,7 @@ settings:
 | Attribute | Default | Description |
 | --- | --- | --- |
 | `enabled: boolean` | `false` | Enable Compose runtime, dependencies and the compiler plugins. |
-| `version: string` | `1.11.1` | The Compose plugin version to use. |
+| `version: string` | `1.12.1` | The Compose plugin version to use. |
 | `resources: object` |   | Compose Resources settings. |
 | `experimental: object` |   | Experimental Compose settings. |
 
@@ -436,7 +437,7 @@ Full form
 settings:
   compose:
     enabled: true
-    version: 1.11.1
+    version: 1.12.1
 ```
 
 Full form with resources configuration
@@ -445,7 +446,7 @@ Full form with resources configuration
 settings:
   compose:
     enabled: true
-    version: 1.11.1
+    version: 1.12.1
     resources:
       packageName: "com.example.myapp.resources"
       exposedAccessors: true
@@ -571,10 +572,11 @@ Values for `selectionMode`:
 | `allOpen: object` |   | Configure the [Kotlin all-open compiler plugin](https://kotlinlang.org/docs/all-open-plugin.html). |
 | `allWarningsAsErrors: boolean` | `false` | Turn any warnings into a compilation error. |
 | `apiVersion: enum` | (set from `languageVersion`) | Allow using declarations only from the specified version of Kotlin bundled libraries. |
-| `compileIncrementally: boolean` | (enabled for Kotlin >= 2.4.0) | Whether Kotlin code should be compiled incrementally (only recompile what's necessary depending on the changes). |
+| `compileIncrementally: boolean` | (enabled for Kotlin >= 2.4.0) | Whether Kotlin code should be compiled incrementally (only recompile what's necessary depending on the changes). For [native targets](https://kotlinlang.org/docs/native-target-support.html), this enables the Kotlin/Native compiler caches, which also make linking significantly faster by reusing the compiled native code of external dependencies across builds. Note that it currently only affects the linking of native binaries (compilation to klibs is always done as a whole), and only debug (non-optimized) binaries for targets whose compiler supports caching. Can be set per platform, for example under `settings@native`. |
 | `compilerPlugins: object list` | `\[\]` | Configure third-party Kotlin compiler plugins. |
 | `dataframe: object \| enum` |   | Configure the [Kotlin DataFrame compiler plugin](https://kotlin.github.io/dataframe/home.html). |
 | `debug: boolean` | (enabled in debug variants) | (Only for [native targets](https://kotlinlang.org/docs/native-target-support.html)) Enable emitting debug information. |
+| `explicitApi: enum` | `disable` | Enforce the [explicit API mode](https://kotlinlang.org/docs/whatsnew14.html#explicit-api-mode-for-library-authors) (`strict`, `warning`, or `disable`). Ignored for test sources. |
 | `freeCompilerArgs: string list` | `\[\]` | Pass any [compiler option](https://kotlinlang.org/docs/compiler-reference.html#compiler-options) directly. |
 | `jsPlainObjects: object \| enum` |   | Enable the Kotlin JS-plain-objects compiler plugin. |
 | `ksp: object` |   | Configure [Kotlin Symbol Processing](../../user-guide/advanced/ksp/). |
@@ -754,7 +756,7 @@ settings:
 
 | Attribute | Default | Description |
 | --- | --- | --- |
-| `version: string` | `2.3.11` | The version of KSP to use |
+| `version: string` | `2.3.12` | The version of KSP to use |
 | `processors: string list` | `\[\]` | The list of KSP processors to use. Each item can be a path to a local module, a catalog reference, or maven coordinates. |
 | `processorOptions: map<string, string>` | `{}` | Some options to pass to KSP processors. Refer to each processor documentation for details. |
 
@@ -775,7 +777,7 @@ settings:
 | --- | --- | --- |
 | `enabled: boolean` | `false` | Enable the kotlinx.rpc compiler plugin |
 | `applyBom: boolean` | `true` | Apply the kotlinx.rpc BOM to enforce dependency version alignment |
-| `version: string` | `0.10.3` | The version of kotlinx.rpc to use |
+| `version: string` | `0.10.4` | The version of kotlinx.rpc to use |
 | `annotationTypeSafetyEnabled: boolean` | `true` | Controls `@Rpc` annotation type-safety compile-time checkers. Disabling is considered unsafe and is only needed when type-safety analysis fails on valid code. |
 
 ### `settings.ktor`
@@ -785,7 +787,7 @@ settings:
 | Attribute | Default | Description |
 | --- | --- | --- |
 | `enabled: boolean` | `false` | Enable the Ktor server framework. This is just a convenience to generate library catalog entries for Ktor libraries. |
-| `version: string` | `3.5.2` | The Ktor version used for the BOM and in the generated library catalog entries |
+| `version: string` | `3.6.0` | The Ktor version used for the BOM and in the generated library catalog entries |
 | `applyBom: boolean` | `true` | Whether to apply the Ktor BOM |
 
 Example:
@@ -804,7 +806,7 @@ settings:
 | Attribute | Default | Description |
 | --- | --- | --- |
 | `enabled: boolean` | `false` | Enable Lombok |
-| `version: string` | `1.18.46` | Lombok version for runtime and annotation processor |
+| `version: string` | `1.18.48` | Lombok version for runtime and annotation processor |
 
 Example:
 
@@ -880,7 +882,7 @@ settings:
 | Attribute | Default | Description |
 | --- | --- | --- |
 | `enabled: boolean` | `false` | Enable Spring Boot |
-| `version: string` | `4.1.0` | Spring Boot version |
+| `version: string` | `4.1.1` | Spring Boot version |
 | `applyBom: boolean` | `true` | Whether to apply the Spring Boot BOM |
 
 Example:

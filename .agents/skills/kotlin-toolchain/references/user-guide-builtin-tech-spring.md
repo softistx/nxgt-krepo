@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/builtin-tech/spring/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/builtin-tech/spring/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # xml version="1.0" encoding="utf-8"?  Generator: Adobe Illustrator 24.0.3, SVG Export Plug-In . SVG Version: 6.00 Build 0)    icon-spring-boot        Spring Boot
 
@@ -27,8 +27,8 @@ Mixed projects (containing Java and Kotlin sources simultaneously) are supported
 
 Examples of Spring Boot projects:
 
-- [spring-petclinic](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/spring-petclinic)
-- [spring-petclinic-kotlin](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/spring-petclinic-kotlin)
+- [spring-petclinic](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/spring-petclinic)
+- [spring-petclinic-kotlin](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/spring-petclinic-kotlin)
 
 You can also customize the version of the Spring Boot libraries using the full form of the configuration: 
 

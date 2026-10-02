@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/yaml-primer/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/yaml-primer/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Brief YAML primer
 

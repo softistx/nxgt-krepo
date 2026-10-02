@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # The Kotlin Toolchain
 
@@ -9,6 +9,7 @@ A unified entry point into Kotlin. Build JVM, Android, iOS, multiplatform, and s
 via SDKMAN
 
 ```
+sdk update
 sdk install kotlintoolchain
 ```
 
@@ -36,7 +37,7 @@ Install the [Kotlin Toolchain plugin](https://plugins.jetbrains.com/plugin/31850
 
 **File → New → Project → Kotlin**
 
-[Get started](getting-started/) [User Guide](user-guide/) [Examples](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples)
+[Get started](getting-started/) [User Guide](user-guide/) [Examples](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples)
 
 ## Minimal Configuration
 
@@ -79,6 +80,8 @@ dependencies:
   - //shared
 
 settings:
+  android:
+    namespace: com.example.app
   compose: enabled
 ```
 
@@ -124,7 +127,7 @@ settings:
 
 Shared UI across Android, iOS, and desktop with a single codebase.
 
-[See more examples](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples)
+[See more examples](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples)
 
 The Kotlin Toolchain is [Alpha](https://kotlinlang.org/docs/components-stability.html#stability-levels-explained). We'd love your feedback!
 

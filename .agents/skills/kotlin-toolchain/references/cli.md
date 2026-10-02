@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/cli/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/cli/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Kotlin CLI
 
@@ -11,6 +11,7 @@ Install the Kotlin CLI using one of the methods below. After installation, the `
 ### via SDKMAN
 
 ```
+sdk update
 sdk install kotlintoolchain
 ```
 
@@ -57,7 +58,7 @@ Here are the most commonly used commands:
 - `kotlin build` to compile and link all code in the project
 - `kotlin run` to run your application
 - `kotlin test` to run tests in the project
-- `kotlin show (modules|settings|dependencies|tasks|checks|commands)` to introspect the project's configuration
+- `kotlin show (modules|settings|dependencies|checks|commands)` to introspect the project's configuration
 - `kotlin clean` to remove the project's build output and caches
 - `kotlin publish` to publish modules to a repository
 

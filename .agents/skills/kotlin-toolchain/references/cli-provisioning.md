@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/cli/provisioning/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/cli/provisioning/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Wrapper script & provisioning
 
@@ -14,7 +14,7 @@ Of course, the Kotlin CLI application is only downloaded once (per version) and 
 
 ## Project-local version detection
 
-The wrapper script is the source of truth for the version of the Kotlin Toolchain used in your project. A globally installed wrapper (for instance, installed [via SDKMAN or the installer script](../#installation)) doesn't blindly use its own version. When run, it searches the current directory and its ancestors for a project (a directory with a `project.yaml` or `module.yaml` file) containing its own `kotlin` wrapper script. If it finds one, it reads the Kotlin Toolchain version and distribution checksum from that wrapper and uses them instead of its own, so the project is built with the version it declares.
+The wrapper script is the source of truth for the version of the Kotlin Toolchain used in your project. A globally installed Kotlin CLI (for instance, installed [via SDKMAN or the installer script](../#installation)) doesn't blindly use its own version. When run, it searches the current directory and its ancestors for a project (a directory with a `project.yaml` or `module.yaml` file) containing its own `kotlin` wrapper script. If it finds one, it reads the Kotlin Toolchain version and distribution checksum from that wrapper and uses them instead of its own, so the project is built with the version it declares.
 
 ## Concurrency
 

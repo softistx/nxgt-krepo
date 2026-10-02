@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/multiplatform/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/multiplatform/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Multiplatform modules
 
@@ -290,6 +290,7 @@ product: android/app
 
 settings@android:    # settings to be used for Android target platform
   android:           # Android toolchain settings
+    namespace: com.example.app
     compileSdk: 33
   kotlin:        # Kotlin toolchain settings
     languageVersion: 2.3
@@ -302,6 +303,7 @@ product: android/app
 
 settings:
   android:           # Android toolchain settings
+    namespace: com.example.app
     compileSdk: 33
   kotlin:        # Kotlin toolchain settings
     languageVersion: 2.3
