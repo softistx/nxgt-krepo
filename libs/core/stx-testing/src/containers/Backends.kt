@@ -93,10 +93,15 @@ fun rabbitContainer(image: String = RABBITMQ_IMAGE): ContainerService<RabbitMQCo
     )
 
 /**
- * Quay, not Docker Hub: MinIO stopped publishing there, and `minio/minio` no longer pulls at all.
- * The compatible-substitute call below is what lets Testcontainers accept the registry prefix.
+ * Pigsty's build of the upstream MinIO server, pinned. MinIO stopped publishing images: `minio/minio`
+ * no longer pulls at all, and since 2026-10 `quay.io/minio/minio` refuses an anonymous pull with
+ * `unauthorized`. `pgsty/minio` is the same binary built from the same source — same `server /data`,
+ * same `MINIO_ROOT_*` — so the container below needs no change. Pinned to a release rather than
+ * `latest`, because a community rebuild is exactly where an unannounced change would come from.
+ * The compatible-substitute call below is what lets Testcontainers accept a name that is not
+ * `minio/minio`.
  */
-private const val MINIO_IMAGE = "quay.io/minio/minio:latest"
+private const val MINIO_IMAGE = "pgsty/minio:RELEASE.2026-08-04T00-00-00Z"
 
 /**
  * Where an object store is and what opens it — the three together, because two of them are useless
