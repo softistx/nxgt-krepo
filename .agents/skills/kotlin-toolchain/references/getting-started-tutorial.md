@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/getting-started/tutorial/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/getting-started/tutorial/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Tutorial
 
@@ -156,7 +156,7 @@ test-dependencies:
   - io.mockk:mockk:1.13.10
 ```
 
-> **Example: [JVM "Hello, World!"](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/jvm)**
+> **Example: [JVM "Hello, World!"](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/jvm)**
 
 > **Related documentation: [Testing](../../user-guide/testing/)**
 
@@ -231,10 +231,9 @@ Now we have a GUI application!
 
 > **Examples**
 
-- [Compose Desktop](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-desktop)
-- [Compose Android](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-android)
-- [Compose iOS](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-ios)
-- [Compose Multiplatform](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-multiplatform)
+- [Compose Desktop](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/compose-desktop)
+- [Compose Android](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/compose-android)
+- [Compose Multiplatform](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/compose-multiplatform)
 
 > **Related documentation: [Compose Multiplatform](../../user-guide/builtin-tech/compose-multiplatform/)**
 
@@ -338,7 +337,7 @@ fun main() = application {
 
 We now have a multi-module project with some neatly extracted shared code.
 
-> **Example: [Compose Multiplatform](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-multiplatform)**
+> **Example: [Compose Multiplatform](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/compose-multiplatform)**
 
 > **Related documentation**
 
@@ -392,6 +391,8 @@ dependencies:
   - //shared
 
 settings:
+  android:
+    namespace: com.example.app
   compose:
     enabled: true
 ```
@@ -466,7 +467,7 @@ fun ViewController() = ComposeUIViewController {
 }
 ```
 
-And the last step, copy the [AndroidManifest.xml file from an example project](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-multiplatform/android-app/src/AndroidManifest.xml) into `android-app/src` folder, and the [iosApp.swift file](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-multiplatform/ios-app/src/iosApp.swift) into the `ios-app/src`. These files bind the Compose UI code with the native application entry points.
+And the last step, copy the [AndroidManifest.xml file from an example project](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/compose-multiplatform/android-app/src/AndroidManifest.xml) into `android-app/src` folder, and the [iosApp.swift file](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/compose-multiplatform/ios-app/src/iosApp.swift) into the `ios-app/src`. These files bind the Compose UI code with the native application entry points.
 
 Make sure that your project structure looks like this: 
 
@@ -502,7 +503,7 @@ Now you can build and run both apps using the corresponding IntelliJ IDEA run co
 
 After the first build, the Xcode project will appear beside the `module.yaml` in the `ios-app` module. It can be checked into the VCS and customized (e.g. *Team* (`DEVELOPMENT\_TEAM`) setting). See the [iOS application](../../user-guide/product-types/ios-app/) section to learn more about the Xcode ↔ the Kotlin Toolchain interoperability.
 
-> **Example: [Compose Multiplatform](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-multiplatform)**
+> **Example: [Compose Multiplatform](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/compose-multiplatform)**
 
 > **Related documentation**
 
@@ -588,6 +589,10 @@ product: android/app
 apply:
   - //compose.module-template.yaml
   - //app.module-template.yaml
+
+settings:
+  android:
+    namespace: com.example.app
 ```
 
 ios-app/module.yaml
@@ -606,6 +611,6 @@ You can put all common dependencies and settings into the template. It's also po
 
 ## Further steps
 
-Check the [user guide](../../user-guide/) and explore [example projects](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples).
+Check the [user guide](../../user-guide/) and explore [example projects](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples).
 
 1. Since the Kotlin Toolchain is moving fast, it's best to use the latest [IntelliJ IDEA EAP](https://www.jetbrains.com/idea/nextversion/) version. The best way to get the most recent IDE versions is by using the [- Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.               Toolbox App](https://www.jetbrains.com/lp/toolbox/). Also, don't forget to install the [Kotlin Toolchain plugin](https://plugins.jetbrains.com/plugin/31850-kotlin-toolchain). ↩

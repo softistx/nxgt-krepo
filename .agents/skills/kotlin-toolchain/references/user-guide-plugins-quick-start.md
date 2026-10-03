@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/plugins/quick-start/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/plugins/quick-start/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Quick start
 
@@ -427,7 +427,7 @@ See the dedicated documentation [section](../topics/tasks/#consuming-things-from
 
 > **Tip**
 
-There are plugins that we ourselves have implemented and are already [using in the Kotlin Toolchain](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/build-sources). Feel free to take a look!
+There are plugins that we ourselves have implemented and are already [using in the Kotlin Toolchain](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/build-sources). Feel free to take a look!
 
 - Protobuf
 - Binary Compatibility Validator

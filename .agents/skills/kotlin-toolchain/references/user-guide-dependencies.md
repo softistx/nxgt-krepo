@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/dependencies/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/dependencies/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Dependencies
 
@@ -417,6 +417,114 @@ dependencies:
   - bom: io.ktor:ktor-bom:3.2.0
   - $libs.ktor.client.core
 ```
+
+## SwiftPM dependencies
+
+[Multiplatform modules](../multiplatform/) with Apple platforms can import Objective-C APIs from Objective-C and Swift code using SwiftPM dependencies:
+
+```yaml
+product: ios/app
+
+dependencies:
+  - swiftPackage:
+      repository: "https://github.com/firebase/firebase-ios-sdk.git"
+      version: "12.17.0"
+      products: [ "FirebaseAnalytics" ]
+```
+
+The list of products available in the package can often be found in the Package documentation or in the [Package.swift file](https://github.com/firebase/firebase-ios-sdk/blob/33a468adfdb75b53f05a37e7c886ca7c962b5c17/Package.swift#L43).
+
+SwiftPM integration is based on importing Clang modules using [native interop](../advanced/native-interop/). The import mechanism automatically discovers Clang modules in specified Swift packages and makes all available modules accessible to Kotlin code — similar to how API visibility works in Swift and Objective-C.
+
+Imported Objective-C APIs are contained in namespaces that start with the `swiftPMImport` prefix and end with the module name:
+
+```kotlin
+// app/src/app.kt
+import swiftPMImport.app.FIRAnalytics
+import swiftPMImport.app.FIRApp
+```
+
+### Set platform constraints
+
+Some SwiftPM dependencies may not compile or provide valid APIs for all Apple platforms in your module. For example, the Google Maps SDK currently only supports iOS targets. In this case add the SwiftPM dependency to a specific `dependencies` block:
+
+```yaml
+product:
+  type: kmp/lib
+  platforms: [iosSimulatorArm64, iosArm64, macosArm64]
+
+dependencies@ios:
+  - swiftPackage:
+      repository: "https://github.com/googlemaps/ios-maps-sdk.git"
+      version: "10.6.0"
+      products: [ "GoogleMaps" ]
+```
+
+The shorthand notation for the version means a [strict version](https://docs.swift.org/swiftpm/documentation/packagedescription/package/dependency/package(url:exact:)/#discussion) of dependency will apply. Other types of dependencies can be specified using the `type` property: 
+
+```
+  - swiftPackage:
+      repository: "https://github.com/googlemaps/ios-maps-sdk.git"
+      version:
+        value: "10.6.0" # or branch_foo / revision_sha
+        type: from # or branch / revision
+```
+
+### Importing local Swift packages
+
+The SwiftPM import mechanism also allows importing Swift packages from the local file system.
+
+```yaml
+product: ios/app
+
+dependencies:
+  - localSwiftPackage:
+      path: /path/to/CryptoKitWrapper
+      products: [ "CryptoKitWrapper" ]
+```
+
+Such packages can be useful to wrap APIs only accessible in Swift:
+
+```kotlin
+// /path/to/CryptoKitWrapper/Sources/CryptoKitWrapper/CryptoKitWrapper.swift
+// CryptoKit is a system library with Swift APIs that are not accessible to Objective-C
+import CryptoKit
+import Foundation
+
+@objc public class CryptoKitWrapper: NSObject {
+    @objc public static func sha256(data: NSData) -> NSString {
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() as NSString
+    }
+}
+```
+
+and called in Kotlin/Native code:
+
+```kotlin
+// src@apple/sha256.kt
+import kotlinx.cinterop.ExperimentalForeignApi
+import platform.Foundation.NSString
+import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.dataUsingEncoding
+import swiftPMImport.lib.CryptoKitWrapper
+
+fun sha256(value: String): String {
+    @OptIn(ExperimentalForeignApi::class)
+    return CryptoKitWrapper.sha256WithData(
+        (value as NSString).dataUsingEncoding(NSUTF8StringEncoding)!!
+    )
+}
+```
+
+### Publishing libraries with SwiftPM dependencies
+
+When a [published library](../publishing/) declares SwiftPM dependencies, they are published alongside its artifacts so that consumers of the library know which Swift packages they have to fetch and link. Nothing needs to be configured for this: the SwiftPM dependencies of the library are described in an additional `-swiftpm-metadata.json` artifact, in the same format as the one published by the Kotlin Gradle Plugin.
+
+Only the SwiftPM dependencies declared by the library itself are published. The ones declared by their own dependencies are published by those dependencies and are collected by walking the whole dependency graph.
+
+> **Libraries depending on local Swift packages can only be published to the local Maven repository**
+
+Local Swift packages are published as the absolute path they had on the publishing machine, so only consumers building on that same machine could resolve them reliably. This is why a library that depends on local Swift packages can only be published to the local Maven repository (`mavenLocal`), which is machine-local as well. Publishing it to any other repository fails with an error, so use remote packages in libraries that you share with others.
 
 1. If you're not familiar with Maven coordinates, check out Maven's [POM reference ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.](https://maven.apache.org/pom.html#Maven_Coordinates). ↩
 2. If you're not familiar with Maven repositories, check out Maven's [Introduction to repositories ! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.](https://maven.apache.org/guides/introduction/introduction-to-repositories.html). ↩

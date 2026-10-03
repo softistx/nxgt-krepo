@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/product-types/android-app/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/product-types/android-app/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Android application
 
@@ -49,15 +49,25 @@ The application's entry point is specified in the `AndroidManifest.xml` file acc
 src/AndroidManifest.xml
 
 ```
-<manifest ... >
-  <application ... >
-    <activity android:name="com.example.myapp.MainActivity" ... >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <activity android:name="com.example.myapp.MainActivity" android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
     </activity>
   </application>
 </manifest>
 ```
 
-You can run your application using the `./kotlin run` command.
+## Running your application
+
+You can run your application using the `kotlin run` command.
+
+It installs and starts the application on a connected device or emulator, starting a new emulator if necessary.
+
+There are no prerequisites for this. All the required tools, including the Android SDK, will be provisioned if not present (you will need to accept licenses).
 
 **Run in IntelliJ IDEA**
 
@@ -67,7 +77,23 @@ IntelliJ IDEA with the Kotlin Toolchain plugin automatically detects the `androi
 
 You can use the `build` command to create an APK, or the `package` command to create an Android Application Bundle (AAB).
 
-The `package` command will not only build the AAB, but also minify/obfuscate it with R8, and sign it. See the dedicated signing and code shrinking sections below to learn how to configure this.
+The `package` command will not only build the AAB, but also minify/obfuscate it with R8, and sign it when signing is enabled. See the dedicated signing and code shrinking sections below to learn how to configure this.
+
+For example, build an AAB for the `android-app` module with:
+
+```bash
+kotlin package -m android-app
+```
+
+For an `android/app` module, the Android platform, AAB format, and release variant are selected automatically. The command prints the path to the generated AAB. For a module named `android-app`, the default path, relative to the project root, is:
+
+```
+build/tasks/_android-app_bundleAndroid/gradle-project-release.aab
+```
+
+> **Note**
+
+This path is temporary: the build artifact layout will be revised in a future release. Use the path printed by the command to locate your bundle.
 
 ### Resolving duplicate Java resources
 
@@ -91,6 +117,30 @@ Choose the rule that matches the resource's semantics:
 
 The values are glob patterns accepted by Android's [`Packaging.Resources`](https://developer.android.com/reference/tools/gradle-api/com/android/build/api/dsl/Resources) API. See the [`resourcePackaging` reference](../../../reference/module/#settingsandroidresourcepackaging) for all available options.
 
+### Filtering native library ABIs
+
+An Android package may carry pre-compiled native libraries (`.so` files) grouped by [ABI](https://developer.android.com/ndk/guides/abis)s, and by default it carries every ABI it can find.
+
+Native libraries come from two sources: the module's own `jniLibs` directory, and those dependencies of the module that contain native libraries, each bringing the ABIs it was built for. Most dependencies contain none at all, but the ones that do could have different ABIs coverage.
+
+This matters because Android picks a single ABI per installation: it takes the first entry of the device's supported ABI list that is present in the package, and then only that one `lib/<abi>/` directory is used. If an ABI doesn't carry every mandatory native library that the other ABIs carry, the app might fail at runtime with `UnsatisfiedLinkError` on every device that selects it.
+
+The Kotlin Toolchain **warns** when it packages ABIs with inconsistent native libraries, reporting which ABI is missing which library.
+
+Use `settings.android.abiFilters` to package only the ABIs that all of your native libraries support:
+
+```yaml
+settings:
+  android:
+    abiFilters: [ arm64-v8a, x86_64 ]
+```
+
+Only the listed ABIs are packaged; any other `lib/<abi>/` directory is dropped. Narrowing the list to ABIs whose native libraries are all present makes the package consistent, which silences the warning.
+
+Sometimes an ABI is incomplete on purpose because the missing library is optional: your code guards the call to `System.loadLibrary` and degrades gracefully when it isn't there. Only you can know that, which is why this is reported as a warning rather than an error.
+
+The check runs whether or not you selected the ABIs yourself, since selecting them says nothing about the consistency of the libraries behind them: a dependency you add later can make a previously fine selection incomplete.
+
 ### Code shrinking
 
 When creating a release build with the Kotlin Toolchain, R8 will be used automatically, with minification and shrinking enabled. This is equivalent to the following Gradle configuration:
@@ -113,11 +163,13 @@ You can create a `proguard-rules.pro` file in the module folder to add custom ru
 
 It is automatically used by the Kotlin Toolchain if present.
 
-An example of how to add custom R8 rules can be found [in the android-app module](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/compose-multiplatform/android-app/proguard-rules.pro) of the `compose-multiplatform` example project.
+An example of how to add custom R8 rules can be found [in the android-app module](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/compose-multiplatform/android-app/proguard-rules.pro) of the `compose-multiplatform` example project.
 
-### Signing
+## Signing
 
-In a module containing an Android application (using the `android/app` product type) you can enable signing under settings:
+Enable signing in `android-app/module.yaml` to sign the release AAB during `kotlin package -m android-app`:
+
+android-app/module.yaml
 
 ```yaml
 settings:
@@ -125,30 +177,85 @@ settings:
     signing: enabled
 ```
 
-This will use a `keystore.properties` file located in the module folder for the signing details by default. This properties file must contain the following signing details. **Remember that these details should usually not be added to version control.**
+Create `android-app/keystore.properties` next to `android-app/module.yaml`:
 
 ```
-storeFile=/Users/example/.keystores/release.keystore
-storePassword=store_password
+android-app/
+├─ module.yaml
+╰─ keystore.properties  # create this file
+```
+
+Add the signing details to that file. Set `storeFile` to the name of the keystore to create in the same module directory:
+
+android-app/keystore.properties
+
+```
+storeFile=release.keystore
+storePassword=REPLACE_WITH_STRONG_STORE_PASSWORD
 keyAlias=alias
-keyPassword=key_password
+keyPassword=REPLACE_WITH_STRONG_KEY_PASSWORD
 ```
 
-To customize the path to this file, you can use the `propertiesFile` option:
+Replace both password placeholders with your own strong passwords before generating the keystore.
 
-```yaml
-settings:
-  android:
-    signing:
-      enabled: true
-      propertiesFile: ./keystore.properties # default value
+From the `android-app` directory, generate the keystore using the values in `keystore.properties`:
+
+```bash
+kotlin tool generate-keystore --properties-file keystore.properties
 ```
 
-You can use `./kotlin tool generate-keystore` to generate a new keystore if you don't have one yet. This will create a new self-signed certificate, using the details in the `keystore.properties` file.
+The tool creates `android-app/release.keystore`; do not create it beforehand. When you build the AAB, the signing configuration reads `android-app/keystore.properties` and uses `android-app/release.keystore` to sign the bundle. A relative `storeFile` path is resolved from the module directory, so run `generate-keystore` from there as shown above.
+
+> **Keep the signing files secure**
+
+Add `release.keystore` and `keystore.properties` to your Git ignore rules. Never commit either file to version control. Back up both files in a secure location. Losing the upload key requires an upload-key reset in Google Play Console.
 
 > **Note**
 
 You can also pass in these details to `generate-keystore` as command line arguments. Invoke the tool with `--help` to learn more.
+
+## Publishing
+
+Publish an `android/app` module to Google Play as a signed Android App Bundle (AAB). You need a Google Play Console developer account.
+
+### Configure the application
+
+Set a unique application ID and an initial version in `android-app/module.yaml`:
+
+android-app/module.yaml
+
+```yaml
+product: android/app
+
+settings:
+  android:
+    applicationId: com.example.myapp
+    versionCode: 1
+    versionName: "1.0"
+```
+
+The `applicationId` uniquely identifies the application in Google Play and cannot be changed after you upload the first artifact.
+
+Before uploading the application:
+
+1. Prepare signing: create `android-app/keystore.properties` and generate the upload key in `android-app/release.keystore`.
+2. Package the application with `kotlin package -m android-app`. This produces a signed release AAB and prints its path. Use that AAB for the upload.
+
+### Upload the bundle
+
+If you haven't created the application yet, open [Google Play Console](https://play.google.com/console/) and select **Create app** to set it up before uploading your first bundle.
+
+Open the application in Google Play Console, go to **Test and release**, and select the appropriate testing or production track. Create a release and upload the generated `.aab` file.
+
+Google Play validates and processes the bundle before making the release available to testers or users.
+
+> **For future uploads**
+
+Increase `versionCode` in `android-app/module.yaml` before every new upload: Google Play rejects bundles with a previously used version code. Update the user-facing `versionName` when publishing a new application version.
+
+### Build from IntelliJ IDEA or Android Studio
+
+Generating a signed bundle from **Build | Generate Signed App Bundle or APK** is not supported for Kotlin Toolchain projects yet. Use the Kotlin CLI to create the AAB.
 
 ## Parcelize
 

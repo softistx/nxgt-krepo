@@ -507,7 +507,17 @@ Inspecting the resolved project model — cheap, and it catches manifest errors 
 
 ### Toolchain wrapper
 
-`./kotlin` and `kotlin.bat` are committed wrappers pinning the toolchain to the `kotlin_cli_version` at the top of the script (0.12.2). **Use `./kotlin <command>`, not a bare `kotlin`**, so everyone builds with the same version regardless of what is on `PATH`. Regenerate with `kotlin update -c` (add `--target-version=<v>` to move the pin).
+`./kotlin` and `kotlin.bat` are committed wrappers pinning the toolchain to the `kotlin_cli_version` at the top of the script (0.13.0). **Use `./kotlin <command>`, not a bare `kotlin`**, so everyone builds with the same version regardless of what is on `PATH`. Regenerate with `kotlin update -c` (add `--target-version=<v>` to move the pin).
+
+**On macOS, `./kotlin build` needs the full Xcode selected, not the Command Line Tools.**
+`stx-material` declares two Apple targets, and on a Mac whose `xcode-select -p` answers
+`/Library/Developer/CommandLineTools` the build fails even with `Xcode.app` installed. Measured on
+both versions: 0.12.2 compiled the iOS klibs and then failed linking the iOS test binary, on
+`xcrun: unable to find utility "xcodebuild"`; 0.13.0 checks first and fails in the
+`xcodeEnvironment` task with *"Xcode installation is not detected"*. Either
+`sudo xcode-select --switch /Applications/Xcode.app` once, or prefix the command with
+`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`, which needs no root. A Linux host
+skips the Apple targets in `build`, which is where CI and the release run.
 
 ### Shared code
 
@@ -867,7 +877,7 @@ modules:
   - plugins/*
 ```
 
-Only directories that directly contain a `module.yaml` are matched, so grouping directories — `examples/material-demo`, the role folders under `libs/`, a family such as `libs/api/stx-graphix` — and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported (a weak warning, re-measured on 0.12.2, seen when `libs/*` outlived the last module directly under `libs/`), so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
+Only directories that directly contain a `module.yaml` are matched, so grouping directories — `examples/material-demo`, the role folders under `libs/`, a family such as `libs/api/stx-graphix` — and every `src/`, `test/` and `build/` are ignored. Two ways a glob goes wrong: `**` is rejected — express depth with successive `*` segments, which is why `examples/*` and `examples/*/*` are both listed — and a pattern matching *nothing* is reported (a weak warning, re-measured on 0.13.0, seen when `libs/*` outlived the last module directly under `libs/`), so don't add a line for a directory that doesn't exist yet. There is no nesting: one `project.yaml` defines the project root, it has no include directive, and module dependencies may not cross a project boundary.
 
 **`libs/` is grouped by role, and a role folder is ownership, not a build boundary.** Six folders,
 each with its own line in `.github/CODEOWNERS`:
@@ -929,10 +939,11 @@ The catalog's `[bundles]` groupings map to the intended consumer surfaces of thi
 - **`kotlinx`**, **`faker`** — coroutines/datetime, and kotlin-faker for test data.
 
 **A module that turns on `settings.ktor` pins the version to the catalog's.** `ktor: enabled` gives
-`$ktor.server.core` and the rest from the toolchain's *own* default version, which is 3.5.2 today
-and matches `ktor = "3.5.2"` in the catalog by coincidence rather than by construction — a toolchain
-upgrade would move one and not the other, and an artifact this repo names itself (`ktor-server-di`,
-on `version.ref = "ktor"`) would then be a different Ktor from `ktor-server-core`. So:
+`$ktor.server.core` and the rest from the toolchain's *own* default version, which matched
+`ktor = "3.5.2"` in the catalog on 0.12.x by coincidence rather than by construction. Toolchain
+0.13.0 moved the default to 3.6.0 and the catalog stayed — exactly the upgrade this rule was written
+for: without the pin, an artifact this repo names itself (`ktor-server-di`, on
+`version.ref = "ktor"`) would now be a different Ktor from `ktor-server-core`. So:
 
 ```yaml
 settings:
@@ -945,7 +956,9 @@ settings:
 `# default` when the toolchain is choosing. Sixteen modules enable it — `stx-ktor`, every `*-ktor`
 integration beside its library, and the four Ktor examples — and every one of them carries the pin.
 
-The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.10 with CLI 0.12.2), so that entry does not control what this repo compiles with.
+The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.20 with CLI 0.13.0), so that entry does not control what this repo compiles with — nor what it publishes: every POM declares `kotlin-stdlib` at the toolchain's version, so a toolchain bump that moves the compiler moves that line in every family's next release. Spring Boot is the same — `springBoot: enabled` without a `version` imports the toolchain's default `spring-boot-dependencies` BOM into the POM (4.1.1 on 0.13.0, 4.1.0 on 0.12.2).
+
+A compiler plugin is tied to the compiler, and a bump can break it where no source changed. 0.13.0's Kotlin 2.4.20 failed `server/oauth` inside the Koin compiler plugin 1.1.0 — an `IrGenerationExtensionException` on a removed `getValueArgument` overload, preceded by Koin's own warning that 2.4.20 is newer than it was tested on. `koin-compiler = "1.2.1"` compiles it. Read that warning as the failure's first line, not as noise.
 
 ## Coroutine-first Kotlin
 

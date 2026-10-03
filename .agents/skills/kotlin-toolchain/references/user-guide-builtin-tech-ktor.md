@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/builtin-tech/ktor/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/builtin-tech/ktor/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # - Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.              Ktor
 
@@ -19,7 +19,7 @@ Setting `ktor: enabled` performs the following actions:
 
 Examples of Ktor projects:
 
-- [ktor-simplest-sample](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.12/examples/ktor-simplest-sample)
+- [ktor-simplest-sample](https://github.com/JetBrains/kotlin-toolchain/tree/release/0.13/examples/ktor-simplest-sample)
 
 You can also customize the version of the Ktor libraries using the full form of the configuration: 
 

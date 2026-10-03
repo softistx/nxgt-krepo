@@ -15,15 +15,21 @@ Compose Multiplatform moves faster than memory does.
 
 ## What this repo verified against the CLI
 
-Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64, and re-checked on **0.12.2**, where
-the findings below still hold. Re-check after a toolchain bump.
+Measured on toolchain 0.12.0, Compose 1.11.1, on Linux x86_64, re-checked on 0.12.2, and the
+version facts below re-measured on **0.13.0**. Re-check after a toolchain bump.
 
-**The toolchain's default Compose version is 1.11.1, and this repo does not use it.**
+**This repo pins Compose and does not follow the toolchain's default.**
 `libs/ui/stx-material` and the `examples/material-demo` modules pin `settings.compose.version:
-1.12.0` — *ahead* of the default, not equal to it, because the library is built against the 1.12
-expressive APIs. Measured on a throwaway project that sets no version: 1.11.1 on 0.12.0 and 1.11.1
-on 0.12.2. So **raising the toolchain does not raise Compose here**, and a comment in
-`stx-material`'s manifest saying the pin tracked the 0.12.0 default was wrong — it never did.
+1.12.0`. The default was 1.11.1 on 0.12.0 and 0.12.2, so the pin sat *ahead* of it for the 1.12
+expressive APIs; on 0.13.0 the default is **1.12.1**, now one patch *ahead of the pin*. Measured
+with `kotlin show settings` on a module that sets no version. So **raising the toolchain does not
+move Compose here** in either direction — moving the pin is a change to what `stx-material`
+publishes, made on its own and with its own changeset.
+
+- **A Mac builds the Apple targets only with the full Xcode selected.** With `xcode-select -p` on
+  the Command Line Tools, `./kotlin build` fails — on 0.13.0 up front in `xcodeEnvironment`, on
+  0.12.2 later while linking the iOS test binary. `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`
+  fixes it per command; AGENTS.md's *Toolchain wrapper* has both errors.
 
 - **`iosX64` is not a valid platform for a Compose library.** The Compose artifacts publish for
   `[android, iosArm64, iosSimulatorArm64, js, jvm, macosArm64, wasmJs]` and nothing else, so
@@ -65,9 +71,9 @@ on 0.12.2. So **raising the toolchain does not raise Compose here**, and a comme
   `compose.enabled`, which is misleading when Compose is already on: it means the key is not in
   the catalog. Check the list above before chasing the setting.
 - **`$compose.material3` resolves to its own version line, and to a different artifact per
-  platform** — `org.jetbrains.compose…material3-desktop:1.11.0-alpha07` on jvm,
-  `androidx.compose.material3:material3-android:1.5.0-alpha17` on android, while `foundation` and
-  `ui` are `1.11.1`. It being an alpha is what `settings.compose.version` gives, not a mistake to
+  platform** — `org.jetbrains.compose.material3:material3-desktop:1.12.0-alpha03` on jvm,
+  `androidx.compose.material3:material3-android:1.5.0-alpha22` on android, while `foundation` and
+  `ui` are `1.12.0` (the pin). It being an alpha is what `settings.compose.version` gives, not a mistake to
   correct. Check an API against *both* artifacts before using it in common code;
   `dynamicLightColorScheme(Context)` is android-only and belongs behind `expect`/`actual`. The
   `material3-compose` skill has the real surface.

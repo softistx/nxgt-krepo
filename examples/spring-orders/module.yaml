@@ -100,7 +100,7 @@ plugins:
         interfaceSuffix: Service
 
 settings:
-  # Applies the Spring Boot BOM (4.1.0), all-open with the `spring` preset — so `@Configuration`
+  # Applies the Spring Boot BOM (4.1.1), all-open with the `spring` preset — so `@Configuration`
   # and `@Component` classes need not be written `open` — and `-java-parameters`.
   springBoot: enabled
   kotlin:

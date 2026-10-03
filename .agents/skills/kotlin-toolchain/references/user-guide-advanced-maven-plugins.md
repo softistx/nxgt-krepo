@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/advanced/maven-plugins/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/advanced/maven-plugins/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # Maven plugins
 
@@ -103,11 +103,14 @@ mavenPlugins:
   maven-checkstyle-plugin.checkstyle:
     enabled: true
     dependencies:
+      # can also be a catalog references like $libs.nohttp.checkstyle
       - io.spring.nohttp:nohttp-checkstyle:0.0.11
     configuration:
       configLocation: ./nohttp-checkstyle.xml
       includes: "**/*"
 ```
+
+Each dependency can be either Maven coordinates, as above, or a reference to a [library catalog](../../dependencies/#library-catalogs) entry.
 
 # Source generation capability
 

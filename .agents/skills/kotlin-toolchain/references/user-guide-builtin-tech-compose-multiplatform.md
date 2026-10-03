@@ -1,4 +1,4 @@
-<!-- Generated from https://kotlin-toolchain.org/0.12/user-guide/builtin-tech/compose-multiplatform/ (v0.12) on 2026-08-26. Do not edit; re-run fetch_docs.py. -->
+<!-- Generated from https://kotlin-toolchain.org/0.13/user-guide/builtin-tech/compose-multiplatform/ (v0.13) on 2026-10-01. Do not edit; re-run fetch_docs.py. -->
 
 # - Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.                    Compose Multiplatform
 
@@ -39,6 +39,8 @@ dependencies:
   - $compose.material3
 
 settings:
+  android:
+    namespace: com.example.app
   compose: enabled # (2)!
 ```
 
@@ -116,9 +118,9 @@ Read more about setting up and using compose resources in [the documentation](ht
 
 ### Generated accessors package
 
-By default, resources accessors are generated in the package `<sanitized-name>.generated.resources`, where `<sanitized-name>` is derived from the `group` and `artifactId` of the `settings.publishing` section if they are set, or from the module name otherwise. The name is sanitized by lowercasing it, replacing `-` characters with `\_`, and prefixing it with `\_` if it starts with a digit.
+By default, resources accessors are generated in the package `<sanitized-module-name>.generated.resources`. Names are sanitized by lowercasing them, replacing `-` characters with `\_`, and prefixing them with `\_` if they start with a digit.
 
-In the above example where the module name is `my-kmp-module` (and no publishing settings are set), the package name for the generated resources is therefore `my\_kmp\_module.generated.resources`.
+In the above example, where the module name is `my-kmp-module`, the package name for the generated resources is therefore `my\_kmp\_module.generated.resources`.
 
 You can customize the package name by setting the `settings.compose.resources.packageName` property in your module file:
 
@@ -128,6 +130,36 @@ settings:
     resources:
       packageName: com.example.gen
 ```
+
+> **Modules published to a Maven repository**
+
+Libraries usually declare publication coordinates in the `settings.publishing` section. When a `group` is declared there, it is included in the default package, which becomes `<sanitized-group>.<sanitized-artifact-id>.generated.resources`, where `<sanitized-artifact-id>` defaults to the module name, just like the published coordinates do. This is the naming scheme of the Compose Multiplatform Gradle plugin, so such a module gets the same package as it would in a Gradle build, as long as it keeps the default `artifactId`. Modules without a `group` still differ from Gradle, though: Gradle derives a default group from the root project name and the project path, while the Kotlin Toolchain uses the module name alone.
+
+### Customizing `Res` object name
+
+By default, generated resources accessors are extension of the `<resources-package-name>.Res` object. You can customize the name of this object via the `settings.compose.resources.nameOfResClass` property: 
+
+```yaml
+settings:
+  compose:
+    resources:
+      nameOfResClass: Resources
+```
+
+ Then the resources can be accessed like `Resources.string.hello` instead of `Res.string.hello`.
+
+### Making resource accessors public
+
+Generated `Res` object and the accessors are `internal` by default, so they are only visible in the module that has the resources. If you want to expose your resources to the consumers of your module and make them part of the module's API, you can use `settings.compose.resources.exposedAccessors` property: 
+
+```yaml
+settings:
+  compose:
+    resources:
+      exposedAccessors: true
+```
+
+ This will make the generated accessors and the `Res` class `public`.
 
 ## - Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.          Compose Hot Reload (experimental)
 
@@ -152,10 +184,10 @@ Make sure that:
 
 In this mode, IDEA will recompile and hot-reload your application based on file system changes.
 
-To run your application with Compose Hot Reload from the [command line](../../../cli/), use the `--compose-hot-reload-mode` flag:
+To run your application with Compose Hot Reload from the [command line](../../../cli/), use the `--compose-hot-reload` flag:
 
 ```bash
-./kotlin run --compose-hot-reload-mode
+./kotlin run --compose-hot-reload
 ```
 
 > **No file-system watch**

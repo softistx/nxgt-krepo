@@ -97,11 +97,11 @@ settings:
   compose:
     enabled: true
     # Pinned the way `ktor` is pinned in the modules that enable it, so a toolchain upgrade moves
-    # this line visibly rather than silently. It is *ahead* of the toolchain default rather than
-    # equal to it — measured 1.11.1 on both 0.12.0 and 0.12.2 — because $compose.material3 sits on
-    # its own alpha line and this library is built against the 1.12 expressive APIs. Raising the
-    # toolchain does not raise this; check `kotlin show settings` on a module that sets no version
-    # before assuming the two have met.
+    # this line visibly rather than silently. It was set *ahead* of the toolchain default — 1.11.1
+    # on 0.12.0 and 0.12.2 — because $compose.material3 sits on its own alpha line and this library
+    # is built against the 1.12 expressive APIs. On 0.13.0 the default is 1.12.1, one patch ahead of
+    # this. The two are independent either way: raising the toolchain does not move this line, and
+    # moving it changes what this library publishes, so it gets its own change and changeset.
     version: 1.12.0
   android:
     namespace: com.softistx.material
