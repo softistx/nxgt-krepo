@@ -6,7 +6,11 @@
   "dockerComposeFile": "../compose.yaml",
   "service": "workspace",
   // Explicitly, because every service has a profile: the workspace and the two database setups.
-  "runServices": ["workspace", "jpa-shop-db-init", "spring-orders-db-init"],
+  "runServices": [
+    "workspace",
+    "jpa-shop-db-init",
+    "spring-orders-db-init"
+  ],
   "workspaceFolder": "/workspace",
   "shutdownAction": "stopCompose",
   "customizations": {
