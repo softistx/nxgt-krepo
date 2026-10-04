@@ -127,8 +127,8 @@ cache for the same files.
 ## The databases
 
 `<example>-db-init` runs with the workspace, and before the image in the example's `-prod`
-profile, which `depends_on` it; then it exits. Both scripts are idempotent: a second `up` changes nothing but the password, which is
-set every time so that editing `.env` takes effect.
+profile, which `depends_on` it; then it exits. Both scripts are idempotent: a second `up` changes
+nothing but the password, which is set every time so that editing `.env` takes effect.
 
 - **Postgres** (`postgres-init.sh`, as the superuser): creates the role and the database it owns.
   Nothing is ever dropped. `jpa-shop` then creates its own tables, since it runs with `CREATE_DROP`.
