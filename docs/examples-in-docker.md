@@ -26,16 +26,23 @@ docker compose --profile jpa-shop down
 
 ## What has to be running first
 
-Nothing here starts a database or a proxy. The examples join the external `proxy` network and reach
-the servers there by alias — `postgres`, `mongo1`/`mongo2`, `redis` — so the workspace's own
-compose projects (nxgt-docker's `traefik`, `database/postgres`, `database/mongo`,
-`database/redis`) have to be up. Those servers publish no port on the host, which is also why a
-`./kotlin run` of `jpa-shop` or `spring-orders` from a shell does not reach them: the container is the
-way in.
+Nothing here starts a database or a proxy. The examples join an external Docker network named
+`proxy` and expect to find there, by these aliases:
 
-Every `*.localhost` name resolves to this machine with nothing in `/etc/hosts`. Traefik serves it on
-the `web` entrypoint over plain http, which needs nxgt-docker's `traefik/docker-compose.dev.yaml`
-included — without it `web` redirects everything to `https` and each hostname answers 404.
+| Alias | What | Needed by |
+| --- | --- | --- |
+| `postgres` | PostgreSQL, with a superuser | `jpa-shop` |
+| `mongo1:27017`, `mongo2:27018` | a MongoDB replica set `rs0`, with authentication and a root user | `spring-orders` |
+| `redis` | Redis, no authentication | `workflow-checkout` |
+| — | Traefik, with its Docker provider on `proxy` and a plain-http entrypoint `web` | every server |
+
+`.env` can point each one elsewhere (`POSTGRES_HOST`, `MONGO_SEEDS`, `MONGO_REPLICA_SET`,
+`REDIS_HOST`, and the `TRAEFIK_*` trio). Servers that publish no port on the host are reachable this
+way and no other: a `./kotlin run` of `jpa-shop` or `spring-orders` from a shell does not reach
+them, the container does.
+
+Every `*.localhost` name resolves to this machine with nothing in `/etc/hosts`. The `web` entrypoint
+must serve plain http: one that redirects to `https` leaves every hostname answering 404.
 
 ## Two profiles per example
 
@@ -56,9 +63,15 @@ compile.
   would run, and it is the profile that found the bug below. Nothing restarts it on its own: it runs
 until `docker compose down`.
 
-`compose.yaml` writes each example once: an `x-<example>` block holds its environment, its Traefik
-router and what it depends on, and the two services merge that block with `x-dev` or `x-prod`. A new
-example is one such block and two services.
+`compose.yaml` writes each example once, in one of two shapes, and its two services merge that with
+`x-dev` or `x-prod`:
+
+- a **server** gets an `x-<example>` block: its environment, its Traefik router, what it depends
+  on, and — `demo-api` — its network alias and healthcheck;
+- a **run-once** example gets only an `x-<example>-env` map.
+
+A new example is one of those and two services; one with a database also gets an
+`<example>-db-init` service in both its profiles.
 
 `examples/docker/` holds what the services run: the `Dockerfile` (targets `dev` and `prod`),
 `dev-run.sh`, and the two database scripts. All three are shell rather than the TypeScript of
@@ -100,15 +113,20 @@ set every time so that editing `.env` takes effect.
   the way out.
 
 The administrator's credentials are only ever in the root `.env`, which git ignores, and only the
-`-db-init` services receive them. The values are the ones in nxgt-docker's `database/postgres/.env`
-(`POSTGRES_PASSWORD`) and `database/mongo/.env` (`MONGO_ROOT_USERNAME`, `MONGO_ROOT_PASSWORD`).
+`-db-init` services receive them: the Postgres superuser's password, and the replica set's root
+user and password — whatever the servers were started with.
 
 ## Running the clients
 
 `demo-client` and `demo-spring-client` call `http://demo-api:8080/`, the alias `demo-api` holds on
 `proxy` in either profile. Each client's profile includes demo-api, and the client waits for its
 healthcheck — the port accepting a connection, checked with bash's `/dev/tcp` because the JRE image
-has no curl — so `docker compose --profile demo-client up` is the whole of it. Each client creates
+has no curl. `--exit-code-from` stops demo-api again once the client is done and returns the
+client's exit code; without it, compose stays attached to the server after the client exits.
+
+```bash
+docker compose --profile demo-client up --exit-code-from demo-client
+``` Each client creates
 what it reads, so either runs against a fresh server, in any order.
 
 The clients, like `workflow-checkout`, run once, print what they did, and exit with

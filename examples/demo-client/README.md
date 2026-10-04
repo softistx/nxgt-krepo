@@ -8,11 +8,12 @@ The kotlinx side of the generator: a Ktorfit client generated from
 ./kotlin test -m demo-client
 ```
 
-Or in a container, against `demo-api`'s — start that one first:
+Or in a container, against `demo-api`'s, which its profile brings up and waits for:
 
 ```bash
 cp .env.example .env   # at the repository root, once
-docker compose --profile demo-client up   # or demo-client-prod
+docker compose --profile demo-client up --exit-code-from demo-client
+docker compose --profile demo-client-prod up --exit-code-from demo-client-prod   # the jar in an image
 ```
 
 The `demo-client` profile compiles the mounted checkout, and a restart picks up an edit;

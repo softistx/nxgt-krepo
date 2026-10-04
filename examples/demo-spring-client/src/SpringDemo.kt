@@ -79,8 +79,7 @@ public class SpringDemoClient(
 public fun main(): Unit =
     runBlocking {
         val client = SpringDemoClient(System.getenv("DEMO_API_URL") ?: "http://127.0.0.1:8080/")
-        // Creates what it reads, so it answers against a fresh server in any order — it used to read
-        // category "1" and depend on demo-client having run first.
+        // Creates what it reads, so it answers against a fresh server whatever ran before it.
         val created = client.categories.createCategory(CategoryRequest(name = "books", family = "media"))
         println("created ${created.id} -> ${created.name}")
         println("category: " + client.categories.findCategory(created.id))

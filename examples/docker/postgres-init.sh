@@ -12,8 +12,8 @@ set -eu
 for v in PGHOST PGUSER PGPASSWORD APP_DB_NAME APP_DB_USER APP_DB_PASSWORD; do
     eval "val=\${$v:-}"
     [ -n "$val" ] || { echo "postgres-init: $v is not set — see .env.example at the repository root" >&2; exit 1; }
-    # `${X:?}` in compose refuses only an empty value; the template's placeholder would otherwise
-    # become a real password.
+    # Compose refuses nothing here: it interpolates the whole file whatever the profile, so an unset
+    # credential arrives empty. These two checks are what reject it, and the template's placeholder.
     [ "$val" != CHANGE_ME ] || { echo "postgres-init: $v is still the template's CHANGE_ME" >&2; exit 1; }
 done
 
