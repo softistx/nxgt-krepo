@@ -1,0 +1,28 @@
+# The context of docker/Dockerfile is the repository root. Nothing below is an input to a
+# build: outputs, caches, VCS and editor state — and credentials, which must never reach a layer.
+# A pattern without `**/` matches at the root only, so every credential is written with it: the
+# same list as .gitignore, at any depth.
+**/build
+.git
+**/.idea
+**/.vscode
+.claude
+**/.kotlin
+**/node_modules
+
+**/.env
+**/.env.*
+!**/.env.example
+**/creds.properties
+**/*.creds.properties
+**/creds*.properties
+**/secrets.properties
+**/local.properties
+**/settings.xml
+**/*.settings.xml
+**/*.jks
+**/*.p12
+**/*.keystore
+**/*.pem
+**/*.key
+**/assets

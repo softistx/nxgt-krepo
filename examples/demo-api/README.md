@@ -4,8 +4,19 @@ The server the generator is aimed at: one hand-written Ktor API, and the OpenAPI
 describes it.
 
 ```bash
-./kotlin run -m demo-api        # http://localhost:8080
+./kotlin run -m demo-api        # http://localhost:8084
 ```
+
+Or in the repository's dev container, at <http://demo-api.localhost/failures/typed> — start it with
+`docker compose up -d` at the repository root after `cp .env.example .env`, or open the repository
+in the IDE as a dev container, then from its terminal:
+
+```bash
+./kotlin run -m demo-api
+docker compose --profile demo-api-prod up -d   # or the jar baked into an image, from the host
+```
+
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ## Why a hand-written server
 

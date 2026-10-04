@@ -32,7 +32,10 @@ import io.ktor.server.routing.routing
  * mapped because it is annotated and lives in `domain`, not because this file mentions it.
  */
 fun main() {
-    embeddedServer(Netty, port = 8080, module = Application::shop).start(wait = true)
+    // Each example has a port of its own, so several can run side by side in the dev container and
+    // Traefik routes each hostname to one. PORT overrides it.
+    val port = System.getenv("PORT")?.toInt() ?: 8082
+    embeddedServer(Netty, port = port, module = Application::shop).start(wait = true)
 }
 
 fun Application.shop() {

@@ -2,6 +2,8 @@ package com.softistx.graphix.schema
 
 import com.softistx.graphix.GraphixException
 import java.io.File
+import java.net.JarURLConnection
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.jar.JarFile
@@ -63,6 +65,10 @@ private fun String.scanSchemaDocuments(
                             if (dir.isDirectory()) dir.schemaDocuments(extensions) else emptyList()
                         }
 
+                        "jar" -> {
+                            url.jarSchemaDocuments(extensions)
+                        }
+
                         else -> {
                             emptyList()
                         }
@@ -115,16 +121,35 @@ private fun Path.jarSchemaDocuments(
     extensions: List<String>,
 ): List<SchemaFile> {
     if (!name.endsWith(".jar", ignoreCase = true)) return emptyList()
-    val prefix = "$base/"
-    return JarFile(toFile()).use { file ->
-        file
-            .entries()
-            .asSequence()
-            .filter { !it.isDirectory && it.name.startsWith(prefix) && extensions.any { ext -> it.name.endsWith(ext, ignoreCase = true) } }
-            .map { SchemaFile(it.name.removePrefix(prefix), file.getInputStream(it).reader().readText()) }
-            .toList()
-    }
+    return JarFile(toFile()).use { it.schemaDocuments("$base/", extensions) }
 }
+
+/**
+ * A directory inside a jar that only the class loader can name. The case that needs it is a Spring
+ * Boot executable jar — what `./kotlin package -f executable-jar` writes: `java.class.path` holds
+ * the outer jar alone, whose entries all start `BOOT-INF/`, and the schema is reachable only as
+ * `jar:nested:…/BOOT-INF/classes/!/graphql/`. Without this the application starts with no schema
+ * documents and falls back to building one from its types. The class loader resolves a directory
+ * inside a jar through the jar's directory entry, so a jar written without directory entries is
+ * still not found this way; an executable jar has them.
+ */
+private fun URL.jarSchemaDocuments(extensions: List<String>): List<SchemaFile> {
+    val connection = openConnection() as? JarURLConnection ?: return emptyList()
+    // An uncached connection hands out a JarFile of its own, which is then ours to close.
+    connection.useCaches = false
+    val entry = connection.entryName ?: return emptyList()
+    return connection.jarFile.use { it.schemaDocuments(entry.removeSuffix("/") + "/", extensions) }
+}
+
+private fun JarFile.schemaDocuments(
+    prefix: String,
+    extensions: List<String>,
+): List<SchemaFile> =
+    entries()
+        .asSequence()
+        .filter { !it.isDirectory && it.name.startsWith(prefix) && extensions.any { ext -> it.name.endsWith(ext, ignoreCase = true) } }
+        .map { SchemaFile(it.name.removePrefix(prefix), getInputStream(it).reader().readText()) }
+        .toList()
 
 private fun classpathEntries(): List<Path> =
     System

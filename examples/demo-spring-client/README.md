@@ -7,6 +7,23 @@ as `@HttpExchange` interfaces over `WebClient`, bound by Jackson 3.
 ./kotlin test -m demo-spring-client
 ```
 
+Or in the repository's dev container, against a `demo-api` started beside it — start it with `docker compose up -d` at the
+repository root after `cp .env.example .env`, or open the repository in the IDE as a dev container,
+then from its terminal:
+
+```bash
+./kotlin run -m demo-api &
+./kotlin run -m demo-spring-client
+```
+
+Or the jar baked into an image, from the host:
+
+```bash
+docker compose --profile demo-spring-client-prod up --exit-code-from demo-spring-client-prod
+```
+
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
+
 ## Two documents, one module
 
 This is the case the plugin's `specs` list exists for. A client of more than one upstream API used

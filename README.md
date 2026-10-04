@@ -127,6 +127,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 | [`libs/data/stx-jpa/stx-jpa-spring/README.md`](libs/data/stx-jpa/stx-jpa-spring/README.md) | The Spring auto-configuration — why `packages` is required, and why the schema is somebody else's job |
 | [`docs/jpa-criteria.md`](docs/jpa-criteria.md) | What a stx-jpa query may say — operators, joins, fetch joins, entity graphs, projections, and the two escapes |
 | [`docs/jpa-mapping.md`](docs/jpa-mapping.md) | What a stx-jpa entity may say — the database, column names, identifiers, `Instant`/`Uuid`, JSON columns, validation |
+| [`docs/examples-in-docker.md`](docs/examples-in-docker.md) | Running an example in a container from the root `compose.yaml` — the dev container and a `-prod` profile per example, the databases it expects and what it measured |
 | [`docs/graphix.md`](docs/graphix.md) | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, SDL scan, HTTP/SSE/graphql-ws |
 | [`libs/api/stx-graphix/stx-graphix/README.md`](libs/api/stx-graphix/stx-graphix/README.md) | The GraphQL engine — why SerialDescriptor and not Jackson, why there is no class scan in core |
 | [`libs/api/stx-graphix/stx-graphix-ktor/README.md`](libs/api/stx-graphix/stx-graphix-ktor/README.md) | The Ktor plugin — path, `instance` vs `schema { }`, the call on every operation, and the engine it registers with the container |

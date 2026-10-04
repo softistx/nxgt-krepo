@@ -15,7 +15,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration.Companion.milliseconds
 
-private const val URI = "redis://localhost:6379/15"
+/** `REDIS_URI` when set — the root `compose.yaml` points it at the workspace's Redis on `proxy`. */
+private val URI = System.getenv("REDIS_URI") ?: "redis://localhost:6379/15"
 
 /**
  * Three checkouts against a real Redis: one that works, one that has to be undone, and one whose
@@ -25,15 +26,16 @@ private const val URI = "redis://localhost:6379/15"
  * ./kotlin run -m workflow-checkout
  * ```
  *
- * It needs a Redis on `localhost:6379` — the workspace's own will do — and it writes to database 15
- * under its own namespace, which it deletes on the way out.
+ * It needs a Redis on `localhost:6379`, or wherever `REDIS_URI` says — the workspace's own will do,
+ * and a `./kotlin run` in the repository's dev container reaches it — and it
+ * writes to database 15 under its own namespace, which it deletes on the way out.
  */
 fun main() =
     runBlocking {
         val redis =
             runCatching { Redis.connect(RedisConfig(URI, namespace = "checkout-demo")).also { it.ping() } }
                 .getOrElse {
-                    println("This example needs a Redis on localhost:6379 — none answered ($URI).")
+                    println("This example needs a Redis — none answered at $URI.")
                     return@runBlocking
                 }
 

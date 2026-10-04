@@ -8,7 +8,23 @@ and a run that outlives the process that started it.
 ./kotlin run -m workflow-checkout
 ```
 
-It needs a Redis on `localhost:6379` — the workspace's own will do. It writes to **database 15**
+Or in the repository's dev container, on the workspace's Redis — `REDIS_URI` is what points it there — start it with `docker compose up -d` at the
+repository root after `cp .env.example .env`, or open the repository in the IDE as a dev container,
+then from its terminal:
+
+```bash
+./kotlin run -m workflow-checkout
+```
+
+Or the jar baked into an image, from the host:
+
+```bash
+docker compose --profile workflow-checkout-prod up --exit-code-from workflow-checkout-prod
+```
+
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
+
+It needs a Redis on `localhost:6379`, or at `REDIS_URI` — the workspace's own will do. It writes to **database 15**
 under its own namespace and deletes that namespace on the way out.
 
 There is no HTTP in here, though there could be — `install(Workflows)` in `stx-ktor` and

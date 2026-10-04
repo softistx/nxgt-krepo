@@ -186,6 +186,12 @@ Schema **documents** are the other scan, and it is the Spring GraphQL one: `clas
 every `.graphqls` / `.gqls` file, merged. Present files are the schema; annotated functions
 are the DataFetchers. No files, the `@Serializable` types stay the schema.
 
+The scan asks the class loader as well as `java.class.path`, which is what finds the documents in a
+Spring Boot executable jar (`./kotlin package -f executable-jar`): there the classpath names only
+the outer jar, and `BOOT-INF/classes/graphql/` is reachable through the loader alone. Until 0.2.2 it
+was not, and such an application quietly fell back to its types — failing on the first `union`.
+`docs/graphix.md` (*Schema documents*) has the location syntax.
+
 Custom scalars and field directives are declared on the builder (`scalar { }`,
 `fieldDirective { }`). The lambdas see the operation `GraphQLContext`. Spring collects
 `GraphQLScalarType`, `GraphixDirective`, `GraphixCustomizer`, `GraphixInterceptor` and

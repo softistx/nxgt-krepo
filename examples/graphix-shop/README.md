@@ -6,7 +6,7 @@ A shop catalogue over GraphQL — the smallest thing that shows `stx-graphix-kto
 ./kotlin run -m graphix-shop
 ```
 
-Then open <http://localhost:8080/sandbox> — `sandbox = true` on the plugin serves the Apollo
+Then open <http://localhost:8081/sandbox> — `sandbox = true` on the plugin serves the Apollo
 Sandbox there, and it finds `/graphql` on its own from the page's origin. Or by hand:
 
 ```
@@ -22,6 +22,17 @@ POST /graphql
 
 The subscription is `text/event-stream` on the same path (`subscriptions = Sse`, the default).
 `subscriptions = GraphqlWs` serves `graphql-ws` on that path instead.
+
+Or in the repository's dev container, at <http://graphix-shop.localhost/sandbox> — start it with
+`docker compose up -d` at the repository root after `cp .env.example .env`, or open the repository
+in the IDE as a dev container, then from its terminal:
+
+```bash
+./kotlin run -m graphix-shop
+docker compose --profile graphix-shop-prod up -d   # or the jar baked into an image, from the host
+```
+
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 The GraphQL schema is the files under `resources/graphql/` (`schema.graphqls`, `product.graphqls`,
 `review.graphqls`, `search.graphqls`), merged the way Spring GraphQL merges a split document.

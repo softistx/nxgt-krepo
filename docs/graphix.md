@@ -1027,6 +1027,11 @@ meaning: the built-in of that name is dropped rather than colliding with it.
 
 No files found: the annotated `@Serializable` types remain the schema, as before.
 
+A `classpath:` location is found wherever the class loader can see it: a directory, a jar, and a
+jar nested in another — the `BOOT-INF/classes/` of a Spring Boot executable jar, which is what
+`./kotlin package -f executable-jar` writes. Until 0.2.2 the nested case found nothing, and an
+application packaged that way silently fell back to its types.
+
 Ktor: `schemaLocations` / `schemaFileExtensions` on `install(GraphQL)`. Spring:
 `stx.graphix.schema-locations` and `stx.graphix.schema-file-extensions`. Core:
 

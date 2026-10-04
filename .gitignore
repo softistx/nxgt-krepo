@@ -25,6 +25,8 @@ settings.xml
 *.settings.xml
 .env
 .env.*
+# The templates beside them are documentation, and committed.
+!.env.example
 *.jks
 *.p12
 *.keystore

@@ -8,6 +8,23 @@ The kotlinx side of the generator: a Ktorfit client generated from
 ./kotlin test -m demo-client
 ```
 
+Or in the repository's dev container, against a `demo-api` started beside it — start it with `docker compose up -d` at the
+repository root after `cp .env.example .env`, or open the repository in the IDE as a dev container,
+then from its terminal:
+
+```bash
+./kotlin run -m demo-api &
+./kotlin run -m demo-client
+```
+
+Or the jar baked into an image, from the host:
+
+```bash
+docker compose --profile demo-client-prod up --exit-code-from demo-client-prod
+```
+
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
+
 ## What it is for
 
 Nothing here is written by hand except `src/DemoClient.kt`, which calls a few operations so the
