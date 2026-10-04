@@ -9,6 +9,7 @@
 set -eu
 
 [ -n "${MODULE:-}" ] || { echo "dev-run: MODULE is not set; the compose.yaml names it" >&2; exit 1; }
+# The toolchain's task layout; the Dockerfile's `build` stage copies the jar from the same path.
 jar="/build/tasks/_${MODULE}_executableJarJvm/${MODULE}-jvm-executable.jar"
 
 ./kotlin package -m "$MODULE" -f executable-jar --build-dir /build

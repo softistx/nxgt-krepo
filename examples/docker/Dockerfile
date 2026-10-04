@@ -27,9 +27,9 @@ WORKDIR /workspace
 FROM toolchain AS dev
 # dev-run.sh packages into /build — outside the mount: the host's own `build/` belongs to the IDE
 # and to `./kotlin` on macOS, and a Linux build writing into it would invalidate both — then execs
-# the jar, so the toolchain does not outlive the compile.
-COPY examples/docker/dev-run.sh /usr/local/bin/dev-run
-ENTRYPOINT ["dev-run"]
+# the jar, so the toolchain does not outlive the compile. It is read from the mounted checkout, not
+# copied in: an edit to it takes effect on the next restart, and no image ever runs a stale copy.
+ENTRYPOINT ["/workspace/examples/docker/dev-run.sh"]
 
 # ── prod ──────────────────────────────────────────────────────────────────────────────────────────
 FROM toolchain AS build
@@ -40,7 +40,8 @@ COPY . .
 # never copied into a layer.
 #
 # The jar's path is the toolchain's task layout, read off a real build:
-# tasks/_<module>_executableJarJvm/<module>-jvm-executable.jar. The build directory is a cache per
+# tasks/_<module>_executableJarJvm/<module>-jvm-executable.jar — dev-run.sh reads the same path, so a
+# toolchain that moves it moves both. The build directory is a cache per
 # module, so two examples building at once never share one; the toolchain cache is shared, locked.
 RUN --mount=type=cache,target=/root/.cache,sharing=locked \
     --mount=type=cache,id=krepo-build-${MODULE},target=/build \

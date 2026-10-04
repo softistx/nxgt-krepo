@@ -33,6 +33,10 @@ services:
     # A bound, so an example that runs away is killed by docker rather than the host's OOM killer
     # choosing something else. It has to hold the compile, which is the peak.
     mem_limit: 1536m
+    # A real PID 1. While dev-run.sh compiles, `sh` is PID 1 and the kernel gives it no default
+    # SIGTERM action, so a `restart` would wait out the grace period and SIGKILL the toolchain in the
+    # middle of writing the build volume.
+    init: true
     networks: [ proxy ]
     restart: "no"
 

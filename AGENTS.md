@@ -724,7 +724,7 @@ proves a behaviour. **Such a bound is never loosened to buy speed**; a harness t
 nothing, may be. `ci.yml` has the measurements.
 
 **The examples that are applications run in Docker too**, on these same servers: each has a
-`compose.yaml` with a `dev` profile (the checkout mounted, `./kotlin run`) and a `prod` one (the
+`compose.yaml` with a `dev` profile (the checkout mounted, compiled, then run as a jar) and a `prod` one (the
 executable jar on a JRE), joins the external `proxy` network, and answers at `<example>.localhost`
 through Traefik. The workspace's servers publish no host port, so for `jpa-shop` and `spring-orders`
 that is the way in. `docs/examples-in-docker.md` has it.

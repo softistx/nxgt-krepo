@@ -52,9 +52,10 @@ included — without it `web` redirects everything to `https` and each hostname 
 until `docker compose down`.
 
 `examples/docker/` holds what they share: the `Dockerfile` (targets `dev` and `prod`), the
-`compose.base.yaml` both services `extend`, and the two database scripts — shell rather than the
-TypeScript of `scripts/`, because they run inside the `postgres:17` and `mongo:8` images, which have
-no bun. Each example's
+`compose.base.yaml` both services `extend`, `dev-run.sh`, and the two database scripts. All three
+are shell rather than the TypeScript of `scripts/`, because they run inside images that have no bun:
+the Temurin dev image, `postgres:17` and `mongo:8`. `dev-run.sh` is read from the mount rather than
+copied into the image, so an edit to it needs no rebuild. Each example's
 `compose.yaml` adds only its module name, its environment, its Traefik router and, where it has one,
 its `db-init`.
 
@@ -125,7 +126,7 @@ victim. The application's heap is `APP_JAVA_OPTS` (`-XX:MaxRAMPercentage=50`), n
   distribution: *"Please install 'wget' or 'curl'"*. The `toolchain` stage installs curl.
 - `./kotlin package -f executable-jar` writes
   `tasks/_<module>_executableJarJvm/<module>-jvm-executable.jar` under the build directory; the
-  `prod` stage copies it from there.
+  `prod` stage copies it from there and `dev-run.sh` runs it from there — two readers of one path.
 - `graphix-shop`'s executable jar started with no schema documents at all and failed on
   `Serializer for class 'Any' is not found`: `stx-graphix` found `classpath:graphql/` on disk and in
   a jar named by `java.class.path`, but not inside a Spring Boot executable jar, where the class
