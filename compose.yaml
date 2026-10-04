@@ -4,10 +4,11 @@
 #   <example>        dev: the checkout mounted, compiled, then run as a jar; a restart recompiles
 #   <example>-prod   the executable jar on a JRE, baked into an image
 #
-#   cp .env.example .env                       # fill the CHANGE_ME
-#   docker compose --profile jpa-shop up -d    # http://jpa-shop.localhost/products
+#   cp .env.example .env                       # fill the CHANGE_ME; COMPOSE_PROFILES picks one
+#   docker compose up -d                       # http://jpa-shop.localhost/products
 #   docker compose restart jpa-shop            # after an edit
-#   docker compose --profile jpa-shop down
+#   docker compose down
+#   docker compose --profile spring-orders up -d   # another one, for this run only
 #
 # One example at a time, and one of its two profiles: both answer to the same hostname. A dev
 # container holds a compile, which is why there is no profile for everything at once.
@@ -22,7 +23,7 @@ x-dev: &dev
   image: krepo-examples-dev
   build:
     context: .
-    dockerfile: examples/docker/Dockerfile
+    dockerfile: docker/Dockerfile
     target: dev
   environment: &dev-env
     # Not JAVA_TOOL_OPTIONS, which would reach the toolchain's JVM too: dev-run.sh gives this to the
@@ -60,7 +61,7 @@ x-prod: &prod
 
 x-prod-build: &prod-build
   context: .
-  dockerfile: examples/docker/Dockerfile
+  dockerfile: docker/Dockerfile
   target: prod
   # The host's mavenLocal, lent to the build step read-only and never copied into a layer.
   additional_contexts:
@@ -169,7 +170,7 @@ services:
     image: postgres:17
     entrypoint: [ sh, /postgres-init.sh ]
     volumes:
-      - ./examples/docker/postgres-init.sh:/postgres-init.sh:ro
+      - ./docker/postgres-init.sh:/postgres-init.sh:ro
     environment:
       PGHOST: ${POSTGRES_HOST:-postgres}
       PGUSER: ${POSTGRES_ADMIN_USER:-postgres}
@@ -196,7 +197,7 @@ services:
     image: mongo:8
     entrypoint: [ sh, /mongo-init.sh ]
     volumes:
-      - ./examples/docker/mongo-init.sh:/mongo-init.sh:ro
+      - ./docker/mongo-init.sh:/mongo-init.sh:ro
     environment:
       MONGO_HOSTS: ${MONGO_REPLICA_SET:-rs0}/${MONGO_SEEDS:-mongo1:27017,mongo2:27018}
       MONGO_ADMIN_USER: ${MONGO_ADMIN_USER:-}

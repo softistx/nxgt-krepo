@@ -29,7 +29,7 @@ FROM toolchain AS dev
 # and to `./kotlin` on macOS, and a Linux build writing into it would invalidate both — then execs
 # the jar, so the toolchain does not outlive the compile. It is read from the mounted checkout, not
 # copied in: an edit to it takes effect on the next restart, and no image ever runs a stale copy.
-ENTRYPOINT ["/workspace/examples/docker/dev-run.sh"]
+ENTRYPOINT ["/workspace/docker/dev-run.sh"]
 
 # ── prod ──────────────────────────────────────────────────────────────────────────────────────────
 FROM toolchain AS build

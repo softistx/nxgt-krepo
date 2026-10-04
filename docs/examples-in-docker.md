@@ -19,10 +19,15 @@ Everything is one file, the repository root's `compose.yaml`, with one `.env` be
 
 ```bash
 cp .env.example .env                       # fill the CHANGE_ME
-docker compose --profile jpa-shop up -d    # http://jpa-shop.localhost/products
+docker compose up -d                       # COMPOSE_PROFILES=jpa-shop: http://jpa-shop.localhost/products
 docker compose restart jpa-shop            # after an edit
-docker compose --profile jpa-shop down
+docker compose down
+docker compose --profile spring-orders up -d   # another example, for this run only
 ```
+
+`COMPOSE_PROFILES` in `.env` is what a bare `up` or `down` acts on. Without it every service has a
+profile, so a bare `up` answers `no service selected` — deliberately: starting all seven dev
+profiles would run seven compiles at once.
 
 ## What has to be running first
 
@@ -73,7 +78,7 @@ until `docker compose down`.
 A new example is one of those and two services; one with a database also gets an
 `<example>-db-init` service in both its profiles.
 
-`examples/docker/` holds what the services run: the `Dockerfile` (targets `dev` and `prod`),
+`docker/`, beside `compose.yaml`, holds what the services run: the `Dockerfile` (targets `dev` and `prod`),
 `dev-run.sh`, and the two database scripts. All three are shell rather than the TypeScript of
 `scripts/`, because they run inside images that have no bun: the Temurin dev image, `postgres:17`
 and `mongo:8`. `dev-run.sh` is read from the mount rather than copied into the image, so an edit to
