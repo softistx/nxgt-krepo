@@ -1,0 +1,69 @@
+# spring-orders in a container, on the workspace's Mongo replica set, behind Traefik. Two profiles:
+#
+#   dev    the checkout mounted and run by `./kotlin run`         COMPOSE_PROFILES=dev
+#   prod   the executable jar on a JRE, built into an image        COMPOSE_PROFILES=prod
+#
+#   cp .env.example .env   # then fill the two passwords
+#   docker compose up -d
+#   curl http://spring-orders.localhost/orders
+#
+# `db-init` runs first in either profile and gives the order book its own user, with readWrite on
+# its two databases and nothing else. `docs/examples-in-docker.md` has the whole arrangement.
+name: krepo-spring-orders
+
+x-app: &app
+  environment:
+    MODULE: spring-orders
+    # The two members that can be primary; the arbiter holds no data. The password is hex, so it
+    # needs no percent-encoding here.
+    MONGO_URI: mongodb://${ORDERS_DB_USER:-spring_orders}:${ORDERS_DB_PASSWORD:?set ORDERS_DB_PASSWORD in examples/spring-orders/.env}@${MONGO_SEEDS:-mongo1:27017,mongo2:27018}/spring_orders?replicaSet=${MONGO_REPLICA_SET:-rs0}&authSource=admin
+    TELEMETRY_MONGO_URI: mongodb://${ORDERS_DB_USER:-spring_orders}:${ORDERS_DB_PASSWORD}@${MONGO_SEEDS:-mongo1:27017,mongo2:27018}/?replicaSet=${MONGO_REPLICA_SET:-rs0}&authSource=admin
+  depends_on:
+    db-init:
+      condition: service_completed_successfully
+  labels:
+    - traefik.enable=${TRAEFIK_ENABLE:-true}
+    - traefik.docker.network=proxy
+    - traefik.http.routers.krepo-spring-orders.rule=Host(`spring-orders.${HOST:-localhost}`)
+    - traefik.http.routers.krepo-spring-orders.entrypoints=${TRAEFIK_HTTP_ENTRYPOINTS:-web}
+    - traefik.http.routers.krepo-spring-orders.tls=${TRAEFIK_USE_TLS:-false}
+    - traefik.http.services.krepo-spring-orders.loadbalancer.server.port=8080
+
+services:
+  dev:
+    extends: { file: ../docker/compose.base.yaml, service: dev }
+    <<: *app
+
+  prod:
+    extends: { file: ../docker/compose.base.yaml, service: prod }
+    <<: *app
+    image: krepo-examples/spring-orders
+    build:
+      args:
+        MODULE: spring-orders
+
+  db-init:
+    profiles: [ dev, prod ]
+    image: mongo:8
+    entrypoint: [ sh, /mongo-init.sh ]
+    volumes:
+      - ../docker/mongo-init.sh:/mongo-init.sh:ro
+    environment:
+      MONGO_HOSTS: ${MONGO_REPLICA_SET:-rs0}/${MONGO_SEEDS:-mongo1:27017,mongo2:27018}
+      MONGO_ADMIN_USER: ${MONGO_ADMIN_USER:?set MONGO_ADMIN_USER in examples/spring-orders/.env}
+      MONGO_ADMIN_PASSWORD: ${MONGO_ADMIN_PASSWORD:?set MONGO_ADMIN_PASSWORD in examples/spring-orders/.env}
+      APP_DB_USER: ${ORDERS_DB_USER:-spring_orders}
+      APP_DB_PASSWORD: ${ORDERS_DB_PASSWORD}
+      # The orders and the migration ledger, then the telemetry `stx.telemetry.mongo` writes.
+      APP_DBS: spring_orders,spring_orders_telemetry
+    networks: [ proxy ]
+    restart: "no"
+
+volumes:
+  kotlin-cache:
+    name: krepo-kotlin-cache
+  build:
+
+networks:
+  proxy:
+    external: true

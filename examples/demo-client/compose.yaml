@@ -1,0 +1,41 @@
+# demo-client in a container, calling demo-api's container. Two profiles:
+#
+#   dev    the checkout mounted and run by `./kotlin run`         COMPOSE_PROFILES=dev
+#   prod   the executable jar on a JRE, built into an image        COMPOSE_PROFILES=prod
+#
+#   cp .env.example .env
+#   docker compose up
+#
+# It makes its calls, prints them, and exits; it needs demo-api up first.
+# `docs/examples-in-docker.md` has the whole arrangement.
+name: krepo-demo-client
+
+x-app: &app
+  environment:
+    MODULE: demo-client
+    # demo-api's alias on `proxy`. Start it first: `docker compose up -d` in examples/demo-api.
+    DEMO_API_URL: ${DEMO_API_URL:-http://demo-api:8080/}
+
+services:
+  dev:
+    extends: { file: ../docker/compose.base.yaml, service: dev }
+    <<: *app
+
+  prod:
+    extends: { file: ../docker/compose.base.yaml, service: prod }
+    <<: *app
+    image: krepo-examples/demo-client
+    build:
+      args:
+        MODULE: demo-client
+    # It runs once and exits, so nothing restarts it — `docker compose up` again runs it again.
+    restart: "no"
+
+volumes:
+  kotlin-cache:
+    name: krepo-kotlin-cache
+  build:
+
+networks:
+  proxy:
+    external: true

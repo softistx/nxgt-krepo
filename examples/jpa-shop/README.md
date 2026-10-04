@@ -9,6 +9,16 @@ POSTGRES_USER=… POSTGRES_PASSWORD=… \
 ./kotlin run -m jpa-shop
 ```
 
+Or in a container, on the workspace's Postgres with a role and database of its own, at
+<http://jpa-shop.localhost/products>:
+
+```bash
+cd examples/jpa-shop && cp .env.example .env && docker compose up -d
+```
+
+`COMPOSE_PROFILES=dev` mounts the checkout and runs `./kotlin run`; `prod` runs the executable jar.
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
+
 ```
 GET    /products?search=anvil&under=1000&first=20&skip=0
 GET    /products/summary?first=20

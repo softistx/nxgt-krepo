@@ -23,6 +23,15 @@ POST /graphql
 The subscription is `text/event-stream` on the same path (`subscriptions = Sse`, the default).
 `subscriptions = GraphqlWs` serves `graphql-ws` on that path instead.
 
+Or in a container, at <http://graphix-shop.localhost/sandbox>:
+
+```bash
+cd examples/graphix-shop && cp .env.example .env && docker compose up -d
+```
+
+`COMPOSE_PROFILES=dev` mounts the checkout and runs `./kotlin run`; `prod` runs the executable jar.
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
+
 The GraphQL schema is the files under `resources/graphql/` (`schema.graphqls`, `product.graphqls`,
 `review.graphqls`, `search.graphqls`), merged the way Spring GraphQL merges a split document.
 `Catalog` is the DataFetchers for those fields.

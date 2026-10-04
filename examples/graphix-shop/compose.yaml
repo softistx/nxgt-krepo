@@ -1,0 +1,45 @@
+# graphix-shop in a container, behind Traefik. Two profiles:
+#
+#   dev    the checkout mounted and run by `./kotlin run`         COMPOSE_PROFILES=dev
+#   prod   the executable jar on a JRE, built into an image        COMPOSE_PROFILES=prod
+#
+#   cp .env.example .env
+#   docker compose up -d
+#   curl -H 'Content-Type: application/json' -d '{"query":"{ products { name price } }"}' \
+#        http://graphix-shop.localhost/graphql
+#   open http://graphix-shop.localhost/sandbox
+# `docs/examples-in-docker.md` has the whole arrangement.
+name: krepo-graphix-shop
+
+x-app: &app
+  environment:
+    MODULE: graphix-shop
+  labels:
+    - traefik.enable=${TRAEFIK_ENABLE:-true}
+    - traefik.docker.network=proxy
+    - traefik.http.routers.krepo-graphix-shop.rule=Host(`graphix-shop.${HOST:-localhost}`)
+    - traefik.http.routers.krepo-graphix-shop.entrypoints=${TRAEFIK_HTTP_ENTRYPOINTS:-web}
+    - traefik.http.routers.krepo-graphix-shop.tls=${TRAEFIK_USE_TLS:-false}
+    - traefik.http.services.krepo-graphix-shop.loadbalancer.server.port=8080
+
+services:
+  dev:
+    extends: { file: ../docker/compose.base.yaml, service: dev }
+    <<: *app
+
+  prod:
+    extends: { file: ../docker/compose.base.yaml, service: prod }
+    <<: *app
+    image: krepo-examples/graphix-shop
+    build:
+      args:
+        MODULE: graphix-shop
+
+volumes:
+  kotlin-cache:
+    name: krepo-kotlin-cache
+  build:
+
+networks:
+  proxy:
+    external: true

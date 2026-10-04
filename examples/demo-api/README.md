@@ -7,6 +7,16 @@ describes it.
 ./kotlin run -m demo-api        # http://localhost:8080
 ```
 
+Or in a container, at <http://demo-api.localhost/> — and `demo-api` on the `proxy` network, which is
+what the two clients' containers call:
+
+```bash
+cd examples/demo-api && cp .env.example .env && docker compose up -d
+```
+
+`COMPOSE_PROFILES=dev` mounts the checkout and runs `./kotlin run`; `prod` runs the executable jar.
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
+
 ## Why a hand-written server
 
 `openapi.yaml` is the input to [`libs/api/stx-openapi-generator`](../../libs/api/stx-openapi-generator/README.md),

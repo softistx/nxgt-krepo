@@ -1,0 +1,49 @@
+# The two services every example's compose.yaml extends — `dev` and `prod`, one per profile.
+#
+#   extends: { file: ../docker/compose.base.yaml, service: dev }
+#
+# Relative paths here resolve against THIS file, not the example's: `../..` is the repository root
+# wherever the extending file sits. `extends` copies a service and nothing else, so the
+# `volumes:` and `networks:` these name are declared again at the foot of each example's file.
+# `docs/examples-in-docker.md` has the whole arrangement.
+
+services:
+  # The checkout, mounted, run by `./kotlin run`. An edit is `docker compose restart <service>`
+  # away; nothing is copied into an image, so the one image serves every example.
+  dev:
+    profiles: [ dev ]
+    image: krepo-examples-dev
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: dev
+    volumes:
+      - ../..:/workspace
+      # The examples consume `io.github.softistx:*` as published artifacts, from mavenLocal —
+      # read-only, since publishing is the host's job (`./kotlin publish mavenLocal`).
+      - ${HOME}/.m2/repository:/root/.m2/repository:ro
+      # One toolchain cache for every example: the distribution, the compiler and the dependency
+      # jars are a gigabyte nobody should download once per example.
+      - kotlin-cache:/root/.cache
+      # This example's own build output, kept between restarts so a restart is incremental.
+      - build:/build
+    networks: [ proxy ]
+    restart: "no"
+
+  # The executable jar on a JRE, built from a copy of the checkout. What a deployment would run.
+  prod:
+    profiles: [ prod ]
+    build:
+      context: ../..
+      dockerfile: examples/docker/Dockerfile
+      target: prod
+      additional_contexts:
+        m2: ${HOME}/.m2/repository
+    environment:
+      # A container's memory, not the host's: the JVM's default is a quarter of what it can see.
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75
+    mem_limit: 768m
+    networks: [ proxy ]
+    # Not `unless-stopped`: an example left up would come back with every Docker start, on a machine
+    # where the services that matter already fill the memory. It runs until `docker compose down`.
+    restart: "no"

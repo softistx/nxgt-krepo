@@ -1,0 +1,67 @@
+# jpa-shop in a container, on the workspace's Postgres, behind Traefik. Two profiles:
+#
+#   dev    the checkout mounted and run by `./kotlin run`         COMPOSE_PROFILES=dev
+#   prod   the executable jar on a JRE, built into an image        COMPOSE_PROFILES=prod
+#
+#   cp .env.example .env   # then fill the two passwords
+#   docker compose up -d
+#   curl http://jpa-shop.localhost/products
+#
+# `db-init` runs first in either profile and gives the shop its own role and database.
+# `docs/examples-in-docker.md` has the whole arrangement.
+name: krepo-jpa-shop
+
+x-app: &app
+  environment:
+    MODULE: jpa-shop
+    POSTGRES_URI: postgresql://${POSTGRES_HOST:-postgres}:5432/${SHOP_DB_NAME:-shop}
+    POSTGRES_USER: ${SHOP_DB_USER:-shop}
+    POSTGRES_PASSWORD: ${SHOP_DB_PASSWORD:?set SHOP_DB_PASSWORD in examples/jpa-shop/.env}
+  depends_on:
+    db-init:
+      condition: service_completed_successfully
+  labels:
+    - traefik.enable=${TRAEFIK_ENABLE:-true}
+    - traefik.docker.network=proxy
+    - traefik.http.routers.krepo-jpa-shop.rule=Host(`jpa-shop.${HOST:-localhost}`)
+    - traefik.http.routers.krepo-jpa-shop.entrypoints=${TRAEFIK_HTTP_ENTRYPOINTS:-web}
+    - traefik.http.routers.krepo-jpa-shop.tls=${TRAEFIK_USE_TLS:-false}
+    - traefik.http.services.krepo-jpa-shop.loadbalancer.server.port=8080
+
+services:
+  dev:
+    extends: { file: ../docker/compose.base.yaml, service: dev }
+    <<: *app
+
+  prod:
+    extends: { file: ../docker/compose.base.yaml, service: prod }
+    <<: *app
+    image: krepo-examples/jpa-shop
+    build:
+      args:
+        MODULE: jpa-shop
+
+  db-init:
+    profiles: [ dev, prod ]
+    image: postgres:17
+    entrypoint: [ sh, /postgres-init.sh ]
+    volumes:
+      - ../docker/postgres-init.sh:/postgres-init.sh:ro
+    environment:
+      PGHOST: ${POSTGRES_HOST:-postgres}
+      PGUSER: ${POSTGRES_ADMIN_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_ADMIN_PASSWORD:?set POSTGRES_ADMIN_PASSWORD in examples/jpa-shop/.env}
+      APP_DB_NAME: ${SHOP_DB_NAME:-shop}
+      APP_DB_USER: ${SHOP_DB_USER:-shop}
+      APP_DB_PASSWORD: ${SHOP_DB_PASSWORD:?set SHOP_DB_PASSWORD in examples/jpa-shop/.env}
+    networks: [ proxy ]
+    restart: "no"
+
+volumes:
+  kotlin-cache:
+    name: krepo-kotlin-cache
+  build:
+
+networks:
+  proxy:
+    external: true

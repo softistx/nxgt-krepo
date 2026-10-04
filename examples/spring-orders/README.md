@@ -8,6 +8,16 @@ skill describes.
 MONGO_URI=mongodb://localhost:27017/orders ./kotlin run -m spring-orders
 ```
 
+Or in a container, on the workspace's replica set with a user of its own, at
+<http://spring-orders.localhost/orders>:
+
+```bash
+cd examples/spring-orders && cp .env.example .env && docker compose up -d
+```
+
+`COMPOSE_PROFILES=dev` mounts the checkout and runs `./kotlin run`; `prod` runs the executable jar.
+[`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
+
 ```
 GET    /orders?filter=status:eq:PAID&sort=placedAt:DESC&size=20&cursor=…
 GET    /orders/valuable?floor=10000
