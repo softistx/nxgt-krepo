@@ -14,7 +14,7 @@
     },
     "libs/api/stx-graphix": {
       "name": "stx-graphix",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "dependencies": {
         "stx-common": "workspace:*",
       },
@@ -52,7 +52,7 @@
     },
     "libs/core/stx-testing": {
       "name": "stx-testing",
-      "version": "0.2.1",
+      "version": "0.2.2",
     },
     "libs/data/stx-jpa": {
       "name": "stx-jpa",
