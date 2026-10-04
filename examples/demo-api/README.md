@@ -11,10 +11,12 @@ Or in a container, at <http://demo-api.localhost/> — and `demo-api` on the `pr
 what the two clients' containers call:
 
 ```bash
-cd examples/demo-api && cp .env.example .env && docker compose up -d
+cp .env.example .env   # at the repository root, once
+docker compose --profile demo-api up -d   # or demo-api-prod
 ```
 
-`COMPOSE_PROFILES=dev` compiles the mounted checkout and runs it; `prod` bakes the jar into an image.
+The `demo-api` profile compiles the mounted checkout, and a restart picks up an edit;
+`demo-api-prod` runs the jar baked into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ## Why a hand-written server

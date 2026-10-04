@@ -1,6 +1,7 @@
 #!/bin/sh
 # Gives an example its own role and database on the workspace's running Postgres, as its superuser.
-# Run by the `db-init` service of an example's compose.yaml, before the application starts.
+# Run by the example's `-db-init` service in the repository root's compose.yaml, before the
+# application starts.
 #
 # Idempotent: the role and the database are created when missing, and the role's password is set
 # every time, so changing APP_DB_PASSWORD in .env takes effect on the next `up`. Nothing is ever
@@ -10,7 +11,7 @@ set -eu
 
 for v in PGHOST PGUSER PGPASSWORD APP_DB_NAME APP_DB_USER APP_DB_PASSWORD; do
     eval "val=\${$v:-}"
-    [ -n "$val" ] || { echo "postgres-init: $v is not set — see the example's .env.example" >&2; exit 1; }
+    [ -n "$val" ] || { echo "postgres-init: $v is not set — see .env.example at the repository root" >&2; exit 1; }
     # `${X:?}` in compose refuses only an empty value; the template's placeholder would otherwise
     # become a real password.
     [ "$val" != CHANGE_ME ] || { echo "postgres-init: $v is still the template's CHANGE_ME" >&2; exit 1; }

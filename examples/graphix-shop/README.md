@@ -26,10 +26,12 @@ The subscription is `text/event-stream` on the same path (`subscriptions = Sse`,
 Or in a container, at <http://graphix-shop.localhost/sandbox>:
 
 ```bash
-cd examples/graphix-shop && cp .env.example .env && docker compose up -d
+cp .env.example .env   # at the repository root, once
+docker compose --profile graphix-shop up -d   # or graphix-shop-prod
 ```
 
-`COMPOSE_PROFILES=dev` compiles the mounted checkout and runs it; `prod` bakes the jar into an image.
+The `graphix-shop` profile compiles the mounted checkout, and a restart picks up an edit;
+`graphix-shop-prod` runs the jar baked into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 The GraphQL schema is the files under `resources/graphql/` (`schema.graphqls`, `product.graphqls`,

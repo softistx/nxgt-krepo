@@ -52,4 +52,6 @@ RUN --mount=type=cache,target=/root/.cache,sharing=locked \
 FROM ${JRE_IMAGE} AS prod
 WORKDIR /app
 COPY --from=build /app.jar /app/app.jar
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# A container's memory, not the host's: the JVM's default heap is a quarter of what it can see. In
+# the image rather than in compose, so the dev image — another target — never inherits it.
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]

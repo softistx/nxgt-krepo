@@ -15,11 +15,13 @@ Seven examples run in a container, on the workspace's own databases, behind its 
 The others are not applications: `artifacts-*` and `graphix-codegen` are checks on published
 artifacts and generated code, and `material-demo` is a UI.
 
+Everything is one file, the repository root's `compose.yaml`, with one `.env` beside it:
+
 ```bash
-cd examples/jpa-shop
-cp .env.example .env      # fill the CHANGE_ME
-docker compose up -d
-curl http://jpa-shop.localhost/products
+cp .env.example .env                       # fill the CHANGE_ME
+docker compose --profile jpa-shop up -d    # http://jpa-shop.localhost/products
+docker compose restart jpa-shop            # after an edit
+docker compose --profile jpa-shop down
 ```
 
 ## What has to be running first
@@ -35,29 +37,34 @@ Every `*.localhost` name resolves to this machine with nothing in `/etc/hosts`. 
 the `web` entrypoint over plain http, which needs nxgt-docker's `traefik/docker-compose.dev.yaml`
 included — without it `web` redirects everything to `https` and each hostname answers 404.
 
-## Two profiles
+## Two profiles per example
 
-`COMPOSE_PROFILES` in the example's `.env` picks one; set exactly one.
+Every example has two, named after it: `jpa-shop` and `jpa-shop-prod`, `spring-orders` and
+`spring-orders-prod`, and so on. Run one example at a time, and one of its two profiles: both answer
+to the same hostname. There is no profile for everything at once, because a dev container holds a
+compile.
 
-- **`dev`** mounts the checkout at `/workspace`, and `dev-run.sh` packages the module there and then
+- **`<example>`**, dev, mounts the checkout at `/workspace`, and `dev-run.sh` packages the module there and then
   `exec`s `java -jar` on the result — so the toolchain exits once the compile is done and the
-  application is the only process left (Memory, below). An edit is a `docker compose restart dev`
+  application is the only process left (Memory, below). An edit is a `docker compose restart <example>`
   away, and the restart compiles incrementally: the build output is a
   volume of its own, kept between restarts, and never the host's `build/` — a Linux build writing
   there would invalidate the IDE's and macOS's. One image, `krepo-examples-dev`, serves every
   example, since nothing of the repository is copied into it.
-- **`prod`** builds `./kotlin package -f executable-jar` into an image, `krepo-examples/<module>`,
+- **`<example>-prod`** builds `./kotlin package -f executable-jar` into an image, `krepo-examples/<module>`,
   and runs it on a JRE, with `-XX:MaxRAMPercentage=75` under a 768 MiB limit. It is what a deployment
   would run, and it is the profile that found the bug below. Nothing restarts it on its own: it runs
 until `docker compose down`.
 
-`examples/docker/` holds what they share: the `Dockerfile` (targets `dev` and `prod`), the
-`compose.base.yaml` both services `extend`, `dev-run.sh`, and the two database scripts. All three
-are shell rather than the TypeScript of `scripts/`, because they run inside images that have no bun:
-the Temurin dev image, `postgres:17` and `mongo:8`. `dev-run.sh` is read from the mount rather than
-copied into the image, so an edit to it needs no rebuild. Each example's
-`compose.yaml` adds only its module name, its environment, its Traefik router and, where it has one,
-its `db-init`.
+`compose.yaml` writes each example once: an `x-<example>` block holds its environment, its Traefik
+router and what it depends on, and the two services merge that block with `x-dev` or `x-prod`. A new
+example is one such block and two services.
+
+`examples/docker/` holds what the services run: the `Dockerfile` (targets `dev` and `prod`),
+`dev-run.sh`, and the two database scripts. All three are shell rather than the TypeScript of
+`scripts/`, because they run inside images that have no bun: the Temurin dev image, `postgres:17`
+and `mongo:8`. `dev-run.sh` is read from the mount rather than copied into the image, so an edit to
+it needs no rebuild.
 
 ### mavenLocal is part of the build
 
@@ -78,7 +85,7 @@ example reuses them. The `prod` build keeps its own BuildKit cache for the same 
 
 ## The databases
 
-`db-init` runs before the application in either profile, exits, and is what the application
+`<example>-db-init` runs before the application in either of its profiles, exits, and is what the application
 `depends_on`. Both scripts are idempotent: a second `up` changes nothing but the password, which is
 set every time so that editing `.env` takes effect.
 
@@ -92,16 +99,20 @@ set every time so that editing `.env` takes effect.
 - **Redis** needs nothing. `workflow-checkout` writes to database 15 under a namespace it deletes on
   the way out.
 
-The administrator's credentials are only ever in the example's `.env`, which git ignores, and only
-`db-init` receives them. The values are the ones in nxgt-docker's `database/postgres/.env`
+The administrator's credentials are only ever in the root `.env`, which git ignores, and only the
+`-db-init` services receive them. The values are the ones in nxgt-docker's `database/postgres/.env`
 (`POSTGRES_PASSWORD`) and `database/mongo/.env` (`MONGO_ROOT_USERNAME`, `MONGO_ROOT_PASSWORD`).
 
 ## Running the clients
 
 `demo-client` and `demo-spring-client` call `http://demo-api:8080/`, the alias `demo-api` holds on
-`proxy` in either profile. A compose project cannot `depends_on` another, so start `demo-api` first.
+`proxy` in either profile. Each client's profile includes demo-api, and the client waits for its
+healthcheck — the port accepting a connection, checked with bash's `/dev/tcp` because the JRE image
+has no curl — so `docker compose --profile demo-client up` is the whole of it. Each client creates
+what it reads, so either runs against a fresh server, in any order.
+
 The clients, like `workflow-checkout`, run once, print what they did, and exit with
-`restart: "no"` — `docker compose up` again runs them again.
+`restart: "no"` — `docker compose --profile <example> up` again runs them again.
 
 ## Memory
 
@@ -113,19 +124,22 @@ parent for as long as the application runs. Measured on `jpa-shop`, 2026-10-04:
 | `./kotlin run` — toolchain 450 MiB + application 370 MiB | 730–860 MiB | 7–8 s |
 | `dev-run.sh` — package, then `exec java -jar` | 325 MiB | 7 s unchanged, 12 s after an edit |
 
-`spring-orders` settles at 435 MiB the same way. The compile is now the peak — 590 MiB was the
-highest sample during a recompile — and only lasts while it runs. `dev` is bounded at 1.5 GiB so
+`spring-orders` settles at 435–455 MiB the same way. The compile is now the peak, and only lasts
+while it runs: a first compile into an empty build directory sampled 780 MiB for `jpa-shop` and
+1,000 MiB for `spring-orders`, a recompile 590 MiB. `dev` is bounded at 1.5 GiB so
 that a runaway example is killed by docker rather than by the host's OOM killer, which picks its own
 victim. The application's heap is `APP_JAVA_OPTS` (`-XX:MaxRAMPercentage=50`), not
 `JAVA_TOOL_OPTIONS`, which would reach the toolchain's JVM too. A `prod` container measured
-320–390 MiB. Still, `docker compose down` what you are done with.
+320–390 MiB; its heap setting, `-XX:MaxRAMPercentage=75`, is in the image's entrypoint, so the dev
+image — another target of the same Dockerfile — never inherits it. Still, `docker compose down` what you are done with.
 
 ## What it measured
 
 - The Temurin image has neither `curl` nor `wget`, and `./kotlin` needs one to download its
   distribution: *"Please install 'wget' or 'curl'"*. The `toolchain` stage installs curl.
 - `./kotlin package -f executable-jar` writes
-  `tasks/_<module>_executableJarJvm/<module>-jvm-executable.jar` under the build directory; the
+  `tasks/_<module>_executableJarJvm/<module>-jvm-executable.jar` under the build directory —
+  `/build/<module>` in dev; the
   `prod` stage copies it from there and `dev-run.sh` runs it from there — two readers of one path.
 - `graphix-shop`'s executable jar started with no schema documents at all and failed on
   `Serializer for class 'Any' is not found`: `stx-graphix` found `classpath:graphql/` on disk and in

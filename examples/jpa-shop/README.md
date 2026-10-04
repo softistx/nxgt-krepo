@@ -13,10 +13,12 @@ Or in a container, on the workspace's Postgres with a role and database of its o
 <http://jpa-shop.localhost/products>:
 
 ```bash
-cd examples/jpa-shop && cp .env.example .env && docker compose up -d
+cp .env.example .env   # at the repository root, once
+docker compose --profile jpa-shop up -d   # or jpa-shop-prod
 ```
 
-`COMPOSE_PROFILES=dev` compiles the mounted checkout and runs it; `prod` bakes the jar into an image.
+The `jpa-shop` profile compiles the mounted checkout, and a restart picks up an edit;
+`jpa-shop-prod` runs the jar baked into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ```

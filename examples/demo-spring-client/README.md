@@ -10,10 +10,12 @@ as `@HttpExchange` interfaces over `WebClient`, bound by Jackson 3.
 Or in a container, against `demo-api`'s — start that one first:
 
 ```bash
-cd examples/demo-spring-client && cp .env.example .env && docker compose up
+cp .env.example .env   # at the repository root, once
+docker compose --profile demo-spring-client up   # or demo-spring-client-prod
 ```
 
-`COMPOSE_PROFILES=dev` compiles the mounted checkout and runs it; `prod` bakes the jar into an image.
+The `demo-spring-client` profile compiles the mounted checkout, and a restart picks up an edit;
+`demo-spring-client-prod` runs the jar baked into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ## Two documents, one module

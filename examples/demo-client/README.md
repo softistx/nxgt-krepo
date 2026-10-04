@@ -11,10 +11,12 @@ The kotlinx side of the generator: a Ktorfit client generated from
 Or in a container, against `demo-api`'s — start that one first:
 
 ```bash
-cd examples/demo-client && cp .env.example .env && docker compose up
+cp .env.example .env   # at the repository root, once
+docker compose --profile demo-client up   # or demo-client-prod
 ```
 
-`COMPOSE_PROFILES=dev` compiles the mounted checkout and runs it; `prod` bakes the jar into an image.
+The `demo-client` profile compiles the mounted checkout, and a restart picks up an edit;
+`demo-client-prod` runs the jar baked into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ## What it is for

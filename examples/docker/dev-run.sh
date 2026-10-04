@@ -8,11 +8,14 @@
 # incremental across restarts.
 set -eu
 
-[ -n "${MODULE:-}" ] || { echo "dev-run: MODULE is not set; the compose.yaml names it" >&2; exit 1; }
-# The toolchain's task layout; the Dockerfile's `build` stage copies the jar from the same path.
-jar="/build/tasks/_${MODULE}_executableJarJvm/${MODULE}-jvm-executable.jar"
+[ -n "${MODULE:-}" ] || { echo "dev-run: MODULE is not set; the root compose.yaml names it" >&2; exit 1; }
+# One build directory per module inside the shared /build volume, so two examples compiling at
+# once never share one. Under it, the toolchain's task layout — the Dockerfile's `build` stage
+# copies the jar from the same relative path.
+build="/build/$MODULE"
+jar="$build/tasks/_${MODULE}_executableJarJvm/${MODULE}-jvm-executable.jar"
 
-./kotlin package -m "$MODULE" -f executable-jar --build-dir /build
+./kotlin package -m "$MODULE" -f executable-jar --build-dir "$build"
 
 # APP_JAVA_OPTS, not JAVA_TOOL_OPTIONS: the latter would reach the toolchain's JVM above as well.
 # shellcheck disable=SC2086

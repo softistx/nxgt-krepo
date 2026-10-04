@@ -1,0 +1,280 @@
+# Every runnable example in a container, on the workspace's databases, behind its Traefik. Two
+# profiles per example:
+#
+#   <example>        dev: the checkout mounted, compiled, then run as a jar; a restart recompiles
+#   <example>-prod   the executable jar on a JRE, baked into an image
+#
+#   cp .env.example .env                       # fill the CHANGE_ME
+#   docker compose --profile jpa-shop up -d    # http://jpa-shop.localhost/products
+#   docker compose restart jpa-shop            # after an edit
+#   docker compose --profile jpa-shop down
+#
+# One example at a time, and one of its two profiles: both answer to the same hostname. A dev
+# container holds a compile, which is why there is no profile for everything at once.
+# `docs/examples-in-docker.md` has the whole arrangement.
+name: krepo-examples
+
+# ── How a service is built and run ────────────────────────────────────────────────────────────────
+
+# The checkout, mounted, compiled and run by dev-run.sh. Nothing of the repository is copied into
+# the image, so the one image serves every example.
+x-dev: &dev
+  image: krepo-examples-dev
+  build:
+    context: .
+    dockerfile: examples/docker/Dockerfile
+    target: dev
+  environment: &dev-env
+    # Not JAVA_TOOL_OPTIONS, which would reach the toolchain's JVM too: dev-run.sh gives this to the
+    # application's `java` alone, once the toolchain has exited.
+    APP_JAVA_OPTS: -XX:MaxRAMPercentage=50
+  volumes:
+    - .:/workspace
+    # The examples consume `io.github.softistx:*` as published artifacts, from mavenLocal —
+    # read-only, since publishing is the host's job (`./kotlin publish mavenLocal`).
+    - ${HOME}/.m2/repository:/root/.m2/repository:ro
+    # One toolchain cache for every example: the distribution, the compiler and the dependency jars
+    # are a gigabyte nobody should download once per example.
+    - kotlin-cache:/root/.cache
+    # The build output, kept between restarts so a restart is incremental. dev-run.sh builds into
+    # /build/<module>, so two examples compiling at once never share a directory.
+    - build:/build
+  # A bound, so an example that runs away is killed by docker rather than the host's OOM killer
+  # choosing something else. It has to hold the compile, which is the peak.
+  mem_limit: 1536m
+  # A real PID 1. While dev-run.sh compiles, `sh` is PID 1 and the kernel gives it no default
+  # SIGTERM action, so a `restart` would wait out the grace period and SIGKILL the toolchain in the
+  # middle of writing the build volume.
+  init: true
+  networks: [ proxy ]
+  restart: "no"
+
+# The executable jar on a JRE, built from a copy of the checkout. What a deployment would run; its
+# heap setting is in the image. The image's name is the service's, set per example below.
+x-prod: &prod
+  mem_limit: 768m
+  networks: [ proxy ]
+  # Not `unless-stopped`: an example left up would come back with every Docker start, on a machine
+  # where the services that matter already fill the memory. It runs until `docker compose down`.
+  restart: "no"
+
+x-prod-build: &prod-build
+  context: .
+  dockerfile: examples/docker/Dockerfile
+  target: prod
+  # The host's mavenLocal, lent to the build step read-only and never copied into a layer.
+  additional_contexts:
+    m2: ${HOME}/.m2/repository
+
+# A server is ready once its port accepts a connection. bash's /dev/tcp, because neither image is
+# guaranteed curl — the JRE one has none.
+x-port-open: &port-open
+  test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080" ]
+  interval: 5s
+  timeout: 3s
+  # The first dev start downloads and compiles; the healthcheck must not give up on it.
+  start_period: 10m
+  start_interval: 2s
+
+# ── Each example: its environment, its router, its database setup ─────────────────────────────────
+
+x-jpa-shop: &jpa-shop
+  environment: &jpa-shop-env
+    MODULE: jpa-shop
+    POSTGRES_URI: postgresql://${POSTGRES_HOST:-postgres}:5432/${SHOP_DB_NAME:-shop}
+    POSTGRES_USER: ${SHOP_DB_USER:-shop}
+    POSTGRES_PASSWORD: ${SHOP_DB_PASSWORD:-}
+  depends_on:
+    jpa-shop-db-init: { condition: service_completed_successfully }
+  labels:
+    - traefik.enable=${TRAEFIK_ENABLE:-true}
+    - traefik.docker.network=proxy
+    - traefik.http.routers.krepo-jpa-shop.rule=Host(`jpa-shop.${HOST:-localhost}`)
+    - traefik.http.routers.krepo-jpa-shop.entrypoints=${TRAEFIK_HTTP_ENTRYPOINTS:-web}
+    - traefik.http.routers.krepo-jpa-shop.tls=${TRAEFIK_USE_TLS:-false}
+    - traefik.http.services.krepo-jpa-shop.loadbalancer.server.port=8080
+
+x-spring-orders: &spring-orders
+  environment: &spring-orders-env
+    MODULE: spring-orders
+    # The two members that can be primary; the arbiter holds no data. The password is hex, so it
+    # needs no percent-encoding here.
+    MONGO_URI: mongodb://${ORDERS_DB_USER:-spring_orders}:${ORDERS_DB_PASSWORD:-}@${MONGO_SEEDS:-mongo1:27017,mongo2:27018}/spring_orders?replicaSet=${MONGO_REPLICA_SET:-rs0}&authSource=admin
+    TELEMETRY_MONGO_URI: mongodb://${ORDERS_DB_USER:-spring_orders}:${ORDERS_DB_PASSWORD:-}@${MONGO_SEEDS:-mongo1:27017,mongo2:27018}/?replicaSet=${MONGO_REPLICA_SET:-rs0}&authSource=admin
+  depends_on:
+    spring-orders-db-init: { condition: service_completed_successfully }
+  labels:
+    - traefik.enable=${TRAEFIK_ENABLE:-true}
+    - traefik.docker.network=proxy
+    - traefik.http.routers.krepo-spring-orders.rule=Host(`spring-orders.${HOST:-localhost}`)
+    - traefik.http.routers.krepo-spring-orders.entrypoints=${TRAEFIK_HTTP_ENTRYPOINTS:-web}
+    - traefik.http.routers.krepo-spring-orders.tls=${TRAEFIK_USE_TLS:-false}
+    - traefik.http.services.krepo-spring-orders.loadbalancer.server.port=8080
+
+x-graphix-shop: &graphix-shop
+  environment: &graphix-shop-env
+    MODULE: graphix-shop
+  labels:
+    - traefik.enable=${TRAEFIK_ENABLE:-true}
+    - traefik.docker.network=proxy
+    - traefik.http.routers.krepo-graphix-shop.rule=Host(`graphix-shop.${HOST:-localhost}`)
+    - traefik.http.routers.krepo-graphix-shop.entrypoints=${TRAEFIK_HTTP_ENTRYPOINTS:-web}
+    - traefik.http.routers.krepo-graphix-shop.tls=${TRAEFIK_USE_TLS:-false}
+    - traefik.http.services.krepo-graphix-shop.loadbalancer.server.port=8080
+
+x-demo-api: &demo-api
+  environment: &demo-api-env
+    MODULE: demo-api
+  # Its name on `proxy` in either profile, which is what the two clients call.
+  networks:
+    proxy:
+      aliases: [ demo-api ]
+  healthcheck: *port-open
+  labels:
+    - traefik.enable=${TRAEFIK_ENABLE:-true}
+    - traefik.docker.network=proxy
+    - traefik.http.routers.krepo-demo-api.rule=Host(`demo-api.${HOST:-localhost}`)
+    - traefik.http.routers.krepo-demo-api.entrypoints=${TRAEFIK_HTTP_ENTRYPOINTS:-web}
+    - traefik.http.routers.krepo-demo-api.tls=${TRAEFIK_USE_TLS:-false}
+    - traefik.http.services.krepo-demo-api.loadbalancer.server.port=8080
+
+# The two clients call demo-api's container and exit; nothing restarts them.
+x-demo-client-env: &demo-client-env
+  MODULE: demo-client
+  DEMO_API_URL: ${DEMO_API_URL:-http://demo-api:8080/}
+x-demo-spring-client-env: &demo-spring-client-env
+  MODULE: demo-spring-client
+  DEMO_API_URL: ${DEMO_API_URL:-http://demo-api:8080/}
+
+# Database 15, under a namespace the run deletes on the way out, so it shares the workspace's Redis
+# with nothing it could disturb.
+x-workflow-checkout-env: &workflow-checkout-env
+  MODULE: workflow-checkout
+  REDIS_URI: redis://${REDIS_HOST:-redis}:6379/${REDIS_DB:-15}
+
+services:
+  # ── jpa-shop ───────────────────────────────────────────────────────────────────────────────────
+  jpa-shop:
+    <<: [ *jpa-shop, *dev ]
+    profiles: [ jpa-shop ]
+    environment: { <<: [ *jpa-shop-env, *dev-env ] }
+  jpa-shop-prod:
+    <<: [ *jpa-shop, *prod ]
+    profiles: [ jpa-shop-prod ]
+    image: krepo-examples/jpa-shop
+    build: { <<: *prod-build, args: { MODULE: jpa-shop } }
+  # The shop's own role and database, created as the superuser before either starts.
+  jpa-shop-db-init:
+    profiles: [ jpa-shop, jpa-shop-prod ]
+    image: postgres:17
+    entrypoint: [ sh, /postgres-init.sh ]
+    volumes:
+      - ./examples/docker/postgres-init.sh:/postgres-init.sh:ro
+    environment:
+      PGHOST: ${POSTGRES_HOST:-postgres}
+      PGUSER: ${POSTGRES_ADMIN_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_ADMIN_PASSWORD:-}
+      APP_DB_NAME: ${SHOP_DB_NAME:-shop}
+      APP_DB_USER: ${SHOP_DB_USER:-shop}
+      APP_DB_PASSWORD: ${SHOP_DB_PASSWORD:-}
+    networks: [ proxy ]
+    restart: "no"
+
+  # ── spring-orders ──────────────────────────────────────────────────────────────────────────────
+  spring-orders:
+    <<: [ *spring-orders, *dev ]
+    profiles: [ spring-orders ]
+    environment: { <<: [ *spring-orders-env, *dev-env ] }
+  spring-orders-prod:
+    <<: [ *spring-orders, *prod ]
+    profiles: [ spring-orders-prod ]
+    image: krepo-examples/spring-orders
+    build: { <<: *prod-build, args: { MODULE: spring-orders } }
+  # The order book's own user, with readWrite on its two databases and nothing else.
+  spring-orders-db-init:
+    profiles: [ spring-orders, spring-orders-prod ]
+    image: mongo:8
+    entrypoint: [ sh, /mongo-init.sh ]
+    volumes:
+      - ./examples/docker/mongo-init.sh:/mongo-init.sh:ro
+    environment:
+      MONGO_HOSTS: ${MONGO_REPLICA_SET:-rs0}/${MONGO_SEEDS:-mongo1:27017,mongo2:27018}
+      MONGO_ADMIN_USER: ${MONGO_ADMIN_USER:-}
+      MONGO_ADMIN_PASSWORD: ${MONGO_ADMIN_PASSWORD:-}
+      APP_DB_USER: ${ORDERS_DB_USER:-spring_orders}
+      APP_DB_PASSWORD: ${ORDERS_DB_PASSWORD:-}
+      # The orders and the migration ledger, then the telemetry `stx.telemetry.mongo` writes.
+      APP_DBS: spring_orders,spring_orders_telemetry
+    networks: [ proxy ]
+    restart: "no"
+
+  # ── graphix-shop ───────────────────────────────────────────────────────────────────────────────
+  graphix-shop:
+    <<: [ *graphix-shop, *dev ]
+    profiles: [ graphix-shop ]
+    environment: { <<: [ *graphix-shop-env, *dev-env ] }
+  graphix-shop-prod:
+    <<: [ *graphix-shop, *prod ]
+    profiles: [ graphix-shop-prod ]
+    image: krepo-examples/graphix-shop
+    build: { <<: *prod-build, args: { MODULE: graphix-shop } }
+
+  # ── demo-api, and the two clients that call it ─────────────────────────────────────────────────
+  # In the clients' profiles too, so `--profile demo-client` brings up the server it calls and
+  # waits for its port.
+  demo-api:
+    <<: [ *demo-api, *dev ]
+    profiles: [ demo-api, demo-client, demo-spring-client ]
+    environment: { <<: [ *demo-api-env, *dev-env ] }
+  demo-api-prod:
+    <<: [ *demo-api, *prod ]
+    profiles: [ demo-api-prod, demo-client-prod, demo-spring-client-prod ]
+    image: krepo-examples/demo-api
+    build: { <<: *prod-build, args: { MODULE: demo-api } }
+
+  demo-client:
+    <<: *dev
+    profiles: [ demo-client ]
+    environment: { <<: [ *demo-client-env, *dev-env ] }
+    depends_on: { demo-api: { condition: service_healthy } }
+  demo-client-prod:
+    <<: *prod
+    profiles: [ demo-client-prod ]
+    image: krepo-examples/demo-client
+    build: { <<: *prod-build, args: { MODULE: demo-client } }
+    environment: *demo-client-env
+    depends_on: { demo-api-prod: { condition: service_healthy } }
+
+  demo-spring-client:
+    <<: *dev
+    profiles: [ demo-spring-client ]
+    environment: { <<: [ *demo-spring-client-env, *dev-env ] }
+    depends_on: { demo-api: { condition: service_healthy } }
+  demo-spring-client-prod:
+    <<: *prod
+    profiles: [ demo-spring-client-prod ]
+    image: krepo-examples/demo-spring-client
+    build: { <<: *prod-build, args: { MODULE: demo-spring-client } }
+    environment: *demo-spring-client-env
+    depends_on: { demo-api-prod: { condition: service_healthy } }
+
+  # ── workflow-checkout: three checkouts, narrated, then it exits ────────────────────────────────
+  workflow-checkout:
+    <<: *dev
+    profiles: [ workflow-checkout ]
+    environment: { <<: [ *workflow-checkout-env, *dev-env ] }
+  workflow-checkout-prod:
+    <<: *prod
+    profiles: [ workflow-checkout-prod ]
+    image: krepo-examples/workflow-checkout
+    build: { <<: *prod-build, args: { MODULE: workflow-checkout } }
+    environment: *workflow-checkout-env
+
+volumes:
+  kotlin-cache:
+    name: krepo-kotlin-cache
+  build:
+
+networks:
+  proxy:
+    external: true

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Gives an example its own user on the workspace's running replica set, as its root user. Run by
-# the `db-init` service of an example's compose.yaml, before the application starts.
+# the example's `-db-init` service in the repository root's compose.yaml, before the application
+# starts.
 #
 # The user lives in `admin` and holds readWrite on each database of APP_DBS and nothing else — not
 # the readWriteAnyDatabase the workspace's shared application user has. Idempotent: an existing user
@@ -10,7 +11,7 @@ set -eu
 
 for v in MONGO_HOSTS MONGO_ADMIN_USER MONGO_ADMIN_PASSWORD APP_DB_USER APP_DB_PASSWORD APP_DBS; do
     eval "val=\${$v:-}"
-    [ -n "$val" ] || { echo "mongo-init: $v is not set — see the example's .env.example" >&2; exit 1; }
+    [ -n "$val" ] || { echo "mongo-init: $v is not set — see .env.example at the repository root" >&2; exit 1; }
     # `${X:?}` in compose refuses only an empty value; the template's placeholder would otherwise
     # become a real password.
     [ "$val" != CHANGE_ME ] || { echo "mongo-init: $v is still the template's CHANGE_ME" >&2; exit 1; }

@@ -11,10 +11,12 @@ and a run that outlives the process that started it.
 Or in a container, on the workspace's Redis — `REDIS_URI` is what points it there:
 
 ```bash
-cd examples/workflow-checkout && cp .env.example .env && docker compose up
+cp .env.example .env   # at the repository root, once
+docker compose --profile workflow-checkout up   # or workflow-checkout-prod
 ```
 
-`COMPOSE_PROFILES=dev` compiles the mounted checkout and runs it; `prod` bakes the jar into an image.
+The `workflow-checkout` profile compiles the mounted checkout, and a restart picks up an edit;
+`workflow-checkout-prod` runs the jar baked into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 It needs a Redis on `localhost:6379`, or at `REDIS_URI` — the workspace's own will do. It writes to **database 15**
