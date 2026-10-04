@@ -39,8 +39,10 @@ included — without it `web` redirects everything to `https` and each hostname 
 
 `COMPOSE_PROFILES` in the example's `.env` picks one; set exactly one.
 
-- **`dev`** mounts the checkout at `/workspace` and runs `./kotlin run -m <module>` in it. An edit is
-  a `docker compose restart dev` away, and the restart compiles incrementally: the build output is a
+- **`dev`** mounts the checkout at `/workspace`, and `dev-run.sh` packages the module there and then
+  `exec`s `java -jar` on the result — so the toolchain exits once the compile is done and the
+  application is the only process left (Memory, below). An edit is a `docker compose restart dev`
+  away, and the restart compiles incrementally: the build output is a
   volume of its own, kept between restarts, and never the host's `build/` — a Linux build writing
   there would invalidate the IDE's and macOS's. One image, `krepo-examples-dev`, serves every
   example, since nothing of the repository is copied into it.
@@ -102,9 +104,20 @@ The clients, like `workflow-checkout`, run once, print what they did, and exit w
 
 ## Memory
 
-A `dev` container runs the toolchain, its compiler and the application in one place, so it is the
-expensive one; start them one at a time on a 16 GiB machine, and `docker compose down` what you are
-done with. A `prod` container of these examples measured 320–390 MiB.
+`dev` used to be `./kotlin run`, and that keeps the toolchain's JVM alive as the application's
+parent for as long as the application runs. Measured on `jpa-shop`, 2026-10-04:
+
+| `dev` container | settled | ready after `restart` |
+| --- | --- | --- |
+| `./kotlin run` — toolchain 450 MiB + application 370 MiB | 730–860 MiB | 7–8 s |
+| `dev-run.sh` — package, then `exec java -jar` | 325 MiB | 7 s unchanged, 12 s after an edit |
+
+`spring-orders` settles at 435 MiB the same way. The compile is now the peak — 590 MiB was the
+highest sample during a recompile — and only lasts while it runs. `dev` is bounded at 1.5 GiB so
+that a runaway example is killed by docker rather than by the host's OOM killer, which picks its own
+victim. The application's heap is `APP_JAVA_OPTS` (`-XX:MaxRAMPercentage=50`), not
+`JAVA_TOOL_OPTIONS`, which would reach the toolchain's JVM too. A `prod` container measured
+320–390 MiB. Still, `docker compose down` what you are done with.
 
 ## What it measured
 

@@ -8,8 +8,8 @@
 # `docs/examples-in-docker.md` has the whole arrangement.
 
 services:
-  # The checkout, mounted, run by `./kotlin run`. An edit is `docker compose restart <service>`
-  # away; nothing is copied into an image, so the one image serves every example.
+  # The checkout, mounted, compiled and run by dev-run.sh. An edit is `docker compose restart <service>`
+  # away; nothing of the repository is copied into the image, so the one image serves every example.
   dev:
     profiles: [ dev ]
     image: krepo-examples-dev
@@ -27,6 +27,12 @@ services:
       - kotlin-cache:/root/.cache
       # This example's own build output, kept between restarts so a restart is incremental.
       - build:/build
+    environment:
+      # The application's JVM only; dev-run.sh hands it to `java` once the toolchain has exited.
+      APP_JAVA_OPTS: -XX:MaxRAMPercentage=50
+    # A bound, so an example that runs away is killed by docker rather than the host's OOM killer
+    # choosing something else. It has to hold the compile, which is the peak.
+    mem_limit: 1536m
     networks: [ proxy ]
     restart: "no"
 

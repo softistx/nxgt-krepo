@@ -14,7 +14,7 @@ Or in a container, on the workspace's Redis — `REDIS_URI` is what points it th
 cd examples/workflow-checkout && cp .env.example .env && docker compose up
 ```
 
-`COMPOSE_PROFILES=dev` mounts the checkout and runs `./kotlin run`; `prod` runs the executable jar.
+`COMPOSE_PROFILES=dev` compiles the mounted checkout and runs it; `prod` bakes the jar into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 It needs a Redis on `localhost:6379`, or at `REDIS_URI` — the workspace's own will do. It writes to **database 15**

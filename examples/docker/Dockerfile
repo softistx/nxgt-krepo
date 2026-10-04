@@ -4,7 +4,8 @@
 # `docs/examples-in-docker.md` has the whole arrangement; the two targets are:
 #
 #   dev   the toolchain and a JDK, nothing of the repository. Compose mounts the checkout at
-#         /workspace and runs `./kotlin run`, so an edit is one `docker compose restart` away.
+#         /workspace and dev-run.sh compiles it, then runs the jar, so an edit is one
+#         `docker compose restart` away.
 #   prod  the module's executable jar on a JRE, built from a copy of the checkout.
 
 ARG JDK_IMAGE=eclipse-temurin:25-jdk
@@ -24,9 +25,11 @@ ENV KOTLIN_CLI_JAVA_HOME=/opt/java/openjdk \
 WORKDIR /workspace
 
 FROM toolchain AS dev
-# `--build-dir` outside the mount: the host's own `build/` belongs to the IDE and to `./kotlin` on
-# macOS, and a Linux build writing into it would invalidate both.
-ENTRYPOINT ["sh", "-c", "exec ./kotlin run -m \"$MODULE\" --build-dir /build"]
+# dev-run.sh packages into /build — outside the mount: the host's own `build/` belongs to the IDE
+# and to `./kotlin` on macOS, and a Linux build writing into it would invalidate both — then execs
+# the jar, so the toolchain does not outlive the compile.
+COPY examples/docker/dev-run.sh /usr/local/bin/dev-run
+ENTRYPOINT ["dev-run"]
 
 # ── prod ──────────────────────────────────────────────────────────────────────────────────────────
 FROM toolchain AS build

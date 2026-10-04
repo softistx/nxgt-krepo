@@ -14,7 +14,7 @@ what the two clients' containers call:
 cd examples/demo-api && cp .env.example .env && docker compose up -d
 ```
 
-`COMPOSE_PROFILES=dev` mounts the checkout and runs `./kotlin run`; `prod` runs the executable jar.
+`COMPOSE_PROFILES=dev` compiles the mounted checkout and runs it; `prod` bakes the jar into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ## Why a hand-written server

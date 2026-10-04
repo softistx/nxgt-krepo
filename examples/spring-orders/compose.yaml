@@ -1,6 +1,6 @@
 # spring-orders in a container, on the workspace's Mongo replica set, behind Traefik. Two profiles:
 #
-#   dev    the checkout mounted and run by `./kotlin run`         COMPOSE_PROFILES=dev
+#   dev    the checkout mounted, compiled, then run as a jar       COMPOSE_PROFILES=dev
 #   prod   the executable jar on a JRE, built into an image        COMPOSE_PROFILES=prod
 #
 #   cp .env.example .env   # then fill the two passwords
