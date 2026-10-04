@@ -9,16 +9,15 @@ POSTGRES_USER=… POSTGRES_PASSWORD=… \
 ./kotlin run -m jpa-shop
 ```
 
-Or in a container, on the workspace's Postgres with a role and database of its own, at
-<http://jpa-shop.localhost/products>:
+Or in the repository's dev container, on the workspace's Postgres, with a role and database of its own, at <http://jpa-shop.localhost/products> — start it with
+`docker compose up -d` at the repository root after `cp .env.example .env`, or open the repository
+in the IDE as a dev container, then from its terminal:
 
 ```bash
-cp .env.example .env   # at the repository root, once
-docker compose --profile jpa-shop up -d   # or jpa-shop-prod
+./kotlin run -m jpa-shop
+docker compose --profile jpa-shop-prod up -d   # or the jar baked into an image, from the host
 ```
 
-The `jpa-shop` profile compiles the mounted checkout, and a restart picks up an edit;
-`jpa-shop-prod` runs the jar baked into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ```

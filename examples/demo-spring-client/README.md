@@ -7,16 +7,21 @@ as `@HttpExchange` interfaces over `WebClient`, bound by Jackson 3.
 ./kotlin test -m demo-spring-client
 ```
 
-Or in a container, against `demo-api`'s, which its profile brings up and waits for:
+Or in the repository's dev container, against a `demo-api` started beside it — start it with `docker compose up -d` at the
+repository root after `cp .env.example .env`, or open the repository in the IDE as a dev container,
+then from its terminal:
 
 ```bash
-cp .env.example .env   # at the repository root, once
-docker compose --profile demo-spring-client up --exit-code-from demo-spring-client
-docker compose --profile demo-spring-client-prod up --exit-code-from demo-spring-client-prod   # the jar in an image
+./kotlin run -m demo-api &
+./kotlin run -m demo-spring-client
 ```
 
-The `demo-spring-client` profile compiles the mounted checkout, and a restart picks up an edit;
-`demo-spring-client-prod` runs the jar baked into an image.
+Or the jar baked into an image, from the host:
+
+```bash
+docker compose --profile demo-spring-client-prod up --exit-code-from demo-spring-client-prod
+```
+
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ## Two documents, one module

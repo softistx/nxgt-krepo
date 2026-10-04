@@ -8,16 +8,15 @@ skill describes.
 MONGO_URI=mongodb://localhost:27017/orders ./kotlin run -m spring-orders
 ```
 
-Or in a container, on the workspace's replica set with a user of its own, at
-<http://spring-orders.localhost/orders>:
+Or in the repository's dev container, on the workspace's replica set, with a user of its own, at <http://spring-orders.localhost/orders> — start it with
+`docker compose up -d` at the repository root after `cp .env.example .env`, or open the repository
+in the IDE as a dev container, then from its terminal:
 
 ```bash
-cp .env.example .env   # at the repository root, once
-docker compose --profile spring-orders up -d   # or spring-orders-prod
+./kotlin run -m spring-orders
+docker compose --profile spring-orders-prod up -d   # or the jar baked into an image, from the host
 ```
 
-The `spring-orders` profile compiles the mounted checkout, and a restart picks up an edit;
-`spring-orders-prod` runs the jar baked into an image.
 [`docs/examples-in-docker.md`](../../docs/examples-in-docker.md) has the rest.
 
 ```

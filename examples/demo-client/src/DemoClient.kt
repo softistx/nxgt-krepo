@@ -69,7 +69,7 @@ public class DemoClient(
 
 public fun main(): Unit =
     runBlocking {
-        val baseUrl = System.getenv("DEMO_API_URL") ?: "http://127.0.0.1:8080/"
+        val baseUrl = System.getenv("DEMO_API_URL") ?: "http://127.0.0.1:8084/"
         DemoClient(baseUrl).use { client ->
             val created = client.categories.createCategory(CategoryRequest(name = "books", family = "media"))
             println("created ${created.id} -> ${created.name}")

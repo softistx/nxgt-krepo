@@ -60,7 +60,9 @@ public fun startDemoServer(port: Int = 0): DemoServer {
 }
 
 public fun main() {
-    val server = startDemoServer(port = 8080)
+    // Each example has a port of its own, so several can run side by side in the dev container and
+    // Traefik routes each hostname to one. PORT overrides it.
+    val server = startDemoServer(port = System.getenv("PORT")?.toInt() ?: 8084)
     println("demo-api listening on ${server.baseUrl}")
     Thread.currentThread().join()
 }

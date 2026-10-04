@@ -1,17 +1,17 @@
 # syntax=docker/dockerfile:1
 #
-# One Dockerfile for every runnable example, built with the repository root as its context.
-# `docs/examples-in-docker.md` has the whole arrangement; the two targets are:
+# The repository's images, built with its root as the context. `docs/examples-in-docker.md` has the
+# whole arrangement; the two targets are:
 #
-#   dev   the toolchain and a JDK, nothing of the repository. Compose mounts the checkout at
-#         /workspace and dev-run.sh compiles it, then runs the jar, so an edit is one
-#         `docker compose restart` away.
-#   prod  the module's executable jar on a JRE, built from a copy of the checkout.
+#   workspace  the dev container: a JDK, the toolchain, git and bun, nothing of the repository.
+#              Compose mounts the checkout at /workspace and the IDE attaches to it
+#              (.devcontainer/devcontainer.json); any module runs from there with `./kotlin run`.
+#   prod       one example's executable jar on a JRE, built from a copy of the checkout.
 
 ARG JDK_IMAGE=eclipse-temurin:25-jdk
 ARG JRE_IMAGE=eclipse-temurin:25-jre
 
-# ── dev ───────────────────────────────────────────────────────────────────────────────────────────
+# ── the toolchain, shared by both ─────────────────────────────────────────────────────────────────
 # The `./kotlin` wrapper downloads its distribution with curl or wget, and the Temurin image has
 # neither — measured: "Please install 'wget' or 'curl'". JDK 25 is the toolchain's default
 # requirement, so with JAVA_HOME already pointing at one it provisions no second JDK, and
@@ -24,12 +24,23 @@ ENV KOTLIN_CLI_JAVA_HOME=/opt/java/openjdk \
     KOTLIN_CLI_NO_WELCOME_BANNER=1
 WORKDIR /workspace
 
-FROM toolchain AS dev
-# dev-run.sh packages into /build — outside the mount: the host's own `build/` belongs to the IDE
-# and to `./kotlin` on macOS, and a Linux build writing into it would invalidate both — then execs
-# the jar, so the toolchain does not outlive the compile. It is read from the mounted checkout, not
-# copied in: an edit to it takes effect on the next restart, and no image ever runs a stale copy.
-ENTRYPOINT ["/workspace/docker/dev-run.sh"]
+# ── workspace ─────────────────────────────────────────────────────────────────────────────────────
+# What working in the repository needs beyond the toolchain: git, and bun for `scripts/` and
+# changesets — pinned to the version the host runs, since bun strips types rather than checking them
+# and two versions can disagree. bun's installer unpacks a zip.
+FROM toolchain AS workspace
+ARG BUN_VERSION=1.4.2
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git unzip \
+ && rm -rf /var/lib/apt/lists/* \
+ && curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}" \
+ && git config --system --add safe.directory /workspace
+# The checkout is the host's, owned by another uid, and git refuses a repository it does not own
+# until told otherwise.
+ENV PATH=/root/.bun/bin:$PATH
+# The IDE runs its backend in here and the container's own work is done through it, so the
+# container's process is only something to keep it alive.
+CMD ["sleep", "infinity"]
 
 # ── prod ──────────────────────────────────────────────────────────────────────────────────────────
 FROM toolchain AS build
@@ -40,8 +51,7 @@ COPY . .
 # never copied into a layer.
 #
 # The jar's path is the toolchain's task layout, read off a real build:
-# tasks/_<module>_executableJarJvm/<module>-jvm-executable.jar — dev-run.sh reads the same path, so a
-# toolchain that moves it moves both. The build directory is a cache per
+# tasks/_<module>_executableJarJvm/<module>-jvm-executable.jar. The build directory is a cache per
 # module, so two examples building at once never share one; the toolchain cache is shared, locked.
 RUN --mount=type=cache,target=/root/.cache,sharing=locked \
     --mount=type=cache,id=krepo-build-${MODULE},target=/build \
@@ -53,5 +63,5 @@ FROM ${JRE_IMAGE} AS prod
 WORKDIR /app
 COPY --from=build /app.jar /app/app.jar
 # A container's memory, not the host's: the JVM's default heap is a quarter of what it can see. In
-# the image rather than in compose, so the dev image — another target — never inherits it.
+# the image rather than in compose, so the workspace image — another target — never inherits it.
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]

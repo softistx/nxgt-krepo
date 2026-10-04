@@ -14,10 +14,13 @@ import io.ktor.server.netty.Netty
  * ```
  *
  * Then `POST /graphql` with `{ "query": "{ products { name price } }" }`, or open
- * <http://localhost:8080/sandbox> for the Apollo Sandbox.
+ * <http://localhost:8081/sandbox> for the Apollo Sandbox.
  */
 fun main() {
-    embeddedServer(Netty, port = 8080, module = Application::shop).start(wait = true)
+    // 8081 rather than 8080: each example has a port of its own, so several can run side by side in the
+    // dev container and Traefik routes each hostname to one. PORT overrides it.
+    val port = System.getenv("PORT")?.toInt() ?: 8081
+    embeddedServer(Netty, port = port, module = Application::shop).start(wait = true)
 }
 
 /** Installs GraphQL at `/graphql`, and the Apollo Sandbox at `/sandbox`, over an in-memory [Catalog]. */

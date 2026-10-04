@@ -27,7 +27,7 @@ private val URI = System.getenv("REDIS_URI") ?: "redis://localhost:6379/15"
  * ```
  *
  * It needs a Redis on `localhost:6379`, or wherever `REDIS_URI` says — the workspace's own will do,
- * and `docker compose --profile workflow-checkout up` at the repository root reaches it — and it
+ * and a `./kotlin run` in the repository's dev container reaches it — and it
  * writes to database 15 under its own namespace, which it deletes on the way out.
  */
 fun main() =

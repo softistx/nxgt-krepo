@@ -724,10 +724,11 @@ proves a behaviour. **Such a bound is never loosened to buy speed**; a harness t
 nothing, may be. `ci.yml` has the measurements.
 
 **The examples that are applications run in Docker too**, on these same servers, from the
-repository root's `compose.yaml`: a profile per example for dev (the checkout mounted, compiled,
-then run as a jar) and an `<example>-prod` one (the executable jar baked into an image), on the
-external `proxy` network, answering at `<example>.localhost` through Traefik. The workspace's
-servers publish no host port, so for `jpa-shop` and `spring-orders` that is the way in.
+repository root's `compose.yaml`: a dev container, `workspace` (the checkout mounted, the IDE
+attached through `.devcontainer/devcontainer.json`, any module run with `./kotlin run`), and an
+`<example>-prod` profile per example (the executable jar baked into an image), on the external
+`proxy` network, answering at `<example>.localhost` through Traefik. The workspace's servers
+publish no host port, so for `jpa-shop` and `spring-orders` that is the way in.
 `docs/examples-in-docker.md` has it.
 
 **Check `docker ps` before pulling an image or starting a container.** The pull costs a gigabyte,
@@ -1100,7 +1101,7 @@ the same each time, and the mistakes are the same each time too.
   | `libs/data/stx-jpa/stx-jpa-spring/README.md` | The Spring auto-configuration for it — the two beans, the required `packages`, and why `SchemaMode` defers to stx-migrations |
   | `docs/jpa-criteria.md` | What a stx-jpa query may say — the operators, joins, fetch joins, entity graphs, projections, function vocabulary and the two escapes. **This is where a new operator or function is documented** |
   | `docs/jpa-mapping.md` | What a stx-jpa entity may say — the database, column naming, identifiers, `Instant`/`Uuid`, JSON columns, validation. **This is where a new `SqlTypes` code, strategy or converter is documented** |
-  | `docs/examples-in-docker.md` | How do I run an example in a container, on the workspace's databases, behind Traefik? The two profiles per example, the `db-init` services, and what has to be up first. **This is where a new example's compose service is documented** |
+  | `docs/examples-in-docker.md` | How do I run an example in a container, on the workspace's databases, behind Traefik? The dev container, the `-prod` profile per example, the `db-init` services, and what has to be up first. **This is where a new example's compose service is documented** |
   | `docs/graphix.md` | What a stx-graphix schema may say — the annotations, scalars, field directives, DataLoaders, what a resolver may see (instance, `@Argument`, registered context types). **This is where a new annotation, scalar or directive is documented** |
   | `libs/api/stx-graphix/stx-graphix/README.md` | How the GraphQL engine is shaped, why SerialDescriptor and not Jackson, why there is no class scan in core |
   | `libs/api/stx-graphix/stx-graphix-ktor/README.md` | The Ktor plugin — path, `instance` vs `schema { }`, the call on every operation, and the engine it registers with the container |

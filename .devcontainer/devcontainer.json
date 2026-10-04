@@ -1,0 +1,17 @@
+{
+  // The repository's dev container: the root compose.yaml's `workspace` service, which mounts the
+  // checkout at /workspace on the `proxy` network beside the workspace's databases and Traefik.
+  // docs/examples-in-docker.md has the whole arrangement.
+  "name": "krepo",
+  "dockerComposeFile": "../compose.yaml",
+  "service": "workspace",
+  // Explicitly, because every service has a profile: the workspace and the two database setups.
+  "runServices": ["workspace", "jpa-shop-db-init", "spring-orders-db-init"],
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "jetbrains": {
+      "backend": "IntelliJ"
+    }
+  }
+}
