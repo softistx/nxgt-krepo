@@ -12,7 +12,8 @@
     "changeset": "changeset",
     "version": "changeset version && bun scripts/sync-version.ts && bun install --lockfile-only",
     "typecheck": "tsc --noEmit",
-    "test": "bun test scripts/"
+    "test": "bun test scripts/",
+    "publish:local": "./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",

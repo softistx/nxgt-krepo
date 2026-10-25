@@ -386,7 +386,7 @@ Spring Boot.
 ```bash
 ./kotlin publish -m stx-mongo --transitive mavenLocal   # one library and what it depends on
 # all of them — `ls libs` lists role folders, not modules, so the selection comes from the manifests
-./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)
+./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)   # or: bun run publish:local
 ```
 
 Five things about it that are not guessable:
