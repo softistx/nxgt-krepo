@@ -283,7 +283,7 @@ To check what you are about to publish *without* signing or a token, publish to 
 and read the result:
 
 ```bash
-./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)
+./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)   # or: bun run publish:local
 ```
 
 Then check the result rather than the exit code — a dependency published with no version is the
