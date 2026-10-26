@@ -2,19 +2,15 @@ package com.softistx.amqp.consumer
 
 import com.rabbitmq.client.CancelCallback
 import com.rabbitmq.client.Channel
-import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConsumerShutdownSignalCallback
 import com.rabbitmq.client.DeliverCallback
-import com.rabbitmq.client.Delivery
 import com.rabbitmq.client.Recoverable
-import com.rabbitmq.client.ShutdownSignalException
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpValueException
 import com.softistx.amqp.codec.AmqpCodec
 import com.softistx.amqp.codec.jsonCodec
 import com.softistx.amqp.message.AmqpMessage
 import com.softistx.common.lifecycle.CloseGuard
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
@@ -88,7 +84,7 @@ class AmqpConsumer<T> internal constructor(
                         try {
                             AmqpMessage.from(delivery, codec)
                         } catch (failure: AmqpValueException) {
-                            undecodable(delivery, failure) { close(it) }
+                            rejectUndecodable(channel = broker, options, delivery, failure) { close(it) }
                             return@DeliverCallback
                         }
                     /* Blocking the broker's dispatch thread *is* the backpressure: with prefetch
@@ -198,45 +194,6 @@ class AmqpConsumer<T> internal constructor(
         guard.once {
             runCatching { channel.close() }
         }
-
-    // ─── Handling ─────────────────────────────────────────────────────────────
-
-    private suspend fun handle(
-        message: AmqpMessage<T>,
-        handler: suspend (AmqpMessage<T>) -> Unit,
-        onFailure: (AmqpMessage<T>, Throwable) -> Unit,
-    ) {
-        try {
-            handler(message)
-        } catch (cancellation: CancellationException) {
-            /* The collector is going away, not the message: leave it unacknowledged so the broker
-               gives it to whoever comes next. */
-            throw cancellation
-        } catch (failure: Throwable) {
-            onFailure(message, failure)
-            runCatching { nack(message, requeue = options.requeueOnFailure) }
-            return
-        }
-        if (options.ack is AckStrategy.AfterHandler) ackAfterHandler(message)
-    }
-
-    private fun undecodable(
-        delivery: Delivery,
-        failure: AmqpValueException,
-        stop: (Throwable) -> Unit,
-    ) {
-        when (options.undecodable) {
-            Undecodable.DeadLetter -> {
-                if (!autoAck) runCatching { channel.basicReject(delivery.envelope.deliveryTag, false) }
-            }
-
-            Undecodable.Fail -> {
-                if (!autoAck) runCatching { channel.basicNack(delivery.envelope.deliveryTag, false, true) }
-                // Thrown from here it would close the channel and leave the collector waiting.
-                stop(failure)
-            }
-        }
-    }
 }
 
 /**
@@ -259,24 +216,3 @@ fun <T> Amqp.consumer(
     codec: AmqpCodec<T>,
     options: ConsumerOptions = ConsumerOptions(),
 ): AmqpConsumer<T> = AmqpConsumer(openChannel(), queue, codec, options)
-
-/** What a consumer's flow does when its channel reports a shutdown. */
-internal enum class ShutdownOutcome { Continue, End, Fail }
-
-/**
- * Decides what a shutdown means for a flow.
- *
- * Only a *connection-level* loss that the client will recover from leaves the flow open — the
- * consumer is re-registered on the new channel with the same callbacks. A close this side asked
- * for ends it quietly; a channel closed by the broker, or any loss without recovery, ends it with
- * the signal as the reason.
- */
-internal fun shutdownOutcome(
-    signal: ShutdownSignalException,
-    recoverable: Boolean,
-): ShutdownOutcome =
-    when {
-        signal.isInitiatedByApplication -> ShutdownOutcome.End
-        recoverable && signal.reference is Connection -> ShutdownOutcome.Continue
-        else -> ShutdownOutcome.Fail
-    }
