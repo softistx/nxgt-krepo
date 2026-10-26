@@ -49,8 +49,9 @@ specs will use it instead of pulling an image. `libs/core/stx-testing/README.md`
 ## Opening a pull request
 
 **Every pull request targets `develop`.** Branch off `develop`, open against `develop`, merge there.
-Nothing is merged into `main`, however small and however green — `main` is aligned from `develop`
-when someone asks for it. A PR opened against `main` has the wrong base and wants recreating.
+Nothing is merged into `main`, however small and however green — `main` is fast-forwarded to
+`develop` right after each merge into it (see AGENTS.md). A PR opened against `main` has the wrong
+base and wants recreating.
 
 The one exception is a feature too large for a single PR: its slices target that feature's own
 integration branch, and the integration branch targets `develop`.

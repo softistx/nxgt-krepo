@@ -22,7 +22,7 @@ develop
 - **Cut the integration branch first**: `git checkout develop && git pull --ff-only && git checkout -b feat/<slug>`, and push it so the slice PRs have a base to target.
 - **Every slice PR targets the integration branch**: `gh pr create --base feat/<slug>`. A slice never PRs into another slice, and never into `develop`.
 - **The integration branch is the only thing that PRs into `develop`**, once every slice is merged and the whole feature is green: `gh pr create --base develop`. Say so and wait for a go-ahead before merging it — that PR is the feature, and it is the one a human wants to look at.
-- **`develop` is the terminus.** No branch here ever targets `main`, and finishing a feature does not touch it: `main` is aligned from `develop` separately, when someone asks for it.
+- **`develop` is the terminus.** No branch here ever targets `main`, and a feature never touches it directly: `main` follows `develop` by fast-forward right after each merge into `develop`.
 - Each slice branches off the integration branch that already has the previous one, so `git checkout feat/<slug> && git pull --ff-only` before starting the next. Slices that genuinely do not touch each other can run in parallel; anything that shares a file should not.
 - Use `fix/<slug>-<task>` when a slice repairs something an earlier slice of the same feature introduced.
 
