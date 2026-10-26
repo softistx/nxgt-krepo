@@ -189,7 +189,12 @@ class KafkaSubscriber<K, V> internal constructor(
         committed.await()
     }
 
-    /** Marks one record handled and commits up to it — for a [CommitStrategy.Manual] collector. */
+    /**
+     * Marks one record handled and commits up to it — for a [CommitStrategy.Manual] collector.
+     *
+     * A `copy()` of the emitted record carries no assignment epoch, so it is accepted for the
+     * partition's current assignment even when the original was emitted before a revocation.
+     */
     suspend fun commit(record: KafkaRecord<K, V>) {
         mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset, record.epoch))
         commitPending()

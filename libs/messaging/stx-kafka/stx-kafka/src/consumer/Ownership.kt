@@ -33,8 +33,6 @@ internal class Ownership {
         epochs.set(epochs.get() - partitions.toSet())
     }
 
-    fun owns(partition: TopicPartition): Boolean = partition in epochs.get()
-
     /** Whether a completion stamped [epoch] still belongs to [partition]'s current assignment. */
     fun accepts(
         partition: TopicPartition,

@@ -26,7 +26,8 @@ data class KafkaRecord<K, V>(
     /**
      * The assignment epoch this record was handed out under, so a completion that outlives a
      * revocation is told apart from one for the partition's new assignment. Not part of the record's
-     * identity: it is not in equals, `copy` or the constructor, and a copy has none.
+     * identity: it is not in equals, `copy` or the constructor, and a copy has none, so a completion or
+     * `commit` for a `copy()`d record is accepted for the partition's current assignment, stale or not.
      */
     internal var epoch: Long = NO_EPOCH
 

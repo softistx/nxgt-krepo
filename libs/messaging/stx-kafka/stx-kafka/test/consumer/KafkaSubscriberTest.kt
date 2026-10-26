@@ -20,6 +20,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.MockConsumer
 import org.apache.kafka.common.TopicPartition
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -332,22 +333,26 @@ class KafkaSubscriberTest :
 
                 val started = CompletableDeferred<Unit>()
                 val release = CompletableDeferred<Unit>()
+                val rebalanced = AtomicBoolean(false)
+                val finished = AtomicBoolean(false)
                 coroutineScope {
                     val processing =
                         launch {
                             subscriber.process {
                                 started.complete(Unit)
                                 release.await()
+                                finished.set(true)
                             }
                         }
                     started.await()
                     mock.schedulePollTask {
                         mock.listener().onPartitionsRevoked(listOf(orders0))
                         mock.listener().onPartitionsAssigned(listOf(orders0))
+                        rebalanced.set(true)
                     }
-                    delay(300)
+                    until { rebalanced.get() }
                     release.complete(Unit)
-                    delay(300)
+                    until { finished.get() }
                     subscriber.commitPending()
                     processing.cancel()
                 }
