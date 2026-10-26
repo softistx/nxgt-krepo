@@ -79,5 +79,4 @@ val CorsPolicy.ignoredByKtor: List<String>
             if (path != CorsPolicy().path) add("path")
         }
 
-private fun originPattern(glob: String): Regex =
-    Regex(glob.split("*").joinToString(".*") { Regex.escape(it) })
+private fun originPattern(glob: String): Regex = Regex(glob.split("*").joinToString(".*") { Regex.escape(it) })

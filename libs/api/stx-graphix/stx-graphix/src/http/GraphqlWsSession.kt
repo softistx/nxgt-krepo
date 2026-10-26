@@ -54,9 +54,11 @@ class GraphqlWsSession(
     private val mutex = Mutex()
     private val sendMutex = Mutex()
     private var acked = false
+
     @Volatile
     private var closed = false
     private var init: GraphqlWsInit = GraphqlWsInit(null)
+
     // Concurrent: `shutdown()` is not suspending, so it cannot take the mutex (the HTTP layer calls it
     // from a close handler, and `shut` calls it already holding the lock).
     private val active = ConcurrentHashMap<String, Job>()
