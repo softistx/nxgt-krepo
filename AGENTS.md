@@ -949,22 +949,24 @@ The catalog's `[bundles]` groupings map to the intended consumer surfaces of thi
 **A module that turns on `settings.ktor` pins the version to the catalog's.** `ktor: enabled` gives
 `$ktor.server.core` and the rest from the toolchain's *own* default version, which matched
 `ktor = "3.5.2"` in the catalog on 0.12.x by coincidence rather than by construction. Toolchain
-0.13.0 moved the default to 3.6.0 and the catalog stayed — exactly the upgrade this rule was written
-for: without the pin, an artifact this repo names itself (`ktor-server-di`, on
+0.13.0 moved the default to 3.6.0 while the catalog was still on 3.5.2 — exactly the upgrade this
+rule was written for (the catalog has since caught up): without the pin, an artifact this repo names itself (`ktor-server-di`, on
 `version.ref = "ktor"`) would now be a different Ktor from `ktor-server-core`. So:
 
 ```yaml
 settings:
   ktor:
     enabled: true
-    version: 3.5.2   # matches `ktor` in libs.versions.toml
+    version: 3.6.0   # matches `ktor` in libs.versions.toml
 ```
 
 `./kotlin show settings -m <module>` says which one is in force: `# module.yaml` when it is pinned,
-`# default` when the toolchain is choosing. Sixteen modules enable it — `stx-ktor`, every `*-ktor`
-integration beside its library, and the four Ktor examples — and every one of them carries the pin.
+`# default` when the toolchain is choosing. Eighteen modules enable it — `stx-ktor`, every `*-ktor`
+integration beside its library, the five Ktor examples and `server/oauth` — and every one of them carries the pin.
 
-The catalog's `kotlin = "2.4.0"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.20 with CLI 0.13.0), so that entry does not control what this repo compiles with — nor what it publishes: every POM declares `kotlin-stdlib` at the toolchain's version, so a toolchain bump that moves the compiler moves that line in every family's next release. Spring Boot is the same — `springBoot: enabled` without a `version` imports the toolchain's default `spring-boot-dependencies` BOM into the POM (4.1.1 on 0.13.0, 4.1.0 on 0.12.2).
+**`kotlinx-serialization` follows the toolchain the same way.** `settings.kotlin.serialization: json` makes the toolchain add `kotlinx-serialization-core` at its own default (1.11.0 on 0.13.0), so the catalog's `kotlinx-serialization` (the `-json` artifact) stays at that version: a higher one would put `json-jvm:1.12.0` next to `core-jvm:1.11.0` in the POMs, and Maven's nearest-wins rule would keep core 1.11 under json 1.12. Check `./kotlin show settings -m stx-common` and `./kotlin show dependencies -m stx-common` on every toolchain bump.
+
+The catalog's `kotlin = "2.4.20"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.20 with CLI 0.13.0), so that entry does not control what this repo compiles with — nor what it publishes: every POM declares `kotlin-stdlib` at the toolchain's version, so a toolchain bump that moves the compiler moves that line in every family's next release. Spring Boot is the same — `springBoot: enabled` without a `version` imports the toolchain's default `spring-boot-dependencies` BOM into the POM (4.1.1 on 0.13.0, 4.1.0 on 0.12.2).
 
 A compiler plugin is tied to the compiler, and a bump can break it where no source changed. 0.13.0's Kotlin 2.4.20 failed `server/oauth` inside the Koin compiler plugin 1.1.0 — an `IrGenerationExtensionException` on a removed `getValueArgument` overload, preceded by Koin's own warning that 2.4.20 is newer than it was tested on. `koin-compiler = "1.2.1"` compiles it. Read that warning as the failure's first line, not as noise.
 

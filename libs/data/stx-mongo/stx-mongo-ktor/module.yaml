@@ -39,4 +39,4 @@ settings:
     enabled: true
     # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is
     # the same number today by coincidence.
-    version: 3.5.2
+    version: 3.6.0
