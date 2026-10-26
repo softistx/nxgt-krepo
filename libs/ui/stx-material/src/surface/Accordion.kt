@@ -15,6 +15,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.StxIcons
 import com.softistx.material.motion.Transitions
@@ -56,7 +57,7 @@ fun Accordion(
                         .styleable(styleState, navigationItemStyle, style)
                         .clickable(
                             interactionSource = interactionSource,
-                            indication = null,
+                            role = Role.Button,
                             onClick = { onExpandedChange(if (open) null else index) },
                         ).padding(vertical = StxTheme.spacing.sm),
                 verticalAlignment = Alignment.CenterVertically,

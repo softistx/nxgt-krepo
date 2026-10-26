@@ -166,27 +166,29 @@ vient de `$compose.desktop.currentOs`, qui n'existe que sur jvm.
 
 Le critère de recette : `screens/sign-up-form` — huit contrôles, une validation croisée, des erreurs
 qui attendent leur tour, un bouton qui sait s'il peut être pressé — s'écrit avec **un seul**
-`remember`, et c'est de l'état métier.
+`rememberForm`, et c'est de l'état métier.
 
 **L'état**
-- [x] `FieldState<T>` — valeur, validité, `touched`, `dirty`, et surtout `showError` : une erreur est
-      *retenue* jusqu'à ce que le champ soit quitté après avoir été saisi, ou que `validate()`
-      l'exige. Un formulaire vide qui accueille le lecteur avec six reproches est ce que ce type
-      empêche
-- [x] `FormState` + `rememberForm` + `form.field(name, initial, vararg rules)` — il ne copie rien,
-      il interroge ses champs ; `isValid`, `dirty`, `errors`, `values()`, `validate()`,
-      `submit { }`, `reset()`
-- [x] `Validation<T>` — une règle est une fonction `(T) -> String?`. **Aucune dépendance de
-      validation** : Konform ou autre se branche en trois lignes, la librairie n'impose rien
-- [x] `Rules` — `required`, `minLength`, `maxLength`, `email`, `pattern`, `digits`, `matching`,
-      `checked`, `chosen`, `anyOf`, `inRange`
+- [x] `FormState<T>` + `rememberForm { }` — un formulaire est **une** valeur (le corps de la
+      requête, l'entrée GraphQL) et chaque champ en est une propriété ; `value`, `errors`,
+      `error(path)`, `hasError(path)`, `isValid()`, `isDirty()`, `update(path) { }`, `validateAll()`,
+      `submit { }`, `clearErrors()`, `reset()`. Une erreur est *retenue* : `errors` ne contient que
+      les chemins passés par `update`, jusqu'à ce que `validateAll()` fasse parler tout le monde.
+      Un formulaire vide qui accueille le lecteur avec six reproches est ce que ce type empêche
+- [x] `Validation<T>` de Konform — les règles se déclarent une fois sur toute la valeur
+      (`override val validate = Validation { ... }`). Konform est exporté par le module ; les
+      messages sont des paramètres, la librairie ne porte aucun catalogue
+- [x] Les contraintes sur le builder de Konform — `required`, `email`, `minLength`, `maxLength`,
+      `pattern`, `digits`, `matching`, `checked`, `chosen`, `anyOf`, `inRange`
+- [x] (remplacé par le commit 0c4931d) `FieldState<T>`, `rememberField`, `form.field(...)` et
+      `Rules` : l'état par champ a été retiré au profit de `FormState<T>`
 
 **Les contrôles**
 - [x] `TextField` (avec `secret` et son bouton de révélation), `TextareaField` (avec compteur),
       `SelectField` — tous trois sur l'`OutlinedTextField` de M3, qui porte déjà le label flottant,
       le texte d'aide et les couleurs d'erreur
-- [x] `Checkbox`, `Switch`, `RadioGroup`, `CheckboxGroup` — la ligne entière est **une** cible, label
-      compris ; M3 ne livre que la case
+- [x] `Checkbox`, `Switch`, `RadioGroup`, `CheckboxGroup` — la ligne entière est **une** cible d'au moins
+      48 dp, label compris ; M3 ne livre que la case
 - [x] `SliderField` — la valeur reste visible, ce que le `Slider` de M3 ne fait qu'au glissement
 - [x] `OtpField` — **un** champ portant plusieurs cases, et non une case par chiffre : le collage
       fonctionne, l'effacement aussi, et le lecteur d'écran reçoit une seule saisie
@@ -195,9 +197,8 @@ qui attendent leur tour, un bouton qui sait s'il peut être pressé — s'écrit
 - [x] `ChevronDown`, `Eye`, `EyeOff` ajoutés au jeu d'icônes
 
 **Vérification**
-- [x] `RulesTest`, `FieldStateTest`, `FormStateTest` — l'ordre des règles est le message, une règle
-      de format laisse passer le vide, une erreur attend son tour, `validate()` les fait toutes
-      parler, et déclarer deux fois le même nom rend le même champ
+- [x] `RulesTest`, `FormStateTest` — l'ordre des règles est le message, une règle de format laisse
+      passer le vide, une erreur attend son tour, `validateAll()` les fait toutes parler
 - [x] `FormRenderTest` — chaque contrôle est réellement rendu (`ImageComposeScene`), pour la classe
       de panne qui compile puis explose à l'affichage
 - [x] Une story par contrôle, plus `screens/sign-up-form`

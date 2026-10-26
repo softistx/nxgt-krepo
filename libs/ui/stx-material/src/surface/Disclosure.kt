@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import com.softistx.material.icon.Icon
 import com.softistx.material.icon.StxIcons
 import com.softistx.material.motion.Transitions
@@ -47,7 +48,7 @@ fun Disclosure(
                     .styleable(styleState, navigationItemStyle, style)
                     .clickable(
                         interactionSource = interactionSource,
-                        indication = null,
+                        role = Role.Button,
                         onClick = { onExpandedChange(!expanded) },
                     ).padding(vertical = StxTheme.spacing.sm),
             verticalAlignment = Alignment.CenterVertically,

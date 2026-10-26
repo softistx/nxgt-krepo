@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +42,7 @@ fun Switch(
                     enabled = enabled,
                     role = Role.Switch,
                     onValueChange = onValueChange,
-                ),
+                ).minimumInteractiveComponentSize(),
         horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
