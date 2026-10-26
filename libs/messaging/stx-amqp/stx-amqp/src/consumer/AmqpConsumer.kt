@@ -3,12 +3,14 @@ package com.softistx.amqp.consumer
 import com.rabbitmq.client.CancelCallback
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DeliverCallback
+import com.rabbitmq.client.ConsumerShutdownSignalCallback
 import com.rabbitmq.client.Delivery
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpValueException
 import com.softistx.amqp.codec.AmqpCodec
 import com.softistx.amqp.codec.jsonCodec
 import com.softistx.amqp.message.AmqpMessage
+import com.softistx.common.lifecycle.CloseGuard
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -18,7 +20,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
@@ -60,6 +61,8 @@ class AmqpConsumer<T> internal constructor(
 ) : AutoCloseable {
     private val autoAck = options.ack is AckStrategy.OnDelivery
 
+    private val guard = CloseGuard()
+
     /**
      * The messages, as they arrive, until the collector stops.
      *
@@ -82,7 +85,7 @@ class AmqpConsumer<T> internal constructor(
                         try {
                             AmqpMessage.from(delivery, codec)
                         } catch (failure: AmqpValueException) {
-                            undecodable(delivery, failure)
+                            undecodable(delivery, failure) { close(it) }
                             return@DeliverCallback
                         }
                     /* Blocking the broker's dispatch thread *is* the backpressure: with prefetch
@@ -91,6 +94,14 @@ class AmqpConsumer<T> internal constructor(
                     trySendBlocking(message).getOrThrow()
                 }
             val cancelled = CancelCallback { close() }
+
+            /* A channel or connection that went away takes the consumer with it: nothing will be
+               delivered again, so a collector left waiting would wait for ever. A close this side
+               asked for ends the flow quietly; the broker's or the network's is the reason. */
+            val shutdown =
+                ConsumerShutdownSignalCallback { _, signal ->
+                    if (signal.isInitiatedByApplication) close() else close(signal)
+                }
 
             val tag =
                 broker.basicConsume(
@@ -102,6 +113,7 @@ class AmqpConsumer<T> internal constructor(
                     options.arguments,
                     deliver,
                     cancelled,
+                    shutdown,
                 )
 
             awaitClose { runCatching { broker.basicCancel(tag) } }
@@ -118,17 +130,34 @@ class AmqpConsumer<T> internal constructor(
     suspend fun process(
         onFailure: (AmqpMessage<T>, Throwable) -> Unit = { _, _ -> },
         handler: suspend (AmqpMessage<T>) -> Unit,
-    ) = coroutineScope {
-        val inFlight = Semaphore(options.concurrency)
+    ) = dispatch { message -> handle(message, handler, onFailure) }
 
-        messages().collect { message ->
-            if (options.concurrency == 1) {
-                handle(message, handler, onFailure)
-            } else {
-                this@coroutineScope.launch { inFlight.withPermit { handle(message, handler, onFailure) } }
+    /**
+     * Runs [handle] for every message, one at a time or up to [ConsumerOptions.concurrency] at once.
+     *
+     * The permit is taken *before* the coroutine is launched: taken inside it, the collector would
+     * keep launching while every permit was held, and the waiting coroutines would be as many as
+     * the prefetch let the broker deliver.
+     */
+    internal suspend fun dispatch(handle: suspend (AmqpMessage<T>) -> Unit) =
+        coroutineScope {
+            val inFlight = Semaphore(options.concurrency)
+
+            messages().collect { message ->
+                if (options.concurrency == 1) {
+                    handle(message)
+                } else {
+                    inFlight.acquire()
+                    launch {
+                        try {
+                            handle(message)
+                        } finally {
+                            inFlight.release()
+                        }
+                    }
+                }
             }
         }
-    }
 
     /** Takes the message off the queue for good. */
     suspend fun ack(
@@ -156,9 +185,10 @@ class AmqpConsumer<T> internal constructor(
     }
 
     /** Cancels the consumer and closes its channel. The connection it came from stays open. */
-    override fun close() {
-        runCatching { channel.close() }
-    }
+    override fun close() =
+        guard.once {
+            runCatching { channel.close() }
+        }
 
     // ─── Handling ─────────────────────────────────────────────────────────────
 
@@ -184,6 +214,7 @@ class AmqpConsumer<T> internal constructor(
     private fun undecodable(
         delivery: Delivery,
         failure: AmqpValueException,
+        stop: (Throwable) -> Unit,
     ) {
         when (options.undecodable) {
             Undecodable.DeadLetter -> {
@@ -192,7 +223,8 @@ class AmqpConsumer<T> internal constructor(
 
             Undecodable.Fail -> {
                 if (!autoAck) runCatching { channel.basicNack(delivery.envelope.deliveryTag, false, true) }
-                throw failure
+                // Thrown from here it would close the channel and leave the collector waiting.
+                stop(failure)
             }
         }
     }

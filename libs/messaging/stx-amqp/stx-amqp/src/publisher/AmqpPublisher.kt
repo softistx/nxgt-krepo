@@ -10,6 +10,7 @@ import com.softistx.amqp.codec.AmqpCodec
 import com.softistx.amqp.codec.jsonCodec
 import com.softistx.amqp.message.MessageHeaders
 import com.softistx.common.coroutines.Mailbox
+import com.softistx.common.lifecycle.CloseGuard
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,9 +69,15 @@ class AmqpPublisher<T> internal constructor(
     /** Held across "take the next sequence number, then publish under it", which must not interleave. */
     private val publishing = Mutex()
 
+    private val guard = CloseGuard()
+
     private val settling = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     init {
+        /* A lost channel takes its sequence numbers with it: the client recovers it by default and
+           restarts them at 1, so entries left in the map would be answered by the wrong confirms
+           and the lost ones never. Fail them all at the loss, before anything new is registered. */
+        channel.addShutdownListener { confirms.post(Confirm.Lost) }
         if (options.confirms) {
             channel.confirmSelect()
             channel.addConfirmListener(
@@ -129,10 +136,11 @@ class AmqpPublisher<T> internal constructor(
      * settler stops — and whatever it never got round to saying is failed rather than left as a
      * coroutine awaiting an answer that is not coming.
      */
-    override fun close() {
-        runCatching { channel.close() }
-        confirms.close()
-    }
+    override fun close() =
+        guard.once {
+            runCatching { channel.close() }
+            confirms.close()
+        }
 
     // ─── Publishing ───────────────────────────────────────────────────────────
 
@@ -241,6 +249,12 @@ class AmqpPublisher<T> internal constructor(
                     is Confirm.Failed -> {
                         take(message.sequence, false).forEach { it.failed(message.cause) }
                     }
+
+                    Confirm.Lost -> {
+                        pending.values.forEach { it.abandoned() }
+                        pending.clear()
+                        bySequence.clear()
+                    }
                 }
             }
         } finally {
@@ -311,6 +325,9 @@ private sealed interface Confirm {
         val sequence: Long,
         val cause: Throwable,
     ) : Confirm
+
+    /** The channel shut down: nothing registered before this will ever be confirmed. */
+    data object Lost : Confirm
 }
 
 /**

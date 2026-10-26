@@ -13,11 +13,8 @@ import com.softistx.amqp.topology.DeadLetter
 import com.softistx.amqp.topology.Topology
 import com.softistx.amqp.topology.declare
 import com.softistx.amqp.topology.delete
+import com.softistx.common.lifecycle.CloseGuard
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.json.Json
 
 /**
@@ -87,8 +84,10 @@ class RetryQueue<T> internal constructor(
         return willRetry
     }
 
+    private val guard = CloseGuard()
+
     /** Closes the publisher this uses. The queues stay where they are. */
-    override fun close() = publisher.close()
+    override fun close() = guard.once { publisher.close() }
 
     companion object {
         /** Which attempt this delivery is: absent on the first, one higher on every copy after it. */
@@ -161,30 +160,31 @@ suspend fun <T> AmqpConsumer<T>.processWithRetry(
     retries: RetryQueue<T>,
     onFailure: (AmqpMessage<T>, Throwable) -> Unit = { _, _ -> },
     handler: suspend (AmqpMessage<T>) -> Unit,
-) = coroutineScope {
-    val inFlight = Semaphore(options.concurrency)
-
-    suspend fun handle(message: AmqpMessage<T>) {
+) = dispatch { message ->
+    val failure =
         try {
             handler(message)
-            ack(message)
+            null
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (failure: Throwable) {
-            onFailure(message, failure)
-            try {
-                retries.retry(message, failure)
-                ack(message)
-            } catch (republish: Throwable) {
-                /* The copy did not make it. Back on the queue is the only place left that is not
-                   "lost", even though it means an immediate redelivery. */
-                if (republish is CancellationException) throw republish
-                runCatching { nack(message, requeue = true) }
-            }
+            failure
         }
-    }
 
-    messages().collect { message ->
-        if (options.concurrency == 1) handle(message) else launch { inFlight.withPermit { handle(message) } }
+    if (failure == null) {
+        /* Outside the handler's try: a handler that succeeded and then lost its channel on the ack
+           is not a failed handler, and must not be sent round the retries as one. */
+        ack(message)
+    } else {
+        onFailure(message, failure)
+        try {
+            retries.retry(message, failure)
+            ack(message)
+        } catch (republish: Throwable) {
+            /* The copy did not make it. Back on the queue is the only place left that is not
+               "lost", even though it means an immediate redelivery. */
+            if (republish is CancellationException) throw republish
+            runCatching { nack(message, requeue = true) }
+        }
     }
 }

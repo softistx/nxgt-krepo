@@ -2,6 +2,7 @@ package com.softistx.amqp.consumer
 
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpTestBroker
+import com.softistx.amqp.AmqpValueException
 import com.softistx.amqp.codec.AmqpCodec
 import com.softistx.amqp.publisher.publisher
 import com.softistx.amqp.topology.ExchangeType
@@ -14,7 +15,9 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.take
@@ -174,6 +177,44 @@ class AmqpConsumerTest :
 
                     handled.toList() shouldContainExactly listOf("A2")
                     amqp.eventually(dead, 1)
+                }
+            }
+        }
+
+        feature("a consumer whose channel the broker closed").config(enabled = AmqpTestBroker.available) {
+            scenario("the flow ends with the broker's reason instead of hanging") {
+                withQueues { amqp, queue, _ ->
+                    val channel = amqp.openChannel()
+                    val consumer = AmqpConsumer(channel, queue, AmqpCodec.text, ConsumerOptions())
+                    val failure =
+                        async {
+                            runCatching { consumer.messages().collect { } }.exceptionOrNull()
+                        }
+                    delay(500)
+                    // A passive declare of a queue that is not there: the broker answers 404 and closes the channel.
+                    runCatching { channel.queueDeclarePassive("test.no.such.queue.${AmqpTestBroker.name("x")}") }
+
+                    withTimeout(10.seconds) { failure.await() } shouldNotBe null
+                }
+            }
+        }
+
+        feature("a body that will not decode, with Undecodable.Fail").config(enabled = AmqpTestBroker.available) {
+            scenario("the message goes back on the queue and the consumer stops with the decode failure") {
+                withQueues { amqp, queue, _ ->
+                    amqp.publisher<String>(codec = AmqpCodec.text).use { it.publish("not json at all", routingKey = queue) }
+
+                    val failure =
+                        withTimeout(10.seconds) {
+                            runCatching {
+                                amqp
+                                    .consumer<Order>(queue, ConsumerOptions(undecodable = Undecodable.Fail))
+                                    .use { it.process { } }
+                            }.exceptionOrNull()
+                        }
+
+                    (failure is AmqpValueException) shouldBe true
+                    amqp.eventually(queue, 1)
                 }
             }
         }
