@@ -4,6 +4,7 @@ import com.softistx.spring.error.ApiException
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
+import reactor.core.publisher.Mono
 
 /**
  * Who is making this request, or null when nobody is.
@@ -28,6 +29,20 @@ suspend fun currentUser(): UserDetails? =
         .awaitSingleOrNull()
         ?.authentication
         ?.principal as? UserDetails
+
+/**
+ * The signed-in user's name, or empty, for code that is in a Reactor chain rather than a coroutine.
+ *
+ * Kept apart from its callers on purpose: Spring Security is an optional dependency, and a bean
+ * class that names its types in a signature or lambda fails Spring's introspection when it is
+ * missing, before any `catch` can run.
+ */
+internal fun currentUserName(): Mono<String> =
+    ReactiveSecurityContextHolder
+        .getContext()
+        .map { (it.authentication?.principal as? UserDetails)?.username.orEmpty() }
+        .onErrorReturn("")
+        .defaultIfEmpty("")
 
 /**
  * [currentUser], for a route that has nothing to say to a stranger.
