@@ -89,7 +89,6 @@ class KafkaSubscriber<K, V> internal constructor(
     /** What this consumer owns, as the rebalance listener last said — what records and completions are checked against. */
     private val ownership = Ownership()
 
-    // Touched only on the dispatcher.
     private val commits = LoopCommits(consumer, options, mailbox, ownership)
 
     private val loop = PollLoop(consumer, topics, options, ownership, commits, polling, assigned)
