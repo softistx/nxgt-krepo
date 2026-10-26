@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback
-import org.springframework.security.core.context.ReactiveSecurityContextHolder
-import org.springframework.security.core.userdetails.UserDetails
 import reactor.core.publisher.Mono
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
@@ -117,11 +115,7 @@ class AuditListener(
      */
     private fun authorOfSave(): Mono<String> =
         try {
-            ReactiveSecurityContextHolder
-                .getContext()
-                .map { (it.authentication?.principal as? UserDetails)?.username.orEmpty() }
-                .onErrorReturn("")
-                .defaultIfEmpty("")
+            SecurityAuthor.current()
         } catch (_: NoClassDefFoundError) {
             Mono.just("")
         }
