@@ -47,16 +47,24 @@ class ChannelLossTest :
                             shutdown = args[0] as ShutdownListener
                             null
                         }
+
                         "addConfirmListener" -> {
                             acked = args[0] as ConfirmCallback
                             null
                         }
-                        "getNextPublishSeqNo" -> sequence.get()
+
+                        "getNextPublishSeqNo" -> {
+                            sequence.get()
+                        }
+
                         "basicPublish" -> {
                             published.incrementAndGet()
                             sequence.incrementAndGet()
                         }
-                        else -> null
+
+                        else -> {
+                            null
+                        }
                     }.let { if (method.returnType == Long::class.javaPrimitiveType && it !is Long) 0L else it }
                 } as Channel
         }

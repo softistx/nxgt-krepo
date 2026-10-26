@@ -148,7 +148,12 @@ class FileExporterTest :
                 exporter.export(resource, listOf(log("third")))
                 exporter.close()
 
-                val text = directory.toFile().walk().filter { it.isFile }.joinToString("") { it.readText() }
+                val text =
+                    directory
+                        .toFile()
+                        .walk()
+                        .filter { it.isFile }
+                        .joinToString("") { it.readText() }
                 text shouldContain "first"
                 text shouldContain "second"
                 text shouldContain "third"

@@ -400,6 +400,7 @@ class KafkaSubscriber<K, V> internal constructor(
     private fun drop(partitions: Collection<TopicPartition>) {
         owned -= partitions.toSet()
         val gone = partitions.toSet()
+
         fun KafkaRecord<K, V>.revoked() = TopicPartition(topic, partition) in gone
         val kept = mutableListOf<KafkaRecord<K, V>>()
         val queue = buffer

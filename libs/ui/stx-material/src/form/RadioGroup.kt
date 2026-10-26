@@ -51,12 +51,14 @@ fun <T> RadioGroup(
             options.forEach { option ->
                 Row(
                     modifier =
-                        Modifier.selectable(
-                            selected = value == option,
-                            enabled = enabled,
-                            role = Role.RadioButton,
-                            onClick = { onValueChange(option) },
-                        ).minimumInteractiveComponentSize(),
+                        Modifier
+                            .selectable(
+                                selected = value == option,
+                                enabled = enabled,
+                                role = Role.RadioButton,
+                                onClick = { onValueChange(option) },
+                            )
+                            .minimumInteractiveComponentSize(),
                     horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

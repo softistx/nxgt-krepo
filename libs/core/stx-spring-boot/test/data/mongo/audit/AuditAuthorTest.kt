@@ -94,7 +94,12 @@ class AuditAuthorTest :
                 audited { template, store ->
                     AuditIndexes(store).create()
 
-                    val indexes = template.indexOps(store.audits).indexInfo.collectList().awaitSingle()
+                    val indexes =
+                        template
+                            .indexOps(store.audits)
+                            .indexInfo
+                            .collectList()
+                            .awaitSingle()
                     indexes.single { it.name == "oid_collection_version" }.isUnique shouldBe true
                 }
             }
@@ -112,7 +117,11 @@ class AuditAuthorTest :
                     listener.close()
                     scope.cancel()
 
-                    template.findAll(AuditEntry::class.java, store.audits).collectList().awaitSingle().size shouldBe 8
+                    template
+                        .findAll(AuditEntry::class.java, store.audits)
+                        .collectList()
+                        .awaitSingle()
+                        .size shouldBe 8
                 }
             }
         }
