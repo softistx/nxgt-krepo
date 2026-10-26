@@ -36,9 +36,9 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - **Every PR targets `develop`, never `main`.** Branch off `develop`, `gh pr create --base develop`,
   merge it there. The one exception is a feature too large for a single PR: its slices target that
   feature's integration branch and the integration branch targets `develop` —
-  `large-feature-branch-workflow` owns that shape. `main` is fast-forwarded to `develop` right after every merge into `develop`, and aligning means
-  fast-forwarding `main` onto `develop` only — never merging a feature branch into it. Check the base before
-  opening a PR. The repo's default branch is now `develop`, so `gh pr create` picks the right base on
+  `large-feature-branch-workflow` owns that shape. `main` is fast-forwarded to `develop` right after
+  every merge into `develop` — a fast-forward only, never a feature branch merged into it. Check the
+  base before opening a PR. The repo's default branch is now `develop`, so `gh pr create` picks the right base on
   its own — pass `--base develop` anyway rather than trusting a setting a fork or a stale clone may
   not share. AGENTS.md's *Conventions* section has the repair if `main` has been written to directly.
 - Prefer `./kotlin show modules` / `show settings -m <module>` / `show dependencies -m <module>` over reading manifests and inferring. They resolve the real model in seconds and surface manifest errors with a line pointer, without a compile.

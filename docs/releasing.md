@@ -361,8 +361,9 @@ on nothing themselves, which is why their plan is one batch.
 ## And `main`
 
 Nothing. A release happens entirely on `develop`. `main` follows by fast-forward right after
-the merge, with `git checkout main && git merge --ff-only develop`, so it carries the latest release — which is consistent
-with the branch rule in AGENTS.md, where `main` is never a pull request target. Releasing from
+the merge, with `git checkout main && git merge --ff-only develop`, so it carries the latest
+release — which is consistent with the branch rule in AGENTS.md, where `main` is never a pull
+request target. Releasing from
 `main` would need a "Version Packages" PR opened against it, which this repository does not allow.
 
 ## Why Maven Central and not GitHub Packages
