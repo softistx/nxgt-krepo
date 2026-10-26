@@ -1,6 +1,6 @@
 {
   "name": "stx-kafka",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "description": "Kafka over the Apache clients, made suspending — typed publishers and a poll loop, serialized with kotlinx.serialization",
   "dependencies": {
