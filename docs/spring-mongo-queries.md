@@ -6,7 +6,8 @@ so it lives here rather than in the module README, which answers *why the integr
 way* and stays roughly the size it is.
 
 [`libs/core/stx-spring-boot/README.md`](../libs/core/stx-spring-boot/README.md) has the rest: the opt-in
-model, the error and locale decisions, and the seven library integrations.
+model, the error and locale decisions, and the table of `stx.*` integrations, each of which now lives
+beside its own library.
 [`docs/spring-configuration.md`](spring-configuration.md) is the other half of this one — every
 `stx.*` key an application may set.
 
@@ -185,7 +186,19 @@ Three rules the implementation enforces, each of which is silent when it goes wr
   unreachable. `MongoPage` refuses a pre-sorted query for this reason; it was a real defect, and
   this page's own example demonstrated it.
 
-Every failure is an `ApiException` — a contradictory window, a page size of zero and a foreign cursor
+- **A sort field may hold nulls and may be a dotted path.** Mongo sorts a null and a missing field as
+  one value, before everything else, and `$gt`/`$lt` never match it, so a plain comparison drops every
+  such document from the pages after the cursor crosses it. The keyset filter is null-aware: past a
+  null every non-null value is greater, past a value the nulls are lesser. A path such as
+  `address.city` is read out of the nested document when the cursor is built. `stx-mongo`'s
+  `findPage` does the same.
+- **A page is at most `MAX_PAGE_SIZE` (1000) rows.** `?size=` above it is coerced down to it, so
+  `?size=999999` is served as a full page; a `MongoPage` built by hand with `first` or `last` above
+  it is refused as `pagination.invalid`. The bound also keeps the `limit + 1` the store fetches from
+  overflowing to "no limit". It comes from `stx-common`'s `PageWindow`, so `stx-mongo` and `stx-jpa`
+  share it.
+
+Every failure is an `ApiException` — a contradictory window, a page size of zero or above the cap and a foreign cursor
 are all a client sending something it should not have, so they are 400s under `pagination.invalid`
 and they arrive translated.
 
@@ -220,3 +233,16 @@ A new operator is one `infix fun` on `String`, one on `KProperty<*>`, one row in
 a spec. A new filter token is an `Operator` entry, a branch in `Filters.kt`, a row in the filter
 table, and a spec that pins what an unparseable value does — that last one is the part that has been
 wrong before.
+
+## The audit trail
+
+`stx.data.mongo.audit.enabled=true` records every save and delete of an `@Auditable` document as an
+`AuditEntry` in the configured collection.
+
+- **The author is the user signed in on the save's own reactive chain.** A save is observed through
+  Spring Data's `ReactiveAfterSaveCallback`, which runs where the security context exists, and the
+  name is handed to the asynchronous write. A save with nobody signed in has an empty author. A
+  delete has no after-callback in the reactive template, so a delete entry carries no author.
+- **Entries are written one at a time, in save order**, and `(oid, collection, version)` is a unique
+  index on the configured collection, created at startup. A writer that loses the race for a
+  version, in this process or another, reads the latest entry again and takes the next one.

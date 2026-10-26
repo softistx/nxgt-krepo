@@ -2,6 +2,7 @@ package com.softistx.spring.client
 
 import com.softistx.spring.error.ApiException
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.format.support.DefaultFormattingConversionService
@@ -170,5 +171,23 @@ class HttpClientsTest :
 
             catalog.byGrade(Grade.TOP_SHELF) shouldBe "one product"
             asked.single() shouldBe "/products/top-shelf"
+        }
+    })
+
+class UpstreamStatusTest :
+    FeatureSpec({
+        feature("an upstream's status code") {
+            scenario("a listed code is the enum's own") {
+                upstreamStatus(404) shouldBe HttpStatus.NOT_FOUND
+            }
+
+            scenario("an unlisted 5xx, such as Cloudflare's 522, is a bad gateway rather than an exception") {
+                upstreamStatus(522) shouldBe HttpStatus.BAD_GATEWAY
+            }
+
+            scenario("an unlisted 4xx is a bad request, and anything else is ours to answer") {
+                upstreamStatus(499) shouldBe HttpStatus.BAD_REQUEST
+                upstreamStatus(299) shouldBe HttpStatus.INTERNAL_SERVER_ERROR
+            }
         }
     })

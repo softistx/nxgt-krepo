@@ -3,6 +3,7 @@ package com.softistx.spring.data.mongo.audit
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.TypeAlias
+import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.MongoId
@@ -50,6 +51,7 @@ data class PropertyChange(
  */
 @TypeAlias(AuditEntry.NAME)
 @Document(AuditEntry.COLLECTION)
+@CompoundIndex(name = "oid_collection_version", def = "{'oid': 1, 'collection': 1, 'version': 1}", unique = true)
 data class AuditEntry(
     @MongoId val id: String = ObjectId().toHexString(),
     /** The `_id` of the document this is a version of. */
