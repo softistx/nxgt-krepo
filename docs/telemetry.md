@@ -48,7 +48,7 @@ fleet with no telemetry.
 | `stackTraces` | `true` | Whether a failure's stack trace is rendered into the signal |
 | `batch` | `512` | How many signals ship together at most |
 | `linger` | `1s` | How long a partial batch waits for company before shipping anyway |
-| `drainTimeout` | `10s` | How long `close()` waits for the queue before giving up on it |
+| `drainTimeout` | `10s` | How long `close()` waits for the queue before giving up on it; a backlog dropped at the timeout goes to `onExportError` |
 | `onExportError` | prints to `System.err` | What happens when an exporter throws |
 | `export(…)` | none | Adds a destination. Every signal goes to every one, in order |
 
@@ -230,7 +230,7 @@ interface Exporter : AutoCloseable {
 
 Called from the single coroutine that owns the queue, so an implementation needs no synchronisation
 and may take as long as it needs without blocking anybody who writes a log. It should not throw;
-`onExportError` catches what does, and the remaining exporters still get the batch.
+`onExportError` catches what does, and the remaining exporters still get the batch. An exporter's own `CancellationException` (a `withTimeout` inside it) counts as a failure too; only the pipeline's own cancellation ends the drain.
 
 | Built in | |
 | --- | --- |
