@@ -75,6 +75,9 @@ class FileExporter(
 ) : Exporter {
     private val rotation = Rotation(path, maxSize, every, keep, compress)
     private val guard = CloseGuard()
+
+    /** How the file is opened; a spec swaps it to make a reopen fail. */
+    internal var openStream: (Path) -> OutputStream = { Files.newOutputStream(it, CREATE, APPEND) }
     private val sink = Guarded(open())
 
     override suspend fun export(
@@ -101,7 +104,7 @@ class FileExporter(
         path.parent?.let(Files::createDirectories)
         val existing = path.exists()
         return Sink(
-            out = BufferedOutputStream(Files.newOutputStream(path, CREATE, APPEND)),
+            out = BufferedOutputStream(openStream(path)),
             size = if (existing) path.fileSize() else 0,
             // The last line written, which is the best a filesystem reliably offers: a process that
             // was down over midnight rolls on its first line back, carrying a few of yesterday's.
@@ -121,6 +124,9 @@ class FileExporter(
         var size: Long,
         var openedAt: Instant,
     ) {
+        /** False between a roll closing the stream and its reopen succeeding. */
+        private var opened = true
+
         fun write(lines: List<ByteArray>) {
             if (guard.isClosed) return
             // One reading for the batch. A period boundary crossed between two lines of the same
@@ -129,42 +135,49 @@ class FileExporter(
             val now = clock.now()
             var rollFailure: Throwable? = null
             for (line in lines) {
-                if (rollFailure == null && rotation.due(size, openedAt, now)) {
+                if (rollFailure == null && (!opened || rotation.due(size, openedAt, now))) {
                     rollFailure = runCatching { roll(now) }.exceptionOrNull()
                 }
+                // A stream that could not be reopened has nothing to write to: stop, and the next batch rolls again.
+                if (!opened) break
                 out.write(line)
                 out.write(NEWLINE)
                 size += line.size + 1
             }
-            out.flush()
+            if (opened) out.flush()
             // The lines are written, to the file that would not roll; the next write tries again.
             rollFailure?.let { throw it }
         }
 
         /**
-         * A roll that fails leaves the stream open, never closed: a closed [out] would fail every
-         * later write for the life of the process. When the move itself had succeeded (a later
+         * A roll that fails leaves the stream open, or marks it not [opened] so the next write rolls
+         * again: a closed [out] must not fail every later write for the life of the process. When the move itself had succeeded (a later
          * compress or prune failed), the new file is empty, so [size] and [openedAt] restart too and
          * the next write does not roll an empty file again.
          */
         private fun roll(now: Instant) {
             out.close()
+            opened = false
             var failure: Throwable? = null
             try {
                 rotation.roll(now)
             } catch (e: Throwable) {
                 failure = e
             }
-            if (failure == null || !path.exists()) {
-                size = 0
-                openedAt = now
-            }
+            val emptied = failure == null || !path.exists()
             try {
-                out = BufferedOutputStream(Files.newOutputStream(path, CREATE, APPEND))
+                out = BufferedOutputStream(openStream(path))
+                opened = true
             } catch (e: Throwable) {
+                // size and openedAt are left alone, so the next write is still due and rolls again: the
+                // move is a no-op by then and the reopen is what gets another attempt.
                 if (failure == null) throw e
                 failure.addSuppressed(e)
                 throw failure
+            }
+            if (emptied) {
+                size = 0
+                openedAt = now
             }
             failure?.let { throw it }
         }

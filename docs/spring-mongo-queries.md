@@ -196,7 +196,7 @@ Three rules the implementation enforces, each of which is silent when it goes wr
   `?size=999999` is served as a full page; a `MongoPage` built by hand with `first` or `last` above
   it is refused as `pagination.invalid`. The bound also keeps the `limit + 1` the store fetches from
   overflowing to "no limit". It comes from `stx-common`'s `PageWindow`, so `stx-mongo` and `stx-jpa`
-  share it.
+  share it: `stx-jpa`'s `findPage(limit)` refuses a `limit` outside `1..MAX_PAGE_SIZE`.
 
 Every failure is an `ApiException` — a contradictory window, a page size of zero or above the cap and a foreign cursor
 are all a client sending something it should not have, so they are 400s under `pagination.invalid`

@@ -27,7 +27,7 @@ import io.ktor.server.plugins.cors.routing.CORS
  * application is starting rather than on somebody's first preflight.
  *
  * Each entry of [CorsPolicy.origins] is a full origin, `scheme://host[:port]`; one without the
- * scheme would match nothing in a browser, so it fails here rather than silently. Each entry of
+ * scheme would match nothing in a browser, so [CorsPolicy.validate] refuses it. Each entry of
  * [CorsPolicy.originPatterns] is a glob where `*` stands for any run of characters
  * (a scheme, then `*.example.com`), tested against the request's `Origin` header in full.
  *
@@ -37,12 +37,6 @@ import io.ktor.server.plugins.cors.routing.CORS
  */
 fun Application.cors(policy: CorsPolicy) {
     policy.validate(patternsSetting = "CorsPolicy.originPatterns")
-    policy.origins.filter { it != CorsPolicy.WILDCARD }.forEach {
-        require("://" in it) {
-            "CORS: origin \"$it\" has no scheme — write it as scheme://host[:port], " +
-                "for example \"https://$it\". A browser sends the scheme, so this would match nothing."
-        }
-    }
     val patterns = policy.originPatterns.map(::originPattern)
     install(CORS) {
         if (CorsPolicy.WILDCARD in policy.origins) {

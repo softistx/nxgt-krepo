@@ -160,6 +160,36 @@ class FileExporterTest :
             }
         }
 
+        feature("a roll whose reopen fails") {
+            scenario("is retried by the next write, instead of leaving the stream closed until a restart") {
+                val directory = directory()
+                val path = directory.resolve("telemetry.jsonl")
+                val exporter = FileExporter(path, maxSize = 1, clock = Ticking(start))
+                exporter.export(resource, listOf(log("first")))
+
+                val reopen = exporter.openStream
+                var failures = 1
+                exporter.openStream = {
+                    if (failures-- > 0) throw IOException("no file descriptors left")
+                    reopen(it)
+                }
+                shouldThrow<IOException> { exporter.export(resource, listOf(log("second"))) }
+
+                exporter.export(resource, listOf(log("third")))
+                exporter.close()
+
+                val text =
+                    directory
+                        .toFile()
+                        .walk()
+                        .filter { it.isFile }
+                        .joinToString("") { it.readText() }
+                text shouldContain "first"
+                text shouldContain "third"
+                path.readText() shouldContain "third"
+            }
+        }
+
         feature("a roll whose prune fails after the move") {
             scenario("the new file is empty, so the next write does not roll it again") {
                 val directory = directory()

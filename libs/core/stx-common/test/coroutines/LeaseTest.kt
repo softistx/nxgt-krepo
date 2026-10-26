@@ -170,4 +170,52 @@ class LeaseTest :
                 renews.get() shouldBeGreaterThanOrEqual 2
             }
         }
+
+        feature("a renewal that keeps failing") {
+            scenario("reports each failure and cancels the block once none succeeded within the duration") {
+                val reported = AtomicInteger()
+                val lease =
+                    Lease(
+                        duration = 90.milliseconds,
+                        take = { true },
+                        renew = { error("connection dropped") },
+                        release = {},
+                        onRenewalFailure = { _, _ -> reported.incrementAndGet() },
+                    )
+                var finished = false
+
+                shouldThrow<LeaseLostException> {
+                    withTimeout(10.seconds) {
+                        lease.guard("id") {
+                            delay(5.seconds)
+                            finished = true
+                        }
+                    }
+                }
+
+                finished shouldBe false
+                reported.get() shouldBeGreaterThanOrEqual 2
+            }
+
+            scenario("keeps the block running while failures stay under the duration") {
+                val renews = AtomicInteger()
+                val lease =
+                    Lease(
+                        duration = 300.milliseconds,
+                        take = { true },
+                        // fails twice, then recovers: the gap without a success stays under 300ms
+                        renew = {
+                            if (renews.incrementAndGet() <= 2) error("blip")
+                            true
+                        },
+                        release = {},
+                        onRenewalFailure = { _, _ -> },
+                    )
+
+                lease.guard("id") {
+                    delay(450)
+                    "finished"
+                } shouldBe "finished"
+            }
+        }
     })

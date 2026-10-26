@@ -4,6 +4,7 @@ import com.softistx.telemetry.Attributes
 import com.softistx.telemetry.model.LogRecord
 import com.softistx.telemetry.model.Resource
 import com.softistx.telemetry.model.Severity
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -96,6 +97,27 @@ class MongoExporterTest :
 
                     // The client is the harness's, and it still works.
                     database.getCollection<Document>("telemetry").find().toList() shouldHaveSize 1
+                }
+            }
+        }
+
+        feature("a retention that cannot be prepared").config(enabled = MongoTestServer.available) {
+            scenario("still inserts the batch, reports the failure, and tries again on the next batch") {
+                MongoTestServer.withDatabase { database ->
+                    var attempts = 0
+                    val exporter =
+                        MongoExporter(database, "telemetry") {
+                            attempts++
+                            if (attempts == 1) error("not authorised on collMod")
+                        }
+
+                    shouldThrow<IllegalStateException> { exporter.export(resource, listOf(log("first"))) }
+                    database.getCollection<Document>("telemetry").find().toList() shouldHaveSize 1
+
+                    exporter.export(resource, listOf(log("second")))
+
+                    attempts shouldBe 2
+                    database.getCollection<Document>("telemetry").find().toList() shouldHaveSize 2
                 }
             }
         }

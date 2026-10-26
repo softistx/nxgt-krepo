@@ -120,8 +120,9 @@ the real work:
 - **A watchdog puts the TTL back** every third of it while the block runs. Without it the TTL is a
   deadline on the work rather than a lock: a slow block loses it silently and a second holder starts
   the same task. `renew = false` where the work genuinely must not outlive the TTL — both halves
-  have a test. A renewal that fails is retried on the next tick rather than cancelling the block,
-  and a holder that is cancelled still releases the lock.
+  have a test. A renewal that fails is retried on the next tick, but once none has succeeded within the TTL
+  the lock has lapsed and the block is cancelled with a `LeaseLostException` rather than left
+  running beside a second holder. A holder that is cancelled still releases the lock.
 - **`withLock` polls**, because a lock has no queue to block on. The last attempt lands within one
   retry interval of `wait`; `withLockOrNull` answers null where the caller would rather skip the work
   than fail.

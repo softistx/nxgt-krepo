@@ -8,6 +8,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration
+import kotlin.time.TimeSource
 
 /**
  * A distributed lock built out of two fields, for the stores that have no lock to borrow.
@@ -32,8 +33,11 @@ import kotlin.time.Duration
  * - **It renews while the work runs**, a third of [duration] at a time, because the lease says
  *   *this is being worked on right now*, not *this code is short*. That is what separates it from a
  *   fixed expiry, which has to be guessed against the slowest run and is wrong either way.
- *   A renewal that **throws** is retried on the next tick rather than cancelling the block; one that
- *   answers false means the lease was lost, and the watchdog stops (the block is not interrupted).
+ *   A renewal that **throws** is reported to [onRenewalFailure] and retried on the next tick, so a
+ *   dropped connection does not end the work; but once no renewal has **succeeded** within [duration]
+ *   the lease has lapsed on the store, and the block is cancelled with a [LeaseLostException] —
+ *   failing closed, because a second holder may already be running. One that answers false means the
+ *   lease was lost, and the watchdog stops (the block is not interrupted).
  * - **[release] runs even when the coroutine is cancelled.** A cancelled coroutine cannot make a
  *   suspending call, and a scope dying mid-step is exactly what a crash looks like — without
  *   [NonCancellable] the release would throw out of the `finally` and leave the id held until the
@@ -47,6 +51,9 @@ class Lease(
     private val take: suspend (String) -> Boolean,
     private val renew: suspend (String) -> Boolean,
     private val release: suspend (String) -> Unit,
+    private val onRenewalFailure: (String, Throwable) -> Unit = { id, e ->
+        LOG.log(System.Logger.Level.WARNING, "lease '$id' could not be renewed", e)
+    },
 ) {
     /**
      * Runs [block] holding the lease on [id], and answers null without running it when somebody else
@@ -61,19 +68,24 @@ class Lease(
         if (!take(id)) return null
         return try {
             coroutineScope {
+                var lastRenewed = TimeSource.Monotonic.markNow()
                 val watchdog =
                     launch {
                         while (isActive) {
                             delay(duration / 3)
-                            // A renewal that throws (a dropped connection) is one missed attempt, not the end of
-                            // the work: the next tick tries again, and the lease only lapses if they all fail.
-                            // Cancellation is the exception to the exception, and goes through.
+                            // A renewal that throws (a dropped connection) is reported and retried on the next
+                            // tick; the lease only lapses if none succeeds within `duration`, and then the
+                            // block is cancelled. Cancellation is the exception to the exception.
                             val renewed =
                                 try {
-                                    renew(id)
+                                    renew(id).also { if (it) lastRenewed = TimeSource.Monotonic.markNow() }
                                 } catch (e: CancellationException) {
                                     throw e
-                                } catch (_: Exception) {
+                                } catch (e: Exception) {
+                                    onRenewalFailure(id, e)
+                                    if (lastRenewed.elapsedNow() >= duration) {
+                                        throw LeaseLostException(id, duration, e)
+                                    }
                                     true
                                 }
                             if (!renewed) break
@@ -90,3 +102,12 @@ class Lease(
         }
     }
 }
+
+private val LOG = System.getLogger(Lease::class.java.name)
+
+/** The lease could not be renewed for a whole duration, so the block holding it was cancelled. */
+class LeaseLostException(
+    id: String,
+    duration: Duration,
+    cause: Throwable,
+) : IllegalStateException("lease '$id' was not renewed within $duration and is presumed lost", cause)

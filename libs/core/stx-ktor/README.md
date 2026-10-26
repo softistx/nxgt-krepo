@@ -76,8 +76,8 @@ two cannot drift on what a given configuration means.
 
 The policy is validated before the plugin is installed, so a wildcard origin with credentials fails
 while the application is starting rather than on somebody's first preflight. Each entry of `origins` has to be a
-full origin, `scheme://host[:port]`; a bare host would match nothing in a browser, so it is refused
-at install. `originPatterns` is honoured as a glob: `*` stands for any run of characters, and the
+full origin, `scheme://host[:port]`; a bare host would match nothing in a browser, so `CorsPolicy.validate` refuses it
+at install (Spring refuses it the same way). `originPatterns` is honoured as a glob: `*` stands for any run of characters, and the
 pattern is matched against the whole `Origin` header. One field has no Ktor equivalent — `path`,
 because Ktor scopes a plugin by installing it on a route. `CorsPolicy.ignoredByKtor` names it rather
 than letting it be silently absent.

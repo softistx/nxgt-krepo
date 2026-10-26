@@ -44,7 +44,7 @@ data class CorsPolicy(
     val path: String = "/**",
 ) {
     /**
-     * Refuses the one combination that builds, starts, and then fails on every preflight.
+     * Refuses what builds, starts, and then fails on every preflight or matches nothing.
      *
      * A wildcard origin with credentials is forbidden by the CORS specification — a browser will not
      * send cookies to a wildcard — and the frameworks do not agree on when they notice. Spring
@@ -52,6 +52,9 @@ data class CorsPolicy(
      * browser failure found by whoever is testing the front end, with a message in a log nobody was
      * reading. Checking here means every framework refuses it at the same moment: while the
      * application is starting.
+     *
+     * An entry of [origins] without its scheme (`example.com` for `https://example.com`) is refused for
+     * the same reason: a browser sends the scheme, so it would match nothing.
      *
      * [patternsSetting] is what to name in the message — `stx.cors.origin-patterns` under Spring,
      * `originPatterns` in Kotlin. The useful half of this failure is what to do instead, and "what
@@ -64,6 +67,12 @@ data class CorsPolicy(
                     "specification forbids it and a browser will refuse the response. Set " +
                     "$patternsSetting instead, which echoes the concrete requesting origin back, or " +
                     "disallow credentials."
+            }
+            origins.filter { it != WILDCARD }.forEach {
+                require("://" in it) {
+                    "CORS: origin \"$it\" has no scheme — write it as scheme://host[:port], " +
+                        "for example \"https://$it\". A browser sends the scheme, so this would match nothing."
+                }
             }
         }
 
