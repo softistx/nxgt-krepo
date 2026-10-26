@@ -969,5 +969,9 @@ it.
 `concurrency` waits in the loop and never becomes one coroutine per id. An id already in flight in
 this worker is skipped, and when a pass starts nothing the loop waits a `poll` instead of asking the
 store again at once. A `resume` that throws is passed to `onError` (the default logs a warning) and
-its id is left alone for a `poll`. The default logs because a worker must not fail silently. Every id is parked for a `poll` after its `resume` returns, so a lock held by another engine cannot make the loop spin, and the worker asks the store for `batch` plus the parked and in-flight ids so unregistered instances cannot starve the real ones. An instance of a workflow this engine has not registered is not
+its id is left alone for a `poll`. The default logs because a worker must not fail silently. Every
+id is parked for a `poll` after its `resume` returns, so a lock held by another engine cannot make
+the loop spin, and the worker asks the store for `batch` plus the parked and in-flight ids so
+unregistered instances cannot starve the real ones. An instance of a workflow this engine has not
+registered is not
 failed, since another deployment may own it: it is reported once and left alone for `unknownBackoff`.
