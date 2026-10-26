@@ -10,6 +10,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import com.softistx.material.text.Emphasis
 import com.softistx.material.text.Typography
 import com.softistx.material.text.TypographyVariant
@@ -42,8 +43,8 @@ fun ListTile(
                     if (onClick != null) {
                         Modifier.clickable(
                             interactionSource = interactionSource,
-                            indication = null,
                             enabled = enabled,
+                            role = Role.Button,
                             onClick = onClick,
                         )
                     } else {

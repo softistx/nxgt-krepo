@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,7 +56,7 @@ fun <T> RadioGroup(
                             enabled = enabled,
                             role = Role.RadioButton,
                             onClick = { onValueChange(option) },
-                        ),
+                        ).minimumInteractiveComponentSize(),
                     horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

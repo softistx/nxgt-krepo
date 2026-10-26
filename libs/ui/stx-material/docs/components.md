@@ -227,53 +227,75 @@ a form. `PricingCard` is name + `Price` + `FeatureList` + the CTA; `highlighted`
 ## Forms
 
 The part of the library that removes the most work, because a form is where plumbing usually lives.
-A control takes its `FieldState` and nothing else is wired: the value, the change handler, the
-error, and *when the error is allowed to appear* all come from it.
+A form is **one value** — the request body, the GraphQL input — held by a `FormState<T>`. A control
+takes the plain `value` and `onValueChange` of the property it edits, plus `isError` and
+`supportingText` (or `supportingText` alone on the groups); the form supplies each from that one
+value, and *when the error is allowed to appear* is the form's decision, not the control's.
 
 ```kotlin
-val form = rememberForm()
-val email = form.field("email", "", Rules.required(), Rules.email())
-val terms = form.field("terms", false, Rules.checked())
+class SignUpForm : FormState<SignUpInput>(
+    SignUpInput(email = "", terms = false),
+    listOf(SignUpInput::email, SignUpInput::terms),
+) {
+    override val validate = Validation {
+        SignUpInput::email { required(); email() }
+        SignUpInput::terms { checked() }
+    }
+}
 
-TextField(email, label = "Email")
-Checkbox(terms, label = "I accept the terms")
-Button("Create account", onClick = { form.submit { register(form.values()) } })
+val form = rememberForm { SignUpForm() }
+
+TextField(
+    value = form.value.email,
+    onValueChange = { v -> form.update(SignUpInput::email) { it.copy(email = v) } },
+    label = "Email",
+    isError = form.hasError(SignUpInput::email),
+    supportingText = form.error(SignUpInput::email),
+)
+Checkbox(
+    value = form.value.terms,
+    onValueChange = { v -> form.update(SignUpInput::terms) { it.copy(terms = v) } },
+    label = "I accept the terms",
+    supportingText = form.error(SignUpInput::terms),
+)
+Button("Create account", enabled = form.isValid(), onClick = { form.submit { register(it) } })
 ```
 
 | Type | What it holds | Where it lives |
 | --- | --- | --- |
-| `FieldState<T>` | one input: value, validity, `touched`, `dirty`, `showError` | `rememberField(initial, vararg rules)` |
-| `FormState` | the fields that submit together: `isValid`, `dirty`, `validate()`, `submit { }`, `reset()`, `values()` | `rememberForm()` + `form.field(name, initial, vararg rules)` |
-| `Validation<T>` | a rule, as `(T) -> String?` — `null` passes, anything else is the message | `Rules.*`, combined with `and` |
+| `FormState<T>` | the form as one value: `value`, `errors`, `error(path)`, `hasError(path)`, `isValid()`, `isDirty()`, `update(path) { }`, `validateAll()`, `submit { }`, `clearErrors()`, `reset()` | subclass it, declare `validate`, and `rememberForm { MyForm() }` |
+| `Validation<T>` | the rules, declared once over the whole of `T` — Konform's type, exported | `override val validate = Validation { ... }` |
 
 **An error is held until it is earned.** A required field is invalid the moment an empty form is
 drawn, and showing that immediately greets someone with six complaints about work they have not
-started. So a field speaks once it has been *left after being typed in*, or once `form.validate()`
-demands it. `showError` is the only thing a control asks about.
+started. So `errors` holds only the paths that have been `update`d, or that `validateAll()` /
+`submit { }` demanded. `isValid()` checks everything without publishing anything, so a submit
+button reads it and is disabled from the first frame while the form stays quiet.
 
-`Rules` — `required`, `minLength`, `maxLength`, `email`, `pattern`, `digits`, `matching`, `checked`,
-`chosen`, `anyOf`, `inRange`. A format rule passes a blank value, so an optional field with a format
-is one rule rather than a special case; `and` reports the first complaint, which is why
-`required() and email()` is the right order and the reverse is not.
-
-**No validation library is required.** A rule is a function, so Konform or anything else is an
-adapter: `Validation { value -> konform.validate(value).errors.firstOrNull()?.message }`.
+**The rules are Konform's.** `FormState` takes a `Validation<T>` and the library adds constraints to
+its builder — `required`, `email`, `minLength`, `maxLength`, `pattern`, `digits`, `matching`,
+`checked`, `chosen`, `anyOf`, `inRange`. Each takes its message as a parameter (with an English
+default), so a caller with a string catalogue passes translated text in. A format rule passes a
+blank value, so an optional field with a format is one rule rather than a special case;
+`required(); email()` reports "required" for an empty box, which is why that order is the right one.
+`matching` needs the whole value, so it sits in `dynamic(SignUpInput::confirm) { form ->
+matching(form.password) }`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `TextField` | `field`, `label?`, `placeholder?`, `helper?`, `secret`, `keyboardType`, `leading?`, `trailing?` | `forms/text-field` |
-| `TextareaField` | `field`, `label?`, `minLines = 3`, `maxLines = 8`, `maxLength?` | `forms/textarea` |
-| `SelectField` | `field`, `options`, `label?`, `placeholder`, `optionLabel` | `forms/select` |
+| `TextField` | `value`, `onValueChange`, `label?`, `placeholder?`, `helper?`, `secret`, `keyboardType`, `leading?`, `trailing?` | `forms/text-field` |
+| `TextareaField` | `value`, `onValueChange`, `label?`, `minLines = 3`, `maxLines = 8`, `maxLength?` | `forms/textarea` |
+| `SelectField` | `value`, `onValueChange`, `options`, `label?`, `placeholder`, `optionLabel` | `forms/select` |
 | `Autocomplete` | `value`, `onValueChange`, `options`, `onSelect` | `forms/autocomplete` |
-| `Checkbox` | `field`, `label`, `helper?` | `forms/checkbox-and-switch` |
+| `Checkbox` | `value`, `onValueChange`, `label`, `helper?`, `supportingText?` | `forms/checkbox-and-switch` |
 | `TriStateCheckbox` | `state: CheckState`, `onClick`, `label` | `forms/tri-state-checkbox` |
-| `Switch` | `field`, `label`, `description?` | `forms/checkbox-and-switch` |
-| `RadioGroup` | `field`, `options`, `label?`, `required`, `optionLabel` | `forms/choice-groups` |
-| `CheckboxGroup` | `field: FieldState<Set<T>>`, `options`, `label?` | `forms/choice-groups` |
+| `Switch` | `value`, `onValueChange`, `label`, `description?` | `forms/checkbox-and-switch` |
+| `RadioGroup` | `value`, `onValueChange`, `options`, `label?`, `required`, `optionLabel` | `forms/choice-groups` |
+| `CheckboxGroup` | `value: Set<T>`, `onValueChange`, `options`, `label?` | `forms/choice-groups` |
 | `SliderField` | `value: Float` or `ClosedFloatingPointRange<Float>`, `label?`, `range`, `steps`, `format` | `forms/slider`, `forms/range-slider` |
 | `TagField` | `tags`, `onTagsChange`, `label?`, `placeholder` | `forms/tags` |
 | `QuantityField` | `value`, `onValueChange`, `range = 0..999`, `label?` | `forms/quantity` |
-| `OtpField` | `field`, `length = 6`, `label?`, `helper?` | `forms/one-time-code` |
+| `OtpField` | `value`, `onValueChange`, `length = 6`, `label?`, `helper?` | `forms/one-time-code` |
 | `InputGroup` | `content: RowScope` | `forms/input-group` |
 | `UploadField` | `onClick`, `label`, `supporting?`, `enabled` | `forms/upload` |
 | `InlineEdit` | `value`, `onValueChange`, `placeholder`, `enabled` | `forms/inline-edit` |
