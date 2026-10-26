@@ -1,6 +1,6 @@
 {
   "name": "stx-workflow",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Compensable workflows in Kotlin: a DSL of steps, a compensation per step, and state checkpointed after each one",
   "dependencies": {
