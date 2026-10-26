@@ -217,7 +217,7 @@ class AmqpConsumer<T> internal constructor(
             runCatching { nack(message, requeue = options.requeueOnFailure) }
             return
         }
-        if (options.ack is AckStrategy.AfterHandler) ack(message)
+        if (options.ack is AckStrategy.AfterHandler) ackAfterHandler(message)
     }
 
     private fun undecodable(

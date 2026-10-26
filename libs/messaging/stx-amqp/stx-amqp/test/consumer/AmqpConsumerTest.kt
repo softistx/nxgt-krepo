@@ -1,5 +1,6 @@
 package com.softistx.amqp.consumer
 
+import com.rabbitmq.client.AlreadyClosedException
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ShutdownSignalException
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
+import java.io.IOException
 import java.lang.reflect.Proxy
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
@@ -224,6 +226,16 @@ class AmqpConsumerTest :
             }
             scenario("a close this side asked for ends the flow quietly") {
                 shutdownOutcome(signal(true, connection), recoverable = true) shouldBe ShutdownOutcome.End
+            }
+        }
+
+        feature("an acknowledgement that meets a shutdown") {
+            scenario("is told apart from any other failure") {
+                isShutdown(AlreadyClosedException(ShutdownSignalException(false, false, null, null))) shouldBe true
+                isShutdown(ShutdownSignalException(true, false, null, null)) shouldBe true
+                isShutdown(IOException("write failed", ShutdownSignalException(false, false, null, null))) shouldBe true
+                isShutdown(IOException("disk")) shouldBe false
+                isShutdown(IllegalStateException("bug")) shouldBe false
             }
         }
 

@@ -63,12 +63,11 @@ class RetryQueueTest :
                         val channel = amqp.openChannel()
                         val consumer = AmqpConsumer(channel, queue, jsonCodec<Order>(amqp.json), ConsumerOptions())
 
+                        // Returns: the lost acknowledgement is logged, not thrown out of the flow.
                         withTimeout(10.seconds) {
-                            runCatching {
-                                consumer.processWithRetry(retries, onFailure = { _, f -> failures += f }) {
-                                    // Succeeds, but the channel is gone by the time it is acknowledged.
-                                    channel.close()
-                                }
+                            consumer.processWithRetry(retries, onFailure = { _, f -> failures += f }) {
+                                // Succeeds, but the channel is gone by the time it is acknowledged.
+                                channel.close()
                             }
                         }
 
