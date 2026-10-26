@@ -957,7 +957,7 @@ for: without the pin, an artifact this repo names itself (`ktor-server-di`, on
 settings:
   ktor:
     enabled: true
-    version: 3.5.2   # matches `ktor` in libs.versions.toml
+    version: 3.6.0   # matches `ktor` in libs.versions.toml
 ```
 
 `./kotlin show settings -m <module>` says which one is in force: `# module.yaml` when it is pinned,

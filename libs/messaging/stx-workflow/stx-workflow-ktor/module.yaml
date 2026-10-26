@@ -29,7 +29,7 @@ test-dependencies:
 settings:
   ktor:
     enabled: true
-    version: 3.5.2
+    version: 3.6.0
   kotlin:
     # A consumer installing this plugin needs the same block: a workflow context is @Serializable
     # by definition, and the specs here declare one.
