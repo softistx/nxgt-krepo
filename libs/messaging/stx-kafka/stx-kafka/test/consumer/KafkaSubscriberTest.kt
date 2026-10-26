@@ -3,6 +3,7 @@ package com.softistx.kafka.consumer
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.longs.shouldBeLessThan
+import io.kotest.matchers.longs.shouldBeLessThanOrEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -14,10 +15,12 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.MockConsumer
 import org.apache.kafka.common.TopicPartition
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -41,6 +44,26 @@ class KafkaSubscriberTest :
             options: SubscriberOptions = SubscriberOptions(),
         ): Pair<KafkaSubscriber<String, String>, MockConsumer<String, String>> {
             val mock = MockConsumer<String, String>("earliest")
+            return KafkaSubscriber(mock, listOf("orders"), options) to mock
+        }
+
+        /** A mock that keeps the rebalance listener, so a spec can revoke part of the assignment. */
+        class ListenerMock : MockConsumer<String, String>("earliest") {
+            @Volatile private var held: ConsumerRebalanceListener? = null
+
+            override fun subscribe(
+                topics: MutableCollection<String>,
+                listener: ConsumerRebalanceListener,
+            ) {
+                held = listener
+                super.subscribe(topics, listener)
+            }
+
+            fun listener(): ConsumerRebalanceListener = held!!
+        }
+
+        fun rebalancing(options: SubscriberOptions): Pair<KafkaSubscriber<String, String>, ListenerMock> {
+            val mock = ListenerMock()
             return KafkaSubscriber(mock, listOf("orders"), options) to mock
         }
 
@@ -272,7 +295,90 @@ class KafkaSubscriberTest :
             }
         }
 
+        feature("a revocation of one partition") {
+            scenario("keeps the order of the partitions it leaves, and never hands over the revoked one") {
+                val (subscriber, mock) = rebalancing(SubscriberOptions(prefetch = 8, commit = CommitStrategy.AfterEach))
+                mock.assign(orders0, orders1)
+                mock.feed(orders1, (0 until 300).map { "b$it" })
+                mock.feed(orders0, (0 until 300).map { "a$it" })
+
+                val handled = ConcurrentLinkedQueue<String>()
+                coroutineScope {
+                    val processing = launch { subscriber.process { handled += it.value } }
+                    until { handled.size > 5 }
+                    // Cooperative: only orders0 goes, in the middle of a poll, as Kafka does it.
+                    mock.schedulePollTask { mock.listener().onPartitionsRevoked(listOf(orders0)) }
+                    until(10.seconds) { handled.count { it.startsWith("b") } == 300 }
+                    processing.cancel()
+                }
+
+                handled.filter { it.startsWith("b") } shouldContainExactly (0 until 300).map { "b$it" }
+                subscriber.commitPending()
+                mock.committed(setOf(orders1))[orders1]?.offset() shouldBe 300L
+                /* Nothing of orders0 reaches the handler out of order or after it was revoked: what
+                   was handled is a prefix, and the commit never passes it. */
+                val a = handled.filter { it.startsWith("a") }
+                a shouldContainExactly (0 until a.size).map { "a$it" }
+                (mock.committed(setOf(orders0))[orders0]?.offset() ?: 0L) shouldBeLessThanOrEqual a.size.toLong()
+
+                subscriber.close()
+            }
+        }
+
+        feature("a partition revoked and assigned again") {
+            scenario("does not commit the completion of a record from before the revocation") {
+                val (subscriber, mock) = rebalancing(SubscriberOptions(commit = CommitStrategy.AfterEach))
+                mock.assign(orders0)
+                mock.feed(orders0, listOf("a0"))
+
+                val started = CompletableDeferred<Unit>()
+                val release = CompletableDeferred<Unit>()
+                val rebalanced = AtomicBoolean(false)
+                val finished = AtomicBoolean(false)
+                coroutineScope {
+                    val processing =
+                        launch {
+                            subscriber.process {
+                                started.complete(Unit)
+                                release.await()
+                                finished.set(true)
+                            }
+                        }
+                    started.await()
+                    mock.schedulePollTask {
+                        mock.listener().onPartitionsRevoked(listOf(orders0))
+                        mock.listener().onPartitionsAssigned(listOf(orders0))
+                        rebalanced.set(true)
+                    }
+                    until { rebalanced.get() }
+                    release.complete(Unit)
+                    until { finished.get() }
+                    subscriber.commitPending()
+                    processing.cancel()
+                }
+
+                mock.committed(setOf(orders0))[orders0] shouldBe null
+                subscriber.close()
+            }
+        }
+
         feature("handling partitions concurrently") {
+            scenario("process returns after close, with the partition workers ended") {
+                val (subscriber, mock) =
+                    subscriber(SubscriberOptions(concurrency = Concurrency.PerPartition(limit = 4)))
+                mock.assign(orders0, orders1)
+                mock.feed(orders0, listOf("a0"))
+                mock.feed(orders1, listOf("b0"))
+
+                val handled = ConcurrentLinkedQueue<String>()
+                coroutineScope {
+                    val processing = launch { subscriber.process { handled += it.value } }
+                    until { handled.size == 2 }
+                    subscriber.close()
+                    withTimeout(5.seconds) { processing.join() }
+                }
+            }
+
             scenario("they run alongside each other while each keeps its own order") {
                 val (subscriber, mock) =
                     subscriber(

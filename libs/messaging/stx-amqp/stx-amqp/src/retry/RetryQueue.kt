@@ -4,6 +4,7 @@ import com.softistx.amqp.Amqp
 import com.softistx.amqp.codec.AmqpCodec
 import com.softistx.amqp.codec.jsonCodec
 import com.softistx.amqp.consumer.AmqpConsumer
+import com.softistx.amqp.consumer.ackAfterHandler
 import com.softistx.amqp.message.AmqpMessage
 import com.softistx.amqp.message.MessageHeaders
 import com.softistx.amqp.publisher.AmqpPublisher
@@ -174,12 +175,12 @@ suspend fun <T> AmqpConsumer<T>.processWithRetry(
     if (failure == null) {
         /* Outside the handler's try: a handler that succeeded and then lost its channel on the ack
            is not a failed handler, and must not be sent round the retries as one. */
-        ack(message)
+        ackAfterHandler(message)
     } else {
         onFailure(message, failure)
         try {
             retries.retry(message, failure)
-            ack(message)
+            ackAfterHandler(message)
         } catch (republish: Throwable) {
             /* The copy did not make it. Back on the queue is the only place left that is not
                "lost", even though it means an immediate redelivery. */

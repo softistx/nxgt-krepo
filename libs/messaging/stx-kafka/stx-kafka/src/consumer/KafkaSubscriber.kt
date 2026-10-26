@@ -116,11 +116,8 @@ class KafkaSubscriber<K, V> internal constructor(
     /** Records polled and not yet handed to the buffer — touched only by the loop and its rebalance listener. */
     private val waiting = ArrayDeque<KafkaRecord<K, V>>()
 
-    /** The buffer of the running [records] call, so a revocation can take the revoked records out of it. */
-    private var buffer: Channel<KafkaRecord<K, V>>? = null
-
-    /** What this consumer owns, as the rebalance listener last said — what a completion is checked against. */
-    private val owned = mutableSetOf<TopicPartition>()
+    /** What this consumer owns, as the rebalance listener last said — what records and completions are checked against. */
+    private val ownership = Ownership()
 
     private var lastCommit = TimeSource.Monotonic.markNow()
 
@@ -143,11 +140,12 @@ class KafkaSubscriber<K, V> internal constructor(
      */
     fun records(): Flow<KafkaRecord<K, V>> =
         flow {
-            val buffer = Channel<KafkaRecord<K, V>>(options.prefetch)
+            val buffer = Channel<OwnedRecord<K, V>>(options.prefetch)
             coroutineScope {
                 val poller = launch(dispatcher) { pollInto(buffer) }
                 try {
-                    for (record in buffer) emit(record)
+                    // A record whose partition was revoked since it was buffered is not ours to hand out.
+                    for (owned in buffer) if (ownership.isCurrent(owned)) emit(owned.record.also { it.epoch = owned.epoch })
                 } finally {
                     poller.cancelAndJoin()
                 }
@@ -191,9 +189,14 @@ class KafkaSubscriber<K, V> internal constructor(
         committed.await()
     }
 
-    /** Marks one record handled and commits up to it — for a [CommitStrategy.Manual] collector. */
+    /**
+     * Marks one record handled and commits up to it — for a [CommitStrategy.Manual] collector.
+     *
+     * A `copy()` of the emitted record carries no assignment epoch, so it is accepted for the
+     * partition's current assignment even when the original was emitted before a revocation.
+     */
     suspend fun commit(record: KafkaRecord<K, V>) {
-        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
+        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset, record.epoch))
         commitPending()
     }
 
@@ -214,16 +217,17 @@ class KafkaSubscriber<K, V> internal constructor(
 
     // ─── The loop ─────────────────────────────────────────────────────────────
 
-    private suspend fun pollInto(buffer: Channel<KafkaRecord<K, V>>) {
+    private suspend fun pollInto(buffer: Channel<OwnedRecord<K, V>>) {
         waiting.clear()
-        this.buffer = buffer
         polling.value = true
         consumer.subscribe(topics, RevocationCommit())
         try {
             while (currentCoroutineContext().isActive) {
                 drainMailbox()
 
-                while (waiting.isNotEmpty() && buffer.trySend(waiting.first()).isSuccess) {
+                while (waiting.isNotEmpty()) {
+                    val owned = ownership.stamp(waiting.first())
+                    if (owned != null && !buffer.trySend(owned).isSuccess) break
                     waiting.removeFirst()
                 }
 
@@ -255,7 +259,6 @@ class KafkaSubscriber<K, V> internal constructor(
             polling.value = false
             // Ends the `for (record in buffer)` of records(), so a closed subscriber ends its flow.
             buffer.close()
-            this.buffer = null
             waiting.clear()
             drainMailbox()
             runCatching { commitNow() }
@@ -274,7 +277,7 @@ class KafkaSubscriber<K, V> internal constructor(
                 is LoopMessage.Completed -> {
                     /* A record handled after its partition was revoked is not ours to commit:
                        recording it would put the partition back in the tracker after forget. */
-                    if (message.partition in owned) {
+                    if (ownership.accepts(message.partition, message.epoch)) {
                         tracker.completed(message.partition, message.offset)
                         handledSinceCommit++
                     }
@@ -342,21 +345,27 @@ class KafkaSubscriber<K, V> internal constructor(
         val partitions = mutableMapOf<TopicPartition, SendChannel<KafkaRecord<K, V>>>()
         val inFlight = Semaphore(concurrency.limit)
 
-        records().collect { record ->
-            val partition = TopicPartition(record.topic, record.partition)
-            partitions
-                .getOrPut(partition) {
-                    Channel<KafkaRecord<K, V>>(Channel.BUFFERED).also { queue ->
-                        launch {
-                            /* One worker per partition, so a partition's records stay in order
-                               while other partitions run alongside it. */
-                            for (queued in queue) {
-                                inFlight.withPermit { handler(queued) }
-                                handled(queued)
+        try {
+            records().collect { record ->
+                val partition = TopicPartition(record.topic, record.partition)
+                partitions
+                    .getOrPut(partition) {
+                        Channel<KafkaRecord<K, V>>(Channel.BUFFERED).also { queue ->
+                            launch {
+                                /* One worker per partition, so a partition's records stay in order
+                                   while other partitions run alongside it. */
+                                for (queued in queue) {
+                                    inFlight.withPermit { handler(queued) }
+                                    handled(queued)
+                                }
                             }
                         }
-                    }
-                }.send(record)
+                    }.send(record)
+            }
+        } finally {
+            /* The workers end when their channel does: without this a closed subscriber leaves
+               them waiting and the scope never returns. They finish what is already queued first. */
+            partitions.values.forEach { it.close() }
         }
     }
 
@@ -365,7 +374,7 @@ class KafkaSubscriber<K, V> internal constructor(
      * would be a handler throttled to one record per poll timeout, and one poll away from deadlock.
      */
     private fun handled(record: KafkaRecord<K, V>) {
-        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
+        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset, record.epoch))
     }
 
     /**
@@ -382,7 +391,7 @@ class KafkaSubscriber<K, V> internal constructor(
         }
 
         override fun onPartitionsAssigned(partitions: Collection<TopicPartition>) {
-            owned += partitions
+            ownership.assigned(partitions)
         }
 
         override fun onPartitionsLost(partitions: Collection<TopicPartition>) {
@@ -394,24 +403,13 @@ class KafkaSubscriber<K, V> internal constructor(
     }
 
     /**
-     * Takes [partitions] out of everything not yet handled: the records waiting for room, and the
-     * ones already in the buffer, which go back to the front of [waiting] in their order.
+     * Takes [partitions] out of everything not yet handled: the records waiting for room are
+     * removed, and the ones already in the buffer stop being current, so [records] skips them.
      */
     private fun drop(partitions: Collection<TopicPartition>) {
-        owned -= partitions.toSet()
+        ownership.revoked(partitions)
         val gone = partitions.toSet()
-
-        fun KafkaRecord<K, V>.revoked() = TopicPartition(topic, partition) in gone
-        val kept = mutableListOf<KafkaRecord<K, V>>()
-        val queue = buffer
-        if (queue != null) {
-            while (true) {
-                val record = queue.tryReceive().getOrNull() ?: break
-                if (!record.revoked()) kept += record
-            }
-        }
-        waiting.removeAll { it.revoked() }
-        waiting.addAll(0, kept)
+        waiting.removeAll { TopicPartition(it.topic, it.partition) in gone }
     }
 
     private companion object {
@@ -426,6 +424,7 @@ private sealed interface LoopMessage {
     data class Completed(
         val partition: TopicPartition,
         val offset: Long,
+        val epoch: Long,
     ) : LoopMessage
 
     /** Commit what is committable and say so. */
