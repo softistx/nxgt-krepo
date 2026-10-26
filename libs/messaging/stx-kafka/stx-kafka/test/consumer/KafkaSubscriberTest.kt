@@ -324,6 +324,39 @@ class KafkaSubscriberTest :
             }
         }
 
+        feature("a partition revoked and assigned again") {
+            scenario("does not commit the completion of a record from before the revocation") {
+                val (subscriber, mock) = rebalancing(SubscriberOptions(commit = CommitStrategy.AfterEach))
+                mock.assign(orders0)
+                mock.feed(orders0, listOf("a0"))
+
+                val started = CompletableDeferred<Unit>()
+                val release = CompletableDeferred<Unit>()
+                coroutineScope {
+                    val processing =
+                        launch {
+                            subscriber.process {
+                                started.complete(Unit)
+                                release.await()
+                            }
+                        }
+                    started.await()
+                    mock.schedulePollTask {
+                        mock.listener().onPartitionsRevoked(listOf(orders0))
+                        mock.listener().onPartitionsAssigned(listOf(orders0))
+                    }
+                    delay(300)
+                    release.complete(Unit)
+                    delay(300)
+                    subscriber.commitPending()
+                    processing.cancel()
+                }
+
+                mock.committed(setOf(orders0))[orders0] shouldBe null
+                subscriber.close()
+            }
+        }
+
         feature("handling partitions concurrently") {
             scenario("process returns after close, with the partition workers ended") {
                 val (subscriber, mock) =

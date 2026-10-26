@@ -23,10 +23,19 @@ data class KafkaRecord<K, V>(
     val value: V?,
     val headers: RecordHeaders = RecordHeaders.EMPTY,
 ) {
+    /**
+     * The assignment epoch this record was handed out under, so a completion that outlives a
+     * revocation is told apart from one for the partition's new assignment. Not part of the record's
+     * identity: it is not in equals, `copy` or the constructor, and a copy has none.
+     */
+    internal var epoch: Long = NO_EPOCH
+
     /** The value, or a failure naming the record — for a topic where a tombstone means nothing. */
     fun requireValue(): V = value ?: throw KafkaValueException("record has no value", topic, partition, offset)
 
     companion object {
+        internal const val NO_EPOCH = -1L
+
         internal fun <K, V> from(record: ConsumerRecord<K, V>): KafkaRecord<K, V> =
             KafkaRecord(
                 topic = record.topic(),

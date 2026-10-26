@@ -145,7 +145,7 @@ class KafkaSubscriber<K, V> internal constructor(
                 val poller = launch(dispatcher) { pollInto(buffer) }
                 try {
                     // A record whose partition was revoked since it was buffered is not ours to hand out.
-                    for (owned in buffer) if (ownership.isCurrent(owned)) emit(owned.record)
+                    for (owned in buffer) if (ownership.isCurrent(owned)) emit(owned.record.also { it.epoch = owned.epoch })
                 } finally {
                     poller.cancelAndJoin()
                 }
@@ -191,7 +191,7 @@ class KafkaSubscriber<K, V> internal constructor(
 
     /** Marks one record handled and commits up to it — for a [CommitStrategy.Manual] collector. */
     suspend fun commit(record: KafkaRecord<K, V>) {
-        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
+        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset, record.epoch))
         commitPending()
     }
 
@@ -272,7 +272,7 @@ class KafkaSubscriber<K, V> internal constructor(
                 is LoopMessage.Completed -> {
                     /* A record handled after its partition was revoked is not ours to commit:
                        recording it would put the partition back in the tracker after forget. */
-                    if (ownership.owns(message.partition)) {
+                    if (ownership.accepts(message.partition, message.epoch)) {
                         tracker.completed(message.partition, message.offset)
                         handledSinceCommit++
                     }
@@ -369,7 +369,7 @@ class KafkaSubscriber<K, V> internal constructor(
      * would be a handler throttled to one record per poll timeout, and one poll away from deadlock.
      */
     private fun handled(record: KafkaRecord<K, V>) {
-        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
+        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset, record.epoch))
     }
 
     /**
@@ -419,6 +419,7 @@ private sealed interface LoopMessage {
     data class Completed(
         val partition: TopicPartition,
         val offset: Long,
+        val epoch: Long,
     ) : LoopMessage
 
     /** Commit what is committable and say so. */

@@ -35,6 +35,15 @@ internal class Ownership {
 
     fun owns(partition: TopicPartition): Boolean = partition in epochs.get()
 
+    /** Whether a completion stamped [epoch] still belongs to [partition]'s current assignment. */
+    fun accepts(
+        partition: TopicPartition,
+        epoch: Long,
+    ): Boolean {
+        val current = epochs.get()[partition] ?: return false
+        return epoch == KafkaRecord.NO_EPOCH || epoch == current
+    }
+
     /** [record] as owned right now, or `null` when its partition is not. */
     fun <K, V> stamp(record: KafkaRecord<K, V>): OwnedRecord<K, V>? =
         epochs.get()[TopicPartition(record.topic, record.partition)]?.let { OwnedRecord(record, it) }
