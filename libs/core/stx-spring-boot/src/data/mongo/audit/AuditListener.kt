@@ -2,6 +2,7 @@ package com.softistx.spring.data.mongo.audit
 
 import com.softistx.common.coroutines.Mailbox
 import com.softistx.common.lifecycle.CloseGuard
+import com.softistx.spring.security.currentUserName
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -111,11 +112,12 @@ class AuditListener(
 
     /**
      * The signed-in user's name, or empty. Spring Security is an optional dependency, so a missing
-     * class is the same answer as nobody being signed in.
+     * class is the same answer as nobody being signed in. The security types stay in
+     * [currentUserName]: none may appear in this class's own members, which Spring reflects over.
      */
     private fun authorOfSave(): Mono<String> =
         try {
-            SecurityAuthor.current()
+            currentUserName()
         } catch (_: NoClassDefFoundError) {
             Mono.just("")
         }
