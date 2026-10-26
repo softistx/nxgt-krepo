@@ -38,7 +38,8 @@ enum class Undecodable {
     DeadLetter,
 
     /**
-     * Requeue it and stop the consumer.
+     * Requeue it and stop the consumer: the message goes back on the queue and the flow of
+     * [AmqpConsumer.messages] (so `process` too) ends with the decode failure.
      *
      * For a consumer whose deployment is the suspect — a rollback puts the message back in front of
      * a version that can read it.

@@ -2,6 +2,9 @@ package com.softistx.amqp.retry
 
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpTestBroker
+import com.softistx.amqp.codec.jsonCodec
+import com.softistx.amqp.consumer.AmqpConsumer
+import com.softistx.amqp.consumer.ConsumerOptions
 import com.softistx.amqp.consumer.consumer
 import com.softistx.amqp.publisher.publisher
 import com.softistx.amqp.topology.Topology
@@ -49,6 +52,35 @@ class RetryQueueTest :
             queue: String,
             order: Order,
         ) = publisher<Order>().use { it.publish(order, routingKey = queue) }
+
+        feature("a handler that succeeds").config(enabled = AmqpTestBroker.available) {
+            scenario("is not sent round the retries when its acknowledgement fails") {
+                withWorkQueue { amqp, queue ->
+                    val retries = amqp.retryQueue<Order>(queue, RetryPolicy(listOf(100.milliseconds)))
+                    try {
+                        amqp.publish(queue, Order("A1"))
+                        val failures = ConcurrentLinkedQueue<Throwable>()
+                        val channel = amqp.openChannel()
+                        val consumer = AmqpConsumer(channel, queue, jsonCodec<Order>(amqp.json), ConsumerOptions())
+
+                        withTimeout(10.seconds) {
+                            runCatching {
+                                consumer.processWithRetry(retries, onFailure = { _, f -> failures += f }) {
+                                    // Succeeds, but the channel is gone by the time it is acknowledged.
+                                    channel.close()
+                                }
+                            }
+                        }
+
+                        failures.size shouldBe 0
+                        amqp.messageCount(retries.delayQueues.single()) shouldBe 0L
+                        amqp.messageCount(retries.parked) shouldBe 0L
+                    } finally {
+                        amqp.delete(retries)
+                    }
+                }
+            }
+        }
 
         feature("a message that fails").config(enabled = AmqpTestBroker.available) {
             scenario("comes back after the delay, and says which attempt it is on") {
