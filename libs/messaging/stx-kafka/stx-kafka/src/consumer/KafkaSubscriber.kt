@@ -1,5 +1,7 @@
 package com.softistx.kafka.consumer
 
+import com.softistx.common.coroutines.Mailbox
+import com.softistx.common.lifecycle.CloseGuard
 import com.softistx.kafka.Kafka
 import com.softistx.kafka.clientProperties
 import com.softistx.kafka.record.KafkaRecord
@@ -12,8 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
-import com.softistx.common.coroutines.Mailbox
-import com.softistx.common.lifecycle.CloseGuard
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope

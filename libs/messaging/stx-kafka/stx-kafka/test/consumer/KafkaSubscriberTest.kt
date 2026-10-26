@@ -228,9 +228,9 @@ class KafkaSubscriberTest :
                     until { mock.paused().isNotEmpty() }
 
                     mock.schedulePollTask {
-                    mock.updateBeginningOffsets(mapOf(orders1 to 0L))
-                    mock.rebalance(listOf(orders1))
-                }
+                        mock.updateBeginningOffsets(mapOf(orders1 to 0L))
+                        mock.rebalance(listOf(orders1))
+                    }
                     until { subscriber.assignment.value == setOf(orders1) }
                     mock.schedulePollTask {
                         mock.addRecord(ConsumerRecord("orders", 1, 0L, "k", "b0"))
