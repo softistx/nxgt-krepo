@@ -103,11 +103,19 @@ suspend fun <T> withTelemetry(
  * are still right after a suspension, still right on a different dispatcher, and **absent** in a
  * sibling coroutine that was not launched inside this block — which is the case an MDC gets wrong
  * quietly.
+ *
+ * With no [withTelemetry] around it, the block runs against [Telemetry.installed], the same fallback
+ * a log or a span uses; with neither there is nothing to carry them, and [block] simply runs.
  */
 suspend fun <T> withAttributes(
     vararg pairs: Pair<String, Any?>,
     block: suspend () -> T,
 ): T {
-    val current = coroutineContext[TelemetryContext] ?: return block()
-    return withContext(current.with(attributes = current.attributes + attributesOf(*pairs))) { block() }
+    val added = attributesOf(*pairs)
+    val current = coroutineContext[TelemetryContext]
+    val element =
+        current?.with(attributes = current.attributes + added)
+            ?: Telemetry.installed?.let { TelemetryContext(it, span = null, attributes = added) }
+            ?: return block()
+    return withContext(element) { block() }
 }

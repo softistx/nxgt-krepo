@@ -10,7 +10,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -86,7 +88,10 @@ internal class Pipeline(
             try {
                 exporter.export(resource, outgoing)
             } catch (cancellation: CancellationException) {
-                throw cancellation
+                // The scope's own cancellation ends the drain; an exporter's (a withTimeout inside
+                // it) is that exporter failing, and must not stop the only consumer.
+                currentCoroutineContext().ensureActive()
+                report(cancellation)
             } catch (failure: Throwable) {
                 report(failure)
             }
@@ -115,7 +120,10 @@ internal class Pipeline(
         guard.once {
             ticker.cancel()
             mailbox.close()
-            runBlocking { withTimeoutOrNull(drainTimeout) { drain.join() } }
+            val drained = runBlocking { withTimeoutOrNull(drainTimeout) { drain.join() } }
+            if (drained == null) {
+                report(IllegalStateException("telemetry drain timed out after $drainTimeout; the queued backlog was dropped"))
+            }
             scope.cancel()
             for (exporter in exporters) {
                 try {

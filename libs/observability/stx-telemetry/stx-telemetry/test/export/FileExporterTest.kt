@@ -3,6 +3,7 @@ package com.softistx.telemetry.export
 import com.softistx.telemetry.model.LogRecord
 import com.softistx.telemetry.model.Resource
 import com.softistx.telemetry.model.Severity
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -12,6 +13,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.attribute.FileTime
@@ -126,6 +128,53 @@ class FileExporterTest :
                 path.readText().trim().lines() shouldHaveSize 1
                 val rolled = directory.toFile().list()!!.single { it != "telemetry.jsonl" }
                 directory.resolve(rolled).readText() shouldContain "first"
+            }
+        }
+
+        feature("a roll that fails") {
+            scenario("the file stays writable, and the failure is thrown once") {
+                val directory = directory()
+                val path = directory.resolve("telemetry.jsonl")
+                val exporter = FileExporter(path, maxSize = 1, clock = Ticking(start))
+                exporter.export(resource, listOf(log("first")))
+
+                // No write permission on the directory: the rename fails, the open stream does not.
+                directory.toFile().setWritable(false)
+                try {
+                    shouldThrow<IOException> { exporter.export(resource, listOf(log("second"))) }
+                } finally {
+                    directory.toFile().setWritable(true)
+                }
+                exporter.export(resource, listOf(log("third")))
+                exporter.close()
+
+                val text = directory.toFile().walk().filter { it.isFile }.joinToString("") { it.readText() }
+                text shouldContain "first"
+                text shouldContain "second"
+                text shouldContain "third"
+            }
+        }
+
+        feature("a roll whose prune fails after the move") {
+            scenario("the new file is empty, so the next write does not roll it again") {
+                val directory = directory()
+                val path = directory.resolve("telemetry.jsonl")
+                val clock = Ticking(start)
+                // A non-empty directory with a rotated file's name: pruning it throws.
+                val stuck = directory.resolve("telemetry-20200101-000000.jsonl")
+                stuck.toFile().mkdirs()
+                stuck.resolve("x").toFile().writeText("x")
+                val exporter = FileExporter(path, keep = 0, clock = clock)
+                exporter.export(resource, listOf(log("first")))
+
+                clock.at = start + 25.hours
+                shouldThrow<IOException> { exporter.export(resource, listOf(log("second"))) }
+                exporter.export(resource, listOf(log("third")))
+                exporter.close()
+
+                // Had the third write rolled again, its prune would have thrown too.
+                path.readText() shouldContain "second"
+                path.readText() shouldContain "third"
             }
         }
 
