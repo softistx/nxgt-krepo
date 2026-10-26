@@ -2,9 +2,12 @@ package com.softistx.amqp.consumer
 
 import com.rabbitmq.client.CancelCallback
 import com.rabbitmq.client.Channel
-import com.rabbitmq.client.DeliverCallback
+import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConsumerShutdownSignalCallback
+import com.rabbitmq.client.DeliverCallback
 import com.rabbitmq.client.Delivery
+import com.rabbitmq.client.Recoverable
+import com.rabbitmq.client.ShutdownSignalException
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpValueException
 import com.softistx.amqp.codec.AmqpCodec
@@ -97,10 +100,16 @@ class AmqpConsumer<T> internal constructor(
 
             /* A channel or connection that went away takes the consumer with it: nothing will be
                delivered again, so a collector left waiting would wait for ever. A close this side
-               asked for ends the flow quietly; the broker's or the network's is the reason. */
+               asked for ends the flow quietly; the broker's is the reason. A lost *connection*
+               under automatic recovery is not an end: the client reconnects and re-registers
+               this consumer, and the flow carries on. */
             val shutdown =
                 ConsumerShutdownSignalCallback { _, signal ->
-                    if (signal.isInitiatedByApplication) close() else close(signal)
+                    when (shutdownOutcome(signal, broker is Recoverable)) {
+                        ShutdownOutcome.Continue -> Unit
+                        ShutdownOutcome.End -> close()
+                        ShutdownOutcome.Fail -> close(signal)
+                    }
                 }
 
             val tag =
@@ -250,3 +259,24 @@ fun <T> Amqp.consumer(
     codec: AmqpCodec<T>,
     options: ConsumerOptions = ConsumerOptions(),
 ): AmqpConsumer<T> = AmqpConsumer(openChannel(), queue, codec, options)
+
+/** What a consumer's flow does when its channel reports a shutdown. */
+internal enum class ShutdownOutcome { Continue, End, Fail }
+
+/**
+ * Decides what a shutdown means for a flow.
+ *
+ * Only a *connection-level* loss that the client will recover from leaves the flow open — the
+ * consumer is re-registered on the new channel with the same callbacks. A close this side asked
+ * for ends it quietly; a channel closed by the broker, or any loss without recovery, ends it with
+ * the signal as the reason.
+ */
+internal fun shutdownOutcome(
+    signal: ShutdownSignalException,
+    recoverable: Boolean,
+): ShutdownOutcome =
+    when {
+        signal.isInitiatedByApplication -> ShutdownOutcome.End
+        recoverable && signal.reference is Connection -> ShutdownOutcome.Continue
+        else -> ShutdownOutcome.Fail
+    }

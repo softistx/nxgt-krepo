@@ -22,6 +22,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
 import kotlin.time.Instant
 
@@ -71,13 +72,16 @@ class AmqpPublisher<T> internal constructor(
 
     private val guard = CloseGuard()
 
+    /** Bumped by the shutdown listener, so a publish can tell its sequence number outlived its channel. */
+    private val epoch = AtomicLong()
+
     private val settling = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     init {
         /* A lost channel takes its sequence numbers with it: the client recovers it by default and
            restarts them at 1, so entries left in the map would be answered by the wrong confirms
            and the lost ones never. Fail them all at the loss, before anything new is registered. */
-        channel.addShutdownListener { confirms.post(Confirm.Lost) }
+        channel.addShutdownListener { confirms.post(Confirm.Lost(epoch.incrementAndGet())) }
         if (options.confirms) {
             channel.confirmSelect()
             channel.addConfirmListener(
@@ -174,6 +178,7 @@ class AmqpPublisher<T> internal constructor(
 
         return withContext(Dispatchers.IO) {
             publishing.withLock {
+                val born = epoch.get()
                 val sequence = if (options.confirms) channel.nextPublishSeqNo else 0L
                 val entry = Pending(sequence, exchange, routingKey, id)
                 if (!options.confirms) {
@@ -181,7 +186,7 @@ class AmqpPublisher<T> internal constructor(
                 } else {
                     /* Registered before the bytes go out, so the confirm that answers them cannot
                        reach the settler first: one queue, and this end of it is already in. */
-                    confirms.post(Confirm.Registered(entry))
+                    confirms.post(Confirm.Registered(entry, born))
                 }
                 try {
                     channel.basicPublish(exchange, routingKey, options.mandatory, properties, body)
@@ -209,6 +214,7 @@ class AmqpPublisher<T> internal constructor(
            from the front rather than a sorted structure. */
         val pending = LinkedHashMap<Long, Pending>()
         val bySequence = mutableMapOf<String, Long>()
+        var lost = 0L
 
         fun forget(entry: Pending) {
             pending.remove(entry.sequence)
@@ -228,8 +234,14 @@ class AmqpPublisher<T> internal constructor(
             confirms.consume { message ->
                 when (message) {
                     is Confirm.Registered -> {
-                        pending[message.entry.sequence] = message.entry
-                        message.entry.messageId?.let { bySequence[it] = message.entry.sequence }
+                        if (message.epoch < lost) {
+                            /* Its sequence number was read before the channel was lost, so the
+                               loss has already been applied and nothing will ever confirm it. */
+                            message.entry.abandoned()
+                        } else {
+                            pending[message.entry.sequence] = message.entry
+                            message.entry.messageId?.let { bySequence[it] = message.entry.sequence }
+                        }
                     }
 
                     /* The broker sends a return before the confirm for that message, so marking it
@@ -250,7 +262,8 @@ class AmqpPublisher<T> internal constructor(
                         take(message.sequence, false).forEach { it.failed(message.cause) }
                     }
 
-                    Confirm.Lost -> {
+                    is Confirm.Lost -> {
+                        lost = message.epoch
                         pending.values.forEach { it.abandoned() }
                         pending.clear()
                         bySequence.clear()
@@ -304,6 +317,7 @@ private class Pending(
 private sealed interface Confirm {
     data class Registered(
         val entry: Pending,
+        val epoch: Long,
     ) : Confirm
 
     data class Acked(
@@ -327,7 +341,9 @@ private sealed interface Confirm {
     ) : Confirm
 
     /** The channel shut down: nothing registered before this will ever be confirmed. */
-    data object Lost : Confirm
+    data class Lost(
+        val epoch: Long,
+    ) : Confirm
 }
 
 /**

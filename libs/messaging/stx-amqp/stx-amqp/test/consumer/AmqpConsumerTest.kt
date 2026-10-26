@@ -1,5 +1,8 @@
 package com.softistx.amqp.consumer
 
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.Connection
+import com.rabbitmq.client.ShutdownSignalException
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpTestBroker
 import com.softistx.amqp.AmqpValueException
@@ -25,7 +28,9 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
+import java.lang.reflect.Proxy
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -195,6 +200,58 @@ class AmqpConsumerTest :
                     runCatching { channel.queueDeclarePassive("test.no.such.queue.${AmqpTestBroker.name("x")}") }
 
                     withTimeout(10.seconds) { failure.await() } shouldNotBe null
+                }
+            }
+        }
+
+        feature("what a shutdown means for the flow") {
+            fun signal(
+                app: Boolean,
+                reference: Any,
+            ) = ShutdownSignalException(false, app, null, reference)
+
+            val connection = Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, _, _ -> null }
+            val channel = Proxy.newProxyInstance(Channel::class.java.classLoader, arrayOf(Channel::class.java)) { _, _, _ -> null }
+
+            scenario("a connection lost under recovery leaves the flow open") {
+                shutdownOutcome(signal(false, connection), recoverable = true) shouldBe ShutdownOutcome.Continue
+            }
+            scenario("a connection lost without recovery fails the flow") {
+                shutdownOutcome(signal(false, connection), recoverable = false) shouldBe ShutdownOutcome.Fail
+            }
+            scenario("a channel the broker closed fails the flow even under recovery") {
+                shutdownOutcome(signal(false, channel), recoverable = true) shouldBe ShutdownOutcome.Fail
+            }
+            scenario("a close this side asked for ends the flow quietly") {
+                shutdownOutcome(signal(true, connection), recoverable = true) shouldBe ShutdownOutcome.End
+            }
+        }
+
+        feature("a concurrency limit").config(enabled = AmqpTestBroker.available) {
+            scenario("never has more handlers running than it allows") {
+                withQueues { amqp, queue, _ ->
+                    amqp.publish(queue, *(1..6).map { Order("A$it") }.toTypedArray())
+                    val running = AtomicInteger()
+                    val most = AtomicInteger()
+                    val done = AtomicInteger()
+
+                    coroutineScope {
+                        val consuming =
+                            launch {
+                                amqp.consumer<Order>(queue, ConsumerOptions(concurrency = 2)).use { consumer ->
+                                    consumer.process {
+                                        most.accumulateAndGet(running.incrementAndGet(), ::maxOf)
+                                        delay(100)
+                                        running.decrementAndGet()
+                                        done.incrementAndGet()
+                                    }
+                                }
+                            }
+                        withTimeout(10.seconds) { while (done.get() < 6) delay(20) }
+                        consuming.cancel()
+                    }
+
+                    most.get() shouldBe 2
                 }
             }
         }
