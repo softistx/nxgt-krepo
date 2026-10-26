@@ -17,7 +17,7 @@ data class TelemetryProperties(
     val enabled: Boolean = false,
     /** `service.name`. Falls back to `spring.application.name` when unset. */
     val service: String? = null,
-    /** `service.version`. Falls back to the implementation version on the main class's jar. */
+    /** `service.version`. Left unset when null: nothing is read from the jar's manifest. */
     val version: String? = null,
     /** `deployment.environment.name` — "production", "staging". */
     val environment: String? = null,

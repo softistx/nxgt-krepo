@@ -35,6 +35,20 @@ class ContainerServiceTest :
             }
         }
 
+        feature("describing a service nobody has asked for yet") {
+            scenario("resolves it first, so the answer is not the unresolved default") {
+                val service =
+                    ContainerService.declare<GenericContainer<*>>(
+                        name = "fake",
+                        reusing = "PATH",
+                        create = { error("a container was built despite the override") },
+                        endpointOf = { error("unreachable") },
+                    )
+
+                service.describe() shouldContain "reusing the server named by PATH"
+            }
+        }
+
         feature("a service that cannot be had") {
             scenario("is unavailable rather than a thrown startup") {
                 val service =

@@ -88,21 +88,60 @@ class CorsTest :
                 // The same rule stx-spring-boot enforces, from the same code — this is the whole
                 // point of the policy being a shared type rather than two configuration classes
                 // that agree for as long as somebody keeps them agreeing.
-                shouldThrow<IllegalArgumentException> {
-                    testApplication {
-                        serve(CorsPolicy(origins = listOf("*"), allowCredentials = true))
-                        client.get("/orders")
+                val failure =
+                    shouldThrow<IllegalArgumentException> {
+                        testApplication {
+                            serve(CorsPolicy(origins = listOf("*"), allowCredentials = true))
+                            client.get("/orders")
+                        }
                     }
+
+                failure.message!!.contains("CorsPolicy.originPatterns") shouldBe true
+            }
+        }
+
+        feature("origin patterns are honoured") {
+            scenario("a subdomain matching a pattern is echoed back with credentials") {
+                testApplication {
+                    serve(CorsPolicy(originPatterns = listOf("https://*.example.com")))
+
+                    val response = client.get("/orders") { header(HttpHeaders.Origin, "https://app.example.com") }
+
+                    response.headers[HttpHeaders.AccessControlAllowOrigin] shouldBe "https://app.example.com"
+                    response.headers[HttpHeaders.AccessControlAllowCredentials] shouldBe "true"
+                }
+            }
+
+            scenario("an origin outside the pattern gets nothing") {
+                testApplication {
+                    serve(CorsPolicy(originPatterns = listOf("https://*.example.com")))
+
+                    val response = client.get("/orders") { header(HttpHeaders.Origin, "https://app.example.com.evil.test") }
+
+                    response.headers[HttpHeaders.AccessControlAllowOrigin] shouldBe null
                 }
             }
         }
 
+        feature("an origin without a scheme is refused") {
+            scenario("it fails at install and says what to write") {
+                val failure =
+                    shouldThrow<IllegalArgumentException> {
+                        testApplication {
+                            serve(CorsPolicy(origins = listOf("localhost:5173")))
+                            client.get("/orders")
+                        }
+                    }
+
+                failure.message!!.contains("scheme://host") shouldBe true
+            }
+        }
+
         feature("what Ktor cannot express is named rather than dropped") {
-            scenario("origin patterns and a path are reported as ignored") {
+            scenario("a path is reported as ignored") {
                 // A configuration field a framework quietly ignores is worse than one it refuses:
                 // nothing fails, and the policy in the file is not the policy in force.
-                CorsPolicy(originPatterns = listOf("https://sub.example.com"), path = "/api/**")
-                    .ignoredByKtor shouldBe listOf("originPatterns", "path")
+                CorsPolicy(path = "/api/**").ignoredByKtor shouldBe listOf("path")
             }
 
             scenario("a policy Ktor can express fully reports nothing") {

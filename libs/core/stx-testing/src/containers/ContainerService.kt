@@ -73,8 +73,9 @@ class ContainerService<C : GenericContainer<*>, E : Any> internal constructor(
     fun requireEndpoint(): E = requireNotNull(endpoint) { describe() }
 
     /** Where this one ended up, for a log line or a failure that needs to say why it skipped. */
-    fun describe(): String =
-        when (origin.also { endpoint }) {
+    fun describe(): String {
+        endpoint // resolves, which is what records the origin read below
+        return when (origin) {
             Origin.REUSED -> {
                 "$name: reusing the server named by $reusing"
             }
@@ -88,6 +89,7 @@ class ContainerService<C : GenericContainer<*>, E : Any> internal constructor(
                     ?: "$name: unavailable — $reusing is unset and Docker is not reachable"
             }
         }
+    }
 
     /**
      * Stops the container, if this started one.
