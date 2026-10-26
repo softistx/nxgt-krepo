@@ -1,5 +1,5 @@
 ---
-"stx-common": patch
+"stx-common": minor
 "stx-redis": patch
 ---
 
