@@ -2,6 +2,8 @@ package com.softistx.jpa.scan
 
 import com.softistx.jpa.JpaMappingException
 import io.github.classgraph.ClassGraph
+import io.github.classgraph.ClassInfoList
+import io.github.classgraph.ScanResult
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter
 import jakarta.persistence.Embeddable
@@ -33,9 +35,9 @@ fun scanEntities(packages: List<String>): List<KClass<*>> {
     if (packages.isEmpty()) throw JpaMappingException("scanning needs at least one package name")
 
     val found =
-        scan(packages) { result ->
+        scan(packages) { result, classLoader ->
             listOf(Entity::class, MappedSuperclass::class, Embeddable::class)
-                .flatMap { annotation -> result.getClassesWithAnnotation(annotation.java).loadClasses() }
+                .flatMap { annotation -> result.getClassesWithAnnotation(annotation.java).load(classLoader) }
                 .distinct()
                 .map { it.kotlin }
         }
@@ -63,10 +65,10 @@ fun scanEntities(vararg packages: String): List<KClass<*>> = scanEntities(packag
 fun scanConverters(packages: List<String>): List<KClass<out AttributeConverter<*, *>>> {
     if (packages.isEmpty()) throw JpaMappingException("scanning needs at least one package name")
 
-    return scan(packages) { result ->
+    return scan(packages) { result, classLoader ->
         result
             .getClassesWithAnnotation(Converter::class.java)
-            .loadClasses()
+            .load(classLoader)
             .filter { AttributeConverter::class.java.isAssignableFrom(it) }
             .map { it.kotlin as KClass<out AttributeConverter<*, *>> }
     }
@@ -75,12 +77,22 @@ fun scanConverters(packages: List<String>): List<KClass<out AttributeConverter<*
 /** The same, spelled for the common case. */
 fun scanConverters(vararg packages: String): List<KClass<out AttributeConverter<*, *>>> = scanConverters(packages.toList())
 
+/**
+ * Scans the classpath of [classLoader] and hands the result to [read] with that same loader: ClassGraph
+ * 6 no longer loads classes, so the loader that was scanned is the one that loads them, without
+ * running their static initializers.
+ */
 private fun <T> scan(
     packages: List<String>,
-    read: (io.github.classgraph.ScanResult) -> T,
+    classLoader: ClassLoader = Thread.currentThread().contextClassLoader ?: ScanResult::class.java.classLoader,
+    read: (ScanResult, ClassLoader) -> T,
 ): T =
     ClassGraph()
+        .enableClassLoaders(classLoader)
+        .enableClassInfo()
         .enableAnnotationInfo()
         .acceptPackages(*packages.toTypedArray())
         .scan()
-        .use(read)
+        .use { read(it, classLoader) }
+
+private fun ClassInfoList.load(classLoader: ClassLoader): List<Class<*>> = map { Class.forName(it.name, false, classLoader) }
