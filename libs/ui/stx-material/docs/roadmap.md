@@ -244,5 +244,6 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
 - [x] **8i — Commerce.** `Price`, `FeatureList`, `PricingCard`, `PromoBanner`.
 - [ ] **9 — Graphiques.** `Area`, `Bar`, `Line`, `Pie`, `Radar`, `Scatter`, `Funnel`, `Heatmap`
       au `Canvas`, thème dérivé des tokens
-- [ ] **10 — i18n et publication.** Catalogue de messages multiplateforme, locales `en`/`fr`,
-      puis `settings.publishing` et publication Maven
+- [x] **10a — Publication.** `settings.publishing` et publication Maven Central, cibles Apple
+      comprises — `stx-material@0.2.2`.
+- [ ] **10b — i18n.** Catalogue de messages multiplateforme, locales `en`/`fr`.
