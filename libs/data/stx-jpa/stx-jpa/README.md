@@ -456,7 +456,8 @@ form is still a `createDelete<Purchase>()` away for a caller who has measured.
 another*, and leaves the cursors in `PageInfo` null — they belong to keyset pagination, which this is
 not. Offset makes the database walk and discard, so a deep page costs more and a row inserted between
 requests shifts the window. Fine behind a UI over a few hundred rows; for an export or an infinite
-scroll, order by the identifier and resume from the last one seen.
+scroll, order by the identifier and resume from the last one seen. A `limit` above `MAX_PAGE_SIZE`
+(1000, from `stx-common`) is refused, as it is in `stx-mongo`.
 
 **Writing is stateful-session only.** A stateless session has no persistence context, so `update`
 would have nothing to merge into and `delete` nothing to cascade from. The reads take the narrower

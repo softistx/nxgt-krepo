@@ -15,7 +15,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.PrintStream
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption.APPEND
+import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.attribute.FileTime
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.exists
@@ -157,6 +160,35 @@ class FileExporterTest :
                 text shouldContain "first"
                 text shouldContain "second"
                 text shouldContain "third"
+            }
+        }
+
+        feature("a roll whose reopen fails") {
+            scenario("is retried by the next write, instead of leaving the stream closed until a restart") {
+                val directory = directory()
+                val path = directory.resolve("telemetry.jsonl")
+                var failures = 0
+                val exporter =
+                    FileExporter(path, 1, 24.hours, 7, false, Ticking(start)) {
+                        if (failures-- > 0) throw IOException("no file descriptors left")
+                        Files.newOutputStream(it, CREATE, APPEND)
+                    }
+                exporter.export(resource, listOf(log("first")))
+                failures = 1
+                shouldThrow<IOException> { exporter.export(resource, listOf(log("second"))) }
+
+                exporter.export(resource, listOf(log("third")))
+                exporter.close()
+
+                val text =
+                    directory
+                        .toFile()
+                        .walk()
+                        .filter { it.isFile }
+                        .joinToString("") { it.readText() }
+                text shouldContain "first"
+                text shouldContain "third"
+                path.readText() shouldContain "third"
             }
         }
 

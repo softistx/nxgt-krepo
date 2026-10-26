@@ -293,8 +293,9 @@ as somebody keeps them agreeing.
 the wrong shape of default. Everything else defaults permissively — once an origin is trusted,
 restricting which methods it may use adds nothing an attacker at that origin cannot work around.
 
-**One combination fails at startup on purpose.** `origins: ["*"]` with `allow-credentials: true` is
-forbidden by the CORS specification, and Spring throws when the *request* arrives rather than when
+**Two mistakes fail at startup on purpose.** An `origins` entry without its scheme (`localhost:5173`
+for `http://localhost:5173`) would match nothing in a browser, so it is refused. And `origins: ["*"]`
+with `allow-credentials: true` is forbidden by the CORS specification, and Spring throws when the *request* arrives rather than when
 the bean is built — which turns a configuration mistake into an intermittent browser failure found by
 whoever is testing the front end. The policy refuses it while the context is starting, and names
 `stx.cors.origin-patterns` — which is what actually does the job, since the concrete requesting

@@ -55,4 +55,11 @@ class CorsPolicyTest :
 
             policy.validate() shouldBe policy
         }
+
+        "an origin without its scheme is refused, whichever framework built the policy" {
+            val failure = shouldThrow<IllegalArgumentException> { CorsPolicy(origins = listOf("example.com")).validate() }
+
+            failure.message!! shouldContain "https://example.com"
+            CorsPolicy(origins = listOf("https://example.com", "*"), allowCredentials = false).validate()
+        }
     })

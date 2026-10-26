@@ -1,5 +1,6 @@
 package com.softistx.jpa.query
 
+import com.softistx.common.page.MAX_PAGE_SIZE
 import com.softistx.jpa.Jpa
 import com.softistx.jpa.JpaNotFoundException
 import com.softistx.jpa.JpaTestDatabase
@@ -136,6 +137,16 @@ class SelectsTest :
                     jpa.session { session ->
                         shouldThrow<IllegalArgumentException> { session.findPage<Purchase>(limit = 0) }
                         shouldThrow<IllegalArgumentException> { session.findPage<Purchase>(limit = 1, offset = -1) }
+                    }
+                }
+            }
+
+            scenario("refuses a page size above the cap, and one whose limit + 1 would overflow") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        shouldThrow<IllegalArgumentException> { session.findPage<Purchase>(limit = MAX_PAGE_SIZE + 1) }
+                        shouldThrow<IllegalArgumentException> { session.findPage<Purchase>(limit = Int.MAX_VALUE) }
+                        session.findPage<Purchase>(limit = MAX_PAGE_SIZE).info.hasNextPage shouldBe false
                     }
                 }
             }

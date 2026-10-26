@@ -1,5 +1,6 @@
 package com.softistx.redis.lock
 
+import com.softistx.common.coroutines.LeaseLostException
 import com.softistx.redis.RedisLockException
 import com.softistx.redis.RedisTestServer
 import io.kotest.assertions.throwables.shouldThrow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -192,6 +194,28 @@ class RedisLockTest :
 
                     lock.isHeld() shouldBe false
                 }
+            }
+        }
+
+        feature("a watchdog that cannot renew").config(enabled = RedisTestServer.available) {
+            scenario("cancels the block once the TTL has passed without a successful renewal") {
+                // The connection drops under the block: every renewal throws, so within one TTL the lock has
+                // lapsed on the server and the block must not run on beside a second holder.
+                val redis = RedisTestServer.connect("lock-lost")
+                val lock = RedisLock(redis, "lost", ttl = 300.milliseconds)
+                var finished = false
+
+                shouldThrow<LeaseLostException> {
+                    withTimeout(5.seconds) {
+                        lock.withLock {
+                            redis.close()
+                            delay(3.seconds)
+                            finished = true
+                        }
+                    }
+                }
+
+                finished shouldBe false
             }
         }
     })

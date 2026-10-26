@@ -14,6 +14,8 @@ test-dependencies:
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine
   - $libs.kotest.assertions.core
+  # runTest, for the specs that say what a lease does under virtual time
+  - $libs.kotlinx.coroutines.test
 
 settings:
   kotlin:

@@ -7,6 +7,7 @@ import com.softistx.common.lifecycle.CloseGuard
 import com.softistx.telemetry.export.Exporter
 import com.softistx.telemetry.model.Resource
 import com.softistx.telemetry.model.Signal
+import kotlinx.coroutines.CancellationException
 import org.bson.Document
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
@@ -43,15 +44,17 @@ import kotlin.time.Duration.Companion.days
  *
  * ## What a failed insert does
  *
- * Nothing but propagate, to the pipeline's `onExportError`. The batch is unordered, so a document
- * Mongo rejects does not stop the ones behind it — a single oversized attribute costs its own record
- * and not the other five hundred.
+ * Nothing but propagate, to the pipeline's `onExportError`. So does a failure to prepare the
+ * retention index, but only after the batch is written: the signals are never held back by it. The
+ * batch is unordered, so a document Mongo rejects does not stop the ones behind it — a single
+ * oversized attribute costs its own record and not the other five hundred.
  */
 class MongoExporter private constructor(
     database: MongoDatabase,
     collection: String,
     retention: Duration?,
     private val owned: MongoClient?,
+    ensureRetention: (suspend () -> Unit)? = null,
 ) : Exporter {
     /** Against a database somebody else opened, and closes. */
     constructor(
@@ -61,8 +64,16 @@ class MongoExporter private constructor(
         retention: Duration? = 30.days,
     ) : this(database, collection, retention, owned = null)
 
+    /** For a spec that needs the retention step to fail; production code builds the real one. */
+    internal constructor(
+        database: MongoDatabase,
+        collection: String,
+        ensureRetention: suspend () -> Unit,
+    ) : this(database, collection, null, owned = null, ensureRetention)
+
     private val documents = database.getCollection<Document>(collection)
-    private val ttl = TimeToLive(database, documents, retention)
+    private val ensureTtl: suspend () -> Unit =
+        ensureRetention ?: TimeToLive(database, documents, retention).let { ttl -> { ttl.ensure() } }
     private val prepared = AtomicBoolean(false)
     private val guard = CloseGuard()
 
@@ -71,8 +82,16 @@ class MongoExporter private constructor(
         batch: List<Signal>,
     ) {
         if (batch.isEmpty()) return
-        prepare()
-        documents.insertMany(batch.map { it.document(resource) }, UNORDERED)
+        // Retention is housekeeping and never gates the data: a failed preparation is reported after the
+        // batch is written, and tried again with the next one.
+        val preparation = prepare()
+        try {
+            documents.insertMany(batch.map { it.document(resource) }, UNORDERED)
+        } catch (e: Exception) {
+            preparation?.let(e::addSuppressed)
+            throw e
+        }
+        if (preparation != null) throw preparation
     }
 
     /**
@@ -83,10 +102,17 @@ class MongoExporter private constructor(
      * application started is not a permanent failure: the flag is only set once it worked, so the
      * next batch tries again.
      */
-    private suspend fun prepare() {
-        if (prepared.get()) return
-        ttl.ensure()
-        prepared.set(true)
+    private suspend fun prepare(): Exception? {
+        if (prepared.get()) return null
+        return try {
+            ensureTtl()
+            prepared.set(true)
+            null
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            e
+        }
     }
 
     /** Closes the client this opened, if it opened one. Idempotent: a DI container closes twice. */

@@ -1,5 +1,6 @@
 package com.softistx.telemetry.mongo
 
+import com.mongodb.MongoCommandException
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.coroutine.MongoCollection
@@ -24,8 +25,9 @@ import kotlin.time.Duration
  * that was told to keep everything must not go on expiring at the old age. That costs one
  * `listIndexes` per exporter, at its first batch, even with no retention.
  *
- * `collMod` needs the `collMod` privilege, which the `readWrite` role does not include. The index
- * name `stx_telemetry_ttl` is **reserved**: this recognises, changes and drops its index by that
+ * `collMod` needs the `collMod` privilege, which the `readWrite` role does not include. Where it is
+ * refused (error code 13) the index is dropped and created again with the new retention, which
+ * `readWrite` allows. The index name `stx_telemetry_ttl` is **reserved**: this recognises, changes and drops its index by that
  * name, so another index must not use it.
  */
 internal class TimeToLive(
@@ -42,12 +44,24 @@ internal class TimeToLive(
         }
         if (existing != null) {
             if ((existing["expireAfterSeconds"] as? Number)?.toLong() == seconds) return
-            database.runCommand(
-                Document("collMod", collection.namespace.collectionName)
-                    .append("index", Document("name", NAME).append("expireAfterSeconds", seconds)),
-            )
+            try {
+                database.runCommand(
+                    Document("collMod", collection.namespace.collectionName)
+                        .append("index", Document("name", NAME).append("expireAfterSeconds", seconds)),
+                )
+            } catch (e: MongoCommandException) {
+                if (e.errorCode != UNAUTHORIZED) throw e
+                // Without the `collMod` privilege the index is replaced instead: dropping and creating
+                // an index are `readWrite` operations, and the TTL only has to be right, not in place.
+                collection.dropIndex(NAME)
+                create(seconds)
+            }
             return
         }
+        create(seconds)
+    }
+
+    private suspend fun create(seconds: Long) {
         collection.createIndex(
             Indexes.ascending(FIELD),
             IndexOptions().name(NAME).expireAfter(seconds, TimeUnit.SECONDS),
@@ -60,5 +74,8 @@ internal class TimeToLive(
 
         /** Named, so this can recognise its own index among whatever else the collection carries. */
         const val NAME = "stx_telemetry_ttl"
+
+        /** Mongo's `Unauthorized` error code: the user lacks the privilege for the command. */
+        const val UNAUTHORIZED = 13
     }
 }

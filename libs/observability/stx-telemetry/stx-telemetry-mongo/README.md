@@ -50,7 +50,10 @@ Two consequences worth knowing:
 - **A changed retention is a `collMod`.** Mongo refuses a second index with the same key and
   different options, so an application going from thirty days to seven would otherwise keep the
   thirty for ever and never be told. `collMod` rewrites `expireAfterSeconds` in place, with no
-  rebuild.
+  rebuild. Without the `collMod` privilege (`readWrite` has none) the index is dropped and created
+  again instead.
+- **Retention never holds the data back.** A failure to prepare the index is reported through
+  `onExportError` once the batch is written, and the next batch tries again.
 - **No retention drops the index.** `null` (or a retention under a second) removes the TTL index an
   earlier run built, so a collection told to keep everything stops expiring.
 

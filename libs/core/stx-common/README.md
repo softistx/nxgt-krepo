@@ -132,8 +132,10 @@ parked on one slow step; a caller that must wait polls, which keeps that decisio
 worked on right now* rather than *this code is short* — a fixed lease has to be guessed against the
 slowest run and is wrong either way. **The release happens under `NonCancellable`**, because a
 cancelled coroutine cannot make a suspending call, and a scope dying mid-step is exactly what a crash
-looks like. A renewal that **throws** (a dropped connection) is retried on the next tick and does not
-cancel the block; one that **returns false** means the lease was lost, and the watchdog stops (the
+looks like. A renewal that **throws** (a dropped connection) is reported to `onRenewalFailure` (a
+`System.Logger` warning by default) and retried on the next tick, but once no renewal has
+**succeeded** within the duration the lease has lapsed on the store, and the block is cancelled with a
+`LeaseLostException` — fail closed, because a second holder may already be running. One that **returns false** means the lease was lost, and the watchdog stops (the
 block is not interrupted).
 
 ## `getOrPut` on a `ConcurrentHashMap` is not atomic
@@ -260,7 +262,8 @@ half of the failure and it is spelled `stx.cors.origin-patterns` in one place an
 the other.
 
 Ktor matches `originPatterns` as a glob (`*` is any run of characters, tested against the whole
-`Origin`), and requires each `origins` entry to carry its scheme, `scheme://host[:port]`.
+`Origin`). `validate` requires each `origins` entry to carry its scheme, `scheme://host[:port]`, for
+both frameworks.
 
 What a framework *cannot* express is named rather than dropped: `CorsPolicy.ignoredByKtor` lists the
 fields Ktor has no equivalent for — today only `path`. A configuration field that is quietly ignored is worse than one

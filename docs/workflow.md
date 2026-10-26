@@ -974,4 +974,5 @@ id is parked for a `poll` after its `resume` returns, so a lock held by another 
 the loop spin, and the worker asks the store for `batch` plus the parked and in-flight ids so
 unregistered instances cannot starve the real ones. An instance of a workflow this engine has not
 registered is not
-failed, since another deployment may own it: it is reported once and left alone for `unknownBackoff`.
+failed, since another deployment may own it: it is reported once per `unknownBackoff` (a minute by
+default) and left alone for that long.

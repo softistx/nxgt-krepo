@@ -57,8 +57,7 @@ fun <T> RadioGroup(
                                 enabled = enabled,
                                 role = Role.RadioButton,
                                 onClick = { onValueChange(option) },
-                            )
-                            .minimumInteractiveComponentSize(),
+                            ).minimumInteractiveComponentSize(),
                     horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
