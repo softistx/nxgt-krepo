@@ -49,7 +49,7 @@ say and what an entity may say — gain an entry every phase, so they live in
 **A Hibernate Reactive session belongs to the Vert.x context that opened it.** Use it from any other
 thread and it throws `HR000069`— the [reference
 documentation](https://docs.hibernate.org/reactive/4.5/reference/html_single) quotes `HR000068` for
-this, and 4.5.5 does not; `SessionConfinementTest` asserts what the runtime actually says. A
+this, and 4.5.12 does not; `SessionConfinementTest` asserts what the runtime actually says. A
 coroutine that suspends inside a session block resumes wherever its dispatcher puts it, which is not
 that thread — so the obvious wrapper,
 

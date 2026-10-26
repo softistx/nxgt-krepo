@@ -8,8 +8,8 @@ import com.softistx.jpa.query.nativeMutate
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.vertx.core.Vertx
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeout
