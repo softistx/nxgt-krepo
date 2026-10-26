@@ -1,6 +1,5 @@
 package com.softistx.redis.cache
 
-import kotlin.time.Duration.Companion.seconds
 import com.softistx.redis.RedisTestServer
 import com.softistx.redis.codec.ValueCodec
 import io.kotest.core.spec.style.FeatureSpec
@@ -14,6 +13,7 @@ import kotlinx.serialization.Serializable
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 private data class Session(

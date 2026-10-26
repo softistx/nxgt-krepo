@@ -75,10 +75,10 @@ class RedisLock(
      * a lock has no queue to pop from. Throws [RedisLockException] if the wait runs out — a caller
      * that would rather skip the work uses [withLockOrNull].
      *
-     * While [block] runs, a watchdog puts the TTL back every third of it (a renewal that fails is retried, not fatal). Without that the lock
-     * would be a deadline on the work rather than a lock: a `block` slower than [ttl] loses it
-     * silently, and a second holder starts on the same task. Turn it off with `renew = false` where
-     * the work must not outlive the TTL.
+     * While [block] runs, a watchdog puts the TTL back every third of it (a renewal that fails is
+     * retried, not fatal). Without that the lock would be a deadline on the work rather than a lock:
+     * a `block` slower than [ttl] loses it silently, and a second holder starts on the same task.
+     * Turn it off with `renew = false` where the work must not outlive the TTL.
      */
     suspend fun <T> withLock(
         wait: Duration = Duration.ZERO,
