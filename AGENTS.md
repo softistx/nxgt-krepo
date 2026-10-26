@@ -949,15 +949,15 @@ The catalog's `[bundles]` groupings map to the intended consumer surfaces of thi
 **A module that turns on `settings.ktor` pins the version to the catalog's.** `ktor: enabled` gives
 `$ktor.server.core` and the rest from the toolchain's *own* default version, which matched
 `ktor = "3.5.2"` in the catalog on 0.12.x by coincidence rather than by construction. Toolchain
-0.13.0 moved the default to 3.6.0 and the catalog stayed — exactly the upgrade this rule was written
-for: without the pin, an artifact this repo names itself (`ktor-server-di`, on
+0.13.0 moved the default to 3.6.0 while the catalog was still on 3.5.2 — exactly the upgrade this
+rule was written for (the catalog has since caught up): without the pin, an artifact this repo names itself (`ktor-server-di`, on
 `version.ref = "ktor"`) would now be a different Ktor from `ktor-server-core`. So:
 
 ```yaml
 settings:
   ktor:
     enabled: true
-    version: 3.5.2   # matches `ktor` in libs.versions.toml
+    version: 3.6.0   # matches `ktor` in libs.versions.toml
 ```
 
 `./kotlin show settings -m <module>` says which one is in force: `# module.yaml` when it is pinned,
