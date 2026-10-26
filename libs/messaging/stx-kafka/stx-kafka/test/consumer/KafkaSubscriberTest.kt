@@ -6,6 +6,7 @@ import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -184,8 +185,90 @@ class KafkaSubscriberTest :
                        waits for a poll that is not coming back. */
                     withTimeout(10.seconds) { subscriber.close() }
 
+                    // Closing ends the flow by itself: nobody cancels the collector here.
+                    withTimeout(10.seconds) { collector.join() }
+                }
+            }
+
+            scenario("it ends process() without the caller cancelling it") {
+                val (subscriber, mock) = subscriber()
+                mock.assign(orders0)
+
+                coroutineScope {
+                    val processing = launch { subscriber.process { } }
+                    until { mock.assignment().isNotEmpty() }
+
+                    subscriber.close()
+
+                    withTimeout(10.seconds) { processing.join() }
+                }
+            }
+        }
+
+        feature("a rebalance that takes a partition away") {
+            scenario("its buffered records are dropped, not delivered to the handler") {
+                val (subscriber, mock) = subscriber(SubscriberOptions(prefetch = 1))
+                mock.assign(orders0)
+                mock.feed(orders0, (0..9).map { "a$it" })
+
+                val seen = ConcurrentLinkedQueue<String>()
+                val gate = Channel<Unit>(Channel.UNLIMITED)
+
+                coroutineScope {
+                    val collector =
+                        launch {
+                            subscriber.records().collect {
+                                seen += it.value
+                                gate.receive()
+                            }
+                        }
+
+                    until { seen.size == 1 }
+                    // One record in the handler's hands, one in the buffer, the rest waiting.
+                    until { mock.paused().isNotEmpty() }
+
+                    mock.schedulePollTask {
+                        mock.updateBeginningOffsets(mapOf(orders1 to 0L))
+                        mock.rebalance(listOf(orders1))
+                    }
+                    until { subscriber.assignment.value == setOf(orders1) }
+                    mock.schedulePollTask {
+                        mock.addRecord(ConsumerRecord("orders", 1, 0L, "k", "b0"))
+                    }
+
+                    repeat(20) { gate.trySend(Unit) }
+                    until { seen.contains("b0") }
+
+                    seen.toList() shouldContainExactly listOf("a0", "b0")
                     collector.cancel()
                 }
+
+                subscriber.close()
+            }
+
+            scenario("a record handled after its partition was revoked is not committed") {
+                val (subscriber, mock) = subscriber(SubscriberOptions(commit = CommitStrategy.Manual))
+                mock.assign(orders0)
+                mock.feed(orders0, listOf("a0"))
+
+                val first = subscriber.records().first()
+                first.value shouldBe "a0"
+
+                mock.schedulePollTask {
+                    mock.updateBeginningOffsets(mapOf(orders1 to 0L))
+                    mock.rebalance(listOf(orders1))
+                }
+                coroutineScope {
+                    val collector = launch { subscriber.records().collect { } }
+                    until { subscriber.assignment.value == setOf(orders1) }
+                    collector.cancel()
+                }
+
+                subscriber.commit(first)
+
+                mock.committed(setOf(orders0))[orders0] shouldBe null
+
+                subscriber.close()
             }
         }
 

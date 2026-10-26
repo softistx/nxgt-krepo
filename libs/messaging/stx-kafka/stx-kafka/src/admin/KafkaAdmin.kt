@@ -1,5 +1,6 @@
 package com.softistx.kafka.admin
 
+import com.softistx.common.lifecycle.CloseGuard
 import com.softistx.kafka.Kafka
 import com.softistx.kafka.TopicNotFoundException
 import com.softistx.kafka.clientProperties
@@ -25,6 +26,8 @@ import java.util.Optional
 class KafkaAdmin internal constructor(
     internal val admin: Admin,
 ) : AutoCloseable {
+    private val closeGuard = CloseGuard()
+
     /** Every topic this credential can see; Kafka's own bookkeeping topics are hidden by default. */
     suspend fun topics(includeInternal: Boolean = false): Set<String> =
         admin
@@ -157,7 +160,7 @@ class KafkaAdmin internal constructor(
         }
     }
 
-    override fun close() = admin.close()
+    override fun close() = closeGuard.once { admin.close() }
 }
 
 /** Awaits a Kafka future without parking a thread on it. */
