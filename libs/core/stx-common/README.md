@@ -211,7 +211,9 @@ the whole reason it is here: a route that pages over either store maps the data 
 cursors alone, with `Page.map`, and does not care which one it was.
 
 `PageWindow` is the *request* side of the same story: `first`, `last`, `cursor`, the `limit` and
-`forward` derived from them, and the two rules — not both ends, and not a page of zero rows. A
+`forward` derived from them, and the three rules — not both ends, not a page of zero rows, and not a page above `MAX_PAGE_SIZE`
+(1000), which is refused rather than clamped; `limit + 1` is what a store fetches, and an unbounded
+size would overflow it. A
 store's request type implements it and keeps whatever it needs beyond that: Mongo's
 `PaginationOptions` carries a filter and a sort as raw Mongo JSON, because that is how they arrive
 from an HTTP client, and is `@Serializable`.

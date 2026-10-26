@@ -69,11 +69,8 @@ internal fun keysetCriteria(
 ): Criteria {
     val branches =
         keys.mapIndexed { index, key ->
-            val equalities = keys.take(index).map { Criteria.where(it.field).`is`(cursor[it.field]) }
-            val comparison =
-                Criteria.where(key.field).let {
-                    if (key.ascending == forward) it.gt(cursor.valueOf(key.field)) else it.lt(cursor.valueOf(key.field))
-                }
+            val equalities = keys.take(index).map { equalTo(it.field, cursor.valueOf(it.field)) }
+            val comparison = beyond(key.field, cursor.valueOf(key.field), greater = key.ascending == forward)
             if (equalities.isEmpty()) comparison else Criteria().andOperator(equalities + comparison)
         }
 
@@ -81,10 +78,39 @@ internal fun keysetCriteria(
 }
 
 /**
+ * `field == value`, where a null value means "null or missing" — which is what Mongo's `{f: null}`
+ * matches, and what its sort treats as one value.
+ */
+private fun equalTo(
+    field: String,
+    value: Any,
+): Criteria = if (value is BsonNull) Criteria.where(field).isNull else Criteria.where(field).`is`(value)
+
+/**
+ * The documents strictly [greater] (or lesser) than [value] on [field], in Mongo's sort order.
+ *
+ * Null and a missing field are one value that sorts before everything else, and `$gt`/`$lt` never
+ * match it (comparison is type-bracketed), so a plain comparison drops those documents from every
+ * page after the cursor crosses them:
+ * - past a null, every non-null value is greater, and nothing is lesser;
+ * - past a value, the nulls are lesser, in addition to the smaller values.
+ */
+private fun beyond(
+    field: String,
+    value: Any,
+    greater: Boolean,
+): Criteria =
+    when {
+        value is BsonNull && greater -> Criteria.where(field).ne(null)
+        value is BsonNull -> Criteria().andOperator(Criteria.where(field).isNull, Criteria.where(field).ne(null))
+        greater -> Criteria.where(field).gt(value)
+        else -> Criteria().orOperator(Criteria.where(field).lt(value), Criteria.where(field).isNull)
+    }
+
+/**
  * A cursor key's value, with an explicit BSON null where the document has none.
  *
- * `Criteria.gt` takes a non-null `Any`, and a missing key is a real case — a sort field that is
- * nullable, or a document written before the field existed. `BsonNull` is how the driver spells the
- * value that `$gt` then compares against nothing, which is the same answer `stx-mongo` gives.
+ * A missing key is a real case — a sort field that is nullable, or a document written before the
+ * field existed — and it has to stay distinguishable from a value, so it is spelled `BsonNull`.
  */
 private fun Document.valueOf(field: String): Any = this[field] ?: BsonNull.VALUE

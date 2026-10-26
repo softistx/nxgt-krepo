@@ -1,5 +1,6 @@
 package com.softistx.spring.web
 
+import com.softistx.common.page.MAX_PAGE_SIZE
 import com.softistx.spring.error.ApiException
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -39,8 +40,12 @@ fun ServerRequest.requiredListParam(name: String): List<String> = requiredParam(
  */
 val ServerRequest.page: Int get() = ((queryParamOrNull("page")?.toIntOrNull() ?: 1) - 1).coerceAtLeast(0)
 
-/** The requested page size, defaulting to [DEFAULT_PAGE_SIZE] and never zero or negative. */
-val ServerRequest.size: Int get() = queryParamOrNull("size")?.toIntOrNull()?.takeIf { it > 0 } ?: DEFAULT_PAGE_SIZE
+/**
+ * The requested page size, defaulting to [DEFAULT_PAGE_SIZE], never zero or negative, and coerced
+ * down to [MAX_PAGE_SIZE] — `?size=999999` is served as a full page, not refused.
+ */
+val ServerRequest.size: Int
+    get() = (queryParamOrNull("size")?.toIntOrNull()?.takeIf { it > 0 } ?: DEFAULT_PAGE_SIZE).coerceAtMost(MAX_PAGE_SIZE)
 
 /**
  * Where a keyset page resumes from — `?cursor=`, absent on the first page.

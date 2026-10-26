@@ -65,18 +65,43 @@ internal fun keysetFilter(
 ): Bson {
     val branches =
         keys.mapIndexed { index, key ->
-            val equalities = keys.take(index).map { Filters.eq(it.field, cursor.valueOf(it.field)) }
-            val comparison =
-                if (key.ascending == forward) {
-                    Filters.gt(key.field, cursor.valueOf(key.field))
-                } else {
-                    Filters.lt(key.field, cursor.valueOf(key.field))
-                }
+            val equalities = keys.take(index).map { equalTo(it.field, cursor.valueOf(it.field)) }
+            val comparison = beyond(key.field, cursor.valueOf(key.field), greater = key.ascending == forward)
             if (equalities.isEmpty()) comparison else Filters.and(equalities + comparison)
         }
 
     return Filters.or(branches)
 }
+
+/**
+ * `field == value`, where a null value means "null or missing" — which is what Mongo's `{f: null}`
+ * matches, and what its sort treats as one value.
+ */
+private fun equalTo(
+    field: String,
+    value: BsonValue,
+): Bson = if (value.isNull) Filters.eq(field, null) else Filters.eq(field, value)
+
+/**
+ * The documents strictly [greater] (or lesser) than [value] on [field], in Mongo's sort order.
+ *
+ * Null and a missing field are one value that sorts before everything else, and `$gt`/`$lt` never
+ * match it (comparison is type-bracketed), so a plain comparison drops those documents from every
+ * page after the cursor crosses them:
+ * - past a null, every non-null value is greater, and nothing is lesser;
+ * - past a value, the nulls are lesser, in addition to the smaller values.
+ */
+private fun beyond(
+    field: String,
+    value: BsonValue,
+    greater: Boolean,
+): Bson =
+    when {
+        value.isNull && greater -> Filters.ne(field, null)
+        value.isNull -> Filters.and(Filters.eq(field, null), Filters.ne(field, null))
+        greater -> Filters.gt(field, value)
+        else -> Filters.or(Filters.lt(field, value), Filters.eq(field, null))
+    }
 
 /** A key the cursor does not carry sorts as BSON null, which is where a missing field sorts too. */
 private fun BsonDocument.valueOf(field: String): BsonValue = this[field] ?: BsonNull.VALUE

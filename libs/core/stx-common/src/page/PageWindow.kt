@@ -1,6 +1,16 @@
 package com.softistx.common.page
 
 /**
+ * The most rows one page may hold.
+ *
+ * A page size comes from a query string, and `limit + 1` is what the stores fetch: without a bound
+ * `?size=2147483647` asks for the whole collection in one response, and `limit + 1` wraps to a
+ * negative number, which Mongo reads as "no limit" too. A caller that really wants more reads in
+ * several pages.
+ */
+const val MAX_PAGE_SIZE = 1000
+
+/**
  * What a caller asks for, minus the part that is the store's own: a direction, a size, and where to
  * resume from.
  *
@@ -45,6 +55,9 @@ interface PageWindow {
         val limit = limit
         if (limit != null && limit < 1) {
             throw failure("a page size must be at least 1, got $limit")
+        }
+        if (limit != null && limit > MAX_PAGE_SIZE) {
+            throw failure("a page size is capped at $MAX_PAGE_SIZE, got $limit")
         }
     }
 }

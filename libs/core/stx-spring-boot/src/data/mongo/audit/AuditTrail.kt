@@ -1,7 +1,9 @@
 package com.softistx.spring.data.mongo.audit
 
+import com.softistx.common.coroutines.KeyedMutex
 import org.javers.core.Javers
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DuplicateKeyException
 import kotlin.reflect.full.memberProperties
 
 /**
@@ -20,6 +22,32 @@ class AuditTrail(
     private val javers: Javers,
 ) {
     private val log = LoggerFactory.getLogger(AuditTrail::class.java)
+    private val locks = KeyedMutex<String>()
+
+    /**
+     * Runs one read-diff-append for a document with nobody else in the middle of the same one.
+     *
+     * The next version is "latest plus one", so two writers reading the same latest append the same
+     * version. The lock stops that inside this process; the unique `(oid, collection, version)`
+     * index stops it between processes, and the loser — which sees a duplicate key — reads again and
+     * lands on the next version.
+     */
+    private suspend fun <R> exclusively(
+        oid: String,
+        collection: String,
+        block: suspend () -> R,
+    ): R =
+        locks.withLock("$collection/$oid") {
+            var lost: DuplicateKeyException? = null
+            repeat(MAX_ATTEMPTS) {
+                try {
+                    return@withLock block()
+                } catch (duplicate: DuplicateKeyException) {
+                    lost = duplicate
+                }
+            }
+            throw checkNotNull(lost)
+        }
 
     /**
      * Records [entity] as it now stands in [collection].
@@ -34,6 +62,15 @@ class AuditTrail(
         author: String?,
     ): AuditEntry? {
         val oid = entity.identifier() ?: return null.also { log.warn("no id on {}, not audited", entity::class.simpleName) }
+        return exclusively(oid, collection) { commitOnce(entity, oid, collection, author) }
+    }
+
+    private suspend fun commitOnce(
+        entity: Any,
+        oid: String,
+        collection: String,
+        author: String?,
+    ): AuditEntry? {
         if (store.terminated(oid, collection)) {
             log.warn("{}/{} is already recorded as deleted; not recording a save after it", collection, oid)
             return null
@@ -79,6 +116,12 @@ class AuditTrail(
         oid: String,
         collection: String,
         author: String?,
+    ): AuditEntry? = exclusively(oid, collection) { terminateOnce(oid, collection, author) }
+
+    private suspend fun terminateOnce(
+        oid: String,
+        collection: String,
+        author: String?,
     ): AuditEntry? {
         val previous =
             store.latest(oid, collection)
@@ -113,3 +156,6 @@ private fun Any.identifier(): String? =
         ?.call(this)
         ?.toString()
         ?.takeIf { it.isNotBlank() }
+
+/** How often a commit re-reads after another process took its version. */
+private const val MAX_ATTEMPTS = 3

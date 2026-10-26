@@ -27,7 +27,7 @@ internal fun encodeCursor(
     keys: List<SortKey>,
 ): String {
     val key = Document()
-    keys.forEach { key[it.field] = document[it.field] ?: BsonNull.VALUE }
+    keys.forEach { key[it.field] = document.valueAt(it.field) ?: BsonNull.VALUE }
     return Base64.getUrlEncoder().withoutPadding().encodeToString(key.toJson(EXTENDED).toByteArray())
 }
 
@@ -51,4 +51,16 @@ internal fun decodeCursor(
     }
 
     return decoded
+}
+
+/**
+ * The value at [path], where a dotted path (`address.city`) walks into nested documents — a sort on
+ * one is legal, and a plain lookup of the dotted name finds nothing. A missing step is null.
+ */
+private fun Document.valueAt(path: String): Any? {
+    var current: Any? = this
+    for (step in path.split('.')) {
+        current = (current as? Map<*, *>)?.get(step) ?: return null
+    }
+    return current
 }

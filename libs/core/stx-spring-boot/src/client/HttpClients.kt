@@ -122,7 +122,22 @@ private suspend fun org.springframework.web.reactive.function.client.ClientRespo
             .orEmpty()
     return ApiException(
         message = body["message"] ?: ApiException.KEY_UNEXPECTED,
-        status = HttpStatus.valueOf(statusCode().value()),
+        status = upstreamStatus(statusCode().value()),
         code = body["code"],
     )
 }
+
+/**
+ * The [HttpStatus] for an upstream's status code, which may be one the enum does not list.
+ *
+ * `HttpStatus.valueOf` throws on the codes only some servers use (Cloudflare's 522, nginx's 499),
+ * and throwing while turning a failure into an exception hides the failure. An unknown 5xx is the
+ * upstream failing, so it is a bad gateway; an unknown 4xx is a bad request; anything else is ours.
+ */
+internal fun upstreamStatus(code: Int): HttpStatus =
+    HttpStatus.resolve(code)
+        ?: when (code) {
+            in 500..599 -> HttpStatus.BAD_GATEWAY
+            in 400..499 -> HttpStatus.BAD_REQUEST
+            else -> HttpStatus.INTERNAL_SERVER_ERROR
+        }
