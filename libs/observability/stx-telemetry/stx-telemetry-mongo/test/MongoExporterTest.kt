@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.json.JsonPrimitive
 import org.bson.Document
 import java.util.Date
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
@@ -117,6 +118,18 @@ class MongoExporterTest :
 
                     val ttl = index(database.getCollection("telemetry")).shouldNotBeNull()
                     (ttl["expireAfterSeconds"] as Number).toLong() shouldBe 12.hours.inWholeSeconds
+                }
+            }
+
+            scenario("dropping the retention drops the old TTL index, null or zero") {
+                MongoTestServer.withDatabase { database ->
+                    MongoExporter(database, retention = 30.days).export(resource, listOf(log("first")))
+                    MongoExporter(database, retention = null).export(resource, listOf(log("second")))
+                    index(database.getCollection("telemetry")) shouldBe null
+
+                    MongoExporter(database, retention = 30.days).export(resource, listOf(log("third")))
+                    MongoExporter(database, retention = Duration.ZERO).export(resource, listOf(log("fourth")))
+                    index(database.getCollection("telemetry")) shouldBe null
                 }
             }
 

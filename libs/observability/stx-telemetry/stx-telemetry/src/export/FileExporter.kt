@@ -127,21 +127,33 @@ class FileExporter(
             // batch is a boundary crossed within a fraction of a second, and paying a clock call per
             // signal to put those lines in the other file buys nobody anything.
             val now = clock.now()
+            var rollFailure: Throwable? = null
             for (line in lines) {
-                if (rotation.due(size, openedAt, now)) roll(now)
+                if (rollFailure == null && rotation.due(size, openedAt, now)) {
+                    rollFailure = runCatching { roll(now) }.exceptionOrNull()
+                }
                 out.write(line)
                 out.write(NEWLINE)
                 size += line.size + 1
             }
             out.flush()
+            // The lines are written, to the file that would not roll; the next write tries again.
+            rollFailure?.let { throw it }
         }
 
+        /**
+         * A roll that fails leaves the stream open on the file that would not move, never closed:
+         * a closed [out] would fail every later write for the life of the process.
+         */
         private fun roll(now: Instant) {
             out.close()
-            rotation.roll(now)
-            out = BufferedOutputStream(Files.newOutputStream(path, CREATE, APPEND))
-            size = 0
-            openedAt = now
+            try {
+                rotation.roll(now)
+                size = 0
+                openedAt = now
+            } finally {
+                out = BufferedOutputStream(Files.newOutputStream(path, CREATE, APPEND))
+            }
         }
     }
 

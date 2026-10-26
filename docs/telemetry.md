@@ -168,7 +168,8 @@ The exception always propagates. A span observes; it never swallows.
 | `currentSpan()` | The span this code is in, or `null`. Non-suspending |
 | `currentTraceparent()` | The header for an outgoing call, or `null` |
 
-`withAttributes` outside any `withTelemetry` and with nothing installed simply runs the block.
+`withAttributes` outside any `withTelemetry` uses the installed telemetry, as a log or a span does; with
+nothing installed either, it simply runs the block.
 
 ## Attributes
 
@@ -258,7 +259,8 @@ both be used, which `Slf4jExporter` checks rather than looping.
 `MongoExporter.connecting(uri, database, collection, retention)`, which writes one document per
 signal — the JSON-lines fields, plus the resource, with the instants as BSON dates so Mongo can index
 and expire them. Retention is a **TTL index**, so the deleting is Mongo's background task and not a
-job in this process; changing it rebuilds the index rather than leaving the old window in place. The
+job in this process; changing it updates the index in place (`collMod`) and a null or zero retention drops it, rather than
+leaving the old window in place. The
 `connecting` form opens a client of its own and closes it, which is what `stx.telemetry.mongo` uses:
 telemetry on its own pool means a burst of it cannot exhaust the one business requests queue for.
 
@@ -277,7 +279,8 @@ midnight, not a day after the process started, so two processes started at diffe
 files at the same moments. An empty file is never rolled, whatever the clock says: retention that
 counted empty files would prune the full ones out of existence behind them. Closing rolls nothing and
 the next start appends, so a service that restarts often keeps a week of files rather than a week of
-deploys.
+deploys. A roll that fails (a permissions error, a full disk) is reported through `onExportError`
+and the exporter keeps appending to the current file, trying the roll again on the next write.
 
 ## The signal model
 

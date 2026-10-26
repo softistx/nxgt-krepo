@@ -11,11 +11,13 @@ import com.softistx.telemetry.model.Signal
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -127,6 +129,62 @@ class PipelineTest :
                 }
                 collector.logs.size shouldBe 1
                 telemetry.close()
+            }
+        }
+
+        feature("an exporter that cancels itself") {
+            scenario("a timeout inside the exporter is reported, and the next batch still ships") {
+                val collector = Collector()
+                val failures = mutableListOf<Throwable>()
+                val first = AtomicBoolean(true)
+                val flaky =
+                    object : Exporter {
+                        override suspend fun export(
+                            resource: Resource,
+                            batch: List<Signal>,
+                        ) {
+                            if (first.getAndSet(false)) withTimeout(10.milliseconds) { delay(10.seconds) }
+                            collector.export(resource, batch)
+                        }
+
+                        override fun close() = Unit
+                    }
+                val telemetry =
+                    Telemetry("spec") {
+                        minimum = Severity.Debug
+                        batch = 1
+                        linger = 1.milliseconds
+                        onExportError = { failures += it }
+                        export(flaky)
+                    }
+
+                withTelemetry(telemetry) {
+                    log.info("lost")
+                    delay(200)
+                    log.info("kept")
+                }
+                telemetry.close()
+
+                failures.size shouldBe 1
+                collector.logs.map { it.name } shouldBe listOf("kept")
+            }
+
+            scenario("a backlog dropped at the drain timeout is reported") {
+                val collector = Collector(slow = 5.seconds)
+                val failures = mutableListOf<Throwable>()
+                val telemetry =
+                    Telemetry("spec") {
+                        minimum = Severity.Debug
+                        batch = 1
+                        linger = 1.milliseconds
+                        drainTimeout = 50.milliseconds
+                        onExportError = { failures += it }
+                        export(collector)
+                    }
+                withTelemetry(telemetry) { repeat(5) { log.info("n", "i" to it) } }
+                telemetry.close()
+
+                failures.size shouldBe 1
             }
         }
 
