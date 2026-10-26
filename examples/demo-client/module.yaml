@@ -21,7 +21,7 @@ settings:
     # Pinned to the catalog's `ktor` version rather than left to the toolchain's default, which is
     # the same number today by coincidence. `$ktor.*` and a `$libs.*` alias on `version.ref = "ktor"`
     # have to be one version, or a toolchain upgrade splits them silently.
-    version: 3.5.2
+    version: 3.6.0
   kotlin:
     serialization: json
     ksp:
