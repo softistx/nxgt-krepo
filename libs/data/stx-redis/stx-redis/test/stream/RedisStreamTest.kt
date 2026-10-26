@@ -185,4 +185,15 @@ class RedisStreamTest :
                 }
             }
         }
+
+        feature("history").config(enabled = RedisTestServer.available) {
+            scenario("a count returns the last entries, newest last") {
+                RedisTestServer.withRedis { redis ->
+                    val orders = redis.stream<OrderEvent>("orders")
+                    repeat(5) { orders.append(OrderEvent("o$it")) }
+
+                    orders.history(2).map { it.value.id } shouldBe listOf("o3", "o4")
+                }
+            }
+        }
     })

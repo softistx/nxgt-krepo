@@ -147,4 +147,27 @@ class LeaseTest :
                 fake.releases.get() shouldBe 1
             }
         }
+
+        feature("a renewal that throws") {
+            scenario("does not cancel the block, and is tried again on the next tick") {
+                val renews = AtomicInteger()
+                val lease =
+                    Lease(
+                        duration = 90.milliseconds,
+                        take = { true },
+                        renew = {
+                            if (renews.incrementAndGet() == 1) error("connection dropped")
+                            true
+                        },
+                        release = {},
+                    )
+
+                lease.guard("id") {
+                    delay(400)
+                    "finished"
+                } shouldBe "finished"
+
+                renews.get() shouldBeGreaterThanOrEqual 2
+            }
+        }
     })

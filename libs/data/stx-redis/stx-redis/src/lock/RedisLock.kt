@@ -4,10 +4,13 @@ import com.softistx.redis.Redis
 import com.softistx.redis.RedisLockException
 import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.SetArgs
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -72,10 +75,10 @@ class RedisLock(
      * a lock has no queue to pop from. Throws [RedisLockException] if the wait runs out — a caller
      * that would rather skip the work uses [withLockOrNull].
      *
-     * While [block] runs, a watchdog puts the TTL back every third of it. Without that the lock
-     * would be a deadline on the work rather than a lock: a `block` slower than [ttl] loses it
-     * silently, and a second holder starts on the same task. Turn it off with `renew = false` where
-     * the work must not outlive the TTL.
+     * While [block] runs, a watchdog puts the TTL back every third of it (a renewal that fails is
+     * retried, not fatal). Without that the lock would be a deadline on the work rather than a lock:
+     * a `block` slower than [ttl] loses it silently, and a second holder starts on the same task.
+     * Turn it off with `renew = false` where the work must not outlive the TTL.
      */
     suspend fun <T> withLock(
         wait: Duration = Duration.ZERO,
@@ -100,7 +103,15 @@ class RedisLock(
                     launch {
                         while (isActive) {
                             delay(ttl / 3)
-                            if (!extend(token)) break
+                            val extended =
+                                try {
+                                    extend(token)
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (_: Exception) {
+                                    true // a failed renewal is retried on the next tick, it does not cancel the block
+                                }
+                            if (!extended) break
                         }
                     }
                 } else {
@@ -110,7 +121,7 @@ class RedisLock(
                 block()
             } finally {
                 watchdog?.cancel()
-                release(token)
+                withContext(NonCancellable) { release(token) }
             }
         }
     }

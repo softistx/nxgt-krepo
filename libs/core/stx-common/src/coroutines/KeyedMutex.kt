@@ -1,7 +1,9 @@
 package com.softistx.common.coroutines
 
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * One lock per key, so callers only wait for each other when they want the same thing.
@@ -40,8 +42,11 @@ class KeyedMutex<K> {
         try {
             return holder.mutex.withLock { block() }
         } finally {
-            registry.withLock {
-                if (--holder.waiting == 0) locks.remove(key)
+            // A cancelled caller must still give its place back, or the key stays in the map for good.
+            withContext(NonCancellable) {
+                registry.withLock {
+                    if (--holder.waiting == 0) locks.remove(key)
+                }
             }
         }
     }

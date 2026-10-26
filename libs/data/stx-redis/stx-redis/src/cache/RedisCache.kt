@@ -5,13 +5,12 @@ import com.softistx.redis.codec.JsonValueCodec
 import com.softistx.redis.codec.ValueCodec
 import com.softistx.redis.deleteKeys
 import io.lettuce.core.SetArgs
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.future.await
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -84,18 +83,25 @@ class RedisCache<T>(
     }
 
     /**
-     * Writes every entry, concurrently.
+     * Writes every entry in one batch.
      *
-     * Not `MSET`, which cannot carry a TTL and would leave the entries to live forever. Lettuce
-     * multiplexes over one connection, so the concurrent writes go out as a pipeline and cost one
-     * round trip between them rather than one each.
+     * Not `MSET`, which cannot carry a TTL and would leave the entries to live forever. Every `SET` is
+     * enqueued in map order on the one multiplexed connection, which sends them as a pipeline, and
+     * they are awaited together: one round trip between them, and no coroutine per entry. Every entry
+     * is encoded before the first is sent, so an entry that cannot be encoded writes nothing.
      */
     suspend fun putAll(
         values: Map<String, T>,
         ttl: Duration? = this.ttl,
-    ) = coroutineScope {
-        values.map { (id, value) -> async { put(id, value, ttl) } }.awaitAll()
-        Unit
+    ) {
+        if (values.isEmpty()) return
+        val args = ttl?.let { SetArgs.Builder.px(it.inWholeMilliseconds) }
+        val encoded = values.map { (id, value) -> key(id) to codec.encode(value) }
+        val pending =
+            encoded.map { (key, value) ->
+                if (args == null) redis.async.set(key, value) else redis.async.set(key, value, args)
+            }
+        CompletableFuture.allOf(*pending.map { it.toCompletableFuture() }.toTypedArray()).await()
     }
 
     /** The cached value, or [load]'s, which is cached on the way back. */
