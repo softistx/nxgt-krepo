@@ -1230,11 +1230,10 @@ the same each time, and the mistakes are the same each time too.
   feature's own integration branch, and that branch is what targets `develop`. See
   `large-feature-branch-workflow`, which owns the shape. Everything else is one branch, one PR,
   base `develop`.
-- **`main` is aligned from `develop`, only when that is asked for.** Aligning is not part of finishing
-  a feature: it happens when someone asks for it, and it is `git checkout main && git merge develop`
-  — never merging a feature branch into `main`, never cherry-picking across. That fast-forwards while
-  it can and leaves a `Merge branch 'develop'` commit once it cannot, which is the same shape
-  `nxgt-federation` and `sellix-monorepo` carry on their own `main`.
+- **`main` is fast-forwarded to `develop` right after every merge into `develop`.** Aligning is not
+  part of writing a feature, but it follows each merge at once, as in the other repositories. It is
+  `git checkout main && git merge --ff-only develop` (or `git push origin develop:main`) — fast-forward
+  only: never merging a feature branch into `main`, never cherry-picking across, never forcing.
 
   If `develop` is *behind* `main`, someone has written to `main` directly and that is the thing to fix
   first: merge `main` into `develop`, then align `main` from the result. No history is rewritten

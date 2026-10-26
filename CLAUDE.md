@@ -36,8 +36,8 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - **Every PR targets `develop`, never `main`.** Branch off `develop`, `gh pr create --base develop`,
   merge it there. The one exception is a feature too large for a single PR: its slices target that
   feature's integration branch and the integration branch targets `develop` —
-  `large-feature-branch-workflow` owns that shape. `main` is aligned from `develop` only when the user asks, and aligning means
-  fast-forwarding `main` onto `develop` — not merging a feature branch into it. Check the base before
+  `large-feature-branch-workflow` owns that shape. `main` is fast-forwarded to `develop` right after every merge into `develop`, and aligning means
+  fast-forwarding `main` onto `develop` only — never merging a feature branch into it. Check the base before
   opening a PR. The repo's default branch is now `develop`, so `gh pr create` picks the right base on
   its own — pass `--base develop` anyway rather than trusting a setting a fork or a stale clone may
   not share. AGENTS.md's *Conventions* section has the repair if `main` has been written to directly.
