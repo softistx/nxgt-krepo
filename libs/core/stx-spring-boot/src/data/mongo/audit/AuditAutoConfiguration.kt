@@ -1,5 +1,6 @@
 package com.softistx.spring.data.mongo.audit
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -7,13 +8,17 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.javers.core.Javers
 import org.javers.core.JaversBuilder
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
+import org.springframework.context.event.EventListener
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 
 /**
@@ -42,7 +47,10 @@ data class AuditProperties(
 
 /**
  * Registers the audit trail: a Javers instance, a scope to write on, the store, and the listener
- * that turns Spring Data's events into entries.
+ * that turns Spring Data's saves and deletes into entries.
+ *
+ * The listener takes the trail through an [ObjectProvider]: Spring Data collects its entity callbacks
+ * while it creates the template, and the trail needs that template, so a direct reference is a cycle.
  */
 @AutoConfiguration
 @EnableConfigurationProperties(AuditProperties::class)
@@ -59,6 +67,10 @@ class AuditAutoConfiguration {
         template: ReactiveMongoTemplate,
         properties: AuditProperties,
     ): AuditStore = AuditStore(template, properties.collection)
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun auditIndexes(store: AuditStore): AuditIndexes = AuditIndexes(store)
 
     @Bean
     @ConditionalOnMissingBean
@@ -84,9 +96,9 @@ class AuditAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun auditListener(
-        trail: AuditTrail,
+        trail: ObjectProvider<AuditTrail>,
         scope: AuditScope,
-    ): AuditListener = AuditListener(trail, scope.scope)
+    ): AuditListener = AuditListener({ trail.getObject() }, scope.scope)
 }
 
 /**
@@ -101,5 +113,28 @@ class AuditScope(
 ) : AutoCloseable {
     override fun close() {
         scope.cancel("the application context is closing")
+    }
+}
+
+/** Creates the audit collection's indexes once the application is ready. A failure is logged, not fatal. */
+class AuditIndexes(
+    private val store: AuditStore,
+) {
+    private val log = LoggerFactory.getLogger(AuditIndexes::class.java)
+
+    @EventListener(ApplicationReadyEvent::class)
+    suspend fun create() {
+        try {
+            store.ensureIndexes()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            log.error(
+                "stx.data.mongo.audit: could not create the indexes on '{}' (the unique (oid, collection, version) " +
+                    "one fails while duplicate versions exist): {}",
+                store.audits,
+                failure.message,
+            )
+        }
     }
 }

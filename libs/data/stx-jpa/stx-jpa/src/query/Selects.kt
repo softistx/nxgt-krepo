@@ -1,5 +1,6 @@
 package com.softistx.jpa.query
 
+import com.softistx.common.page.MAX_PAGE_SIZE
 import com.softistx.common.page.Page
 import com.softistx.common.page.PageInfo
 import com.softistx.jpa.criteria.JpaSpec
@@ -91,6 +92,8 @@ suspend inline fun <reified T : Any> JpaQueries.exists(noinline spec: JpaSpec<T>
  * **An ordering is not optional**, and nothing can enforce it here: without one the database may
  * answer in any order it likes, and two pages of an unordered query are not two pages of anything.
  * Say it in [shape].
+ *
+ * A [limit] above `MAX_PAGE_SIZE` (1000) is refused, which also keeps `limit + 1` from overflowing.
  */
 suspend inline fun <reified T : Any> JpaQueries.findPage(
     limit: Int,
@@ -98,7 +101,7 @@ suspend inline fun <reified T : Any> JpaQueries.findPage(
     noinline spec: JpaSpec<T>? = null,
     shape: (CriteriaQuery<T>, Root<T>) -> Unit = { _, _ -> },
 ): Page<T> {
-    require(limit >= 1) { "a page size must be at least 1, got $limit" }
+    require(limit in 1..MAX_PAGE_SIZE) { "a page size must be between 1 and $MAX_PAGE_SIZE, got $limit" }
     require(offset >= 0) { "an offset cannot be negative, got $offset" }
 
     val rows =

@@ -97,7 +97,8 @@ for the read-then-write that is only correct as one step.
 
 **`KeyedMutex`** is the case `getOrPut` refuses: one lock per key, so callers wanting different
 things stay concurrent and only the ones about to do the same work twice wait. It is what a cold
-cache wants the moment everybody asks for the same popular key at once.
+cache wants the moment everybody asks for the same popular key at once. A caller that is cancelled
+while waiting or working gives its place back, so a key is not left held.
 
 ```kotlin
 suspend fun profile(id: UserId): Profile =
@@ -131,7 +132,11 @@ parked on one slow step; a caller that must wait polls, which keeps that decisio
 worked on right now* rather than *this code is short* — a fixed lease has to be guessed against the
 slowest run and is wrong either way. **The release happens under `NonCancellable`**, because a
 cancelled coroutine cannot make a suspending call, and a scope dying mid-step is exactly what a crash
-looks like.
+looks like. A renewal that **throws** (a dropped connection) is reported to `onRenewalFailure` (a
+`System.Logger` warning by default) and retried on the next tick, but once no renewal has
+**succeeded** within the duration the lease has lapsed on the store, and the block is cancelled with a
+`LeaseLostException` — fail closed, because a second holder may already be running. One that **returns false** means the lease was lost, and the watchdog stops (the
+block is not interrupted).
 
 ## `getOrPut` on a `ConcurrentHashMap` is not atomic
 
@@ -211,7 +216,9 @@ the whole reason it is here: a route that pages over either store maps the data 
 cursors alone, with `Page.map`, and does not care which one it was.
 
 `PageWindow` is the *request* side of the same story: `first`, `last`, `cursor`, the `limit` and
-`forward` derived from them, and the two rules — not both ends, and not a page of zero rows. A
+`forward` derived from them, and the three rules — not both ends, not a page of zero rows, and not a page above `MAX_PAGE_SIZE`
+(1000), which is refused rather than clamped; `limit + 1` is what a store fetches, and an unbounded
+size would overflow it. A
 store's request type implements it and keeps whatever it needs beyond that: Mongo's
 `PaginationOptions` carries a filter and a sort as raw Mongo JSON, because that is how they arrive
 from an HTTP client, and is `@Serializable`.
@@ -254,8 +261,12 @@ message names the setting in the caller's own vocabulary, because what to do ins
 half of the failure and it is spelled `stx.cors.origin-patterns` in one place and `originPatterns` in
 the other.
 
+Ktor matches `originPatterns` as a glob (`*` is any run of characters, tested against the whole
+`Origin`). `validate` requires each `origins` entry to carry its scheme, `scheme://host[:port]`, for
+both frameworks.
+
 What a framework *cannot* express is named rather than dropped: `CorsPolicy.ignoredByKtor` lists the
-fields Ktor has no equivalent for. A configuration field that is quietly ignored is worse than one
+fields Ktor has no equivalent for — today only `path`. A configuration field that is quietly ignored is worse than one
 that is refused — nothing fails, and the policy in the file is not the policy in force.
 
 ## What belongs here

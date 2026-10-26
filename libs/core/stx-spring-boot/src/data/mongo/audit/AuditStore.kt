@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.exists
 import org.springframework.data.mongodb.core.findOne
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver
 
 /**
  * Where audit entries are read and written.
@@ -28,7 +29,7 @@ import org.springframework.data.mongodb.core.findOne
  */
 class AuditStore(
     private val template: ReactiveMongoTemplate,
-    private val audits: String = AuditEntry.COLLECTION,
+    val audits: String = AuditEntry.COLLECTION,
 ) {
     /** The most recent entry for a document, or null when it has no history yet. */
     suspend fun latest(
@@ -57,4 +58,20 @@ class AuditStore(
 
     /** Appends an entry. Nothing here ever updates one — a history that can be edited is not one. */
     suspend fun append(entry: AuditEntry): AuditEntry = template.insert(entry, audits).awaitSingle()
+
+    /**
+     * Creates the entry indexes on the configured collection, the unique `(oid, collection, version)`
+     * one included.
+     *
+     * Not left to `IndexInitializer`: that one is opt-in, resolves a type's *default* collection, and
+     * only knows entities the mapping context has already met — so the unique index, which is what
+     * keeps two writers from taking one version, would be missing exactly when it matters.
+     */
+    suspend fun ensureIndexes() {
+        val resolver = MongoPersistentEntityIndexResolver(template.converter.mappingContext)
+        val operations = template.indexOps(audits)
+        template.converter.mappingContext.getPersistentEntity(AuditEntry::class.java)?.let { entity ->
+            resolver.resolveIndexFor(entity.typeInformation).forEach { operations.createIndex(it).awaitFirstOrNull() }
+        }
+    }
 }

@@ -15,12 +15,8 @@ import io.ktor.server.plugins.di.dependencies
  *
  * Called by [I18n] at install — there is nothing to switch on.
  *
- * **The container closes it at application stop, and that is not a problem.** Ktor's DI closes every
- * `AutoCloseable` it hands out — one a provider merely passed through included, which a spec in
- * this module pins, and a per-key `cleanup` runs in addition to that rather than instead of it. So
- * this resource is closed by the container as well as by whoever created it, and both are safe
- * because these clients close idempotently: see `CloseGuard` in `stx-common`. What it does mean
- * is that a connection which has to outlive the application should not be registered here.
+ * `Messages` holds no connection and is not `AutoCloseable`, so the container has nothing to close
+ * and the application owns the catalogs for as long as it runs.
  */
 internal fun Application.provideMessages() {
     val catalogs = messages

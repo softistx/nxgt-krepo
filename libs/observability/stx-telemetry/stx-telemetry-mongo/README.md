@@ -47,10 +47,15 @@ Two consequences worth knowing:
   that builds an exporter does — a `Telemetry { }` block, a Spring `@Bean` method. Building it here
   also means a database that was down at startup is not a permanent failure: the flag is set only
   once it worked, so the next batch tries again.
-- **A changed retention rebuilds it.** Mongo refuses a second index with the same key and different
-  options, so an application going from thirty days to seven would otherwise keep the thirty for
-  ever and never be told. The old index is dropped and the new one built, which on a large collection
-  is minutes of background work — against a setting that silently does nothing.
+- **A changed retention is a `collMod`.** Mongo refuses a second index with the same key and
+  different options, so an application going from thirty days to seven would otherwise keep the
+  thirty for ever and never be told. `collMod` rewrites `expireAfterSeconds` in place, with no
+  rebuild. Without the `collMod` privilege (`readWrite` has none) the index is dropped and created
+  again instead.
+- **Retention never holds the data back.** A failure to prepare the index is reported through
+  `onExportError` once the batch is written, and the next batch tries again.
+- **No retention drops the index.** `null` (or a retention under a second) removes the TTL index an
+  earlier run built, so a collection told to keep everything stops expiring.
 
 ## Whose client it is
 

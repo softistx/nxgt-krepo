@@ -4,6 +4,7 @@ import com.softistx.telemetry.Attributes
 import com.softistx.telemetry.model.LogRecord
 import com.softistx.telemetry.model.Resource
 import com.softistx.telemetry.model.Severity
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.json.JsonPrimitive
 import org.bson.Document
 import java.util.Date
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
@@ -99,6 +101,27 @@ class MongoExporterTest :
             }
         }
 
+        feature("a retention that cannot be prepared").config(enabled = MongoTestServer.available) {
+            scenario("still inserts the batch, reports the failure, and tries again on the next batch") {
+                MongoTestServer.withDatabase { database ->
+                    var attempts = 0
+                    val exporter =
+                        MongoExporter(database, "telemetry") {
+                            attempts++
+                            if (attempts == 1) error("not authorised on collMod")
+                        }
+
+                    shouldThrow<IllegalStateException> { exporter.export(resource, listOf(log("first"))) }
+                    database.getCollection<Document>("telemetry").find().toList() shouldHaveSize 1
+
+                    exporter.export(resource, listOf(log("second")))
+
+                    attempts shouldBe 2
+                    database.getCollection<Document>("telemetry").find().toList() shouldHaveSize 2
+                }
+            }
+        }
+
         feature("retention").config(enabled = MongoTestServer.available) {
             scenario("a TTL index is built on the first batch, with the retention asked for") {
                 MongoTestServer.withDatabase { database ->
@@ -117,6 +140,34 @@ class MongoExporterTest :
 
                     val ttl = index(database.getCollection("telemetry")).shouldNotBeNull()
                     (ttl["expireAfterSeconds"] as Number).toLong() shouldBe 12.hours.inWholeSeconds
+                }
+            }
+
+            scenario("a shorter retention updates the same index in place") {
+                MongoTestServer.withDatabase { database ->
+                    MongoExporter(database, retention = 30.days).export(resource, listOf(log("first")))
+                    val before = index(database.getCollection("telemetry")).shouldNotBeNull()
+                    MongoExporter(database, retention = 7.days).export(resource, listOf(log("second")))
+
+                    val after = index(database.getCollection("telemetry")).shouldNotBeNull()
+                    (after["expireAfterSeconds"] as Number).toLong() shouldBe 7.days.inWholeSeconds
+                    (before["expireAfterSeconds"] as Number).toLong() shouldBe 30.days.inWholeSeconds
+                    after["v"] shouldBe before["v"]
+                    database.getCollection<Document>("telemetry").listIndexes().toList().count {
+                        it.getString("name") == TimeToLive.NAME
+                    } shouldBe 1
+                }
+            }
+
+            scenario("dropping the retention drops the old TTL index, null or zero") {
+                MongoTestServer.withDatabase { database ->
+                    MongoExporter(database, retention = 30.days).export(resource, listOf(log("first")))
+                    MongoExporter(database, retention = null).export(resource, listOf(log("second")))
+                    index(database.getCollection("telemetry")) shouldBe null
+
+                    MongoExporter(database, retention = 30.days).export(resource, listOf(log("third")))
+                    MongoExporter(database, retention = Duration.ZERO).export(resource, listOf(log("fourth")))
+                    index(database.getCollection("telemetry")) shouldBe null
                 }
             }
 

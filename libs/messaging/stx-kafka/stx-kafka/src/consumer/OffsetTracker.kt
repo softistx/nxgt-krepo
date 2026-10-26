@@ -60,7 +60,9 @@ internal class OffsetTracker {
      *
      * Called on revocation *after* the final commit: holding on would mean committing an offset for
      * a partition this consumer no longer owns, which the coordinator rejects and which would be
-     * wrong even if it did not.
+     * wrong even if it did not. Forgetting is not enough on its own: a completion that arrives
+     * afterwards would put the partition back, so [KafkaSubscriber] also drops the revoked
+     * partitions' unhandled records and ignores a completion for a partition it no longer owns.
      */
     fun forget(partitions: Collection<TopicPartition>) {
         partitions.forEach {

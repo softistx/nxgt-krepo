@@ -1,13 +1,13 @@
 package com.softistx.redis.lock
 
+import com.softistx.common.coroutines.Lease
 import com.softistx.redis.Redis
 import com.softistx.redis.RedisLockException
 import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.SetArgs
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -72,10 +72,11 @@ class RedisLock(
      * a lock has no queue to pop from. Throws [RedisLockException] if the wait runs out — a caller
      * that would rather skip the work uses [withLockOrNull].
      *
-     * While [block] runs, a watchdog puts the TTL back every third of it. Without that the lock
-     * would be a deadline on the work rather than a lock: a `block` slower than [ttl] loses it
-     * silently, and a second holder starts on the same task. Turn it off with `renew = false` where
-     * the work must not outlive the TTL.
+     * While [block] runs, a watchdog puts the TTL back every third of it (a renewal that fails is
+     * reported and retried; if none succeeds within [ttl] the lock has lapsed and the block is cancelled
+     * with a `LeaseLostException`). Without that the lock would be a deadline on the work rather than a lock:
+     * a `block` slower than [ttl] loses it silently, and a second holder starts on the same task.
+     * Turn it off with `renew = false` where the work must not outlive the TTL.
      */
     suspend fun <T> withLock(
         wait: Duration = Duration.ZERO,
@@ -94,25 +95,22 @@ class RedisLock(
         block: suspend () -> T,
     ): T? {
         val token = acquire(wait, retry) ?: return null
-        return coroutineScope {
-            val watchdog =
-                if (renew) {
-                    launch {
-                        while (isActive) {
-                            delay(ttl / 3)
-                            if (!extend(token)) break
-                        }
-                    }
-                } else {
-                    null
-                }
-            try {
+        if (!renew) {
+            return try {
                 block()
             } finally {
-                watchdog?.cancel()
-                release(token)
+                withContext(NonCancellable) { release(token) }
             }
         }
+        // The watchdog is the lease policy `stx-common` owns: a renewal that fails is reported and
+        // retried, and once none has succeeded within the TTL the lock has lapsed and the block is
+        // cancelled with a LeaseLostException rather than left running beside a second holder.
+        return Lease(
+            duration = ttl,
+            take = { true },
+            renew = { extend(token) },
+            release = { release(token) },
+        ).guard(name) { block() }
     }
 
     /** Tries now, then every [retry] until [wait] is up — so the last attempt lands within one retry of it. */

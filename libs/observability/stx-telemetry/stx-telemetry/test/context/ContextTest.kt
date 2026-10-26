@@ -133,6 +133,21 @@ class ContextTest :
                 inner.attributes.values["orderId"] shouldBe JsonPrimitive("A-91")
             }
 
+            scenario("with no withTelemetry, the installed telemetry's spans carry them") {
+                val collector = Collector()
+                val telemetry = collecting(collector).install()
+                try {
+                    withAttributes("tenant" to "acme") { span("installed") {} }
+                } finally {
+                    telemetry.close()
+                }
+
+                collector
+                    .span("installed")
+                    .shouldNotBeNull()
+                    .attributes.values["tenant"] shouldBe JsonPrimitive("acme")
+            }
+
             scenario("a sibling launched outside the block does not carry them") {
                 val collector = Collector()
                 val telemetry = collecting(collector)

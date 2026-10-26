@@ -40,6 +40,15 @@ class CorsAutoConfigurationTest :
                 }
         }
 
+        "an origin without its scheme fails at startup, as it does under Ktor" {
+            runner
+                .withPropertyValues("stx.cors.enabled=true", "stx.cors.origins=localhost:5173")
+                .run { context ->
+                    context.startupFailure shouldNotBe null
+                    context.startupFailure!!.stackTraceToString() shouldContain "scheme://host"
+                }
+        }
+
         "a wildcard origin without credentials is allowed" {
             runner
                 .withPropertyValues(

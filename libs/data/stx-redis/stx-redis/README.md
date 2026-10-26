@@ -97,7 +97,9 @@ val session = sessions.getOrLoad(id) { database.loadSession(id) }
 - **A null is an absence, not a cached value.** Caching "this does not exist" is a real technique,
   and it belongs in the type — `redis.cache<Session?>("sessions")` — not in a special case here.
 - **`putAll` is not `MSET`.** `MSET` cannot carry a TTL, so entries written with one would live
-  forever. The writes go out concurrently instead, which Lettuce multiplexes into a pipeline.
+  forever. The writes go out as one batch instead: every `SET` is pipelined on the shared connection
+  and awaited together, and every entry is encoded before the first is sent, so one that cannot be
+  encoded writes nothing.
 - **`invalidateAll` scans, it does not `KEYS`.** `KEYS` walks the whole keyspace with the server
   single-threaded throughout; on a shared instance that is a stall charged to everyone else.
 
@@ -118,7 +120,9 @@ the real work:
 - **A watchdog puts the TTL back** every third of it while the block runs. Without it the TTL is a
   deadline on the work rather than a lock: a slow block loses it silently and a second holder starts
   the same task. `renew = false` where the work genuinely must not outlive the TTL — both halves
-  have a test.
+  have a test. A renewal that fails is retried on the next tick, but once none has succeeded within the TTL
+  the lock has lapsed and the block is cancelled with a `LeaseLostException` rather than left
+  running beside a second holder. A holder that is cancelled still releases the lock.
 - **`withLock` polls**, because a lock has no queue to block on. The last attempt lands within one
   retry interval of `wait`; `withLockOrNull` answers null where the caller would rather skip the work
   than fail.
@@ -178,7 +182,8 @@ orders.process(group = "billing", consumer = "worker-1") { event -> charge(event
   still collecting. Blocking forever saves a round trip and buys a consumer that ignores cancellation
   until the next entry arrives — on a quiet stream, a very long time.
 - **A group starts at the end of the stream.** It is a subscription, not a backfill; `history()` is
-  how to read what came before.
+  how to read what came before: `history(count)` returns the last `count` entries (100 by default),
+  oldest first.
 - **`claimStale` is the recovery path**, and there is no free one: an entry handed to a worker that
   then died stays pending forever, because the group has already delivered it. Run it on an interval
   with a `minIdle` comfortably longer than a normal handler takes.

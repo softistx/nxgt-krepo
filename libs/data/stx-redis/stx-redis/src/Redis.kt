@@ -4,6 +4,7 @@ import com.softistx.common.lifecycle.CloseGuard
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulRedisConnection
+import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.coroutines
 import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection
@@ -39,6 +40,9 @@ class Redis internal constructor(
 
     /** The whole of Lettuce's suspending API, for everything the typed layers do not cover. */
     val commands: RedisCoroutinesCommands<String, String> by lazy { connection.coroutines() }
+
+    /** The same connection's futures API, for a batch that is enqueued in order and awaited together. */
+    internal val async: RedisAsyncCommands<String, String> by lazy { connection.async() }
 
     /** This connection's [namespace], and [parts] under it. */
     fun key(vararg parts: String): String = redisKey(namespace, *parts)

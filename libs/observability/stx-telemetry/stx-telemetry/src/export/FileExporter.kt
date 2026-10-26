@@ -58,21 +58,32 @@ import kotlin.time.Instant
  * only thing that can be done with it is `onExportError`, and telemetry that was silently never
  * written is the failure this whole library exists to make visible.
  */
-class FileExporter(
+class FileExporter internal constructor(
     private val path: Path,
-    /** Bytes, after which the file is rolled. 0 for no size limit. */
-    maxSize: Long = 64L * 1024 * 1024,
-    /**
-     * The period one file covers, aligned to the epoch — `24.hours` rolls at UTC midnight, not 24
-     * hours after this process started. Null for no time limit.
-     */
-    every: Duration? = 24.hours,
-    /** How many rolled files survive. 0 keeps only the file being written. */
-    keep: Int = 7,
-    /** Whether a rolled file is gzipped. Off by default: it happens on the export path. */
-    compress: Boolean = false,
-    private val clock: Clock = Clock.System,
+    maxSize: Long,
+    every: Duration?,
+    keep: Int,
+    compress: Boolean,
+    private val clock: Clock,
+    /** How the file is opened; a spec swaps it to make a reopen fail. */
+    private val openStream: (Path) -> OutputStream,
 ) : Exporter {
+    constructor(
+        path: Path,
+        /** Bytes, after which the file is rolled. 0 for no size limit. */
+        maxSize: Long = 64L * 1024 * 1024,
+        /**
+         * The period one file covers, aligned to the epoch — `24.hours` rolls at UTC midnight, not 24
+         * hours after this process started. Null for no time limit.
+         */
+        every: Duration? = 24.hours,
+        /** How many rolled files survive. 0 keeps only the file being written. */
+        keep: Int = 7,
+        /** Whether a rolled file is gzipped. Off by default: it happens on the export path. */
+        compress: Boolean = false,
+        clock: Clock = Clock.System,
+    ) : this(path, maxSize, every, keep, compress, clock, { Files.newOutputStream(it, CREATE, APPEND) })
+
     private val rotation = Rotation(path, maxSize, every, keep, compress)
     private val guard = CloseGuard()
     private val sink = Guarded(open())
@@ -101,7 +112,7 @@ class FileExporter(
         path.parent?.let(Files::createDirectories)
         val existing = path.exists()
         return Sink(
-            out = BufferedOutputStream(Files.newOutputStream(path, CREATE, APPEND)),
+            out = BufferedOutputStream(openStream(path)),
             size = if (existing) path.fileSize() else 0,
             // The last line written, which is the best a filesystem reliably offers: a process that
             // was down over midnight rolls on its first line back, carrying a few of yesterday's.
@@ -121,27 +132,62 @@ class FileExporter(
         var size: Long,
         var openedAt: Instant,
     ) {
+        /** False between a roll closing the stream and its reopen succeeding. */
+        private var opened = true
+
         fun write(lines: List<ByteArray>) {
             if (guard.isClosed) return
             // One reading for the batch. A period boundary crossed between two lines of the same
             // batch is a boundary crossed within a fraction of a second, and paying a clock call per
             // signal to put those lines in the other file buys nobody anything.
             val now = clock.now()
+            var rollFailure: Throwable? = null
             for (line in lines) {
-                if (rotation.due(size, openedAt, now)) roll(now)
+                if (rollFailure == null && (!opened || rotation.due(size, openedAt, now))) {
+                    rollFailure = runCatching { roll(now) }.exceptionOrNull()
+                }
+                // A stream that could not be reopened has nothing to write to: stop, and the next batch rolls again.
+                if (!opened) break
                 out.write(line)
                 out.write(NEWLINE)
                 size += line.size + 1
             }
-            out.flush()
+            if (opened) out.flush()
+            // The lines are written, to the file that would not roll; the next write tries again.
+            rollFailure?.let { throw it }
         }
 
+        /**
+         * A roll that fails leaves the stream open, or marks it not [opened] so the next write rolls
+         * again: a closed [out] must not fail every later write for the life of the process. When the move itself had succeeded (a later
+         * compress or prune failed), the new file is empty, so [size] and [openedAt] restart too and
+         * the next write does not roll an empty file again.
+         */
         private fun roll(now: Instant) {
             out.close()
-            rotation.roll(now)
-            out = BufferedOutputStream(Files.newOutputStream(path, CREATE, APPEND))
-            size = 0
-            openedAt = now
+            opened = false
+            var failure: Throwable? = null
+            try {
+                rotation.roll(now)
+            } catch (e: Throwable) {
+                failure = e
+            }
+            val emptied = failure == null || !path.exists()
+            try {
+                out = BufferedOutputStream(openStream(path))
+                opened = true
+            } catch (e: Throwable) {
+                // size and openedAt are left alone, so the next write is still due and rolls again: the
+                // move is a no-op by then and the reopen is what gets another attempt.
+                if (failure == null) throw e
+                failure.addSuppressed(e)
+                throw failure
+            }
+            if (emptied) {
+                size = 0
+                openedAt = now
+            }
+            failure?.let { throw it }
         }
     }
 

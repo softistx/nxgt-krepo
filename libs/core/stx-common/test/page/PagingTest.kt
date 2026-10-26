@@ -53,6 +53,18 @@ class PagingTest :
             }
         }
 
+        feature("the page size cap") {
+            scenario("a page of exactly the cap is allowed, one more is refused") {
+                Window(first = MAX_PAGE_SIZE).limit shouldBe MAX_PAGE_SIZE
+                shouldThrow<IllegalArgumentException> { Window(first = MAX_PAGE_SIZE + 1) }
+                    .message shouldBe "a page size is capped at $MAX_PAGE_SIZE, got ${MAX_PAGE_SIZE + 1}"
+            }
+
+            scenario("a size that would overflow limit + 1 is refused, not wrapped to unlimited") {
+                shouldThrow<IllegalArgumentException> { Window(last = Int.MAX_VALUE) }
+            }
+        }
+
         feature("assembling a page") {
             // The rows a query for `limit + 1` returned, in the order the database read them.
             fun rows(vararg values: String) = values.toList()

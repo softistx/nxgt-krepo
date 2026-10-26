@@ -131,7 +131,7 @@ class SqlMigrationLedger(
                         "duration_ms = ${dialect.parameter(5)}, updated_at = ${dialect.parameter(6)} " +
                         "where version = ${dialect.parameter(7)}",
                     arrayOf<Any?>(
-                        record.description,
+                        record.description.take(DESCRIPTION_LIMIT),
                         record.status.name,
                         record.appliedBy?.take(OWNER_LIMIT),
                         record.failure?.take(FAILURE_LIMIT),

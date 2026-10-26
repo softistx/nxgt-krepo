@@ -11,6 +11,10 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -81,6 +85,55 @@ class GraphqlWsTest :
                     ws.incoming("""{"id":"1","type":"subscribe","payload":{"query":"subscription { hang }"}}""")
                     ws.incoming("""{"id":"1","type":"subscribe","payload":{"query":"subscription { hang }"}}""")
                     closed.get().shouldNotBeNull().first shouldBe GraphqlWsClose.SUBSCRIBER_EXISTS
+                }
+            }
+
+            scenario("completing an id and resubscribing it keeps the new operation alive") {
+                session { ws, out, closed ->
+                    ws.incoming("""{"type":"connection_init"}""")
+                    out.receive()
+                    ws.incoming("""{"id":"1","type":"subscribe","payload":{"query":"subscription { hang }"}}""")
+                    // Let the first operation start, so it has a cleanup to run once cancelled.
+                    delay(50)
+                    ws.incoming("""{"id":"1","type":"complete"}""")
+                    ws.incoming("""{"id":"1","type":"subscribe","payload":{"query":"subscription { hang }"}}""")
+                    // Let the cancelled first job run its cleanup; it must not drop the second one.
+                    delay(100)
+                    ws.incoming("""{"id":"1","type":"subscribe","payload":{"query":"subscription { hang }"}}""")
+                    closed.get().shouldNotBeNull().first shouldBe GraphqlWsClose.SUBSCRIBER_EXISTS
+                }
+            }
+
+            scenario("a query that completes at once leaves its id free, on a multi-threaded dispatcher") {
+                val engine = Graphix { resolvers(GreetingQueries()) }
+                val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+                try {
+                    repeat(200) {
+                        val closed = Closed()
+                        val out = Channel<String>(Channel.UNLIMITED)
+                        val ws =
+                            GraphqlWsSession(
+                                engine = engine,
+                                json = lenientJson,
+                                send = { out.send(it) },
+                                close = { code, reason -> closed.value = code to reason },
+                                scope = scope,
+                                initTimeout = Duration.INFINITE,
+                            )
+                        ws.incoming("""{"type":"connection_init"}""")
+                        repeat(5) {
+                            ws.incoming("""{"id":"x","type":"subscribe","payload":{"query":"{ hello }"}}""")
+                            withTimeout(2_000) {
+                                while (!out.receive().contains(""""type":"complete"""")) Unit
+                            }
+                            delay(1)
+                        }
+                        closed.get() shouldBe null
+                        ws.shutdown()
+                        out.close()
+                    }
+                } finally {
+                    scope.cancel()
                 }
             }
 

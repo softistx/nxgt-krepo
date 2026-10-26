@@ -4,10 +4,14 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.longs.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.TimeSource
 
@@ -84,6 +88,20 @@ class KeyedMutexTest :
                 val locks = KeyedMutex<String>()
 
                 coroutineScope { (1..50).map { async { locks.withLock("key$it") { delay(5) } } }.awaitAll() }
+
+                locks.held() shouldBe 0
+            }
+        }
+
+        feature("a cancelled caller") {
+            scenario("gives its place back, so the key does not stay in the map") {
+                val locks = KeyedMutex<String>()
+                val holder = CoroutineScope(Dispatchers.Default).launch { locks.withLock("k") { delay(10_000) } }
+                val waiter = CoroutineScope(Dispatchers.Default).launch { locks.withLock("k") { delay(10_000) } }
+                delay(100)
+
+                waiter.cancelAndJoin()
+                holder.cancelAndJoin()
 
                 locks.held() shouldBe 0
             }

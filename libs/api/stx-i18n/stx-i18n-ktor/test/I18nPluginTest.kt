@@ -106,6 +106,18 @@ class I18nPluginTest :
                 }
             }
 
+            scenario("turned on and blank, the header still decides") {
+                testApplication {
+                    serve { queryParameter = "lang" }
+                    client
+                        .get("/?lang=") { header(HttpHeaders.AcceptLanguage, "fr") }
+                        .bodyAsText() shouldBe "Commandes"
+                    client
+                        .get("/?lang=%20") { header(HttpHeaders.AcceptLanguage, "fr") }
+                        .bodyAsText() shouldBe "Commandes"
+                }
+            }
+
             scenario("turned on and absent, the header still decides") {
                 testApplication {
                     serve { queryParameter = "lang" }

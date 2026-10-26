@@ -10,14 +10,13 @@ import io.ktor.server.plugins.cors.routing.CORS
  * Ktor's CORS plugin, configured from a [CorsPolicy].
  *
  * ```kotlin
- * install(cors(CorsPolicy(origins = listOf("http://localhost:5173"))))
+ * fun Application.module() {
+ *     cors(CorsPolicy(origins = listOf("http://localhost:5173")))
+ * }
  * ```
  *
- * Or, since the policy is the only argument:
- *
- * ```kotlin
- * cors(policy)
- * ```
+ * It installs the plugin itself, so it is called inside an `Application` and never wrapped in
+ * `install(...)`.
  *
  * **The policy is the shared type on purpose.** `stx-spring-boot` builds Spring's
  * `CorsConfiguration` from the same one, so an application that moves between the two frameworks
@@ -27,19 +26,25 @@ import io.ktor.server.plugins.cors.routing.CORS
  * [CorsPolicy.validate] runs first, so a wildcard origin with credentials fails here while the
  * application is starting rather than on somebody's first preflight.
  *
- * Two of the policy's fields have no Ktor equivalent and are ignored: `path`, because Ktor scopes a
- * plugin by installing it on a route rather than by pattern, and `originPatterns` — Ktor matches a
- * host and a scheme rather than a glob, so a pattern is expressed as `allowHost` there. Both are
- * flagged rather than silently dropped: see [ignoredByKtor].
+ * Each entry of [CorsPolicy.origins] is a full origin, `scheme://host[:port]`; one without the
+ * scheme would match nothing in a browser, so [CorsPolicy.validate] refuses it. Each entry of
+ * [CorsPolicy.originPatterns] is a glob where `*` stands for any run of characters
+ * (a scheme, then `*.example.com`), tested against the request's `Origin` header in full.
+ *
+ * One field has no Ktor equivalent and is ignored: `path`, because Ktor scopes a plugin by installing
+ * it on a route rather than by pattern. It is flagged rather than silently dropped: see
+ * [ignoredByKtor].
  */
 fun Application.cors(policy: CorsPolicy) {
     policy.validate(patternsSetting = "CorsPolicy.originPatterns")
+    val patterns = policy.originPatterns.map(::originPattern)
     install(CORS) {
         if (CorsPolicy.WILDCARD in policy.origins) {
             anyHost()
         } else {
             policy.origins.forEach { allowHost(it.substringAfter("://"), schemes = listOf(it.substringBefore("://"))) }
         }
+        if (patterns.isNotEmpty()) allowOrigins { origin -> patterns.any { it.matches(origin) } }
 
         if (CorsPolicy.WILDCARD in policy.methods) {
             HttpMethod.DefaultMethods.forEach { allowMethod(it) }
@@ -65,6 +70,7 @@ fun Application.cors(policy: CorsPolicy) {
 val CorsPolicy.ignoredByKtor: List<String>
     get() =
         buildList {
-            if (originPatterns.isNotEmpty()) add("originPatterns")
             if (path != CorsPolicy().path) add("path")
         }
+
+private fun originPattern(glob: String): Regex = Regex(glob.split("*").joinToString(".*") { Regex.escape(it) })

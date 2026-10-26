@@ -944,6 +944,8 @@ class WorkflowWorker(
     poll: Duration = 1.seconds,
     batch: Int = 32,
     concurrency: Int = 8,
+    unknownBackoff: Duration = 1.minutes,
+    onError: (id: String, cause: Throwable) -> Unit = /* logs a warning */,
 ) : AutoCloseable {
     fun start(scope: CoroutineScope): Job
     override fun close()
@@ -962,3 +964,15 @@ the instance's lock itself and returns quietly when somebody else has it, so two
 same id is the normal shape of this rather than a race to prevent. It runs on a `CoroutineScope` the
 caller owns and cancels; `close()` stops it and touches neither the engine nor the connection under
 it.
+
+**It is bounded.** The permit is taken before a coroutine is launched, so a backlog larger than
+`concurrency` waits in the loop and never becomes one coroutine per id. An id already in flight in
+this worker is skipped, and when a pass starts nothing the loop waits a `poll` instead of asking the
+store again at once. A `resume` that throws is passed to `onError` (the default logs a warning) and
+its id is left alone for a `poll`. The default logs because a worker must not fail silently. Every
+id is parked for a `poll` after its `resume` returns, so a lock held by another engine cannot make
+the loop spin, and the worker asks the store for `batch` plus the parked and in-flight ids so
+unregistered instances cannot starve the real ones. An instance of a workflow this engine has not
+registered is not
+failed, since another deployment may own it: it is reported once per `unknownBackoff` (a minute by
+default) and left alone for that long.

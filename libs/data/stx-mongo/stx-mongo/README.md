@@ -97,6 +97,8 @@ val page = notes.findPage(PaginationOptions(first = 20, sort = json("""{"tag": 1
 val next = notes.findPage(PaginationOptions.first(20, page.info.endCursor))
 ```
 
+A sort field may hold nulls (stored or missing) and may be a dotted path such as `"address.city"`; the cursor handles both, so no document is skipped or repeated. A page is at most `MAX_PAGE_SIZE` (1000) rows — a larger `first` or `last` is refused.
+
 It pages by **keyset**, not by `skip`. `skip(n)` makes the server walk and discard n documents, so
 a page costs more the deeper it is and page 500 is a scan; resuming from the previous page's sort
 key costs the same at any depth, and does not skip or repeat a document when one is inserted

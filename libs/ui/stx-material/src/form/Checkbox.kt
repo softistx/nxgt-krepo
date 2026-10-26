@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,15 +31,16 @@ fun Checkbox(
     supportingText: String? = null,
     enabled: Boolean = true,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
         Row(
             modifier =
-                modifier.toggleable(
-                    value = value,
-                    enabled = enabled,
-                    role = Role.Checkbox,
-                    onValueChange = onValueChange,
-                ),
+                Modifier
+                    .toggleable(
+                        value = value,
+                        enabled = enabled,
+                        role = Role.Checkbox,
+                        onValueChange = onValueChange,
+                    ).minimumInteractiveComponentSize(),
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {

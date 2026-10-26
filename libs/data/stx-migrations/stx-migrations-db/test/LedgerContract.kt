@@ -120,6 +120,19 @@ internal fun FeatureSpecRootScope.ledgerContract(
             }
         }
 
+        scenario("update takes a description longer than the column and still moves the status") {
+            ledgers(1.minutes) { open ->
+                val ledger = open()
+                ledger.prepare()
+                val claimed = record(1, MigrationStatus.RUNNING)
+                ledger.claim(claimed)
+
+                ledger.update(claimed.copy(status = MigrationStatus.APPLIED, description = "d".repeat(600)))
+
+                ledger.find(1L).shouldNotBeNull().status shouldBe MigrationStatus.APPLIED
+            }
+        }
+
         scenario("all() is lowest version first, whatever order they were claimed in") {
             ledgers(1.minutes) { open ->
                 val ledger = open()

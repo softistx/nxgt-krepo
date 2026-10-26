@@ -70,6 +70,8 @@ test-dependencies@jvm:
   # Skiko's native library, so a jvm test can render a composable into a bitmap with
   # ImageComposeScene. Without it the class initialiser fails on a missing libskiko-*.so.
   - $compose.desktop.currentOs
+  # runComposeUiTest: semantics queries and performClick, for the role and touch-target specs.
+  - $compose.uiTest
 
 test-dependencies@android:
   - $libs.kotest.runner.junit5

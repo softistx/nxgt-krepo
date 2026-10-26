@@ -3,6 +3,7 @@ package com.softistx.mongo.page
 import com.softistx.mongo.InvalidPaginationException
 import org.bson.BsonDocument
 import org.bson.BsonNull
+import org.bson.BsonValue
 import org.bson.json.JsonMode
 import org.bson.json.JsonWriterSettings
 import java.util.Base64
@@ -24,7 +25,7 @@ internal fun encodeCursor(
     keys: List<SortKey>,
 ): String {
     val key = BsonDocument()
-    keys.forEach { key[it.field] = document[it.field] ?: BsonNull.VALUE }
+    keys.forEach { key[it.field] = document.valueAt(it.field) }
     return Base64.getUrlEncoder().withoutPadding().encodeToString(key.toJson(EXTENDED).toByteArray())
 }
 
@@ -45,4 +46,17 @@ internal fun decodeCursor(
     }
 
     return decoded
+}
+
+/**
+ * The value at [path], where a dotted path (`address.city`) walks into nested documents — a sort on
+ * one is legal, and a plain lookup of the dotted name finds nothing. A missing step is null, which
+ * is where Mongo sorts a missing field.
+ */
+private fun BsonDocument.valueAt(path: String): BsonValue {
+    var current: BsonValue = this
+    for (step in path.split('.')) {
+        current = (current as? BsonDocument)?.get(step) ?: return BsonNull.VALUE
+    }
+    return current
 }

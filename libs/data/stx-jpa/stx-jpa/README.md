@@ -49,7 +49,7 @@ say and what an entity may say — gain an entry every phase, so they live in
 **A Hibernate Reactive session belongs to the Vert.x context that opened it.** Use it from any other
 thread and it throws `HR000069`— the [reference
 documentation](https://docs.hibernate.org/reactive/4.5/reference/html_single) quotes `HR000068` for
-this, and 4.5.5 does not; `SessionConfinementTest` asserts what the runtime actually says. A
+this, and 4.5.12 does not; `SessionConfinementTest` asserts what the runtime actually says. A
 coroutine that suspends inside a session block resumes wherever its dispatcher puts it, which is not
 that thread — so the obvious wrapper,
 
@@ -456,7 +456,8 @@ form is still a `createDelete<Purchase>()` away for a caller who has measured.
 another*, and leaves the cursors in `PageInfo` null — they belong to keyset pagination, which this is
 not. Offset makes the database walk and discard, so a deep page costs more and a row inserted between
 requests shifts the window. Fine behind a UI over a few hundred rows; for an export or an infinite
-scroll, order by the identifier and resume from the last one seen.
+scroll, order by the identifier and resume from the last one seen. A `limit` above `MAX_PAGE_SIZE`
+(1000, from `stx-common`) is refused, as it is in `stx-mongo`.
 
 **Writing is stateful-session only.** A stateless session has no persistence context, so `update`
 would have nothing to merge into and `delete` nothing to cascade from. The reads take the narrower

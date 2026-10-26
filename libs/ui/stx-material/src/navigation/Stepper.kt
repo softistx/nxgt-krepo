@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.icon.Icon
@@ -134,7 +135,7 @@ private fun StepRow(
                 if (clickable) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = null,
+                        role = Role.Button,
                         onClick = { onStep.invoke(index) },
                     )
                 } else {

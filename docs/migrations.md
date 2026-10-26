@@ -330,7 +330,10 @@ plainly and, if the insert fails, asks the database whether the row is now there
 One lock per ledger, built out of two fields — an owner and an expiry — that one conditional write
 sets, another extends and a third clears. The policy around those three writes is `Lease` from
 `stx-common`: it **declines rather than queues**, **renews at a third of its duration** while the work
-runs, and **releases under `NonCancellable`**.
+runs, and **releases under `NonCancellable`**. A renewal that throws is reported and retried on the next tick, but once none has succeeded within
+the lock's duration the lock has lapsed and the migration is cancelled with a `LeaseLostException`
+(fail closed: another process may already be migrating); one that returns false means the lock was lost, and the watchdog
+stops without interrupting it.
 
 The runner is what turns a refusal into a wait. That is the opposite of `WorkflowStore.guarded`'s
 caller, and deliberately: a fleet of workers declining a busy instance goes off and does other work,

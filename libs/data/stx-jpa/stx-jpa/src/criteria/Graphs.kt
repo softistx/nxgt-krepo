@@ -14,7 +14,7 @@ import kotlin.reflect.KProperty1
  *     .add(Purchase::reference)
  *     .subgraphOf(Purchase::customer).add(Buyer::name).graph
  *
- * session.find(plan, id)
+ * session.find(id, plan)
  * session.query<Purchase>("from Purchase").plan(plan).list()
  * ```
  *

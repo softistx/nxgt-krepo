@@ -67,6 +67,7 @@ private fun Messages.forRequest(
     request: ApplicationRequest,
     configuration: I18nConfiguration,
 ): Translator {
-    val asked = configuration.queryParameter?.let { request.queryParameters[it] }
+    // A blank `?lang=` is no answer at all, so the header still decides.
+    val asked = configuration.queryParameter?.let { request.queryParameters[it] }?.takeIf { it.isNotBlank() }
     return negotiate(asked ?: request.headers[configuration.header])
 }

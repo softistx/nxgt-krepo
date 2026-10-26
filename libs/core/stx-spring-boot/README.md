@@ -172,7 +172,9 @@ val catalog = httpClient<Catalog>("https://catalog.internal")
 **An error response arrives as an `ApiException`, not a `WebClientResponseException`.** A failure
 from a service upstream and one raised in this one should reach a handler as the same type, or the
 translation gets written twice — and the second time is after the first outage. The upstream's status
-is carried across, so its 404 is a 404 here rather than a 500.
+is carried across, so its 404 is a 404 here rather than a 500. A status `HttpStatus` does not list
+(Cloudflare's 522, nginx's 499) maps to 502 for an unknown 5xx, 400 for an unknown 4xx and 500
+otherwise.
 
 The upstream's body is read as a map rather than as `ErrorResponse`: an upstream that is not one of
 ours answers in its own shape, and a decoder that throws while handling an error would replace a
@@ -291,8 +293,9 @@ as somebody keeps them agreeing.
 the wrong shape of default. Everything else defaults permissively — once an origin is trusted,
 restricting which methods it may use adds nothing an attacker at that origin cannot work around.
 
-**One combination fails at startup on purpose.** `origins: ["*"]` with `allow-credentials: true` is
-forbidden by the CORS specification, and Spring throws when the *request* arrives rather than when
+**Two mistakes fail at startup on purpose.** An `origins` entry without its scheme (`localhost:5173`
+for `http://localhost:5173`) would match nothing in a browser, so it is refused. And `origins: ["*"]`
+with `allow-credentials: true` is forbidden by the CORS specification, and Spring throws when the *request* arrives rather than when
 the bean is built — which turns a configuration mistake into an intermittent browser failure found by
 whoever is testing the front end. The policy refuses it while the context is starting, and names
 `stx.cors.origin-patterns` — which is what actually does the job, since the concrete requesting
@@ -422,6 +425,12 @@ That is the whole setup. Every save and delete of an `@Auditable` document appen
 carrying the document's full state, the properties that changed, who changed them, and a version
 number that only goes up. Nothing is ever updated — a history that can be edited is not one.
 
+The author is the signed-in user's name, read from Spring Security when it is on the classpath. It
+is empty when nobody is signed in, and a delete carries none, because Spring Data's reactive
+template gives a delete no callback inside the request's chain. A unique index on
+`(oid, collection, version)` backs the version number, so two writers cannot append the same one.
+To query the trail like any other collection, see [what a Mongo query may say](../../../docs/spring-mongo-queries.md).
+
 The diff comes from [Javers](https://javers.org), which is `compile-only`: an application that does
 not audit anything does not carry it.
 
@@ -445,7 +454,8 @@ every caller latency for a record nobody is waiting on. The consequence stated p
 be lost if the process dies between the save and the append. The scope is the `stxAuditScope` bean —
 replaceable, and cancelled when the context closes. It is deliberately **not** `GlobalScope`, which
 would keep writing through shutdown, be stopped only by the process exiting, and give a test nothing
-to wait for.
+to wait for. At shutdown the queued entries are given up to five seconds to drain before the scope
+is cancelled.
 
 **The collection name is not a SpEL `@Document`.** A configurable mapped collection is normally
 written `@Document("#{@environment.getProperty(…)}")`, because the annotation is read at mapping time

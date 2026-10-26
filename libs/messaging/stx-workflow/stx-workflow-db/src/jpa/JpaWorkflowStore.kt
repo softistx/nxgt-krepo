@@ -56,11 +56,33 @@ class JpaWorkflowStore(
     private val guard = Lease(lease, ::take, ::renew, ::release)
 
     override suspend fun create(record: WorkflowRecord) {
-        jpa.transaction { session ->
-            require(session.find<WorkflowInstanceRow>(record.id) == null) {
-                "workflow instance '${record.id}' already exists"
+        try {
+            jpa.transaction { session ->
+                require(session.find<WorkflowInstanceRow>(record.id) == null) {
+                    "workflow instance '${record.id}' already exists"
+                }
+                session.persist(row(record))
             }
-            session.persist(row(record))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            // The check above is a find-then-persist, so two creates of one id can both pass it and
+            // the primary key refuses the second at flush, in the database's own words. When the row
+            // is there now, that is exactly the refusal this method promises; anything else is a real
+            // write failure and is not ours to translate.
+            val exists =
+                try {
+                    jpa.find<WorkflowInstanceRow>(record.id) != null
+                } catch (lookup: CancellationException) {
+                    throw lookup
+                } catch (lookup: Exception) {
+                    e.addSuppressed(lookup)
+                    false
+                }
+            if (!exists) throw e
+            throw IllegalArgumentException("workflow instance '${record.id}' already exists", e)
         }
     }
 

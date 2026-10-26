@@ -1,8 +1,10 @@
 package com.softistx.telemetry.mongo
 
+import com.mongodb.MongoCommandException
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.coroutine.MongoCollection
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import org.bson.Document
 import java.util.concurrent.TimeUnit
@@ -16,22 +18,50 @@ import kotlin.time.Duration
  * all where a table would need a nightly `DELETE` — and the reason nothing here has a scheduler,
  * a coroutine of its own, or an opinion about when the deleting happens.
  *
- * **A changed retention re-creates the index.** Mongo refuses a second index with the same key and
+ * **A changed retention is a `collMod`.** Mongo refuses a second index with the same key and
  * different options, so an application that goes from thirty days to seven would otherwise keep the
- * thirty for ever and never be told. The old one is dropped and the new one built, which on a large
- * collection is minutes of background work — the alternative is a setting that silently does nothing.
+ * thirty for ever and never be told. `collMod` rewrites `expireAfterSeconds` in place, with no rebuild.
+ * **No retention** (null, or under a second) drops the index this left behind, since a collection
+ * that was told to keep everything must not go on expiring at the old age. That costs one
+ * `listIndexes` per exporter, at its first batch, even with no retention.
+ *
+ * `collMod` needs the `collMod` privilege, which the `readWrite` role does not include. Where it is
+ * refused (error code 13) the index is dropped and created again with the new retention, which
+ * `readWrite` allows. The index name `stx_telemetry_ttl` is **reserved**: this recognises, changes and drops its index by that
+ * name, so another index must not use it.
  */
 internal class TimeToLive(
+    private val database: MongoDatabase,
     private val collection: MongoCollection<Document>,
-    private val retention: Duration,
+    private val retention: Duration?,
 ) {
     suspend fun ensure() {
-        val seconds = retention.inWholeSeconds
+        val seconds = retention?.inWholeSeconds?.takeIf { it > 0 }
         val existing = collection.listIndexes().firstOrNull { it.getString("name") == NAME }
+        if (seconds == null) {
+            if (existing != null) collection.dropIndex(NAME)
+            return
+        }
         if (existing != null) {
             if ((existing["expireAfterSeconds"] as? Number)?.toLong() == seconds) return
-            collection.dropIndex(NAME)
+            try {
+                database.runCommand(
+                    Document("collMod", collection.namespace.collectionName)
+                        .append("index", Document("name", NAME).append("expireAfterSeconds", seconds)),
+                )
+            } catch (e: MongoCommandException) {
+                if (e.errorCode != UNAUTHORIZED) throw e
+                // Without the `collMod` privilege the index is replaced instead: dropping and creating
+                // an index are `readWrite` operations, and the TTL only has to be right, not in place.
+                collection.dropIndex(NAME)
+                create(seconds)
+            }
+            return
         }
+        create(seconds)
+    }
+
+    private suspend fun create(seconds: Long) {
         collection.createIndex(
             Indexes.ascending(FIELD),
             IndexOptions().name(NAME).expireAfter(seconds, TimeUnit.SECONDS),
@@ -44,5 +74,8 @@ internal class TimeToLive(
 
         /** Named, so this can recognise its own index among whatever else the collection carries. */
         const val NAME = "stx_telemetry_ttl"
+
+        /** Mongo's `Unauthorized` error code: the user lacks the privilege for the command. */
+        const val UNAUTHORIZED = 13
     }
 }

@@ -136,7 +136,9 @@ should not fail a request over a translation, and a test suite should not pass o
 
 It also replaces WebFlux's `LocaleContextResolver` with one that only answers with a language it has.
 The default answers with whatever `Accept-Language` asked for, so a browser asking for Japanese
-produces a `Translator` for Japanese that falls back key by key.
+produces a `Translator` for Japanese that falls back key by key. The resolver follows the `Messages` bean
+in the context: an application's own `Messages` decides the supported locales and the default, and a
+configured language with no catalog file is not offered.
 
 **Unless the application set `spring.web.locale` or `spring.web.locale-resolver`**, in which case
 Boot's resolver stays in charge and only the catalogs load here — the rule at the top of this page.

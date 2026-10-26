@@ -167,7 +167,7 @@ class RedisStream<T>(
         }
     }
 
-    /** How many entries [group] was handed and has not acknowledged. */
+    /** Acknowledges [ids] for [group], and answers how many of them were pending and now are not. */
     suspend fun ack(
         group: String,
         vararg ids: String,
@@ -203,9 +203,10 @@ class RedisStream<T>(
     /** The last [count] entries, newest last, regardless of any group. */
     suspend fun history(count: Long = 100): List<StreamRecord<T>> =
         redis.commands
-            .xrange(key, Range.unbounded(), Limit.create(0, count))
+            .xrevrange(key, Range.unbounded(), Limit.create(0, count))
             .toList()
             .map { it.toRecord() }
+            .asReversed()
 
     private fun LettuceStreamMessage<String, String>.toRecord(): StreamRecord<T> {
         val raw = body[FIELD] ?: throw RedisValueException("stream entry $id has no '$FIELD' field")

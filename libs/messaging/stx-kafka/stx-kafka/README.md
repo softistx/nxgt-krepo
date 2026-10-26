@@ -97,6 +97,10 @@ for the least redelivery, `Manual` for a caller that wants to say so itself. `re
 loop as a `Flow` with nothing committed for you, and `commit(record)` / `commitPending()` are how a
 collector says a record is done.
 
+Closing the subscriber ends `records()` and returns from `process` in both concurrency modes (the
+per-partition workers finish what they already hold), so a collector in another coroutine finishes
+instead of hanging; `close()` is idempotent, and a second call does nothing.
+
 **Delivery is at least once.** Every commit happens after the handler returned, so a handler that
 succeeds and then loses the connection sees its record again. Handlers have to be idempotent. The
 alternative — committing first — trades duplicates for records that are silently never processed,
@@ -116,8 +120,10 @@ partitions alongside each other while each keeps its own order. Handlers then fi
 each partition. Committing 8 there would mean a crash loses record 6 for good.
 
 **A rebalance is where offsets are lost.** Partitions are committed on revocation, before they are
-handed over, and forgotten afterwards. Partitions that are *lost* rather than revoked are only
-forgotten: committing them would be claiming work this consumer no longer owns.
+handed over, and forgotten afterwards; their records still waiting in the buffer are dropped, and a
+record handled after its partition was revoked is not committed. Partitions that are *lost* rather
+than revoked are only forgotten and dropped: committing them would be claiming work this consumer
+no longer owns.
 
 **The client wants exclusion, not a thread.** `KafkaConsumer` takes an owner slot on the way into
 every method and frees it on the way out, so consecutive calls from different threads are fine and

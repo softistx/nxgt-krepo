@@ -164,6 +164,12 @@ what the name is for.
 `RetryPolicy` is the list of delays, so both questions an incident asks are read off it: how many
 attempts (`attempts`) and how long until it gives up (`window`).
 
+## When the channel is lost
+
+- **Publishing:** a `publish` still waiting for its confirm when the channel shuts down fails with `AmqpClosedException`. The message may or may not have reached the broker; publish it again if that matters. The publisher stays usable once the client has recovered its channel.
+- **Consuming:** the `messages()` flow (and `process`) ends when its channel shuts down: quietly when you closed it, with the broker's `ShutdownSignalException` otherwise. A lost *connection* under automatic recovery (`AmqpConfig.recovery`, on by default) leaves the flow open, because the client reconnects and re-registers the consumer. With recovery off, a lost connection ends it.
+- **`Undecodable.Fail`:** the message is requeued and the flow ends with the decode failure (`AmqpValueException`), instead of closing the channel and leaving the collector waiting.
+
 ## Tests
 
 The specs that need no broker cover the parts that are wrong in Kotlin rather than in the broker:

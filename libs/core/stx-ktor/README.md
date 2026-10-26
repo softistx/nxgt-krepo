@@ -75,10 +75,12 @@ because an application should configure a policy once and not per framework. `Co
 two cannot drift on what a given configuration means.
 
 The policy is validated before the plugin is installed, so a wildcard origin with credentials fails
-while the application is starting rather than on somebody's first preflight. Two of its fields have
-no Ktor equivalent — `path`, because Ktor scopes a plugin by installing it on a route, and
-`originPatterns`, because Ktor matches a host and a scheme rather than a glob.
-`CorsPolicy.ignoredByKtor` names them rather than letting them be silently absent.
+while the application is starting rather than on somebody's first preflight. Each entry of `origins` has to be a
+full origin, `scheme://host[:port]`; a bare host would match nothing in a browser, so `CorsPolicy.validate` refuses it
+at install (Spring refuses it the same way). `originPatterns` is honoured as a glob: `*` stands for any run of characters, and the
+pattern is matched against the whole `Origin` header. One field has no Ktor equivalent — `path`,
+because Ktor scopes a plugin by installing it on a route. `CorsPolicy.ignoredByKtor` names it rather
+than letting it be silently absent.
 
 ## Why this module has no integration in it
 

@@ -1,5 +1,7 @@
 package com.softistx.spring.data.mongo.config
 
+import com.softistx.spring.data.mongo.audit.AuditEntry
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -35,20 +37,26 @@ class IndexInitializer(
         context
             .persistentEntities
             .filter { it.isAnnotationPresent(Document::class.java) }
+            // The audit entries live in a collection the audit configuration names; its own
+            // initializer indexes that one, and this one would index the default.
+            .filter { it.type != AuditEntry::class.java }
             .forEach { entity ->
                 val definitions = resolver.resolveIndexFor(entity.type).toList()
                 if (definitions.isEmpty()) return@forEach
 
                 val operations = template.indexOps(entity.type)
                 definitions.forEach { definition ->
-                    runCatching { operations.createIndex(definition).awaitFirstOrNull() }
-                        .onFailure {
-                            log.warn(
-                                "stx.data.mongo: could not create an index on {}: {}",
-                                entity.type.simpleName,
-                                it.message,
-                            )
-                        }
+                    try {
+                        operations.createIndex(definition).awaitFirstOrNull()
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (failure: Exception) {
+                        log.warn(
+                            "stx.data.mongo: could not create an index on {}: {}",
+                            entity.type.simpleName,
+                            failure.message,
+                        )
+                    }
                 }
                 log.debug("stx.data.mongo: {} index(es) ensured on {}", definitions.size, entity.type.simpleName)
             }

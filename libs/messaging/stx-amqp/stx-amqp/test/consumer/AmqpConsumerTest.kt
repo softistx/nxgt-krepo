@@ -1,7 +1,12 @@
 package com.softistx.amqp.consumer
 
+import com.rabbitmq.client.AlreadyClosedException
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.Connection
+import com.rabbitmq.client.ShutdownSignalException
 import com.softistx.amqp.Amqp
 import com.softistx.amqp.AmqpTestBroker
+import com.softistx.amqp.AmqpValueException
 import com.softistx.amqp.codec.AmqpCodec
 import com.softistx.amqp.publisher.publisher
 import com.softistx.amqp.topology.ExchangeType
@@ -14,7 +19,9 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.take
@@ -22,7 +29,10 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
+import java.io.IOException
+import java.lang.reflect.Proxy
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -174,6 +184,106 @@ class AmqpConsumerTest :
 
                     handled.toList() shouldContainExactly listOf("A2")
                     amqp.eventually(dead, 1)
+                }
+            }
+        }
+
+        feature("a consumer whose channel the broker closed").config(enabled = AmqpTestBroker.available) {
+            scenario("the flow ends with the broker's reason instead of hanging") {
+                withQueues { amqp, queue, _ ->
+                    val channel = amqp.openChannel()
+                    val consumer = AmqpConsumer(channel, queue, AmqpCodec.text, ConsumerOptions())
+                    val failure =
+                        async {
+                            runCatching { consumer.messages().collect { } }.exceptionOrNull()
+                        }
+                    delay(500)
+                    // A passive declare of a queue that is not there: the broker answers 404 and closes the channel.
+                    runCatching { channel.queueDeclarePassive("test.no.such.queue.${AmqpTestBroker.name("x")}") }
+
+                    withTimeout(10.seconds) { failure.await() } shouldNotBe null
+                }
+            }
+        }
+
+        feature("what a shutdown means for the flow") {
+            fun signal(
+                app: Boolean,
+                reference: Any,
+            ) = ShutdownSignalException(false, app, null, reference)
+
+            val connection = Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, _, _ -> null }
+            val channel = Proxy.newProxyInstance(Channel::class.java.classLoader, arrayOf(Channel::class.java)) { _, _, _ -> null }
+
+            scenario("a connection lost under recovery leaves the flow open") {
+                shutdownOutcome(signal(false, connection), recoverable = true) shouldBe ShutdownOutcome.Continue
+            }
+            scenario("a connection lost without recovery fails the flow") {
+                shutdownOutcome(signal(false, connection), recoverable = false) shouldBe ShutdownOutcome.Fail
+            }
+            scenario("a channel the broker closed fails the flow even under recovery") {
+                shutdownOutcome(signal(false, channel), recoverable = true) shouldBe ShutdownOutcome.Fail
+            }
+            scenario("a close this side asked for ends the flow quietly") {
+                shutdownOutcome(signal(true, connection), recoverable = true) shouldBe ShutdownOutcome.End
+            }
+        }
+
+        feature("an acknowledgement that meets a shutdown") {
+            scenario("is told apart from any other failure") {
+                isShutdown(AlreadyClosedException(ShutdownSignalException(false, false, null, null))) shouldBe true
+                isShutdown(ShutdownSignalException(true, false, null, null)) shouldBe true
+                isShutdown(IOException("write failed", ShutdownSignalException(false, false, null, null))) shouldBe true
+                isShutdown(IOException("disk")) shouldBe false
+                isShutdown(IllegalStateException("bug")) shouldBe false
+            }
+        }
+
+        feature("a concurrency limit").config(enabled = AmqpTestBroker.available) {
+            scenario("never has more handlers running than it allows") {
+                withQueues { amqp, queue, _ ->
+                    amqp.publish(queue, *(1..6).map { Order("A$it") }.toTypedArray())
+                    val running = AtomicInteger()
+                    val most = AtomicInteger()
+                    val done = AtomicInteger()
+
+                    coroutineScope {
+                        val consuming =
+                            launch {
+                                amqp.consumer<Order>(queue, ConsumerOptions(concurrency = 2)).use { consumer ->
+                                    consumer.process {
+                                        most.accumulateAndGet(running.incrementAndGet(), ::maxOf)
+                                        delay(100)
+                                        running.decrementAndGet()
+                                        done.incrementAndGet()
+                                    }
+                                }
+                            }
+                        withTimeout(10.seconds) { while (done.get() < 6) delay(20) }
+                        consuming.cancel()
+                    }
+
+                    most.get() shouldBe 2
+                }
+            }
+        }
+
+        feature("a body that will not decode, with Undecodable.Fail").config(enabled = AmqpTestBroker.available) {
+            scenario("the message goes back on the queue and the consumer stops with the decode failure") {
+                withQueues { amqp, queue, _ ->
+                    amqp.publisher<String>(codec = AmqpCodec.text).use { it.publish("not json at all", routingKey = queue) }
+
+                    val failure =
+                        withTimeout(10.seconds) {
+                            runCatching {
+                                amqp
+                                    .consumer<Order>(queue, ConsumerOptions(undecodable = Undecodable.Fail))
+                                    .use { it.process { } }
+                            }.exceptionOrNull()
+                        }
+
+                    (failure is AmqpValueException) shouldBe true
+                    amqp.eventually(queue, 1)
                 }
             }
         }

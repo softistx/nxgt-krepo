@@ -81,12 +81,12 @@ minio = "9.0.3"
 kafka = "4.4.0"
 amqp-client = "5.37.0"
 confluent = "8.4.0"
-hibernate-reactive = "4.5.5.Final"
-# What hibernate-reactive-core 4.5.5.Final resolves for each of these. All three have to move with
+hibernate-reactive = "4.5.12.Final"
+# What hibernate-reactive-core 4.5.12.Final resolves for each of these. All three have to move with
 # it: a mismatched pair fails at runtime with a driver or a provider it cannot find, not at build
 # time.
-vertx = "5.1.6"
-hibernate-orm = "7.4.5.Final"
+vertx = "5.1.10"
+hibernate-orm = "7.4.13.Final"
 jakarta-persistence = "3.2.0"
 # Bean Validation: the reference implementation, the API an entity writes against, and the
 # expression language its default message interpolator needs at runtime.
@@ -164,6 +164,7 @@ accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-dra
 
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-jdk8 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.8.0" }

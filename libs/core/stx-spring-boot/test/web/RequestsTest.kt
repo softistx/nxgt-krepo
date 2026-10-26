@@ -1,5 +1,6 @@
 package com.softistx.spring.web
 
+import com.softistx.common.page.MAX_PAGE_SIZE
 import com.softistx.spring.error.ApiException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
@@ -39,6 +40,11 @@ class RequestsTest :
         "a size is taken as sent, and otherwise defaulted" {
             request("/products?size=50").size shouldBe 50
             request("/products").size shouldBe DEFAULT_PAGE_SIZE
+        }
+
+        "a size above the cap is coerced down to it, even one that would overflow limit + 1" {
+            request("/products?size=${MAX_PAGE_SIZE + 1}").size shouldBe MAX_PAGE_SIZE
+            request("/products?size=2147483647").size shouldBe MAX_PAGE_SIZE
         }
 
         "a size of zero or less is not a size" {
