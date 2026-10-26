@@ -52,7 +52,7 @@ coil3 = "3.6.3"
 # win — `./kotlin show dependencies -m stx-material` shows the upgrade arrow that says so. M3 has
 # its own alpha line and does not follow foundation/ui's 1.12.0, so it is named explicitly.
 compose-multiplatform-material3 = "1.12.0-alpha03"
-# Pinned to the Compose Multiplatform 1.12.0 pairing (What's new in CMP 1.12.0). Adaptive
+# CMP 1.12.0 pairing table named 1.3.0-beta02; the stable 1.3.0 is what is pinned. Adaptive
 # sits on its own version line, like material3 above.
 compose-multiplatform-adaptive = "1.3.0"
 # CMP 1.12.0 pairing table named 1.2.0-alpha02; the stable 1.2.0 is what is pinned.
