@@ -21,7 +21,12 @@ import kotlin.time.Duration
  * different options, so an application that goes from thirty days to seven would otherwise keep the
  * thirty for ever and never be told. `collMod` rewrites `expireAfterSeconds` in place, with no rebuild.
  * **No retention** (null, or under a second) drops the index this left behind, since a collection
- * that was told to keep everything must not go on expiring at the old age.
+ * that was told to keep everything must not go on expiring at the old age. That costs one
+ * `listIndexes` per exporter, at its first batch, even with no retention.
+ *
+ * `collMod` needs the `collMod` privilege, which the `readWrite` role does not include. The index
+ * name `stx_telemetry_ttl` is **reserved**: this recognises, changes and drops its index by that
+ * name, so another index must not use it.
  */
 internal class TimeToLive(
     private val database: MongoDatabase,

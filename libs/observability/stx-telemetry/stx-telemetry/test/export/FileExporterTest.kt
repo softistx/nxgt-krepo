@@ -155,6 +155,29 @@ class FileExporterTest :
             }
         }
 
+        feature("a roll whose prune fails after the move") {
+            scenario("the new file is empty, so the next write does not roll it again") {
+                val directory = directory()
+                val path = directory.resolve("telemetry.jsonl")
+                val clock = Ticking(start)
+                // A non-empty directory with a rotated file's name: pruning it throws.
+                val stuck = directory.resolve("telemetry-20200101-000000.jsonl")
+                stuck.toFile().mkdirs()
+                stuck.resolve("x").toFile().writeText("x")
+                val exporter = FileExporter(path, keep = 0, clock = clock)
+                exporter.export(resource, listOf(log("first")))
+
+                clock.at = start + 25.hours
+                shouldThrow<IOException> { exporter.export(resource, listOf(log("second"))) }
+                exporter.export(resource, listOf(log("third")))
+                exporter.close()
+
+                // Had the third write rolled again, its prune would have thrown too.
+                path.readText() shouldContain "second"
+                path.readText() shouldContain "third"
+            }
+        }
+
         feature("rolling on a period") {
             scenario("the boundary rolls the file, and the clock moving inside one does not") {
                 val directory = directory()

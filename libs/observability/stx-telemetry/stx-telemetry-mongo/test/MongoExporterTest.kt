@@ -121,6 +121,22 @@ class MongoExporterTest :
                 }
             }
 
+            scenario("a shorter retention updates the same index in place") {
+                MongoTestServer.withDatabase { database ->
+                    MongoExporter(database, retention = 30.days).export(resource, listOf(log("first")))
+                    val before = index(database.getCollection("telemetry")).shouldNotBeNull()
+                    MongoExporter(database, retention = 7.days).export(resource, listOf(log("second")))
+
+                    val after = index(database.getCollection("telemetry")).shouldNotBeNull()
+                    (after["expireAfterSeconds"] as Number).toLong() shouldBe 7.days.inWholeSeconds
+                    (before["expireAfterSeconds"] as Number).toLong() shouldBe 30.days.inWholeSeconds
+                    after["v"] shouldBe before["v"]
+                    database.getCollection<Document>("telemetry").listIndexes().toList().count {
+                        it.getString("name") == TimeToLive.NAME
+                    } shouldBe 1
+                }
+            }
+
             scenario("dropping the retention drops the old TTL index, null or zero") {
                 MongoTestServer.withDatabase { database ->
                     MongoExporter(database, retention = 30.days).export(resource, listOf(log("first")))

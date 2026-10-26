@@ -142,18 +142,31 @@ class FileExporter(
         }
 
         /**
-         * A roll that fails leaves the stream open on the file that would not move, never closed:
-         * a closed [out] would fail every later write for the life of the process.
+         * A roll that fails leaves the stream open, never closed: a closed [out] would fail every
+         * later write for the life of the process. When the move itself had succeeded (a later
+         * compress or prune failed), the new file is empty, so [size] and [openedAt] restart too and
+         * the next write does not roll an empty file again.
          */
         private fun roll(now: Instant) {
             out.close()
+            var failure: Throwable? = null
             try {
                 rotation.roll(now)
+            } catch (e: Throwable) {
+                failure = e
+            }
+            if (failure == null || !path.exists()) {
                 size = 0
                 openedAt = now
-            } finally {
-                out = BufferedOutputStream(Files.newOutputStream(path, CREATE, APPEND))
             }
+            try {
+                out = BufferedOutputStream(Files.newOutputStream(path, CREATE, APPEND))
+            } catch (e: Throwable) {
+                if (failure == null) throw e
+                failure.addSuppressed(e)
+                throw failure
+            }
+            failure?.let { throw it }
         }
     }
 

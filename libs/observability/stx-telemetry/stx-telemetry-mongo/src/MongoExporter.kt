@@ -29,8 +29,8 @@ import kotlin.time.Duration.Companion.days
  * [retention] is an index option, not a job: Mongo expires the documents itself, on the primary,
  * whether or not this process is running. Compare a file, where retention is a count of files this
  * process prunes as it rolls them, and a SQL table, where it is a nightly `DELETE` somebody has to
- * own. Null keeps everything, which is a decision to make deliberately and not a default; it also
- * drops the index an earlier run left, so the collection stops expiring.
+ * own. Null (or under a second) keeps everything, which is a decision to make deliberately and not
+ * a default; it also drops the index an earlier run left, so the collection stops expiring.
  *
  * ## Whose client it is
  *
@@ -57,7 +57,7 @@ class MongoExporter private constructor(
     constructor(
         database: MongoDatabase,
         collection: String = "telemetry",
-        /** How long a signal is kept. Null keeps everything, and means the collection grows for ever. */
+        /** How long a signal is kept. Null (or under a second) keeps everything: the collection grows for ever. */
         retention: Duration? = 30.days,
     ) : this(database, collection, retention, owned = null)
 
