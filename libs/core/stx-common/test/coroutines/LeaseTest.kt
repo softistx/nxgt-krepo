@@ -8,11 +8,14 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -213,6 +216,49 @@ class LeaseTest :
                     )
 
                 lease.guard("id") {
+                    delay(450)
+                    "finished"
+                } shouldBe "finished"
+            }
+        }
+
+        feature("the deadline") {
+            scenario("is counted on the coroutine clock, so it trips under virtual time") {
+                runTest {
+                    val lease = Lease(30.seconds, take = { true }, renew = { error("down") }, release = {}, onRenewalFailure = { _, _ -> })
+
+                    shouldThrow<LeaseLostException> { lease.guard("id") { delay(10.minutes) } }
+                }
+            }
+
+            scenario("a renewal that hangs is a lost lease, and a release that throws does not hide it") {
+                runTest {
+                    val lease =
+                        Lease(
+                            30.seconds,
+                            take = { true },
+                            renew = { awaitCancellation() },
+                            release = { error("release failed") },
+                        )
+
+                    val failure = shouldThrow<LeaseLostException> { lease.guard("id") { delay(10.minutes) } }
+
+                    failure.suppressed.map { it.message } shouldBe listOf("release failed")
+                }
+            }
+
+            scenario("a hook that throws cannot cancel the block") {
+                val flaky = AtomicInteger()
+                val guarded =
+                    Lease(
+                        duration = 300.milliseconds,
+                        take = { true },
+                        renew = { if (flaky.incrementAndGet() == 1) error("blip") else true },
+                        release = {},
+                        onRenewalFailure = { _, _ -> error("hook broke") },
+                    )
+
+                guarded.guard("id") {
                     delay(450)
                     "finished"
                 } shouldBe "finished"

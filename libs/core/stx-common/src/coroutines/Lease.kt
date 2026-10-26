@@ -2,13 +2,14 @@ package com.softistx.common.coroutines
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration
-import kotlin.time.TimeSource
 
 /**
  * A distributed lock built out of two fields, for the stores that have no lock to borrow.
@@ -33,8 +34,8 @@ import kotlin.time.TimeSource
  * - **It renews while the work runs**, a third of [duration] at a time, because the lease says
  *   *this is being worked on right now*, not *this code is short*. That is what separates it from a
  *   fixed expiry, which has to be guessed against the slowest run and is wrong either way.
- *   A renewal that **throws** is reported to [onRenewalFailure] and retried on the next tick, so a
- *   dropped connection does not end the work; but once no renewal has **succeeded** within [duration]
+ *   A renewal that **throws** is reported to [onRenewalFailure] (a hook that throws is ignored, it
+ *   cannot cancel the block) and retried on the next tick, so a dropped connection does not end the work; but once no renewal has **succeeded** within [duration]
  *   the lease has lapsed on the store, and the block is cancelled with a [LeaseLostException] —
  *   failing closed, because a second holder may already be running. One that answers false means the
  *   lease was lost, and the watchdog stops (the block is not interrupted).
@@ -66,40 +67,57 @@ class Lease(
         block: suspend () -> T,
     ): T? {
         if (!take(id)) return null
-        return try {
-            coroutineScope {
-                var lastRenewed = TimeSource.Monotonic.markNow()
-                val watchdog =
-                    launch {
-                        while (isActive) {
-                            delay(duration / 3)
-                            // A renewal that throws (a dropped connection) is reported and retried on the next
-                            // tick; the lease only lapses if none succeeds within `duration`, and then the
-                            // block is cancelled. Cancellation is the exception to the exception.
-                            val renewed =
-                                try {
-                                    renew(id).also { if (it) lastRenewed = TimeSource.Monotonic.markNow() }
-                                } catch (e: CancellationException) {
-                                    throw e
-                                } catch (e: Exception) {
-                                    onRenewalFailure(id, e)
-                                    if (lastRenewed.elapsedNow() >= duration) {
+        val outcome =
+            runCatching {
+                coroutineScope {
+                    // Counted from the ticks, not read off a clock, so the deadline holds under virtual time too.
+                    var sinceRenewed = Duration.ZERO
+                    val watchdog =
+                        launch {
+                            while (isActive) {
+                                delay(duration / 3)
+                                sinceRenewed += duration / 3
+                                // A renewal that throws (a dropped connection) is reported and retried on the
+                                // next tick; the lease only lapses if none succeeds within `duration` (a hung
+                                // one counts as lost at once), and then the block is cancelled.
+                                val renewed =
+                                    try {
+                                        withTimeout(duration) { renew(id) }.also { if (it) sinceRenewed = Duration.ZERO }
+                                    } catch (e: TimeoutCancellationException) {
+                                        report(id, e)
                                         throw LeaseLostException(id, duration, e)
+                                    } catch (e: CancellationException) {
+                                        throw e
+                                    } catch (e: Exception) {
+                                        report(id, e)
+                                        if (sinceRenewed >= duration) throw LeaseLostException(id, duration, e)
+                                        true
                                     }
-                                    true
-                                }
-                            if (!renewed) break
+                                if (!renewed) break
+                            }
                         }
+                    try {
+                        block()
+                    } finally {
+                        watchdog.cancel()
                     }
-                try {
-                    block()
-                } finally {
-                    watchdog.cancel()
                 }
             }
-        } finally {
-            withContext(NonCancellable) { release(id) }
+        // The release failure never replaces the reason the block ended: it rides along as suppressed.
+        val released = withContext(NonCancellable) { runCatching { release(id) } }
+        outcome.exceptionOrNull()?.let { primary ->
+            released.exceptionOrNull()?.let(primary::addSuppressed)
+            throw primary
         }
+        released.exceptionOrNull()?.let { throw it }
+        return outcome.getOrThrow()
+    }
+
+    private fun report(
+        id: String,
+        failure: Throwable,
+    ) {
+        runCatching { onRenewalFailure(id, failure) }
     }
 }
 

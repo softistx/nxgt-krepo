@@ -15,7 +15,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.PrintStream
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption.APPEND
+import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.attribute.FileTime
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.exists
@@ -164,15 +167,14 @@ class FileExporterTest :
             scenario("is retried by the next write, instead of leaving the stream closed until a restart") {
                 val directory = directory()
                 val path = directory.resolve("telemetry.jsonl")
-                val exporter = FileExporter(path, maxSize = 1, clock = Ticking(start))
+                var failures = 0
+                val exporter =
+                    FileExporter(path, 1, 24.hours, 7, false, Ticking(start)) {
+                        if (failures-- > 0) throw IOException("no file descriptors left")
+                        Files.newOutputStream(it, CREATE, APPEND)
+                    }
                 exporter.export(resource, listOf(log("first")))
-
-                val reopen = exporter.openStream
-                var failures = 1
-                exporter.openStream = {
-                    if (failures-- > 0) throw IOException("no file descriptors left")
-                    reopen(it)
-                }
+                failures = 1
                 shouldThrow<IOException> { exporter.export(resource, listOf(log("second"))) }
 
                 exporter.export(resource, listOf(log("third")))

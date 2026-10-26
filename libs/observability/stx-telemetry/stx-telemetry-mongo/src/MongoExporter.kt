@@ -45,9 +45,9 @@ import kotlin.time.Duration.Companion.days
  * ## What a failed insert does
  *
  * Nothing but propagate, to the pipeline's `onExportError`. So does a failure to prepare the
- * retention index, but only after the batch is written: the signals are never held back by it. The batch is unordered, so a document
- * Mongo rejects does not stop the ones behind it — a single oversized attribute costs its own record
- * and not the other five hundred.
+ * retention index, but only after the batch is written: the signals are never held back by it. The
+ * batch is unordered, so a document Mongo rejects does not stop the ones behind it — a single
+ * oversized attribute costs its own record and not the other five hundred.
  */
 class MongoExporter private constructor(
     database: MongoDatabase,
@@ -63,6 +63,13 @@ class MongoExporter private constructor(
         /** How long a signal is kept. Null (or under a second) keeps everything: the collection grows for ever. */
         retention: Duration? = 30.days,
     ) : this(database, collection, retention, owned = null)
+
+    /** For a spec that needs the retention step to fail; production code builds the real one. */
+    internal constructor(
+        database: MongoDatabase,
+        collection: String,
+        ensureRetention: suspend () -> Unit,
+    ) : this(database, collection, null, owned = null, ensureRetention)
 
     private val documents = database.getCollection<Document>(collection)
     private val ensureTtl: suspend () -> Unit =
@@ -110,13 +117,6 @@ class MongoExporter private constructor(
 
     /** Closes the client this opened, if it opened one. Idempotent: a DI container closes twice. */
     override fun close() = guard.once { owned?.close() }
-
-    /** For a spec that needs the retention step to fail; production code builds the real one. */
-    internal constructor(
-        database: MongoDatabase,
-        collection: String,
-        ensureRetention: suspend () -> Unit,
-    ) : this(database, collection, null, owned = null, ensureRetention)
 
     companion object {
         /** One rejected document costs its own record, not the five hundred behind it. */

@@ -1,5 +1,6 @@
 package com.softistx.redis.lock
 
+import com.softistx.common.coroutines.LeaseLostException
 import com.softistx.redis.RedisLockException
 import com.softistx.redis.RedisTestServer
 import io.kotest.assertions.throwables.shouldThrow
@@ -204,7 +205,7 @@ class RedisLockTest :
                 val lock = RedisLock(redis, "lost", ttl = 300.milliseconds)
                 var finished = false
 
-                shouldThrow<Exception> {
+                shouldThrow<LeaseLostException> {
                     withTimeout(5.seconds) {
                         lock.withLock {
                             redis.close()

@@ -58,26 +58,34 @@ import kotlin.time.Instant
  * only thing that can be done with it is `onExportError`, and telemetry that was silently never
  * written is the failure this whole library exists to make visible.
  */
-class FileExporter(
+class FileExporter internal constructor(
     private val path: Path,
-    /** Bytes, after which the file is rolled. 0 for no size limit. */
-    maxSize: Long = 64L * 1024 * 1024,
-    /**
-     * The period one file covers, aligned to the epoch — `24.hours` rolls at UTC midnight, not 24
-     * hours after this process started. Null for no time limit.
-     */
-    every: Duration? = 24.hours,
-    /** How many rolled files survive. 0 keeps only the file being written. */
-    keep: Int = 7,
-    /** Whether a rolled file is gzipped. Off by default: it happens on the export path. */
-    compress: Boolean = false,
-    private val clock: Clock = Clock.System,
+    maxSize: Long,
+    every: Duration?,
+    keep: Int,
+    compress: Boolean,
+    private val clock: Clock,
+    /** How the file is opened; a spec swaps it to make a reopen fail. */
+    private val openStream: (Path) -> OutputStream,
 ) : Exporter {
+    constructor(
+        path: Path,
+        /** Bytes, after which the file is rolled. 0 for no size limit. */
+        maxSize: Long = 64L * 1024 * 1024,
+        /**
+         * The period one file covers, aligned to the epoch — `24.hours` rolls at UTC midnight, not 24
+         * hours after this process started. Null for no time limit.
+         */
+        every: Duration? = 24.hours,
+        /** How many rolled files survive. 0 keeps only the file being written. */
+        keep: Int = 7,
+        /** Whether a rolled file is gzipped. Off by default: it happens on the export path. */
+        compress: Boolean = false,
+        clock: Clock = Clock.System,
+    ) : this(path, maxSize, every, keep, compress, clock, { Files.newOutputStream(it, CREATE, APPEND) })
+
     private val rotation = Rotation(path, maxSize, every, keep, compress)
     private val guard = CloseGuard()
-
-    /** How the file is opened; a spec swaps it to make a reopen fail. */
-    internal var openStream: (Path) -> OutputStream = { Files.newOutputStream(it, CREATE, APPEND) }
     private val sink = Guarded(open())
 
     override suspend fun export(
