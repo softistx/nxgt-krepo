@@ -1,5 +1,5 @@
 ---
-"stx-ktor": patch
+"stx-ktor": minor
 "stx-testing": patch
 "stx-telemetry": patch
 ---
