@@ -72,7 +72,16 @@ class JpaWorkflowStore(
             // the primary key refuses the second at flush, in the database's own words. When the row
             // is there now, that is exactly the refusal this method promises; anything else is a real
             // write failure and is not ours to translate.
-            if (jpa.find<WorkflowInstanceRow>(record.id) == null) throw e
+            val exists =
+                try {
+                    jpa.find<WorkflowInstanceRow>(record.id) != null
+                } catch (lookup: CancellationException) {
+                    throw lookup
+                } catch (lookup: Exception) {
+                    e.addSuppressed(lookup)
+                    false
+                }
+            if (!exists) throw e
             throw IllegalArgumentException("workflow instance '${record.id}' already exists", e)
         }
     }

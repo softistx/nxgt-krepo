@@ -120,7 +120,8 @@ class WorkflowWorkerTest :
                 val scope = CoroutineScope(Job() + Dispatchers.Default)
                 val worker = WorkflowWorker(engine, poll = 10.milliseconds, batch = 40, concurrency = 3)
                 val job = worker.start(scope)
-                delay(500)
+                withTimeout(10.seconds) { while (peak.get() < 3) delay(10) }
+                delay(100)
 
                 job.children.count() shouldBe 3
                 peak.get() shouldBe 3
@@ -159,6 +160,30 @@ class WorkflowWorkerTest :
                 runnableCalls.get() shouldBeLessThan 30
                 reported.get() shouldBe 1
                 store.load("ghost")!!.status shouldBe WorkflowStatus.Running
+            }
+
+            scenario("unregistered instances filling the batch do not starve a real due instance") {
+                val store = InMemoryStore()
+                val ran = AtomicInteger()
+                val flow =
+                    workflow<Ledger>("real") {
+                        step("work") {
+                            ran.incrementAndGet()
+                            context
+                        }
+                    }
+                val engine = WorkflowEngine(store) { register(flow) }
+                repeat(5) { store.create(due("ghost-$it", "nobody-registered")) }
+                store.create(due("real-1", "real"))
+
+                val scope = CoroutineScope(Job() + Dispatchers.Default)
+                val worker = WorkflowWorker(engine, poll = 10.milliseconds, batch = 5, concurrency = 2, onError = { _, _ -> })
+                worker.start(scope)
+                withTimeout(10.seconds) { while (store.load("real-1")!!.status != WorkflowStatus.Completed) delay(10) }
+                worker.close()
+                scope.cancel()
+
+                ran.get() shouldBe 1
             }
         }
     })

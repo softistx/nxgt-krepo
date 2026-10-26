@@ -85,7 +85,8 @@ class WorkflowWorker(
                     val now = Clock.System.now()
                     parked.values.removeIf { it <= now }
                     var started = 0
-                    for (id in engine.runnable(now, batch)) {
+                    // Parked and in-flight ids still sit in the store's window, so ask for enough to see past them.
+                    for (id in engine.runnable(now, batch + parked.size + inFlight.size)) {
                         if (id in inFlight || parked.containsKey(id)) continue
                         // The permit is taken here, before `launch`, so a backlog waits in the loop
                         // instead of becoming a coroutine apiece. Taken inside the child it would
@@ -96,6 +97,9 @@ class WorkflowWorker(
                         launch {
                             try {
                                 engine.resume(id)
+                                // `resume` returns quietly when another engine holds the lock, and one that
+                                // made progress ran until it blocked: either way the id waits a poll.
+                                parked[id] = Clock.System.now() + poll
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: WorkflowUnknownException) {
