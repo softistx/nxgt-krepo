@@ -38,7 +38,9 @@ apollo = "5.2.0"
 room = "2.8.5"
 work = "2.12.0"
 accompanist = "0.37.3"
-kotlinx-serialization = "1.12.0"
+# Follows the toolchain's serialization default (`./kotlin show settings -m stx-common`) and moves
+# with the toolchain, as the Ktor pin does.
+kotlinx-serialization = "1.11.0"
 material3 = "1.4.0"
 datastore = "1.3.0"
 coil = "2.7.0"
