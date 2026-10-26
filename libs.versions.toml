@@ -90,7 +90,8 @@ jakarta-persistence = "3.2.0"
 hibernate-validator = "9.1.5.Final"
 jakarta-validation = "3.1.1"
 expressly = "6.0.0"
-# Classpath scanning, for `Jpa.scan`. The version kotest already resolves, so a test run carries one.
+# Classpath scanning, for `Jpa.scan`. Kotest pulls an older classgraph too; resolution moves it up to
+# this one, so a test run carries one (stx-jpa's kotest specs run on it).
 classgraph = "6.0.0"
 # `@Language`, so the IDE injects HQL and SQL into the query strings. Compile-only on stx-jpa;
 # 26.1.0 is the current line and still owns `org.intellij.lang.annotations.Language`.
