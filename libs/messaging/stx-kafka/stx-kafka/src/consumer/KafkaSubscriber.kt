@@ -12,6 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import com.softistx.common.coroutines.Mailbox
+import com.softistx.common.lifecycle.CloseGuard
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope
@@ -94,7 +96,9 @@ class KafkaSubscriber<K, V> internal constructor(
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     /** What handlers and collectors ask of the loop. Unlimited, so asking never blocks a handler. */
-    private val mailbox = Channel<LoopMessage>(Channel.UNLIMITED)
+    private val mailbox = Mailbox<LoopMessage>()
+
+    private val closeGuard = CloseGuard()
 
     private val polling = MutableStateFlow(false)
 
@@ -108,6 +112,15 @@ class KafkaSubscriber<K, V> internal constructor(
     private val awaiting = mutableListOf<CompletableDeferred<Unit>>()
 
     private var handledSinceCommit = 0
+
+    /** Records polled and not yet handed to the buffer — touched only by the loop and its rebalance listener. */
+    private val waiting = ArrayDeque<KafkaRecord<K, V>>()
+
+    /** The buffer of the running [records] call, so a revocation can take the revoked records out of it. */
+    private var buffer: Channel<KafkaRecord<K, V>>? = null
+
+    /** What this consumer owns, as the rebalance listener last said — what a completion is checked against. */
+    private val owned = mutableSetOf<TopicPartition>()
 
     private var lastCommit = TimeSource.Monotonic.markNow()
 
@@ -173,14 +186,14 @@ class KafkaSubscriber<K, V> internal constructor(
      */
     suspend fun commitPending() {
         val committed = CompletableDeferred<Unit>()
-        mailbox.send(LoopMessage.CommitNow(committed))
+        mailbox.post(LoopMessage.CommitNow(committed))
         if (!polling.value) withContext(dispatcher) { serveCommits() }
         committed.await()
     }
 
     /** Marks one record handled and commits up to it — for a [CommitStrategy.Manual] collector. */
     suspend fun commit(record: KafkaRecord<K, V>) {
-        mailbox.send(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
+        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
         commitPending()
     }
 
@@ -191,17 +204,19 @@ class KafkaSubscriber<K, V> internal constructor(
      * in-flight `poll` throw, which is how a loop that is otherwise blocked gets told to stop. The
      * close itself is queued onto the dispatcher, where it lands behind the loop it just woke.
      */
-    override fun close() {
-        consumer.wakeup()
-        scope
-            .launch { runCatching { consumer.close() } }
-            .invokeOnCompletion { scope.cancel() }
-    }
+    override fun close() =
+        closeGuard.once {
+            consumer.wakeup()
+            scope
+                .launch { runCatching { consumer.close() } }
+                .invokeOnCompletion { scope.cancel() }
+        }
 
     // ─── The loop ─────────────────────────────────────────────────────────────
 
-    private suspend fun pollInto(buffer: SendChannel<KafkaRecord<K, V>>) {
-        val waiting = ArrayDeque<KafkaRecord<K, V>>()
+    private suspend fun pollInto(buffer: Channel<KafkaRecord<K, V>>) {
+        waiting.clear()
+        this.buffer = buffer
         polling.value = true
         consumer.subscribe(topics, RevocationCommit())
         try {
@@ -215,8 +230,9 @@ class KafkaSubscriber<K, V> internal constructor(
                 // Full buffer: stop being given records, but go on proving we are alive.
                 if (waiting.isNotEmpty()) {
                     consumer.pause(consumer.assignment())
-                } else if (consumer.paused().isNotEmpty()) {
-                    consumer.resume(consumer.paused())
+                } else {
+                    val resumable = consumer.paused() intersect consumer.assignment()
+                    if (resumable.isNotEmpty()) consumer.resume(resumable)
                 }
 
                 val due = commitDue()
@@ -237,6 +253,10 @@ class KafkaSubscriber<K, V> internal constructor(
             /* Reported stopped before the last drain, so a commit that arrives after this either
                lands in the drain below or finds polling false and serves itself. */
             polling.value = false
+            // Ends the `for (record in buffer)` of records(), so a closed subscriber ends its flow.
+            buffer.close()
+            this.buffer = null
+            waiting.clear()
             drainMailbox()
             runCatching { commitNow() }
             answer { it.complete(Unit) } // Nobody else will.
@@ -246,14 +266,18 @@ class KafkaSubscriber<K, V> internal constructor(
     /** Applies everything handlers and collectors have asked for since the last turn. */
     private fun drainMailbox() {
         while (true) {
-            when (val message = mailbox.tryReceive().getOrNull()) {
+            when (val message = mailbox.tryReceive()) {
                 null -> {
                     return
                 }
 
                 is LoopMessage.Completed -> {
-                    tracker.completed(message.partition, message.offset)
-                    handledSinceCommit++
+                    /* A record handled after its partition was revoked is not ours to commit:
+                       recording it would put the partition back in the tracker after forget. */
+                    if (message.partition in owned) {
+                        tracker.completed(message.partition, message.offset)
+                        handledSinceCommit++
+                    }
                 }
 
                 is LoopMessage.CommitNow -> {
@@ -341,7 +365,7 @@ class KafkaSubscriber<K, V> internal constructor(
      * would be a handler throttled to one record per poll timeout, and one poll away from deadlock.
      */
     private fun handled(record: KafkaRecord<K, V>) {
-        mailbox.trySend(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
+        mailbox.post(LoopMessage.Completed(TopicPartition(record.topic, record.partition), record.offset))
     }
 
     /**
@@ -354,15 +378,39 @@ class KafkaSubscriber<K, V> internal constructor(
             drainMailbox()
             runCatching { commitAndAnswer() }
             tracker.forget(partitions)
+            drop(partitions)
         }
 
-        override fun onPartitionsAssigned(partitions: Collection<TopicPartition>) = Unit
+        override fun onPartitionsAssigned(partitions: Collection<TopicPartition>) {
+            owned += partitions
+        }
 
         override fun onPartitionsLost(partitions: Collection<TopicPartition>) {
             /* Lost, not revoked: the partitions are already someone else's, and committing their
                offsets now would be claiming work this consumer no longer owns. */
             tracker.forget(partitions)
+            drop(partitions)
         }
+    }
+
+    /**
+     * Takes [partitions] out of everything not yet handled: the records waiting for room, and the
+     * ones already in the buffer, which go back to the front of [waiting] in their order.
+     */
+    private fun drop(partitions: Collection<TopicPartition>) {
+        owned -= partitions.toSet()
+        val gone = partitions.toSet()
+        fun KafkaRecord<K, V>.revoked() = TopicPartition(topic, partition) in gone
+        val kept = mutableListOf<KafkaRecord<K, V>>()
+        val queue = buffer
+        if (queue != null) {
+            while (true) {
+                val record = queue.tryReceive().getOrNull() ?: break
+                if (!record.revoked()) kept += record
+            }
+        }
+        waiting.removeAll { it.revoked() }
+        waiting.addAll(0, kept)
     }
 
     private companion object {

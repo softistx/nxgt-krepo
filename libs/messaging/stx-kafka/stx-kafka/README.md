@@ -116,8 +116,10 @@ partitions alongside each other while each keeps its own order. Handlers then fi
 each partition. Committing 8 there would mean a crash loses record 6 for good.
 
 **A rebalance is where offsets are lost.** Partitions are committed on revocation, before they are
-handed over, and forgotten afterwards. Partitions that are *lost* rather than revoked are only
-forgotten: committing them would be claiming work this consumer no longer owns.
+handed over, and forgotten afterwards; their records still waiting in the buffer are dropped, and a
+record handled after its partition was revoked is not committed. Partitions that are *lost* rather
+than revoked are only forgotten and dropped: committing them would be claiming work this consumer
+no longer owns.
 
 **The client wants exclusion, not a thread.** `KafkaConsumer` takes an owner slot on the way into
 every method and frees it on the way out, so consecutive calls from different threads are fine and

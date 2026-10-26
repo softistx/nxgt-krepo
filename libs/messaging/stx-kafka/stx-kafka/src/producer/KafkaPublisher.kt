@@ -1,5 +1,6 @@
 package com.softistx.kafka.producer
 
+import com.softistx.common.lifecycle.CloseGuard
 import com.softistx.kafka.Kafka
 import com.softistx.kafka.clientProperties
 import com.softistx.kafka.record.RecordHeaders
@@ -46,6 +47,8 @@ import kotlin.time.Instant
 class KafkaPublisher<K, V> internal constructor(
     internal val producer: Producer<K, V>,
 ) : AutoCloseable {
+    private val closeGuard = CloseGuard()
+
     /**
      * Sends one record and waits for the acknowledgement.
      *
@@ -117,7 +120,7 @@ class KafkaPublisher<K, V> internal constructor(
     /** Waits for everything already handed over to be acknowledged. */
     suspend fun flush() = withContext(Dispatchers.IO) { producer.flush() }
 
-    override fun close() = producer.close()
+    override fun close() = closeGuard.once { producer.close() }
 }
 
 /**
