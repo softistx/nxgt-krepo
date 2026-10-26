@@ -1,6 +1,7 @@
 package com.softistx.graphix.ktor
 
 import com.softistx.graphix.Graphix
+import com.softistx.graphix.GraphixOperation
 import com.softistx.graphix.GraphixRequest
 import com.softistx.graphix.http.BadGraphixHttp
 import com.softistx.graphix.http.GRAPHQL_TRANSPORT_WS
@@ -13,6 +14,7 @@ import com.softistx.graphix.http.toGraphixRequest
 import com.softistx.graphix.http.toHttp
 import com.softistx.graphix.http.toSse
 import com.softistx.graphix.isSubscription
+import com.softistx.graphix.operation
 import com.softistx.graphix.subscribe
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -100,6 +102,9 @@ private suspend fun ApplicationCall.handleGet(
             operationName = request.queryParameters["operationName"],
             variables = variables,
         ).toGraphixRequest(preferredLocale())
+    if (request.operation() == GraphixOperation.MUTATION) {
+        return respondMethodNotAllowed(json, "a mutation must be sent with POST")
+    }
     respondResult(engine, json, request, subscriptions)
 }
 
@@ -129,6 +134,20 @@ private suspend fun ApplicationCall.respondResult(
         json.encodeToString(GraphixHttpResponse.serializer(), result),
         ContentType.Application.Json,
         HttpStatusCode.OK,
+    )
+}
+
+/** A mutation over GET is a cross-site request forgery waiting to happen: refuse it, name POST. */
+private suspend fun ApplicationCall.respondMethodNotAllowed(
+    json: Json,
+    message: String,
+) {
+    response.headers.append(HttpHeaders.Allow, "POST")
+    val body = GraphixHttpResponse(errors = listOf(GraphixHttpError(message)))
+    respondText(
+        json.encodeToString(GraphixHttpResponse.serializer(), body),
+        ContentType.Application.Json,
+        HttpStatusCode.MethodNotAllowed,
     )
 }
 

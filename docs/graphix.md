@@ -893,7 +893,10 @@ own `extensions`. Anything empty is **omitted** rather than sent as `[]` or `{}`
 `extensions` are passed through to the operation untouched, where instrumentation can read them. A field error is HTTP **200** with `errors[]`. Malformed JSON, a missing
 query, or unparseable GET `variables` is HTTP **400** with `errors[]`.
 
-`GET /graphql?query=...` is for introspection and simple queries. Variables on GET are a JSON
+`GET /graphql?query=...` is for queries only. A **mutation over GET** is refused with HTTP **405**, an
+`Allow: POST` header and an `errors[]` body, and it is not executed: a GET is what a link, an image tag or a
+prefetch can send cross-site, so a state change must not ride on one. Both integrations do this. A query
+over GET, introspection included, runs as before. Variables on GET are a JSON
 object in the `variables` query parameter. `__schema` and `__type` are on by default — GraphiQL
 and Apollo Sandbox POST the standard introspection query to the same path.
 

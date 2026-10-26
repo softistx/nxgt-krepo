@@ -11,6 +11,7 @@ import com.softistx.graphix.http.SubscriptionProtocol
 import com.softistx.graphix.ktor.fixture.BoomQueries
 import com.softistx.graphix.ktor.fixture.ExpiryQueries
 import com.softistx.graphix.ktor.fixture.GreetingQueries
+import com.softistx.graphix.ktor.fixture.PingMutations
 import com.softistx.graphix.ktor.fixture.TickSubscriptions
 import com.softistx.graphix.scalar.graphQLScalar
 import com.softistx.graphix.scalar.scalar
@@ -18,6 +19,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.client.request.get
@@ -36,6 +38,56 @@ import io.ktor.websocket.readText
 
 class GraphixPluginTest :
     FeatureSpec({
+        feature("GET") {
+            scenario("a mutation over GET is 405 with Allow: POST, and does not run") {
+                testApplication {
+                    application {
+                        install(GraphQL) { schema { resolvers(GreetingQueries(), PingMutations()) } }
+                    }
+                    val response = client.get("/graphql") { url { parameters.append("query", "mutation { ping }") } }
+                    response.status shouldBe HttpStatusCode.MethodNotAllowed
+                    response.headers[HttpHeaders.Allow] shouldBe "POST"
+                    response.bodyAsText() shouldNotContain "pong"
+                }
+            }
+
+            scenario("with several operations, operationName decides whether GET is refused") {
+                testApplication {
+                    application {
+                        install(GraphQL) { schema { resolvers(GreetingQueries(), PingMutations()) } }
+                    }
+                    val document = "query A { hello } mutation B { ping }"
+                    val mutation =
+                        client.get("/graphql") {
+                            url {
+                                parameters.append("query", document)
+                                parameters.append("operationName", "B")
+                            }
+                        }
+                    mutation.status shouldBe HttpStatusCode.MethodNotAllowed
+                    val query =
+                        client.get("/graphql") {
+                            url {
+                                parameters.append("query", document)
+                                parameters.append("operationName", "A")
+                            }
+                        }
+                    query.status shouldBe HttpStatusCode.OK
+                }
+            }
+
+            scenario("a query over GET still runs") {
+                testApplication {
+                    application {
+                        install(GraphQL) { schema { resolvers(GreetingQueries(), PingMutations()) } }
+                    }
+                    val response = client.get("/graphql") { url { parameters.append("query", "{ hello }") } }
+                    response.status shouldBe HttpStatusCode.OK
+                    response.bodyAsText() shouldContain "world"
+                }
+            }
+        }
+
         feature("Accept-Language") {
             scenario("the header decides the language a coercion error comes back in") {
                 testApplication {

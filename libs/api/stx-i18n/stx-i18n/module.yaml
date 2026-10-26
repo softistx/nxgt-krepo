@@ -5,11 +5,11 @@ apply:
   - //libs/api/stx-i18n/stx-i18n.module-template.yaml
 
 dependencies:
-  # ICU's MessageFormat: named arguments, plurals and selects, which java.text's cannot do
-  - $libs.icu4j: exported
   # Guarded, for the one thing here that is not immutable after loading: ICU's MessageFormat, which
   # its own documentation calls unsynchronized. Not exported — no type from it is in this API.
   - //libs/core/stx-common
+  # ICU's MessageFormat: named arguments, plurals and selects, which java.text's cannot do
+  - $libs.icu4j: exported
 
 test-dependencies:
   - $libs.kotest.runner.junit5

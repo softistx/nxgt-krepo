@@ -88,6 +88,7 @@ class GraphixAutoConfiguration {
 
     /** POST and GET at [GraphixProperties.path]. Field errors stay HTTP 200. */
     @Bean
+    @ConditionalOnMissingBean(name = ["graphixRouter"])
     fun graphixRouter(
         graphix: Graphix,
         properties: GraphixProperties,
@@ -95,16 +96,19 @@ class GraphixAutoConfiguration {
 
     /** The Apollo Sandbox page. Absent unless `stx.graphix.sandbox=true`. */
     @Bean
+    @ConditionalOnMissingBean(name = ["graphixSandboxRouter"])
     @ConditionalOnProperty(prefix = "stx.graphix", name = ["sandbox"], havingValue = "true")
     fun graphixSandboxRouter(properties: GraphixProperties): RouterFunction<ServerResponse> =
         sandboxRouter(properties.sandboxPath, apolloSandboxPage(properties.path, properties.sandboxEndpoint))
 
     /** graphql-ws on [GraphixProperties.path]. Absent unless `stx.graphix.subscriptions=graphql-ws`. */
     @Bean
+    @ConditionalOnMissingBean(name = ["graphixWebSocketHandler"])
     @ConditionalOnProperty(prefix = "stx.graphix", name = ["subscriptions"], havingValue = "graphql-ws")
     fun graphixWebSocketHandler(graphix: Graphix): GraphixWebSocketHandler = GraphixWebSocketHandler(graphix, lenientJson)
 
     @Bean
+    @ConditionalOnMissingBean(name = ["graphixWebSocketMapping"])
     @ConditionalOnProperty(prefix = "stx.graphix", name = ["subscriptions"], havingValue = "graphql-ws")
     fun graphixWebSocketMapping(
         handler: GraphixWebSocketHandler,

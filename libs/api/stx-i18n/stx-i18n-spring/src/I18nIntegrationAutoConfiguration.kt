@@ -100,9 +100,11 @@ class I18nIntegrationAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @Conditional(BootLocaleUnset::class)
-    fun localeContextResolver(properties: I18nIntegrationProperties): LocaleContextResolver =
+    fun localeContextResolver(messages: Messages): LocaleContextResolver =
+        // From the bean, not the properties: an application's own Messages is the catalogue the
+        // resolver has to narrow to, whatever `stx.i18n.languages` says.
         AcceptHeaderLocaleContextResolver().apply {
-            supportedLocales = properties.locales()
-            defaultLocale = properties.fallbackLocale()
+            supportedLocales = messages.locales.toList()
+            defaultLocale = messages.fallback
         }
 }
