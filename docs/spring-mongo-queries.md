@@ -246,3 +246,7 @@ wrong before.
 - **Entries are written one at a time, in save order**, and `(oid, collection, version)` is a unique
   index on the configured collection, created at startup. A writer that loses the race for a
   version, in this process or another, reads the latest entry again and takes the next one.
+- **A context shutdown drains the queue** for up to five seconds; entries still queued after that are
+  dropped and the count is logged.
+- **If duplicate versions already exist, the unique index is not created** and an `error` naming the
+  collection is logged at startup. Cross-process ordering is off until the duplicates are removed.

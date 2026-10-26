@@ -14,8 +14,8 @@ import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.event.EventListener
@@ -129,7 +129,12 @@ class AuditIndexes(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
-            log.warn("stx.data.mongo.audit: could not create the audit indexes: {}", failure.message)
+            log.error(
+                "stx.data.mongo.audit: could not create the indexes on '{}' (the unique (oid, collection, version) " +
+                    "one fails while duplicate versions exist): {}",
+                store.audits,
+                failure.message,
+            )
         }
     }
 }

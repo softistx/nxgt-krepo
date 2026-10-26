@@ -89,6 +89,34 @@ class AuditAuthorTest :
             }
         }
 
+        feature("the audit indexes").config(enabled = SpringMongo.available) {
+            scenario("AuditIndexes creates the unique index on the configured collection") {
+                audited { template, store ->
+                    AuditIndexes(store).create()
+
+                    val indexes = template.indexOps(store.audits).indexInfo.collectList().awaitSingle()
+                    indexes.single { it.name == "oid_collection_version" }.isUnique shouldBe true
+                }
+            }
+        }
+
+        feature("closing the listener").config(enabled = SpringMongo.available) {
+            scenario("lets every queued save land before it returns") {
+                SpringMongo.withTemplate { template ->
+                    val store = AuditStore(template)
+                    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                    val listener = AuditListener(AuditTrail(store, JaversBuilder.javers().build()), scope)
+                    template.setEntityCallbacks(ReactiveEntityCallbacks.create(listener))
+
+                    (1..8).forEach { template.save(Order("$it", "NEW", it)).awaitSingle() }
+                    listener.close()
+                    scope.cancel()
+
+                    template.findAll(AuditEntry::class.java, store.audits).collectList().awaitSingle().size shouldBe 8
+                }
+            }
+        }
+
         feature("two rapid saves of one document").config(enabled = SpringMongo.available) {
             scenario("land on consecutive versions, in save order, with their own authors") {
                 audited { template, store ->

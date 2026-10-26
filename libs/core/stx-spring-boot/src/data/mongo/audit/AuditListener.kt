@@ -1,10 +1,15 @@
 package com.softistx.spring.data.mongo.audit
 
 import com.softistx.common.coroutines.Mailbox
+import com.softistx.common.lifecycle.CloseGuard
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import org.bson.Document
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
@@ -14,6 +19,8 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCall
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import reactor.core.publisher.Mono
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Turns Spring Data's save and delete into audit entries.
@@ -36,21 +43,25 @@ import reactor.core.publisher.Mono
  *
  * **Entries are written one at a time, in the order they were posted.** One consumer owns the
  * [Mailbox], so two rapid saves of one document are diffed against each other in save order rather
- * than racing for the same next version. A delete has no after-callback in Spring Data's reactive
+ * than racing for the same next version. Closing the listener (Spring does, at context shutdown)
+ * lets the queue drain for up to five seconds before the scope is cancelled. A delete has no after-callback in Spring Data's reactive
  * template, so it still arrives as an event and carries no author.
  */
 class AuditListener(
     private val trailOf: () -> AuditTrail,
     private val scope: CoroutineScope,
-) : ReactiveAfterSaveCallback<Any> {
+) : ReactiveAfterSaveCallback<Any>,
+    AutoCloseable {
     constructor(trail: AuditTrail, scope: CoroutineScope) : this({ trail }, scope)
 
     private val trail: AuditTrail get() = trailOf()
 
     private val log = LoggerFactory.getLogger(AuditListener::class.java)
     private val writes = Mailbox<AuditWrite>()
+    private val queued = AtomicInteger()
+    private val guard = CloseGuard()
 
-    init {
+    private val consumer: Job =
         scope.launch(CoroutineName("stx-audit")) {
             writes.consume { write ->
                 try {
@@ -59,9 +70,31 @@ class AuditListener(
                     throw cancelled
                 } catch (failure: Exception) {
                     log.error("stx.data.mongo.audit: could not record a {}", write.what, failure)
+                } finally {
+                    queued.decrementAndGet()
                 }
             }
         }
+
+    /**
+     * Stops taking writes and gives the ones already queued [DRAIN_TIMEOUT] to land.
+     *
+     * Called by Spring when the context closes, before the scope is cancelled (the listener depends
+     * on it). What is still queued when the time is up is lost, and the count is logged.
+     */
+    override fun close() =
+        guard.once {
+            writes.close()
+            val drained = runBlocking { withTimeoutOrNull(DRAIN_TIMEOUT) { consumer.join() } } != null
+            if (!drained) {
+                log.warn("stx.data.mongo.audit: {} audit write(s) still queued after {}, dropped", queued.get(), DRAIN_TIMEOUT)
+                consumer.cancel()
+            }
+        }
+
+    private fun post(write: AuditWrite) {
+        queued.incrementAndGet()
+        if (!writes.post(write)) queued.decrementAndGet()
     }
 
     override fun onAfterSave(
@@ -74,7 +107,7 @@ class AuditListener(
         // The author is read here, in the save's own chain, because this is the only place the
         // security context is reachable; it never fails the save it describes.
         return authorOfSave()
-            .doOnNext { author -> writes.post(AuditWrite("save") { trail.commit(entity, collection, author) }) }
+            .doOnNext { author -> post(AuditWrite("save") { trail.commit(entity, collection, author) }) }
             .thenReturn(entity)
     }
 
@@ -104,9 +137,11 @@ class AuditListener(
                 .orEmpty()
         if (oid.isBlank()) return
 
-        writes.post(AuditWrite("delete") { trail.terminate(oid, event.collectionName.orEmpty(), null) })
+        post(AuditWrite("delete") { trail.terminate(oid, event.collectionName.orEmpty(), null) })
     }
 }
+
+private val DRAIN_TIMEOUT = 5.seconds
 
 /** One queued audit write, and what to call it in the log. */
 private class AuditWrite(

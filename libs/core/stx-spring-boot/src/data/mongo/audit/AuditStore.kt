@@ -8,8 +8,8 @@ import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate
 import org.springframework.data.mongodb.core.exists
-import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver
 import org.springframework.data.mongodb.core.findOne
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver
 
 /**
  * Where audit entries are read and written.
@@ -29,7 +29,7 @@ import org.springframework.data.mongodb.core.findOne
  */
 class AuditStore(
     private val template: ReactiveMongoTemplate,
-    private val audits: String = AuditEntry.COLLECTION,
+    val audits: String = AuditEntry.COLLECTION,
 ) {
     /** The most recent entry for a document, or null when it has no history yet. */
     suspend fun latest(
