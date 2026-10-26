@@ -961,8 +961,10 @@ settings:
 ```
 
 `./kotlin show settings -m <module>` says which one is in force: `# module.yaml` when it is pinned,
-`# default` when the toolchain is choosing. Sixteen modules enable it — `stx-ktor`, every `*-ktor`
-integration beside its library, and the four Ktor examples — and every one of them carries the pin.
+`# default` when the toolchain is choosing. Eighteen modules enable it — `stx-ktor`, every `*-ktor`
+integration beside its library, the five Ktor examples and `server/oauth` — and every one of them carries the pin.
+
+**`kotlinx-serialization` follows the toolchain the same way.** `settings.kotlin.serialization: json` makes the toolchain add `kotlinx-serialization-core` at its own default (1.11.0 on 0.13.0), so the catalog's `kotlinx-serialization` (the `-json` artifact) stays at that version: a higher one would put `json-jvm:1.12.0` next to `core-jvm:1.11.0` in the POMs, and Maven's nearest-wins rule would keep core 1.11 under json 1.12. Check `./kotlin show settings -m stx-common` and `./kotlin show dependencies -m stx-common` on every toolchain bump.
 
 The catalog's `kotlin = "2.4.20"` entry is for consumers that need an explicit Kotlin version; the toolchain supplies its own compiler and stdlib (2.4.20 with CLI 0.13.0), so that entry does not control what this repo compiles with — nor what it publishes: every POM declares `kotlin-stdlib` at the toolchain's version, so a toolchain bump that moves the compiler moves that line in every family's next release. Spring Boot is the same — `springBoot: enabled` without a `version` imports the toolchain's default `spring-boot-dependencies` BOM into the POM (4.1.1 on 0.13.0, 4.1.0 on 0.12.2).
 
