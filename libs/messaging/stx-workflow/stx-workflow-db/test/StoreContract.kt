@@ -7,8 +7,11 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.scopes.FeatureSpecRootScope
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.JsonObject
 import kotlin.time.Clock
@@ -61,6 +64,19 @@ internal fun FeatureSpecRootScope.storeContract(
             store(30.seconds) { store ->
                 store.create(record("a"))
                 shouldThrow<IllegalArgumentException> { store.create(record("a")) }
+            }
+        }
+
+        scenario("of several creates of one id racing, exactly one wins and the rest are refused the same way") {
+            store(30.seconds) { store ->
+                val outcomes =
+                    coroutineScope {
+                        (1..8).map { async(Dispatchers.Default) { runCatching { store.create(record("raced")) } } }.awaitAll()
+                    }
+
+                outcomes.count { it.isSuccess } shouldBe 1
+                outcomes.mapNotNull { it.exceptionOrNull() }.forEach { it.shouldBeInstanceOf<IllegalArgumentException>() }
+                store.load("raced")!!.version shouldBe 0L
             }
         }
 
