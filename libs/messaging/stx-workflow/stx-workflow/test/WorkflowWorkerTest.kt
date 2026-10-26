@@ -25,6 +25,14 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
+private fun due(
+    id: String,
+    workflow: String,
+): WorkflowRecord {
+    val now = Clock.System.now()
+    return WorkflowRecord(id, workflow, WorkflowStatus.Running, JsonObject(emptyMap()), createdAt = now, updatedAt = now)
+}
+
 /**
  * The worker, against the store in this module.
  *
@@ -106,10 +114,7 @@ class WorkflowWorkerTest :
                     }
                 val engine = WorkflowEngine(store) { register(flow) }
                 repeat(40) { index ->
-                    val now = Clock.System.now()
-                    store.create(
-                        WorkflowRecord("w-$index", "backlog", WorkflowStatus.Running, JsonObject(emptyMap()), createdAt = now, updatedAt = now),
-                    )
+                    store.create(due("w-$index", "backlog"))
                 }
 
                 val scope = CoroutineScope(Job() + Dispatchers.Default)
@@ -139,10 +144,7 @@ class WorkflowWorkerTest :
                             return inner.runnable(now, limit)
                         }
                     }
-                val now = Clock.System.now()
-                store.create(
-                    WorkflowRecord("ghost", "nobody-registered", WorkflowStatus.Running, JsonObject(emptyMap()), createdAt = now, updatedAt = now),
-                )
+                store.create(due("ghost", "nobody-registered"))
                 val engine = WorkflowEngine(store) { }
                 val reported = AtomicInteger()
 
