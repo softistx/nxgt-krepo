@@ -1,6 +1,7 @@
 package com.softistx.workflow
 
 import com.softistx.common.lifecycle.CloseGuard
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -8,11 +9,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.yield
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 /**
  * Picks up instances nobody is advancing.
@@ -46,6 +49,21 @@ class WorkflowWorker(
     private val batch: Int = 32,
     /** How many instances this worker advances at once. */
     private val concurrency: Int = 8,
+    /**
+     * How long an id whose definition is not registered here is left alone.
+     *
+     * Another deployment may own it, so it is neither failed nor retried every poll: the store keeps
+     * offering it, and without this the loop would ask for it again as fast as the store answers.
+     */
+    private val unknownBackoff: Duration = 1.minutes,
+    /**
+     * Told about every `resume` that threw, with the instance's id. The default writes a warning
+     * to the JDK's `System.Logger`; nothing is swallowed. An id that failed is left alone for one
+     * [poll] before it is offered again.
+     */
+    private val onError: (id: String, cause: Throwable) -> Unit = { id, cause ->
+        System.getLogger(WorkflowWorker::class.java.name).log(System.Logger.Level.WARNING, "resuming workflow '$id' failed", cause)
+    },
 ) : AutoCloseable {
     private val guard = CloseGuard()
     private var job: Job? = null
@@ -59,18 +77,55 @@ class WorkflowWorker(
     fun start(scope: CoroutineScope): Job {
         check(job == null) { "this worker has already been started" }
         val limit = Semaphore(concurrency)
+        val inFlight = ConcurrentHashMap.newKeySet<String>()
+        val parked = ConcurrentHashMap<String, Instant>()
         return scope
             .launch {
                 while (currentCoroutineContext().isActive) {
-                    val ids = engine.runnable(Clock.System.now(), batch)
-                    // The permit is taken inside the coroutine, not around starting it — around it,
-                    // it would be released the instant `launch` returned and would bound nothing.
-                    ids.forEach { id -> launch { limit.withPermit { runCatching { engine.resume(id) } } } }
+                    val now = Clock.System.now()
+                    parked.values.removeIf { it <= now }
+                    var started = 0
+                    for (id in engine.runnable(now, batch)) {
+                        if (id in inFlight || parked.containsKey(id)) continue
+                        // The permit is taken here, before `launch`, so a backlog waits in the loop
+                        // instead of becoming a coroutine apiece. Taken inside the child it would
+                        // still bound the work but not the number of coroutines parked waiting.
+                        limit.acquire()
+                        inFlight.add(id)
+                        started++
+                        launch {
+                            try {
+                                engine.resume(id)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: WorkflowUnknownException) {
+                                parked[id] = Clock.System.now() + unknownBackoff
+                                report(id, e)
+                            } catch (e: Throwable) {
+                                parked[id] = Clock.System.now() + poll
+                                report(id, e)
+                            } finally {
+                                inFlight.remove(id)
+                                limit.release()
+                            }
+                        }
+                    }
                     // Suspends either way. `delay(ZERO)` returns without suspending, so the busy
-                    // path needs a yield of its own rather than a duration of zero.
-                    if (ids.isEmpty()) delay(poll) else yield()
+                    // path needs a yield of its own rather than a duration of zero. When no id in
+                    // the batch was started (all in flight, parked, or none due) nothing made
+                    // progress, and the next look waits a poll.
+                    if (started == 0) delay(poll) else yield()
                 }
             }.also { job = it }
+    }
+
+    private fun report(
+        id: String,
+        cause: Throwable,
+    ) {
+        // A hook that throws must not take the child down with it and leak nothing: the finally
+        // above still runs, and the failure is the hook's own to own.
+        runCatching { onError(id, cause) }
     }
 
     /** Stops claiming. It does not close the engine or the connection under it — it opened neither. */

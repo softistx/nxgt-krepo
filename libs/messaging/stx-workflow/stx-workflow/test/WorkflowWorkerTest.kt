@@ -5,17 +5,25 @@ import com.softistx.workflow.dsl.step
 import com.softistx.workflow.fixture.Calls
 import com.softistx.workflow.fixture.Ledger
 import com.softistx.workflow.store.InMemoryStore
+import com.softistx.workflow.store.WorkflowRecord
+import com.softistx.workflow.store.WorkflowStore
 import com.softistx.workflow.workflow
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonObject
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 /**
  * The worker, against the store in this module.
@@ -78,6 +86,77 @@ class WorkflowWorkerTest :
 
                 store.load(id)!!.status shouldBe WorkflowStatus.Sleeping
                 scope.cancel()
+            }
+
+            scenario("a backlog larger than the concurrency never has more coroutines or handlers live than the concurrency") {
+                val store = InMemoryStore()
+                val running = AtomicInteger()
+                val peak = AtomicInteger()
+                val done = AtomicInteger()
+                val gate = CompletableDeferred<Unit>()
+                val flow =
+                    workflow<Ledger>("backlog") {
+                        step("work") {
+                            peak.accumulateAndGet(running.incrementAndGet(), ::maxOf)
+                            gate.await()
+                            running.decrementAndGet()
+                            done.incrementAndGet()
+                            context
+                        }
+                    }
+                val engine = WorkflowEngine(store) { register(flow) }
+                repeat(40) { index ->
+                    val now = Clock.System.now()
+                    store.create(
+                        WorkflowRecord("w-$index", "backlog", WorkflowStatus.Running, JsonObject(emptyMap()), createdAt = now, updatedAt = now),
+                    )
+                }
+
+                val scope = CoroutineScope(Job() + Dispatchers.Default)
+                val worker = WorkflowWorker(engine, poll = 10.milliseconds, batch = 40, concurrency = 3)
+                val job = worker.start(scope)
+                delay(500)
+
+                job.children.count() shouldBe 3
+                peak.get() shouldBe 3
+                gate.complete(Unit)
+                withTimeout(10.seconds) { while (done.get() < 40) delay(20) }
+                peak.get() shouldBe 3
+                worker.close()
+                scope.cancel()
+            }
+
+            scenario("an instance of a workflow nobody registered is left alone, not failed and not polled in a loop") {
+                val inner = InMemoryStore()
+                val runnableCalls = AtomicInteger()
+                val store =
+                    object : WorkflowStore by inner {
+                        override suspend fun runnable(
+                            now: Instant,
+                            limit: Int,
+                        ): List<String> {
+                            runnableCalls.incrementAndGet()
+                            return inner.runnable(now, limit)
+                        }
+                    }
+                val now = Clock.System.now()
+                store.create(
+                    WorkflowRecord("ghost", "nobody-registered", WorkflowStatus.Running, JsonObject(emptyMap()), createdAt = now, updatedAt = now),
+                )
+                val engine = WorkflowEngine(store) { }
+                val reported = AtomicInteger()
+
+                val scope = CoroutineScope(Job() + Dispatchers.Default)
+                val worker = WorkflowWorker(engine, poll = 50.milliseconds, onError = { _, _ -> reported.incrementAndGet() })
+                worker.start(scope)
+                delay(600)
+                worker.close()
+                scope.cancel()
+
+                // One try, then the id is parked: the loop only polls, about every 50 ms.
+                runnableCalls.get() shouldBeLessThan 30
+                reported.get() shouldBe 1
+                store.load("ghost")!!.status shouldBe WorkflowStatus.Running
             }
         }
     })
