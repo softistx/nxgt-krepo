@@ -51,6 +51,31 @@ class GraphixPluginTest :
                 }
             }
 
+            scenario("with several operations, operationName decides whether GET is refused") {
+                testApplication {
+                    application {
+                        install(GraphQL) { schema { resolvers(GreetingQueries(), PingMutations()) } }
+                    }
+                    val document = "query A { hello } mutation B { ping }"
+                    val mutation =
+                        client.get("/graphql") {
+                            url {
+                                parameters.append("query", document)
+                                parameters.append("operationName", "B")
+                            }
+                        }
+                    mutation.status shouldBe HttpStatusCode.MethodNotAllowed
+                    val query =
+                        client.get("/graphql") {
+                            url {
+                                parameters.append("query", document)
+                                parameters.append("operationName", "A")
+                            }
+                        }
+                    query.status shouldBe HttpStatusCode.OK
+                }
+            }
+
             scenario("a query over GET still runs") {
                 testApplication {
                     application {

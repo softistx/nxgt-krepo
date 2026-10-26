@@ -42,6 +42,22 @@ class GraphixHttpTest :
                     .value { it shouldNotContain "pong" }
             }
 
+            scenario("with several operations, operationName decides whether GET is refused") {
+                val document = "query A { hello } mutation B { ping }"
+                client(GreetingQueries(), PingMutations())
+                    .get()
+                    .uri("/graphql?query={query}&operationName=B", document)
+                    .exchange()
+                    .expectStatus()
+                    .isEqualTo(405)
+                client(GreetingQueries(), PingMutations())
+                    .get()
+                    .uri("/graphql?query={query}&operationName=A", document)
+                    .exchange()
+                    .expectStatus()
+                    .isOk
+            }
+
             scenario("a query over GET still runs") {
                 client(GreetingQueries(), PingMutations())
                     .get()

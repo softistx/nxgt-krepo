@@ -6,6 +6,7 @@ import com.softistx.graphix.GraphixRequest
 import com.softistx.graphix.isSubscription
 import com.softistx.graphix.subscribe
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -137,12 +138,15 @@ class GraphqlWsSession(
             }
             // Read under the lock, with `init`, so the launched coroutine cannot race the ack.
             val operationContext = context + (GraphqlWsInit::class to init)
-            val job = scope.launch { run(id, request, operationContext) }
+            // Lazy, so the entry is in the map before the operation can finish and remove it.
+            val job = scope.launch(start = CoroutineStart.LAZY) { run(id, request, operationContext) }
             active[id] = job
             // A `shutdown()` that ran between the check above and the put has already drained.
             if (closed) {
                 active.remove(id, job)
                 job.cancel()
+            } else {
+                job.start()
             }
         }
     }
