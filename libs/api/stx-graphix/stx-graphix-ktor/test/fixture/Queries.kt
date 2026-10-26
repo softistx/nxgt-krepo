@@ -1,6 +1,7 @@
 package com.softistx.graphix.ktor.fixture
 
 import com.softistx.graphix.schema.Argument
+import com.softistx.graphix.schema.MutationMapping
 import com.softistx.graphix.schema.QueryMapping
 import com.softistx.graphix.schema.SubscriptionMapping
 import io.ktor.server.application.ApplicationCall
@@ -11,6 +12,11 @@ import kotlinx.datetime.LocalDate
 class GreetingQueries {
     @QueryMapping
     fun hello(): String = "world"
+}
+
+class PingMutations {
+    @MutationMapping
+    fun ping(): String = "pong"
 }
 
 class BoomQueries {

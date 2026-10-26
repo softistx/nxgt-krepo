@@ -42,7 +42,11 @@ import org.springframework.core.annotation.Order
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.web.reactive.HandlerMapping
 import org.springframework.web.reactive.function.server.RouterFunction
+import org.springframework.web.reactive.function.server.RouterFunctions
+import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping
 import java.util.concurrent.CompletableFuture
 
 class GraphixAutoConfigurationTest :
@@ -186,6 +190,21 @@ class GraphixAutoConfigurationTest :
                     .withUserConfiguration(OwnEngineConfiguration::class.java)
                     .run { context ->
                         context.getBeansOfType(Graphix::class.java).keys shouldBe setOf("mine")
+                    }
+            }
+        }
+
+        feature("an application's own bean of the same name") {
+            scenario("replaces the router, the sandbox and the graphql-ws pair rather than clashing") {
+                runner
+                    .withPropertyValues("stx.graphix.enabled=true", "stx.graphix.sandbox=true", "stx.graphix.subscriptions=graphql-ws")
+                    .withUserConfiguration(WiringConfiguration::class.java, OwnNamedBeansConfiguration::class.java)
+                    .run { context ->
+                        context.startupFailure shouldBe null
+                        context.getBean("graphixRouter") shouldBe OwnNamedBeansConfiguration.router
+                        context.getBean("graphixSandboxRouter") shouldBe OwnNamedBeansConfiguration.router
+                        context.getBean("graphixWebSocketHandler") shouldBe OwnNamedBeansConfiguration.handlerMarker
+                        context.getBean("graphixWebSocketMapping") shouldBe OwnNamedBeansConfiguration.mapping
                     }
             }
         }
@@ -342,4 +361,25 @@ private class WiringConfiguration {
         GraphixCustomizer {
             scalar(graphQLScalar("Weight") { serialize { value -> value.toString() } })
         }
+}
+
+@Configuration(proxyBeanMethods = false)
+class OwnNamedBeansConfiguration {
+    companion object {
+        val router: RouterFunction<ServerResponse> = RouterFunctions.route().GET("/own") { ServerResponse.ok().build() }.build()
+        val handlerMarker = Any()
+        val mapping = SimpleUrlHandlerMapping()
+    }
+
+    @Bean
+    fun graphixRouter(): RouterFunction<ServerResponse> = router
+
+    @Bean
+    fun graphixSandboxRouter(): RouterFunction<ServerResponse> = router
+
+    @Bean
+    fun graphixWebSocketHandler(): Any = handlerMarker
+
+    @Bean
+    fun graphixWebSocketMapping(): HandlerMapping = mapping
 }

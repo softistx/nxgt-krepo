@@ -45,6 +45,18 @@ class I18nWiringTest :
                     resolver.supportedLocales shouldBe listOf("en", "fr", "de").map(Locale::forLanguageTag)
                 }
         }
+
+        "a Messages bean of the application's own decides the resolver's locales, not the properties" {
+            val own = Messages.of(Locale.GERMAN to mapOf("k" to "v"), Locale.ITALIAN to mapOf("k" to "v"), fallback = Locale.ITALIAN)
+            runner()
+                .withPropertyValues("stx.i18n.enabled=true", "stx.i18n.languages=en,fr", "stx.i18n.fallback=en")
+                .withBean(Messages::class.java, { own })
+                .run { context ->
+                    val resolver = context.getBean(AcceptHeaderLocaleContextResolver::class.java)
+                    resolver.supportedLocales.toSet() shouldBe own.locales
+                    resolver.defaultLocale shouldBe Locale.ITALIAN
+                }
+        }
     })
 
 private fun runner() =

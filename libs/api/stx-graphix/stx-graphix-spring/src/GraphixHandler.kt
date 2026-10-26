@@ -1,6 +1,7 @@
 package com.softistx.graphix.spring
 
 import com.softistx.graphix.Graphix
+import com.softistx.graphix.GraphixOperation
 import com.softistx.graphix.GraphixRequest
 import com.softistx.graphix.http.BadGraphixHttp
 import com.softistx.graphix.http.GraphixHttpError
@@ -11,6 +12,7 @@ import com.softistx.graphix.http.acceptedLocale
 import com.softistx.graphix.http.toGraphixRequest
 import com.softistx.graphix.http.toHttp
 import com.softistx.graphix.isSubscription
+import com.softistx.graphix.operation
 import com.softistx.graphix.subscribe
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.reactor.mono
@@ -18,6 +20,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.server.*
 import org.springframework.web.server.ServerWebExchange
@@ -82,6 +85,19 @@ internal class GraphixHandler(
                 operationName = request.queryParam("operationName").orElse(null),
                 variables = variables,
             ).toGraphixRequest(request.preferredLocale())
+        if (graphixRequest.operation() == GraphixOperation.MUTATION) {
+            // A mutation over GET is a cross-site request forgery waiting to happen: refuse it, name POST.
+            return ServerResponse
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .header(HttpHeaders.ALLOW, "POST")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValueAndAwait(
+                    json.encodeToString(
+                        GraphixHttpResponse.serializer(),
+                        GraphixHttpResponse(errors = listOf(GraphixHttpError("a mutation must be sent with POST"))),
+                    ),
+                )
+        }
         return respond(graphixRequest, request.context())
     }
 

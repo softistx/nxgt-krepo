@@ -40,7 +40,7 @@ install(I18n) {
 `queryParameter` is **off by default, deliberately**. `?lang=fr` is genuinely useful for a link
 somebody sends a colleague, and it is also a second thing the same URL can mean, which every cache
 in front of the service has to be told about. That is a decision to take, not a default to inherit.
-When it is on it beats the header, being the more deliberate of the two.
+When it is on it beats the header, being the more deliberate of the two; a blank value counts as absent.
 
 ## Why the plugin is not in `stx-i18n`
 

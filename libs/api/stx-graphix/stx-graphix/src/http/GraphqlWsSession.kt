@@ -18,6 +18,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.coroutineContext
 import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -51,9 +53,12 @@ class GraphqlWsSession(
     private val mutex = Mutex()
     private val sendMutex = Mutex()
     private var acked = false
+    @Volatile
     private var closed = false
     private var init: GraphqlWsInit = GraphqlWsInit(null)
-    private val active = mutableMapOf<String, Job>()
+    // Concurrent: `shutdown()` is not suspending, so it cannot take the mutex (the HTTP layer calls it
+    // from a close handler, and `shut` calls it already holding the lock).
+    private val active = ConcurrentHashMap<String, Job>()
     private val initJob: Job? =
         initTimeout.takeIf { it.isPositive() && it.isFinite() }?.let { timeout ->
             scope.launch {
@@ -85,9 +90,10 @@ class GraphqlWsSession(
 
     /** Cancels every operation. The HTTP layer calls this when the socket goes away. */
     fun shutdown() {
+        closed = true
         initJob?.cancel()
-        active.values.forEach { it.cancel() }
-        active.clear()
+        // Remove-then-cancel per key, so an entry added meanwhile is either drained here or sees `closed`.
+        active.keys.toList().forEach { active.remove(it)?.cancel() }
     }
 
     private suspend fun init(payload: JsonElement?) {
@@ -125,13 +131,19 @@ class GraphqlWsSession(
                 shut(GraphqlWsClose.UNAUTHORIZED, "Unauthorized")
                 return
             }
-            if (id in active) {
+            if (active.containsKey(id)) {
                 shut(GraphqlWsClose.SUBSCRIBER_EXISTS, "Subscriber for $id already exists")
                 return
             }
             // Read under the lock, with `init`, so the launched coroutine cannot race the ack.
             val operationContext = context + (GraphqlWsInit::class to init)
-            active[id] = scope.launch { run(id, request, operationContext) }
+            val job = scope.launch { run(id, request, operationContext) }
+            active[id] = job
+            // A `shutdown()` that ran between the check above and the put has already drained.
+            if (closed) {
+                active.remove(id, job)
+                job.cancel()
+            }
         }
     }
 
@@ -154,7 +166,9 @@ class GraphqlWsSession(
         } catch (failure: Exception) {
             emit("error", id, errorPayload(failure.message ?: failure::class.simpleName ?: "error"))
         } finally {
-            mutex.withLock { active.remove(id) }
+            // Only this operation's own entry: a `complete` followed by a new `subscribe` on the same
+            // id has already put a different job under it.
+            coroutineContext[Job]?.let { active.remove(id, it) }
         }
     }
 

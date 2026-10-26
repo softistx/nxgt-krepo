@@ -84,6 +84,22 @@ class GraphqlWsTest :
                 }
             }
 
+            scenario("completing an id and resubscribing it keeps the new operation alive") {
+                session { ws, out, closed ->
+                    ws.incoming("""{"type":"connection_init"}""")
+                    out.receive()
+                    ws.incoming("""{"id":"1","type":"subscribe","payload":{"query":"subscription { hang }"}}""")
+                    // Let the first operation start, so it has a cleanup to run once cancelled.
+                    delay(50)
+                    ws.incoming("""{"id":"1","type":"complete"}""")
+                    ws.incoming("""{"id":"1","type":"subscribe","payload":{"query":"subscription { hang }"}}""")
+                    // Let the cancelled first job run its cleanup; it must not drop the second one.
+                    delay(100)
+                    ws.incoming("""{"id":"1","type":"subscribe","payload":{"query":"subscription { hang }"}}""")
+                    closed.get().shouldNotBeNull().first shouldBe GraphqlWsClose.SUBSCRIBER_EXISTS
+                }
+            }
+
             scenario("init timeout closes when the client never acks") {
                 session(initTimeout = 20.milliseconds) { _, _, closed ->
                     delay(80)

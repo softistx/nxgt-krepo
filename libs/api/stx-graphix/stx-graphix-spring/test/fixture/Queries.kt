@@ -1,5 +1,6 @@
 package com.softistx.graphix.spring.fixture
 
+import com.softistx.graphix.schema.MutationMapping
 import com.softistx.graphix.schema.QueryMapping
 import com.softistx.graphix.schema.SubscriptionMapping
 import com.softistx.graphix.spring.GraphQLController
@@ -11,6 +12,12 @@ import org.springframework.web.server.ServerWebExchange
 class GreetingQueries {
     @QueryMapping
     fun hello(): String = "world"
+}
+
+@GraphQLController
+class PingMutations {
+    @MutationMapping
+    fun ping(): String = "pong"
 }
 
 @GraphQLController

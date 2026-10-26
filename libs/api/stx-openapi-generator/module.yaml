@@ -6,7 +6,7 @@ apply:
 
 dependencies:
   - $libs.swagger.parser
-  # FileSpec appears in ClientEmitter's signature, so KotlinPoet is part of this
+  # FileSpec appears in SourceEmitter's signature, so KotlinPoet is part of this
   # module's public API and must be visible to modules that compile against it
   - $libs.kotlinpoet: exported
 

@@ -44,10 +44,9 @@ import kotlin.reflect.KClass
  * The application **names** its roots. There is no classpath scan for resolver classes — Spring
  * may collect `@GraphQLController` beans; that is `stx-graphix-spring`. Schema documents under
  * `classpath:graphql/` are scanned, Spring GraphQL's default. A data fetcher is not part of this
- * API: each `@QueryMapping` / `@MutationMapping` / `@SubscriptionMapping` / `@SchemaMapping` is a function on the instance
- * passed to [GraphixBuilder.query], [GraphixBuilder.mutation], [GraphixBuilder.subscription]
- * or [GraphixBuilder.type], so a Spring `OrderService` lives on that instance's constructor,
- * not in [execute]'s context map.
+ * API: each `@QueryMapping` / `@MutationMapping` / `@SubscriptionMapping` / `@SchemaMapping` is a
+ * function on an instance passed to [GraphixBuilder.resolvers], so a Spring `OrderService` lives on
+ * that instance's constructor, not in [execute]'s context map.
  *
  * ```kotlin
  * val graphix = Graphix {
@@ -390,7 +389,7 @@ class GraphixBuilder internal constructor(
  * Builds a [Graphix] from named roots. [json] is how arguments and `@Serializable` types are
  * read; the default is `stx-common`'s lenient `Json`.
  *
- * [GraphixBuilder.subscription] and [GraphixBuilder.type] are optional. GraphQL still
+ * [GraphixBuilder.resolvers] takes every root and type object in one call. GraphQL still
  * requires a query root.
  */
 fun Graphix(

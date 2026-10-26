@@ -61,7 +61,7 @@ class Loader<K : Any, V : Any> internal constructor(
 
 /**
  * Declares a DataLoader. [name] defaults to the property name when the instance is registered
- * with [GraphixBuilder.type] / [GraphixBuilder.query].
+ * with [GraphixBuilder.resolvers].
  *
  * [batch] receives the keys of this level and returns `Map<K, V>`. Missing keys become null.
  * The two-argument form also sees this field's [DataFetchingEnvironment] (`graphQlContext`,
