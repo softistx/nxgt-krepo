@@ -6,9 +6,9 @@ import com.softistx.redis.lock.RedisLock
 import com.softistx.workflow.WorkflowStatus
 import com.softistx.workflow.store.WorkflowRecord
 import com.softistx.workflow.store.WorkflowStore
-import io.lettuce.core.Limit
 import io.lettuce.core.Range
 import io.lettuce.core.ScriptOutputType
+import io.lettuce.core.ZRange
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -109,19 +109,18 @@ class RedisWorkflowStore(
     ): List<String> {
         if (limit <= 0) return emptyList()
         return redis.commands
-            .zrangebyscore(
+            .zrange(
                 redis.runnableKey(),
-                Range.create(0, now.toEpochMilliseconds()),
-                Limit.create(0, limit.toLong()),
+                ZRange.byScore(Range.create(0, now.toEpochMilliseconds())).limit(0, limit.toLong()),
             ).toList()
     }
 
     /**
      * A page of the instances in [status], newest first.
      *
-     * `ZREVRANGEBYSCORE` gives the ids in one round trip; the records are then read one hash at a
-     * time, because a page is tens of instances and a pipeline for that is machinery without a
-     * reason.
+     * `ZRANGE … BYSCORE REV` (Redis 6.2+) gives the ids in one round trip; the records are then
+     * read one hash at a time, because a page is tens of instances and a pipeline for that is
+     * machinery without a reason.
      *
      * **It prunes as it reads.** A terminal instance's hash expires under the retention TTL, and
      * nothing expires an entry in a sorted set — so an id whose hash is gone is an entry that
@@ -137,7 +136,7 @@ class RedisWorkflowStore(
         val index = redis.statusPrefix() + status.name
         val ids =
             redis.commands
-                .zrevrangebyscore(index, Range.unbounded<Long>(), Limit.create(offset.toLong(), limit.toLong()))
+                .zrange(index, ZRange.byScore(Range.unbounded<Long>()).rev().limit(offset.toLong(), limit.toLong()))
                 .toList()
         return ids.mapNotNull { id ->
             load(id) ?: null.also { redis.commands.zrem(index, id) }
