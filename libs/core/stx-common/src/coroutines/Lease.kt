@@ -1,5 +1,6 @@
 package com.softistx.common.coroutines
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -31,6 +32,8 @@ import kotlin.time.Duration
  * - **It renews while the work runs**, a third of [duration] at a time, because the lease says
  *   *this is being worked on right now*, not *this code is short*. That is what separates it from a
  *   fixed expiry, which has to be guessed against the slowest run and is wrong either way.
+ *   A renewal that **throws** is retried on the next tick rather than cancelling the block; one that
+ *   answers false means the lease was lost, and the watchdog stops (the block is not interrupted).
  * - **[release] runs even when the coroutine is cancelled.** A cancelled coroutine cannot make a
  *   suspending call, and a scope dying mid-step is exactly what a crash looks like — without
  *   [NonCancellable] the release would throw out of the `finally` and leave the id held until the
@@ -62,7 +65,18 @@ class Lease(
                     launch {
                         while (isActive) {
                             delay(duration / 3)
-                            if (!renew(id)) break
+                            // A renewal that throws (a dropped connection) is one missed attempt, not the end of
+                            // the work: the next tick tries again, and the lease only lapses if they all fail.
+                            // Cancellation is the exception to the exception, and goes through.
+                            val renewed =
+                                try {
+                                    renew(id)
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (_: Exception) {
+                                    true
+                                }
+                            if (!renewed) break
                         }
                     }
                 try {

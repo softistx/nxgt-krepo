@@ -1,5 +1,6 @@
 package com.softistx.redis.cache
 
+import kotlin.time.Duration.Companion.seconds
 import com.softistx.redis.RedisTestServer
 import com.softistx.redis.codec.ValueCodec
 import io.kotest.core.spec.style.FeatureSpec
@@ -45,6 +46,19 @@ class RedisCacheTest :
                     sessions.getAll(listOf("s1", "missing", "s2")) shouldBe
                         mapOf("s1" to Session("ada"), "s2" to Session("grace"))
                     sessions.getAll(emptyList()) shouldBe emptyMap()
+                }
+            }
+        }
+
+        feature("putAll").config(enabled = RedisTestServer.available) {
+            scenario("carries the ttl on every entry, and an empty map is nothing") {
+                RedisTestServer.withRedis { redis ->
+                    val sessions = redis.cache<Session>("sessions")
+                    sessions.putAll(emptyMap())
+                    sessions.putAll(mapOf("a" to Session("ada"), "b" to Session("grace")), ttl = 5.seconds)
+
+                    sessions.get("b") shouldBe Session("grace")
+                    (sessions.expiresIn("a")!! <= 5.seconds) shouldBe true
                 }
             }
         }
