@@ -14,7 +14,7 @@ What exists:
 | `libs.versions.toml` | Project catalog: every dependency the modules share |
 | `./kotlin`, `kotlin.bat` | Toolchain wrappers pinning the CLI version |
 | `libs/api/stx-openapi-generator` | Reads an OpenAPI spec, emits models and a typed client with KotlinPoet |
-| `libs/core/stx-common` | What more than one module needs and nothing else. Two concurrency packages, split by whether the caller can suspend: `coroutines/` has `CoroutineSafeMap`, `KeyedMutex` and `Mailbox`; `concurrent/` has `Memo`, `Guarded`, the `ConcurrentMap` extensions and the `BlockingQueue` bridge, for the Hibernate binders and SLF4J initialisers that cannot. Plus `CloseGuard`, the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
+| `libs/core/stx-common` | What more than one module needs and nothing else. Two concurrency packages, split by whether the caller can suspend: `coroutines/` has `CoroutineSafeMap`, `KeyedMutex`, `Lease` and `Mailbox`; `concurrent/` has `Memo`, `Guarded`, the `ConcurrentMap` extensions and the `BlockingQueue` bridge, for the Hibernate binders and SLF4J initialisers that cannot. Plus `CloseGuard`, `http/CorsPolicy` (the one CORS policy both web seams build from), the keyset-pagination half both stores share, and the one lenient `Json` the storage and messaging libraries read through |
 | `libs/messaging/stx-amqp` | AMQP over the RabbitMQ client: topology in one block, publishes that wait for the confirm, deliveries as a `Flow`, and a delay-queue retry path |
 | `libs/api/stx-i18n` | Message catalogs compiled once at startup, a per-key walk down the locale chain, ICU arguments and plurals, `Accept-Language` negotiation, and an audit of what each locale is missing |
 | `libs/data/stx-jpa` | Postgres for a Kotlin coroutine service, over Hibernate Reactive: annotated Kotlin entities, sessions confined to the event loop that opened them, HQL, SQL and JPA Criteria — named by `KProperty` rather than by strings — through one suspending builder |
@@ -23,7 +23,7 @@ What exists:
 | `libs/core/stx-ktor` | The Ktor seam, and only the seam: the resource-lifecycle idiom every plugin is built on (`own`, `publish`, `resource`, `required`), and the one CORS policy `stx-spring-boot` builds Spring's from. No integration lives here — each is a module beside its own library — and the tell is that no spec in this module talks to a backend |
 | `libs/data/stx-mongo` | MongoDB for a Kotlin coroutine service: CRUD collection extensions, keyset pagination, an opt-in audit trail, GridFS |
 | `libs/data/stx-redis` | Redis for a Kotlin coroutine service, over Lettuce: a namespaced connection owning one `Json`, and kotlinx-serialized cache, lock, topics and streams |
-| `libs/core/stx-spring-boot` | The Spring seam, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, security, CORS, the JSON codec, and the Spring Data Mongo layer. Each `stx-*` library's own auto-configuration is a module beside that library, not a package here |
+| `libs/core/stx-spring-boot` | The Spring seam, a package per concern: translated errors in one response shape, the request's locale read off the exchange rather than a `ThreadLocal`, security, CORS, the JSON codec, the HTTP-service clients (`client/`: `httpClient`, `httpServiceFactory`, `generatedApiFactory`), and the Spring Data Mongo layer. Each `stx-*` library's own auto-configuration is a module beside that library, not a package here |
 | `libs/data/stx-storage` | S3-compatible object storage over the MinIO SDK: buckets, objects, and presigned URLs and upload forms |
 | `libs/api/stx-graphix` | GraphQL over graphql-java 25: annotated Kotlin functions, `@Serializable` types, suspending execution. `stx-graphix-ktor` and `stx-graphix-spring` are the HTTP integrations, `stx-graphix-koin` builds the schema from a Koin container |
 | `libs/messaging/stx-workflow` | Compensable workflows for a Kotlin coroutine service: a DSL of steps each with its own compensation, one `@Serializable` context threaded through them, and state checkpointed after every node so a process that dies mid-run is picked up where it stopped. `await` and `sleep` stop an instance for a signal or a deadline by writing it down rather than by holding a coroutine, and `workflowOf` reads the same declaration off an annotated class. `engine.find(Failed)` is the operator's inbox for the one outcome the engine refuses to resolve. Four modules in the group: the engine, `stx-workflow-db` for where instances live (Redis, SQL through `stx-jpa`, or MongoDB), and `stx-workflow-ktor` / `stx-workflow-spring` for the two framework integrations |
@@ -192,8 +192,8 @@ The shape of a wrapper:
 
 A claim about **pixels is measured in pixels.** `ImageComposeScene` renders a composable into a
 bitmap with no window, in milliseconds, on a headless host, and `sendPointerEvent` drives hover and
-press. `libs/ui/stx-material/test@jvm/` holds the two specs that exist, and both were written
-because something looked right and was not: a hover state that was invisible on *selected* chips
+press. `libs/ui/stx-material/test@jvm/` holds the rendering specs (thirteen files, one per group of components); the two that were written
+because something looked right and was not are a hover state that was invisible on *selected* chips
 because they already wear the focus layer, and a collapsed `ResponsiveButton` that kept the padding
 its label had left behind. Rendering specs are jvm-only — skiko's native library comes from
 `$compose.desktop.currentOs` under `test-dependencies@jvm`.
@@ -238,7 +238,7 @@ The shape a component takes:
   the mistake this replaced: the combined transition finishes in two stages. It is *held* rather
   than read from the composition because a `Style` block runs at apply time, not in a composable
   scope.
-- **Every default has a name in `StxStyles`**, reached as `StxTheme.styles.card(variant)`.
+- **Every default has a name in `StxStyles`**, reached as `StxTheme.styles.card`.
   It is a plain `object` behind an extension property, not a `CompositionLocal` — a `Style` reads
   its tokens when it is applied, not when it is written — and it lives in `src/style/` so `theme`
   keeps knowing nothing about the components. Restating a default before editing it is what stops a
