@@ -23,8 +23,8 @@ import org.intellij.lang.annotations.Language
  * every change had to be made in both places with nothing to notice when it was not.
  *
  * **Default implementations rather than extension functions, deliberately.** As extensions these
- * would need an import at every call site and would lose to any member of the same name — the trap
- * `Mutate.kt` documents, and the reason `updateOn`/`deleteOn` are spelled the way they are. Inherited
+ * would need an import at every call site and would lose to any member of the same name, which is
+ * how `criteria` came to be spelled as it is rather than `criteriaBuilder`. Inherited
  * members keep `session.mutate(hql)` compiling exactly as before, in this repo and downstream.
  *
  * **The `reified` members are not here, and cannot be.** `query` and `nativeQuery` each need the

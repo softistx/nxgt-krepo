@@ -10,7 +10,7 @@ import jakarta.persistence.criteria.Root
  * val available: JpaSpec<Product> = { it[Product::discontinued] eq false }
  * fun named(term: String): JpaSpec<Product> = { it[Product::name] ilike "%$term%" }
  *
- * products.findAll(session, available and named("anvil"))
+ * session.findAll<Product>(available and named("anvil"))
  * ```
  *
  * It is a plain function type over Criteria's own [Root] — nothing was added to make it one, and
@@ -36,9 +36,8 @@ infix fun <T : Any> JpaSpec<T>.and(other: JpaSpec<T>): JpaSpec<T> = { root -> co
  * Either.
  *
  * The one that earns its keep: a repository `and`s a spec onto whatever else it was given, and no
- * chain of calls can say `or`. Note that `or` with a spec that restricts nothing is still every row,
- * not the half the other side would have kept — which is what `null` meaning *no restriction* has to
- * imply, and the reason to keep an optional filter out of an `or`.
+ * chain of calls can say `or`. A side that restricts nothing is dropped, so `or` with it is the
+ * other side alone, which is a narrowing and not every row; keep an optional filter out of an `or`.
  */
 infix fun <T : Any> JpaSpec<T>.or(other: JpaSpec<T>): JpaSpec<T> = { root -> combine(this(root), other(root)) { a, b -> a or b } }
 

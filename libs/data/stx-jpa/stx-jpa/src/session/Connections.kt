@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import org.hibernate.reactive.common.spi.Implementor
 import org.hibernate.reactive.pool.ReactiveConnection
 import org.hibernate.reactive.pool.ReactiveConnectionPool
+import java.util.concurrent.CompletableFuture
 
 /**
  * Runs [block] on a connection from the pool Hibernate is already using, and gives it back.
@@ -36,6 +37,8 @@ import org.hibernate.reactive.pool.ReactiveConnectionPool
  * and a caller can wrap what it wants wrapped, and on MySQL it is not and a wrapper would be a
  * promise nothing keeps.
  *
+ * The borrow, [block] and the close all run on one Vert.x context, entered here: a connection belongs
+ * to the context it was borrowed on, and Hibernate Reactive 4.5.12 refuses a pool call made without one.
  * The connection is closed however [block] ends, under [NonCancellable] — a cancelled coroutine that
  * skipped the close would leak a connection out of a fixed-size pool, and the second one to do it
  * hangs the application at the next `session { }`.
@@ -52,14 +55,22 @@ suspend fun <T> Jpa.connection(block: suspend (ReactiveConnection) -> T): T {
                 "this Stage.SessionFactory is not a Hibernate Reactive Implementor, so its connection pool " +
                     "cannot be reached — jpa.connection { } needs the factory Jpa.connect builds",
             )
-    val connection =
-        implementor.serviceRegistry
-            .requireService(ReactiveConnectionPool::class.java)
-            .connection
-            .await()
-    try {
-        return block(connection)
-    } finally {
-        withContext(NonCancellable) { connection.close().await() }
+    val pool = implementor.serviceRegistry.requireService(ReactiveConnectionPool::class.java)
+    val caller = callerContext()
+    val result = CompletableFuture<T>()
+    // Hibernate's own entry points open the context for the session; there is no session here, so
+    // this enters one, and the borrow, the block and the close all run on it.
+    vertx.orCreateContext.runOnContext {
+        confined(caller) {
+            val connection = pool.connection.await()
+            try {
+                block(connection)
+            } finally {
+                withContext(NonCancellable) { connection.close().await() }
+            }
+        }.whenComplete { value, error ->
+            if (error == null) result.complete(value) else result.completeExceptionally(error)
+        }
     }
+    return result.await()
 }

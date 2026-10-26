@@ -8,7 +8,9 @@ import com.softistx.jpa.query.nativeMutate
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.matchers.shouldNotBe
+import io.vertx.core.Vertx
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeout
 import org.hibernate.reactive.pool.ReactiveConnection
@@ -182,6 +184,19 @@ class NativeDdlTest :
                         jpa.transaction { session ->
                             session.nativeMutate("create table $schema.a (id int); create table $schema.b (id int)").execute()
                         }
+                    }
+                }
+            }
+        }
+
+        feature("the context the block runs on").config(enabled = JpaTestDatabase.available) {
+            scenario("is a Vert.x context, the same one for the borrow, every statement and the close") {
+                withJpa { jpa, _ ->
+                    jpa.connection { connection ->
+                        val context = Vertx.currentContext()
+                        context shouldNotBe null
+                        connection.scalar("select 1")
+                        Vertx.currentContext() shouldBeSameInstanceAs context
                     }
                 }
             }
