@@ -118,9 +118,9 @@ class RedisWorkflowStore(
     /**
      * A page of the instances in [status], newest first.
      *
-     * `ZRANGE … BYSCORE REV` (Redis 6.2+) gives the ids in one round trip; the records are then read one hash at a
-     * time, because a page is tens of instances and a pipeline for that is machinery without a
-     * reason.
+     * `ZRANGE … BYSCORE REV` (Redis 6.2+) gives the ids in one round trip; the records are then
+     * read one hash at a time, because a page is tens of instances and a pipeline for that is
+     * machinery without a reason.
      *
      * **It prunes as it reads.** A terminal instance's hash expires under the retention TTL, and
      * nothing expires an entry in a sorted set — so an id whose hash is gone is an entry that
