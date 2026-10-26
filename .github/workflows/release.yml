@@ -59,14 +59,27 @@ jobs:
       # tag. `changeset publish-plan` answers exactly that, in dependency order, and
       # `scripts/release-plan.ts` translates its family names into the module names the toolchain
       # publishes. An empty plan is the normal outcome of a run with nothing to release.
+      #
+      # Publishing to Central is off unless the repository variable MAVEN_CENTRAL_PUBLISH is `true`.
+      # Off, the plan is still printed but its count is forced to 0, so no step below runs: nothing
+      # is uploaded, tagged or released. Turn it on in Settings → Variables, or with
+      # `gh variable set MAVEN_CENTRAL_PUBLISH --body true`.
       - name: What is being released
         id: plan
         if: steps.changesets.outputs.has-changesets == 'false'
+        env:
+          MAVEN_CENTRAL_PUBLISH: ${{ vars.MAVEN_CENTRAL_PUBLISH }}
         run: |
           set -euo pipefail
           bun x changeset publish-plan --output release-plan.json
           bun scripts/release-plan.ts release-plan.json
-          echo "count=$(bun scripts/release-plan.ts release-plan.json --count)" >> "$GITHUB_OUTPUT"
+          count=$(bun scripts/release-plan.ts release-plan.json --count)
+          if [ "$MAVEN_CENTRAL_PUBLISH" != "true" ] && [ "$count" != "0" ]; then
+            echo "::warning::Families ahead of their tags: $count. MAVEN_CENTRAL_PUBLISH is not 'true', so nothing is published. Publish locally with 'bun run publish:local'."
+            count=0
+            echo "off=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "count=$count" >> "$GITHUB_OUTPUT"
 
       # Batch by batch: publish a batch's modules, then tag its families, then the next. The
       # batches come from `changeset publish-plan` and are in dependency order — a family is never
@@ -203,7 +216,7 @@ jobs:
           rm -f release-notes.md release-plan.json
 
       - name: Nothing to release
-        if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count == '0'
+        if: steps.changesets.outputs.has-changesets == 'false' && steps.plan.outputs.count == '0' && steps.plan.outputs.off != 'true'
         run: echo "::notice::No family is ahead of its tag. Nothing was published."
 
       # The third outcome, and the one that used to be silent. `has-changesets` is true whenever

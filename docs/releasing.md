@@ -104,6 +104,12 @@ The PR updates itself as more changesets land. Leaving it open is how you batch 
 
 ### 3. Merging it releases what moved
 
+**Only when Central publishing is switched on.** The repository variable `MAVEN_CENTRAL_PUBLISH`
+must be `true`; with it unset or anything else, the run prints the plan, warns that nothing is
+published, and stops there — no upload, no tag, no GitHub release. It is off while the libraries
+are consumed from `mavenLocal` only (`bun run publish:local`). Switch it on with
+`gh variable set MAVEN_CENTRAL_PUBLISH --body true`, off with `gh variable delete MAVEN_CENTRAL_PUBLISH`.
+
 The same workflow re-runs with no changesets left and, in **one job**:
 
 1. `bun x changeset publish-plan` — the families whose version is ahead of their
