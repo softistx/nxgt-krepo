@@ -215,6 +215,26 @@ The rules, each pinned by `EntityGraphTest`:
 - **`plan` takes a graph of the query's own result type.** Hibernate's `setPlan` says so, and a
   projection's rows are not the entity — the type says so before the runtime has to.
 
+## Specs, and a typed null
+
+A `JpaSpec<T>` is a restriction with a name: a plain `(Root<T>) -> Predicate?`, so more than one
+query can ask for it. `and`, `or` and `all(list)` combine them, and a spec answering `null` restricts
+nothing.
+
+```kotlin
+val available: JpaSpec<Product> = { it[Product::discontinued] eq false }
+fun named(term: String): JpaSpec<Product> = { it[Product::name] ilike "%$term%" }
+
+session.findAll<Product>(available and named("anvil"))
+```
+
+`and` and `or` drop a side that answers `null` and keep the other, so `or` with a spec that
+restricts nothing narrows to the other side and does not widen to every row. Keep an optional filter
+out of an `or`.
+
+`cb.nullLiteral<String>()` is a typed null for the places an expression is wanted and there is no
+value, in place of JPA's `nullLiteral(String::class.java)`.
+
 ## Projections
 
 **Hibernate packages rows into any class with a matching constructor.** Pass the result class to the
@@ -243,6 +263,10 @@ criteria.multiselect(purchase[Purchase::reference], purchase[Purchase::total], b
 `groupBy` and `having` are Criteria's own, and `having` is the only place a condition on an aggregate
 can go — `where` runs before the grouping. A projection of one column needs no class at all:
 `query<String>("select reference from Purchase")`.
+
+`JpaQuery.readOnly()` marks the results of any query read-only: a stateful session then keeps no
+snapshot of what it loaded, which is half the memory and no dirty check. It is for reads that will not
+be changed, and projections already have the same effect.
 
 Projections read only the columns they name and put nothing in the persistence context, which is the
 reason to reach for one: a list page showing three fields of a wide entity does not need the other

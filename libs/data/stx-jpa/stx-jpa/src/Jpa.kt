@@ -38,7 +38,7 @@ class Jpa internal constructor(
     /** The factory itself, for everything this module has not wrapped. */
     val factory: Stage.SessionFactory,
     val config: JpaConfig,
-    private val vertx: Vertx,
+    internal val vertx: Vertx,
     private val ownsVertx: Boolean,
 ) : AutoCloseable {
     private val guard = CloseGuard()
