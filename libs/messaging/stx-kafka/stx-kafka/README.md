@@ -97,6 +97,9 @@ for the least redelivery, `Manual` for a caller that wants to say so itself. `re
 loop as a `Flow` with nothing committed for you, and `commit(record)` / `commitPending()` are how a
 collector says a record is done.
 
+Closing the subscriber ends `records()` and returns from `process`, so a collector in another
+coroutine finishes instead of hanging; `close()` is idempotent, and a second call does nothing.
+
 **Delivery is at least once.** Every commit happens after the handler returned, so a handler that
 succeeds and then loses the connection sees its record again. Handlers have to be idempotent. The
 alternative — committing first — trades duplicates for records that are silently never processed,
