@@ -1,4 +1,4 @@
-<!-- Generated from androidx.compose.material3 1.11.0-alpha07 on 2026-08-28. Do not edit; re-run scripts/extract_api.py. -->
+<!-- Generated from androidx.compose.material3 1.12.0-alpha03 on 2026-10-26. Do not edit; re-run scripts/extract_api.py. -->
 
 # Typography styles
 
