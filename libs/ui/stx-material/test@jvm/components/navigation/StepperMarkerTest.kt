@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
+import com.softistx.material.TestFonts
 import com.softistx.material.contrast
 import com.softistx.material.foundation.motion.StxMotion
 import com.softistx.material.foundation.motion.rememberMorphShape
@@ -60,7 +61,7 @@ private fun <T> markerProbe(
         width = 80,
         height = 80,
         content = {
-            StxTheme(isDark = false) {
+            StxTheme(isDark = false, typography = TestFonts.typography()) {
                 Box(Modifier.probed(bounds)) { StepMarker(status, index = 0, connector = false, vertical = true) }
             }
         },
@@ -117,7 +118,7 @@ class StepperMarkerTest :
                     val bounds = NodeBounds()
                     markerProbe(status, bounds) {
                         val plate = pixelAt(bounds, Corner.TopLeft, inset = 8)
-                        val number = pixelAt(bounds, Corner.Center)
+                        val number = strongestInk(bounds, against = plate, inset = 8)
                         plate shouldBe pair.first
                         number shouldBe pair.second
                         contrast(number, plate) doubleGreater 3.0

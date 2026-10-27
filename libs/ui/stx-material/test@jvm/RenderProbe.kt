@@ -244,6 +244,31 @@ class PixelGrid(
         return best
     }
 
+    /**
+     * The pixel inside [node]'s bounds, shrunk by [inset] on every side, that is farthest from [against] in
+     * luminance: a glyph's solid core on its plate, wherever the host's font happens to put it (the centre pixel
+     * can fall between strokes). Choose [inset] so the region stays on the plate, off its clear corners.
+     */
+    fun strongestInk(
+        node: NodeBounds,
+        against: Color,
+        inset: Int = 0,
+    ): Color {
+        val r = node.rect.deflate(inset.toFloat())
+        var best = against
+        var gap = 0f
+        for (y in r.top.toInt().coerceAtLeast(0) until r.bottom.toInt().coerceAtMost(map.height)) {
+            for (x in r.left.toInt().coerceAtLeast(0) until r.right.toInt().coerceAtMost(map.width)) {
+                val d = kotlin.math.abs(map[x, y].luminance() - against.luminance())
+                if (d > gap) {
+                    gap = d
+                    best = map[x, y]
+                }
+            }
+        }
+        return best
+    }
+
     /** Pixels of [node]'s bounds that are not the background. */
     fun ink(node: NodeBounds): Int = ink(node.rect)
 }
