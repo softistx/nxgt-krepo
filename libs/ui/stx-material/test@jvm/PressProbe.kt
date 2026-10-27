@@ -52,3 +52,9 @@ fun inkWith(
 
 /** A style that hides the node, so a spec can see whether a `style` parameter reached it. */
 val hidden = Style { alpha(0f) }
+
+/** How many pixels of [part] come out red when it is handed [painted]: a node the style reached shows red. */
+fun redPixels(part: @Composable (Style) -> Unit): Int =
+    renderProbe(width = 400, height = 300, content = { StxTheme(isDark = false) { part(painted) } }) {
+        settle().count { it.isPainted() }
+    }

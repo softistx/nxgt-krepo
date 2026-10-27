@@ -4,13 +4,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.disabled
+import androidx.compose.foundation.style.hovered
+import androidx.compose.foundation.style.pressed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
@@ -68,16 +75,25 @@ class SurfaceStyleTest :
                 painted(gestures = false) shouldBeGreaterThan 1000
             }
 
-            scenario("the popups keep their content by default and take the style") {
-                val popups: Map<String, @Composable (Style) -> Unit> =
-                    mapOf(
-                        "Menu" to { s -> Menu(true, {}, items, style = s) },
-                        "ConfirmDialog" to { s -> ConfirmDialog(true, "Delete?", "No way back", {}, {}, style = s) },
-                        "Sheet" to { s -> Sheet(true, {}, style = s) { Text("Body") } },
-                    )
-                popups.forEach { (name, part) ->
-                    withClue(name) { inkWith(Style, part) shouldBeGreaterThan 0 }
-                }
+            scenario("on a wrapper only static properties and disabled apply: disabled fires, hovered and pressed do not") {
+                val states =
+                    Style {
+                        disabled { background(Color.Red) }
+                        hovered { background(Color.Red) }
+                        pressed { background(Color.Red) }
+                    }
+
+                fun reds(
+                    gestures: Boolean,
+                    pointer: Boolean,
+                ) = renderProbe(width = 400, height = 300, content = {
+                    StxTheme(isDark = false) {
+                        Drawer(false, {}, gesturesEnabled = gestures, drawer = {}, style = states) { Text("Anchor") }
+                    }
+                }) { (if (pointer) press(Offset(200f, 150f)) else settle()).count { it.isPainted() } }
+                reds(gestures = true, pointer = false) shouldBe 0
+                reds(gestures = true, pointer = true) shouldBe 0
+                reds(gestures = false, pointer = false) shouldBeGreaterThan 1000
             }
         }
 
@@ -106,14 +122,14 @@ class SurfaceStyleTest :
                 }
             }
 
-            scenario("without customActions the row announces an empty list") {
+            scenario("without customActions the row announces no actions at all") {
                 runComposeUiTest {
                     setContent {
                         StxTheme(isDark = false) {
                             SwipeActions({}, Modifier.testTag("row"), background = {}) { Text("Row") }
                         }
                     }
-                    onNodeWithTag("row").fetchSemanticsNode().config[SemanticsActions.CustomActions] shouldBe emptyList()
+                    onNodeWithTag("row").assert(SemanticsMatcher.keyNotDefined(SemanticsActions.CustomActions))
                 }
             }
         }

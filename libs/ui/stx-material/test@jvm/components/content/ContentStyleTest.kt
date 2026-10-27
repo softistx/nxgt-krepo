@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.style.Style
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -19,6 +20,7 @@ import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.hidden
 import com.softistx.material.inkWith
 import com.softistx.material.painted
+import com.softistx.material.redPixels
 import com.softistx.material.scanline
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -76,6 +78,16 @@ class ContentStyleTest :
                 val reactions = listOf(Reaction("+1", 2, selected = true), Reaction("ok", 1))
                 inkWith(Style) { ReactionBar(reactions, style = it) } shouldBeGreaterThan 300
                 inkWith(hidden) { ReactionBar(reactions, style = it) } shouldBe 0
+            }
+
+            scenario("CodeBlock hands its style to the copy button") {
+                val code: @Composable (Style) -> Unit = { CodeBlock("val x = 1", style = it) }
+                redPixels(code) shouldBeGreaterThan 500
+            }
+
+            scenario("ReplyPreview hands its style to its dismiss button") {
+                val reply: @Composable (Style) -> Unit = { ReplyPreview("Ada", "See you", onDismiss = {}, style = it) }
+                redPixels(reply) shouldBeGreaterThan 500
             }
 
             scenario("ExpandableText hands its style to the toggle, and leaves the text") {

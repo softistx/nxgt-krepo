@@ -222,6 +222,9 @@ for a spinner. `MoreMenu` is the trailing more on a row. `OverflowBar` is M3's `
 visible icons stay in the row, the rest land in the overflow menu. `IconBadge` is an `IconButton`
 in a `BadgedBox`; count zero shows no badge. `ViewToggle` is list-or-grid as a connected button group of two icon toggles (the same body as
 `SegmentedControl`: round ends, squarer seam, filled when chosen, no checkmark, `Role.RadioButton`).
+`FabMenu` and `OverflowBar` take no `style`: each hosts several controls (the main button and its
+actions; the row of icons and its overflow menu), and every control in them is a `Fab`, an
+`IconButton` or an M3 menu item with its own.
 
 **Collapsed, it is an `IconButton`** — round, 40 × 40, M3's own metrics — not a pill with the label
 taken out. The two forms are two components and `AnimatedContent` morphs between them.
@@ -245,10 +248,6 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | `TypingIndicator` | `label = "Someone is typing"` | `feedback/typing-indicator` |
 | `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `feedback/toast` |
 
-Only the three banners carry a dismiss or an action, and they take `style` above; `Toaster`, `Progress`,
-`LabeledProgress`, `LoadingMark`, `Skeleton`, `StatusBadge`, `StatusDot` and `TypingIndicator` are
-inert and take none.
-
 `Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
 `AnimatedVisibility` for the caller to write. `Skeleton` shimmers on its own.
 
@@ -267,26 +266,26 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `style = Style`, `content: ColumnScope` | `content/card` |
-| `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/chip` |
+| `Chip` | `text`, `selected`, `onClick?`, `enabled`, `style = Style`, `leading?`, `trailing?` | `content/chip` |
 | `ListTile` | `title`, `supporting? = null`, `onClick: (() -> Unit)? = null`, `enabled = true`, `style = Style`, `leading? = null`, `trailing? = null`, `selected: Boolean? = null`, `group: ListTileGroup? = null` | `content/list-tile` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
 | `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info`, `reserveDelta = true` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange`, `style = Style` | `content/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled`, `style = Style` | `content/rating` |
 | `LabeledDivider` | `label` — no `style`: a divider is inert | `content/labeled-divider` |
-| `ActionChip` | `text`, `onClick`, `leading?`, `trailing?` | `content/action-chip` |
+| `ActionChip` | `text`, `onClick`, `enabled`, `style = Style`, `leading?`, `trailing?` | `content/action-chip` |
 | `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `content/keyboard-shortcut` |
-| `SuggestionChip` | `text`, `onClick`, `leading?` | `content/suggestion-chip` |
+| `SuggestionChip` | `text`, `onClick`, `enabled`, `style = Style`, `leading?` | `content/suggestion-chip` |
 | `FileChip` | `name`, `sizeLabel?`, `enabled`, `onClick?`, `onRemove?`, `style = Style` | `content/file-chip` |
 | `SectionHeader` | `title`, `supporting?`, `action?`, `emphasized = true` — no `style`: a header is inert | `content/section-header` |
-| `CodeBlock` | `text`, `copyable = true` | `content/code-block` |
+| `CodeBlock` | `text`, `copyable = true`, `style = Style` | `content/code-block` |
 | `ExpandableText` | `text`, `collapsedLines = 3`, `more`, `less`, `style = Style` | `content/expandable-text` |
 | `ReactionBar` | `reactions: List<Reaction>`, `style = Style` | `content/reaction-bar` |
 | `QuoteBlock` | `text`, `attribution?` | `content/quote-block` |
 | `LinkPreview` | `title`, `url`, `description?`, `onClick?`, `style = Style`, `leading?` | `content/link-preview` |
-| `MessageBubble` | `text`, `outgoing`, `name?`, `meta?`, `onClick?` | `content/message-bubble` |
+| `MessageBubble` | `text`, `outgoing`, `name?`, `meta?`, `style = Style`, `onClick?` | `content/message-bubble` |
 | `Comment` | `name`, `text`, `supporting?`, `trailing?` | `content/comment` |
-| `ReplyPreview` | `name`, `text`, `onDismiss?` | `content/reply-preview` |
+| `ReplyPreview` | `name`, `text`, `onDismiss?`, `style = Style` | `content/reply-preview` |
 | `PinBar` | `text`, `onClick?`, `onDismiss?`, `style = Style` | `content/pin-bar` |
 | `MentionChip` | `name`, `onClick`, `image?`, `enabled`, `onRemove?`, `style = Style` | `content/mention-chip` |
 | `Price` | `amount`, `compareAt?`, `period?`, `tone?` | `content/price` |
@@ -304,14 +303,16 @@ it does something, and it is announced as a button. `ListTile` follows the same 
 Every interactive part of the family takes `style = Style`, placed before a trailing lambda. The
 defaults are the entries that already exist: `StxStyles.card` (0.99, a clickable `Card`, `PinBar`,
 `LinkPreview`) and `StxStyles.chip` (0.97, `MentionChip` and `FileChip`). `FilterBar`, `ReactionBar`
-and `Rating` hand their `style` to every chip or star, `ExpandableText` to its toggle. A `FileChip`
+and `Rating` hand their `style` to every chip or star, `ExpandableText` to its toggle, `CodeBlock`
+to its copy button and `ReplyPreview` to its dismiss button. One rule for a host: when its
+interactive part is a single control it forwards `style` to it; a host with several controls takes
+none and is listed below. A `FileChip`
 without `onClick` is a receipt and takes no press scale. `SectionHeader` and the titles of
 `PricingCard` and `DangerZone` are announced as headings.
 
-The parts that take no `style` are not interactive: `StatusDot`, `LabeledDivider`, `Kbd`, `Stat`,
-`QuoteBlock`, `Price`, `FeatureList`, `SectionHeader`, `PricingCard` (its `action` slot is the
-control), `Comment` (its `trailing` slot is), `ReplyPreview` (a dismiss `IconButton` only) and
-`EmptyState`.
+The parts that take no `style` are not interactive: `LabeledDivider`, `Kbd`, `Stat`, `QuoteBlock`,
+`Price`, `FeatureList`, `SectionHeader` and `EmptyState`. `PricingCard` (its `action` slot) and
+`Comment` (its `trailing` slot) host the caller's own controls.
 
 A `ListTile` is M3's `ListItem`, so the press is a shape morph (4 dp at rest, 16 dp pressed) and takes
 no scale. With `selected = null` an interactive tile is a button. With `selected = true` or `false` it
@@ -562,7 +563,9 @@ Each tab has its own interaction source, so its press style runs.
 `Stepper` marks each step with a 32 dp plate: a circle, or a `Cookie9Sided` for the current step, morphing on `motion.spatial` as the step advances.
 `StepFooter` is Back (optional) and Continue under a stepper; `busy` turns Continue into a
 `BusyButton`. `BottomBar` is M3's `BottomAppBar` — verbs for this screen, not destinations
-(`NavigationSuite` is the destinations).
+(`NavigationSuite` is the destinations). `StepFooter` and `NavigationSuite` take no `style`: they
+host several controls (Back and Continue; the destinations and the primary action), each with its
+own. `AppBar` takes none either (its navigation `IconButton` and `actions` slot keep their own).
 
 `NavigationDestination` is a label and an icon, then the decorations a real app actually hangs on
 a destination — not only a badge and a chip:
@@ -608,8 +611,8 @@ over a list and only appears once the reader has left the top. `RefreshBox` is M
 
 `LoadMoreButton` and `ScrollToTop` hand their `style` to the button they are made of. `RefreshBox`
 takes `style = Style` with no default look (no `StxStyles` entry): the indicator and the drag are
-M3's, so `style` dresses the box the gesture is read on. `ResponsiveGrid` and `SelectionBar` are
-inert and take none.
+M3's, so `style` dresses the box the gesture is read on. `ResponsiveGrid` is inert and `SelectionBar` hosts several controls (the clear button and the
+`actions` slot), so neither takes one.
 
 ### Navigation 3 scenes
 
@@ -655,23 +658,42 @@ together. `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of
 here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
 `Disclosure` is one panel; `Accordion` is a list with at most one open. `LabeledProgress` prints
 the percentage M3's indicator does not.
-
-`ConfirmDialog`, `Sheet`, `Drawer`, `Menu`, `Tooltip` and `HoverCard` sit on M3 containers (`AlertDialog`,
-`ModalBottomSheet`, `ModalDrawerSheet`, `DropdownMenu`, `PlainTooltip`, `RichTooltip`) that paint
-their own container over their modifier, so a `background` or a hover layer in `style` would be
-hidden. They take `style = Style` with no default look (no `StxStyles` entry): it is for what M3
-cannot express (a size, an offset, an alpha, a padding). `ContextMenu` and `SwipeActions` have none
-for the same reason, and `Drawer` reads as disabled while `gesturesEnabled` is false. `HelpTip`
-hands its `style` to its `IconButton`. `Accordion` and `Disclosure` already carry theirs.
-
-`SwipeActions` is a gesture a screen reader or a keyboard cannot make, so `customActions` lists the
-same actions as named entries of the row's actions menu. The labels are the caller's
-(`CustomAccessibilityAction("Delete") { remove(); true }`), since only the caller knows what the reveal does.
 `LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content; `contained = true` seats it on a
 `primaryContainer` disc (M3's `ContainedLoadingIndicator`) for use over an image or a busy surface;
 `Progress` is the spinner attached to a control. `Wavy` / `WavyCircular` are M3's expressive
 indicators; `Linear` / `Circular` stay the quiet ones. `TypingIndicator` is three dots that beat
 in turn on the effects axis; Material 3 has no typing mark.
+
+`Tooltip`, `HoverCard`, `ContextMenu`, `SwipeActions` and `Drawer` take `style = Style` with no
+default look (no `StxStyles` entry); `style` dresses the anchor or the host, and the container M3
+paints is not reached. `Drawer` reads as disabled while `gesturesEnabled` is false. `HelpTip` hands
+its `style` to its `IconButton`. `Accordion` and `Disclosure` already carry theirs.
+
+On these wrappers the style state has no input behind it: only static properties and `disabled`
+apply, and `pressed`, `hovered` and `focused` never fire.
+
+The surfaces that take no `style`, each because the popup is M3's and a probe showed `style` does
+not reach it (`alpha(0f)` left the popup fully drawn):
+
+- `ConfirmDialog` wraps `AlertDialog`, which paints its container and scrim in its own window.
+- `Sheet` wraps `ModalBottomSheet`, which paints its container and scrim in its own window.
+- `Menu` wraps `DropdownMenu`, which paints its container in its own popup.
+- `ContextMenu` takes `style` for its anchor only; the menu it opens is `Menu`'s.
+
+`SwipeActions` wraps `SwipeToDismissBox`. A swipe is a gesture a screen reader or a keyboard cannot
+make, so `customActions` lists the same actions as named entries of the row's actions menu. The
+labels are the caller's, and each action returns `true` once it has handled the request. With none
+given the row announces no custom action at all.
+
+```kotlin
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+
+SwipeActions(
+    onDismiss = { remove(item) },
+    background = { Icon(StxIcons.Delete, description = null) },
+    customActions = listOf(CustomAccessibilityAction("Delete") { remove(item); true }),
+) { ListTile(title = item.name) }
+```
 
 ## Date and time
 
@@ -778,8 +800,8 @@ the slot with a renderer, so `Button` never pays for Media3, PdfRenderer or Came
 
 With `onSelect` a `Gallery` tile is a button that presses to 0.99 (`StxStyles.tile`); without it
 `style` has nothing to dress. `PersonCard` hands its `style` to its `Card`, which keeps
-`StxStyles.card`. `Avatar`, `AvatarGroup`, `SeenBy`, `StxImage`, `Lightbox` (its controls are
-`IconButton`s) and the media surfaces are not press targets and take no `style`.
+`StxStyles.card`. `Avatar`, `AvatarGroup`, `SeenBy`, `StxImage` and the media surfaces are not press targets and
+take no `style`; `Lightbox` hosts three controls (close, previous, next), so it takes none.
 
 ## Motion helpers
 

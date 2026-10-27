@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -18,6 +16,7 @@ import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.feedback.AnnouncementBar
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
 
@@ -37,8 +36,8 @@ fun PinBar(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
-    val styled = modifier.fillMaxWidth().styleable(styleState, if (onClick != null) cardStyle else Style, style)
+    val styled =
+        modifier.fillMaxWidth().styledBy(style, base = if (onClick != null) cardStyle else Style, interactionSource = interactionSource)
     val content: @Composable () -> Unit = {
         Row(
             modifier =

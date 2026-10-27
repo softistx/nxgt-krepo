@@ -47,12 +47,12 @@ class DataStyleTest :
                 line.pressed.getValue(3).isPainted() shouldBe true
             }
 
-            scenario("a row without onRowClick takes no style: nothing is painted") {
+            scenario("a row without onRowClick still takes the caller's style (it is never dropped), but is not a press target") {
                 renderProbe(width = 400, height = 200, content = {
                     StxTheme(isDark = false) {
                         DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp, style = painted)
                     }
-                }) { settle().count { it.isPainted() } shouldBe 0 }
+                }) { settle().count { it.isPainted() } shouldBeGreaterThan 1000 }
             }
 
             scenario("a collapsed card gets the caller's style too: alpha 0 hides it, the default shows it") {
