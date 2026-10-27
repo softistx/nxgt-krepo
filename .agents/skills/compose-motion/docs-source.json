@@ -1,0 +1,20 @@
+{
+  "title": "Compose animation and Material 3 motion",
+  "base": "https://developer.android.com/develop/ui/compose/",
+  "discovery": "list",
+  "pages": [
+    "animation/introduction",
+    "animation/choose-api",
+    "animation/quick-guide",
+    "animation/value-based",
+    "animation/composables-modifiers",
+    "animation/customize",
+    "animation/advanced",
+    "animation/shared-elements",
+    "animation/testing",
+    "https://developer.android.com/reference/kotlin/androidx/compose/material3/MotionScheme"
+  ],
+  "exclude": [],
+  "version": "",
+  "last_sync": "2026-10-26"
+}

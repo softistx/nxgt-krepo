@@ -157,12 +157,16 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
 - **`openapi-spec-first`** — how a REST API is authored here: a Redocly-split OpenAPI document under `<module>/openapi/`, the file and naming conventions the generator reads, and the repository → service → controller layering over the generated `@HttpExchange` interface. Read it before adding or changing an endpoint. Its `references/` are written by hand rather than fetched — `document-layout.md` for the split document and the redocly config, `spring-api.md` for the five files a Spring API is made of — and they stay in step with `examples/spring-orders`, which is the same thing running.
 - **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on one integration branch, which then lands on `develop` as the feature.
+- **`stx-material-components`** — the order of work for a `libs/ui/stx-material` component: place it, check M3, wrap through `*Defaults`, dress it with a `Style`, reach for Expressive, meet the quality bar, prove it with a pixel and a semantics spec, story, docs and changeset. `references/` holds the verified Expressive vocabulary, the visual-quality bar, a worked example and the pre-PR checklist (written by hand).
+- **`compose-accessibility`** — semantics, roles, 48 dp targets, contrast, font scale, keyboard focus and reduced motion on Android, iOS and desktop, and how to test them. `references/` caches 15 pages of the Android and JetBrains documentation.
+- **`compose-motion`** — spatial against effects specs, `StxMotion`, Style `animate`, shape morph, enter and exit, stagger, reduced motion and what not to animate. `references/` caches 10 pages of the Android animation documentation.
 
-Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/ui/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
+Four come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/ui/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
 
 - **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/ui/stx-material`**, not background reading; see *Styling a component* below.
 - **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
 - **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
+- **`jetpack-compose-performance`** — recomposition, stability, lazy lists and deferred state reads. Its *Compose Multiplatform notes* section lists what does not apply here (baseline profiles, Android-only tooling).
 
 ## Building a component
 
