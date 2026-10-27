@@ -649,13 +649,15 @@ Package `com.softistx.material.components.surface`.
 | `ContextMenu` | `items`, `style = Style`, `content` | `surfaces/context-menu` |
 | `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |
 | `Disclosure` | `title`, `expanded`, `onExpandedChange`, `content` | `surfaces/disclosure` |
-| `Carousel` | `count`, `peek = 48.dp`, `page` | `surfaces/carousel` |
+| `Carousel` | `count`, `peek = 48.dp`, `style = Style`, `page` | `surfaces/carousel` |
 | `SwipeActions` | `onDismiss`, `background`, `customActions: List<CustomAccessibilityAction> = emptyList()`, `style = Style`, `content` | `surfaces/swipe-actions` |
 
 `HelpTip` is a `Tooltip` around an info `IconButton`, so the sentence and the affordance stay
 together. `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of M3 `Snackbar`s painted with
-`Tone` — M3's host holds one, a dashboard often needs two. `Accordion` and `Carousel` are built
-here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
+`Tone` — M3's host holds one, a dashboard often needs two. `Accordion` is built here: M3 has no accordion.
+`Carousel` is M3's multi-browse carousel: one large page, the next one `peek` wide, and each page cut to a rounded
+mask that morphs with its size (the shape is `extraLarge`, applied to the content of `page`). `style` dresses the
+carousel as a whole (track and dots), never the pages, and has no default look.
 `Disclosure` is one panel; `Accordion` is a list with at most one open. `LabeledProgress` prints
 the percentage M3's indicator does not.
 `LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content; `contained = true` seats it on a
