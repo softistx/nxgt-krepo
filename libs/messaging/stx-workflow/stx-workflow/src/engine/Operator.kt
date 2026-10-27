@@ -2,6 +2,7 @@ package com.softistx.workflow.engine
 
 import com.softistx.workflow.ChildFailedException
 import com.softistx.workflow.ChildLostException
+import com.softistx.workflow.NonRetryableException
 import com.softistx.workflow.WorkflowConflictException
 import com.softistx.workflow.WorkflowEngine
 import com.softistx.workflow.WorkflowNotFoundException
@@ -24,17 +25,30 @@ import kotlinx.serialization.SerializationException
  * fails the parent's compensation, the parent lands [WorkflowStatus.Failed], and a person gets
  * an instance to look at. Pretending it was undone would be the version nobody finds out about.
  * The same holds for a child left [WorkflowStatus.Failed] by a compensation of its own: this throws
- * [ChildFailedException], so the parent fails on the node too. Retry the child with
- * [retryCompensation], then the parent.
+ * a [NonRetryableException] caused by a [ChildFailedException], so the parent fails on the node too
+ * without retrying it. Retry the child with [retryCompensation], then the parent.
+ *
+ * Only `Cancelled` and `Compensated` count as taken back. A child another worker holds the lock of
+ * is handed back unchanged (still running, waiting or completed): that throws a retryable
+ * [ChildFailedException], so the parent never lands `Compensated` over effects that still stand.
  */
 internal suspend fun WorkflowEngine.undoChild(id: String): WorkflowRecord {
     val record = store.load(id) ?: throw ChildLostException(id)
     val taken = if (record.status == WorkflowStatus.Completed) undo(id) else cancel(id)
-    // `cancel` hands a terminal instance back untouched, and `undo` lands `Failed` when the child's
-    // own compensation fails: either way the child is still `Failed`, its effects still standing,
-    // and reporting it as taken back would hide that from the parent's unwind.
-    if (taken.status == WorkflowStatus.Failed) throw ChildFailedException(id, taken.workflow, taken.status)
-    return taken
+    return when (taken.status) {
+        WorkflowStatus.Cancelled, WorkflowStatus.Compensated -> taken
+        // The child's own compensation failed: retrying the node would find it still `Failed`, so the
+        // parent's retry policy must not spend its backoff on it. A person retries the child first.
+        WorkflowStatus.Failed ->
+            throw NonRetryableException(
+                "child instance '$id' is Failed: its own compensation failed; retry it with retryCompensation, then the parent",
+                ChildFailedException(id, taken.workflow, taken.status),
+            )
+        // `cancel` and `undo` hand back the stored record when another worker holds the child's lock,
+        // so the child is still running, waiting or completed and its effects stand. Retryable: the
+        // lock may be free by the next attempt.
+        else -> throw ChildFailedException(id, taken.workflow, taken.status)
+    }
 }
 
 /** What [WorkflowEngine.retryCompensation] does; its contract is documented there. */

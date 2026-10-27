@@ -16,11 +16,16 @@ import com.softistx.workflow.fixture.Approval
 import com.softistx.workflow.fixture.Calls
 import com.softistx.workflow.fixture.Ledger
 import com.softistx.workflow.store.InMemoryStore
+import com.softistx.workflow.store.NodeOutcome
 import com.softistx.workflow.workflow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
@@ -289,6 +294,86 @@ class ChildTest :
                 engine.retryCompensation("order-6/fulfil").status shouldBe WorkflowStatus.Cancelled
                 engine.retryCompensation("order-6").status shouldBe WorkflowStatus.Compensated
                 calls.all() shouldBe listOf("reserve", "fulfilled", "confirm", "unbook", "unbook", "release")
+            }
+
+            scenario("cancelling the parent while the child is parked fails the parent, and two retries finish it") {
+                val calls = Calls()
+                val broken = AtomicBoolean(true)
+                val child =
+                    workflow<Ledger>("fulfilment") {
+                        step("book") { context.copy(booking = "b-1") } compensate {
+                            calls.record("unbook")
+                            if (broken.get()) error("courier refused")
+                        }
+                        await(COURIER) { context }
+                    }
+                val parent = ordering(calls, child)
+                val engine =
+                    WorkflowEngine(InMemoryStore()) {
+                        register(child)
+                        register(parent)
+                    }
+                engine.start(parent, Ledger(), id = "order-7")
+
+                val failed = engine.cancel("order-7")
+
+                failed.status shouldBe WorkflowStatus.Failed
+                engine.record("order-7/fulfil").shouldNotBeNull().status shouldBe WorkflowStatus.Failed
+
+                broken.set(false)
+                engine.retryCompensation("order-7/fulfil").status shouldBe WorkflowStatus.Cancelled
+                engine.retryCompensation("order-7").status shouldBe WorkflowStatus.Cancelled
+                calls.all() shouldBe listOf("reserve", "unbook", "unbook", "release")
+            }
+        }
+
+        feature("a child still held by another worker during the parent's unwind") {
+            scenario("the parent does not land compensated, and finishes the unwind once the child is free") {
+                val calls = Calls()
+                val inSlowStep = CompletableDeferred<Unit>()
+                val release = CompletableDeferred<Unit>()
+                val child =
+                    workflow<Ledger>("fulfilment") {
+                        step("book") {
+                            calls.record("book")
+                            context.copy(booking = "b-1")
+                        } compensate {
+                            calls.record("unbook")
+                        }
+                        await(COURIER) { courier -> context.copy(note = courier.by) }
+                        step("slow") {
+                            inSlowStep.complete(Unit)
+                            release.await()
+                            context
+                        }
+                    }
+                val parent = ordering(calls, child)
+                val engine =
+                    WorkflowEngine(InMemoryStore()) {
+                        register(child)
+                        register(parent)
+                    }
+                engine.start(parent, Ledger(), id = "order-8")
+
+                coroutineScope {
+                    // Another worker: the signal advances the child and holds its lock inside "slow".
+                    val worker = async(Dispatchers.Default) { engine.signal("order-8/fulfil", COURIER, Approval("dock")) }
+                    inSlowStep.await()
+
+                    val unwound = engine.cancel("order-8")
+
+                    unwound.status shouldBe WorkflowStatus.Failed
+                    unwound.latest("fulfil").shouldNotBeNull().outcome shouldBe NodeOutcome.CompensationFailed
+                unwound.latest("fulfil")?.error?.type shouldBe ChildFailedException::class.qualifiedName
+                    release.complete(Unit)
+                    worker.await()
+                }
+
+                // The child ran to the end meanwhile; the parent's retry takes it back with `undo`.
+                engine.record("order-8/fulfil").shouldNotBeNull().status shouldBe WorkflowStatus.Completed
+                engine.retryCompensation("order-8").status shouldBe WorkflowStatus.Cancelled
+                engine.record("order-8/fulfil").shouldNotBeNull().status shouldBe WorkflowStatus.Cancelled
+                calls.all() shouldBe listOf("reserve", "book", "unbook", "release")
             }
         }
 

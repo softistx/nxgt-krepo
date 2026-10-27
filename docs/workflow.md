@@ -365,6 +365,13 @@ would leak a running instance every time.
 A child that is no longer in the store cannot be taken back. That fails the parent's compensation and
 the parent lands `Failed`, which is the status that means a person should look.
 
+Only a child that ends `Cancelled` or `Compensated` counts as taken back. A child left `Failed` by
+a compensation of its own fails the parent's node without a retry (retrying finds it `Failed` again):
+retry the child with `retryCompensation`, then the parent. A child another worker still holds the
+lock of is handed back unchanged — running, waiting or completed — and the parent's node fails with
+a retryable `ChildFailedException` instead of recording the child as compensated while its effects
+stand.
+
 ### Waiting is a park, and it is polled
 
 A parent waiting on a child is `Awaiting`, with `awaiting` holding the **child's id** rather than a
