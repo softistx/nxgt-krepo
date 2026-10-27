@@ -32,6 +32,7 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 
 private const val TITLE = "Orders"
+private const val LONG_TITLE = "Quarterly attendance and behaviour report for the whole of the upper school"
 
 /** The styles the title nodes of an [AppBar] with this [size] were laid out with. */
 @OptIn(ExperimentalTestApi::class)
@@ -137,7 +138,7 @@ class AppBarTest :
                         setContent {
                             StxTheme(isDark = false) {
                                 AppBar(
-                                    title = "Quarterly attendance and behaviour report for the whole of the upper school",
+                                    title = LONG_TITLE,
                                     modifier = Modifier.testTag("bar"),
                                     size = size,
                                     navigationIcon = StxIcons.Menu,
@@ -149,6 +150,14 @@ class AppBarTest :
                             }
                         }
                         onNodeWithTag("bar").assertHeightIsEqualTo(64.dp)
+                        val lines =
+                            onAllNodes(hasText(LONG_TITLE)).fetchSemanticsNodes().mapNotNull { node ->
+                                val results = mutableListOf<TextLayoutResult>()
+                                node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
+                                results.firstOrNull()?.lineCount
+                            }
+                        lines.size shouldBeGreaterThan 0
+                        lines.forEach { it shouldBe 1 }
                     }
                 }
             }
