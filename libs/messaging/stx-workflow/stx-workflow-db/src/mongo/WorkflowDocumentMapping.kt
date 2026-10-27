@@ -31,7 +31,7 @@ internal fun decode(
 /**
  * When this instance should next be looked at, and null when the answer is never.
  *
- * The same three cases as `RedisWorkflowStore.due` and `JpaWorkflowStore.dueAt`, which is the
+ * The same three cases as `RedisWorkflowStore.due` and `dueAt` in `jpa/WorkflowRowMapping.kt`, which is the
  * point — a store that answered "what is due" differently would be a second set of rules for the
  * same engine. A finished instance and one parked on a signal are both out of the index;
  * everything else is due at its `wakeAt`, or one lease after its last checkpoint.
