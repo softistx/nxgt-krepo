@@ -245,10 +245,18 @@ class WorkflowEngine internal constructor(
      * A child that is no longer in the store cannot be taken back, and saying so is the point: this
      * fails the parent's compensation, the parent lands [WorkflowStatus.Failed], and a person gets
      * an instance to look at. Pretending it was undone would be the version nobody finds out about.
+     * The same holds for a child left [WorkflowStatus.Failed] by a compensation of its own: this throws
+     * [ChildFailedException], so the parent fails on the node too. Retry the child with
+     * [retryCompensation], then the parent.
      */
     internal suspend fun undoChild(id: String): WorkflowRecord {
         val record = store.load(id) ?: throw ChildLostException(id)
-        return if (record.status == WorkflowStatus.Completed) undo(id) else cancel(id)
+        val taken = if (record.status == WorkflowStatus.Completed) undo(id) else cancel(id)
+        // `cancel` hands a terminal instance back untouched, and `undo` lands `Failed` when the child's
+        // own compensation fails: either way the child is still `Failed`, its effects still standing,
+        // and reporting it as taken back would hide that from the parent's unwind.
+        if (taken.status == WorkflowStatus.Failed) throw ChildFailedException(id, taken.workflow, taken.status)
+        return taken
     }
 
     /**
@@ -267,9 +275,8 @@ class WorkflowEngine internal constructor(
      * cancel or an [undo], or `Failed` again if the compensation still fails — it can be retried as
      * often as it takes.
      *
-     * For a parent with a `child` node whose compensation failed, retry the child first. Until
-     * issue #319 is fixed the parent does not detect a child left `Failed` and counts it as
-     * compensated.
+     * For a parent with a `child` node whose compensation failed, retry the child first, then the
+     * parent: a child still `Failed` fails the parent's compensation of that node too.
      *
      * Two refusals, both [WorkflowException]s. An id with no instance is [WorkflowNotFoundException].
      * Any instance that is not `Failed` with a failed compensation in its journal is

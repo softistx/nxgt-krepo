@@ -101,6 +101,9 @@ class NonRetryableException(
  * it. That is the honest reading of a delegated piece of work that could not be done, and it is the
  * same shape as a step that threw — the parent does not get to inspect *how* the child failed and
  * carry on regardless, because the child has already compensated whatever it did.
+ *
+ * It is also thrown when a parent's compensation finds the child left `Failed` (its own compensation
+ * failed): the parent's unwind stops on that node. Retry the child first, then the parent.
  */
 class ChildFailedException(
     val id: String,
