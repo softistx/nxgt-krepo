@@ -28,7 +28,6 @@ import com.softistx.material.foundation.theme.Tone
 import com.softistx.material.foundation.theme.stxColors
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan as doubleGreater
 import io.kotest.matchers.ints.shouldBeGreaterThan
