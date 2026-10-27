@@ -28,7 +28,8 @@ fun StxThemeProvider(
 ) {
     StxTheme(
         isDark = isDark,
-        colorScheme = platformColorScheme(
+        colorScheme =
+            platformColorScheme(
                 seed = seed,
                 isDark = isDark,
                 dynamicColor = dynamicColor,

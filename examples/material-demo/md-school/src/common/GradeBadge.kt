@@ -11,11 +11,14 @@ import com.softistx.material.school.data.oneDecimal
 /** A mark below this is the only one that asks the teacher to act. */
 private const val PASS_MARK = 10.0
 
+/** Between this and the pass mark a mark is a caution; below it, an alarm. */
+private const val CAUTION_MARK = 8.0
+
 /** The tone a mark out of 20 reads as, or null from 10 up: amber from 8, red below. */
 fun scoreTone(score: Double): Tone? =
     when {
         score >= PASS_MARK -> null
-        score >= 8 -> Tone.Warning
+        score >= CAUTION_MARK -> Tone.Warning
         else -> Tone.Error
     }
 

@@ -57,7 +57,7 @@ can decide whether to offer the choice at all. Everything above that — the pro
 every component — is written once in the common source set.
 
 The rest of the palette derives from one seed by [material-kolor], including the `success` / `info`
-/ `warning` roles Material 3 does not define; those are added to *whatever* scheme arrives, seed or
+/ `warning` roles Material 3 does not define (`info` follows the scheme's `secondary` unless a colour is passed); those are added to *whatever* scheme arrives, seed or
 wallpaper. `error` is not re-derived — it is delegated to the M3 scheme, so there is exactly one
 red.
 

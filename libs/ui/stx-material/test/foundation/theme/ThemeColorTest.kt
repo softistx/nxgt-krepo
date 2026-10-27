@@ -58,7 +58,19 @@ class ThemeColorTest :
                     "surface" to (onSurface to surface),
                     "surfaceVariant" to (onSurfaceVariant to surfaceVariant),
                     "inverseSurface" to (inverseOnSurface to inverseSurface),
-                )
+                ) +
+                    listOf(
+                        "Lowest" to surfaceContainerLowest,
+                        "Low" to surfaceContainerLow,
+                        "" to surfaceContainer,
+                        "High" to surfaceContainerHigh,
+                        "Highest" to surfaceContainerHighest,
+                    ).flatMap { (name, container) ->
+                        listOf(
+                            "onSurface on surfaceContainer$name" to (onSurface to container),
+                            "onSurfaceVariant on surfaceContainer$name" to (onSurfaceVariant to container),
+                        )
+                    }
             }
 
         feature("the same seed") {

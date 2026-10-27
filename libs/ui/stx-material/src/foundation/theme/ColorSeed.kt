@@ -7,7 +7,10 @@ import com.materialkolor.dynamicColorScheme
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.softistx.material.foundation.style.scheme
 
-/** The hues the extra semantic roles are grown from, when a caller names none. `info` has none: it is the scheme's `secondary`. */
+/**
+ * The hues the extra semantic roles are grown from, when a caller names none.
+ * `info` has none: it is the scheme's `secondary`.
+ */
 private val SuccessSeed = Color(0xFF16A34A)
 private val WarningSeed = Color(0xFFF59E0B)
 
@@ -101,7 +104,11 @@ fun stxColors(
     isDark: Boolean,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     specVersion: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2025,
-): StxColors = stxColors(scheme = stxColorScheme(seed, isDark, paletteStyle, specVersion), isDark = isDark)
+): StxColors =
+    stxColors(
+        scheme = stxColorScheme(seed, isDark, paletteStyle, specVersion),
+        isDark = isDark,
+    )
 
 /** One semantic role, taken as the primary of a scheme grown from [hue]. */
 private fun roleFrom(

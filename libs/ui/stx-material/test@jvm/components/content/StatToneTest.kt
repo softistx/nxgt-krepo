@@ -20,6 +20,7 @@ class StatToneTest :
         feature("the delta of a stat") {
             scenario("paints no tone colour for the neutral Info tone") {
                 tonePixels(Tone.Info) shouldBe 0
+                tonePixels(Tone.Info, secondary = true) shouldBe 0
             }
 
             scenario("paints a dot in the tone colour for a meaningful tone") {
@@ -30,8 +31,17 @@ class StatToneTest :
     })
 
 /** How many pixels of the frame are exactly the main colour of the stat's own [tone]. */
-private fun tonePixels(tone: Tone): Int {
-    val target = stxColors(DefaultSeed, isDark = false).tone(if (tone == Tone.Info) Tone.Success else tone).main
+private fun tonePixels(
+    tone: Tone,
+    secondary: Boolean = false,
+): Int {
+    val colors = stxColors(DefaultSeed, isDark = false)
+    val target =
+        when {
+            secondary -> colors.scheme.secondary
+            tone == Tone.Info -> colors.tone(Tone.Success).main
+            else -> colors.tone(tone).main
+        }
     val scene = ImageComposeScene(width = 300, height = 160)
     try {
         scene.setContent {

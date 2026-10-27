@@ -46,8 +46,11 @@ the primary is the one accent and the rest of the screen stays quiet. `paletteSt
 `specVersion` are parameters of `stxColorScheme`, `stxColors(seed, …)`, `platformColorScheme` and
 `StxThemeProvider`; `PaletteStyle.Vibrant` and `PaletteStyle.Expressive` stay available for a
 brand that wants more colour. They apply to the seed path only — Android's wallpaper palette is
-the system's and is left alone. Every on-pair (`onPrimary` on `primary`, …) meets AA (4.5:1) in
-light and dark for each of these styles, which `ThemeColorTest` checks over several seeds.
+the system's and is left alone. Every on-pair (`onPrimary` on `primary`, …, plus `onSurface` and `onSurfaceVariant` over each
+`surfaceContainer*` role) meets AA (4.5:1) in light and dark for each of these styles, which
+`ThemeColorTest` checks over several seeds.
+
+The `success` and `warning` roles, grown from their own seeds, are pinned to `SPEC_2025` too.
 
 `info` follows the same budget: it is the scheme's `secondary`, so there is no fourth hue sitting
 close to the primary. Tones belong where they change what the reader does — a `StatusBadge` for a

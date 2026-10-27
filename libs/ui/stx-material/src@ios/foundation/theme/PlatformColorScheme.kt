@@ -18,4 +18,7 @@ actual fun platformColorScheme(
     dynamicColor: Boolean,
     paletteStyle: PaletteStyle,
     specVersion: ColorSpec.SpecVersion,
-): ColorScheme = remember(seed, isDark, paletteStyle, specVersion) { stxColorScheme(seed, isDark, paletteStyle, specVersion) }
+): ColorScheme =
+    remember(seed, isDark, paletteStyle, specVersion) {
+        stxColorScheme(seed, isDark, paletteStyle, specVersion)
+    }
