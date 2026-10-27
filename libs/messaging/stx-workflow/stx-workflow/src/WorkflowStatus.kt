@@ -10,7 +10,8 @@ package com.softistx.workflow
  *
  * [Failed] is the one that asks for a person. It does not mean "the workflow failed" — that is
  * [Compensated], and it is an ordinary outcome — it means "the workflow failed and undoing it
- * failed too", which no policy this library could invent would resolve.
+ * failed too", which no policy this library could invent would resolve. An operator resolves it with
+ * `WorkflowEngine.retryCompensation` once the compensation can work.
  */
 enum class WorkflowStatus {
     /** A node is running, or the next one is about to. */
@@ -31,7 +32,7 @@ enum class WorkflowStatus {
     /** A node failed, and every compensation owed for it succeeded. */
     Compensated,
 
-    /** A node failed, and a compensation failed too. Nothing here will retry it. */
+    /** A node failed, and a compensation failed too. Only `retryCompensation` moves it again. */
     Failed,
 
     /** Stopped on request. Whatever had already run was compensated first. */

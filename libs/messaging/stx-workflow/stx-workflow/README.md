@@ -146,7 +146,8 @@ somebody, and it is the only status exempt from the store's retention.
 `engine.resume(id)` is for an operator, a test, or an application with a scheduler of its own.
 Anybody who wants instances picked up automatically after a crash wants `WorkflowWorker`; `resume` in
 a `while (true)` loop is that class, written again and worse. It is here rather than beside a store
-because it asks the engine what is due and resumes it, and knows nothing else.
+because it asks the engine what is due and resumes it, and knows nothing else. A `Failed` instance is
+not resumed at all: `retryCompensation(id)` is what moves it.
 
 ## A wait is a record, not a coroutine
 
@@ -206,9 +207,11 @@ makes the status mean something; without it the only way in is `record(id)`, and
 id. Every store maintains an index for it on every write, and `Failed` is the one status exempt from
 retention everywhere — expiring it would delete the only description of what has to be fixed.
 
-Fix whatever the compensation was choking on, then `resume(workflow, id)`: the journal records which
-nodes were already compensated, so the unwind picks up where it stopped rather than undoing them
-twice.
+Fix whatever the compensation was choking on, then call `engine.retryCompensation(id)`. `resume`
+cannot do it, because `Failed` is terminal. The failed compensation is made due again and the unwind
+picks up where it stopped: nodes already compensated are not undone twice, and the instance lands
+`Compensated` (or `Cancelled`). It refuses an instance that is not `Failed` with a failed
+compensation. See the operator's inbox in [docs/workflow.md](../../../../docs/workflow.md).
 
 ## A node is matched by its name
 

@@ -4,6 +4,7 @@ import com.softistx.workflow.WorkflowError
 import com.softistx.workflow.WorkflowStatus
 import com.softistx.workflow.store.JournalEntry
 import com.softistx.workflow.store.NodeOutcome
+import com.softistx.workflow.store.WorkflowRecord
 import kotlin.time.Clock
 
 /**
@@ -19,6 +20,8 @@ import kotlin.time.Clock
  * the node named, and nothing here tries to keep going. Undoing the steps *before* one whose undo
  * failed leaves the world in a shape nobody can describe — a released reservation for an order that
  * is still charged — and no policy this library could invent is better than a person looking at it.
+ * That person fixes what the compensation choked on and calls `WorkflowEngine.retryCompensation`,
+ * which is [reopenFailedCompensations] followed by this function.
  */
 internal suspend fun <C> Run<C>.unwind() {
     while (true) {
@@ -33,6 +36,30 @@ internal suspend fun <C> Run<C>.unwind() {
         }
     }
     checkpoint { it.copy(status = if (record.cancelled) WorkflowStatus.Cancelled else WorkflowStatus.Compensated) }
+}
+
+/** The nodes whose compensation failed and has not been run again since. */
+internal fun WorkflowRecord.failedCompensations(): List<String> =
+    journal.map { it.node }.distinct().filter { latest(it)?.outcome == NodeOutcome.CompensationFailed }
+
+/**
+ * Makes every failed compensation due again, and puts the instance back to [WorkflowStatus.Compensating].
+ *
+ * The journal is append-only, so "due again" is a new `Succeeded` entry for the node — which is what
+ * its effect still is, since the undo never took it back — carrying the value of the entry it
+ * replaces, because a fan-out leg's compensation reads it. The `CompensationFailed` entry stays
+ * behind it as history. Compensations that already succeeded are untouched, which is what keeps the
+ * unwind that follows from refunding a charge twice. One write carries the entries and the status,
+ * so a crash cannot leave one without the other.
+ */
+internal suspend fun <C> Run<C>.reopenFailedCompensations() {
+    val now = Clock.System.now()
+    val due =
+        record.failedCompensations().map { node ->
+            val effect = record.journal.lastOrNull { it.node == node && it.outcome == NodeOutcome.Succeeded }
+            JournalEntry(node, NodeOutcome.Succeeded, effect?.attempts ?: 1, effect?.value, error = null, at = now)
+        }
+    checkpoint { it.copy(status = WorkflowStatus.Compensating, journal = it.journal + due) }
 }
 
 private fun <C> Run<C>.nextUndo(): JournalEntry? =
