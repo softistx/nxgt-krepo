@@ -1,4 +1,4 @@
-package com.softistx.material.foundation.layout
+package com.softistx.material.components.layout
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

@@ -6,11 +6,11 @@ import com.softistx.material.demo.stories.components.data.DataStories
 import com.softistx.material.demo.stories.components.datetime.DateTimeStories
 import com.softistx.material.demo.stories.components.feedback.FeedbackStories
 import com.softistx.material.demo.stories.components.form.FormStories
+import com.softistx.material.demo.stories.components.layout.LayoutStories
 import com.softistx.material.demo.stories.components.media.MediaStories
 import com.softistx.material.demo.stories.components.navigation.NavigationStories
 import com.softistx.material.demo.stories.components.surface.SurfaceStories
 import com.softistx.material.demo.stories.foundation.FoundationStories
-import com.softistx.material.demo.stories.foundation.LayoutStories
 import com.softistx.material.demo.stories.foundation.MotionStories
 import com.softistx.material.demo.stories.screens.ScreenStories
 
@@ -26,11 +26,11 @@ val CatalogGroups: List<StoryGroup> =
         // Foundation: what the library is built from.
         FoundationStories,
         MotionStories,
-        LayoutStories,
         // Components, in the order of their families.
         ButtonStories,
         FormStories,
         NavigationStories,
+        LayoutStories,
         FeedbackStories,
         ContentStories,
         SurfaceStories,

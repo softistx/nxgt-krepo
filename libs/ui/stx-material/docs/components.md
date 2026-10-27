@@ -416,6 +416,8 @@ below `collapseBelow` it stacks.
 
 ### Layout
 
+Package `com.softistx.material.components.layout`.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `ResponsiveGrid` | `items`, `minSize = 200.dp`, `item` | `layout/responsive-grid` |

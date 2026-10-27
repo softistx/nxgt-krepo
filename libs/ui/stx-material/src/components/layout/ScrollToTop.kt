@@ -1,4 +1,4 @@
-package com.softistx.material.foundation.layout
+package com.softistx.material.components.layout
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.BoxScope

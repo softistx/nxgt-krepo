@@ -211,8 +211,9 @@ Suivi dans #291. Une version mineure marquée *breaking* : ce que l'on y gagne, 
 dont la forme se lit dans les imports.
 
 - [x] **Des paquets qui disent à quoi ils servent.** `com.softistx.material.foundation.*` (`theme`,
-      `style`, `motion`, `layout`, `icon`, `text`) porte ce dont tout le reste est fait ;
-      `com.softistx.material.components.*` (`button`, `form`, `navigation`, `feedback`, `content`,
+      `style`, `motion`, `layout` pour les aides de taille de fenêtre, `icon`, `text`) porte ce dont
+      tout le reste est fait, sans aucun composant ;
+      `com.softistx.material.components.*` (`button`, `form`, `navigation`, `layout`, `feedback`, `content`,
       `surface`, `media`, `data`, `datetime`) porte les composants, une famille par dossier. Un
       dossier est un paquet, et le `*Styles.kt` d'un composant reste à côté de lui
 - [x] **Ce qui rend compte d'un état est au même endroit.** Alertes, bandeaux, badges de statut,

@@ -31,10 +31,10 @@ class EveryStoryRendersTest :
                     listOf(
                         "Foundation",
                         "Motion",
-                        "Layout",
                         "Buttons",
                         "Forms",
                         "Navigation",
+                        "Layout",
                         "Feedback",
                         "Content",
                         "Surfaces",

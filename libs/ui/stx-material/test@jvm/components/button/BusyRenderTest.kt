@@ -17,10 +17,10 @@ import com.softistx.material.components.feedback.LabeledProgress
 import com.softistx.material.components.form.CheckState
 import com.softistx.material.components.form.CopyField
 import com.softistx.material.components.form.TriStateCheckbox
+import com.softistx.material.components.layout.SelectionBar
 import com.softistx.material.components.surface.Disclosure
 import com.softistx.material.components.surface.MenuItem
 import com.softistx.material.foundation.icon.StxIcons
-import com.softistx.material.foundation.layout.SelectionBar
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec

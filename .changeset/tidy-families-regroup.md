@@ -10,8 +10,8 @@ BREAKING: the packages moved to `com.softistx.material.foundation.*` and `com.so
 | `theme.StyleTokens` (the `StyleScope.colors` / `scheme` / `shapes` / `spacing` / `motion` extensions) | `foundation.style` |
 | `style` (`StxStyles`, `StxTheme.styles`) | `foundation.style` |
 | `motion` | `foundation.motion` |
-| `layout` | `foundation.layout` |
-| `helpers` (`wCompact`, `hExpanded`, …) | `foundation.layout` |
+| `layout`: `ResponsiveGrid`, `ScrollToTop`, `LoadMoreButton`, `SelectionBar`, `RefreshBox` | `components.layout` |
+| `helpers` (`Breakpoints`, `wCompact`, `hExpanded`, …) | `foundation.layout` (window-size helpers only) |
 | `icon` | `foundation.icon` |
 | `text` | `foundation.text` |
 | `button` | `components.button` |

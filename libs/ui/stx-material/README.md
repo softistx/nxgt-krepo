@@ -14,7 +14,7 @@ libs/ui/stx-material/
     theme/    tokens, StxTheme, the colour seed, and the platform scheme's expect
     style/    StxStyles — every component default in one place — and the StyleScope token extensions
     motion/   the M3 MotionScheme, transitions, shimmer, stagger
-    layout/   the window-size helpers
+    layout/   the window-size and responsive helpers (Breakpoints, wCompact, LocalWindowSize, …)
     text/     Typography and the variant scale
     icon/     Icon and the library's own icon set
   src/components/            the components, one folder per family         (com.softistx.material.components.*)
@@ -23,6 +23,7 @@ libs/ui/stx-material/
     navigation/  AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, StepFooter, BottomBar, Breadcrumb
     feedback/    what reports state: Alert, AnnouncementBar, PromoBanner, StatusBadge, StatusDot, Skeleton, Toaster, Progress, LabeledProgress, LoadingMark, TypingIndicator, UiState, ApiResponse
     content/     Card, ListTile, Stat, EmptyState, Chip, ActionChip, SuggestionChip, FileChip, MentionChip, Kbd, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText, ReactionBar, QuoteBlock, LinkPreview, MessageBubble, Comment, ReplyPreview, PinBar, Price, FeatureList, PricingCard
+    layout/      ResponsiveGrid, ScrollToTop, LoadMoreButton, SelectionBar, RefreshBox
     surface/     ConfirmDialog, Sheet, Drawer, Tooltip, HelpTip, HoverCard, Menu, ContextMenu, Accordion, Disclosure, Carousel, SwipeActions
     media/       Avatar, AvatarGroup, PersonCard, SeenBy, StxImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
     data/        DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline, SortControl, QueryFilter
@@ -33,9 +34,8 @@ libs/ui/stx-material/
 ```
 
 A folder is a package: `src/components/button/Button.kt` is `com.softistx.material.components.button`.
-A component's `*Styles.kt` sits beside it. Where a piece of `layout/` is a component rather than a
-helper (`ResponsiveGrid`, `ScrollToTop`, `LoadMoreButton`, `SelectionBar`, `RefreshBox`), it lives in
-`foundation/layout/` with the window-size helpers.
+A component's `*Styles.kt` sits beside it. `foundation` holds no components: the layout components live in
+`components/layout/`, and `foundation/layout/` keeps only the window-size helpers.
 
 
 ## The shape of it

@@ -1,4 +1,4 @@
-package com.softistx.material.demo.stories.foundation
+package com.softistx.material.demo.stories.components.layout
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,13 +15,13 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.content.Card
 import com.softistx.material.components.content.ListTile
+import com.softistx.material.components.layout.LoadMoreButton
+import com.softistx.material.components.layout.RefreshBox
+import com.softistx.material.components.layout.ResponsiveGrid
+import com.softistx.material.components.layout.ScrollToTop
+import com.softistx.material.components.layout.SelectionBar
 import com.softistx.material.demo.storyGroup
 import com.softistx.material.foundation.icon.StxIcons
-import com.softistx.material.foundation.layout.LoadMoreButton
-import com.softistx.material.foundation.layout.RefreshBox
-import com.softistx.material.foundation.layout.ResponsiveGrid
-import com.softistx.material.foundation.layout.ScrollToTop
-import com.softistx.material.foundation.layout.SelectionBar
 import com.softistx.material.foundation.text.Typography
 
 val LayoutStories =
