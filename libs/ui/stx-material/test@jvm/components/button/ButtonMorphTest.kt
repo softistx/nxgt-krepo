@@ -213,7 +213,6 @@ class ButtonMorphTest :
         }
     })
 
-
 /**
  * The painted container's height down the node's centre line. The node's own bounds include M3's
  * 48 dp touch target, which is larger than what is drawn.
