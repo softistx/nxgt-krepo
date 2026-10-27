@@ -87,7 +87,7 @@ fun ButtonSurface(
     MaterialButton(
         onClick = onClick,
         shapes = ButtonDefaults.shapesFor(size.height),
-        modifier = modifier.heightIn(min = size.height).styleable(styleState, morphingButtonStyle, style),
+        modifier = modifier.heightIn(min = if (variant == ButtonVariant.Link) 0.dp else size.height).styleable(styleState, morphingButtonStyle, style),
         enabled = enabled,
         colors = buttonColors(variant, color),
         elevation = null,
@@ -98,7 +98,10 @@ fun ButtonSurface(
     )
 }
 
-/** A link is text in a sentence, so it keeps no padding of its own; the rest use M3's. */
+/**
+ * A link is text in a sentence, so it keeps no padding of its own and [size] gives it no height;
+ * the rest use M3's padding for the size.
+ */
 private fun contentPadding(
     variant: ButtonVariant,
     size: ButtonSize,
