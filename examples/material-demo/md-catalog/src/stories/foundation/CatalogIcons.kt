@@ -35,4 +35,9 @@ val CatalogIcons: List<Pair<String, ImageVector>> =
         "ViewGrid" to StxIcons.ViewGrid,
         "Send" to StxIcons.Send,
         "Pin" to StxIcons.Pin,
+        "Touch" to StxIcons.Touch,
+        "Bell" to StxIcons.Bell,
+        "Printer" to StxIcons.Printer,
+        "Phone" to StxIcons.Phone,
+        "EditNote" to StxIcons.EditNote,
     )

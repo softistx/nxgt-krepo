@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularProgressIndicator
@@ -75,7 +76,7 @@ internal fun DestinationLabel(
     val shortcut = destination.showShortcut(compact)
     val supporting = destination.showSupporting(compact)
     if (!chip && !shortcut && !supporting) {
-        Typography(text = destination.label)
+        DestinationName(destination.label, compact)
         return
     }
     Column {
@@ -83,7 +84,7 @@ internal fun DestinationLabel(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
-            Typography(text = destination.label)
+            DestinationName(destination.label, compact)
             if (chip) Chip(text = destination.chip!!)
             if (shortcut) {
                 Typography(
@@ -109,5 +110,25 @@ internal fun DestinationBadge(destination: NavigationDestination) {
         ResolvedBadge.None -> Unit
         ResolvedBadge.Dot -> Badge()
         is ResolvedBadge.Label -> StatusBadge(text = badge.text, tone = badge.tone)
+    }
+}
+
+/**
+ * The destination's name. On a compact bar it is one line that ends in an ellipsis, with half of
+ * M3's 8 dp item gap on each side, so "Dashboard" never wraps and two neighbours never touch.
+ */
+@Composable
+private fun DestinationName(
+    label: String,
+    compact: Boolean,
+) {
+    if (compact) {
+        Typography(
+            text = label,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = StxTheme.spacing.xs),
+        )
+    } else {
+        Typography(text = label)
     }
 }
