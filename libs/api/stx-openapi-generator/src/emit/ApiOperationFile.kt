@@ -78,7 +78,10 @@ internal fun apiOperationFile(options: EmitOptions): FileSpec {
                     .initializer("security")
                     .addKdoc(
                         """
-                        The schemes this operation requires, by the document's own name for each.
+                        What a caller may send to be let in: one element per *alternative*, any one of
+                        which is enough. An alternative is the document's own names of the schemes it
+                        needs together, joined by `,` (`"ApiKey,Basic"`), and the empty string is the
+                        anonymous alternative `{}`, which allows the call with no credential.
 
                         Empty means no credential. The document can say that two ways — by declaring
                         nothing anywhere, or by overriding its root with `security: []` — and to a

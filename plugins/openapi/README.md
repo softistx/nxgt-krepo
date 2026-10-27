@@ -136,6 +136,12 @@ Without `ApiErrors`, Ktor leaves `expectSuccess` off and a `404` carrying an err
 the deserializer as the success type — what surfaces is a complaint about a body of the wrong shape,
 with no status and no parsed body. Without `ApiAuth`, nothing attaches a credential.
 
+With `ApiAuth`, an operation's `security` is a list of alternatives: the client sends the first one
+whose credentials are all configured, sends none when the document allows `{}` and nothing is
+configured, and otherwise throws an `IllegalStateException` naming the expected alternatives before
+the request leaves. The rules and an example are in
+[`docs/openapi-support.md`](../../docs/openapi-support.md#authentication).
+
 **`client: Spring`** — no processing step; `$libs.spring.web` is enough to compile, and the
 interfaces are handed to `HttpServiceProxyFactory` at runtime. Because the functions are `suspend`,
 the proxy needs a reactive adapter (`WebClientAdapter`, from spring-webflux) rather than
@@ -198,8 +204,10 @@ Use it where the API surface is hand-written or lives elsewhere but the payload 
 follow the document.
 
 **Any style, if the document declares an unfamiliar `http` security scheme** — `digest` or
-`negotiate` — and an operation requires it: the emit fails naming the operation. The credential for
-one of those is the answer to a server challenge, not a value the client can be handed. `oauth2` and
+`negotiate` — and an operation requires it as its only way in: the emit fails naming the operation.
+The credential for one of those is the answer to a server challenge, not a value the client can be
+handed. When the operation lists another alternative (`[{Digest}, {Bearer}]`) that one is emitted and
+the unsupported one is dropped. `oauth2` and
 `openIdConnect` are fine: this generator does not run the flow, but the token a flow produces goes
 in the same bearer header, and the slot is there for you to put it in.
 

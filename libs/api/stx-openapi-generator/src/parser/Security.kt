@@ -31,17 +31,22 @@ internal fun OpenAPI.parseSecuritySchemes(): List<SecurityScheme> =
  * uses `security: []` on its sign-in and sign-up operations, and what a caller needs to know is only
  * that they take no credential.
  *
+ * The result keeps OpenAPI's shape: the outer list is the alternatives (any one will do), each inner
+ * list the schemes that alternative needs together. `{}` is an alternative with no schemes, which
+ * is how a document says anonymous access is allowed beside the others; it stays in the list so an
+ * emitter can tell "none required" (empty outer list) from "none, or one of these".
+ *
  * Resolving here rather than in an emitter is what keeps the rule in one place; an emitter that
  * re-derived it would be a second chance to get the override backwards.
  */
 internal fun OpenAPI.parseSecurity(
     operation: SwaggerOperation,
     where: String,
-): List<SecurityRequirement> {
+): List<List<SecurityRequirement>> {
     val declared = operation.security ?: security ?: return emptyList()
     val known = components?.securitySchemes.orEmpty().keys
-    return declared.flatMap { requirement ->
-        requirement.map { (name, scopes) ->
+    return declared.map { alternative ->
+        alternative.map { (name, scopes) ->
             if (name !in known) {
                 throw OpenApiParseException(
                     "$where requires security scheme '$name', which components.securitySchemes does not " +

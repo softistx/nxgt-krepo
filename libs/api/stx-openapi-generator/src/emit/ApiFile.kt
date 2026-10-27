@@ -54,10 +54,7 @@ private fun identify(
                 .addMember("id = %S", operation.id)
                 .apply {
                     if (operation.security.isNotEmpty()) {
-                        addMember(
-                            "security = [%L]",
-                            operation.security.joinToString(", ") { "\"${it.scheme}\"" },
-                        )
+                        addMember("security = [%L]", operation.encodedSecurity().joinToString(", ") { "\"$it\"" })
                     }
                 }.build(),
         ).build()

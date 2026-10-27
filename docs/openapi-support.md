@@ -311,6 +311,69 @@ that declares its own `security` **replaces** the document root's rather than ad
 `security: []` replaces it with nothing. Both "declares nothing anywhere" and "`security: []`"
 arrive at the client as *no credential*, because to a caller they are the same instruction.
 
+### Alternatives
+
+`security` is a list of **alternatives**: any one of them lets the call in, and the schemes inside
+one entry are *all* needed together. The generator keeps that shape from the parser to the client
+instead of flattening it into one list of schemes, which would turn "or" into "and" and send every
+credential the client holds.
+
+```yaml
+components:
+  securitySchemes:
+    Bearer: { type: http, scheme: bearer }
+    Basic: { type: http, scheme: basic }
+    ApiKey: { type: apiKey, in: header, name: X-Api-Key }
+paths:
+  /reports:
+    get:
+      operationId: findReports
+      security:
+        - Bearer: []          # a bearer token,
+        - ApiKey: []          # or an api key together with
+          Basic: []           #    basic credentials,
+        - {}                  # or nothing at all
+```
+
+An entry with no schemes, `{}`, is the **anonymous** alternative: the document allows the call with
+no credential. It is not the same as `security: []`, which says the call needs nothing and has no
+other way in; the difference only shows when the client holds a credential for one of the others
+(see below).
+
+Every generated function carries the alternatives in `@ApiOperation(security = [...])` as one
+string per alternative, its scheme names joined by `,`, and `""` for the anonymous one — the example
+above is `["Bearer", "ApiKey,Basic", ""]`. An annotation cannot hold an array of arrays, hence the
+encoding. A scheme whose own name contains a comma cannot be encoded and is an `EmitException`.
+
+**What the client does**, Ktorfit's `ApiAuth` plugin and Spring's `apiAuthFilter` alike:
+
+1. It walks the alternatives in the document's order and takes the **first one whose every scheme
+   has a credential** — a slot that is set and returns a value. Only that alternative's credentials
+   go on the request: with `[{Bearer}, {ApiKey}]` and both slots set, a bearer token is sent and the
+   api key is not. A slot is read when the walk reaches its scheme, so a token that costs a refresh
+   is only fetched when an alternative gets that far.
+2. If none is complete and `{}` is among the alternatives, it **sends no credential** — whatever
+   the position of `{}`: it only counts when nothing else could be sent.
+3. Otherwise it throws an `IllegalStateException` **before sending**, naming the operation and the
+   alternatives it expected: `findReports needs a credential for one of [Bearer] or [ApiKey + Basic],
+   but none is configured`. (With `{}` absent the document does not allow the call, so the request
+   would only come back as a 401 that does not say which slot to fill.)
+
+An operation with no `security` at all, or `security: []`, sends no credential and never throws.
+
+**There is no generated server side.** This generator emits clients (Ktorfit and Spring
+`WebClient`) and models; nothing it writes checks an incoming request's credentials, so "a server
+accepts a request once one alternative is satisfied" is for the server's own security layer to
+implement. The `@ApiOperation` annotation and the document are what such a layer would read.
+
+**An alternative the generator cannot handle** — one naming a scheme it has no credential for, such
+as `digest` (see below) — no longer fails the emit as long as another alternative of the same
+operation is handled. It is *dropped*: left out of the annotation, never chosen, and not named in the
+error above. An alternative counts as unhandled when **any** of its schemes is, because a client
+cannot satisfy half of an "and". The anonymous alternative is a handled one, so
+`[{Digest}, {}]` is emitted as anonymous-only. An operation left with **no** handled alternative
+is still an `EmitException`, since a `security` of nothing would read as "open".
+
 `ApiAuthConfig` is generated with one slot per declared scheme — including schemes no operation
 currently requires, since a document that declares one is describing a surface its author expects
 to use. Each slot is a suspending function called per request, so a token that expires can be
@@ -335,8 +398,9 @@ caller's job.
 
 What *is* refused is an `http` scheme this generator does not know — `digest`, `negotiate` — where
 the credential is the answer to a server challenge rather than a value the caller holds. Declaring
-one parses; an operation **requiring** one is an `EmitException` naming the operation and the
-scheme.
+one parses and gets no slot; an operation whose **every** alternative requires one is an
+`EmitException` naming the operation and the scheme. An operation that offers another alternative
+still emits, as described under *Alternatives*.
 
 ## Endpoints
 

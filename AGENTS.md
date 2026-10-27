@@ -121,6 +121,9 @@ parsed `ErrorResponse`, with a base `ApiException(status, rawBody)` for a status
 not declare, one it declared without a body, and a body that does not parse. `securitySchemes` and
 `security` become `ApiAuthConfig`, one suspending credential slot per declared scheme, resolved
 against the document root — `security: []` on an operation means *no* credential, not the root's.
+An operation's `security` stays a list of *alternatives* (OR, each an AND of schemes) all the way to
+the client, which sends the first alternative it holds every credential for, none when `{}` is
+allowed, and otherwise throws before sending; `docs/openapi-support.md` has the rules.
 
 Both need the same thing: the operation has to reach the HTTP layer, where the status and the body
 live but the operation is anonymous. Every generated function therefore carries `@ApiOperation(id,

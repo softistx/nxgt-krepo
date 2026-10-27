@@ -2,10 +2,11 @@ package com.softistx.demo.spring
 
 import com.softistx.demo.api.DemoServer
 import com.softistx.demo.api.startDemoServer
-import com.softistx.demo.spring.api.utils.ErrorResponseException
+import com.softistx.demo.spring.api.utils.BasicCredentials
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 
 /**
  * The document says which operations need a credential and which do not — a root
@@ -40,10 +41,12 @@ class AuthTest :
                 authorized.session.whoAmI().subject shouldBe "s3cret"
             }
 
-            scenario("without one the call fails as the document says it will") {
-                val thrown = shouldThrow<ErrorResponseException> { anonymous.session.whoAmI() }
-                thrown.status shouldBe 401
-                thrown.error.message shouldBe "no bearer token"
+            scenario("without one the call fails before it is sent, naming what was expected") {
+                // No alternative is configured and the document offers no anonymous one, so the client
+                // refuses rather than send a request it knows the server will answer with a 401.
+                val thrown = shouldThrow<IllegalStateException> { anonymous.session.whoAmI() }
+                thrown.message shouldContain "whoAmI"
+                thrown.message shouldContain "[Bearer]"
             }
         }
 
@@ -66,6 +69,51 @@ class AuthTest :
                 client.session.whoAmI().subject shouldBe "first"
                 current = "second"
                 client.session.whoAmI().subject shouldBe "second"
+            }
+        }
+    
+        // The same alternatives the Ktorfit client's AuthTest asks about: any one is enough, and a
+        // client sends the first it holds a credential for and never two.
+        feature("an operation whose security lists a bearer token or basic credentials") {
+            val base64 = java.util.Base64.getEncoder()
+
+            fun client(
+                token: String?,
+                basic: BasicCredentials?,
+            ) = SpringDemoClient(
+                server.baseUrl,
+                token = token?.let { t -> suspend { t } },
+                basic = basic?.let { b -> suspend { b } },
+            )
+
+            scenario("a client holding the first alternative sends it") {
+                client("t0k", null).session.echoEither().authorization shouldBe "Bearer t0k"
+            }
+
+            scenario("a client holding only the second sends that one") {
+                client(null, BasicCredentials("ada", "pw")).session.echoEither().authorization shouldBe
+                    "Basic " + base64.encodeToString("ada:pw".toByteArray())
+            }
+
+            scenario("a client holding both sends the first alternative only, never both") {
+                client("t0k", BasicCredentials("ada", "pw")).session.echoEither().authorization shouldBe "Bearer t0k"
+            }
+
+            scenario("a client holding neither fails before sending, naming the alternatives") {
+                val thrown = shouldThrow<IllegalStateException> { client(null, null).session.echoEither() }
+                thrown.message shouldContain "echoEither"
+                thrown.message shouldContain "[Bearer] or [Basic]"
+            }
+        }
+
+        feature("an operation whose security lists a bearer token or {}") {
+
+            scenario("a client holding a token sends it") {
+                authorized.session.echoOptional().authorization shouldBe "Bearer s3cret"
+            }
+
+            scenario("a client holding none sends nothing, instead of failing") {
+                anonymous.session.echoOptional().authorization shouldBe null
             }
         }
     })

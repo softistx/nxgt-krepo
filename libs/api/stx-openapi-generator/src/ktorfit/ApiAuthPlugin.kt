@@ -9,6 +9,7 @@ import com.softistx.openapi.emit.GENERATED_COMMENT
 import com.softistx.openapi.emit.apiOperationName
 import com.softistx.openapi.emit.authConfigType
 import com.softistx.openapi.emit.basicCredentialsType
+import com.softistx.openapi.emit.chooseAlternative
 import com.softistx.openapi.emit.credentialSchemes
 import com.softistx.openapi.emit.needsBasicCredentials
 import com.squareup.kotlinpoet.ClassName
@@ -29,7 +30,8 @@ import com.squareup.kotlinpoet.PropertySpec
  * own copy of the list.
  *
  * `onRequest` reads the requirement off `@ApiOperation`, which Ktorfit puts on the request and
- * ktorfit-ksp carries through from the generated interface.
+ * ktorfit-ksp carries through from the generated interface. The requirement is a list of
+ * alternatives, and [chooseAlternative] holds the rule for picking one.
  *
  * ```kotlin
  * install(ApiAuth) { bearer = { tokenStore.current() } }
@@ -49,18 +51,12 @@ internal fun apiAuthFile(
             .addStatement("val credentials = pluginConfig")
             .beginControlFlow("onRequest { request, _ ->")
             .addStatement(
-                "val required = request.%M.filterIsInstance<%T>().firstOrNull()?.security ?: return@onRequest",
+                "val operation = request.%M.filterIsInstance<%T>().firstOrNull() ?: return@onRequest",
                 ANNOTATIONS,
                 apiOperationName(options),
-            ).beginControlFlow("required.forEach { scheme ->")
-            .beginControlFlow("when (scheme)")
-            .apply { schemes.forEach { add(it.attach()) } }
-            // A requirement naming a scheme with no slot cannot happen — the parser rejects a
-            // requirement the document does not declare, and the emitter rejects one no client can
-            // satisfy — but `when` over a String is not exhaustive, so it has to be said.
-            .addStatement("else -> Unit")
-            .endControlFlow()
-            .endControlFlow()
+            ).addStatement("val alternatives = operation.security")
+            .addStatement("if (alternatives.isEmpty()) return@onRequest")
+            .add(chooseAlternative(schemes, "alternatives", "operation.id") { it.attach() })
             .endControlFlow()
             .endControlFlow()
             .build()
@@ -73,6 +69,11 @@ internal fun apiAuthFile(
                 """
                 Attaches the credential each operation's `security` asks for, and nothing to the
                 operations that ask for none.
+
+                `security` is a list of alternatives: the first one whose credentials are all
+                configured is sent, and only those. When none is configured and the document allows
+                anonymous access (`{}`) nothing is sent; otherwise the request fails with an
+                [IllegalStateException] naming the expected alternatives, before it leaves.
 
                 Install it on the `HttpClient` the `Ktorfit` instance is built with.
                 """.trimIndent(),
@@ -88,58 +89,37 @@ internal fun apiAuthFile(
         .build()
 }
 
-/** One `when` branch: where this scheme's credential goes on the request. */
+/** The statements that put this scheme's credential, held in `value`, on the request. */
 private fun SecurityScheme.attach(): CodeBlock {
-    val builder = CodeBlock.builder().beginControlFlow("%S ->", name)
+    val builder = CodeBlock.builder()
     when (kind) {
         SecurityKind.HttpBearer, SecurityKind.OAuthToken -> {
-            builder.addStatement(
-                "credentials.%N?.invoke()?.let { request.headers.append(%S, %P) }",
-                propertyName,
-                "Authorization",
-                "Bearer \$it",
-            )
+            builder.addStatement("request.headers.append(%S, %P)", "Authorization", "Bearer \$value")
         }
 
         SecurityKind.HttpBasic -> {
             builder
-                .addStatement("val basic = credentials.%N?.invoke()", propertyName)
-                .beginControlFlow("if (basic != null)")
-                .addStatement("val encoded = %T.encode(%P.encodeToByteArray())", BASE64, "\${basic.username}:\${basic.password}")
+                .addStatement("val encoded = %T.encode(%P.encodeToByteArray())", BASE64, "\${value.username}:\${value.password}")
                 .addStatement("request.headers.append(%S, %P)", "Authorization", "Basic \$encoded")
-                .endControlFlow()
         }
 
         SecurityKind.ApiKeyHeader -> {
-            builder.addStatement(
-                "credentials.%N?.invoke()?.let { request.headers.append(%S, it) }",
-                propertyName,
-                parameterName.orEmpty(),
-            )
+            builder.addStatement("request.headers.append(%S, value)", parameterName.orEmpty())
         }
 
         SecurityKind.ApiKeyQuery -> {
-            builder.addStatement(
-                "credentials.%N?.invoke()?.let { request.url.parameters.append(%S, it) }",
-                propertyName,
-                parameterName.orEmpty(),
-            )
+            builder.addStatement("request.url.parameters.append(%S, value)", parameterName.orEmpty())
         }
 
         SecurityKind.ApiKeyCookie -> {
-            builder.addStatement(
-                "credentials.%N?.invoke()?.let { request.headers.append(%S, %P) }",
-                propertyName,
-                "Cookie",
-                "${parameterName.orEmpty()}=\$it",
-            )
+            builder.addStatement("request.headers.append(%S, %P)", "Cookie", "${parameterName.orEmpty()}=\$value")
         }
 
         SecurityKind.Unsupported -> {
             error("a scheme with no credential slot should not be here")
         }
     }
-    return builder.endControlFlow().build()
+    return builder.build()
 }
 
 private val CLIENT_PLUGIN = ClassName("io.ktor.client.plugins.api", "ClientPlugin")

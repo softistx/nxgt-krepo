@@ -7,6 +7,7 @@ import com.softistx.demo.spring.api.apis.SessionApi
 import com.softistx.demo.spring.api.apis.TagsApi
 import com.softistx.demo.spring.api.models.CategoryRequest
 import com.softistx.demo.spring.api.utils.ApiAuthConfig
+import com.softistx.demo.spring.api.utils.BasicCredentials
 import com.softistx.demo.spring.api.utils.apiAuthFilter
 import com.softistx.demo.spring.api.utils.apiErrorFilter
 import com.softistx.demo.spring.api.utils.apiOperationProcessor
@@ -39,10 +40,18 @@ public class SpringDemoClient(
      * else. Called per request, so a token that expires can be replaced behind it.
      */
     token: (suspend () -> String?)? = null,
+    /**
+     * Basic credentials, for the one operation whose `security` offers them as an alternative to the
+     * bearer token. Called per request, like [token].
+     */
+    basic: (suspend () -> BasicCredentials?)? = null,
 ) {
     // Generated: one credential slot per scheme the document declares. The same class the Ktorfit
     // client configures, because a credential is a fact about the document, not about the client.
-    private val credentials = ApiAuthConfig().apply { bearer = token }
+    private val credentials = ApiAuthConfig().apply {
+        bearer = token
+        this.basic = basic
+    }
 
     private val webClient =
         WebClient

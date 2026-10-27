@@ -14,6 +14,7 @@ import com.softistx.demo.client.api.models.CategoryRequest
 import com.softistx.demo.client.api.models.SearchRequest
 import com.softistx.demo.client.api.utils.ApiAuth
 import com.softistx.demo.client.api.utils.ApiErrors
+import com.softistx.demo.client.api.utils.BasicCredentials
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -33,6 +34,11 @@ public class DemoClient(
      * else. Called per request, so a token that expires can be replaced behind it.
      */
     token: (suspend () -> String?)? = null,
+    /**
+     * Basic credentials, for the one operation whose `security` offers them as an alternative to the
+     * bearer token. Called per request, like [token].
+     */
+    basic: (suspend () -> BasicCredentials?)? = null,
 ) : AutoCloseable {
     /** The URL this client was built against, so a test can build a second one beside it. */
     public val baseUrl: String = baseUrl
@@ -46,7 +52,10 @@ public class DemoClient(
             // Generated: attaches the credential each operation's `security` asks for. The
             // document's sign-in operations override the root with `security: []`, so this is
             // also what keeps the token off the endpoints that hand it out.
-            install(ApiAuth) { bearer = token }
+            install(ApiAuth) {
+                bearer = token
+                this.basic = basic
+            }
         }
 
     private val ktorfit =
