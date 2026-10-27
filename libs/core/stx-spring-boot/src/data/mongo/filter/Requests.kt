@@ -16,13 +16,24 @@ import org.springframework.web.reactive.function.server.queryParamOrNull
  * It lives here and not in `web/` because `Sort` is a spring-data-commons type: a route reading a
  * query parameter should not put a data-access library on its consumer's classpath. This is the
  * package that already has one.
+ *
+ * With [allowed], a property outside that set fails as `filters.invalid`, the way an unlisted filter
+ * field does; null sorts by whatever the client named. Dotted paths are matched whole, as in
+ * [parseFilter].
  */
-fun List<SortOrder>.toSort(): Sort =
+fun List<SortOrder>.toSort(allowed: Set<String>? = null): Sort =
     if (isEmpty()) {
         Sort.unsorted()
     } else {
-        Sort.by(map { if (it.descending) Sort.Order.desc(it.property) else Sort.Order.asc(it.property) })
+        Sort.by(
+            map {
+                if (allowed != null && it.property !in allowed) throw invalid(it.clause)
+                if (it.descending) Sort.Order.desc(it.property) else Sort.Order.asc(it.property)
+            },
+        )
     }
+
+private val SortOrder.clause get() = "$property:${if (descending) "DESC" else "ASC"}"
 
 /** The `?filter=` parameter of this request, as a query. */
 val ServerRequest.mongoFilter: Query get() = queryParamOrNull("filter").parseFilter()
@@ -46,8 +57,18 @@ val ServerRequest.mongoQuery: Query get() = mongoFilter.with(sort.toSort())
  * on the query, where the keyset machinery cannot see it: the rows come back sorted and the cursor is
  * built from `_id` alone, so the first page is right, the second is empty, and nothing says so.
  * [MongoPage] now refuses it outright — this is what to write instead.
+ *
+ * Pass [allowed] — the fields a client may filter and sort on — on any route over a collection with
+ * a field that must not leak; see [parseFilter]. Null allows every field.
  */
 fun ServerRequest.mongoPage(
     size: Int = this.size,
     cursor: String? = this.cursor,
-): MongoPage = MongoPage.first(size, cursor = cursor, query = mongoFilter, sort = sort.toSort())
+    allowed: Set<String>? = null,
+): MongoPage =
+    MongoPage.first(
+        size,
+        cursor = cursor,
+        query = queryParamOrNull("filter").parseFilter(allowed),
+        sort = sort.toSort(allowed),
+    )

@@ -126,6 +126,41 @@ given the ones that do not.
 The failure arrives as `ApiException.badRequest("filters.invalid", mapOf("filter" to clause))`, so
 the response names the clause it could not read, translated.
 
+## Which fields a client may name
+
+**Unset, every field of the collection is filterable and sortable.** `?filter=passwordHash:like:a`
+answers whether a hash contains an `a`, and a client repeats that per character until it has read
+the field — an oracle on data the response never returns. `parseFilter`, `toSort` and `mongoPage`
+therefore take an optional `allowed: Set<String>`; null keeps the open behaviour, so an existing
+route compiles and behaves as before, and **any route over a collection with a field that must not
+leak should set it**.
+
+```kotlin
+private val FILTERABLE = setOf("status", "total", "placedAt", "customer.city")
+
+suspend fun list(request: ServerRequest): ServerResponse =
+    ok(template.findPage<Order>(request.mongoPage(allowed = FILTERABLE)))
+
+// Without a ServerRequest: parseFilter(FILTERABLE) and sort.parseSort().toSort(FILTERABLE)
+```
+
+- **The list names full paths, matched exactly.** `customer.city` allows `customer.city` and nothing
+  else: listing `customer` does not open `customer.passwordHash`, and `customer.city` does not open
+  `customer`.
+- **The same list gates `?filter=` and `?sort=`.** Sorting by a hidden field leaks its order.
+- **A field outside the list is refused, never dropped** — for a sort too, although an unreadable sort
+  clause is dropped. The client sent a field name it was not offered; silently ignoring it would hand
+  back a different answer than the one it asked for.
+- **The client gets** the same 400 as an unreadable clause, `filters.invalid`, with the clause named:
+
+```json
+{"status": 400, "key": "filters.invalid", "args": {"filter": "passwordHash:like:a"}}
+```
+
+(the response body is the module's translated error shape; `key` and `args` are what the
+`ApiException` carries.) The message does not say whether the field exists, so the refusal is not an
+oracle itself.
+
 ## The sort grammar
 
 ```
