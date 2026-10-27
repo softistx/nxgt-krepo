@@ -65,8 +65,10 @@ is the data, observability is what an application switches on.
 
 ## The two lifecycle rules this repository already had
 
-**`instance` is used and not closed.** A telemetry built elsewhere — by a DI container, or shared
-with a worker — belongs to whoever built it. Without one the plugin builds its own from the settings
+**`instance` is used and not closed by the plugin.** A telemetry built elsewhere — by a DI container, or shared
+with a worker — belongs to whoever built it. Ktor's DI, which the plugin registers it with, still
+closes it at application stop if it resolved it; an `instance` shared between servers needs
+`onShutdown` replaced in `install(DI)` (see the `stx-ktor` README). Without one the plugin builds its own from the settings
 and closes it on `ApplicationStopped`, which drains the queue. That is `stx-ktor`'s `resource`
 helper, unchanged.
 
