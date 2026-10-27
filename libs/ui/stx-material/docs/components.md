@@ -241,7 +241,7 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | `PromoBanner` | `text`, `code?`, `tone = Success`, `style = Style`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)` | `feedback/promo-banner` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `feedback/progress` |
 | `LabeledProgress` | `progress`, `caption?`, `kind` | `feedback/labeled-progress` |
-| `LoadingMark` | `progress: Float? = null` | `feedback/loading-mark` |
+| `LoadingMark` | `progress: Float? = null`, `contained = false` | `feedback/loading-mark` |
 | `TypingIndicator` | `label = "Someone is typing"` | `feedback/typing-indicator` |
 | `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `feedback/toast` |
 
@@ -492,7 +492,7 @@ because M3 has neither.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `AppBar` | `title`, `size = Small`, `navigationIcon?`, `onNavigation?`, `actions` | `navigation/app-bar` |
+| `AppBar` | `title`, `size = Small`, `navigationIcon?`, `navigationDescription?`, `onNavigation?`, `scrollBehavior: TopAppBarScrollBehavior? = null`, `actions` | `navigation/app-bar` |
 | `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `results` | `navigation/search` |
 | `NavigationSuite` | `destinations`, `selected`, `onSelect`, `primaryAction?`, `content` | `navigation/navigation-suite` |
 | `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false`, `enabled`, `style` | `navigation/tabs` |
@@ -503,7 +503,9 @@ because M3 has neither.
 | `StepFooter` | `onNext`, `onBack?`, `nextLabel`, `busy` | `navigation/step-footer` |
 | `BottomBar` | `actions`, `fab?` | `navigation/bottom-bar` |
 
-`AppBarSize` — `Small`, `Centered`, `Medium`, `Large`, mapped onto M3's four top app bars.
+`AppBarSize` — `Small`, `Centered`, `Medium`, `Large`. `Medium` and `Large` are M3's flexible bars (headline-medium and display-small
+titles, which collapse into the small bar given a `scrollBehavior`); the title of every size is emphasised and announced as a heading.
+`Stepper` marks each step with a 32 dp plate: a circle, or a `Cookie9Sided` for the current step, morphing on `motion.spatial` as the step advances.
 Each tab has its own interaction source, so its press style runs.
 `StepFooter` is Back (optional) and Continue under a stepper; `busy` turns Continue into a
 `BusyButton`. `BottomBar` is M3's `BottomAppBar` — verbs for this screen, not destinations
@@ -595,7 +597,8 @@ together. `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of
 here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
 `Disclosure` is one panel; `Accordion` is a list with at most one open. `LabeledProgress` prints
 the percentage M3's indicator does not.
-`LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content;
+`LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content; `contained = true` seats it on a
+`primaryContainer` disc (M3's `ContainedLoadingIndicator`) for use over an image or a busy surface;
 `Progress` is the spinner attached to a control. `Wavy` / `WavyCircular` are M3's expressive
 indicators; `Linear` / `Circular` stay the quiet ones. `TypingIndicator` is three dots that beat
 in turn on the effects axis; Material 3 has no typing mark.
