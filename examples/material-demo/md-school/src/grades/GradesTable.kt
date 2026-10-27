@@ -64,9 +64,10 @@ fun GradesTable(
                 columns = Columns,
                 rows = rows,
                 sort = query.sort?.let { SortColumns[it] }?.let { TableSort(it, query.direction) },
+                sortable = { it in SortColumns.values },
                 onSortChange = { next ->
                     SortColumns.entries.firstOrNull { it.value == next.column }?.let { query.sort = it.key }
-                    if (next.column in SortColumns.values) query.direction = next.direction
+                    query.direction = next.direction
                 },
                 onRowClick = {
                     query.editing = it

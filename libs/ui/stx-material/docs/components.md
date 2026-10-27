@@ -5,8 +5,8 @@ component is documented in**, in the change that adds it.
 
 Open the catalogue with `./kotlin run -m md-desktop`; the story id is the line under each story's
 title. Every component takes `modifier: Modifier`, and every *interactive* one takes
-`style: Style = Style` — both are left out of the tables below because they are on everything that
-has them.
+`style: Style = Style`. The tables leave out `modifier`, and list `style` only where its position
+matters or the default is not obvious.
 
 Story ids such as `surfaces/menu` or `feedback/skeleton` are catalogue ids (group, then story), not packages.
 A section is a package: the foundation ones live under `com.softistx.material.foundation.*` and
@@ -644,6 +644,8 @@ in turn on the effects axis; Material 3 has no typing mark.
 
 Package `com.softistx.material.components.datetime`.
 
+Every interactive part takes `style: Style = Style`, applied last.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `DateField` | `value: LocalDate?`, `onValueChange`, `label`, `enabled`, `style = Style` | `date-and-time/date-field` |
@@ -674,7 +676,7 @@ Package `com.softistx.material.components.data`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `CommandPalette` | `visible`, `query`, `onQueryChange`, `items`, `onDismiss`, `style = Style` | `data/command-palette` |
-| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp`, `sort: TableSort? = null`, `onSortChange?`, `style = Style`, `headerStyle = Style`, `onRowClick?` | `data/data-table` |
+| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp`, `sort: TableSort? = null`, `onSortChange?`, `style = Style`, `headerStyle = Style`, `sortable: (Int) -> Boolean = { true }`, `onRowClick?` | `data/data-table` |
 | `Description` | `items: List<DescriptionItem>` | `data/description` |
 | `EntityHeader` | `title`, `supporting?`, `leading?`, `actions`, `emphasized = true` | `data/entity-header` |
 | `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext`, `label?`, `style = Style` | `data/pagination` |
@@ -687,18 +689,25 @@ measured on the offered width. `Pagination` is previous/next for a keyset page, 
 `SortControl` is a `SelectField` plus a direction icon; `cycleSortDirection` is the usual next
 value.
 
-`DataTable` with `onSortChange` turns every header into a button: a click sorts that column
-ascending, then flips it, `sort` shows the arrow and announces "Ascending" or "Descending", and
-`TableSort(column, direction)` is the value (the column's index). A folded table has no headers, so it
-sorts through a `SortControl` beside it. `onRowClick` also makes the rows of the wide table
-clickable (it only did for the cards before). `EntityHeader` announces its title as a heading;
-`Description` and `Timeline` titles are item labels, not headings.
+`TableSort(column: Int, direction: SortDirection = Asc)` is the sort, `column` an index into `columns`.
+The table only reports the click; the caller re-sorts `rows`:
 
-Every interactive part takes `style: Style = Style`, applied last. The defaults are named in
-`StxStyles`: `tableRow` (the clickable rows of the wide `DataTable`: a 0.99 press scale, no fade, a
-row is never disabled) and `sortHeader` (a sortable header: a 0.97 press scale, as a chip has, since
-a header is compact). `style` goes to the rows and cards, `headerStyle` to the headers. `Pagination`
-and `SortControl` hand theirs to the buttons and the field they are made of.
+```kotlin
+var sort by remember { mutableStateOf<TableSort?>(null) }
+DataTable(columns, rows, sort = sort, onSortChange = { sort = it }, sortable = { it != 1 }) { row -> open(row) }
+```
+
+With `onSortChange` the headers `sortable` accepts are buttons (ascending first, then flipped); the
+others are plain text. `sort` alone is display-only: the arrow and "Ascending" or "Descending" are
+shown and announced, with no click. A folded table has no headers, so it sorts through a
+`SortControl` beside it. `EntityHeader` announces its title as a heading; `Description` and
+`Timeline` titles are item labels, not headings.
+
+The defaults are named in `StxStyles`: `tableRow` (a 0.99 press scale; a row is never disabled, so no
+fade) and `sortHeader` (a 0.97 press scale, as a chip has, since a header is compact). `style`
+reaches the cards always and the table rows only with `onRowClick`; `headerStyle` reaches only the
+sortable headers. `Pagination` and `SortControl` hand their `style` to the buttons and field they
+are made of.
 
 The parts that take no `style` are not interactive: `Description`, `Timeline`, `EntityHeader`
 (`leading` and `actions` carry their own).

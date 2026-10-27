@@ -26,8 +26,32 @@ import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
- * One column title. Plain text without [onClick]; with it a button that sorts, showing an arrow and
- * announcing its direction while [direction] is not null.
+ * A press target: this modifier, dressed by [base] then the caller's [style], and clickable as a
+ * button (labelled [label] when given) when [onClick] is not null. Without it the modifier is
+ * unchanged, so a plain header or a row with no click carries no style, no press and no role.
+ */
+@Composable
+internal fun Modifier.pressable(
+    base: Style,
+    style: Style,
+    onClick: (() -> Unit)?,
+    label: String? = null,
+): Modifier {
+    if (onClick == null) return this
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
+    return styleable(styleState, base, style).clickable(
+        interactionSource = interactionSource,
+        indication = LocalIndication.current,
+        role = Role.Button,
+        onClickLabel = label,
+        onClick = onClick,
+    )
+}
+
+/**
+ * One column title. Plain text without [onClick]; with it a button that sorts. While [direction] is
+ * not null it shows an arrow and announces the direction, clickable or not (a display-only sort).
  */
 @Composable
 internal fun TableHeader(
@@ -37,24 +61,11 @@ internal fun TableHeader(
     style: Style,
     modifier: Modifier = Modifier,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
-    val interactive =
-        if (onClick == null) {
-            Modifier
-        } else {
-            Modifier
-                .styleable(styleState, sortHeaderStyle, style)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = LocalIndication.current,
-                    role = Role.Button,
-                    onClickLabel = "Sort by $text",
-                    onClick = onClick,
-                ).semantics { direction?.let { stateDescription = if (it == SortDirection.Asc) "Ascending" else "Descending" } }
-        }
     Row(
-        modifier = modifier.then(interactive),
+        modifier =
+            modifier
+                .pressable(sortHeaderStyle, style, onClick, "Sort by $text")
+                .semantics(mergeDescendants = true) { direction?.let { stateDescription = if (it == SortDirection.Asc) "Ascending" else "Descending" } },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
     ) {
@@ -77,22 +88,7 @@ internal fun <T> TableRow(
     style: Style,
     onClick: (() -> Unit)?,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
-    val interactive =
-        if (onClick == null) {
-            Modifier
-        } else {
-            Modifier
-                .styleable(styleState, tableRowStyle, style)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = LocalIndication.current,
-                    role = Role.Button,
-                    onClick = onClick,
-                )
-        }
-    Row(modifier = Modifier.fillMaxWidth().then(interactive).padding(vertical = StxTheme.spacing.sm)) {
+    Row(modifier = Modifier.fillMaxWidth().pressable(tableRowStyle, style, onClick).padding(vertical = StxTheme.spacing.sm)) {
         columns.forEach { column ->
             Typography(text = column.value(row), modifier = Modifier.weight(1f))
         }

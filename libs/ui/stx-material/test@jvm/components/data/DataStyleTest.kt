@@ -23,18 +23,14 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.isBare
+import com.softistx.material.isPainted
+import com.softistx.material.painted
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-
-private val painted = Style { background(Color.Red) }
-
-/** A painted red pixel has no green; a ripple darkens it a little. */
-private fun Color.isPainted() = red > 0.3f && green < 0.1f
-
-private fun Color.isBare() = green > 0.9f
 
 private val oneColumn = listOf(TableColumn<String>("Name") { it })
 
@@ -162,6 +158,37 @@ class DataStyleTest :
                 }
             }
 
+            scenario("sortable = { it == 0 }: column 0 is a button, column 1 is plain text") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false) {
+                            DataTable(
+                                columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score") { it }),
+                                rows = listOf("Ada"),
+                                collapseBelow = 100.dp,
+                                onSortChange = {},
+                                sortable = { it == 0 },
+                            )
+                        }
+                    }
+                    onNodeWithText("Name").assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+                    onNodeWithText("Score").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Role))
+                    onNodeWithText("Score").assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
+                }
+            }
+
+            scenario("a display-only sort (no onSortChange) still announces its direction, without a click") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false) {
+                            DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp, sort = TableSort(0, SortDirection.Asc))
+                        }
+                    }
+                    onNodeWithText("Name").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Ascending"))
+                    onNodeWithText("Name").assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
+                }
+            }
+
             scenario("without onSortChange a header is plain text, not a button") {
                 runComposeUiTest {
                     setContent {
@@ -213,14 +240,14 @@ class DataStyleTest :
 
         feature("CommandPalette") {
             scenario("the caller's style dresses the list of commands, and nothing is painted without it") {
-                fun painted(style: Style) =
+                fun paintedCount(style: Style) =
                     renderProbe(width = 600, height = 600, content = {
                         StxTheme(isDark = false) {
                             CommandPalette(true, "", {}, listOf(CommandItem("Open", {})), {}, style = style)
                         }
                     }) { settle().count { it.isPainted() } }
-                painted(Style) shouldBe 0
-                painted(Style { background(Color.Red) }) shouldBeGreaterThan 1000
+                paintedCount(Style) shouldBe 0
+                paintedCount(painted) shouldBeGreaterThan 1000
             }
         }
 

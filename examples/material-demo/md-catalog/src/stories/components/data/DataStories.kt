@@ -59,6 +59,13 @@ val DataStories =
 
         story("Data table") { knobs ->
             var sort by remember { mutableStateOf<TableSort?>(TableSort(1)) }
+            val sorted =
+                listOf(
+                    OrderRow("4412", "Amara Diallo", "€120.00"),
+                    OrderRow("4413", "Jonas Weber", "€64.50"),
+                    OrderRow("4414", "Priya Raman", "€210.00"),
+                ).sortedBy { row -> listOf(row.id, row.customer, row.total)[sort?.column ?: 0] }
+                    .let { if (sort?.direction == SortDirection.Desc) it.reversed() else it }
             DataTable(
                 columns =
                     listOf(
@@ -66,15 +73,11 @@ val DataStories =
                         TableColumn("Customer") { it.customer },
                         TableColumn("Total") { it.total },
                     ),
-                rows =
-                    listOf(
-                        OrderRow("4412", "Amara Diallo", "€120.00"),
-                        OrderRow("4413", "Jonas Weber", "€64.50"),
-                        OrderRow("4414", "Priya Raman", "€210.00"),
-                    ),
+                rows = sorted,
                 collapseBelow = if (knobs.flag("Force cards", false)) 10_000.dp else 600.dp,
                 sort = sort,
                 onSortChange = { sort = it },
+                onRowClick = {},
             )
         }
 

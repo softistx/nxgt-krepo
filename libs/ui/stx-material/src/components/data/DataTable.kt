@@ -21,7 +21,10 @@ data class TableColumn<T>(
     val value: (T) -> String,
 )
 
-/** Which column a [DataTable] is sorted by (an index into its `columns`), and which way. */
+/**
+ * Which column a [DataTable] is sorted by, and which way. [column] is an index into `columns`, so
+ * reordering the columns changes it.
+ */
 @Immutable
 data class TableSort(
     val column: Int,
@@ -36,8 +39,10 @@ data class TableSort(
  *
  * With [onSortChange] every header is a button: a click sorts by that column, ascending first and
  * then flipping with [cycleSortDirection], and [sort] marks the current one with an arrow and
- * announces it. The cards have no headers, so a folded table sorts through a [SortControl] beside it.
- * [style] dresses the clickable rows and cards and [headerStyle] the sortable headers; a row is
+ * announces it; [sortable] says which columns (by index) take a click, the others stay plain text.
+ * The table only reports the click: the caller re-sorts `rows`. With [sort] and no [onSortChange]
+ * the arrow and its announcement are display-only. The cards have no headers, so a folded table sorts through a [SortControl] beside it.
+ * [style] dresses the cards and, with [onRowClick], the rows; [headerStyle] only the sortable headers; a row is
  * clickable with [onRowClick], which stays last so a trailing lambda still reads as the row click.
  */
 @Composable
@@ -50,6 +55,7 @@ fun <T> DataTable(
     onSortChange: ((TableSort) -> Unit)? = null,
     style: Style = Style,
     headerStyle: Style = Style,
+    sortable: (Int) -> Boolean = { true },
     onRowClick: ((T) -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -72,7 +78,7 @@ fun <T> DataTable(
                         TableHeader(
                             text = column.header,
                             direction = sort?.takeIf { it.column == index }?.direction,
-                            onClick = onSortChange?.let { change -> { change(nextSort(sort, index)) } },
+                            onClick = onSortChange?.takeIf { sortable(index) }?.let { change -> { change(nextSort(sort, index)) } },
                             style = headerStyle,
                             modifier = Modifier.weight(1f),
                         )

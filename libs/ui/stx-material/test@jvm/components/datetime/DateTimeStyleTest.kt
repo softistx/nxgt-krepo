@@ -1,13 +1,14 @@
 package com.softistx.material.components.datetime
 
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.disabled
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.painted
+import com.softistx.material.paintedWhenDisabled
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.assertions.withClue
@@ -16,9 +17,6 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
-
-private val painted = Style { background(Color.Red) }
-private val paintedWhenDisabled = Style { disabled { background(Color.Red) } }
 
 private typealias DatePart = @Composable (Modifier, Style, Boolean) -> Unit
 

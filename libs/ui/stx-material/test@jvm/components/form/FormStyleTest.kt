@@ -2,7 +2,6 @@ package com.softistx.material.components.form
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.disabled
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,6 +13,9 @@ import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.foundation.theme.ColorMode
 import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.isPainted
+import com.softistx.material.painted
+import com.softistx.material.paintedWhenDisabled
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.assertions.withClue
@@ -31,8 +33,6 @@ private const val TOLERANCE = 0.03f
 /** A painted red pixel has no green; a ripple or an antialiased edge adds a little, uncovered white adds a lot. */
 private const val PAINTED_GREEN = 0.1f
 
-private val painted = Style { background(Color.Red) }
-private val paintedWhenDisabled = Style { disabled { background(Color.Red) } }
 
 /** A form part, drawn at [modifier] with the caller's [style] and the given [enabled]. */
 private typealias FormPart = @Composable (modifier: Modifier, style: Style, enabled: Boolean) -> Unit
@@ -75,7 +75,7 @@ private fun reds(name: String): Pair<Int, Int> {
         height = 300,
         content = { StxTheme(isDark = false) { part(Modifier.padding(20.dp).probed(bounds), painted, true) } },
     ) {
-        val reddish = { c: Color -> c.red > 0.5f && c.green < PAINTED_GREEN }
+        val reddish = { c: Color -> c.isPainted() }
         val rest = settle().count(reddish)
         rest to press(bounds).count(reddish)
     }
