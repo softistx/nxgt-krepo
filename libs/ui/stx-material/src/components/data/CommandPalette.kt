@@ -1,14 +1,19 @@
 package com.softistx.material.components.data
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softistx.material.components.content.ListTile
@@ -33,6 +38,9 @@ data class CommandItem(
  * Material 3 has no command palette. The host opens it (typically ⌘K / Ctrl+K); this filters
  * [items] as the query changes and runs the selected command. Matching is a case-insensitive
  * contains — fuzzy ranking is the caller's if they outgrow that.
+ *
+ * [style] dresses the list of commands, not the dialog: M3's `AlertDialog` paints its own container
+ * over its modifier, and each command is a `ListTile` with the list-tile style.
  */
 @Composable
 fun CommandPalette(
@@ -42,8 +50,10 @@ fun CommandPalette(
     items: List<CommandItem>,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    style: Style = Style,
 ) {
     if (!visible) return
+    val styleState = rememberUpdatedStyleState(remember { MutableInteractionSource() }) { it.isEnabled = true }
     val needle = query.trim()
     val shown =
         if (needle.isEmpty()) {
@@ -64,6 +74,7 @@ fun CommandPalette(
                         Modifier
                             .fillMaxWidth()
                             .heightIn(max = 360.dp)
+                            .styleable(styleState, style)
                             .verticalScroll(rememberScrollState())
                             .padding(top = StxTheme.spacing.sm),
                 ) {

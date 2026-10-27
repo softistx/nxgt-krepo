@@ -9,6 +9,7 @@ import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.content.Stat
 import com.softistx.material.components.data.DataTable
 import com.softistx.material.components.data.TableColumn
+import com.softistx.material.components.data.TableSort
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.school.data.Grade
 import com.softistx.material.school.data.Grades
@@ -25,6 +26,9 @@ private val Columns =
         TableColumn("Score") { it.score.oneDecimal() },
         TableColumn("Weight") { "x${it.weight}" },
     )
+
+/** The sorts the headers offer: the table column each [GradeSorts] entry sorts. */
+private val SortColumns = mapOf("Student" to 0, "Date" to 3, "Score" to 4)
 
 /** The filtered marks as a table; a click on a row loads it into the form to be corrected. */
 @Composable
@@ -59,6 +63,12 @@ fun GradesTable(
             DataTable(
                 columns = Columns,
                 rows = rows,
+                sort = query.sort?.let { SortColumns[it] }?.let { TableSort(it, query.direction) },
+                sortable = { it in SortColumns.values },
+                onSortChange = { next ->
+                    SortColumns.entries.firstOrNull { it.value == next.column }?.let { query.sort = it.key }
+                    query.direction = next.direction
+                },
                 onRowClick = {
                     query.editing = it
                     query.tab = 1

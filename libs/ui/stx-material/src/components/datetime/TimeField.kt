@@ -1,5 +1,6 @@
 package com.softistx.material.components.datetime
 
+import androidx.compose.foundation.style.Style
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
@@ -29,6 +30,7 @@ fun TimeField(
     modifier: Modifier = Modifier,
     label: String = "Time",
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     var open by remember { mutableStateOf(false) }
     val state =
@@ -43,6 +45,7 @@ fun TimeField(
         label = label,
         readOnly = true,
         enabled = enabled,
+        style = style,
         trailing = {
             IconButton(
                 icon = StxIcons.Schedule,

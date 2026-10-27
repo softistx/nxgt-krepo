@@ -1,5 +1,6 @@
 package com.softistx.material.components.datetime
 
+import androidx.compose.foundation.style.Style
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.rememberDateRangePickerState
@@ -27,6 +28,7 @@ fun DateRangeField(
     modifier: Modifier = Modifier,
     label: String = "Dates",
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     var open by remember { mutableStateOf(false) }
     val state =
@@ -47,6 +49,7 @@ fun DateRangeField(
         label = label,
         readOnly = true,
         enabled = enabled,
+        style = style,
         trailing = {
             IconButton(
                 icon = StxIcons.Calendar,

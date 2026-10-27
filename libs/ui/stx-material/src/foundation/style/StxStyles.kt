@@ -5,6 +5,8 @@ import com.softistx.material.components.button.buttonStyle
 import com.softistx.material.components.content.cardStyle
 import com.softistx.material.components.content.chipStyle
 import com.softistx.material.components.content.listTileStyle
+import com.softistx.material.components.data.sortHeaderStyle
+import com.softistx.material.components.data.tableRowStyle
 import com.softistx.material.components.feedback.alertStyle
 import com.softistx.material.components.form.dimmedStyle
 import com.softistx.material.components.form.fieldStyle
@@ -46,6 +48,10 @@ object StxStyles {
     val toggle: Style get() = toggleStyle
 
     val upload: Style get() = uploadStyle
+
+    val tableRow: Style get() = tableRowStyle
+
+    val sortHeader: Style get() = sortHeaderStyle
 
     val listTile: Style get() = listTileStyle
 

@@ -2,6 +2,7 @@ package com.softistx.material.components.data
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +16,8 @@ import com.softistx.material.foundation.theme.StxTheme
  *
  * `hasMore` is the cursor, not a page number. A numbered pager pretends the store knows how many
  * rows it has; a keyset only knows whether there is another page.
+ *
+ * [style] goes to both buttons, which already carry `StxStyles.button`.
  */
 @Composable
 fun Pagination(
@@ -24,6 +27,7 @@ fun Pagination(
     onNext: () -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
+    style: Style = Style,
 ) {
     Row(
         modifier = modifier,
@@ -35,6 +39,7 @@ fun Pagination(
             onClick = onPrevious,
             variant = ButtonVariant.Ghost,
             enabled = hasPrevious,
+            style = style,
         )
         if (label != null) {
             Typography(text = label)
@@ -44,6 +49,7 @@ fun Pagination(
             onClick = onNext,
             variant = ButtonVariant.Ghost,
             enabled = hasNext,
+            style = style,
         )
     }
 }
