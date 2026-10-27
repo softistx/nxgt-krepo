@@ -20,6 +20,9 @@ sealed interface AckStrategy {
      *
      * Faster and unrecoverable: a crash between delivery and handling loses the message, and there
      * is no record of it anywhere. For metrics and heartbeats, not for work.
+     *
+     * The broker applies no prefetch to it, so nothing bounds the deliveries: a collector that falls
+     * behind until the delivery buffer is full fails the flow with `AmqpBufferFullException`.
      */
     data object OnDelivery : AckStrategy
 
@@ -55,6 +58,14 @@ enum class Undecodable {
  * pushes the entire queue at the first consumer that attaches, which is a consumer holding a
  * queue's worth of messages in memory and every other consumer of that queue holding none.
  *
+ * [prefetch] is also bounded above, by [MAX_PREFETCH], and `0` ("no limit") is refused. The broker's
+ * deliveries land in a buffer of twice that size ([DELIVERY_BUFFER]), and a full buffer parks the client's delivery
+ * thread — a thread of the connection's shared pool, which every other consumer on the connection needs
+ * too. With a prefetch within the cap it can never fill, since a consumer holds no more
+ * unacknowledged messages than that. The headroom is for connection recovery: the broker redelivers
+ * the unacknowledged messages while the stale ones the collector has not taken are still buffered,
+ * so up to twice the prefetch can sit there for a moment. `DeliveryThreadsTest` shows the failure this rules out.
+ *
  * [concurrency] is how many messages a handler may be working on at once. Above one, the queue's
  * order stops being the handling order — AMQP's FIFO promise is about delivery, not about when
  * handlers finish.
@@ -75,7 +86,18 @@ data class ConsumerOptions(
     val arguments: Map<String, Any> = emptyMap(),
 ) {
     init {
-        require(prefetch >= 0) { "a prefetch is not negative: $prefetch" }
+        require(prefetch in 1..MAX_PREFETCH) {
+            "a prefetch is between 1 and $MAX_PREFETCH, not $prefetch: more than the delivery buffer holds " +
+                "would park the client's shared delivery thread, and 0 means no limit at all"
+        }
         require(concurrency > 0) { "a consumer handles a positive number of messages at once, not $concurrency" }
+    }
+
+    companion object {
+        /** The most unacknowledged messages a consumer may ask for. */
+        const val MAX_PREFETCH = 64
+
+        /** The delivery buffer: twice [MAX_PREFETCH], so redeliveries after a recovery fit beside stale ones. */
+        const val DELIVERY_BUFFER = 2 * MAX_PREFETCH
     }
 }

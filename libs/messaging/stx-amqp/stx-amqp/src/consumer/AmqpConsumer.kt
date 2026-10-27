@@ -6,6 +6,7 @@ import com.rabbitmq.client.ConsumerShutdownSignalCallback
 import com.rabbitmq.client.DeliverCallback
 import com.rabbitmq.client.Recoverable
 import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpBufferFullException
 import com.softistx.amqp.AmqpValueException
 import com.softistx.amqp.codec.AmqpCodec
 import com.softistx.amqp.codec.jsonCodec
@@ -16,6 +17,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -37,7 +39,9 @@ import kotlinx.serialization.json.Json
  * **Prefetch is the only backpressure there is.** The broker will hand over as many messages as it
  * is allowed to have unacknowledged, and the default in the protocol is *all of them*. So a
  * consumer sets [ConsumerOptions.prefetch], and a slow handler then leaves the rest of the queue
- * where other consumers can reach it instead of hoarding it in memory.
+ * where other consumers can reach it instead of hoarding it in memory. It is capped at
+ * [ConsumerOptions.MAX_PREFETCH], half the size of the buffer deliveries land in, so that buffer never
+ * fills and the client's shared delivery thread is never parked waiting for the collector.
  *
  * **A delivery tag belongs to the channel it arrived on.** Acknowledging one on another channel is
  * a `PRECONDITION_FAILED` that closes it, which is why a consumer owns its channel and why nothing
@@ -45,7 +49,9 @@ import kotlinx.serialization.json.Json
  *
  * **Delivery is at least once by default.** The acknowledgement happens after the handler returned,
  * so a handler that succeeds and then loses the connection sees its message again. The alternative
- * — [AckStrategy.OnDelivery] — trades duplicates for messages that are silently never handled.
+ * — [AckStrategy.OnDelivery] — trades duplicates for messages that are silently never handled, and
+ * has no prefetch: a collector that falls behind until the buffer is full fails the flow with
+ * [AmqpBufferFullException] rather than blocking the client's delivery thread.
  *
  * **A failure is dead-lettered, not retried in place.** A message that is requeued after failing is
  * redelivered immediately, fails again, and is requeued again — an infinite loop that reads as a
@@ -87,10 +93,20 @@ class AmqpConsumer<T> internal constructor(
                             rejectUndecodable(channel = broker, options, delivery, failure) { close(it) }
                             return@DeliverCallback
                         }
-                    /* Blocking the broker's dispatch thread *is* the backpressure: with prefetch
-                       set, at most that many messages can be waiting here, and the broker gives the
-                       rest to somebody else rather than to this consumer's heap. */
-                    trySendBlocking(message).getOrThrow()
+                    /* Prefetch is capped at half the buffer's size ([ConsumerOptions.DELIVERY_BUFFER])
+                       and a consumer holds no more unacknowledged messages than its prefetch, so
+                       the buffer is never full here and the blocking send returns at once: the one
+                       deliberate block on the client's delivery thread, bounded backpressure that
+                       never waits for the collector. Uncapped, enough full buffers park every
+                       thread of the connection's shared pool (`DeliveryThreadsTest`). Auto-ack has
+                       no prefetch, so it never blocks: a full buffer fails the flow instead. */
+                    if (autoAck) {
+                        if (trySend(message).isFailure && !isClosedForSend) {
+                            close(AmqpBufferFullException(queue, ConsumerOptions.DELIVERY_BUFFER))
+                        }
+                    } else {
+                        trySendBlocking(message).getOrThrow()
+                    }
                 }
             val cancelled = CancelCallback { close() }
 
@@ -122,7 +138,7 @@ class AmqpConsumer<T> internal constructor(
                 )
 
             awaitClose { runCatching { broker.basicCancel(tag) } }
-        }
+        }.buffer(ConsumerOptions.DELIVERY_BUFFER)
 
     /**
      * Hands every message to [handler] and acknowledges on the terms [ConsumerOptions.ack] set.
