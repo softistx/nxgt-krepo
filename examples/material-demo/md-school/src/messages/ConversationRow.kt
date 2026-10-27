@@ -39,7 +39,13 @@ fun ConversationRow(
         background = {
             Typography(text = "Archive", modifier = Modifier.padding(StxTheme.spacing.md))
         },
-        customActions = listOf(CustomAccessibilityAction("Archive") { archive(); true }),
+        customActions =
+            listOf(
+                CustomAccessibilityAction("Archive") {
+                    archive()
+                    true
+                },
+            ),
     ) {
         ListTile(
             title = conversation.title,

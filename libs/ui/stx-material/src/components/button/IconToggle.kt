@@ -7,7 +7,6 @@ import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.IconToggleButton as MaterialIconToggleButton
 import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -15,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.IconSize
+import androidx.compose.material3.IconToggleButton as MaterialIconToggleButton
 
 /**
  * An icon that stays pressed. Material 3's `IconToggleButton`.

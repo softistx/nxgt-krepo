@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.style.Style
-import androidx.compose.material3.Card as MaterialCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +18,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.theme.StxTheme
+import androidx.compose.material3.Card as MaterialCard
 
 /**
  * A card. Material 3's, with the padding and the vertical rhythm already applied — M3's cards give

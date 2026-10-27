@@ -68,11 +68,10 @@ private fun save(
 }
 
 /** The frame as PNG bytes; also what two frames are compared by. */
-fun png(image: Image): ByteArray =
-    image.encodeToData(EncodedImageFormat.PNG)?.bytes ?: error("Skia could not encode the frame as PNG")
+fun png(image: Image): ByteArray = image.encodeToData(EncodedImageFormat.PNG)?.bytes ?: error("Skia could not encode the frame as PNG")
 
 /** A frame with fewer distinct colours than this is blank or failed: a real screen holds dozens. */
-const val MinColours = 8
+const val MIN_COLOURS = 8
 
 /** How many distinct colours the frame holds: a blank or failed render holds one or two. */
 fun distinctColours(image: Image): Int {

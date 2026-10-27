@@ -48,22 +48,31 @@ fun StudentList(
             ResponsiveButton(text = "New student", icon = StxIcons.Add, onClick = { enrolling = true })
         }
         when {
-            students.isEmpty() ->
+            students.isEmpty() -> {
                 EmptyState(
                     illustration = { EmptyStateDefaults.IconPlate(StxIcons.Person) },
                     title = "No students enrolled",
                     description = "Enrol the first student to start tracking marks.",
                     action = { Button(text = "Enrol a student", onClick = { enrolling = true }) },
                 )
-            shown.isEmpty() ->
+            }
+
+            shown.isEmpty() -> {
                 EmptyState(
                     illustration = { EmptyStateDefaults.IconPlate(StxIcons.Search) },
                     title = "No student matches",
                     description = "Try another name or clear the class filter.",
                     action = { Button(text = "Clear filters", onClick = query::clear) },
                 )
-            query.view == ViewMode.Grid -> StudentGrid(shown, session)
-            else -> StudentRows(shown, query, session)
+            }
+
+            query.view == ViewMode.Grid -> {
+                StudentGrid(shown, session)
+            }
+
+            else -> {
+                StudentRows(shown, query, session)
+            }
         }
     }
     EnrolSheet(visible = enrolling, onDismiss = { enrolling = false }, session = session)
@@ -85,12 +94,12 @@ private fun StudentRows(
     query: StudentsQuery,
     session: SchoolSession,
 ) {
-    val lastPage = (shown.size - 1) / PageSize
+    val lastPage = (shown.size - 1) / PAGE_SIZE
     val page = query.page.coerceIn(0, lastPage)
     val listState = rememberLazyListState()
     Box(Modifier.fillMaxSize()) {
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-            items(shown.drop(page * PageSize).take(PageSize), key = { it.id }) { StudentRow(it, session) }
+            items(shown.drop(page * PAGE_SIZE).take(PAGE_SIZE), key = { it.id }) { StudentRow(it, session) }
             item {
                 Pagination(
                     hasPrevious = page > 0,

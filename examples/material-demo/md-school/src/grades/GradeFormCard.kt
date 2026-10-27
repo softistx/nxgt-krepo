@@ -37,12 +37,14 @@ fun GradeFormCard(
             studentQuery = Students.byId(editing.studentId)?.name.orEmpty()
         }
     }
+
     fun finish(addAnother: Boolean) {
         query.editing = null
         form.reset()
         studentQuery = ""
         if (!addAnother) query.tab = 0
     }
+
     fun save(addAnother: Boolean) =
         form.submit { input ->
             val grade = input.toGrade(id = session.grades.maxOf { it.id } + 1) ?: return@submit

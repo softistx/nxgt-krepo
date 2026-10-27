@@ -47,7 +47,7 @@ fun ConversationList(
             )
         }
         when {
-            conversations.isEmpty() ->
+            conversations.isEmpty() -> {
                 EmptyState(
                     illustration = { EmptyStateDefaults.IconPlate(StxIcons.Inbox) },
                     title = "Inbox zero",
@@ -58,13 +58,19 @@ fun ConversationList(
                         }
                     },
                 )
-            shown.isEmpty() -> EmptyState(title = "No conversation matches", description = "Try another name.")
-            else ->
+            }
+
+            shown.isEmpty() -> {
+                EmptyState(title = "No conversation matches", description = "Try another name.")
+            }
+
+            else -> {
                 LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(ListTileDefaults.GroupGap)) {
                     itemsIndexed(shown, key = { _, it -> it.id }) { index, it ->
                         ConversationRow(it, session, ListTileGroup(index, shown.size))
                     }
                 }
+            }
         }
     }
 }

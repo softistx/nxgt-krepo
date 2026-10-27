@@ -35,10 +35,10 @@ import com.softistx.material.foundation.theme.stxColorScheme
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
-import io.kotest.matchers.doubles.shouldBeGreaterThan as doubleGreater
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.doubles.shouldBeGreaterThan as doubleGreater
 
 private val scheme = stxColorScheme(DefaultSeed, isDark = false)
 
@@ -171,6 +171,7 @@ class StepperMarkerTest :
                             Box(Modifier.testTag("marker")) { StepMarker(status, index = 0, connector = false, vertical = true) }
                         }
                     }
+
                     fun covered(): Int {
                         val map = onNodeWithTag("marker").captureToImage().toPixelMap()
                         var n = 0

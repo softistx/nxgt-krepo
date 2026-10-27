@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
-import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import androidx.compose.material3.Button as MaterialButton
 
 /**
  * A button. `Button("Save changes", onClick = ::save)` is the whole common case.

@@ -32,8 +32,7 @@ internal val StepMarkerSize = 32.dp
  * The shape a step wears: the current one is a `Cookie9Sided`, the done and upcoming ones are
  * circles. When [stepStatus] moves a step on, the marker morphs between the two.
  */
-internal fun StepStatus.polygon(): RoundedPolygon =
-    if (this == StepStatus.Current) MaterialShapes.Cookie9Sided else MaterialShapes.Circle
+internal fun StepStatus.polygon(): RoundedPolygon = if (this == StepStatus.Current) MaterialShapes.Cookie9Sided else MaterialShapes.Circle
 
 /**
  * The marker of one step and the connector to the next. [vertical] draws the connector down,

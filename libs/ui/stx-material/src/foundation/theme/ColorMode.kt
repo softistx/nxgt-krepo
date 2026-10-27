@@ -1,6 +1,5 @@
 package com.softistx.material.foundation.theme
 
-
 /**
  * How the screen should pick its scheme.
  *

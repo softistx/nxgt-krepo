@@ -47,8 +47,7 @@ fun scanline(
 fun inkWith(
     style: Style,
     part: @Composable (Style) -> Unit,
-): Int =
-    renderProbe(width = 400, height = 300, content = { StxTheme(isDark = false) { part(style) } }) { settle().ink() }
+): Int = renderProbe(width = 400, height = 300, content = { StxTheme(isDark = false) { part(style) } }) { settle().ink() }
 
 /** A style that hides the node, so a spec can see whether a `style` parameter reached it. */
 val hidden = Style { alpha(0f) }

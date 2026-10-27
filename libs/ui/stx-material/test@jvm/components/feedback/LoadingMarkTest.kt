@@ -14,8 +14,8 @@ import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
-import io.kotest.matchers.ints.shouldBeGreaterThan as intGreater
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.ints.shouldBeGreaterThan as intGreater
 
 private val scheme = stxColorScheme(DefaultSeed, isDark = false)
 

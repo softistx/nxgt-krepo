@@ -22,9 +22,9 @@ import com.softistx.material.foundation.theme.stxColors
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
-import io.kotest.matchers.ints.shouldBeGreaterThan as intGreater
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.ints.shouldBeGreaterThan as intGreater
 
 /** The summed alpha of the whole rendered root: zero while nothing is visible, growing with a fade. */
 @OptIn(ExperimentalTestApi::class)

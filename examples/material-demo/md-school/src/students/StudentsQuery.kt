@@ -14,7 +14,7 @@ import com.softistx.material.school.data.Student
 
 val StudentSorts: List<String> = listOf("Name", "Class", "Average")
 
-const val PageSize = 10
+const val PAGE_SIZE = 10
 
 /** What the reader typed, ticked and sorted by on the student list. Applying it is one function. */
 @Stable

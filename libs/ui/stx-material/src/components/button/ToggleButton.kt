@@ -8,7 +8,6 @@ import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.OutlinedToggleButton
-import androidx.compose.material3.ToggleButton as MaterialToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TonalToggleButton
 import androidx.compose.runtime.Composable
@@ -21,6 +20,7 @@ import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
+import androidx.compose.material3.ToggleButton as MaterialToggleButton
 
 /**
  * A button that stays pressed. Material 3's `ToggleButton`.

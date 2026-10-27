@@ -27,11 +27,11 @@ import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import com.softistx.material.textLayout
 import io.kotest.core.spec.style.FeatureSpec
-import io.kotest.matchers.doubles.shouldBeGreaterThan as doubleGreater
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.doubles.shouldBeGreaterThan as doubleGreater
 
 private val colors = stxColors(DefaultSeed, isDark = false)
 
@@ -162,6 +162,7 @@ class AlertSurfaceTest :
                 alertProbe(bounds, { PromoBanner("Sale", modifier = it, icon = null) }) {
                     settle().count(main) shouldBe 0
                 }
+
                 fun ink(icon: ImageVector): Int {
                     var out = 0
                     alertProbe(bounds, { PromoBanner("Sale", modifier = it, icon = icon) }) {
@@ -193,7 +194,9 @@ class AlertSurfaceTest :
                     }
                     val node = onNodeWithText("Heads up")
                     node.assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-                    node.textLayout()!!.layoutInput.style.fontWeight shouldBe emphasised
+                    node
+                        .textLayout()!!
+                        .layoutInput.style.fontWeight shouldBe emphasised
                 }
                 emphasised!!.weight shouldBeGreaterThan plain!!.weight
             }

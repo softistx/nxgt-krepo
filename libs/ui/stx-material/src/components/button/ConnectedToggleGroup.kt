@@ -12,7 +12,6 @@ import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ToggleButton as MaterialToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,6 +21,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.material3.ToggleButton as MaterialToggleButton
 
 /**
  * One choice among a few, as Material 3's connected button group: a row of toggle buttons that

@@ -57,9 +57,10 @@ fun ProfileTab(
         }
         Typography(text = "Report comment", variant = TypographyVariant.LabelMedium)
         ExpandableText(
-            text = "${student.firstName} contributes well in class and works steadily. Written work is " +
-                "careful, and the next step is to check answers before handing them in. Attendance " +
-                "and punctuality are good, and ${student.firstName} gets on well with the whole group.",
+            text =
+                "${student.firstName} contributes well in class and works steadily. Written work is " +
+                    "careful, and the next step is to check answers before handing them in. Attendance " +
+                    "and punctuality are good, and ${student.firstName} gets on well with the whole group.",
             collapsedLines = 2,
         )
         Typography(text = "Classmates", variant = TypographyVariant.LabelMedium)

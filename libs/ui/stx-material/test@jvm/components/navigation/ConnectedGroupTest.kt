@@ -79,6 +79,7 @@ class ConnectedGroupTest :
                     // Six pixels from the seam, two down: the unchosen right segment's inner corner is a small
                     // radius, so it has ink there; the chosen left segment's is a pill's, so it has none.
                     val seam = r.left + r.width / 2
+
                     fun inkAt(x: Float) = grid.ink(Rect(x, r.top + 2, x + 1, r.top + 3))
                     inkAt(seam + 6) shouldBe 1
                     inkAt(seam - 7) shouldBe 0
@@ -211,7 +212,12 @@ class ConnectedGroupTest :
                     var picked by mutableStateOf(0)
                     setContent {
                         StxTheme(isDark = false) {
-                            SegmentedControl(options = listOf("Day", "Week"), selected = picked, onSelect = { picked = it }, enabled = false)
+                            SegmentedControl(
+                                options = listOf("Day", "Week"),
+                                selected = picked,
+                                onSelect = { picked = it },
+                                enabled = false,
+                            )
                         }
                     }
                     onNodeWithText("Week").assertIsNotEnabled().performClick()
@@ -244,6 +250,7 @@ class ConnectedGroupTest :
                     val grid = settle()
                     val r = bounds.rect
                     val third = r.width / 3
+
                     // Unchosen middle segment, 6 px in from each edge, 2 down: inner corners are small radii, so inked.
                     fun inkAt(x: Float) = grid.ink(Rect(x, r.top + 2, x + 1, r.top + 3))
                     inkAt(r.left + third + 6) shouldBe 1
@@ -267,7 +274,15 @@ class ConnectedGroupTest :
                 val bounds = NodeBounds()
                 probe(
                     bounds,
-                    { SegmentedControl(listOf("XXXX", "XXXX"), selected = 0, onSelect = {}, modifier = it, style = Style { background(Color.Red) }) },
+                    {
+                        SegmentedControl(
+                            listOf("XXXX", "XXXX"),
+                            selected = 0,
+                            onSelect = {},
+                            modifier = it,
+                            style = Style { background(Color.Red) },
+                        )
+                    },
                 ) {
                     val grid = settle()
                     // A square background painted by the style shows at the outer corner a pill would clear.

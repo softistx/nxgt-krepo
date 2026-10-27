@@ -8,7 +8,6 @@ import androidx.compose.foundation.selection.triStateToggleable
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
-import androidx.compose.material3.TriStateCheckbox as MaterialTriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -17,6 +16,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
+import androidx.compose.material3.TriStateCheckbox as MaterialTriStateCheckbox
 
 /** The three values a parent checkbox can take when its children disagree. */
 enum class CheckState {

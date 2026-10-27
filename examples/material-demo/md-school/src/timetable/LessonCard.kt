@@ -38,6 +38,12 @@ fun LessonCard(
         }
         Typography(text = lesson.time, emphasis = Emphasis.Medium)
         Typography(text = "Class ${lesson.className}", emphasis = Emphasis.Medium)
-        if (showRooms) Typography(text = "${lesson.room}, ${lesson.teacher}", variant = TypographyVariant.BodySmall, emphasis = Emphasis.Subtle)
+        if (showRooms) {
+            Typography(
+                text = "${lesson.room}, ${lesson.teacher}",
+                variant = TypographyVariant.BodySmall,
+                emphasis = Emphasis.Subtle,
+            )
+        }
     }
 }

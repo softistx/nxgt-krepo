@@ -76,7 +76,7 @@ fun AppBar(
     }
     val colors = TopAppBarDefaults.topAppBarColors()
     when (size) {
-        AppBarSize.Small ->
+        AppBarSize.Small -> {
             TopAppBar(
                 title = { BarTitle(title) },
                 modifier = modifier,
@@ -85,8 +85,9 @@ fun AppBar(
                 colors = colors,
                 scrollBehavior = scrollBehavior,
             )
+        }
 
-        AppBarSize.Centered ->
+        AppBarSize.Centered -> {
             CenterAlignedTopAppBar(
                 title = { BarTitle(title) },
                 modifier = modifier,
@@ -95,8 +96,9 @@ fun AppBar(
                 colors = colors,
                 scrollBehavior = scrollBehavior,
             )
+        }
 
-        AppBarSize.Medium ->
+        AppBarSize.Medium -> {
             MediumFlexibleTopAppBar(
                 title = { ExpandedTitle(title) },
                 modifier = modifier,
@@ -105,8 +107,9 @@ fun AppBar(
                 colors = colors,
                 scrollBehavior = scrollBehavior,
             )
+        }
 
-        AppBarSize.Large ->
+        AppBarSize.Large -> {
             LargeFlexibleTopAppBar(
                 title = { ExpandedTitle(title) },
                 modifier = modifier,
@@ -115,6 +118,7 @@ fun AppBar(
                 colors = colors,
                 scrollBehavior = scrollBehavior,
             )
+        }
     }
 }
 

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
-import androidx.compose.material3.Card as MaterialCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
+import androidx.compose.material3.Card as MaterialCard
 
 /**
  * One message in a thread. Material 3's `Card`, coloured and aligned by who sent it.

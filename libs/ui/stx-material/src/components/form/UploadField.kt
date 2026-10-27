@@ -63,8 +63,7 @@ fun UploadField(
                     indication = LocalIndication.current,
                     enabled = enabled,
                     onClick = onClick,
-                )
-                .padding(StxTheme.spacing.lg),
+                ).padding(StxTheme.spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {

@@ -109,7 +109,10 @@ class SurfaceStyleTest :
                                 background = {},
                                 customActions =
                                     listOf(
-                                        CustomAccessibilityAction("Archive") { archived = true; true },
+                                        CustomAccessibilityAction("Archive") {
+                                            archived = true
+                                            true
+                                        },
                                         CustomAccessibilityAction("Supprimer") { true },
                                     ),
                             ) { Text("Row") }

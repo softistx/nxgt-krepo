@@ -9,7 +9,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
-import androidx.compose.material3.Switch as MaterialSwitch
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -20,6 +19,7 @@ import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
+import androidx.compose.material3.Switch as MaterialSwitch
 
 /**
  * A setting that takes effect as it is flicked.

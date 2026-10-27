@@ -131,7 +131,6 @@ private fun PressSwatch(into: NodeBounds) {
                         pressed = false
                     },
                 )
-            }
-            .background(if (pressed) Color.Red else Color.Black),
+            }.background(if (pressed) Color.Red else Color.Black),
     )
 }

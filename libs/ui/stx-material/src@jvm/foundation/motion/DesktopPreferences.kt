@@ -39,20 +39,32 @@ internal object DesktopPreferences {
     var runner: suspend (List<String>) -> String? = ::runCommand
 
     /** A hand-set property, or null when there is none or it is not `true` or `false`. */
-    fun override(property: String): Boolean? = System.getProperty(property)?.trim()?.lowercase()?.toBooleanStrictOrNull()
+    fun override(property: String): Boolean? =
+        System
+            .getProperty(property)
+            ?.trim()
+            ?.lowercase()
+            ?.toBooleanStrictOrNull()
 
     /** What [osName] says about reduce motion, through [runner]; null when unknown. */
     suspend fun reducedMotion(osName: String): Boolean? {
         val name = osName.lowercase()
         return when {
-            "mac" in name -> runner(listOf("defaults", "read", MAC, "reduceMotion"))?.trim()?.let { it == "1" }
-            "windows" in name -> null
-            else ->
+            "mac" in name -> {
+                runner(listOf("defaults", "read", MAC, "reduceMotion"))?.trim()?.let { it == "1" }
+            }
+
+            "windows" in name -> {
+                null
+            }
+
+            else -> {
                 when (runner(listOf("gsettings", "get", GNOME_INTERFACE, "enable-animations"))?.trim()) {
                     "false" -> true
                     "true" -> false
                     else -> null
                 }
+            }
         }
     }
 }
