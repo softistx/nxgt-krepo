@@ -10,6 +10,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PixelMap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -201,6 +202,22 @@ class PixelGrid(
         var count = 0
         for (y in 0 until map.height) for (x in 0 until map.width) if (matches(map[x, y])) count++
         return count
+    }
+
+    /** The pixel of the frame that is farthest from the background in luminance: a glyph's solid core, for a contrast reading. */
+    fun strongestInk(): Color {
+        var best = background
+        var gap = 0f
+        for (y in 0 until map.height) {
+            for (x in 0 until map.width) {
+                val d = kotlin.math.abs(map[x, y].luminance() - background.luminance())
+                if (d > gap) {
+                    gap = d
+                    best = map[x, y]
+                }
+            }
+        }
+        return best
     }
 
     /** Pixels of [node]'s bounds that are not the background. */
