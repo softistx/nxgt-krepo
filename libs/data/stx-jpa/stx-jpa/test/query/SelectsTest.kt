@@ -166,6 +166,22 @@ class SelectsTest :
                 }
             }
 
+            scenario("refuses a collection fetched under a to-one fetch") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        // PurchaseLine -> purchase (to-one) -> lines (collection): one level down.
+                        val error =
+                            shouldThrow<IllegalArgumentException> {
+                                session.findPage<PurchaseLine>(limit = 2) { criteria, line ->
+                                    line.fetch(PurchaseLine::purchase).fetchEach(Purchase::lines)
+                                    criteria.orderBy(asc(line[PurchaseLine::id]))
+                                }
+                            }
+                        error.message.shouldNotBeNull() shouldContain "lines"
+                    }
+                }
+            }
+
             scenario("refuses a page size above the cap, and one whose limit + 1 would overflow") {
                 seeded { jpa ->
                     jpa.session { session ->

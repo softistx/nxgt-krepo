@@ -457,7 +457,8 @@ another*, and leaves the cursors in `PageInfo` null — they belong to keyset pa
 not. Offset makes the database walk and discard, so a deep page costs more and a row inserted between
 requests shifts the window. Fine behind a UI over a few hundred rows; for an export or an infinite
 scroll, order by the identifier and resume from the last one seen. A `limit` above `MAX_PAGE_SIZE`
-(1000, from `stx-common`) is refused, as it is in `stx-mongo`.
+(1000, from `stx-common`) is refused, as it is in `stx-mongo`. A query that fetches a collection is refused too, at any depth,
+because the limit would cut the joined rows rather than the owners; see `docs/jpa-criteria.md`.
 
 **Writing is stateful-session only.** A stateless session has no persistence context, so `update`
 would have nothing to merge into and `delete` nothing to cascade from. The reads take the narrower
