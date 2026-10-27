@@ -36,12 +36,18 @@ private fun benchViews(): List<Triple<String, SchoolScreen, SchoolStart>> =
 
 /** Every shot of the bench; [filter] keeps those whose file name contains one of its comma-separated parts. */
 fun benchShots(filter: String? = null): List<BenchShot> {
-    val parts = filter?.split(',')?.map { it.trim().lowercase() }?.filter { it.isNotEmpty() }.orEmpty()
-    return Viewport.entries.flatMap { viewport ->
-        benchViews().flatMap { (name, screen, start) ->
-            listOf(false, true).map { BenchShot(name, screen, start, viewport, it) }
-        }
-    }.filter { shot -> parts.isEmpty() || parts.any { it in shot.file } }
+    val parts =
+        filter
+            ?.split(',')
+            ?.map { it.trim().lowercase() }
+            ?.filter { it.isNotEmpty() }
+            .orEmpty()
+    return Viewport.entries
+        .flatMap { viewport ->
+            benchViews().flatMap { (name, screen, start) ->
+                listOf(false, true).map { BenchShot(name, screen, start, viewport, it) }
+            }
+        }.filter { shot -> parts.isEmpty() || parts.any { it in shot.file } }
 }
 
 /** Renders the bench into [dir]: the PNGs, `manifest.json` and one `contact-<viewport>.png` per viewport. */
@@ -82,8 +88,8 @@ private fun layout(viewport: Viewport): Pair<Int, Int> =
         Viewport.Desktop -> 2 to 560
     }
 
-private const val Gap = 16
-private const val LabelHeight = 36
+private const val GAP = 16
+private const val LABEL_HEIGHT = 36
 
 /** A grid of the viewport's shots: one pair (light, dark) per cell, labelled with the screen name. */
 private fun contactSheet(
@@ -95,10 +101,10 @@ private fun contactSheet(
     val frameHeight = frameWidth * viewport.height / viewport.width
     val names = shots.map { it.name }.distinct()
     val rows = (names.size + perRow - 1) / perRow
-    val cellWidth = 2 * frameWidth + Gap
-    val cellHeight = LabelHeight + frameHeight
-    val width = perRow * cellWidth + (perRow + 1) * Gap
-    val height = rows * (cellHeight + Gap) + Gap
+    val cellWidth = 2 * frameWidth + GAP
+    val cellHeight = LABEL_HEIGHT + frameHeight
+    val width = perRow * cellWidth + (perRow + 1) * GAP
+    val height = rows * (cellHeight + GAP) + GAP
     val typeface = labelTypeface()
     try {
         Font(typeface, 22f).use { font ->
@@ -107,13 +113,13 @@ private fun contactSheet(
                     val canvas = surface.canvas
                     canvas.clear(Color.makeRGB(236, 236, 240))
                     names.forEachIndexed { index, name ->
-                        val x = Gap + (index % perRow) * (cellWidth + Gap)
-                        val y = Gap + (index / perRow) * (cellHeight + Gap)
+                        val x = GAP + (index % perRow) * (cellWidth + GAP)
+                        val y = GAP + (index / perRow) * (cellHeight + GAP)
                         canvas.drawString("$name  (${viewport.name.lowercase()}, light | dark)", x.toFloat(), y + 24f, font, ink)
                         listOf(false, true).forEachIndexed { column, dark ->
                             val shot = shots.firstOrNull { it.name == name && it.dark == dark }
                             val image = shot?.let(frames::get) ?: return@forEachIndexed
-                            canvas.drawFrame(image, x + column * (frameWidth + Gap), y + LabelHeight, frameWidth, frameHeight)
+                            canvas.drawFrame(image, x + column * (frameWidth + GAP), y + LABEL_HEIGHT, frameWidth, frameHeight)
                         }
                     }
                     return surface.makeImageSnapshot()

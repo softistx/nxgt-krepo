@@ -19,7 +19,7 @@ data class DashboardData(
 
         fun of(session: SchoolSession) =
             DashboardData(
-                lessons = Timetable.lessons(Timetable.Mine, SchoolClock.today.dayOfWeek),
+                lessons = Timetable.lessons(Timetable.MINE, SchoolClock.today.dayOfWeek),
                 recent = session.grades.sortedByDescending { it.date }.take(5),
                 announcements = Announcements.all,
             )

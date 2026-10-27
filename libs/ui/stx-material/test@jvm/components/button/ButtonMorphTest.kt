@@ -2,7 +2,6 @@ package com.softistx.material.components.button
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.Text
@@ -29,6 +28,7 @@ import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import androidx.compose.material3.Button as MaterialButton
 
 /**
  * The shape answers the finger: round at rest, squarer under a press, round again on release.

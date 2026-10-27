@@ -14,12 +14,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.launch
 import com.softistx.material.components.surface.Menu
 import com.softistx.material.components.surface.MenuItem
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.Typography
+import kotlinx.coroutines.launch
 
 /**
  * A primary action with a sibling that opens alternatives. Material 3's `SplitButtonLayout`.

@@ -19,8 +19,8 @@ import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.floats.shouldBeLessThan
-import io.kotest.matchers.ints.shouldBeGreaterThan as inkShouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.ints.shouldBeGreaterThan as inkShouldBeGreaterThan
 
 private const val STEP_MILLIS = 100
 

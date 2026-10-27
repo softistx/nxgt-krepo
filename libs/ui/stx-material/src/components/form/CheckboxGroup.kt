@@ -8,7 +8,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
-import androidx.compose.material3.Checkbox as MaterialCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -16,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
+import androidx.compose.material3.Checkbox as MaterialCheckbox
 
 /**
  * Any number of several, held as the set of what is ticked.

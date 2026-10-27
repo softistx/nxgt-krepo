@@ -24,7 +24,12 @@ private fun Set<Channel>.state(): CheckState =
 fun NotificationsSection(preferences: Preferences) {
     Card {
         SectionHeader(title = "Notifications")
-        Switch(preferences.gradeAlerts, { preferences.gradeAlerts = it }, "Grade alerts", description = "When a mark is entered for your class")
+        Switch(
+            preferences.gradeAlerts,
+            { preferences.gradeAlerts = it },
+            "Grade alerts",
+            description = "When a mark is entered for your class",
+        )
         Switch(preferences.messageAlerts, { preferences.messageAlerts = it }, "Message alerts", description = "New messages from guardians")
         Switch(preferences.weeklyDigest, { preferences.weeklyDigest = it }, "Weekly digest", description = "Every Friday afternoon")
         TriStateCheckbox(

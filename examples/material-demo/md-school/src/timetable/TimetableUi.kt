@@ -20,9 +20,12 @@ typealias WeekPlan = Map<DayOfWeek, List<Lesson>>
 /** What the timetable screen is looking at: whose lessons, which week, which day on a phone. */
 @Stable
 class TimetableUi {
-    var filter by mutableStateOf(Timetable.Mine)
+    var filter by mutableStateOf(Timetable.MINE)
     var anchor by mutableStateOf<LocalDate?>(SchoolClock.today)
-    var day by mutableStateOf(SchoolClock.today.dayOfWeek.ordinal.coerceAtMost(4))
+    var day by mutableStateOf(
+        SchoolClock.today.dayOfWeek.ordinal
+            .coerceAtMost(4),
+    )
     var showRooms by mutableStateOf(true)
 
     val monday: LocalDate get() = SchoolClock.weekStart(anchor ?: SchoolClock.today)

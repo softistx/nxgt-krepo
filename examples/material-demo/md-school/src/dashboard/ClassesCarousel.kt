@@ -20,7 +20,11 @@ fun ClassesCarousel() {
     val classes = Students.classNames
     Carousel(count = classes.size, modifier = Modifier.fillMaxWidth()) { index ->
         val name = classes[index]
-        val ids = Students.all.filter { it.className == name }.map { it.id }.toSet()
+        val ids =
+            Students.all
+                .filter { it.className == name }
+                .map { it.id }
+                .toSet()
         val average = Grades.average(Grades.all.filter { it.studentId in ids })
         Card(modifier = Modifier.fillMaxWidth()) {
             Typography(text = "Class $name", variant = TypographyVariant.TitleMedium)

@@ -15,4 +15,4 @@ enum class Subject(
 }
 
 /** The signed-in user of the showcase. */
-const val CurrentTeacher: String = "Ms. Alvarez"
+const val CURRENT_TEACHER: String = "Ms. Alvarez"

@@ -172,7 +172,11 @@ class CarouselTest :
                         var run = 0
                         for (x in 0 until image.width) {
                             val ink = (100 until image.height).any { image[x, it] != Color.White && image[x, it].alpha > 0f }
-                            if (ink) run++ else if (run > 0) widths += run.also { run = 0 }
+                            if (ink) {
+                                run++
+                            } else if (run > 0) {
+                                widths += run.also { run = 0 }
+                            }
                         }
                         return widths
                     }

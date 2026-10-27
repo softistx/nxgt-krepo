@@ -24,8 +24,7 @@ val EnrolSteps: List<List<kotlin.reflect.KProperty1<Enrolment, *>>> =
         listOf(Enrolment::guardianName, Enrolment::guardianEmail),
     )
 
-class EnrolForm :
-    FormState<Enrolment>(Enrolment(), EnrolSteps.flatten()) {
+class EnrolForm : FormState<Enrolment>(Enrolment(), EnrolSteps.flatten()) {
     override val validate: Validation<Enrolment> =
         Validation {
             Enrolment::firstName {

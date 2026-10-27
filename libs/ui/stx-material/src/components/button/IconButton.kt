@@ -6,7 +6,6 @@ import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.IconButton as MaterialIconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
@@ -18,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.theme.ToneColors
+import androidx.compose.material3.IconButton as MaterialIconButton
 
 /**
  * An icon on its own, as a button.

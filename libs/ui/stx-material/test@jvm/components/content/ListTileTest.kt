@@ -110,7 +110,15 @@ class ListTileTest :
                 val bounds = NodeBounds()
                 probe(
                     bounds,
-                    { ListTile("Amara", onClick = {}, group = ListTileGroup(0, 3), modifier = it, style = Style { background(Color.Red) }) },
+                    {
+                        ListTile(
+                            "Amara",
+                            onClick = {},
+                            group = ListTileGroup(0, 3),
+                            modifier = it,
+                            style = Style { background(Color.Red) },
+                        )
+                    },
                 ) {
                     settle().pixelAt(bounds, Corner.TopLeft, inset = 0) shouldBe Color.Red
                 }
@@ -149,7 +157,13 @@ class ListTileTest :
                     var out = emptyList<Boolean>()
                     probe(bounds, { ListTile("Amara", onClick = {}, group = group, selected = true, modifier = it) }) {
                         val grid = settle()
-                        out = listOf(Corner.TopLeft, Corner.TopRight, Corner.BottomLeft, Corner.BottomRight).map { grid.isTransparent(bounds, it, inset = 2) }
+                        out =
+                            listOf(
+                                Corner.TopLeft,
+                                Corner.TopRight,
+                                Corner.BottomLeft,
+                                Corner.BottomRight,
+                            ).map { grid.isTransparent(bounds, it, inset = 2) }
                     }
                     return out
                 }
@@ -175,7 +189,11 @@ class ListTileTest :
                 runComposeUiTest {
                     var clicks by mutableStateOf(0)
                     setContent { StxTheme(isDark = false) { ListTile("Profile", onClick = { clicks++ }) } }
-                    onNodeWithText("Profile").assert(button).assertHasClickAction().assertHeightIsAtLeast(48.dp).performClick()
+                    onNodeWithText("Profile")
+                        .assert(button)
+                        .assertHasClickAction()
+                        .assertHeightIsAtLeast(48.dp)
+                        .performClick()
                     clicks shouldBe 1
                 }
             }

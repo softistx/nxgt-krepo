@@ -24,7 +24,7 @@ class EveryScreenRendersTest :
             start: SchoolStart = SchoolStart(),
         ): ByteArray =
             renderSchool(screen, viewport, dark, start).use {
-                distinctColours(it) shouldBeGreaterThan MinColours
+                distinctColours(it) shouldBeGreaterThan MIN_COLOURS
                 png(it)
             }
 

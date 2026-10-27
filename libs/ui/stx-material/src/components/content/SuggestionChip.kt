@@ -4,12 +4,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
-import androidx.compose.material3.SuggestionChip as MaterialSuggestionChip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import androidx.compose.material3.SuggestionChip as MaterialSuggestionChip
 
 /**
  * A chip that offers a completion. Material 3's `SuggestionChip`.

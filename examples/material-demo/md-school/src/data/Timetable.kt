@@ -20,9 +20,9 @@ fun LocalTime.hhmm(): String = "${hour.toString().padStart(2, '0')}:${minute.toS
 /** A fixed week for each class. Wednesday afternoon is free for everybody. */
 object Timetable {
     /** The filter value that means "the signed-in teacher's own lessons". */
-    const val Mine: String = "My lessons"
+    const val MINE: String = "My lessons"
 
-    val options: List<String> = listOf(Mine) + Students.classNames
+    val options: List<String> = listOf(MINE) + Students.classNames
 
     private val slots =
         listOf(
@@ -45,14 +45,14 @@ object Timetable {
             }
         }
 
-    /** Lessons for [filter] (a class name, or [Mine]) on [day], earliest first. */
+    /** Lessons for [filter] (a class name, or [MINE]) on [day], earliest first. */
     fun lessons(
         filter: String,
         day: DayOfWeek,
     ): List<Lesson> =
         week
             .filter { it.day == day }
-            .filter { if (filter == Mine) it.teacher == CurrentTeacher else it.className == filter }
+            .filter { if (filter == MINE) it.teacher == CURRENT_TEACHER else it.className == filter }
             .sortedBy { it.start }
 
     private val SchoolClockDays get() = SchoolClock.teachingDays

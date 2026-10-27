@@ -11,7 +11,7 @@ import com.softistx.material.components.data.DescriptionItem
 import com.softistx.material.components.media.PersonCard
 import com.softistx.material.school.common.SkeletonCards
 import com.softistx.material.school.common.StateHost
-import com.softistx.material.school.data.CurrentTeacher
+import com.softistx.material.school.data.CURRENT_TEACHER
 import com.softistx.material.school.session.DataState
 import com.softistx.material.school.session.SchoolSession
 import com.softistx.material.school.session.of
@@ -40,7 +40,7 @@ fun AccountSection(session: SchoolSession) {
                 )
                 return@StateHost
             }
-            PersonCard(name = "Elena Alvarez", supporting = "$CurrentTeacher, Mathematics")
+            PersonCard(name = "Elena Alvarez", supporting = "$CURRENT_TEACHER, Mathematics")
             Description(
                 items =
                     listOf(

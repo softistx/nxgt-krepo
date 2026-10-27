@@ -87,7 +87,7 @@ private fun EnrolStep(
             UploadField(onClick = { session.toaster.say("Photo picker is the host's job") }, label = "Add a photo")
         }
 
-        1 ->
+        1 -> {
             SelectField(
                 value = form.value.className,
                 onValueChange = { v -> form.update(Enrolment::className) { it.copy(className = v) } },
@@ -96,6 +96,7 @@ private fun EnrolStep(
                 isError = form.hasError(Enrolment::className),
                 supportingText = form.error(Enrolment::className),
             )
+        }
 
         else -> {
             TextField(
