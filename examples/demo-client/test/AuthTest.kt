@@ -72,7 +72,7 @@ class AuthTest :
                 }
             }
         }
-    
+
         // `security` is a list of alternatives: any one is enough, and the schemes inside one are all
         // needed. Flattened, `/session/either` sent every credential the client held.
         feature("an operation whose security lists a bearer token or basic credentials") {

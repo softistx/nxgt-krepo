@@ -14,7 +14,7 @@ internal class DeliveryQueue(
     messages: Int,
     prefetch: Int,
     onDeliver: DeliverCallback,
-    ) {
+) {
     val queue = AmqpTestBroker.name("threads")
     private val channel: Channel = amqp.openChannel()
 

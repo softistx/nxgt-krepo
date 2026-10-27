@@ -876,9 +876,9 @@ due again and reopens the instance, so the unwind **continues from where it stop
   takes. `error` keeps naming the node whose forward step failed.
 
 The call refuses with `WorkflowNotRetryableException` when there is nothing to retry: an instance
-that is not `Failed`, or a `Failed` one whose journal names no failed compensation — the only such
-case is a context that no longer decodes, which failed before any step ran and needs its stored
-context repaired. An unknown id is `WorkflowNotFoundException`, and an instance another process is
+that is not `Failed`, or a `Failed` one whose journal names no failed compensation. It also refuses an
+instance whose stored context no longer decodes (a redeploy changed the context type): nothing is
+reopened or written, `error` is kept, and the stored context has to be repaired first. An unknown id is `WorkflowNotFoundException`, and an instance another process is
 advancing is `WorkflowConflictException`, so an operator never mistakes a skipped retry for a done
 one. For a parent whose [`child` node](#child-workflows) could not be compensated, retry the **child**
 first. Until [#319](https://github.com/softistx/nxgt-krepo/issues/319) is fixed the parent does not

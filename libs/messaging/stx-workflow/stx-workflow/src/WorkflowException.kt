@@ -143,12 +143,13 @@ class WorkflowNotUndoableException(
  * Only an instance that is [WorkflowStatus.Failed] **because a compensation failed** has something to
  * retry. Anything else has its own verb or nothing at all: one still in flight is advancing, one
  * `Compensated`, `Cancelled` or `Completed` has nothing outstanding, and a `Failed` one whose journal
- * names no failed compensation — a context that no longer decodes — has no step to run again, so
- * reopening it would only fail the same way.
+ * names no failed compensation has no step to run again. So is one whose stored context no longer
+ * decodes: reopening it would fail the same way, so it is refused untouched until the context is
+ * repaired.
  */
 class WorkflowNotRetryableException(
     val id: String,
     val status: WorkflowStatus,
-) : WorkflowException(
+    message: String =
         "workflow instance '$id' is $status; only a Failed instance with a failed compensation can be retried",
-    )
+) : WorkflowException(message)

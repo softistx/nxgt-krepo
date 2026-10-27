@@ -93,7 +93,11 @@ class FieldAllowListTest :
             scenario("passes allowed fields, and without a list passes any") {
                 val page = request(filter = "status:eq:PAID", sort = "total:DESC").mongoPage(allowed = ALLOWED)
                 page.sort.toString() shouldBe "total: DESC"
-                request(filter = "secret:eq:1").mongoPage().query.queryObject.toString() shouldContain "secret"
+                request(filter = "secret:eq:1")
+                    .mongoPage()
+                    .query
+                    .queryObject
+                    .toString() shouldContain "secret"
             }
         }
     })

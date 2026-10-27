@@ -1192,8 +1192,8 @@ the same each time, and the mistakes are the same each time too.
     all a caller needs.
   - *Dependency inversion* — depend on the abstraction: the plugin's task action talks to
     `SourceEmitter`, and picks the implementation in exactly one place.
-- **Tests are kotest `FeatureSpec`, grouped by scenario.** Every spec extends `FeatureSpec`, with
-  `feature("...")` naming the behaviour under test and `scenario("...")` naming one case of it:
+- **Tests are kotest `FeatureSpec`, grouped by scenario.** Behaviour specs are kotest `FeatureSpec` (a Spring wiring spec may be a `StringSpec`),
+  with `feature("...")` naming the behaviour under test and `scenario("...")` naming one case of it:
 
   ```kotlin
   class OpenApiParserTest :

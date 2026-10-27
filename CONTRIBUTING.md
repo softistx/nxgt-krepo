@@ -119,8 +119,8 @@ they are typed and tested rather than left as the three-line scripts they look l
 - **Short, single-purpose files, and SOLID.** A file past roughly 150 lines is a signal to split by
   responsibility. If a change makes a file mix two concerns, split it in the same change.
 - **Coroutines first.** When a Java API leaves no choice but a thread, `Thread.ofVirtual()`.
-- **Specs are kotest `FeatureSpec`**, `feature("…")` naming the behaviour and `scenario("…")` one
-  case of it. One spec class per file, named after the file. Fixtures live in a package named for
+- **Behaviour specs are kotest `FeatureSpec`** (a Spring wiring spec may be a `StringSpec`),
+  `feature("…")` naming the behaviour and `scenario("…")` one case of it. One spec class per file, named after the file. Fixtures live in a package named for
   what they are, not beside the spec that needed them first.
 - **Check Material 3 before writing a `libs/ui/stx-material` component**, and reuse the catalog before
   adding a dependency — `libs.versions.toml` is the single place a version lives, referenced as

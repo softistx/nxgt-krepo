@@ -64,8 +64,9 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
   secondary fetches for three rows in `FetchJoinTest`. AGENTS.md's Performance section has the rule
   and `docs/jpa-criteria.md` the vocabulary. `fetch`/`fetchEach` are for a query; an
   `entityGraph<T>()` is for a `find` or a `get` by identifier, which has no query to join
-  on, and for nesting more than one level. Either way `limit`/`offset` silently truncate once a collection is being loaded — nothing
-  refuses the combination, so it is on the caller to page owners and collections separately.
+  on, and for nesting more than one level. Either way `limit`/`offset` silently truncate once a collection is being loaded — only `findPage` refuses
+  the combination; on `select(...).limit(...)` and a graph on a query it is on the caller to page owners and
+  collections separately.
 - A data-access library here offers extensions, not a base class: there is no repository or CRUD
   service in `stx-mongo` or `stx-jpa`, because a class cannot have a `reified` type parameter
   and an extension can — `session.findAll<Purchase>()` needs no `KClass` and no object to construct.
