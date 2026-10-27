@@ -3,7 +3,6 @@ package com.softistx.material.foundation.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softistx.material.foundation.style.spacing
 
 /**
  * The spacing scale, in one place so a component never writes a bare `12.dp`.

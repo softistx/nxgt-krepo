@@ -3,7 +3,6 @@ package com.softistx.material.foundation.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.softistx.material.foundation.style.scheme
 
 /**
  * Where the Material 3 scheme comes from on this platform.

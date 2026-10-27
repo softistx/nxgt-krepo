@@ -30,3 +30,13 @@ BREAKING: the packages moved to `com.softistx.material.foundation.*` and `com.so
 | `models.QueryFilter` | `components.data` |
 
 `com.softistx.material.foundation.style` now holds both `StxStyles` and the `StyleScope` token extensions, so a file that imported `theme.colors` and `style.StxStyles` imports both from one package.
+
+## How to migrate
+
+The Maven coordinates (`io.github.softistx:stx-material`) and the dependency line are unchanged; only imports change. The table is an old to new prefix map you can apply with search and replace, longest prefix first (`form.state` before `form`, `theme.StyleTokens` members before `theme`). A symbol keeps its name; only the package in front of it changes. Wildcard imports of the split packages have to be rewritten by hand:
+
+- `display.*` becomes `components.content.*` plus `components.feedback.Alert`, `AnnouncementBar`, `PromoBanner`, `StatusBadge`, `StatusDot` and `Skeleton` (the types that went to `feedback`).
+- `theme.*` becomes `foundation.theme.*`, plus `foundation.style.*` for the `StyleScope` extensions (`colors`, `scheme`, `shapes`, `spacing`, `motion`).
+- `models.*` is split three ways: `UiState` and `ApiResponse` to `components.feedback`, `DataMode` to `components.form`, `QueryFilter` to `components.data`.
+- `layout.*` becomes `components.layout.*`; `helpers.*` becomes `foundation.layout.*`.
+

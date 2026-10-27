@@ -3,10 +3,6 @@ package com.softistx.material.foundation.theme
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.softistx.material.foundation.motion.StxMotion
-import com.softistx.material.foundation.style.motion
-import com.softistx.material.foundation.style.scheme
-import com.softistx.material.foundation.style.shapes
-import com.softistx.material.foundation.style.spacing
 
 /**
  * Where the tokens live during composition.

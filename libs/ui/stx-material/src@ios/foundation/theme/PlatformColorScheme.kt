@@ -4,7 +4,6 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import com.softistx.material.foundation.style.scheme
 
 /** iOS has no system palette to borrow — its accent colour is one colour, not a scheme, so the seed is the only source. */
 actual val supportsDynamicColor: Boolean = false

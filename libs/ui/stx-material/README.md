@@ -17,17 +17,8 @@ libs/ui/stx-material/
     layout/   the window-size and responsive helpers (Breakpoints, wCompact, LocalWindowSize, …)
     text/     Typography and the variant scale
     icon/     Icon and the library's own icon set
-  src/components/            the components, one folder per family         (com.softistx.material.components.*)
-    button/      Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar, IconBadge, ViewToggle
-    form/        the field/form state layer (form/state), the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter, CopyField, TriStateCheckbox, ThemeToggle, FormSection, DangerZone, Composer, Checklist
-    navigation/  AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, StepFooter, BottomBar, Breadcrumb
-    feedback/    what reports state: Alert, AnnouncementBar, PromoBanner, StatusBadge, StatusDot, Skeleton, Toaster, Progress, LabeledProgress, LoadingMark, TypingIndicator, UiState, ApiResponse
-    content/     Card, ListTile, Stat, EmptyState, Chip, ActionChip, SuggestionChip, FileChip, MentionChip, Kbd, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText, ReactionBar, QuoteBlock, LinkPreview, MessageBubble, Comment, ReplyPreview, PinBar, Price, FeatureList, PricingCard
-    layout/      ResponsiveGrid, ScrollToTop, LoadMoreButton, SelectionBar, RefreshBox
-    surface/     ConfirmDialog, Sheet, Drawer, Tooltip, HelpTip, HoverCard, Menu, ContextMenu, Accordion, Disclosure, Carousel, SwipeActions
-    media/       Avatar, AvatarGroup, PersonCard, SeenBy, StxImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
-    data/        DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline, SortControl, QueryFilter
-    datetime/    DateField, DateRangeField, TimeField, Calendar, RelativeTime
+  src/components/            one folder per family, listed in docs/components.md  (com.softistx.material.components.*)
+    button/ form/ (+ state/) navigation/ layout/ feedback/ content/ surface/ media/ data/ datetime/
   src@android/foundation/theme/  the wallpaper palette          ┐ the only platform-specific
   src@jvm/foundation/theme/      the seed                       │ decision in the library
   src@ios/foundation/theme/      the seed                       ┘
@@ -36,7 +27,6 @@ libs/ui/stx-material/
 A folder is a package: `src/components/button/Button.kt` is `com.softistx.material.components.button`.
 A component's `*Styles.kt` sits beside it. `foundation` holds no components: the layout components live in
 `components/layout/`, and `foundation/layout/` keeps only the window-size helpers.
-
 
 ## The shape of it
 

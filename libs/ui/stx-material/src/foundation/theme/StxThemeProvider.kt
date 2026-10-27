@@ -4,8 +4,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.softistx.material.foundation.style.scheme
-import com.softistx.material.foundation.style.shapes
 
 /**
  * The theme as an application wants it: name a brand colour, and get the platform's best answer.

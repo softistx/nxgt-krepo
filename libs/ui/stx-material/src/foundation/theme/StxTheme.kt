@@ -13,10 +13,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import com.softistx.material.foundation.motion.StxMotion
 import com.softistx.material.foundation.style.colors
-import com.softistx.material.foundation.style.motion
-import com.softistx.material.foundation.style.scheme
-import com.softistx.material.foundation.style.shapes
-import com.softistx.material.foundation.style.spacing
 
 /**
  * The theme. It **wraps** Material 3 rather than replacing it, so a plain M3 component — or any

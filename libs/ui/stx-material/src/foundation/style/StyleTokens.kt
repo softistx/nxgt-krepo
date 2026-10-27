@@ -10,7 +10,6 @@ import com.softistx.material.foundation.theme.LocalStrangeShapes
 import com.softistx.material.foundation.theme.LocalStrangeSpacing
 import com.softistx.material.foundation.theme.StxColors
 import com.softistx.material.foundation.theme.StxSpacing
-import com.softistx.material.foundation.theme.StxTheme
 
 /**
  * The tokens, reachable from inside a `Style { }`.

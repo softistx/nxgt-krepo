@@ -8,6 +8,7 @@ title. Every component takes `modifier: Modifier`, and every *interactive* one t
 `style: Style = Style` — both are left out of the tables below because they are on everything that
 has them.
 
+Story ids such as `surfaces/menu` or `feedback/skeleton` are catalogue ids (group, then story), not packages.
 A section is a package: the foundation ones live under `com.softistx.material.foundation.*` and
 the component families under `com.softistx.material.components.*`, in the same folders under `src/`.
 
@@ -23,6 +24,8 @@ to start from. AGENTS.md's *Building a component* is the rule.
 
 ## Foundation
 
+Package `com.softistx.material.foundation.theme` and `com.softistx.material.foundation.style`.
+
 | Story | Shows |
 | --- | --- |
 | `foundation/typography` | The 20 `TypographyVariant` roles at each `Emphasis` |
@@ -32,6 +35,8 @@ to start from. AGENTS.md's *Building a component* is the rule.
 | `foundation/semantic-colours` | `success` / `info` / `warning` / `error`, main and container |
 
 ## Motion
+
+Package `com.softistx.material.foundation.motion`.
 
 | Story | Shows |
 | --- | --- |
@@ -44,6 +49,8 @@ keep their built-in animations, because a `MotionScheme` has no null.
 
 ## Text
 
+Package `com.softistx.material.foundation.text`.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `Typography` | `text`, `variant = BodyMedium`, `emphasis = Full`, `color`, `align`, `decoration`, `maxLines`, `overflow` | `foundation/typography` |
@@ -55,6 +62,8 @@ keep their built-in animations, because a `MotionScheme` has no null.
 secondary text stays in the palette instead of picking a grey.
 
 ## Icons
+
+Package `com.softistx.material.foundation.icon`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -77,6 +86,8 @@ wants a thousand glyphs should depend on a pack directly and pass the `ImageVect
 component here takes one.
 
 ## Buttons
+
+Package `com.softistx.material.components.button`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -244,6 +255,8 @@ a form. `PricingCard` is name + `Price` + `FeatureList` + the CTA; `highlighted`
 
 ## Forms
 
+Package `com.softistx.material.components.form` (state and rules in `com.softistx.material.components.form.state`).
+
 The part of the library that removes the most work, because a form is where plumbing usually lives.
 A form is **one value** — the request body, the GraphQL input — held by a `FormState<T>`. A control
 takes the plain `value` and `onValueChange` of the property it edits, plus `isError` and
@@ -366,6 +379,8 @@ options, so the field holds the answer and reordering the options cannot silentl
 
 ## Navigation
 
+Package `com.softistx.material.components.navigation`.
+
 The chrome around a screen. Bar, rail and drawer are one list of destinations; the suite picks
 which. Tabs, search and a segmented control wrap Material 3. Breadcrumb and stepper are built here
 because M3 has neither.
@@ -432,6 +447,8 @@ over a list and only appears once the reader has left the top. `RefreshBox` is M
 
 ### Navigation 3 scenes
 
+Package `com.softistx.material.components.navigation`.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `AdaptiveNavDisplay` | `backStack`, `onBack`, `entryProvider` | `navigation/list-detail` |
@@ -448,6 +465,8 @@ The caller owns the back stack (`mutableStateListOf` is enough). Transitions are
 effects axis — Adaptive already owns the spatial motion of the panes.
 
 ## Surfaces
+
+Package `com.softistx.material.components.surface`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -477,6 +496,8 @@ in turn on the effects axis; Material 3 has no typing mark.
 
 ## Date and time
 
+Package `com.softistx.material.components.datetime`.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `DateField` | `value: LocalDate?`, `onValueChange`, `label` | `date-and-time/date-field` |
@@ -491,6 +512,8 @@ inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate`
 a frozen instant.
 
 ## Data
+
+Package `com.softistx.material.components.data`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -509,6 +532,8 @@ measured on the offered width. `Pagination` is previous/next for a keyset page, 
 value.
 
 ## Media
+
+Package `com.softistx.material.components.media`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -531,9 +556,11 @@ the slot with a renderer, so `Button` never pays for Media3, PdfRenderer or Came
 
 ## Motion helpers
 
+Package `com.softistx.material.foundation.motion`.
+
 | Helper | What it does | Story |
 | --- | --- | --- |
-| `Modifier.shimmer()` | The sweeping highlight `Skeleton` is built from | `content/skeleton` |
+| `Modifier.shimmer()` | The sweeping highlight `Skeleton` is built from | `feedback/skeleton` |
 | `Modifier.animateStagger(index)` | Rises and fades a list item in, offset by its position | `screens/orders-screen` |
 
 `animateStagger` runs **two** animations, not one: the rise is spatial and the fade is effects. A
