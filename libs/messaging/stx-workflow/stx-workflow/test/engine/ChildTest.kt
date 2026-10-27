@@ -22,6 +22,7 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -257,6 +258,37 @@ class ChildTest :
                 instance.status shouldBe WorkflowStatus.Compensated
                 instance.record.error?.type shouldBe ChildFailedException::class.qualifiedName
                 calls.all() shouldBe listOf("reserve", "book", "release")
+            }
+        }
+
+        feature("a child whose own compensation fails") {
+            scenario("the parent's unwind fails on it, and retrying the child then the parent finishes it") {
+                val calls = Calls()
+                val broken = AtomicBoolean(true)
+                val child =
+                    workflow<Ledger>("fulfilment") {
+                        step("book") { context.copy(booking = "b-1") } compensate {
+                            calls.record("unbook")
+                            if (broken.get()) error("courier refused")
+                        }
+                    }
+                val parent = ordering(calls, child, fails = true)
+                val engine =
+                    WorkflowEngine(InMemoryStore()) {
+                        register(child)
+                        register(parent)
+                    }
+
+                val failed = engine.start(parent, Ledger(), id = "order-6")
+
+                failed.status shouldBe WorkflowStatus.Failed
+                engine.record("order-6/fulfil").shouldNotBeNull().status shouldBe WorkflowStatus.Failed
+                calls.all() shouldBe listOf("reserve", "fulfilled", "confirm", "unbook")
+
+                broken.set(false)
+                engine.retryCompensation("order-6/fulfil").status shouldBe WorkflowStatus.Cancelled
+                engine.retryCompensation("order-6").status shouldBe WorkflowStatus.Compensated
+                calls.all() shouldBe listOf("reserve", "fulfilled", "confirm", "unbook", "unbook", "release")
             }
         }
 
