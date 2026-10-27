@@ -83,11 +83,13 @@ for what M3 has no parameter for:
 // The 5 × 7 matrix, resolved once, in the shape M3 accepts.
 fun buttonColors(variant: ButtonVariant, color: ButtonColor): ButtonColors = …
 
-// What is left: the press giving under the finger.
-val buttonStyle: Style = Style {
-    pressed  { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
+// A Button's press is M3's shape morph (pill at rest, squarer pressed), so its Style keeps
+// only the disabled alpha.
+val morphingButtonStyle: Style = Style {
     disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
 }
+
+// buttonStyle keeps the 0.97 press scale, for the components that do not morph.
 ```
 
 A `background()` in a style block paints behind a surface M3 has already painted — it either does

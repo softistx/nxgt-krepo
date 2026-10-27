@@ -2,13 +2,11 @@ package com.softistx.material.components.button
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.style.Style
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.softistx.material.components.feedback.Progress
 import com.softistx.material.components.feedback.ProgressKind
-import com.softistx.material.foundation.text.Typography
-import com.softistx.material.foundation.text.TypographyVariant
 
 /**
  * A button that is in flight. Material 3's `Button`, with the label replaced by a spinner.
@@ -27,6 +25,7 @@ fun BusyButton(
     color: ButtonColor = ButtonColor.Primary,
     enabled: Boolean = true,
     style: Style = Style,
+    size: ButtonSize = ButtonSize.Small,
 ) {
     ButtonSurface(
         onClick = onClick,
@@ -35,19 +34,12 @@ fun BusyButton(
         color = color,
         enabled = enabled && !busy,
         style = style,
+        size = size,
     ) {
         if (busy) {
-            Progress(modifier = Modifier.size(18.dp), kind = ProgressKind.Circular)
+            Progress(modifier = Modifier.size(ButtonDefaults.iconSizeFor(size.height)), kind = ProgressKind.Circular)
         } else {
-            Typography(
-                text = text,
-                variant =
-                    if (variant == ButtonVariant.Link) {
-                        TypographyVariant.Link
-                    } else {
-                        TypographyVariant.LabelLarge
-                    },
-            )
+            ButtonLabel(text, variant, size)
         }
     }
 }

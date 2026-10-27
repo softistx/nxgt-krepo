@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import com.softistx.material.components.button.Button
+import com.softistx.material.components.button.ButtonSize
 import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.content.Stat
 import com.softistx.material.components.data.DataTable
@@ -37,12 +38,16 @@ fun GradesTable(
                 title = "No marks match",
                 description = "Widen the class, subject or period.",
                 action = {
-                    Button(text = "Show everything", onClick = {
-                        query.classIndex = 0
-                        query.subjectIndex = 0
-                        query.from = null
-                        query.to = null
-                    })
+                    Button(
+                        text = "Show everything",
+                        onClick = {
+                            query.classIndex = 0
+                            query.subjectIndex = 0
+                            query.from = null
+                            query.to = null
+                        },
+                        size = ButtonSize.Medium,
+                    )
                 },
             )
         } else {

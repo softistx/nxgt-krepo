@@ -5,17 +5,20 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.style.Style
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.softistx.material.foundation.icon.Icon
+import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.motion.Transitions
-import com.softistx.material.foundation.text.Typography
-import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
+import kotlin.math.abs
 
 /**
  * A button that drops its label when the space it is given gets tight, and grows it back when the
@@ -43,6 +46,7 @@ fun ResponsiveButton(
     enabled: Boolean = true,
     collapseBelow: Dp = 360.dp,
     style: Style = Style,
+    size: ButtonSize = ButtonSize.Small,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val expanded = maxWidth >= collapseBelow
@@ -64,9 +68,15 @@ fun ResponsiveButton(
                     color = color,
                     enabled = enabled,
                     style = style,
+                    size = size,
                 ) {
-                    Icon(icon = icon, description = null)
-                    Typography(text = text, variant = TypographyVariant.LabelLarge, maxLines = 1)
+                    Icon(icon = icon, description = null, size = iconSizeFor(size))
+                    Text(
+                        text = text,
+                        style = ButtonDefaults.textStyleFor(size.height),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             } else {
                 IconButton(
@@ -81,4 +91,10 @@ fun ResponsiveButton(
             }
         }
     }
+}
+
+/** The library's icon size closest to what M3 draws in a button of [size]. */
+private fun iconSizeFor(size: ButtonSize): IconSize {
+    val dp = ButtonDefaults.iconSizeFor(size.height)
+    return IconSize.entries.minBy { abs(it.dp.value - dp.value) }
 }

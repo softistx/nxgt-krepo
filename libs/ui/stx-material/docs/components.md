@@ -91,10 +91,10 @@ Package `com.softistx.material.components.button`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `Button` | `text`, `onClick`, `variant = Filled`, `color = Primary`, `enabled` | `buttons/button` |
+| `Button` | `text`, `onClick`, `variant = Filled`, `color = Primary`, `enabled`, `size = Small` | `buttons/button` |
 | `ButtonSurface` | as `Button`, plus a `RowScope` `content` slot instead of `text` | `buttons/button` |
 | `IconButton` | `icon`, `description`, `onClick`, `variant = Ghost`, `color = Neutral`, `size`, `enabled` | `buttons/icon-button` |
-| `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp` | `buttons/responsive-button` |
+| `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp`, `size = Small` | `buttons/responsive-button` |
 | `ButtonRow` | `align = End`, `content: RowScope` | `buttons/button-row` |
 | `Fab` | `icon`, `description`, `onClick`, `text?`, `expanded = true`, `color = Primary` | `buttons/fab` |
 | `FabMenu` | `expanded`, `onExpandedChange`, `actions: List<FabAction>` | `buttons/fab-menu` |
@@ -102,22 +102,33 @@ Package `com.softistx.material.components.button`.
 | `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled` | `buttons/toggle-button` |
 | `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color` | `buttons/icon-toggle` |
 | `CopyButton` | `text`, `description = "Copy"` | `buttons/copy-button` |
-| `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000` | `buttons/confirm-button` |
-| `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled` | `buttons/busy-button` |
+| `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000`, `size = Small` | `buttons/confirm-button` |
+| `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled`, `size = Small` | `buttons/busy-button` |
 | `MoreMenu` | `items: List<MenuItem>`, `description = "More"` | `buttons/more-menu` |
 | `OverflowBar` | `actions: List<OverflowAction>`, `maxVisible` | `buttons/overflow-bar` |
 | `IconBadge` | `icon`, `description`, `onClick`, `count = 0`, `tone = Error` | `buttons/icon-badge` |
 | `ViewToggle` | `value: ViewMode`, `onChange` | `buttons/view-toggle` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
+`ButtonSize` — `ExtraSmall` 32 dp, `Small` 40 dp (the default), `Medium` 56, `Large` 96, `ExtraLarge` 136: M3's own
+heights, each bringing its padding, label style and pressed corner.
+Buttons morph, a pill at rest and squarer while pressed, so they take no press scale.
+A `Link` keeps its 40 dp height at every size instead of growing with `size`, being text in a sentence.
+The collapsed `ResponsiveButton` stays an icon button, 40 × 40, at any size.
+The story is `buttons/size-and-variant-grid`.
+
+```kotlin
+Button("Save", onClick, size = ButtonSize.Medium)
+```
+
 `ButtonColor` — `Primary`, `Secondary`, `Success`, `Info`, `Warning`, `Danger`, `Neutral`.
 
 The 5 × 7 matrix is resolved in **one** function, `buttonColors(variant, color)`, which returns
 Material 3's own `ButtonColors` — so M3 paints the container, the ripple and the disabled treatment,
 and this library only decides *which* colours. Adding a colour touches one enum entry and one `when`
 branch; see `buttons/variant-and-colour-matrix` for the whole grid at once. `buttonBorder` answers
-the same way for the outline, and `buttonStyle` is what is left over: the press scale, which M3 has
-no parameter for.
+the same way for the outline. A button's press is M3's shape morph, so `morphingButtonStyle` keeps only the
+disabled alpha; `buttonStyle` keeps the press scale for the components that do not morph.
 
 `ButtonRow` is a layout — it lines buttons up and spaces them. It is deliberately not named
 `ButtonGroup`: Material 3 has a `ButtonGroup`, and that one is a connected segmented control taking

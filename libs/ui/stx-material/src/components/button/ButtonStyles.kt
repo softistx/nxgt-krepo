@@ -100,6 +100,17 @@ val buttonStyle: Style =
         disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
     }
 
+/**
+ * [buttonStyle] without the press scale, for a button that morphs its shape.
+ *
+ * `Button` hands M3 a pressed shape, so the corners already answer the finger; a scale on top
+ * would be a second give-under-the-finger effect fighting the first.
+ */
+val morphingButtonStyle: Style =
+    Style {
+        disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
+    }
+
 /** Material 3's own disabled opacity, so a disabled wrapper matches a disabled M3 component. */
 const val DISABLED_ALPHA = 0.38f
 

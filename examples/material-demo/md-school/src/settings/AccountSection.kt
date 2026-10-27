@@ -2,6 +2,7 @@ package com.softistx.material.school.settings
 
 import androidx.compose.runtime.Composable
 import com.softistx.material.components.button.Button
+import com.softistx.material.components.button.ButtonSize
 import com.softistx.material.components.content.Card
 import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.content.SectionHeader
@@ -29,7 +30,13 @@ fun AccountSection(session: SchoolSession) {
                 EmptyState(
                     title = "No account linked",
                     description = "Link your staff account to see your classes.",
-                    action = { Button(text = "Link account", onClick = { session.data = DataState.Loaded }) },
+                    action = {
+                        Button(
+                            text = "Link account",
+                            onClick = { session.data = DataState.Loaded },
+                            size = ButtonSize.Medium,
+                        )
+                    },
                 )
                 return@StateHost
             }

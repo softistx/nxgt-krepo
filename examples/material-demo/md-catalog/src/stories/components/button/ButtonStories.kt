@@ -20,6 +20,7 @@ import com.softistx.material.components.button.BusyButton
 import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonColor
 import com.softistx.material.components.button.ButtonRow
+import com.softistx.material.components.button.ButtonSize
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.button.ConfirmButton
 import com.softistx.material.components.button.CopyButton
@@ -56,7 +57,30 @@ val ButtonStories =
                 variant = knobs.enumChoice("Variant", ButtonVariant.Filled),
                 color = knobs.enumChoice("Color", ButtonColor.Primary),
                 enabled = knobs.flag("Enabled", true),
+                size = knobs.enumChoice("Size", ButtonSize.Small),
             )
+        }
+
+        story("Size and variant grid") { _ ->
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
+                ButtonSize.entries.forEach { size ->
+                    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs)) {
+                        Typography(
+                            text = size.name,
+                            variant = TypographyVariant.Overline,
+                            emphasis = Emphasis.Subtle,
+                        )
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+                        ) {
+                            ButtonVariant.entries.forEach { variant ->
+                                Button(text = variant.name, onClick = {}, variant = variant, size = size)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         story("Variant and colour matrix") { knobs ->

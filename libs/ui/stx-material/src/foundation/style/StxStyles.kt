@@ -2,6 +2,7 @@ package com.softistx.material.foundation.style
 
 import androidx.compose.foundation.style.Style
 import com.softistx.material.components.button.buttonStyle
+import com.softistx.material.components.button.morphingButtonStyle
 import com.softistx.material.components.content.cardStyle
 import com.softistx.material.components.content.chipStyle
 import com.softistx.material.components.content.listTileStyle
@@ -28,6 +29,7 @@ import com.softistx.material.foundation.theme.Tone
  */
 object StxStyles {
     val button: Style get() = buttonStyle
+    val morphingButton: Style get() = morphingButtonStyle
 
     val card: Style get() = cardStyle
 
