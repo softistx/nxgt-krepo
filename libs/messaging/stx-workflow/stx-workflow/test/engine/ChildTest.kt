@@ -4,6 +4,7 @@ import com.softistx.workflow.ChildFailedException
 import com.softistx.workflow.ChildTimeoutException
 import com.softistx.workflow.Workflow
 import com.softistx.workflow.WorkflowEngine
+import com.softistx.workflow.WorkflowNotRetryableException
 import com.softistx.workflow.WorkflowNotUndoableException
 import com.softistx.workflow.WorkflowStatus
 import com.softistx.workflow.dsl.await
@@ -27,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.JsonPrimitive
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
@@ -324,6 +326,45 @@ class ChildTest :
                 engine.retryCompensation("order-7/fulfil").status shouldBe WorkflowStatus.Cancelled
                 engine.retryCompensation("order-7").status shouldBe WorkflowStatus.Cancelled
                 calls.all() shouldBe listOf("reserve", "unbook", "unbook", "release")
+            }
+        }
+
+        feature("a child whose stored context no longer decodes") {
+            scenario("the parent's unwind fails on it, and retrying the child then the parent finishes it") {
+                val calls = Calls()
+                val child =
+                    workflow<Ledger>("fulfilment") {
+                        step("book") {
+                            calls.record("book")
+                            context.copy(booking = "b-1")
+                        } compensate {
+                            calls.record("unbook")
+                        }
+                        await(COURIER) { context }
+                    }
+                val parent = ordering(calls, child)
+                val store = InMemoryStore()
+                val engine =
+                    WorkflowEngine(store) {
+                        register(child)
+                        register(parent)
+                    }
+                engine.start(parent, Ledger(), id = "order-9")
+                val parked = store.load("order-9/fulfil").shouldNotBeNull()
+                store.save(parked.copy(context = JsonPrimitive("not a ledger")), parked.version)
+
+                engine.cancel("order-9").status shouldBe WorkflowStatus.Failed
+                engine.record("order-9/fulfil").shouldNotBeNull().status shouldBe WorkflowStatus.Failed
+
+                val refused = shouldThrow<WorkflowNotRetryableException> { engine.retryCompensation("order-9/fulfil") }
+                refused.message.shouldNotBeNull().contains("repair the stored context") shouldBe true
+                engine.record("order-9/fulfil").shouldNotBeNull().status shouldBe WorkflowStatus.Failed
+
+                val current = store.load("order-9/fulfil").shouldNotBeNull()
+                store.save(current.copy(context = parked.context), current.version)
+                engine.retryCompensation("order-9/fulfil").status shouldBe WorkflowStatus.Compensated
+                engine.retryCompensation("order-9").status shouldBe WorkflowStatus.Cancelled
+                calls.all() shouldBe listOf("reserve", "book", "unbook", "release")
             }
         }
 

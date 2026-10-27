@@ -58,7 +58,8 @@ internal suspend fun WorkflowEngine.retryFailedCompensation(id: String): Workflo
     val advanced =
         store.guarded(id) {
             val fresh = store.load(id) ?: throw WorkflowNotFoundException(id)
-            if (fresh.status != WorkflowStatus.Failed || fresh.failedCompensations().isEmpty()) {
+            val undecodable = fresh.failedOnUndecodableContext()
+            if (fresh.status != WorkflowStatus.Failed || (fresh.failedCompensations().isEmpty() && !undecodable)) {
                 throw WorkflowNotRetryableException(id, fresh.status)
             }
             val run =
@@ -72,13 +73,23 @@ internal suspend fun WorkflowEngine.retryFailedCompensation(id: String): Workflo
                             "(${e.message}); repair the stored context before retrying its compensation",
                     )
                 }
-            run.reopenFailedCompensations()
+            // An instance retired for its context holds no failed compensation to reopen: it is put
+            // back to unwinding from where its journal stands, which is what recovering it means.
+            if (undecodable) {
+                run.checkpoint { it.copy(status = WorkflowStatus.Compensating) }
+            } else {
+                run.reopenFailedCompensations()
+            }
             run.advance()
             run.record
         } ?: throw WorkflowConflictException(id)
     if (advanced.status.isTerminal) advanced.parent?.let { wake(it) }
     return advanced
 }
+
+/** An instance [runFor] retired because its stored context did not decode, as opposed to a failed compensation. */
+private fun WorkflowRecord.failedOnUndecodableContext(): Boolean =
+    status == WorkflowStatus.Failed && error?.node == UNDECODABLE_CONTEXT_NODE
 
 /** What [WorkflowEngine.undo] does; its contract is documented there. */
 internal suspend fun WorkflowEngine.undoCompleted(id: String): WorkflowRecord {

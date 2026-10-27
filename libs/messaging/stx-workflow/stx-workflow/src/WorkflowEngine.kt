@@ -248,10 +248,14 @@ class WorkflowEngine internal constructor(
      *
      * Two refusals, both [WorkflowException]s. An id with no instance is [WorkflowNotFoundException].
      * Any instance that is not `Failed` with a failed compensation in its journal is
-     * [WorkflowNotRetryableException]: there is nothing to run again. So is one whose stored context
-     * no longer decodes (a redeploy changed the context type): the compensations need the context,
-     * so it is refused before anything is reopened, nothing is written and `error` keeps naming the
-     * node whose forward step failed. The stored context has to be repaired first.
+     * [WorkflowNotRetryableException]: there is nothing to run again.
+     *
+     * One `Failed` instance has no failed compensation and is still recoverable: the one the engine
+     * retired because its stored context no longer decodes (a redeploy changed the context type;
+     * `error` names the node `<context>`). Once the context decodes again (the stored context
+     * repaired, or the definition fixed), this runs its unwind from where its journal stands.
+     * While it still does not decode it is refused with [WorkflowNotRetryableException], before
+     * anything is reopened, and nothing is written.
      *
      * When another process holds the instance this throws [WorkflowConflictException] rather than
      * returning quietly: an operator who asked for a retry has to know it did not happen.

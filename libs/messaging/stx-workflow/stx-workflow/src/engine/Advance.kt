@@ -82,6 +82,9 @@ private suspend fun <C> WorkflowEngine.guardedAdvance(
         run.record
     }
 
+/** The node name [runFor] records as the failure of an instance whose context no longer decodes. */
+internal const val UNDECODABLE_CONTEXT_NODE = "<context>"
+
 /**
  * Builds the run, or retires the instance when its context no longer decodes.
  *
@@ -101,7 +104,7 @@ private suspend fun <C> WorkflowEngine.runFor(
         store.save(
             record.copy(
                 status = WorkflowStatus.Failed,
-                error = WorkflowError.of("<context>", e, attempts = 1),
+                error = WorkflowError.of(UNDECODABLE_CONTEXT_NODE, e, attempts = 1),
                 updatedAt = Clock.System.now(),
             ),
             record.version,
