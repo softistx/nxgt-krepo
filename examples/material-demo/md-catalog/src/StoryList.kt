@@ -10,13 +10,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.softistx.material.display.ListTile
-import com.softistx.material.display.StatusBadge
-import com.softistx.material.text.Emphasis
-import com.softistx.material.text.Typography
-import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StxTheme
-import com.softistx.material.theme.Tone
+import com.softistx.material.components.content.ListTile
+import com.softistx.material.components.feedback.StatusBadge
+import com.softistx.material.foundation.text.Emphasis
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.foundation.theme.Tone
 
 /**
  * The left pane. It is written with `ListTile` and `StatusBadge` on purpose: the catalogue's own

@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import com.softistx.material.theme.DefaultSeed
+import com.softistx.material.foundation.theme.DefaultSeed
 
 /**
  * What the reader has chosen: the story on screen, and the two theme dials the catalogue drives

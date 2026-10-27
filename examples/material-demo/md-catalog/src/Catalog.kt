@@ -1,17 +1,18 @@
 package com.softistx.material.demo
 
-import com.softistx.material.demo.stories.ButtonStories
-import com.softistx.material.demo.stories.DataStories
-import com.softistx.material.demo.stories.DateTimeStories
-import com.softistx.material.demo.stories.DisplayStories
-import com.softistx.material.demo.stories.FormStories
-import com.softistx.material.demo.stories.FoundationStories
-import com.softistx.material.demo.stories.LayoutStories
-import com.softistx.material.demo.stories.MediaStories
-import com.softistx.material.demo.stories.MotionStories
-import com.softistx.material.demo.stories.NavigationStories
-import com.softistx.material.demo.stories.ScreenStories
-import com.softistx.material.demo.stories.SurfaceStories
+import com.softistx.material.demo.stories.components.button.ButtonStories
+import com.softistx.material.demo.stories.components.content.ContentStories
+import com.softistx.material.demo.stories.components.data.DataStories
+import com.softistx.material.demo.stories.components.datetime.DateTimeStories
+import com.softistx.material.demo.stories.components.feedback.FeedbackStories
+import com.softistx.material.demo.stories.components.form.FormStories
+import com.softistx.material.demo.stories.components.media.MediaStories
+import com.softistx.material.demo.stories.components.navigation.NavigationStories
+import com.softistx.material.demo.stories.components.surface.SurfaceStories
+import com.softistx.material.demo.stories.foundation.FoundationStories
+import com.softistx.material.demo.stories.foundation.LayoutStories
+import com.softistx.material.demo.stories.foundation.MotionStories
+import com.softistx.material.demo.stories.screens.ScreenStories
 
 /**
  * Every group the catalogue shows, in reading order: what the library is built from, then what it
@@ -22,16 +23,20 @@ import com.softistx.material.demo.stories.SurfaceStories
  */
 val CatalogGroups: List<StoryGroup> =
     listOf(
+        // Foundation: what the library is built from.
         FoundationStories,
         MotionStories,
+        LayoutStories,
+        // Components, in the order of their families.
         ButtonStories,
-        DisplayStories,
         FormStories,
         NavigationStories,
-        LayoutStories,
+        FeedbackStories,
+        ContentStories,
         SurfaceStories,
-        DateTimeStories,
-        DataStories,
         MediaStories,
+        DataStories,
+        DateTimeStories,
+        // A whole screen.
         ScreenStories,
     )
