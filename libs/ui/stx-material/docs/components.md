@@ -70,7 +70,7 @@ One emphasised title per screen: `SectionHeader` (`TitleMedium`) and `EntityHead
 emphasised styles as `Medium` (500), but a default `Typography()` in 1.12.0-alpha03 returns the
 regular weight for most roles, so `style(true)` raises the weight itself: `Medium` for a regular
 role, `SemiBold` for a role that is already `Medium`, unless the theme's own emphasised style is
-heavier. `Metric` is display-sized and stays `SemiBold`, never lighter than M3's `Medium` figure.
+heavier. `Metric` is display-sized and at least `SemiBold`: a theme whose emphasised display weight is heavier keeps it.
 The five extra variants ignore the flag.
 
 ```kotlin
