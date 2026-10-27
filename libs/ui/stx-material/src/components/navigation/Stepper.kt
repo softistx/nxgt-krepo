@@ -1,33 +1,23 @@
 package com.softistx.material.components.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softistx.material.foundation.icon.Icon
-import com.softistx.material.foundation.icon.IconSize
-import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -148,7 +138,7 @@ private fun StepRow(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
         ) {
-            Marker(status = status, index = index, connector = !last, vertical = true)
+            StepMarker(status = status, index = index, connector = !last, vertical = true)
             Labels(step = step, status = status)
         }
     } else {
@@ -157,74 +147,9 @@ private fun StepRow(
             horizontalAlignment = Alignment.Start,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Marker(status = status, index = index, connector = !last, vertical = false)
+                StepMarker(status = status, index = index, connector = !last, vertical = false)
             }
             Labels(step = step, status = status)
-        }
-    }
-}
-
-@Composable
-private fun Marker(
-    status: StepStatus,
-    index: Int,
-    connector: Boolean,
-    vertical: Boolean,
-) {
-    val scheme = MaterialTheme.colorScheme
-    val fill =
-        when (status) {
-            StepStatus.Done, StepStatus.Current -> scheme.primary
-            StepStatus.Upcoming -> scheme.surfaceContainerHighest
-        }
-    val content =
-        when (status) {
-            StepStatus.Done, StepStatus.Current -> scheme.onPrimary
-            StepStatus.Upcoming -> scheme.onSurfaceVariant
-        }
-    val circle = @Composable {
-        Box(
-            modifier =
-                Modifier
-                    .size(28.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .background(fill),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (status == StepStatus.Done) {
-                Icon(icon = StxIcons.Check, description = null, size = IconSize.Small, tint = content)
-            } else {
-                Typography(
-                    text = (index + 1).toString(),
-                    variant = TypographyVariant.LabelSmall,
-                    color = content,
-                )
-            }
-        }
-    }
-    if (vertical) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            circle()
-            if (connector) {
-                Box(
-                    Modifier
-                        .width(2.dp)
-                        .height(StxTheme.spacing.lg)
-                        .background(scheme.outlineVariant),
-                )
-            }
-        }
-    } else {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            circle()
-            if (connector) {
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .height(2.dp)
-                        .background(scheme.outlineVariant),
-                )
-            }
         }
     }
 }

@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -14,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import com.softistx.material.components.button.Button
@@ -48,20 +53,39 @@ import com.softistx.material.foundation.theme.Tone
 val NavigationStories =
     storyGroup("Navigation") {
         story("App bar") { knobs ->
-            AppBar(
-                title = knobs.text("Title", "Orders"),
-                size = knobs.enumChoice("Size", AppBarSize.Small),
-                navigationIcon = StxIcons.Menu,
-                navigationDescription = "Open navigation",
-                onNavigation = {},
-                actions = {
-                    IconButton(
-                        icon = StxIcons.Search,
-                        description = "Search",
-                        onClick = {},
-                    )
-                },
-            )
+            val size = knobs.enumChoice("Size", AppBarSize.Small)
+            val behavior =
+                if (size == AppBarSize.Medium || size == AppBarSize.Large) {
+                    TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+                } else {
+                    TopAppBarDefaults.enterAlwaysScrollBehavior()
+                }
+            val collapse = knobs.flag("Collapse on scroll", false)
+            Column(
+                modifier =
+                    Modifier
+                        .height(420.dp)
+                        .then(if (collapse) Modifier.nestedScroll(behavior.nestedScrollConnection) else Modifier),
+            ) {
+                AppBar(
+                    title = knobs.text("Title", "Orders"),
+                    size = size,
+                    navigationIcon = StxIcons.Menu,
+                    navigationDescription = "Open navigation",
+                    onNavigation = {},
+                    scrollBehavior = if (collapse) behavior else null,
+                    actions = {
+                        IconButton(
+                            icon = StxIcons.Search,
+                            description = "Search",
+                            onClick = {},
+                        )
+                    },
+                )
+                Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    repeat(24) { Typography("Order ${it + 1}", modifier = Modifier.padding(StxTheme.spacing.md)) }
+                }
+            }
         }
 
         story("Search") { knobs ->
@@ -232,7 +256,7 @@ val NavigationStories =
         }
 
         story("Stepper") { knobs ->
-            var current by remember { mutableIntStateOf(1) }
+            val current = knobs.number("Current step", 1f, 0f..3f, steps = 2).toInt()
             Stepper(
                 steps =
                     listOf(
@@ -242,7 +266,7 @@ val NavigationStories =
                         Step("Review", "Confirm and pay"),
                     ),
                 current = current,
-                onStep = { current = it },
+                onStep = { knobs.set("Current step", it.toFloat()) },
                 collapseBelow = if (knobs.flag("Force vertical", false)) 10_000.dp else 520.dp,
             )
         }

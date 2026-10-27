@@ -129,7 +129,10 @@ val FeedbackStories =
 
         story("Loading mark") { knobs ->
             val determinate = knobs.flag("Determinate", false)
-            LoadingMark(progress = if (determinate) 0.45f else null)
+            LoadingMark(
+                progress = if (determinate) 0.45f else null,
+                contained = knobs.flag("Contained", false),
+            )
         }
 
         story("Typing indicator") { knobs ->

@@ -3,8 +3,6 @@ package com.softistx.material.components.feedback
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -19,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.RenderProbe
+import com.softistx.material.contrast
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.text.style
@@ -36,15 +35,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 
 private val colors = stxColors(DefaultSeed, isDark = false)
-
-/** WCAG contrast ratio of two opaque colours. */
-private fun contrast(
-    a: Color,
-    b: Color,
-): Double {
-    val (hi, lo) = listOf(a.luminance(), b.luminance()).sortedDescending()
-    return (hi + 0.05) / (lo + 0.05)
-}
 
 private fun <T> alertProbe(
     bounds: NodeBounds,

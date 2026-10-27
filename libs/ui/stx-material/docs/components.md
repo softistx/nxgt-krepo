@@ -65,7 +65,7 @@ secondary text stays in the palette instead of picking a grey.
 style of the same role (15 of them), the heavier weight for the one line a screen wants read first.
 `emphasis` says how *loud the colour* is, `emphasized` how *heavy the type* is; they combine.
 `TypographyVariant.style(emphasized)` is the same mapping for a caller that needs the `TextStyle`.
-The `Alert` title (`TitleSmall`) and the `EmptyState` title (`TitleLarge`) are emphasised and announced as headings.
+The `Alert` title (`TitleSmall`), the `EmptyState` title (`TitleLarge`) and the `AppBar` title (`TitleLarge` on `Small` and `Centered`; M3's headline and display on `Medium` and `Large`) are emphasised and announced as headings.
 One emphasised title per screen: `SectionHeader` (`TitleMedium`) and `EntityHeader`
 (`HeadlineMedium`) wear it by default (`emphasized = false` turns it off). M3 documents the
 emphasised styles as `Medium` (500), but a default `Typography()` in 1.12.0-alpha03 returns the
@@ -82,8 +82,8 @@ SectionHeader("Results", emphasized = false)                      // opt out of 
 
 Visible defaults that changed on the guide: `SectionHeader` is now `TitleMedium` emphasised (was
 `TitleSmall`), `EntityHeader` `HeadlineMedium` emphasised (was `HeadlineSmall`), `Metric` is
-display-sized (was `headlineMedium`), and `Stat` reserves a delta line by default
-(`reserveDelta = false` gives it back).
+display-sized (was `headlineMedium`), `Stat` reserves a delta line by default
+(`reserveDelta = false` gives it back), and `AppBar` titles are emphasised (`Small` and `Centered` stay `TitleLarge`, on one line; `Medium` and `Large` take M3's flexible type).
 
 ## Icons
 
@@ -241,7 +241,7 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | `PromoBanner` | `text`, `code?`, `tone = Success`, `style = Style`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)` | `feedback/promo-banner` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `feedback/progress` |
 | `LabeledProgress` | `progress`, `caption?`, `kind` | `feedback/labeled-progress` |
-| `LoadingMark` | `progress: Float? = null` | `feedback/loading-mark` |
+| `LoadingMark` | `progress: Float? = null`, `contained = false` | `feedback/loading-mark` |
 | `TypingIndicator` | `label = "Someone is typing"` | `feedback/typing-indicator` |
 | `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `feedback/toast` |
 
@@ -492,7 +492,7 @@ because M3 has neither.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `AppBar` | `title`, `size = Small`, `navigationIcon?`, `onNavigation?`, `actions` | `navigation/app-bar` |
+| `AppBar` | `title`, `size = Small`, `navigationIcon?`, `navigationDescription?`, `onNavigation?`, `scrollBehavior: TopAppBarScrollBehavior? = null`, `actions` | `navigation/app-bar` |
 | `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `results` | `navigation/search` |
 | `NavigationSuite` | `destinations`, `selected`, `onSelect`, `primaryAction?`, `content` | `navigation/navigation-suite` |
 | `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false`, `enabled`, `style` | `navigation/tabs` |
@@ -503,8 +503,22 @@ because M3 has neither.
 | `StepFooter` | `onNext`, `onBack?`, `nextLabel`, `busy` | `navigation/step-footer` |
 | `BottomBar` | `actions`, `fab?` | `navigation/bottom-bar` |
 
-`AppBarSize` — `Small`, `Centered`, `Medium`, `Large`, mapped onto M3's four top app bars.
+`AppBarSize` — `Small`, `Centered`, `Medium`, `Large`. `Medium` and `Large` are M3's flexible bars (headline-medium and display-small
+titles; expanded 112 dp and 120 dp, where the plain bars were 112 dp and 152 dp). The title of every size is emphasised and announced as a heading.
+A `scrollBehavior` makes the bar react to the scrolling content: `Medium` and `Large` collapse to the 64 dp small bar
+(`exitUntilCollapsedScrollBehavior()`), `Small` and `Centered` slide away and return on the first scroll back (`enterAlwaysScrollBehavior()`).
+The bar is only told about the scroll through `nestedScroll`:
+
+```kotlin
+val behavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+Column(Modifier.nestedScroll(behavior.nestedScrollConnection)) {
+    AppBar("Orders", size = AppBarSize.Large, scrollBehavior = behavior)
+    LazyColumn { /* … */ }
+}
+```
+
 Each tab has its own interaction source, so its press style runs.
+`Stepper` marks each step with a 32 dp plate: a circle, or a `Cookie9Sided` for the current step, morphing on `motion.spatial` as the step advances.
 `StepFooter` is Back (optional) and Continue under a stepper; `busy` turns Continue into a
 `BusyButton`. `BottomBar` is M3's `BottomAppBar` — verbs for this screen, not destinations
 (`NavigationSuite` is the destinations).
@@ -595,7 +609,8 @@ together. `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of
 here: M3 has no accordion, and the pager is Foundation's with a peek so the next card is visible.
 `Disclosure` is one panel; `Accordion` is a list with at most one open. `LabeledProgress` prints
 the percentage M3's indicator does not.
-`LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content;
+`LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content; `contained = true` seats it on a
+`primaryContainer` disc (M3's `ContainedLoadingIndicator`) for use over an image or a busy surface;
 `Progress` is the spinner attached to a control. `Wavy` / `WavyCircular` are M3's expressive
 indicators; `Linear` / `Circular` stay the quiet ones. `TypingIndicator` is three dots that beat
 in turn on the effects axis; Material 3 has no typing mark.
