@@ -9,7 +9,11 @@ import com.softistx.material.foundation.theme.StxThemeProvider
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 
 /** What the theme installed: its [StxMotion] and the scheme M3 sees. */
 private class Installed(
@@ -178,6 +182,18 @@ class SystemAccessibilityTest :
                 process.waited shouldBe true
             }
 
+            scenario("a process is destroyed when its caller is cancelled during the read") {
+                val process = HangingProcess()
+                // A standalone scope, so a missing destroy fails the join below instead of hanging runBlocking.
+                runBlocking {
+                    val job = CoroutineScope(Dispatchers.Default).launch { runCommand(listOf("hang"), timeoutMillis = 60_000) { process } }
+                    process.readStarted.await(5, java.util.concurrent.TimeUnit.SECONDS) shouldBe true
+                    job.cancel()
+                    withTimeout(5_000) { job.join() }
+                }
+                process.destroyed shouldBe true
+            }
+
             scenario("output is read, and a failing exit answers null") {
                 runBlocking { runCommand(listOf("ok")) { FinishedProcess("1\n", 0) } } shouldBe "1\n"
                 runBlocking { runCommand(listOf("bad")) { FinishedProcess("1\n", 1) } } shouldBe null
@@ -197,9 +213,12 @@ private class HangingProcess : Process() {
 
     @Volatile var waited = false
 
+    val readStarted = java.util.concurrent.CountDownLatch(1)
+
     override fun getInputStream(): java.io.InputStream =
         object : java.io.InputStream() {
             override fun read(): Int {
+                readStarted.countDown()
                 gate.await()
                 return -1
             }

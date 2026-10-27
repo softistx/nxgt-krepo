@@ -1,5 +1,6 @@
 package com.softistx.material.foundation.motion
 
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -60,7 +61,7 @@ internal object DesktopPreferences {
  * Runs [command] and answers its output, or null when it fails, is missing or outlives [timeoutMillis].
  *
  * The output is read before the exit is awaited, so a full pipe cannot deadlock the child; a watchdog
- * destroys the process at the timeout, which ends the read; and the process is always reaped.
+ * destroys the process at the timeout or when the caller is cancelled, which ends the read; and the process is always reaped.
  */
 internal suspend fun runCommand(
     command: List<String>,
@@ -71,15 +72,20 @@ internal suspend fun runCommand(
         val process = runCatching { start(command) }.getOrNull() ?: return@withContext null
         var timedOut = false
         var text: String? = null
+        var finished = false
         try {
             coroutineScope {
                 val watchdog =
-                    launch {
-                        delay(timeoutMillis)
-                        timedOut = true
-                        process.destroyForcibly()
+                    launch(start = CoroutineStart.ATOMIC) {
+                        try {
+                            delay(timeoutMillis)
+                            timedOut = true
+                        } finally {
+                            if (!finished) process.destroyForcibly()
+                        }
                     }
                 text = runCatching { process.inputStream.bufferedReader().use { it.readText() } }.getOrNull()
+                finished = true
                 watchdog.cancel()
             }
         } finally {
