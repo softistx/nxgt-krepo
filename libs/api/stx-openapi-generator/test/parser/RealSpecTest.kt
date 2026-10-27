@@ -103,7 +103,7 @@ class RealSpecTest :
                 operations.count { it.security.isEmpty() } shouldBe 14
                 operations
                     .filter { it.security.isNotEmpty() }
-                    .all { it.security == listOf(SecurityRequirement("Bearer")) } shouldBe true
+                    .all { it.security == listOf(listOf(SecurityRequirement("Bearer"))) } shouldBe true
             }
         }
     })

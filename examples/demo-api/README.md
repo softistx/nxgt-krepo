@@ -28,13 +28,13 @@ document is read twice by two different code paths, and the two [demo](../demo-c
 [clients](../demo-spring-client/README.md) call this server over real HTTP, so a disagreement fails
 a test instead of shipping.
 
-The 32 paths are chosen for what they make the generator do, not for what an application would
+The 34 paths are chosen for what they make the generator do, not for what an application would
 need. `/auth/*` is the root security scheme and the operations that override it with `security: []`;
 `/categories`, `/tags`, `/permissions`, `/roles` and `/users` are the ordinary CRUD shape with
 `PATCH` semantics that have to leave omitted fields alone; `/notifications` carries both kinds of
 `oneOf` — `NotificationPayload` with a `discriminator`, and `Recipient` without one, told apart only
-by the keys each shape carries; `/uploads` is `multipart/form-data`; `/session/echo` reports the
-`Authorization` header the server actually received, which is the only way to observe that a client
+by the keys each shape carries; `/uploads` is `multipart/form-data`; `/session/echo`, `/session/either` and `/session/optional` report the
+`Authorization` header the server actually received (the last two list `security` alternatives), which is the only way to observe that a client
 attached nothing where the document said to; and `/failures/{mode}` returns, on demand, each of the
 failures a client has to handle — a documented status with a body, a documented status without one,
 an undocumented status, and a body that does not parse.
