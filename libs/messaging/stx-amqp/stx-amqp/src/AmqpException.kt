@@ -70,8 +70,9 @@ class AmqpClosedException(
  *
  * The broker applies no prefetch to a consumer that acknowledges on delivery, so nothing bounds what
  * it pushes. Blocking the client's delivery thread would starve the connection's other consumers and
- * dropping a message would lose it unrecorded, so the flow fails instead. Collect faster, or use a
- * manual or after-handler acknowledgement so that prefetch applies.
+ * dropping a message would lose it unrecorded, so the flow fails instead. The message that overflowed,
+ * and any delivered before the consumer is cancelled with the broker, are lost — which is what at-most-once
+ * allows. Collect faster, or use a manual or after-handler acknowledgement so that prefetch applies.
  */
 class AmqpBufferFullException(
     val queue: String,

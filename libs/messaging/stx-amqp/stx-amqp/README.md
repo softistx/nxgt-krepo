@@ -135,15 +135,16 @@ allowed to have unacknowledged, and the protocol's default is all of them — on
 queue's worth of messages in memory while every other consumer of that queue holds none.
 `ConsumerOptions.prefetch` is what stops that, and it defaults to 32. It is also capped at
 `ConsumerOptions.MAX_PREFETCH` (64) and `0` ("no limit") is refused, with an error that names the
-limit: deliveries land in a buffer of that size, and a full one would park a thread of the
-connection's shared delivery pool, which every other consumer on the connection needs. Within the
+limit: deliveries land in a buffer twice that size (128, headroom for connection recovery), and a
+full one would park a thread of the connection's shared delivery pool, which every other consumer on
+the connection needs. Within the
 cap the buffer cannot fill, because a consumer holds no more unacknowledged messages than its
 prefetch. `DeliveryThreadsTest` asked the client about it: deliveries arrive on a `pool-N-thread-M`
 thread, one parked callback holds one thread and delays only its own channel, and as many parked
 callbacks as the pool has threads (`2 x cores` by default) stall a sibling consumer until one
-returns. A consumer with `AckStrategy.OnDelivery` has no prefetch, so the broker bounds nothing for it: it
-never blocks the delivery thread, and a collector that falls behind until the buffer is full fails
-the flow with `AmqpBufferFullException` (naming the queue and the buffer size). Collect faster, or
+returns. A consumer with `AckStrategy.OnDelivery` has no prefetch, so the broker bounds nothing for
+it: it never blocks the delivery thread, and a collector that falls behind until the buffer is full
+fails the flow with `AmqpBufferFullException` (naming the queue and the buffer size). Collect faster, or
 acknowledge manually or after the handler so that prefetch applies.
 
 **A failure is dead-lettered, not retried in place.** A requeued failure is redelivered immediately,
