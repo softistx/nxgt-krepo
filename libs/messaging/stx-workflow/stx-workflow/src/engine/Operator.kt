@@ -2,7 +2,6 @@ package com.softistx.workflow.engine
 
 import com.softistx.workflow.ChildFailedException
 import com.softistx.workflow.ChildLostException
-import com.softistx.workflow.NonRetryableException
 import com.softistx.workflow.WorkflowConflictException
 import com.softistx.workflow.WorkflowEngine
 import com.softistx.workflow.WorkflowNotFoundException
@@ -24,29 +23,18 @@ import kotlinx.serialization.SerializationException
  * A child that is no longer in the store cannot be taken back, and saying so is the point: this
  * fails the parent's compensation, the parent lands [WorkflowStatus.Failed], and a person gets
  * an instance to look at. Pretending it was undone would be the version nobody finds out about.
- * The same holds for a child left [WorkflowStatus.Failed] by a compensation of its own: this throws
- * a [NonRetryableException] caused by a [ChildFailedException], so the parent fails on the node too
- * without retrying it. Retry the child with [retryCompensation], then the parent.
- *
- * Only `Cancelled` and `Compensated` count as taken back. A child another worker holds the lock of
- * is handed back unchanged (still running, waiting or completed): that throws a retryable
- * [ChildFailedException], so the parent never lands `Compensated` over effects that still stand.
+ * Only `Cancelled` and `Compensated` count as taken back; anything else throws a
+ * [ChildFailedException] whose `status` says what the child is, and the parent lands `Failed` (a
+ * child's undo is tried once). A child left [WorkflowStatus.Failed] by a compensation of its own:
+ * retry the child with [retryCompensation], then the parent. A child another worker holds the lock
+ * of is handed back unchanged (running, waiting or completed): retry the parent once the child is
+ * free. Either way the parent never lands `Compensated` over effects that still stand.
  */
 internal suspend fun WorkflowEngine.undoChild(id: String): WorkflowRecord {
     val record = store.load(id) ?: throw ChildLostException(id)
     val taken = if (record.status == WorkflowStatus.Completed) undo(id) else cancel(id)
     return when (taken.status) {
         WorkflowStatus.Cancelled, WorkflowStatus.Compensated -> taken
-        // The child's own compensation failed: retrying the node would find it still `Failed`, so the
-        // parent's retry policy must not spend its backoff on it. A person retries the child first.
-        WorkflowStatus.Failed ->
-            throw NonRetryableException(
-                "child instance '$id' is Failed: its own compensation failed; retry it with retryCompensation, then the parent",
-                ChildFailedException(id, taken.workflow, taken.status),
-            )
-        // `cancel` and `undo` hand back the stored record when another worker holds the child's lock,
-        // so the child is still running, waiting or completed and its effects stand. Retryable: the
-        // lock may be free by the next attempt.
         else -> throw ChildFailedException(id, taken.workflow, taken.status)
     }
 }
@@ -73,13 +61,13 @@ internal suspend fun WorkflowEngine.retryFailedCompensation(id: String): Workflo
                             "(${e.message}); repair the stored context before retrying its compensation",
                     )
                 }
-            // An instance retired for its context holds no failed compensation to reopen: it is put
-            // back to unwinding from where its journal stands, which is what recovering it means.
+            // An instance retired for its context holds no failed compensation to reopen; it is put
+            // back to unwinding from where its journal stands, and its stale decode error is dropped
+            // so a later failed compensation is retried like any other.
             if (undecodable) {
-                run.checkpoint { it.copy(status = WorkflowStatus.Compensating) }
-            } else {
-                run.reopenFailedCompensations()
+                run.checkpoint { it.copy(error = null, awaiting = null, signals = emptyMap(), wakeAt = null) }
             }
+            run.reopenFailedCompensations()
             run.advance()
             run.record
         } ?: throw WorkflowConflictException(id)

@@ -244,7 +244,9 @@ class WorkflowEngine internal constructor(
      * often as it takes.
      *
      * For a parent with a `child` node whose compensation failed, retry the child first, then the
-     * parent: a child still `Failed` fails the parent's compensation of that node too.
+     * parent: a child still `Failed` fails the parent's compensation of that node too. A child
+     * another worker still held when the parent unwound fails it the same way: wait for the child to
+     * be free, then retry the parent.
      *
      * Two refusals, both [WorkflowException]s. An id with no instance is [WorkflowNotFoundException].
      * Any instance that is not `Failed` with a failed compensation in its journal is
@@ -285,6 +287,7 @@ class WorkflowEngine internal constructor(
     ): List<String> = store.runnable(now, limit)
 
     internal fun definitionFor(record: WorkflowRecord): Workflow<Any?> {
+
         @Suppress("UNCHECKED_CAST")
         return definitions[record.workflow] as Workflow<Any?>?
             ?: throw WorkflowUnknownException(record.workflow)
