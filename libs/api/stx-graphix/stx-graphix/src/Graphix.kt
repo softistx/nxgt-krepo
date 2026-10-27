@@ -9,7 +9,6 @@ import com.softistx.graphix.execute.toGraphixResult
 import com.softistx.graphix.intercept.GraphixInterceptor
 import com.softistx.graphix.intercept.runChain
 import com.softistx.graphix.message.GraphixMessages
-import com.softistx.graphix.schema.graphQLSchema
 import com.softistx.graphix.validation.GraphixValidation
 import graphql.GraphQL
 import graphql.schema.idl.SchemaPrinter

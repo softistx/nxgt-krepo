@@ -1,3 +1,4 @@
+// Keeps the facade the inline subscriber<V> compiles into consumers' bytecode; KafkaSubscriber.kt must hold no top-level declaration.
 @file:JvmName("KafkaSubscriberKt")
 
 package com.softistx.kafka.consumer

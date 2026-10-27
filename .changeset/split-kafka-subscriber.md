@@ -2,4 +2,4 @@
 "stx-kafka": patch
 ---
 
-internal: KafkaSubscriber split into single-purpose files (poll loop, commit bookkeeping, per-partition processing, factory), no API change
+No change to the API or behaviour: `KafkaSubscriber`'s poll loop, commit bookkeeping and per-partition processing moved into files of their own.
