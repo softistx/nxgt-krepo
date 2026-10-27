@@ -38,11 +38,13 @@ MANGLED = re.compile(r"-[A-Za-z0-9_]+$")
 
 
 def version_key(version: str) -> tuple:
-    """Order 1.9.0 before 1.12.0-alpha03 (a plain string sort does not); alphas sort below the release."""
+    """Order 1.9.0 before 1.12.0-alpha03 (a plain string sort does not); alpha < beta < rc < release."""
     core, _, pre = version.partition("-")
     nums = tuple(int(n) for n in re.findall(r"\d+", core))
     pre_nums = tuple(int(n) for n in re.findall(r"\d+", pre))
-    return nums, (0 if pre else 1), pre_nums
+    rank = {"alpha": 0, "beta": 1, "rc": 2}
+    kind = next((r for k, r in rank.items() if pre.lower().startswith(k)), 0) if pre else 3
+    return nums, kind, pre_nums
 
 
 def newest_jar() -> Path:
@@ -108,6 +110,13 @@ def top_level_names(jar: Path, suffix: str, package: str = PACKAGE) -> list[str]
         )
 
 
+def is_api_name(name: str) -> bool:
+    """Real entry points read as words; obfuscated internals (`WNYm7Xg`) do not."""
+    if name.startswith("remember"):
+        return True
+    return name[0].isupper() and re.search(r"[a-z]{3,}", name) is not None
+
+
 def composables(jar: Path, package: str = PACKAGE) -> list[str]:
     """Public @Composable entry points, read off the generated *Kt facade classes."""
     facades = [f"{package}.{n}" for n in top_level_names(jar, "Kt", package)]
@@ -116,7 +125,7 @@ def composables(jar: Path, package: str = PACKAGE) -> list[str]:
     for chunk in (facades[i:i + 60] for i in range(0, len(facades), 60)):
         for line in javap(jar, *chunk).splitlines():
             m = re.search(r"\bpublic static final .*\b([A-Z][A-Za-z0-9]*)(?:-[A-Za-z0-9_]+)?\(", line)
-            if m:
+            if m and is_api_name(m.group(1)):
                 found.add(m.group(1))
     return sorted(found)
 
@@ -187,7 +196,7 @@ def main() -> int:
             "Every public top-level function in the root package and each public subpackage "
             "(carousel, pulltorefresh, …) — the components plus the `remember*` state factories. "
             "Presence here is what settles whether a component exists in this version at all. "
-            "Short mixed-case names such as `WNYm7Xg` are obfuscated internals, not API.\n\n"
+            "Obfuscated internals are filtered out.\n\n"
             + sections(comps),
         ),
         encoding="utf-8",

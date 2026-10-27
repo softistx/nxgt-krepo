@@ -2,12 +2,10 @@
 
 # Public entry points
 
-Every public top-level function in the root package and each public subpackage (carousel, pulltorefresh, …) — the components plus the `remember*` state factories. Presence here is what settles whether a component exists in this version at all. Short mixed-case names such as `WNYm7Xg` are obfuscated internals, not API.
+Every public top-level function in the root package and each public subpackage (carousel, pulltorefresh, …) — the components plus the `remember*` state factories. Presence here is what settles whether a component exists in this version at all. Obfuscated internals are filtered out.
 
 ## `androidx.compose.material3`
 
-- `A`
-- `AX2PdCw`
 - `AlertDialog`
 - `AlertDialogContent`
 - `AlertDialogFlowRow`
@@ -15,14 +13,11 @@ Every public top-level function in the root package and each public subpackage (
 - `AnimatedNavigationItem`
 - `AppBarColumn`
 - `AppBarOverflowIndicator`
-- `AppBarRow`
 - `AppBarWithSearch`
 - `AssistChip`
-- `BTG8`
 - `Badge`
 - `BadgedBox`
 - `BasicAlertDialog`
-- `BfByrIA`
 - `BhxgA10`
 - `BottomAppBar`
 - `BottomAppBarState`
@@ -39,7 +34,6 @@ Every public top-level function in the root package and each public subpackage (
 - `ClockFace`
 - `ConsumeSwipeWithinBottomSheetBoundsNestedScrollConnection`
 - `DTcfvLk`
-- `DUhRLBM`
 - `DateEntryContainer`
 - `DateInputContent`
 - `DateInputTextField`
@@ -63,11 +57,6 @@ Every public top-level function in the root package and each public subpackage (
 - `DropdownMenuPopup`
 - `DropdownMenuPopupContent`
 - `DropdownMenuPopupImpl`
-- `E`
-- `EQC0FA8`
-- `EU0dCGE`
-- `EkvW5A0`
-- `ElI5`
 - `ElevatedAssistChip`
 - `ElevatedButton`
 - `ElevatedCard`
@@ -80,7 +69,6 @@ Every public top-level function in the root package and each public subpackage (
 - `ExpandedFullScreenSearchBar`
 - `ExposedDropdownMenuBox`
 - `FHprtrg`
-- `FItCLgY`
 - `FilledIconButton`
 - `FilledIconToggleButton`
 - `FilledTonalButton`
@@ -90,33 +78,16 @@ Every public top-level function in the root package and each public subpackage (
 - `FlexibleBottomAppBar`
 - `FloatingActionButtonMenu`
 - `FloatingToolbarState`
-- `G1PFc`
-- `G6fR4hs`
-- `GHTll3U`
-- `GJbTh5U`
-- `GmEhDVc`
 - `H2RKhps`
-- `HVP43zI`
-- `HXNGIdc`
 - `HorizontalDivider`
 - `HorizontalFloatingToolbar`
 - `HorizontalFloatingToolbarLayout`
 - `HorizontalFloatingToolbarWithFabLayout`
 - `HorizontalTimePicker`
-- `HsRjFd4`
-- `IBZr`
-- `ILWXrKs`
-- `IbK3jfQ`
 - `Icon`
 - `IconButton`
 - `IconToggleButton`
-- `If1S1O4`
-- `IlFM19s`
 - `InputChip`
-- `IyT6zlY`
-- `KE`
-- `L8eD4gc`
-- `LJWHXA8`
 - `Label`
 - `LargeFlexibleTopAppBar`
 - `LargeTopAppBar`
@@ -125,8 +96,6 @@ Every public top-level function in the root package and each public subpackage (
 - `LinearWavyProgressIndicator`
 - `ListItem`
 - `LoadingIndicator`
-- `LxG7B9w`
-- `MBs18nI`
 - `MaterialExpressiveTheme`
 - `MaterialTheme`
 - `MediumFlexibleTopAppBar`
@@ -137,26 +106,19 @@ Every public top-level function in the root package and each public subpackage (
 - `ModalWideNavigationRailDialog`
 - `Month`
 - `MultiChoiceSegmentedButtonRow`
-- `N4Jib3Y`
-- `NTTHHFE`
 - `NavigationBarItem`
 - `NavigationDrawerItem`
 - `NavigationItem`
 - `NavigationRail`
 - `NavigationRailItem`
 - `NdgjQFA`
-- `Nur2B3k`
-- `Nvy7gAk`
-- `Oix01E0`
 - `OnPlatformWindowBoundsChange`
-- `Ou1YvPQ`
 - `OutlinedButton`
 - `OutlinedCard`
 - `OutlinedIconButton`
 - `OutlinedIconToggleButton`
 - `OutlinedTextField`
 - `OutlinedToggleButton`
-- `PXWvyXQ`
 - `PermanentDrawerSheet`
 - `PermanentNavigationDrawer`
 - `PlainTooltip`
@@ -164,8 +126,6 @@ Every public top-level function in the root package and each public subpackage (
 - `PrimaryScrollableTabRow`
 - `PrimaryTabRow`
 - `ProvideTextStyle`
-- `Qj0Zi0g`
-- `RFCenO8`
 - `RIQooxk`
 - `RadioButton`
 - `RangeSlider`
@@ -189,10 +149,6 @@ Every public top-level function in the root package and each public subpackage (
 - `Surface`
 - `SwipeToDismissBox`
 - `Switch`
-- `T9BRK9s`
-- `TYlY6FY`
-- `Tab`
-- `TabRow`
 - `Text`
 - `TextButton`
 - `TextField`
@@ -207,32 +163,21 @@ Every public top-level function in the root package and each public subpackage (
 - `TonalToggleButton`
 - `TooltipBox`
 - `TooltipState`
-- `TopAppBar`
 - `TopAppBarLayout`
 - `TopSearchBar`
 - `TriStateCheckbox`
 - `TvnljyQ`
 - `TwoRowsTopAppBar`
-- `U`
 - `VerticalDivider`
 - `VerticalDragHandle`
 - `VerticalFloatingToolbarLayout`
 - `VerticalSlider`
 - `VerticalTimePicker`
-- `WMdw5o4`
 - `WeekDays`
 - `WideNavigationRail`
 - `WideNavigationRailItem`
 - `WideNavigationRailLayout`
-- `WuY5d9Q`
-- `X`
-- `X9ElhV4`
-- `Xl9yA`
-- `XvU6IwQ`
 - `Y0xEhic`
-- `Y92LkZI`
-- `YbuCTN8`
-- `YhN2O0w`
 - `Z58ophY`
 - `ZmokQxo`
 
@@ -244,12 +189,8 @@ Every public top-level function in the root package and each public subpackage (
 - `KeylineSnapPosition`
 - `MultiAspectCarouselItemDrawInfo`
 - `MultiAspectCarouselScope`
-- `VUP9l70`
-- `WNYm7Xg`
 
 ## `androidx.compose.material3.pulltorefresh`
 
 - `PullToRefreshBox`
 - `PullToRefreshState`
-- `RPmYEkk`
-- `Z4HSEVQ`

@@ -75,6 +75,15 @@ class RenderProbeTest :
                     pressed.pixelAt(node, Corner.Center) shouldBe Color.Red
                 }
             }
+
+            scenario("releasing returns the node to how it was at rest") {
+                val node = NodeBounds()
+                renderProbe(content = { PressSwatch(node) }) {
+                    settle()
+                    press(node)
+                    release(node).pixelAt(node, Corner.Center) shouldBe Color.Black
+                }
+            }
         }
     })
 
@@ -97,7 +106,15 @@ private fun PressSwatch(into: NodeBounds) {
         Modifier
             .size(SIZE.dp)
             .probed(into)
-            .pointerInput(Unit) { detectTapGestures(onPress = { pressed = true }) }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        pressed = true
+                        tryAwaitRelease()
+                        pressed = false
+                    },
+                )
+            }
             .background(if (pressed) Color.Red else Color.Black),
     )
 }

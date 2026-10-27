@@ -79,6 +79,9 @@ class RenderProbe(
         return settle()
     }
 
+    /** Lifts the pointer from the middle of [node]. */
+    fun release(node: NodeBounds): PixelGrid = release(node.rect.center)
+
     override fun close() = scene.close()
 
     private companion object {
