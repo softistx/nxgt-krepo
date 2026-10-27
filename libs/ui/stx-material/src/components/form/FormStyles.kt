@@ -13,7 +13,7 @@ import com.softistx.material.foundation.style.motion
  *
  * Empty, and that is the finding rather than an omission: M3's text field animates and dims its own
  * label, container, text and icons, so any alpha here would dim a disabled field twice. The name
- * exists so a caller can restate the default and edit it: `StxStyles.field then { … }`.
+ * exists so a caller can restate the default and edit it: `StxStyles.field then Style { … }`.
  */
 val fieldStyle: Style = Style
 
