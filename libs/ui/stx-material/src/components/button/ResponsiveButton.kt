@@ -45,8 +45,8 @@ fun ResponsiveButton(
     color: ButtonColor = ButtonColor.Primary,
     enabled: Boolean = true,
     collapseBelow: Dp = 360.dp,
-    style: Style = Style,
     size: ButtonSize = ButtonSize.Small,
+    style: Style = Style,
 ) {
     BoxWithConstraints(modifier = modifier) {
         val expanded = maxWidth >= collapseBelow

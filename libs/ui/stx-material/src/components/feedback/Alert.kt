@@ -43,8 +43,8 @@ fun Alert(
     tone: Tone = Tone.Info,
     title: String? = null,
     visible: Boolean = true,
-    style: Style = Style,
     icon: ImageVector? = AlertDefaults.icon(tone),
+    style: Style = Style,
     action: @Composable (() -> Unit)? = null,
 ) {
     AnimatedVisibility(

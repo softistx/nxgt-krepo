@@ -233,7 +233,7 @@ The shape a component takes:
   better and in one place.
 - **The signature carries no styling parameters.** No `backgroundColor`, no `shape`, no
   `contentPadding`. Instead one `style: Style = Style` parameter, defaulting to exactly `Style`
-  (the companion, which is the empty style) and applied *last* so a caller's override wins:
+  (the companion, which is the empty style), the last parameter (or the last before a trailing lambda), and applied *last* so a caller's override wins:
   `Modifier.styledBy(style, enabled, base, interactionSource)`.
 - **Presentation state belongs to the component.** `styledBy` (or `pressable` for a part that is a
   press target only when clickable, with `pressBase` for the base alone) remembers the style state

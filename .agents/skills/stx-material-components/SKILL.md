@@ -57,7 +57,7 @@ internal val choiceTileStyle: Style =
         }
 ```
 
-- `style: Style = Style` is the only styling parameter, after `enabled`, applied last so the caller wins. Interactive components all take it; an inert one (a divider, `Kbd`) says why it does not.
+- `style: Style = Style` is the only styling parameter, the last parameter (or the last before one trailing lambda), applied last so the caller wins. Interactive components all take it; an inert one (a divider, `Kbd`) says why it does not.
 - Read tokens through `foundation/style/StyleTokens.kt` (`scheme`, `shapes`, `spacing`, `colors`, `motion`); the default is named in `StxStyles` and the docs.
 - States are declared: `pressed`, `hovered`, `focused`, `disabled`, `selected`, `checked`, with `animate(spec) { … }` inside. Build the state with `Modifier.styledBy(style, enabled, base, interactionSource, selected)` (`foundation/style/Pressable.kt`), never an inline `rememberUpdatedStyleState` + `styleable`; a part that is only a press target when clickable uses `pressable(base, style, onClick)`, and `pressBase(base, onClick)` gives the base only then. Reuse `rowPress` (0.99) and `compactPress` (0.97) for the press instead of writing the block again. No `animate*AsState` for an interaction state.
 - Speed by axis: `motion.spatial(..)` for scale, offset, size; `motion.effects(..)` for alpha and colour. Detail in `compose-motion`.

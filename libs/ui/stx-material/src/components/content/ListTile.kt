@@ -39,11 +39,11 @@ fun ListTile(
     supporting: String? = null,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
-    style: Style = Style,
     leading: @Composable (() -> Unit)? = null,
-    trailing: @Composable (() -> Unit)? = null,
     selected: Boolean? = null,
     group: ListTileGroup? = null,
+    style: Style = Style,
+    trailing: @Composable (() -> Unit)? = null,
 ) {
     require(onClick != null || (selected == null && group == null)) {
         "ListTile: selected and group need an onClick; a tile without one is a plain row"

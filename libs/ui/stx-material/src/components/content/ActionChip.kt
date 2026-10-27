@@ -22,8 +22,8 @@ fun ActionChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    style: Style = Style,
     leading: @Composable (() -> Unit)? = null,
+    style: Style = Style,
     trailing: @Composable (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }

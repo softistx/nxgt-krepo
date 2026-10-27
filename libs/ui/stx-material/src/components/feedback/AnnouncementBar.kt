@@ -30,9 +30,9 @@ fun AnnouncementBar(
     text: String,
     modifier: Modifier = Modifier,
     tone: Tone = Tone.Info,
-    style: Style = Style,
     onDismiss: (() -> Unit)? = null,
     icon: ImageVector? = AlertDefaults.icon(tone),
+    style: Style = Style,
     action: @Composable (() -> Unit)? = null,
 ) {
     Row(

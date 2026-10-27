@@ -36,8 +36,8 @@ fun Button(
     variant: ButtonVariant = ButtonVariant.Filled,
     color: ButtonColor = ButtonColor.Primary,
     enabled: Boolean = true,
-    style: Style = Style,
     size: ButtonSize = ButtonSize.Small,
+    style: Style = Style,
 ) {
     ButtonSurface(
         onClick = onClick,
@@ -77,8 +77,8 @@ fun ButtonSurface(
     variant: ButtonVariant = ButtonVariant.Filled,
     color: ButtonColor = ButtonColor.Primary,
     enabled: Boolean = true,
-    style: Style = Style,
     size: ButtonSize = ButtonSize.Small,
+    style: Style = Style,
     content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }

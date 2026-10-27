@@ -133,10 +133,10 @@ Package `com.softistx.material.components.button`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `Button` | `text`, `onClick`, `variant = Filled`, `color = Primary`, `enabled`, `size = Small` | `buttons/button` |
+| `Button` | `text`, `onClick`, `variant = Filled`, `color = Primary`, `enabled`, `size = Small`, `style = Style` | `buttons/button` |
 | `ButtonSurface` | as `Button`, plus a `RowScope` `content` slot instead of `text` | `buttons/button` |
 | `IconButton` | `icon`, `description`, `onClick`, `variant = Ghost`, `color = Neutral`, `size`, `enabled`, `style` | `buttons/icon-button` |
-| `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp`, `size = Small` | `buttons/responsive-button` |
+| `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp`, `size = Small`, `style = Style` | `buttons/responsive-button` |
 | `ButtonRow` | `align = End`, `content: RowScope` | `buttons/button-row` |
 | `Fab` | `icon`, `description`, `onClick`, `text?`, `expanded = true`, `color = Primary`, `style` | `buttons/fab` |
 | `FabMenu` | `expanded`, `onExpandedChange`, `actions: List<FabAction>` | `buttons/fab-menu` |
@@ -144,8 +144,8 @@ Package `com.softistx.material.components.button`.
 | `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled`, `style` (no `size`: M3's default height) | `buttons/toggle-button` |
 | `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color`, `size = IconSize.Medium` (the glyph, not the container), `enabled`, `style` | `buttons/icon-toggle` |
 | `CopyButton` | `text`, `description = "Copy"` | `buttons/copy-button` |
-| `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000`, `size = Small` | `buttons/confirm-button` |
-| `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled`, `size = Small` | `buttons/busy-button` |
+| `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000`, `size = Small`, `style = Style` | `buttons/confirm-button` |
+| `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled`, `size = Small`, `style = Style` | `buttons/busy-button` |
 | `MoreMenu` | `items: List<MenuItem>`, `description = "More"` | `buttons/more-menu` |
 | `OverflowBar` | `actions: List<OverflowAction>`, `maxVisible` | `buttons/overflow-bar` |
 | `IconBadge` | `icon`, `description`, `onClick`, `count = 0`, `tone = Error` | `buttons/icon-badge` |
@@ -243,11 +243,11 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `feedback/status-badge` |
-| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `style = Style`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `action?` | `feedback/alert` |
+| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/alert` |
 | `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `feedback/skeleton` |
 | `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `feedback/status-dot` |
-| `AnnouncementBar` | `text`, `tone = Info`, `style = Style`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `action?` | `feedback/announcement-bar` |
-| `PromoBanner` | `text`, `code?`, `tone = Success`, `style = Style`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)` | `feedback/promo-banner` |
+| `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/announcement-bar` |
+| `PromoBanner` | `text`, `code?`, `tone = Success`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style` | `feedback/promo-banner` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `feedback/progress` |
 | `LabeledProgress` | `progress`, `caption?`, `kind` | `feedback/labeled-progress` |
 | `LoadingMark` | `progress: Float? = null`, `contained = false` | `feedback/loading-mark` |
@@ -272,14 +272,14 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `style = Style`, `content: ColumnScope` | `content/card` |
-| `Chip` | `text`, `selected`, `onClick?`, `enabled`, `style = Style`, `leading?`, `trailing?` | `content/chip` |
-| `ListTile` | `title`, `supporting? = null`, `onClick: (() -> Unit)? = null`, `enabled = true`, `style = Style`, `leading? = null`, `trailing? = null`, `selected: Boolean? = null`, `group: ListTileGroup? = null` | `content/list-tile` |
+| `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `style = Style`, `trailing?` | `content/chip` |
+| `ListTile` | `title`, `supporting? = null`, `onClick: (() -> Unit)? = null`, `enabled = true`, `leading? = null`, `selected: Boolean? = null`, `group: ListTileGroup? = null`, `style = Style`, `trailing? = null` | `content/list-tile` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
 | `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info`, `reserveDelta = true` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange`, `style = Style` | `content/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled`, `style = Style` | `content/rating` |
 | `LabeledDivider` | `label` — no `style`: a divider is inert | `content/labeled-divider` |
-| `ActionChip` | `text`, `onClick`, `enabled`, `style = Style`, `leading?`, `trailing?` | `content/action-chip` |
+| `ActionChip` | `text`, `onClick`, `enabled`, `leading?`, `style = Style`, `trailing?` | `content/action-chip` |
 | `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `content/keyboard-shortcut` |
 | `SuggestionChip` | `text`, `onClick`, `enabled`, `style = Style`, `leading?` | `content/suggestion-chip` |
 | `FileChip` | `name`, `sizeLabel?`, `enabled`, `onClick?`, `onRemove?`, `style = Style` | `content/file-chip` |
@@ -541,10 +541,10 @@ because M3 has neither.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `AppBar` | `title`, `size = Small`, `navigationIcon?`, `navigationDescription?`, `onNavigation?`, `scrollBehavior: TopAppBarScrollBehavior? = null`, `actions` | `navigation/app-bar` |
-| `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `results` | `navigation/search` |
+| `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `trailing?`, `style = Style`, `results` | `navigation/search` |
 | `NavigationSuite` | `destinations`, `selected`, `onSelect`, `primaryAction?`, `content` | `navigation/navigation-suite` |
 | `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false`, `enabled`, `style` | `navigation/tabs` |
-| `SegmentedControl` | `options`, `selected`, `onSelect`, `enabled = true`, `style = Style`, `icons: List<ImageVector>? = null` | `navigation/segmented-control` |
+| `SegmentedControl` | `options`, `selected`, `onSelect`, `enabled = true`, `icons: List<ImageVector> = emptyList()`, `style = Style` | `navigation/segmented-control` |
 | `FloatingToolbar` | `expanded`, `leading?`, `trailing?`, `content` | `navigation/floating-toolbar` |
 | `Breadcrumb` | `items: List<BreadcrumbItem>` | `navigation/breadcrumb` |
 | `Stepper` | `steps`, `current`, `onStep?`, `collapseBelow = 520.dp` | `navigation/stepper` |
@@ -746,7 +746,7 @@ Package `com.softistx.material.components.data`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `CommandPalette` | `visible`, `query`, `onQueryChange`, `items`, `onDismiss`, `style = Style` | `data/command-palette` |
-| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp`, `sort: TableSort? = null`, `onSortChange?`, `style = Style`, `headerStyle = Style`, `onRowClick?` | `data/data-table` |
+| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp`, `sort: TableSort? = null`, `onSortChange?`, `headerStyle = Style`, `style = Style`, `onRowClick?` | `data/data-table` |
 | `Description` | `items: List<DescriptionItem>` | `data/description` |
 | `EntityHeader` | `title`, `supporting?`, `leading?`, `actions`, `emphasized = true` | `data/entity-header` |
 | `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext`, `label?`, `style = Style` | `data/pagination` |

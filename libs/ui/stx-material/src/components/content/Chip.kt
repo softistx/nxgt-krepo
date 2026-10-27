@@ -29,8 +29,8 @@ fun Chip(
     selected: Boolean = false,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
-    style: Style = Style,
     leading: @Composable (() -> Unit)? = null,
+    style: Style = Style,
     trailing: @Composable (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }

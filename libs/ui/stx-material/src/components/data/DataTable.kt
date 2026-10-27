@@ -57,8 +57,8 @@ fun <T> DataTable(
     collapseBelow: Dp = 600.dp,
     sort: TableSort? = null,
     onSortChange: ((TableSort) -> Unit)? = null,
-    style: Style = Style,
     headerStyle: Style = Style,
+    style: Style = Style,
     onRowClick: ((T) -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {

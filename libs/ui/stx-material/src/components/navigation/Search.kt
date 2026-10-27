@@ -32,8 +32,8 @@ fun Search(
     active: Boolean = false,
     onActiveChange: (Boolean) -> Unit = {},
     enabled: Boolean = true,
-    style: Style = Style,
     trailing: @Composable (() -> Unit)? = null,
+    style: Style = Style,
     results: @Composable ColumnScope.() -> Unit = {},
 ) {
     val interactionSource = remember { MutableInteractionSource() }
