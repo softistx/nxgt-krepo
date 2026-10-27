@@ -248,9 +248,27 @@ fun named(term: String): JpaSpec<Product> = { it[Product::name] ilike "%$term%" 
 session.findAll<Product>(available and named("anvil"))
 ```
 
-`and` and `or` drop a side that answers `null` and keep the other, so `or` with a spec that
-restricts nothing narrows to the other side and does not widen to every row. Keep an optional filter
-out of an `or`.
+`and` and `or` drop a side that answers `null` and keep the other; two `null` sides answer `null`.
+That is the right rule for `and`, where a filter that does not apply adds no restriction. For `or` it
+is a trap: `null or b` is `b`, so an absent optional filter OR'd with `b` **narrows to `b`'s rows**
+instead of widening to every row.
+
+```kotlin
+fun named(term: String?): JpaSpec<Product> = { term?.let { t -> it[Product::name] ilike "%$t%" } }
+val cheap: JpaSpec<Product> = { it[Product::price] lt 10L }
+
+session.findAll<Product>(named(null) or cheap)  // only the cheap products, not every product
+```
+
+When "no restriction" is what an absent filter should mean, keep the optional filter out of the `or`
+and decide before composing:
+
+```kotlin
+val either = if (term == null) null else named(term) or cheap  // null: every row
+session.findAll<Product>(either)
+```
+
+`JpaSpecOrTest` pins this against a database.
 
 `cb.nullLiteral<String>()` is a typed null for the places an expression is wanted and there is no
 value, in place of JPA's `nullLiteral(String::class.java)`.
