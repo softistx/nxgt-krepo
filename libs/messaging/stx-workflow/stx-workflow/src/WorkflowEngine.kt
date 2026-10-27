@@ -4,6 +4,8 @@ import com.softistx.common.serialization.lenientJson
 import com.softistx.workflow.dsl.Signal
 import com.softistx.workflow.engine.Run
 import com.softistx.workflow.engine.advance
+import com.softistx.workflow.engine.failedCompensations
+import com.softistx.workflow.engine.reopenFailedCompensations
 import com.softistx.workflow.store.WorkflowRecord
 import com.softistx.workflow.store.WorkflowStore
 import kotlinx.coroutines.delay
@@ -249,6 +251,52 @@ class WorkflowEngine internal constructor(
         return if (record.status == WorkflowStatus.Completed) undo(id) else cancel(id)
     }
 
+    /**
+     * Runs the compensation that failed again, and carries the unwind on from there.
+     *
+     * ```kotlin
+     * engine.find(WorkflowStatus.Failed).forEach { engine.retryCompensation(it.id) }
+     * ```
+     *
+     * This is what an operator calls after fixing whatever the compensation choked on. [resume]
+     * cannot do it: a `Failed` instance is terminal, and a resume hands it back untouched. Here the
+     * failed compensation is made due again and the instance reopens, so the unwind **continues
+     * from where it stopped** — the compensations that already succeeded are not run a second time,
+     * and the ones that never ran because the unwind stopped are run after it, newest first. The
+     * result is [WorkflowStatus.Compensated], or [WorkflowStatus.Cancelled] when the unwind was a
+     * cancel or an [undo], or `Failed` again if the compensation still fails — it can be retried as
+     * often as it takes.
+     *
+     * An instance with a compensating `child` node needs the child fixed first: retry the child,
+     * then the parent.
+     *
+     * Two refusals, both [WorkflowException]s. An id with no instance is [WorkflowNotFoundException].
+     * Any instance that is not `Failed` with a failed compensation in its journal is
+     * [WorkflowNotRetryableException]: there is nothing to run again. That includes a `Failed`
+     * instance whose context no longer decodes, which failed before any step ran and has no
+     * compensation to retry; it needs its stored context repaired, not this.
+     *
+     * When another process holds the instance this throws [WorkflowConflictException] rather than
+     * returning quietly: an operator who asked for a retry has to know it did not happen.
+     */
+    suspend fun retryCompensation(id: String): WorkflowRecord {
+        val record = store.load(id) ?: throw WorkflowNotFoundException(id)
+        val workflow = definitionFor(record)
+        val advanced =
+            store.guarded(id) {
+                val fresh = store.load(id) ?: throw WorkflowNotFoundException(id)
+                if (fresh.status != WorkflowStatus.Failed || fresh.failedCompensations().isEmpty()) {
+                    throw WorkflowNotRetryableException(id, fresh.status)
+                }
+                val run = runFor(workflow, fresh) ?: return@guarded store.load(id)!!
+                run.reopenFailedCompensations()
+                run.advance()
+                run.record
+            } ?: throw WorkflowConflictException(id)
+        if (advanced.status.isTerminal) advanced.parent?.let { wake(it) }
+        return advanced
+    }
+
     suspend fun record(id: String): WorkflowRecord? = store.load(id)
 
     /**
@@ -256,8 +304,8 @@ class WorkflowEngine internal constructor(
      *
      * `find(WorkflowStatus.Failed)` is the operator's inbox: every instance whose compensation could
      * not be made to work, which is the one outcome this engine deliberately refuses to resolve on
-     * its own. Reading one and calling [resume] on it is what a person does after fixing whatever
-     * the compensation was failing on.
+     * its own. Reading one and calling [retryCompensation] on it is what a person does after fixing
+     * whatever the compensation was failing on.
      */
     suspend fun find(
         status: WorkflowStatus,

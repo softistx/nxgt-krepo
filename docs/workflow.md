@@ -97,7 +97,8 @@ A compensation is retried under **its own node's** retry policy: `retry { times 
 says the same about the refund.
 
 **A compensation that fails for good stops the unwind.** The instance lands `Failed` with the node
-named, and nothing before it is undone. See [Status](#status).
+named, and nothing before it is undone. Once the cause is fixed,
+[`retryCompensation`](#the-operators-inbox) runs it again and the unwind carries on. See [Status](#status).
 
 ## Retry
 
@@ -677,14 +678,15 @@ anything terminal and every caller reaching for it defensively depends on that; 
 would turn one of those calls into a refund nobody asked for. `undo` is the one you have to mean, and
 it refuses everything else — a running instance is `cancel`'s, a `Compensated` or `Cancelled` one has
 been unwound already and undoing it twice would take back a compensation, and a `Failed` one is
-waiting for a person by design. It is also what a [`child` node's](#child-workflows) compensation
+waiting for a person by design, through [`retryCompensation`](#the-operators-inbox). It is also what a [`child` node's](#child-workflows) compensation
 runs.
 
 Asking for an instance somebody else is advancing is **not an error**: the engine takes the
 instance's lock, and when it cannot it hands back what the store has rather than queueing.
 
 `resume` is for an operator, a test, or an application with its own scheduler. For automatic
-recovery, use [the worker](#the-worker).
+recovery, use [the worker](#the-worker). It does nothing to a terminal instance, `Failed` included:
+that one is moved by `retryCompensation`.
 
 ## Status
 
@@ -696,7 +698,7 @@ recovery, use [the worker](#the-worker).
 | `Compensating` | A node failed for good; the journal is being unwound | |
 | `Completed` | Every node succeeded | yes |
 | `Compensated` | A node failed, and every compensation owed for it succeeded | yes |
-| `Failed` | A node failed, **and a compensation failed too** | yes |
+| `Failed` | A node failed, **and a compensation failed too**; `retryCompensation` reopens it | yes |
 | `Cancelled` | Stopped on request; whatever had run was compensated first | yes |
 
 `Compensated` is the ordinary outcome of a workflow that failed. `Failed` is the one that asks for a
@@ -853,19 +855,40 @@ the store back.
 ```kotlin
 val stuck = engine.find(WorkflowStatus.Failed)
 stuck.forEach { println("${it.id}: ${it.error?.node} — ${it.error?.message}") }
-engine.resume(checkout, stuck.first().id)      // after fixing whatever the compensation choked on
+
+// after fixing whatever the compensation choked on:
+val record = engine.retryCompensation(stuck.first().id)
+check(record.status == WorkflowStatus.Compensated || record.status == WorkflowStatus.Cancelled)
 ```
 
 `Failed` is the one outcome the engine deliberately refuses to resolve on its own — a compensation
 that could not be made to work — and `find` is what makes the status mean something. Without it the
 only read is `record(id)`, and an operator does not have the id.
 
+`retryCompensation(id)` is what resolves it afterwards. `resume` cannot: `Failed` is terminal, and a
+resume hands a terminal instance back untouched. `retryCompensation` makes the failed compensation
+due again and reopens the instance, so the unwind **continues from where it stopped**:
+
+- compensations that already succeeded are not run a second time;
+- the ones that never ran, because the unwind stopped at the failure, run after it, newest first;
+- the instance lands `Compensated`, or `Cancelled` when the unwind was a `cancel` or an `undo`;
+- a compensation that still fails leaves it `Failed`, and the call can be repeated as often as it
+  takes. `error` keeps naming the node whose forward step failed.
+
+The call refuses with `WorkflowNotRetryableException` when there is nothing to retry: an instance
+that is not `Failed`, or a `Failed` one whose journal names no failed compensation — the only such
+case is a context that no longer decodes, which failed before any step ran and needs its stored
+context repaired. An unknown id is `WorkflowNotFoundException`, and an instance another process is
+advancing is `WorkflowConflictException`, so an operator never mistakes a skipped retry for a done
+one. A `Failed` parent whose [`child` node](#child-workflows) could not be compensated needs the
+child retried first, then the parent.
+
 Every store keeps an index for this: a sorted set per status in Redis, a `(status, updated_at)` index
 in SQL, a compound index in MongoDB. It is the second thing all three maintain on every write.
 
 **There is no ready-made HTTP endpoint for it, in either integration.** An admin route that lists
 instances and restarts them is exactly the route that must not be open, and who may call it is a
-question about your application rather than about this library. The four lines above are the route;
+question about your application rather than about this library. The few lines above are the route;
 put them behind whatever your other admin routes are behind.
 
 ## In a Ktor application
