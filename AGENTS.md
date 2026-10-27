@@ -990,6 +990,14 @@ the same each time, and the mistakes are the same each time too.
   carried a `@Volatile` between two callbacks; `ConfirmThreadsTest` showed both arrive on one
   connection thread, so it was insuring against nothing. Both specs need no server and run in
   milliseconds. Write the spec, then design.
+- **The one deliberate block on a client's delivery thread: `AmqpConsumer`'s `trySendBlocking`.**
+  `DeliveryThreadsTest` asked the RabbitMQ client: deliveries arrive on the connection's shared
+  pool, work is serialised per channel, and a parked callback delays only its own channel — until
+  as many are parked as the pool has threads, when every other consumer on the connection starves.
+  So `ConsumerOptions` refuses a prefetch above `MAX_PREFETCH` (64, the flow's buffer) and `0`, with
+  a message giving the limit and no silent clamp. Within it the buffer never fills, so the block is
+  bounded backpressure that returns at once. `AckStrategy.OnDelivery` is outside the rule (the
+  broker ignores prefetch for it). Everywhere else, never block a client's thread.
 - **A callback that cannot suspend gets a `Mailbox`, never `runBlocking`.** There is no other
   correct bridge: a `Mutex` may suspend and a callback may not, and `runBlocking` on a client's own
   I/O thread parks the thread it needs for heartbeats and deliveries. See the shared code section

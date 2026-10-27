@@ -16,6 +16,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -37,7 +38,9 @@ import kotlinx.serialization.json.Json
  * **Prefetch is the only backpressure there is.** The broker will hand over as many messages as it
  * is allowed to have unacknowledged, and the default in the protocol is *all of them*. So a
  * consumer sets [ConsumerOptions.prefetch], and a slow handler then leaves the rest of the queue
- * where other consumers can reach it instead of hoarding it in memory.
+ * where other consumers can reach it instead of hoarding it in memory. It is capped at
+ * [ConsumerOptions.MAX_PREFETCH], the size of the buffer deliveries land in, so that buffer never
+ * fills and the client's shared delivery thread is never parked waiting for the collector.
  *
  * **A delivery tag belongs to the channel it arrived on.** Acknowledging one on another channel is
  * a `PRECONDITION_FAILED` that closes it, which is why a consumer owns its channel and why nothing
@@ -87,9 +90,14 @@ class AmqpConsumer<T> internal constructor(
                             rejectUndecodable(channel = broker, options, delivery, failure) { close(it) }
                             return@DeliverCallback
                         }
-                    /* Blocking the broker's dispatch thread *is* the backpressure: with prefetch
-                       set, at most that many messages can be waiting here, and the broker gives the
-                       rest to somebody else rather than to this consumer's heap. */
+                    /* The one deliberate block on the client's delivery thread. Prefetch is capped at
+                       the buffer's size ([ConsumerOptions.MAX_PREFETCH]) and a consumer holds no more
+                       unacknowledged messages than its prefetch, so the buffer is never full here
+                       and this returns at once: bounded blocking as backpressure, never a wait for
+                       the collector. Uncapped, enough full buffers park every thread of the
+                       connection's shared pool and starve its other consumers
+                       (`DeliveryThreadsTest`). [AckStrategy.OnDelivery] is the exception: the broker
+                       does not apply prefetch to a consumer that acknowledges on delivery. */
                     trySendBlocking(message).getOrThrow()
                 }
             val cancelled = CancelCallback { close() }
@@ -122,7 +130,7 @@ class AmqpConsumer<T> internal constructor(
                 )
 
             awaitClose { runCatching { broker.basicCancel(tag) } }
-        }
+        }.buffer(ConsumerOptions.MAX_PREFETCH)
 
     /**
      * Hands every message to [handler] and acknowledges on the terms [ConsumerOptions.ack] set.
