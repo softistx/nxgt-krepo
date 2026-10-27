@@ -6,6 +6,7 @@ import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.components.button.CopyButton
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -26,6 +27,7 @@ fun PromoBanner(
     tone: Tone = Tone.Success,
     style: Style = Style,
     onDismiss: (() -> Unit)? = null,
+    icon: ImageVector? = AlertDefaults.icon(tone),
 ) {
     AnnouncementBar(
         text = text,
@@ -33,6 +35,7 @@ fun PromoBanner(
         tone = tone,
         style = style,
         onDismiss = onDismiss,
+        icon = icon,
         action =
             if (code == null) {
                 null

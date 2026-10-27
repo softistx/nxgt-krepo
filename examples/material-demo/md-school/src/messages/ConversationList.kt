@@ -15,6 +15,7 @@ import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.content.EmptyState
+import com.softistx.material.components.content.EmptyStateDefaults
 import com.softistx.material.components.content.ListTileDefaults
 import com.softistx.material.components.content.ListTileGroup
 import com.softistx.material.components.form.InputGroup
@@ -48,6 +49,7 @@ fun ConversationList(
         when {
             conversations.isEmpty() ->
                 EmptyState(
+                    illustration = { EmptyStateDefaults.IconPlate(StxIcons.Inbox) },
                     title = "Inbox zero",
                     description = "No conversation here.",
                     action = {

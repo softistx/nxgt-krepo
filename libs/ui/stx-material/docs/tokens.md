@@ -33,6 +33,10 @@ same colour.
 without naming twelve colours: `colors.tone(tone)` returns a `ToneColors` — `main`, `onMain`,
 `container`, `onContainer`. `StatusBadge` and `Alert` take a `Tone` for exactly this reason.
 
+`Alert`, `AnnouncementBar` and `PromoBanner`: the plate takes the tone's solid pair (`main` with
+`onMain`), except on an error, where it is inverted (`onContainer` plate, `container` icon) to hold 3:1; the notice is `surfaceContainerHigh`, `largeIncreased`, no border, except `Tone.Error`,
+which keeps its container.
+
 **Where the scheme comes from is a platform decision, and only that decision is
 platform-specific.** `platformColorScheme(seed, isDark, dynamicColor, paletteStyle, specVersion)` answers with the user's
 wallpaper palette on Android 12+ and with the seed everywhere else; `supportsDynamicColor` says

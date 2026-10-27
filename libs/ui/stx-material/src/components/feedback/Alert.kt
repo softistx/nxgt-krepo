@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import com.softistx.material.foundation.motion.Transitions
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
@@ -31,6 +34,10 @@ import com.softistx.material.foundation.theme.Tone
  * component, so a caller that flips a boolean gets the animation without asking for it. Passing
  * `visible = false` initially and flipping it is the whole API for "show this when the save
  * succeeds".
+ *
+ * A tonal surface with no outline, a `largeIncreased` shape, and the tone on a leading plate: the
+ * tone's icon, or [icon] when the caller names one, on a `MaterialShapes` cookie; `icon = null`
+ * leaves the plate out. The [title] is emphasised and announced as a heading.
  */
 @Composable
 fun Alert(
@@ -40,6 +47,7 @@ fun Alert(
     title: String? = null,
     visible: Boolean = true,
     style: Style = Style,
+    icon: ImageVector? = AlertDefaults.icon(tone),
     action: @Composable (() -> Unit)? = null,
 ) {
     AnimatedVisibility(
@@ -53,12 +61,18 @@ fun Alert(
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
             verticalAlignment = Alignment.Top,
         ) {
+            if (icon != null) TonePlate(tone, icon)
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
             ) {
                 if (title != null) {
-                    Typography(text = title, variant = TypographyVariant.TitleSmall)
+                    Typography(
+                        text = title,
+                        variant = TypographyVariant.TitleSmall,
+                        emphasized = true,
+                        modifier = Modifier.semantics { heading() },
+                    )
                 }
                 Typography(
                     text = text,

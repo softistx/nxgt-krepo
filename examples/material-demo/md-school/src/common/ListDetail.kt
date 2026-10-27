@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.components.content.EmptyState
+import com.softistx.material.components.content.EmptyStateDefaults
+import com.softistx.material.foundation.icon.StxIcons
 
 private val WideThreshold = 720.dp
 
@@ -37,7 +39,11 @@ fun ListDetail(
                 if (selected) {
                     detail(Modifier.weight(1f).fillMaxHeight())
                 } else {
-                    EmptyState(title = placeholderTitle, modifier = Modifier.weight(1f).fillMaxHeight())
+                    EmptyState(
+                        title = placeholderTitle,
+                        illustration = { EmptyStateDefaults.IconPlate(StxIcons.Touch) },
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    )
                 }
             }
         } else if (selected) {

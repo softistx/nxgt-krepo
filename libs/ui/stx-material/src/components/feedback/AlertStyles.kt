@@ -1,10 +1,9 @@
 package com.softistx.material.components.feedback
 
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.border
 import androidx.compose.foundation.style.contentPadding
-import androidx.compose.ui.unit.dp
 import com.softistx.material.foundation.style.colors
+import com.softistx.material.foundation.style.scheme
 import com.softistx.material.foundation.style.shapes
 import com.softistx.material.foundation.style.spacing
 import com.softistx.material.foundation.theme.Tone
@@ -13,15 +12,19 @@ import com.softistx.material.foundation.theme.Tone
  * Material 3 has no alert or banner, so this one is built from primitives — see AGENTS.md's
  * *Building a component* for when that is the right answer.
  *
- * The alert borrows the badge's colour pair and adds an outline, so a tone reads the same whether
- * it arrives as a two-word badge or as a paragraph.
+ * A tonal surface with no outline: the tone lives on the [TonePlate] at the start, so a screen with
+ * two notices spends two small spots of colour rather than two slabs. Only an error earns a
+ * coloured container, because it is the one tone that must interrupt.
  */
 fun alertStyle(tone: Tone): Style =
     Style {
-        val role = colors.tone(tone)
-        background(role.container)
-        contentColor(role.onContainer)
-        shape(shapes.medium)
-        border(1.dp, role.main)
+        if (tone == Tone.Error) {
+            background(colors.tone(Tone.Error).container)
+            contentColor(colors.tone(Tone.Error).onContainer)
+        } else {
+            background(scheme.surfaceContainerHigh)
+            contentColor(scheme.onSurface)
+        }
+        shape(shapes.largeIncreased)
         contentPadding(spacing.md)
     }
