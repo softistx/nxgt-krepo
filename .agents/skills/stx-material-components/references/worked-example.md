@@ -132,7 +132,7 @@ internal fun choiceTileColors(selected: Boolean): CardColors {
 /** The give under the finger and the disabled alpha: what M3's Card has no parameter for. */
 internal val choiceTileStyle: Style =
     Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.98f) } }
+        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.99f) } }
         disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
     }
 ```

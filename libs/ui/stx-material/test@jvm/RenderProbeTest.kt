@@ -27,13 +27,17 @@ class RenderProbeTest :
     FeatureSpec({
         feature("saving a frame") {
             scenario("writes a PNG a reader can open") {
-                val file = Files.createTempDirectory("probe").resolve("swatch.png")
-                renderProbe(content = { Swatch(CircleShape, NodeBounds()) }) {
-                    savePng(file) shouldBe file
+                val dir = Files.createTempDirectory("probe")
+                val file = dir.resolve("swatch.png")
+                try {
+                    renderProbe(content = { Swatch(CircleShape, NodeBounds()) }) {
+                        savePng(file) shouldBe file
+                    }
+                    Files.readAllBytes(file).take(4) shouldBe listOf(0x89, 0x50, 0x4E, 0x47).map { it.toByte() }
+                } finally {
+                    Files.deleteIfExists(file)
+                    Files.deleteIfExists(dir)
                 }
-                val bytes = Files.readAllBytes(file)
-                bytes.take(4) shouldBe listOf(0x89, 0x50, 0x4E, 0x47).map { it.toByte() }
-                Files.deleteIfExists(file)
             }
         }
 

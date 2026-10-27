@@ -32,7 +32,7 @@ motion.effects<Color>()                    // colour, alpha  (Default speed)
 ```kotlin
 internal val tileStyle: Style =
     Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.98f) } }
+        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.99f) } }
         disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
     }
 ```
