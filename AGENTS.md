@@ -121,6 +121,9 @@ parsed `ErrorResponse`, with a base `ApiException(status, rawBody)` for a status
 not declare, one it declared without a body, and a body that does not parse. `securitySchemes` and
 `security` become `ApiAuthConfig`, one suspending credential slot per declared scheme, resolved
 against the document root — `security: []` on an operation means *no* credential, not the root's.
+An operation's `security` stays a list of *alternatives* (OR, each an AND of schemes) all the way to
+the client, which sends the first alternative it holds every credential for, none when `{}` is
+allowed, and otherwise throws before sending; `docs/openapi-support.md` has the rules.
 
 Both need the same thing: the operation has to reach the HTTP layer, where the status and the body
 live but the operation is anonymous. Every generated function therefore carries `@ApiOperation(id,
@@ -655,8 +658,13 @@ reach it.** Three rules, and the next integration is built to them rather than r
   and the plugin adopts what an application or a container already built, instead of opening a
   second one.
 - **Whoever created it closes it.** `Resources.kt` says this once, as `own` (we opened it, we close
-  it on `ApplicationStopped`) and `publish` (someone else's, we leave it alone). A plugin that
-  adopts a connection and also closes it is the second close.
+  it on `ApplicationStopped`) and `publish` (someone else's, the *plugin* leaves it alone). A plugin
+  that adopts a connection and also closes it is the second close. This is about the plugin, not
+  the container: the plugin registers an adopted `instance` with Ktor's DI as well, and the
+  container closes every `AutoCloseable` it has resolved at application stop, adopted ones
+  included. An `instance` shared between two servers, or kept across a test bench's restarts, is
+  closed under its owner; the way out is the application replacing `onShutdown` in `install(DI)`,
+  shown in the `stx-ktor` README.
 - **Reaching a resource only through `call.x` is a service locator.** A class a container builds
   has no `ApplicationCall`, so each plugin registers what it installed with Ktor's DI —
   `install(RedisConnection) { config = … }` and the same connection is then both `call.redis` and a
@@ -985,6 +993,16 @@ the same each time, and the mistakes are the same each time too.
   carried a `@Volatile` between two callbacks; `ConfirmThreadsTest` showed both arrive on one
   connection thread, so it was insuring against nothing. Both specs need no server and run in
   milliseconds. Write the spec, then design.
+- **The one deliberate block on a client's delivery thread: `AmqpConsumer`'s `trySendBlocking`.**
+  `DeliveryThreadsTest` asked the RabbitMQ client: deliveries arrive on the connection's shared
+  pool, work is serialised per channel, and a parked callback delays only its own channel — until
+  as many are parked as the pool has threads, when every other consumer on the connection starves.
+  So `ConsumerOptions` refuses a prefetch above `MAX_PREFETCH` (64; the flow's buffer is twice that)
+  and `0`, with a message giving the limit and no silent clamp. Within it the buffer never fills —
+  the 2x headroom is for connection recovery, when redelivered messages sit beside stale buffered
+  ones — so the block is bounded backpressure that returns at once. An auto-ack consumer
+  (`OnDelivery`, no prefetch) uses a non-blocking `trySend` and fails the flow with
+  `AmqpBufferFullException` when full, so it never blocks. Everywhere else, never block a client's thread.
 - **A callback that cannot suspend gets a `Mailbox`, never `runBlocking`.** There is no other
   correct bridge: a `Mutex` may suspend and a callback may not, and `runBlocking` on a client's own
   I/O thread parks the thread it needs for heartbeats and deliveries. See the shared code section
@@ -1045,8 +1063,10 @@ the same each time, and the mistakes are the same each time too.
   the answer is an entity graph:
   `session.entityGraph<Purchase>().add(…)` is a fetch plan that is also a value, so a `find` and a
   query cannot disagree about what they load. `docs/jpa-criteria.md` has the rules for both,
-  including the one nothing enforces: `limit` and `offset` silently truncate whenever a query loads a
-  collection, whether by `fetchEach` or by a graph naming one.
+  including the one trap left: `limit` and `offset` silently truncate whenever a query loads a
+  collection, whether by `fetchEach` or by a graph naming one. Only `findPage` enforces it — it throws
+  `IllegalArgumentException` naming the collection it was asked to fetch; `select(...).limit(...)` and
+  a graph on a query still say nothing, so the caller pages owners and collections separately.
 - **Keep the fast tests fast and the slow ones optional.** Timing claims — a full buffer pausing, a
   strategy committing when it says it does, partitions running concurrently — belong on Kafka's own
   `MockConsumer`/`MockProducer` and run in about two seconds. A real server is for behaviour that
@@ -1172,8 +1192,8 @@ the same each time, and the mistakes are the same each time too.
     all a caller needs.
   - *Dependency inversion* — depend on the abstraction: the plugin's task action talks to
     `SourceEmitter`, and picks the implementation in exactly one place.
-- **Tests are kotest `FeatureSpec`, grouped by scenario.** Every spec extends `FeatureSpec`, with
-  `feature("...")` naming the behaviour under test and `scenario("...")` naming one case of it:
+- **Tests are kotest `FeatureSpec`, grouped by scenario.** Behaviour specs are kotest `FeatureSpec` (a Spring wiring spec may be a `StringSpec`),
+  with `feature("...")` naming the behaviour under test and `scenario("...")` naming one case of it:
 
   ```kotlin
   class OpenApiParserTest :
@@ -1189,6 +1209,11 @@ the same each time, and the mistakes are the same each time too.
   telling you the feature names are missing, not that grouping does not apply. Nest a `feature`
   inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
   to the other spec styles. One spec class per file, named after the file.
+
+  The exception is a Spring wiring spec, one that only checks beans are wired and configured: it has
+  no behaviour to group, so it may be a `StringSpec` with flat `"..."` tests, as
+  `libs/core/stx-spring-boot/test/data/mongo/config/MongoAutoConfigurationTest.kt` is. Any spec that
+  tests behaviour stays a `FeatureSpec`.
 - **Every module's packages start with `com.softistx`.** The rest follows the module: `com.softistx.openapi` for `libs/api/stx-openapi-generator`, `com.softistx.openapi.plugin` for `plugins/openapi`, `com.softistx.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
 - **Organise by package, not as a flat pile of files — `test/` exactly as much as `src/`.** A module
   with more than one concern gets a directory per concern, and the directory matches the package —

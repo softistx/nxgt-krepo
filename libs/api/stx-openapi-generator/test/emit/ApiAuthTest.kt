@@ -17,9 +17,10 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 
+/** One alternative per argument, an alternative's schemes joined by `+`; `""` is the anonymous one. */
 private fun operation(
     id: String,
-    vararg security: String,
+    vararg alternatives: String,
 ) = Operation(
     id = id,
     name = id,
@@ -27,7 +28,10 @@ private fun operation(
     path = "orders",
     parameters = emptyList(),
     returnType = TypeRef.UnitRef,
-    security = security.map { SecurityRequirement(it) },
+    security =
+        alternatives.map { alternative ->
+            alternative.split('+').filter { it.isNotEmpty() }.map { SecurityRequirement(it) }
+        },
 )
 
 private val SCHEMES =
@@ -39,6 +43,8 @@ private val SCHEMES =
         SecurityScheme("Session", "session", SecurityKind.ApiKeyCookie, parameterName = "sid"),
         SecurityScheme("Flow", "flow", SecurityKind.OAuthToken),
     )
+
+private val BOTH: List<SourceEmitter> = listOf(KtorfitEmitter(), SpringEmitter())
 
 private val MODEL =
     ApiModel(
@@ -91,7 +97,7 @@ class ApiAuthTest :
             scenario("a bearer and an oauth token go in the same header") {
                 ktorfit shouldContain """"Bearer" -> {"""
                 ktorfit shouldContain """"Flow" -> {"""
-                ktorfit shouldContain """request.headers.append("Authorization", ""${'"'}Bearer ${'$'}it""${'"'})"""
+                ktorfit shouldContain """request.headers.append("Authorization", ""${'"'}Bearer ${'$'}value""${'"'})"""
             }
 
             scenario("basic is encoded here rather than by the caller") {
@@ -99,14 +105,14 @@ class ApiAuthTest :
             }
 
             scenario("an api key goes where the document says it goes") {
-                ktorfit shouldContain """request.headers.append("X-Api-Key", it)"""
-                ktorfit shouldContain """request.url.parameters.append("access_token", it)"""
-                spring shouldContain """authorized.header("X-Api-Key", it)"""
-                spring shouldContain """authorized.cookie("sid", it)"""
+                ktorfit shouldContain """request.headers.append("X-Api-Key", value)"""
+                ktorfit shouldContain """request.url.parameters.append("access_token", value)"""
+                spring shouldContain """authorized.header("X-Api-Key", value)"""
+                spring shouldContain """authorized.cookie("sid", value)"""
             }
 
             scenario("Spring rebuilds the URL for a query key, which its builder cannot append to") {
-                spring shouldContain """url.queryParam("access_token", it)"""
+                spring shouldContain """url.queryParam("access_token", value)"""
                 spring shouldContain "authorized.url(url.build(true).toUri()).build()"
             }
         }
@@ -114,7 +120,8 @@ class ApiAuthTest :
         feature("which operations get one") {
 
             scenario("the requirement is read off the annotation, not guessed") {
-                ktorfit shouldContain "request.annotations.filterIsInstance<ApiOperation>().firstOrNull()?.security"
+                ktorfit shouldContain "request.annotations.filterIsInstance<ApiOperation>().firstOrNull()"
+                ktorfit shouldContain "val alternatives = operation.security"
                 spring shouldContain "request.attributes()[SECURITY_ATTRIBUTE]"
             }
 
@@ -126,6 +133,59 @@ class ApiAuthTest :
             }
         }
 
+        // The rule is the same text in both styles, so what one pins the other has too. Running it is
+        // the demo client's AuthTest; these pin that it is generated, and in what order.
+        feature("choosing one alternative") {
+
+            scenario("alternatives are walked in order and the first with every credential wins") {
+                listOf(ktorfit, spring).forEach { file ->
+                    file shouldContain "for (alternative in alternatives) {"
+                    file shouldContain "for (scheme in alternative.split(',')) {"
+                    file shouldContain "if (!complete) break"
+                    file shouldContain "satisfied = true"
+                }
+            }
+
+            scenario("nothing is attached until an alternative is known to be complete") {
+                listOf(ktorfit, spring).forEach { file ->
+                    file shouldContain "val pending = mutableListOf<() -> Unit>()"
+                    file shouldContain "pending.add {"
+                    file shouldContain "pending.forEach { it() }"
+                }
+                // The attach statement sits inside the deferred lambda, not beside the slot read.
+                ktorfit.substringAfter("pending.add {").substringBefore("pending.forEach") shouldContain
+                    "request.headers.append("
+            }
+
+            scenario("a slot is read when its scheme is reached, and a missing credential ends the alternative") {
+                ktorfit shouldContain "val value = credentials.bearer?.invoke()"
+                ktorfit shouldContain "if (value == null) {"
+                ktorfit shouldContain "complete = false"
+            }
+
+            scenario("the anonymous alternative only counts when no other is complete") {
+                listOf(ktorfit, spring).forEach { file ->
+                    file shouldContain "if (alternative.isEmpty()) {"
+                    file shouldContain "anonymous = true"
+                    file shouldContain "if (!satisfied && !anonymous) {"
+                }
+            }
+
+            scenario("with none complete and no anonymous alternative it throws before sending") {
+                ktorfit shouldContain "throw IllegalStateException("
+                ktorfit shouldContain "needs a credential for one of"
+                ktorfit shouldContain "${'$'}{operation.id}"
+                spring shouldContain "${'$'}{operation}"
+                // Names the alternatives with `+` for an AND and `or` between them.
+                ktorfit shouldContain """.joinToString(" or ") { "[" + it.replace(",", " + ") + "]" }"""
+            }
+
+            scenario("an operation with no alternatives is left alone") {
+                ktorfit shouldContain "if (alternatives.isEmpty()) return@onRequest"
+                spring shouldContain "if (alternatives.isNullOrEmpty()) next.exchange(request) else"
+            }
+        }
+
         feature("a scheme no client can satisfy") {
 
             scenario("it gets no slot, because a slot for it could not work") {
@@ -133,14 +193,59 @@ class ApiAuthTest :
                 KtorfitEmitter().render(digest).getValue("com.example.api.utils.ApiAuth") shouldNotContain "public var digest"
             }
 
-            scenario("an operation requiring one fails the emit, naming the operation") {
-                val digest =
-                    MODEL.copy(
-                        securitySchemes = SCHEMES + SecurityScheme("Digest", "digest", SecurityKind.Unsupported),
-                        groups = listOf(ApiGroup("OrdersApi", listOf(operation("listOrders", "Digest")))),
-                    )
-                val message = shouldThrow<EmitException> { KtorfitEmitter().render(digest) }.message
+            fun digestModel(vararg alternatives: String) =
+                MODEL.copy(
+                    securitySchemes = SCHEMES + SecurityScheme("Digest", "digest", SecurityKind.Unsupported),
+                    groups = listOf(ApiGroup("OrdersApi", listOf(operation("listOrders", *alternatives)))),
+                )
+
+            scenario("an operation requiring only unsupported ones fails the emit, naming the operation") {
+                BOTH.forEach { emitter ->
+                    val message = shouldThrow<EmitException> { emitter.render(digestModel("Digest")) }.message
+                    message.shouldNotBeNull() shouldContain "OrdersApi.listOrders requires 'Digest'"
+                }
+            }
+
+            scenario("so does one whose every alternative needs one, even beside a handled scheme") {
+                val message =
+                    shouldThrow<EmitException> { KtorfitEmitter().render(digestModel("Digest+Bearer", "Digest")) }.message
                 message.shouldNotBeNull() shouldContain "OrdersApi.listOrders requires 'Digest'"
+            }
+
+            scenario("an unsupported alternative is dropped when another one is handled") {
+                BOTH.forEach { emitter ->
+                    val orders = emitter.render(digestModel("Digest", "Bearer")).getValue("com.example.api.apis.OrdersApi")
+                    orders shouldContain """security = ["Bearer"]"""
+                    orders shouldNotContain "Digest"
+                }
+            }
+
+            scenario("an alternative that mixes a handled and an unsupported scheme is dropped whole") {
+                val orders =
+                    KtorfitEmitter()
+                        .render(digestModel("Bearer+Digest", "X-Key"))
+                        .getValue("com.example.api.apis.OrdersApi")
+                orders shouldContain """security = ["X-Key"]"""
+            }
+
+            scenario("the anonymous alternative is a handled one, so it keeps the operation emittable") {
+                val orders =
+                    KtorfitEmitter().render(digestModel("Digest", "")).getValue("com.example.api.apis.OrdersApi")
+                orders shouldContain """security = [""]"""
+            }
+        }
+
+        feature("a scheme name the annotation cannot carry") {
+
+            scenario("a comma in it fails the emit, since the annotation joins an alternative's schemes with one") {
+                val comma =
+                    MODEL.copy(
+                        securitySchemes =
+                            SCHEMES + SecurityScheme("A,B", "ab", SecurityKind.ApiKeyHeader, parameterName = "X"),
+                        groups = listOf(ApiGroup("OrdersApi", listOf(operation("listOrders", "A,B")))),
+                    )
+                val message = shouldThrow<EmitException> { KtorfitEmitter().render(comma) }.message
+                message.shouldNotBeNull() shouldContain "'A,B'"
             }
         }
 

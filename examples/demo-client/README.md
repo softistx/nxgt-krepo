@@ -37,7 +37,7 @@ Four things get asked, each in its own spec:
 
 | spec | what would otherwise go unnoticed |
 | --- | --- |
-| `AuthTest` | the root security scheme is attached, `security: []` overrides it, and the token slot is read per request rather than captured when the client was built |
+| `AuthTest` | the root security scheme is attached, `security: []` overrides it, the token slot is read per request rather than captured when the client was built, and an operation whose `security` lists alternatives (`/session/either`, `/session/optional`) sends the first one the client holds, never two, nothing when `{}` is allowed, and throws before sending otherwise |
 | `ErrorTest` | a documented status arrives as its own exception with the body parsed; an undocumented one still reaches the caller; a body that does not parse does not throw a second exception over the first |
 | `PolymorphismTest` | a `oneOf` resolves to the right subtype in both directions — with a `discriminator`, and without one, where the shapes are told apart only by the keys they carry |
 | `EndToEndTest` | the ordinary read/write path, including that `PATCH` leaves omitted fields alone |

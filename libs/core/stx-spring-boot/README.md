@@ -339,6 +339,9 @@ val listed = template.find(request.mongoQuery, Order::class.java)   // ?filter= 
 val page = template.findPage<Order>(request.mongoPage())            // …plus ?size= and ?cursor=
 ```
 
+Pass `allowed = setOf(...)` to `mongoPage` / `mongoQuery(allowed)` to restrict the fields a client may name;
+unset, `?filter=passwordHash:like:a` is an oracle — see "Which fields a client may name" in the doc below.
+
 The vocabulary — every operator in both forms, the filter tokens and how each reads its value, the
 sort grammar, and the three rules a keyset cursor has to obey — is
 [`docs/spring-mongo-queries.md`](../../../docs/spring-mongo-queries.md). It gains an entry every phase,

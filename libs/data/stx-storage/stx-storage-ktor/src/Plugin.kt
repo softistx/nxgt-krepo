@@ -39,9 +39,15 @@ class StorageConfiguration {
     /**
      * A client built elsewhere — by a DI container, or by hand.
      *
-     * When set, [config] is not needed and this is **not** closed when the application stops: whoever created
+     * When set, [config] is not needed and this is not closed by the plugin itself: whoever created
      * it closes it. That is what lets a container own the client while routes still reach it
      * through `call.storage`.
+     *
+     * **Ktor's DI is another matter.** The plugin registers the instance with it, and the container closes every
+     * `AutoCloseable` it has resolved when the application stops — this one included, whatever the plugin does. That
+     * is harmless while the instance lives and dies with the application. It bites when the instance outlives it:
+     * one shared between two servers, or kept across the restarts of a test bench. Then replace `onShutdown` in
+     * `install(DI)`; the `stx-ktor` README shows how.
      */
     var instance: ObjectStorage? = null
 }

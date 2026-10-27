@@ -1263,6 +1263,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SessionInfo'
+  /session/either:
+    get:
+      tags:
+        - session-controller
+      summary: Echo the Authorization header, for a bearer token or basic credentials
+      description: >
+        `security` lists two alternatives, a bearer token **or** basic credentials, so a generated
+        client sends the first one it holds a credential for and never both. A client that holds
+        neither fails before sending, naming the alternatives.
+      operationId: echoEither
+      security:
+        - Bearer: []
+        - Basic: []
+      responses:
+        '200':
+          description: What the server saw.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
+  /session/optional:
+    get:
+      tags:
+        - session-controller
+      summary: Echo the Authorization header, with a bearer token if there is one
+      description: >
+        `security` lists a bearer token and `{}`, which allows the call anonymously. A client that
+        holds a token sends it; one that holds none sends nothing, rather than failing.
+      operationId: echoOptional
+      security:
+        - Bearer: []
+        - {}
+      responses:
+        '200':
+          description: What the server saw.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfo'
   /failures/{mode}:
     get:
       tags:

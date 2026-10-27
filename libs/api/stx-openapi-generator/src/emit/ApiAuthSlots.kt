@@ -1,6 +1,7 @@
 package com.softistx.openapi.emit
 
 import com.softistx.openapi.ApiModel
+import com.softistx.openapi.Operation
 import com.softistx.openapi.SecurityKind
 import com.softistx.openapi.SecurityScheme
 import com.squareup.kotlinpoet.ClassName
@@ -24,25 +25,6 @@ internal const val BASIC_CREDENTIALS: String = "BasicCredentials"
  * one would be offering something that cannot work.
  */
 internal fun ApiModel.credentialSchemes(): List<SecurityScheme> = securitySchemes.filter { it.kind != SecurityKind.Unsupported }
-
-/** Schemes an operation requires that no client can satisfy. */
-internal fun ApiModel.requireEverySchemeSatisfiable() {
-    val unsupported = securitySchemes.filter { it.kind == SecurityKind.Unsupported }.associateBy { it.name }
-    if (unsupported.isEmpty()) return
-    val offenders =
-        groups.flatMap { group ->
-            group.operations.flatMap { operation ->
-                operation.security.filter { it.scheme in unsupported }.map { "${group.name}.${operation.name} requires '${it.scheme}'" }
-            }
-        }
-    if (offenders.isEmpty()) return
-    throw EmitException(
-        offenders.joinToString(
-            prefix = "no generated client can satisfy these security schemes: ",
-            separator = "; ",
-        ) + ". Their credential is the answer to a server challenge rather than a value a caller holds.",
-    )
-}
 
 /**
  * `ApiAuthConfig`: one credential slot per scheme the document declares.

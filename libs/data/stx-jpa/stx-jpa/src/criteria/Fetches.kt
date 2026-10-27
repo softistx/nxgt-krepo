@@ -45,7 +45,7 @@ fun <T : Any, V : Any> From<*, T>.fetch(
  * val lines = purchase.fetchEach(Purchase::lines)
  * ```
  *
- * **A collection fetch and a row limit do not compose, and nothing refuses the combination.** The
+ * **A collection fetch and a row limit do not compose, and only `findPage` refuses the combination.** The
  * limit is applied to the *joined* rows, so a purchase with three lines under `limit(2)` comes back
  * as one purchase holding two of its three lines — silently incomplete, and cached that way for the
  * rest of the session. Measured, not inferred: it is the same truncation an entity graph naming a

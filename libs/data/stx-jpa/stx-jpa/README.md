@@ -392,12 +392,14 @@ and to a query cannot disagree about what "a purchase with its buyer" means, and
 startup serves every request. `add`, `subgraphOf` and `subgraphEachOf` are extensions on JPA's own
 `Graph`, so the plan is built by ordinary calls and can be handed around half-built.
 
-Two refusals are worth knowing here rather than in the vocabulary, because nothing enforces them:
+Two refusals are worth knowing here rather than in the vocabulary, because little enforces them:
 
 - **A collection fetch and a row limit do not compose.** The limit applies to the *joined* rows, so
   three purchases holding 3, 1 and 0 lines under `limit(2)` come back as one purchase holding two of
   its three lines — silently incomplete, and cached that way for the rest of the session. An entity
-  graph naming a collection truncates identically. Both are measured in specs rather than described.
+  graph naming a collection truncates identically. Only `findPage` checks it, and throws
+  `IllegalArgumentException` naming the collection; `select(...).limit(...)` and a graph on a query do not.
+  Both are measured in specs rather than described.
 - **A fetch has no place in a projection.** `select reference, customer` over a fetched join is a
   `SemanticException`: a fetch says *fill this object in*, and a projection is not returning the
   object to fill. Use a plain `join` there.
@@ -457,7 +459,8 @@ another*, and leaves the cursors in `PageInfo` null — they belong to keyset pa
 not. Offset makes the database walk and discard, so a deep page costs more and a row inserted between
 requests shifts the window. Fine behind a UI over a few hundred rows; for an export or an infinite
 scroll, order by the identifier and resume from the last one seen. A `limit` above `MAX_PAGE_SIZE`
-(1000, from `stx-common`) is refused, as it is in `stx-mongo`.
+(1000, from `stx-common`) is refused, as it is in `stx-mongo`. A query that fetches a collection is refused too, at any depth,
+because the limit would cut the joined rows rather than the owners; see `docs/jpa-criteria.md`.
 
 **Writing is stateful-session only.** A stateless session has no persistence context, so `update`
 would have nothing to merge into and `delete` nothing to cascade from. The reads take the narrower

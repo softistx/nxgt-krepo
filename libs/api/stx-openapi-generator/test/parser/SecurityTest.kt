@@ -41,6 +41,16 @@ paths:
         - ApiKey: []
         - Basic: []
       responses: { '200': { description: ok } }
+  /either:
+    get:
+      tags: [users]
+      operationId: findEither
+      security:
+        - Bearer: []
+        - ApiKey: []
+          Basic: []
+        - {}
+      responses: { '200': { description: ok } }
   /reports:
     get:
       tags: [users]
@@ -112,12 +122,13 @@ class SecurityTest :
         feature("what an operation requires") {
 
             scenario("an operation that declares nothing inherits the document root") {
-                operations.getValue("findMe").security shouldContainExactly listOf(SecurityRequirement("Bearer"))
+                operations.getValue("findMe").security shouldContainExactly
+                    listOf(listOf(SecurityRequirement("Bearer")))
             }
 
             scenario("an operation that declares its own replaces the root outright") {
                 operations.getValue("listAdmins").security shouldContainExactly
-                    listOf(SecurityRequirement("ApiKey"), SecurityRequirement("Basic"))
+                    listOf(listOf(SecurityRequirement("ApiKey")), listOf(SecurityRequirement("Basic")))
             }
 
             scenario("security: [] means no credential, not the root's") {
@@ -126,7 +137,42 @@ class SecurityTest :
 
             scenario("scopes are carried with the requirement") {
                 operations.getValue("listReports").security shouldContainExactly
-                    listOf(SecurityRequirement("OAuth", listOf("read:reports")))
+                    listOf(listOf(SecurityRequirement("OAuth", listOf("read:reports"))))
+            }
+        }
+
+        feature("alternatives") {
+
+            // OpenAPI: the list is OR, and each entry is an AND of the schemes it names. Flattening it
+            // sent every credential the client held to an API that wanted one of them.
+            scenario("two entries are two alternatives, not one list of two requirements") {
+                operations.getValue("listAdmins").security.size shouldBe 2
+            }
+
+            scenario("the schemes of one entry stay together, in the document's order") {
+                operations.getValue("findEither").security[1] shouldContainExactly
+                    listOf(SecurityRequirement("ApiKey"), SecurityRequirement("Basic"))
+            }
+
+            scenario("the alternatives keep the document's order, which is the order a client tries them in") {
+                operations.getValue("findEither").security.map { alternative -> alternative.map { it.scheme } } shouldContainExactly
+                    listOf(listOf("Bearer"), listOf("ApiKey", "Basic"), emptyList())
+            }
+
+            scenario("{} is an alternative with no schemes: anonymous access is allowed") {
+                operations.getValue("findEither").security.last() shouldBe emptyList()
+            }
+
+            scenario("an alternative list holding only {} is not the same as no security at all") {
+                val onlyAnonymous =
+                    OpenApiParser().parse(
+                        WITH_SECURITY.replace("      security: []\n", "      security:\n        - {}\n"),
+                    )
+                onlyAnonymous.groups
+                    .single()
+                    .operations
+                    .single { it.name == "signIn" }
+                    .security shouldContainExactly listOf(emptyList())
             }
         }
 

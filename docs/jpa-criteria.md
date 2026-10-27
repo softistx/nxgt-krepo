@@ -162,12 +162,32 @@ The rules, each pinned by a spec:
 - **A fetch after a plain join on the same attribute cannot be one.** Hibernate has `isFetched` and
   `clearFetched` and no way to set it, so a join already taken cannot become a fetch, and asking for
   both emits two joins to the same table. Fetch first, and let the value it returns be the join.
-- **`limit` and `offset` do not compose with a `fetchEach`, and nothing refuses the combination.**
+- **`limit` and `offset` do not compose with a `fetchEach`, and only `findPage` refuses the combination.**
   The database applies them to the joined rows, not to the owners: measured, `limit(2)` over three
   purchases holding three, one and no lines answers with *one* purchase holding *two* of its three
-  lines — fewer owners than asked for, one of them silently incomplete and cached as whole. Page the
-  owners first and fetch their collections in a second query off the ids, or project the columns the
-  page actually shows. A to-one `fetch` multiplies no rows and is left alone.
+  lines — fewer owners than asked for, one of them silently incomplete and cached as whole, and a
+  page that reports no next page while owners remain. Page the owners first and fetch their
+  collections in a second query off the ids, or project the columns the page actually shows. A to-one
+  `fetch` multiplies no rows and is left alone. `select(...).limit(...)` and an entity graph naming a
+  collection do not check, so there the rule is yours to keep. `findPage` does, and says so:
+
+  ```kotlin
+  session.findPage<Purchase>(limit = 20) { criteria, purchase ->
+      purchase.fetchEach(Purchase::lines)
+      criteria.orderBy(asc(purchase[Purchase::id]))
+  }
+  // IllegalArgumentException: findPage cannot fetch the collection 'lines': limit and offset cut the
+  // joined rows, not the owners ... Page the owners and load their collections separately, or project.
+  ```
+
+  The pattern that works is two queries — the page of owners, then their collections off the ids:
+
+  ```kotlin
+  val page = session.findPage<Purchase>(limit = 20) { c, p -> c.orderBy(asc(p[Purchase::id])) }
+  val ids = page.data.map { it.id }
+  val lines = session.findAll<PurchaseLine> { it[PurchaseLine::purchase][Purchase::id] oneOf ids }
+  ```
+
 - **Not in a projection.** A projection has no owner in its select list to hang a fetch on, so
   Hibernate refuses one with a `SemanticException`. Use a plain `join`.
 - **One level.** There is no fetch from a fetch. Two levels is what an entity graph is for.
@@ -228,9 +248,27 @@ fun named(term: String): JpaSpec<Product> = { it[Product::name] ilike "%$term%" 
 session.findAll<Product>(available and named("anvil"))
 ```
 
-`and` and `or` drop a side that answers `null` and keep the other, so `or` with a spec that
-restricts nothing narrows to the other side and does not widen to every row. Keep an optional filter
-out of an `or`.
+`and` and `or` drop a side that answers `null` and keep the other; two `null` sides answer `null`.
+That is the right rule for `and`, where a filter that does not apply adds no restriction. For `or` it
+is a trap: `null or b` is `b`, so an absent optional filter OR'd with `b` **narrows to `b`'s rows**
+instead of widening to every row.
+
+```kotlin
+fun named(term: String?): JpaSpec<Product> = { term?.let { t -> it[Product::name] ilike "%$t%" } }
+val cheap: JpaSpec<Product> = { it[Product::price] lt 10L }
+
+session.findAll<Product>(named(null) or cheap)  // only the cheap products, not every product
+```
+
+When "no restriction" is what an absent filter should mean, keep the optional filter out of the `or`
+and decide before composing:
+
+```kotlin
+val either = if (term == null) null else named(term) or cheap  // null: every row
+session.findAll<Product>(either)
+```
+
+`JpaSpecOrTest` pins this against a database.
 
 `cb.nullLiteral<String>()` is a typed null for the places an expression is wanted and there is no
 value, in place of JPA's `nullLiteral(String::class.java)`.

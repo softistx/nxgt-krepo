@@ -22,7 +22,7 @@ import io.kotest.matchers.string.shouldNotContain
 private fun operation(
     id: String,
     errors: List<ErrorResponse> = emptyList(),
-    security: List<SecurityRequirement> = emptyList(),
+    security: List<List<SecurityRequirement>> = emptyList(),
 ) = Operation(
     id = id,
     name = id,
@@ -52,7 +52,7 @@ private val MODEL =
                                         // exception can decode it, and none should be emitted.
                                         ErrorResponse("500", TypeRef.StringRef),
                                     ),
-                                security = listOf(SecurityRequirement("Bearer")),
+                                security = listOf(listOf(SecurityRequirement("Bearer"))),
                             ),
                             operation("signIn"),
                         ),
@@ -89,6 +89,44 @@ class ApiOperationTest :
 
             scenario("it carries the resolved security schemes") {
                 ktorfit.getValue("com.example.api.apis.OrdersApi") shouldContain """security = ["Bearer"]"""
+            }
+
+            scenario("alternatives are one string each, an alternative's schemes joined by a comma") {
+                val either =
+                    MODEL.copy(
+                        groups =
+                            listOf(
+                                ApiGroup(
+                                    "OrdersApi",
+                                    listOf(
+                                        operation(
+                                            "listAdmins",
+                                            security =
+                                                listOf(
+                                                    listOf(SecurityRequirement("Bearer")),
+                                                    listOf(SecurityRequirement("ApiKey"), SecurityRequirement("Basic")),
+                                                    emptyList(),
+                                                ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                    )
+                KtorfitEmitter().render(either).getValue("com.example.api.apis.OrdersApi") shouldContain
+                    """security = ["Bearer", "ApiKey,Basic", ""]"""
+            }
+
+            scenario("a scheme name with a quote, a backslash or a dollar is escaped into valid Kotlin") {
+                val odd = """A"B\C${'$'}D"""
+                val model =
+                    MODEL.copy(
+                        groups =
+                            listOf(
+                                ApiGroup("OrdersApi", listOf(operation("listAdmins", security = listOf(listOf(SecurityRequirement(odd)))))),
+                            ),
+                    )
+                val orders = KtorfitEmitter().render(model).getValue("com.example.api.apis.OrdersApi")
+                orders shouldContain """security = ["A\"B\\C${'$'}{'${'$'}'}D"]"""
             }
 
             scenario("an operation that needs no credential says nothing rather than an empty array") {

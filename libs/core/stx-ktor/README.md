@@ -56,9 +56,40 @@ pins both, with a `Probe` and no backend:
   opt out; only the application can, by replacing `onShutdown` in `install(DI)`.
 
 So a plugin that registers what it opened is closed twice, and that is fine because these clients
-close through `CloseGuard` in `stx-common`. It is also the reason a connection which has to outlive
-the application should not be registered at all — use `instance` instead, which a plugin adopts and
-never closes.
+close through `CloseGuard` in `stx-common`.
+
+### A provided `instance` is closed by the container too
+
+`instance` stops the *plugin* from closing what you hand it. It does not stop the container: the
+plugin still registers that instance with Ktor's DI, and the container closes every `AutoCloseable`
+it has resolved when the application stops — yours included. Only an instance something resolved is
+closed; one nothing asked the container for is left open.
+
+That is harmless while the instance lives and dies with the application. It bites when it does not:
+
+- **One instance shared between two servers.** The first application to stop closes the connection
+  the second is still using.
+- **A test bench that restarts the application** against one long-lived connection. The first
+  restart closes it, and the next start finds it shut.
+
+The way out is the application's, since nothing a library registers can opt out. Replace `onShutdown`
+in `install(DI)` — its default is `{ _, instance -> (instance as? AutoCloseable)?.close() }`, and it
+runs after any per-key `cleanup`:
+
+```kotlin
+val shared: Redis = Redis.connect(config)   // built by whoever owns it, and closed by them
+
+install(DI) {
+    // Leave `shared` open; keep Ktor's default for everything else.
+    onShutdown = { _, resolved -> if (resolved !== shared) (resolved as? AutoCloseable)?.close() }
+}
+install(RedisConnection) { instance = shared }
+```
+
+`onShutdown = { _, _ -> }` turns the container's closing off altogether, which is right when every
+`AutoCloseable` in the application has an owner of its own. Install `DI` *before* the plugins:
+the first plugin to register a dependency installs `DI` with its defaults when it is absent, and a
+later `install(DI)` then fails as a duplicate.
 
 The half of that story which needs a real server — that routes and the container get the *same*
 connection — is `stx-redis-ktor`'s `RedisDependenciesTest`, beside the plugin it is about.

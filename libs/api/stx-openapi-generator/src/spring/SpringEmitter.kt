@@ -13,9 +13,9 @@ import com.softistx.openapi.emit.apiFile
 import com.softistx.openapi.emit.apiOperationFile
 import com.softistx.openapi.emit.endpointsFile
 import com.softistx.openapi.emit.optionality
-import com.softistx.openapi.emit.requireEverySchemeSatisfiable
 import com.softistx.openapi.emit.requireExceptionNamesFree
 import com.softistx.openapi.emit.typeNameOf
+import com.softistx.openapi.emit.withSatisfiableSecurity
 import com.softistx.openapi.models.ModelStyle
 import com.softistx.openapi.models.modelFiles
 import com.softistx.openapi.models.types
@@ -61,8 +61,8 @@ public class SpringEmitter(
         options: EmitOptions,
     ): List<FileSpec> {
         model.requireExceptionNamesFree()
-        model.requireEverySchemeSatisfiable()
-        return model.groups.map { emitGroup(it, options) } +
+        val usable = model.withSatisfiableSecurity()
+        return usable.groups.map { emitGroup(it, options) } +
             modelFiles(model, options, style) +
             endpointsFile(model, options) +
             apiOperationFile(options) +

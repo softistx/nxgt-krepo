@@ -61,13 +61,22 @@ public data class Operation(
     /** Every non-2xx response the document declares for this operation, in status order. */
     val errors: List<ErrorResponse> = emptyList(),
     /**
-     * The schemes a caller must satisfy, already resolved against the document root.
+     * What a caller may do to be let in, already resolved against the document root: a list of
+     * *alternatives*, any one of which is enough, each an *and* of the schemes it names.
      *
-     * Empty means *no* authentication, which the document can say two ways — by declaring nothing
-     * anywhere, or by overriding the root with `security: []`. Both arrive here as an empty list,
-     * because to a caller they are the same instruction.
+     * That is OpenAPI's own shape — `[{Bearer: []}, {ApiKey: [], Basic: []}]` reads "a bearer token,
+     * or an api key together with basic credentials" — and it is kept as such rather than flattened,
+     * because flattening turns "or" into "and" and sends every credential the client holds.
+     *
+     * An alternative with no schemes (`{}`) is the anonymous one: the document allows the call with
+     * no credential at all, so a client that holds none of the others may send none.
+     *
+     * An empty outer list means *no* authentication, which the document can say two ways — by
+     * declaring nothing anywhere, or by overriding the root with `security: []`. Both arrive here as
+     * an empty list, because to a caller they are the same instruction, and a client sends no
+     * credential for either.
      */
-    val security: List<SecurityRequirement> = emptyList(),
+    val security: List<List<SecurityRequirement>> = emptyList(),
 )
 
 /**
