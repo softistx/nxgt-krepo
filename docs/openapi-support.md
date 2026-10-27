@@ -361,6 +361,8 @@ encoding. A scheme whose own name contains a comma cannot be encoded and is an `
 
 An operation with no `security` at all, or `security: []`, sends no credential and never throws.
 
+**Migrating:** Before this release a missing credential produced a bare request and a 401; it is now an `IllegalStateException` before sending — fill the slot or add `{}` to the operation's `security`.
+
 **There is no generated server side.** This generator emits clients (Ktorfit and Spring
 `WebClient`) and models; nothing it writes checks an incoming request's credentials, so "a server
 accepts a request once one alternative is satisfied" is for the server's own security layer to

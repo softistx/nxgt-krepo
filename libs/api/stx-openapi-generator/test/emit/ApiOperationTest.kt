@@ -116,6 +116,19 @@ class ApiOperationTest :
                     """security = ["Bearer", "ApiKey,Basic", ""]"""
             }
 
+            scenario("a scheme name with a quote, a backslash or a dollar is escaped into valid Kotlin") {
+                val odd = """A"B\C${'$'}D"""
+                val model =
+                    MODEL.copy(
+                        groups =
+                            listOf(
+                                ApiGroup("OrdersApi", listOf(operation("listAdmins", security = listOf(listOf(SecurityRequirement(odd)))))),
+                            ),
+                    )
+                val orders = KtorfitEmitter().render(model).getValue("com.example.api.apis.OrdersApi")
+                orders shouldContain """security = ["A\"B\\C${'$'}{'${'$'}'}D"]"""
+            }
+
             scenario("an operation that needs no credential says nothing rather than an empty array") {
                 // `security: []` and no `security` at all are the same instruction, and the
                 // annotation's own default already spells it.

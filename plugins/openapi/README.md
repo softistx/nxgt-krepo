@@ -140,7 +140,7 @@ With `ApiAuth`, an operation's `security` is a list of alternatives: the client 
 whose credentials are all configured, sends none when the document allows `{}` and nothing is
 configured, and otherwise throws an `IllegalStateException` naming the expected alternatives before
 the request leaves. The rules and an example are in
-[`docs/openapi-support.md`](../../docs/openapi-support.md#authentication).
+[`docs/openapi-support.md`](../../docs/openapi-support.md#authentication). Before this release a missing credential produced a bare request and a 401; it is now an `IllegalStateException` before sending — fill the slot or add `{}` to the operation's `security`.
 
 **`client: Spring`** — no processing step; `$libs.spring.web` is enough to compile, and the
 interfaces are handed to `HttpServiceProxyFactory` at runtime. Because the functions are `suspend`,
