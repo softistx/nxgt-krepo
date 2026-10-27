@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.style.Style
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -19,6 +22,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -27,8 +31,10 @@ import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
+import com.softistx.material.RenderProbe
 import com.softistx.material.components.button.ViewMode
 import com.softistx.material.components.button.ViewToggle
+import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
@@ -137,25 +143,27 @@ class ConnectedGroupTest :
         }
 
         feature("a tab's press") {
-            scenario("gives under the finger: the pressed tab's corner is no longer covered") {
+            scenario("gives under the finger: a pressed tab's painted corner pulls inwards") {
                 val bounds = NodeBounds()
+                val red = Color.Red
                 renderProbe(
                     width = 400,
                     height = 200,
                     content = {
                         StxTheme(isDark = false) {
-                            Tabs(labels = listOf("Paid"), selected = 0, onSelect = {}, modifier = Modifier.probed(bounds))
+                            Tabs(
+                                labels = listOf("Paid"),
+                                selected = 0,
+                                onSelect = {},
+                                modifier = Modifier.probed(bounds),
+                                style = Style { background(red) },
+                            )
                         }
                     },
                 ) {
-                    val rest = settle()
-                    val restCorner = rest.pixelAt(bounds, Corner.TopLeft, inset = 0)
-                    val restInside = rest.pixelAt(bounds, Corner.TopLeft, inset = 8)
-                    val pressed = press(bounds)
-                    // The ripple tints the tab, so the press reached it...
-                    (pressed.pixelAt(bounds, Corner.TopLeft, inset = 8) != restInside) shouldBe true
-                    // ...and the 0.97 scale pulled the tab's own corner inwards, off the outer pixel.
-                    pressed.pixelAt(bounds, Corner.TopLeft, inset = 0) shouldBe restCorner
+                    // The style paints the tab itself, so its corner is red at rest and, once 0.97 shrinks it, is not.
+                    settle().pixelAt(bounds, Corner.TopLeft, inset = 0) shouldBe red
+                    (press(bounds).pixelAt(bounds, Corner.TopLeft, inset = 0) != red) shouldBe true
                 }
             }
         }
@@ -196,6 +204,93 @@ class ConnectedGroupTest :
                     mode shouldBe ViewMode.Grid
                     onNodeWithContentDescription("Grid").assert(chosen)
                 }
+            }
+
+            scenario("enabled = false refuses a click and reads as not enabled") {
+                runComposeUiTest {
+                    var picked by mutableStateOf(0)
+                    setContent {
+                        StxTheme(isDark = false) {
+                            SegmentedControl(options = listOf("Day", "Week"), selected = picked, onSelect = { picked = it }, enabled = false)
+                        }
+                    }
+                    onNodeWithText("Week").assertIsNotEnabled().performClick()
+                    picked shouldBe 0
+                }
+            }
+        }
+
+        feature("more connected groups") {
+            fun probe(
+                bounds: NodeBounds,
+                content: @Composable (Modifier) -> Unit,
+                block: RenderProbe.() -> Unit,
+            ) = renderProbe(
+                width = 400,
+                height = 200,
+                content = {
+                    StxTheme(isDark = false) {
+                        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                            content(Modifier.padding(20.dp).probed(bounds))
+                        }
+                    }
+                },
+                block = block,
+            )
+
+            scenario("a middle segment of three is squarer on both sides") {
+                val bounds = NodeBounds()
+                probe(bounds, { SegmentedControl(listOf("XXXX", "XXXX", "XXXX"), selected = 0, onSelect = {}, modifier = it) }) {
+                    val grid = settle()
+                    val r = bounds.rect
+                    val third = r.width / 3
+                    // Unchosen middle segment, 6 px in from each edge, 2 down: inner corners are small radii, so inked.
+                    fun inkAt(x: Float) = grid.ink(Rect(x, r.top + 2, x + 1, r.top + 3))
+                    inkAt(r.left + third + 6) shouldBe 1
+                    inkAt(r.left + 2 * third - 7) shouldBe 1
+                }
+            }
+
+            scenario("icons put a glyph before the label") {
+                fun inkOf(icons: List<ImageVector>?): Int {
+                    val bounds = NodeBounds()
+                    var ink = 0
+                    probe(bounds, { SegmentedControl(listOf("XXXX", "XXXX"), selected = 0, onSelect = {}, modifier = it, icons = icons) }) {
+                        ink = settle().ink(bounds)
+                    }
+                    return ink
+                }
+                (inkOf(listOf(StxIcons.Calendar, StxIcons.Calendar)) != inkOf(null)) shouldBe true
+            }
+
+            scenario("a caller style with a background reaches a segment") {
+                val bounds = NodeBounds()
+                probe(
+                    bounds,
+                    { SegmentedControl(listOf("XXXX", "XXXX"), selected = 0, onSelect = {}, modifier = it, style = Style { background(Color.Red) }) },
+                ) {
+                    val grid = settle()
+                    // A square background painted by the style shows at the outer corner a pill would clear.
+                    grid.pixelAt(bounds, Corner.TopLeft, inset = 0) shouldBe Color.Red
+                }
+            }
+
+            scenario("ViewToggle is round at its ends and fills the chosen icon") {
+                fun colours(mode: ViewMode): Pair<Color, Color> {
+                    val bounds = NodeBounds()
+                    var out = Color.Unspecified to Color.Unspecified
+                    probe(bounds, { ViewToggle(value = mode, onChange = {}, modifier = it) }) {
+                        val grid = settle()
+                        grid.isTransparent(bounds, Corner.TopLeft, inset = 2) shouldBe true
+                        grid.isTransparent(bounds, Corner.TopRight, inset = 2) shouldBe true
+                        out = grid.pixelAt(bounds, Corner.TopLeft, inset = 12) to grid.pixelAt(bounds, Corner.TopRight, inset = 12)
+                    }
+                    return out
+                }
+                val list = colours(ViewMode.List)
+                val grid = colours(ViewMode.Grid)
+                (list.first != list.second) shouldBe true
+                list.first shouldBe grid.second
             }
         }
     })

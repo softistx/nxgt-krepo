@@ -130,7 +130,7 @@ Package `com.softistx.material.components.button`.
 | `MoreMenu` | `items: List<MenuItem>`, `description = "More"` | `buttons/more-menu` |
 | `OverflowBar` | `actions: List<OverflowAction>`, `maxVisible` | `buttons/overflow-bar` |
 | `IconBadge` | `icon`, `description`, `onClick`, `count = 0`, `tone = Error` | `buttons/icon-badge` |
-| `ViewToggle` | `value: ViewMode`, `onChange`, `enabled`, `style` | `buttons/view-toggle` |
+| `ViewToggle` | `value: ViewMode`, `onChange`, `enabled = true`, `style = Style` | `buttons/view-toggle` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonSize` — `ExtraSmall` 32 dp, `Small` 40 dp (the default), `Medium` 56, `Large` 96, `ExtraLarge` 136: M3's own
@@ -471,7 +471,9 @@ because M3 has neither.
 | `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `results` | `navigation/search` |
 | `NavigationSuite` | `destinations`, `selected`, `onSelect`, `primaryAction?`, `content` | `navigation/navigation-suite` |
 | `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false`, `enabled`, `style` | `navigation/tabs` |
-| `SegmentedControl` | `options`, `selected`, `onSelect`, `enabled`, `icons?`, `style` | `navigation/segmented-control` |
+| `SegmentedControl` | `options`, `selected`, `onSelect`, `enabled = true`, `style = Style`, `icons: List<ImageVector>? = null` | `navigation/segmented-control` |
+
+Each tab has its own interaction source, so its press style runs.
 | `FloatingToolbar` | `expanded`, `leading?`, `trailing?`, `content` | `navigation/floating-toolbar` |
 | `Breadcrumb` | `items: List<BreadcrumbItem>` | `navigation/breadcrumb` |
 | `Stepper` | `steps`, `current`, `onStep?`, `collapseBelow = 520.dp` | `navigation/stepper` |

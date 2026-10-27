@@ -230,6 +230,7 @@ dont la forme se lit dans les imports.
       les 15 rôles `*Emphasized` ; `SectionHeader` et `EntityHeader` les portent ; le chiffre d'un `Stat`
       reste `SemiBold` en taille display, et les `Stat` d'une rangée gardent la même hauteur (`reserveDelta = true`) ;
       tailles par défaut changées : `SectionHeader` en `TitleMedium`, `EntityHeader` en `HeadlineMedium`, `Metric` en display
+- [x] **Segments connectés (#284).** `SegmentedControl` et `ViewToggle` sont le groupe de boutons connecté de M3 (extrémités rondes, jonctions plus carrées, choisi = rempli, sans coche, `Role.RadioButton` + `selected`) ; `SegmentedControl` gagne `icons`, `ViewToggle` gagne `style` ; la pression de `Tabs` atteint enfin son style.
 - [ ] Les composants Expressive eux-mêmes — voir #291
 
 ## Phases suivantes

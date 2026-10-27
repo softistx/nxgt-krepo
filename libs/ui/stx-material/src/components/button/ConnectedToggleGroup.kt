@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
  * `selected`, not the checkbox a bare `ToggleButton` says, and the row is a `selectableGroup`.
  *
  * It is the body of [com.softistx.material.components.navigation.SegmentedControl] and [ViewToggle];
+ * The segment colours come from M3's `toggleButtonColors` and are not themeable by [style].
  * [style] reaches every item, and a morphing control takes no press scale of its own.
  */
 @Composable

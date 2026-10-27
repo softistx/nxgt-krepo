@@ -30,8 +30,8 @@ fun SegmentedControl(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    icons: List<ImageVector>? = null,
     style: Style = Style,
+    icons: List<ImageVector>? = null,
 ) {
     ConnectedToggleGroup(
         count = options.size,
