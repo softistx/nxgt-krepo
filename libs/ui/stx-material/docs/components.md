@@ -99,11 +99,11 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StxIcons` holds thirty hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StxIcons` holds thirty-four hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
 `Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`,
-`Attach`, `Info`, `ViewList`, `ViewGrid`, `Send`, `Pin`, `Touch`. They are defined
-in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
+`Attach`, `Info`, `ViewList`, `ViewGrid`, `Send`, `Pin`, `Touch`, `Bell`, `Printer`, `Phone`, `EditNote`. They
+are defined in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
 has no key for the Material icons, `$compose.material` does not carry `material-icons-core` in
 Compose Multiplatform 1.11, and the AndroidX icon artifacts are Android-only. An application that
 wants a thousand glyphs should depend on a pack directly and pass the `ImageVector` in — every
@@ -589,6 +589,11 @@ the bar's badge slot and the leading; everything that needs a labelled row waits
 is a short bar, a tabletop or short window is a medium bar, anything wider is a collapsed wide
 rail. `primaryAction` is the FAB the suite places in the rail header or above the bar.
 
+A compact bar holds three to five destinations (M3's rule); past that, labels truncate to one line
+with an ellipsis, so move the extra destinations behind a "More" entry, a drawer or the rail.
+`NavigationSuiteDefaults.CompactBelow` (600 dp) is the width under which the bar is compact, for an
+app that decides which destinations to show.
+
 A `Breadcrumb` of more than four items collapses the middle behind a menu. The last crumb is never
 a control. A `Stepper` only lets a completed step be pressed, so it cannot skip ahead on a tap;
 below `collapseBelow` it stacks.
@@ -816,9 +821,10 @@ Package `com.softistx.material.foundation.motion`.
 | `Modifier.shimmer()` | The sweeping highlight `Skeleton` is built from | `feedback/skeleton` |
 | `Modifier.animateStagger(index)` | Rises and fades a list item in, offset by its position | `screens/orders-screen` |
 
-`animateStagger` runs **two** animations, not one: the rise is spatial and the fade is effects. A
-spatial spring overshoots by design, and an alpha past 1 is at best clamped — the two axes are not
-interchangeable. `motion/spatial-and-effects` shows the difference.
+`animateStagger` counts its wait in frames of the composition's clock, not in wall-clock time, so a
+headless render steps through it. It runs **two** animations, not one: the rise is spatial and the
+fade is effects. A spatial spring overshoots by design, and an alpha past 1 is at best clamped — the
+two axes are not interchangeable. `motion/spatial-and-effects` shows the difference.
 
 `Skeleton`'s sweep names its own cadence rather than taking one from the theme: it is a loop, not a
 state change, and `MotionScheme` has no spec for something that never settles.

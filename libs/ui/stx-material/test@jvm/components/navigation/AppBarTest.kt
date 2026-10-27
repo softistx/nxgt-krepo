@@ -9,7 +9,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertHeightIsEqualTo
@@ -17,7 +16,6 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.runComposeUiTest
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -27,6 +25,7 @@ import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.text.style
 import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.textLayout
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.floats.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -44,11 +43,7 @@ private fun titleStyles(size: AppBarSize): List<TextStyle> {
         styles =
             onAllNodes(hasText(TITLE))
                 .fetchSemanticsNodes()
-                .mapNotNull { node ->
-                    val results = mutableListOf<TextLayoutResult>()
-                    node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
-                    results.firstOrNull()?.layoutInput?.style
-                }
+                .mapNotNull { it.textLayout()?.layoutInput?.style }
     }
     return styles
 }
@@ -152,11 +147,7 @@ class AppBarTest :
                         }
                         onNodeWithTag("bar").assertHeightIsEqualTo(64.dp)
                         val lines =
-                            onAllNodes(hasText(LONG_TITLE)).fetchSemanticsNodes().mapNotNull { node ->
-                                val results = mutableListOf<TextLayoutResult>()
-                                node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
-                                results.firstOrNull()?.lineCount
-                            }
+                            onAllNodes(hasText(LONG_TITLE)).fetchSemanticsNodes().mapNotNull { it.textLayout()?.lineCount }
                         lines.size shouldBeGreaterThan 0
                         lines.forEach { it shouldBe 1 }
                     }

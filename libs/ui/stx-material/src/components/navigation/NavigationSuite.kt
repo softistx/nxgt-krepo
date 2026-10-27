@@ -6,6 +6,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
@@ -23,6 +24,9 @@ import com.softistx.material.foundation.theme.StxTheme
  * in front of it, so a caller never writes three layouts and a `when` on width. [primaryAction]
  * is the FAB that the suite places in the rail header or above the bar, depending on which it is.
  *
+ * A compact bar holds three to five destinations (M3's rule). Past that its labels truncate to one
+ * line with an ellipsis: move the extra destinations behind a "More" entry, a drawer or the rail.
+ *
  * Compact drops section headers, supporting text, chips and shortcuts. Badge and unread dot stay:
  * they are why M3's item has a badge slot.
  */
@@ -35,7 +39,7 @@ fun NavigationSuite(
     primaryAction: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val compact = LocalWindowInfo.current.containerDpSize.width < 600.dp
+    val compact = LocalWindowInfo.current.containerDpSize.width < NavigationSuiteDefaults.CompactBelow
     NavigationSuiteScaffold(
         navigationItems = {
             var previousSection: String? = null
@@ -74,4 +78,10 @@ fun NavigationSuite(
         primaryActionContent = primaryAction ?: {},
         content = content,
     )
+}
+
+/** What [NavigationSuite] decides with, for an app that has to know whether the bar is compact. */
+object NavigationSuiteDefaults {
+    /** Below this window width the suite is a compact bar; from it up, a medium bar or a rail. */
+    val CompactBelow: Dp = 600.dp
 }

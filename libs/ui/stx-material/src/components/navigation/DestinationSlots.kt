@@ -75,7 +75,7 @@ internal fun DestinationLabel(
     val shortcut = destination.showShortcut(compact)
     val supporting = destination.showSupporting(compact)
     if (!chip && !shortcut && !supporting) {
-        Typography(text = destination.label)
+        DestinationName(destination.label, compact)
         return
     }
     Column {
@@ -83,7 +83,7 @@ internal fun DestinationLabel(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
         ) {
-            Typography(text = destination.label)
+            DestinationName(destination.label, compact)
             if (chip) Chip(text = destination.chip!!)
             if (shortcut) {
                 Typography(
@@ -110,4 +110,16 @@ internal fun DestinationBadge(destination: NavigationDestination) {
         ResolvedBadge.Dot -> Badge()
         is ResolvedBadge.Label -> StatusBadge(text = badge.text, tone = badge.tone)
     }
+}
+
+/**
+ * The destination's name. On a compact bar it is one line that ends in an ellipsis, a guard for the
+ * odd long label: M3 spaces its items itself, and a compact bar holds three to five destinations.
+ */
+@Composable
+private fun DestinationName(
+    label: String,
+    compact: Boolean,
+) {
+    Typography(text = label, maxLines = if (compact) 1 else Int.MAX_VALUE)
 }

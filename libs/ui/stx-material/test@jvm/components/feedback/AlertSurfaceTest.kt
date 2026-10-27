@@ -4,14 +4,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
@@ -27,6 +25,7 @@ import com.softistx.material.foundation.theme.Tone
 import com.softistx.material.foundation.theme.stxColors
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
+import com.softistx.material.textLayout
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan as doubleGreater
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -194,9 +193,7 @@ class AlertSurfaceTest :
                     }
                     val node = onNodeWithText("Heads up")
                     node.assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-                    val results = mutableListOf<TextLayoutResult>()
-                    node.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
-                    results.single().layoutInput.style.fontWeight shouldBe emphasised
+                    node.textLayout()!!.layoutInput.style.fontWeight shouldBe emphasised
                 }
                 emphasised!!.weight shouldBeGreaterThan plain!!.weight
             }
