@@ -1,5 +1,6 @@
 package com.softistx.material.components.navigation
 
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
