@@ -1,8 +1,11 @@
 package com.softistx.material
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
@@ -17,6 +20,8 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.theme.StxTheme
 import org.jetbrains.skia.EncodedImageFormat
 import java.nio.file.Files
 import java.nio.file.Path
@@ -127,6 +132,25 @@ fun <T> renderProbe(
     content: @Composable () -> Unit,
     block: RenderProbe.() -> T,
 ): T = RenderProbe(width, height, background, content).use { it.block() }
+
+/**
+ * How many pixels of a light-theme page of [content], stacked in a padded column, are not the page:
+ * a crude but honest measure of "something was drawn", for the specs that only prove a group of
+ * controls renders.
+ */
+fun renderPage(
+    width: Int,
+    height: Int,
+    content: @Composable () -> Unit,
+): Int =
+    renderProbe(width, height, content = {
+        StxTheme(isDark = false) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) { content() }
+        }
+    }) { settle().ink() }
 
 /** One rendered frame, with the questions a spec asks of it. */
 class PixelGrid(

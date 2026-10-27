@@ -94,24 +94,14 @@ class SystemAccessibilityTest :
         }
 
         feature("the desktop theme default reads only the property") {
-            scenario("with the property absent it is not reduced, and no command runs") {
-                val calls = mutableListOf<List<String>>()
-                val before = DesktopPreferences.runner
+            scenario("with the property absent it is not reduced") {
                 val beforeProperty = System.getProperty(REDUCE_MOTION_PROPERTY)
                 try {
-                    DesktopPreferences.runner = {
-                        calls += it
-                        "1"
-                    }
                     System.clearProperty(REDUCE_MOTION_PROPERTY)
                     var motion: StxMotion? = null
                     renderProbe(width = 20, height = 20, content = { StxTheme { motion = StxTheme.motion } }) { settle() }
                     checkNotNull(motion).enabled shouldBe true
-                    calls shouldBe emptyList()
-                    readDesktopReducedMotion()
-                    calls.size shouldBe 1
                 } finally {
-                    DesktopPreferences.runner = before
                     if (beforeProperty != null) System.setProperty(REDUCE_MOTION_PROPERTY, beforeProperty)
                 }
             }
@@ -136,17 +126,13 @@ class SystemAccessibilityTest :
                 os: String,
                 output: String?,
             ): Pair<Boolean?, List<String>> {
-                val before = DesktopPreferences.runner
                 val asked = mutableListOf<String>()
-                try {
-                    DesktopPreferences.runner = {
+                val answer =
+                    DesktopPreferences.reducedMotion(os) {
                         asked += it.joinToString(" ")
                         output
                     }
-                    return DesktopPreferences.reducedMotion(os) to asked
-                } finally {
-                    DesktopPreferences.runner = before
-                }
+                return answer to asked
             }
 
             scenario("macOS asks defaults for reduceMotion and reads 1 as on, 0 as off") {

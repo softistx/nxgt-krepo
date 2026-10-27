@@ -35,9 +35,6 @@ private const val COMMAND_TIMEOUT_MILLIS = 2_000L
 suspend fun readDesktopReducedMotion(): Boolean? = DesktopPreferences.reducedMotion(System.getProperty("os.name").orEmpty())
 
 internal object DesktopPreferences {
-    /** The command runner [reducedMotion] uses; a spec swaps it to count calls and to fake the output. */
-    var runner: suspend (List<String>) -> String? = ::runCommand
-
     /** A hand-set property, or null when there is none or it is not `true` or `false`. */
     fun override(property: String): Boolean? =
         System
@@ -46,8 +43,11 @@ internal object DesktopPreferences {
             ?.lowercase()
             ?.toBooleanStrictOrNull()
 
-    /** What [osName] says about reduce motion, through [runner]; null when unknown. */
-    suspend fun reducedMotion(osName: String): Boolean? {
+    /** What [osName] says about reduce motion, through [runner] (a spec passes one to count calls and fake the output); null when unknown. */
+    suspend fun reducedMotion(
+        osName: String,
+        runner: suspend (List<String>) -> String? = ::runCommand,
+    ): Boolean? {
         val name = osName.lowercase()
         return when {
             "mac" in name -> {

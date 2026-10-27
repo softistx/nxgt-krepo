@@ -138,7 +138,7 @@ class DataStyleTest :
                                 rows = listOf("Ada"),
                                 collapseBelow = 100.dp,
                                 onSortChange = {},
-                                                            )
+                            )
                         }
                     }
                     onNodeWithText("Name").assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))

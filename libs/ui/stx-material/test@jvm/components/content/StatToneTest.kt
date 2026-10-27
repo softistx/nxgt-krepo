@@ -1,12 +1,10 @@
 package com.softistx.material.components.content
 
-import androidx.compose.ui.ImageComposeScene
-import androidx.compose.ui.graphics.toComposeImageBitmap
-import androidx.compose.ui.graphics.toPixelMap
 import com.softistx.material.foundation.theme.DefaultSeed
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.Tone
 import com.softistx.material.foundation.theme.stxColors
+import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -42,23 +40,9 @@ private fun tonePixels(
             tone == Tone.Info -> colors.tone(Tone.Success).main
             else -> colors.tone(tone).main
         }
-    val scene = ImageComposeScene(width = 300, height = 160)
-    try {
-        scene.setContent {
-            StxTheme(isDark = false) {
-                Stat(value = "12", label = "Students", delta = "+2 this term", tone = tone)
-            }
+    return renderProbe(width = 300, height = 160, content = {
+        StxTheme(isDark = false) {
+            Stat(value = "12", label = "Students", delta = "+2 this term", tone = tone)
         }
-        var time = 0L
-        repeat(8) {
-            time += 100_000_000L
-            scene.render(time)
-        }
-        val map = scene.render(time).toComposeImageBitmap().toPixelMap()
-        var count = 0
-        for (y in 0 until map.height) for (x in 0 until map.width) if (map[x, y] == target) count++
-        return count
-    } finally {
-        scene.close()
-    }
+    }) { settle().count(target) }
 }
