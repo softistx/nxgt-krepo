@@ -53,13 +53,25 @@ Package `com.softistx.material.foundation.text`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `Typography` | `text`, `variant = BodyMedium`, `emphasis = Full`, `color`, `align`, `decoration`, `maxLines`, `overflow` | `foundation/typography` |
+| `Typography` | `text`, `variant = BodyMedium`, `emphasis = Full`, `color`, `align`, `decoration`, `maxLines`, `overflow`, `emphasized = false` | `foundation/typography` |
 
 `TypographyVariant` is the 15 Material 3 roles plus five this library adds: `Overline`, `Caption`,
 `Metric` (a figure meant to be read at a glance), `Code` (monospaced), `Link` (underlined).
 
 `Emphasis` — `Full` (1.0), `Medium` (0.72), `Subtle` (0.5) — is an alpha on the content colour, so
 secondary text stays in the palette instead of picking a grey.
+
+`emphasized` is the other axis and does not touch colour: it picks the Material 3 `*Emphasized`
+style of the same role (15 of them), the heavier weight for the one line a screen wants read first.
+`emphasis` says how *loud the colour* is, `emphasized` how *heavy the type* is; they combine.
+`TypographyVariant.style(emphasized)` is the same mapping for a caller that needs the `TextStyle`.
+One emphasised title per screen: `SectionHeader` (`TitleMedium`) and `EntityHeader`
+(`HeadlineMedium`) wear it by default (`emphasized = false` turns it off). M3 documents the
+emphasised styles as `Medium` (500), but a default `Typography()` in 1.12.0-alpha03 returns the
+regular weight for most roles, so `style(true)` raises the weight itself: `Medium` for a regular
+role, `SemiBold` for a role that is already `Medium`, unless the theme's own emphasised style is
+heavier. `Metric` is display-sized and stays `SemiBold`, never lighter than M3's `Medium` figure.
+The five extra variants ignore the flag.
 
 ## Icons
 
@@ -222,7 +234,8 @@ floor.
 
 `EmptyState` fades in on its own, so the caller writes no `AnimatedVisibility`.
 
-`Stat` is a `Card` wearing `TypographyVariant.Metric`. `FilterBar` is a row of `Chip`s — not the
+`Stat` is a `Card` wearing `TypographyVariant.Metric`; it reserves the height of a delta (`reserveDelta = true`)
+so stats in a row keep the same height with or without one. `FilterBar` is a row of `Chip`s — not the
 filter subsystem of phase 7, a selected subset of names. The empty set is "everything". `Rating`
 is a row of `IconButton`s; M3 has no rating control. `LabeledDivider` is M3's `HorizontalDivider`
 with a word in the gap.

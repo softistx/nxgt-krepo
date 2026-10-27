@@ -20,6 +20,11 @@ import androidx.compose.ui.text.style.TextOverflow
  * that is easy to write wrong and impossible to grep for. [emphasis] handles the other half of the
  * same problem: secondary text is *not* a different size, it is the same size at a lower emphasis,
  * and spelling that as a colour lookup at every call site is how two "muted" greys appear.
+ *
+ * [emphasized] is the other, unrelated axis: it switches to the Material 3 `*Emphasized` style of
+ * the same [variant] (heavier weight, same size), the one line a screen wants read first. [emphasis]
+ * changes how *loud the colour* is; [emphasized] changes how *heavy the type* is. They combine.
+ * Use it for one title per screen, not for body text.
  */
 @Composable
 fun Typography(
@@ -32,6 +37,7 @@ fun Typography(
     decoration: TextDecoration? = null,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Ellipsis,
+    emphasized: Boolean = false,
 ) {
     val resolved =
         when {
@@ -41,7 +47,7 @@ fun Typography(
     Text(
         text = text,
         modifier = modifier,
-        style = variant.style(),
+        style = variant.style(emphasized),
         color = resolved,
         textAlign = align,
         textDecoration = decoration,

@@ -17,6 +17,8 @@ import com.softistx.material.foundation.theme.StxTheme
  *
  * "Recent orders" plus "See all" — a list without this reads as a pile. Material 3 has no
  * subheader of its own; [com.softistx.material.components.data.EntityHeader] is the top of a *page*.
+ * The title is `TitleMedium` in M3's emphasised weight ([emphasized], on by default), so a section
+ * reads as a heading.
  */
 @Composable
 fun SectionHeader(
@@ -24,6 +26,7 @@ fun SectionHeader(
     modifier: Modifier = Modifier,
     supporting: String? = null,
     action: @Composable (() -> Unit)? = null,
+    emphasized: Boolean = true,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -31,7 +34,7 @@ fun SectionHeader(
         horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Typography(text = title, variant = TypographyVariant.TitleSmall)
+            Typography(text = title, variant = TypographyVariant.TitleMedium, emphasized = emphasized)
             if (supporting != null) {
                 Typography(text = supporting, emphasis = Emphasis.Medium)
             }

@@ -28,6 +28,7 @@ val FoundationStories =
     storyGroup("Foundation") {
         story("Typography") { knobs ->
             val emphasis = knobs.enumChoice("Emphasis", Emphasis.Full)
+            val emphasized = knobs.flag("Emphasized (M3 heavier type style)", false)
             Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
                 TypographyVariant.entries.forEach { variant ->
                     Row(
@@ -40,7 +41,7 @@ val FoundationStories =
                             emphasis = Emphasis.Subtle,
                             modifier = Modifier.width(140.dp),
                         )
-                        Typography(text = "Grumpy wizards", variant = variant, emphasis = emphasis)
+                        Typography(text = "Grumpy wizards", variant = variant, emphasis = emphasis, emphasized = emphasized)
                     }
                 }
             }

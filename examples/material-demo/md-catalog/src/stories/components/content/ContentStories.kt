@@ -3,10 +3,12 @@ package com.softistx.material.demo.stories.components.content
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.content.ActionChip
@@ -111,10 +113,17 @@ val ContentStories =
         }
 
         story("Stat") { _ ->
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
-                Stat(value = "128", label = "Orders", delta = "+12%", tone = Tone.Success)
-                Stat(value = "€4.2k", label = "Revenue", delta = "−3%", tone = Tone.Error)
-                Stat(value = "96%", label = "Fulfilled")
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
+                    Stat(value = "128", label = "Orders", delta = "+12%", tone = Tone.Success)
+                    Stat(value = "€4.2k", label = "Revenue", delta = "−3%", tone = Tone.Error)
+                    Stat(value = "96%", label = "Fulfilled")
+                }
+                // These two share one height, delta or not: the height of a delta is reserved.
+                Row(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
+                    Stat(value = "12", label = "Students", modifier = Modifier.weight(1f), delta = "+2 this term")
+                    Stat(value = "3", label = "Absences", modifier = Modifier.weight(1f))
+                }
             }
         }
 
