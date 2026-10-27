@@ -51,13 +51,16 @@ StxTheme(colorScheme = brandScheme, motionScheme = MotionScheme.standard()) { �
 ```
 
 **Only one decision is platform-specific**, and it is behind `expect`/`actual`:
-`platformColorScheme(seed, isDark, dynamicColor)` reads the user's wallpaper palette on Android 12+
+`platformColorScheme(seed, isDark, dynamicColor, paletteStyle, specVersion)` reads the user's wallpaper palette on Android 12+
 and falls back to the seed everywhere else. `supportsDynamicColor` says which, so a settings screen
 can decide whether to offer the choice at all. Everything above that — the provider, the tokens,
-every component — is written once in the common source set.
+every component — is written once in the common source set. `paletteStyle` and `specVersion` act on
+the seed path only; the default is a calm TonalSpot palette on `SPEC_2025`, described under
+"A calm palette" in [docs/tokens.md](docs/tokens.md#colour).
 
-The rest of the palette derives from one seed by [material-kolor], including the `success` / `info`
-/ `warning` roles Material 3 does not define (`info` follows the scheme's `secondary` unless a colour is passed); those are added to *whatever* scheme arrives, seed or
+The rest of the palette derives from one seed by [material-kolor], including the `success` and
+`warning` roles Material 3 does not define, each from its own seed; `info` follows the scheme's
+`secondary` unless a colour is passed. Those roles are added to *whatever* scheme arrives, seed or
 wallpaper. `error` is not re-derived — it is delegated to the M3 scheme, so there is exactly one
 red.
 
