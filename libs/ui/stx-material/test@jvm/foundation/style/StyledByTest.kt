@@ -18,7 +18,8 @@ import io.kotest.matchers.shouldBe
 /** What `styledBy` hands to a style's `selected { }` and `disabled { }` blocks, proved in pixels. */
 class StyledByTest :
     FeatureSpec({
-        fun reds(
+        fun count(
+            color: Color,
             selected: Boolean,
             enabled: Boolean = true,
         ): Int {
@@ -30,16 +31,21 @@ class StyledByTest :
                 }
             return renderProbe(width = 40, height = 40, content = {
                 Box(Modifier.size(20.dp).probed(box).styledBy(style, enabled = enabled, selected = selected))
-            }) { settle().count(Color.Red) }
+            }) { settle().count(color) }
         }
 
         feature("styledBy") {
             scenario("a selected part wears the selected block") {
-                reds(selected = true) shouldBeGreaterThan 100
+                count(Color.Red, selected = true) shouldBeGreaterThan 100
+            }
+
+            scenario("a disabled part wears the disabled block") {
+                count(Color.Blue, selected = false, enabled = false) shouldBeGreaterThan 100
+                count(Color.Blue, selected = false, enabled = true) shouldBe 0
             }
 
             scenario("an unselected part does not") {
-                reds(selected = false) shouldBe 0
+                count(Color.Red, selected = false) shouldBe 0
             }
         }
     })

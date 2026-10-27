@@ -129,6 +129,10 @@ class DataStyleTest :
                 }
             }
 
+            scenario("a column can be built with named arguments") {
+                TableColumn<String>(header = "a", value = { it }).sortable shouldBe true
+            }
+
             scenario("a column with sortable = false is plain text, the others are buttons") {
                 runComposeUiTest {
                     setContent {

@@ -135,7 +135,7 @@ internal val choiceTileStyle: Style =
     }
 ```
 
-## `src/foundation/style/StxStyles.kt`
+## `src/components/StxStyles.kt`
 
 Name the default, so a caller can restate it and edit it (`style = StxTheme.styles.choiceTile then { … }`):
 

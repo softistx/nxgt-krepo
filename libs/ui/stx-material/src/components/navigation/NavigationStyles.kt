@@ -3,7 +3,6 @@ package com.softistx.material.components.navigation
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.animate
 import androidx.compose.foundation.style.disabled
-import androidx.compose.foundation.style.pressed
 import androidx.compose.foundation.style.then
 import com.softistx.material.components.button.DISABLED_ALPHA
 import com.softistx.material.foundation.style.compactPress

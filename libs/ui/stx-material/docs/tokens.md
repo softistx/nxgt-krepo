@@ -173,15 +173,14 @@ is damped below 1, every effects spec at exactly 1.
 composable scope — it runs at apply time.
 
 **Which scheme.** `MotionScheme.expressive()` is the default: springier, allowed to overshoot.
-`MotionScheme.standard()` settles instead. Passing one to `StxTheme` changes every animation in
+`MotionScheme.standard()` settles instead. Passing `StxMotion(MotionScheme.standard())` as `motion` to `StxTheme` changes every animation in
 the tree, this library's and Material 3's alike. Both are singletons, so two default themes compare
 equal and installing one is not a recomposition.
 
 **`enabled = false` collapses every spec to `snap()`** rather than removing the animation. The
 states, the transitions and the composables are identical either way — only the clock stops. That
-is what lets a reduced-motion preference, or a screenshot test, be one flag at the theme. It stops
-*this library's* motion; Material 3's own components keep their built-in animations, because a
-`MotionScheme` has no null.
+is what lets a reduced-motion preference, or a screenshot test, be one flag at the theme. The theme also installs a snapping M3
+scheme, so Material 3's own morphs stop with it.
 
 `Transitions` names the `EnterTransition` / `ExitTransition` pairs built from these: `fade` /
 `fadeAway`, `riseIn` / `sinkOut`, `popIn` / `popOut`, `widen` / `narrow`, `expand` / `collapse`.

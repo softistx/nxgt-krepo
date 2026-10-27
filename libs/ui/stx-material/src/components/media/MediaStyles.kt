@@ -1,7 +1,6 @@
 package com.softistx.material.components.media
 
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.scale
 import com.softistx.material.foundation.style.rowPress
 
 /**

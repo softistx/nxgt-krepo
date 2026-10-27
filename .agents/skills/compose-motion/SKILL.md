@@ -30,16 +30,16 @@ motion.effects<Color>()                    // colour, alpha  (Default speed)
 ## Interaction states: Style `animate`
 
 ```kotlin
-internal val tileStyle: Style =
-    Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.99f) } }
-        disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
-    }
+internal val choiceTileStyle: Style =
+    rowPress then
+        Style {
+            disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
+        }
 ```
 
 - `motion` inside a Style block is a held reference (a Style is not a composable scope); `StxTheme` provides it.
 - Scale and offset use `spatial`, colour and alpha use `effects`. No `animate*AsState` for pressed, hovered, focused, selected.
-- Press scale follows the family (0.99 cards and rows, 0.97 chips, buttons, navigation items); a morphing control gets none: `stx-material-components` section 4.
+- Press scale follows the family (0.99 cards and rows, 0.97 chips and navigation items); a morphing control gets none: `stx-material-components` section 4.
 
 ## Shape morph
 

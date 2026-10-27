@@ -766,7 +766,7 @@ var sort by remember { mutableStateOf<TableSort?>(null) }
 DataTable(columns, rows, sort = sort, onSortChange = { sort = it }) { row -> open(row) }
 ```
 
-`TableColumn(header, sortable = true) { … }`: with `onSortChange` the headers of the sortable columns are buttons (ascending first, then flipped); the
+`TableColumn(header, sortable = true) { value }`: with `onSortChange` the headers of the sortable columns are buttons (ascending first, then flipped); the
 others are plain text. `sort` alone is display-only: the arrow and "Ascending" or "Descending" are
 shown and announced, with no click. A folded table has no headers, so it sorts through a
 `SortControl` beside it. `EntityHeader` announces its title as a heading; `Description` and

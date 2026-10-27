@@ -18,12 +18,9 @@ import com.softistx.material.foundation.theme.StxTheme
 @Immutable
 data class TableColumn<T>(
     val header: String,
-    val value: (T) -> String,
     val sortable: Boolean = true,
-) {
-    /** The trailing-lambda form: `TableColumn("Total", sortable = false) { it.total }`. */
-    constructor(header: String, sortable: Boolean = true, value: (T) -> String) : this(header, value, sortable)
-}
+    val value: (T) -> String,
+)
 
 /**
  * Which column a [DataTable] is sorted by, and which way. [column] is an index into `columns`, so

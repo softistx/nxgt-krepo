@@ -2,7 +2,7 @@
 "stx-material": minor
 ---
 
-M3 Expressive for 0.3.0: a calmer palette, Material 3's shape morph on buttons, rows and groups, `style` on every interactive part, and a library whose layout reads in its imports. `0.x` minors carry breaking changes (`docs/consuming.md`, Pre-1.0; `docs/releasing.md` has no rule against it), and this one has several.
+M3 Expressive for 0.3.0: a calmer palette, Material 3's shape morph on buttons, rows and groups, `style` on every interactive part, and a library whose layout reads in its imports. `0.x` minors carry breaking changes (`docs/consuming.md`, Pre-1.0), and this one has several.
 
 ## Breaking
 
@@ -13,8 +13,8 @@ M3 Expressive for 0.3.0: a calmer palette, Material 3's shape morph on buttons, 
 - **`style` moved last** (the last parameter, or the last before one trailing lambda) on `Button`, `ButtonSurface`, `BusyButton`, `ConfirmButton`, `ResponsiveButton` (they put `size` before it), `ActionChip` and `Chip` (`leading` before it), `ListTile` (`leading`, `selected`, `group` before it, `trailing` after), `Alert`, `AnnouncementBar` and `PromoBanner` (`icon` before it), `Search` (`trailing` before it), `SegmentedControl` (`icons` before it) and `DataTable` (`headerStyle` before it).
 - **Positional breaks.** A call that passed these positionally must now name them: `Alert` and `AnnouncementBar` `action`, `DataTable` `onRowClick`, `Drawer` `content`, the `optionLabel` and `format` lambdas that follow `style`, and any argument listed in the previous item.
 - **`SegmentedControl(icons)`** is `List<ImageVector> = emptyList()` instead of a nullable list.
-- **`DataTable` `sortable`** is `TableColumn(header, value, sortable = true)`, not a `(Int) -> Boolean` on the table.
-- **Button family.** The 0.97 press scale is gone from buttons, icon buttons and toggles (they morph their shape), `buttonStyle` keeps only the disabled alpha, and `StxStyles.morphingButton` does not exist.
+- **`DataTable` `sortable`** is `TableColumn(header, sortable = true, value)` (so a positional `TableColumn("x", f)` must name `value`), not a `(Int) -> Boolean` on the table.
+- **Button family.** The 0.97 press scale is gone from buttons, icon buttons and toggles (they morph their shape), `buttonStyle` keeps only the disabled alpha.
 
 ## Visible default changes
 
@@ -27,4 +27,5 @@ M3 Expressive for 0.3.0: a calmer palette, Material 3's shape morph on buttons, 
 
 - `size: ButtonSize` on the button family; `style: Style = Style` on every interactive part; `TableColumn.sortable` and sortable `DataTable` headers with `TableSort`.
 - `StxMotion.system(reduceMotion)`, `systemReducesMotion()` and, on desktop, `readDesktopReducedMotion()`.
+- `styledBy(…, selected: Boolean = false)` for the style state of a selectable part.
 - `Typography(emphasized)`, `ListTile(selected, group)`, `Alert(icon)` with `AlertDefaults`, `NavigationSuiteDefaults.CompactBelow`, four more `StxIcons`.

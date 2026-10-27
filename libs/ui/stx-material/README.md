@@ -30,8 +30,8 @@ A component's `*Styles.kt` sits beside it. `foundation` holds no components: the
 
 ## The shape of it
 
-**`StxTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes` and a
-`MotionScheme`, each with a default — the same four `MaterialTheme` takes. It wraps M3 rather than
+**`StxTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes`, each with a default, and
+`motion: StxMotion?`, from which the theme derives M3's `MotionScheme`. It wraps M3 rather than
 replacing it, so a plain M3 component, or any third-party M3 library, keeps working inside it. That
 is what makes this adoptable in an application that already exists, and a caller that already
 computes one of the four passes it and keeps the other three.
