@@ -88,7 +88,7 @@ fun ButtonSurface(
     MaterialButton(
         onClick = onClick,
         shapes = ButtonDefaults.shapesFor(size.height),
-        modifier = modifier.heightIn(min = minHeight).styleable(styleState, morphingButtonStyle, style),
+        modifier = modifier.heightIn(min = minHeight).styleable(styleState, buttonStyle, style),
         enabled = enabled,
         colors = buttonColors(variant, color),
         elevation = null,

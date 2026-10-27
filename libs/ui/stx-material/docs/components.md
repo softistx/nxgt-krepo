@@ -93,14 +93,14 @@ Package `com.softistx.material.components.button`.
 | --- | --- | --- |
 | `Button` | `text`, `onClick`, `variant = Filled`, `color = Primary`, `enabled`, `size = Small` | `buttons/button` |
 | `ButtonSurface` | as `Button`, plus a `RowScope` `content` slot instead of `text` | `buttons/button` |
-| `IconButton` | `icon`, `description`, `onClick`, `variant = Ghost`, `color = Neutral`, `size`, `enabled` | `buttons/icon-button` |
+| `IconButton` | `icon`, `description`, `onClick`, `variant = Ghost`, `color = Neutral`, `size`, `enabled`, `style` | `buttons/icon-button` |
 | `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp`, `size = Small` | `buttons/responsive-button` |
 | `ButtonRow` | `align = End`, `content: RowScope` | `buttons/button-row` |
-| `Fab` | `icon`, `description`, `onClick`, `text?`, `expanded = true`, `color = Primary` | `buttons/fab` |
+| `Fab` | `icon`, `description`, `onClick`, `text?`, `expanded = true`, `color = Primary`, `style` | `buttons/fab` |
 | `FabMenu` | `expanded`, `onExpandedChange`, `actions: List<FabAction>` | `buttons/fab-menu` |
-| `SplitButton` | `text`, `onClick`, `overflow: List<MenuItem>`, `enabled` | `buttons/split-button` |
-| `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled` | `buttons/toggle-button` |
-| `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color` | `buttons/icon-toggle` |
+| `SplitButton` | `text`, `onClick`, `overflow: List<MenuItem>`, `enabled`, `style` | `buttons/split-button` |
+| `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled`, `style` | `buttons/toggle-button` |
+| `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color`, `enabled`, `style` | `buttons/icon-toggle` |
 | `CopyButton` | `text`, `description = "Copy"` | `buttons/copy-button` |
 | `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000`, `size = Small` | `buttons/confirm-button` |
 | `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled`, `size = Small` | `buttons/busy-button` |
@@ -112,7 +112,19 @@ Package `com.softistx.material.components.button`.
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonSize` — `ExtraSmall` 32 dp, `Small` 40 dp (the default), `Medium` 56, `Large` 96, `ExtraLarge` 136: M3's own
 heights, each bringing its padding, label style and pressed corner.
-Buttons morph, a pill at rest and squarer while pressed, so they take no press scale.
+Buttons morph, a pill at rest and squarer while pressed, so they take no press scale. So does the rest of the
+family, through M3's own morphing APIs (story `buttons/morphing-family`):
+
+- `IconButton` — `IconButtonDefaults.shapes()`, round at rest, squarer pressed; still the 40 dp container in a 48 dp target.
+- `IconToggle` — `IconButtonDefaults.toggleableShapes()`, round off, squarer pressed and while checked.
+- `ToggleButton` — `ToggleButtonDefaults.shapes()`, a pill off, squarer pressed and while checked.
+- `SplitButton` — M3's split shapes: each half rounds its inner corners under the finger. The trailing half is a
+  toggle checked while the menu is open, so it changes shape and its chevron points up.
+- `Fab` — M3's FAB has no `shapes =` overload, so the library draws the morph: the corners shrink to the theme's
+  `small` slot while pressed and spring back at the scheme's fast spatial speed. Rest size and shape are unchanged.
+
+None of them takes a colour from M3's vibrant roles: the colours still come from `ButtonColor`, so the look at rest is
+what it was. Every one takes `style: Style = Style` (default `StxStyles.button`).
 A `Link` keeps its 40 dp height at every size instead of growing with `size`, being text in a sentence.
 The collapsed `ResponsiveButton` stays an icon button, 40 × 40, at any size.
 The story is `buttons/size-and-variant-grid`.
@@ -127,8 +139,9 @@ The 5 × 7 matrix is resolved in **one** function, `buttonColors(variant, color)
 Material 3's own `ButtonColors` — so M3 paints the container, the ripple and the disabled treatment,
 and this library only decides *which* colours. Adding a colour touches one enum entry and one `when`
 branch; see `buttons/variant-and-colour-matrix` for the whole grid at once. `buttonBorder` answers
-the same way for the outline. A button's press is M3's shape morph, so `morphingButtonStyle` keeps only the
-disabled alpha; `buttonStyle` keeps the press scale for the components that do not morph.
+the same way for the outline. A button's press is M3's shape morph, so `buttonStyle`, the one style of
+the whole family, keeps only the disabled alpha. (`morphingButtonStyle` was its name while only `Button` morphed;
+it is a deprecated alias.)
 
 `ButtonRow` is a layout — it lines buttons up and spaces them. It is deliberately not named
 `ButtonGroup`: Material 3 has a `ButtonGroup`, and that one is a connected segmented control taking
@@ -142,7 +155,7 @@ the button never goes silent.
 default. Pass `text` and it becomes the extended FAB. `FabMenu` is M3's `FloatingActionButtonMenu`:
 the main button swaps Add for Close, and each `FabAction` is a menu item that closes the fan on
 click. `SplitButton` is M3's `SplitButtonLayout`: the leading half is the primary action, the
-trailing chevron opens a `Menu` of alternatives.
+trailing chevron (a toggle that turns up while the menu is open) opens a `Menu` of alternatives.
 
 `ToggleButton` is M3's `ToggleButton` — Follow, pin, list-or-grid — and `IconToggle` is the icon
 form. Unchecked is quiet; checked uses the colour pair. `CopyButton` copies and flashes a check;

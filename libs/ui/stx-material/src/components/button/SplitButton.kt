@@ -1,6 +1,10 @@
 package com.softistx.material.components.button
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.runtime.Composable
@@ -20,6 +24,10 @@ import com.softistx.material.foundation.text.Typography
  *
  * The leading half is [text]; the trailing half is a chevron that opens [overflow]. Two actions
  * that look connected because they are — a Save plus a Save as, not two buttons in a row.
+ *
+ * Both halves morph through M3's own split-button shapes: each squares its inner corners while
+ * pressed. The trailing half is a toggle that is checked while the menu is open, so it turns
+ * round and its chevron points up. No press scale.
  */
 @Composable
 fun SplitButton(
@@ -28,9 +36,12 @@ fun SplitButton(
     overflow: List<MenuItem>,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     var open by remember { mutableStateOf(false) }
-    Box(modifier) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
+    Box(modifier.styleable(styleState, buttonStyle, style)) {
         SplitButtonLayout(
             leadingButton = {
                 SplitButtonDefaults.LeadingButton(onClick = onClick, enabled = enabled) {
@@ -39,10 +50,11 @@ fun SplitButton(
             },
             trailingButton = {
                 SplitButtonDefaults.TrailingButton(
-                    onClick = { open = true },
+                    checked = open,
+                    onCheckedChange = { open = it },
                     enabled = enabled && overflow.isNotEmpty(),
                 ) {
-                    Icon(icon = StxIcons.ChevronDown, description = "More actions")
+                    Icon(icon = if (open) StxIcons.ChevronUp else StxIcons.ChevronDown, description = "More actions")
                 }
             },
         )

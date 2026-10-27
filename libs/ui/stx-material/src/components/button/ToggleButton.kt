@@ -26,8 +26,9 @@ import com.softistx.material.foundation.theme.StxTheme
  * A button that stays pressed. Material 3's `ToggleButton`.
  *
  * Follow, pin, list-or-grid — a choice that is still a button, not a switch. [checked] is the
- * caller's. Unchecked is quiet; checked uses the [color] pair so the on-state is the one that
- * claims a meaning.
+ * caller's. It morphs: round when off, squarer while pressed and when checked (M3's
+ * `ToggleButtonDefaults.shapes()`), so it takes no press scale. Unchecked is quiet; checked uses
+ * the [color] pair so the on-state is the one that claims a meaning.
  */
 @Composable
 fun ToggleButton(
@@ -82,6 +83,7 @@ fun ToggleButtonSurface(
         }
     val styled = modifier.styleable(styleState, buttonStyle, style)
     val tone = buttonTone(color)
+    val shapes = ToggleButtonDefaults.shapes()
     val colors =
         when (variant) {
             ButtonVariant.Filled -> {
@@ -119,6 +121,7 @@ fun ToggleButtonSurface(
                 onCheckedChange = onCheckedChange,
                 modifier = styled,
                 enabled = enabled,
+                shapes = shapes,
                 colors = colors,
                 interactionSource = interactionSource,
                 content = content,
@@ -131,6 +134,7 @@ fun ToggleButtonSurface(
                 onCheckedChange = onCheckedChange,
                 modifier = styled,
                 enabled = enabled,
+                shapes = shapes,
                 colors = colors,
                 interactionSource = interactionSource,
                 content = content,
@@ -143,6 +147,7 @@ fun ToggleButtonSurface(
                 onCheckedChange = onCheckedChange,
                 modifier = styled,
                 enabled = enabled,
+                shapes = shapes,
                 colors = colors,
                 border = buttonBorder(ButtonVariant.Outlined, color, enabled),
                 interactionSource = interactionSource,
@@ -156,6 +161,7 @@ fun ToggleButtonSurface(
                 onCheckedChange = onCheckedChange,
                 modifier = styled,
                 enabled = enabled,
+                shapes = shapes,
                 colors = colors,
                 interactionSource = interactionSource,
                 content = content,

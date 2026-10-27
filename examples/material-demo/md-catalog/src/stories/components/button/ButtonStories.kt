@@ -226,6 +226,49 @@ val ButtonStories =
             )
         }
 
+        story("Morphing family") { _ ->
+            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.md)) {
+                Typography(
+                    text = "Press and hold: round corners square off; a checked toggle stays square.",
+                    variant = TypographyVariant.BodySmall,
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+                ) {
+                    val variants = listOf(ButtonVariant.Filled, ButtonVariant.Tonal, ButtonVariant.Outlined, ButtonVariant.Ghost)
+                    variants.forEach { variant ->
+                        IconButton(StxIcons.Add, "Add ${variant.name}", onClick = {}, variant = variant, color = ButtonColor.Primary)
+                    }
+                    variants.forEach { variant ->
+                        var on by remember { mutableStateOf(variant == ButtonVariant.Filled) }
+                        IconToggle(
+                            icon = StxIcons.Star,
+                            description = "Star ${variant.name}",
+                            checked = on,
+                            onCheckedChange = { on = it },
+                            variant = variant,
+                            color = ButtonColor.Primary,
+                        )
+                    }
+                }
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+                ) {
+                    listOf(ButtonVariant.Filled, ButtonVariant.Tonal, ButtonVariant.Outlined).forEach { variant ->
+                        var on by remember { mutableStateOf(variant != ButtonVariant.Tonal) }
+                        ToggleButton(text = variant.name, checked = on, onCheckedChange = { on = it }, variant = variant)
+                    }
+                    SplitButton(text = "Save", onClick = {}, overflow = listOf(MenuItem("Save as draft", onClick = {})))
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
+                    Fab(icon = StxIcons.Add, description = "New", onClick = {})
+                    Fab(icon = StxIcons.Add, description = "New order", onClick = {}, text = "New order")
+                }
+            }
+        }
+
         story("Copy button") { knobs ->
             CopyButton(
                 text = knobs.text("Value", "ord_9f3a"),

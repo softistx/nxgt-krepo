@@ -2,7 +2,6 @@ package com.softistx.material.foundation.style
 
 import androidx.compose.foundation.style.Style
 import com.softistx.material.components.button.buttonStyle
-import com.softistx.material.components.button.morphingButtonStyle
 import com.softistx.material.components.content.cardStyle
 import com.softistx.material.components.content.chipStyle
 import com.softistx.material.components.content.listTileStyle
@@ -19,8 +18,8 @@ import com.softistx.material.foundation.theme.Tone
  *
  * There is less here than there once was, and that is the point: colour, shape, border, padding and
  * elevation moved into Material 3's own `*Colors` and `*Defaults` when the components were rebuilt
- * on M3. What is left is what M3 has no parameter for — the press scale, the disabled alpha, the
- * alert's whole appearance because M3 has no banner.
+ * on M3. What is left is what M3 has no parameter for — the press scale (not on the button family,
+ * which morphs), the disabled alpha, the alert's whole appearance because M3 has no banner.
  *
  * A component already applies its own, so nothing here is needed to *use* the library. It is the
  * seam for adding to one: `style = StxTheme.styles.card then { alpha(0.6f) }` restates the
@@ -29,7 +28,9 @@ import com.softistx.material.foundation.theme.Tone
  */
 object StxStyles {
     val button: Style get() = buttonStyle
-    val morphingButton: Style get() = morphingButtonStyle
+
+    @Deprecated("Every button-family control morphs now: use StxStyles.button.", ReplaceWith("button"))
+    val morphingButton: Style get() = buttonStyle
 
     val card: Style get() = cardStyle
 

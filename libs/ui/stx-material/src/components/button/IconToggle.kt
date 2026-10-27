@@ -20,7 +20,9 @@ import com.softistx.material.foundation.icon.IconSize
  * An icon that stays pressed. Material 3's `IconToggleButton`.
  *
  * Favourite, pin, bookmark — the same 48 dp target as [IconButton], with a checked colour of its
- * own. [checkedIcon] is the on-state glyph; leave it and the same icon just changes colour.
+ * own. It morphs: round when off, squarer while pressed and when checked, through M3's
+ * `toggleableShapes()`, so it takes no press scale. [checkedIcon] is the on-state glyph; leave it
+ * and the same icon just changes colour.
  */
 @Composable
 fun IconToggle(
@@ -44,6 +46,7 @@ fun IconToggle(
         }
     val styled = modifier.styleable(styleState, buttonStyle, style)
     val tone = iconButtonTone(color)
+    val shapes = IconButtonDefaults.toggleableShapes()
     val content = @Composable {
         Icon(icon = if (checked) checkedIcon else icon, description = description, size = size)
     }
@@ -53,6 +56,7 @@ fun IconToggle(
             FilledIconToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
+                shapes = shapes,
                 modifier = styled,
                 enabled = enabled,
                 colors =
@@ -71,10 +75,12 @@ fun IconToggle(
             FilledTonalIconToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
+                shapes = shapes,
                 modifier = styled,
                 enabled = enabled,
                 colors =
                     IconButtonDefaults.filledTonalIconToggleButtonColors(
+                        contentColor = tone.onContainer,
                         checkedContainerColor = tone.container,
                         checkedContentColor = tone.onContainer,
                     ),
@@ -87,6 +93,7 @@ fun IconToggle(
             OutlinedIconToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
+                shapes = shapes,
                 modifier = styled,
                 enabled = enabled,
                 colors =
@@ -94,6 +101,7 @@ fun IconToggle(
                         contentColor = tone.main,
                         checkedContentColor = tone.main,
                     ),
+                border = buttonBorder(ButtonVariant.Outlined, color, enabled),
                 interactionSource = interactionSource,
                 content = content,
             )
@@ -103,6 +111,7 @@ fun IconToggle(
             MaterialIconToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
+                shapes = shapes,
                 modifier = styled,
                 enabled = enabled,
                 colors =
