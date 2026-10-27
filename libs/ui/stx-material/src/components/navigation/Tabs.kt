@@ -36,15 +36,21 @@ fun Tabs(
     enabled: Boolean = true,
     style: Style = Style,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
-    val styled = modifier.styleable(styleState, navigationItemStyle, style)
     val tabs: @Composable () -> Unit = {
         labels.forEachIndexed { index, label ->
+            // The press is per tab: a row-level source has no child feeding it, so its style never fired.
+            val interactionSource = remember { MutableInteractionSource() }
+            val styleState =
+                rememberUpdatedStyleState(interactionSource) {
+                    it.isEnabled = enabled
+                    it.isSelected = index == selected
+                }
             Tab(
                 selected = index == selected,
                 onClick = { onSelect(index) },
+                modifier = Modifier.styleable(styleState, navigationItemStyle, style),
                 enabled = enabled,
+                interactionSource = interactionSource,
                 text = { Typography(text = label) },
                 icon =
                     icons?.getOrNull(index)?.let { image ->
@@ -54,8 +60,8 @@ fun Tabs(
         }
     }
     if (scrollable) {
-        PrimaryScrollableTabRow(selectedTabIndex = selected, modifier = styled, tabs = tabs)
+        PrimaryScrollableTabRow(selectedTabIndex = selected, modifier = modifier, tabs = tabs)
     } else {
-        PrimaryTabRow(selectedTabIndex = selected, modifier = styled, tabs = tabs)
+        PrimaryTabRow(selectedTabIndex = selected, modifier = modifier, tabs = tabs)
     }
 }
