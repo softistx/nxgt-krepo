@@ -994,8 +994,8 @@ the same each time, and the mistakes are the same each time too.
   `DeliveryThreadsTest` asked the RabbitMQ client: deliveries arrive on the connection's shared
   pool, work is serialised per channel, and a parked callback delays only its own channel — until
   as many are parked as the pool has threads, when every other consumer on the connection starves.
-  So `ConsumerOptions` refuses a prefetch above `MAX_PREFETCH` (64, the flow's buffer) and `0`, with
-  a message giving the limit and no silent clamp. Within it the buffer never fills, so the block is
+  So `ConsumerOptions` refuses a prefetch above `MAX_PREFETCH` (64; the flow's buffer is twice that) and `0`, with
+  a message giving the limit and no silent clamp. Within it the buffer never fills — the 2x headroom is for connection recovery, when redelivered messages sit beside stale buffered ones — so the block is
   bounded backpressure that returns at once. `AckStrategy.OnDelivery` is outside the rule (the
   broker ignores prefetch for it). Everywhere else, never block a client's thread.
 - **A callback that cannot suspend gets a `Mailbox`, never `runBlocking`.** There is no other

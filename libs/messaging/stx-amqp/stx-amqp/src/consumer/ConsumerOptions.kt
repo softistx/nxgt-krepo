@@ -56,10 +56,12 @@ enum class Undecodable {
  * queue's worth of messages in memory and every other consumer of that queue holding none.
  *
  * [prefetch] is also bounded above, by [MAX_PREFETCH], and `0` ("no limit") is refused. The broker's
- * deliveries land in a buffer of that size, and a full buffer parks the client's delivery thread —
- * a thread of the connection's shared pool, which every other consumer on the connection needs
- * too. With a prefetch within the buffer it can never fill, since a consumer holds no more
- * unacknowledged messages than that. `DeliveryThreadsTest` shows the failure this rules out.
+ * deliveries land in a buffer of twice that size ([DELIVERY_BUFFER]), and a full buffer parks the client's delivery
+ * thread — a thread of the connection's shared pool, which every other consumer on the connection needs
+ * too. With a prefetch within the cap it can never fill, since a consumer holds no more
+ * unacknowledged messages than that. The headroom is for connection recovery: the broker redelivers
+ * the unacknowledged messages while the stale ones the collector has not taken are still buffered,
+ * so up to twice the prefetch can sit there for a moment. `DeliveryThreadsTest` shows the failure this rules out.
  *
  * [concurrency] is how many messages a handler may be working on at once. Above one, the queue's
  * order stops being the handling order — AMQP's FIFO promise is about delivery, not about when
@@ -89,7 +91,10 @@ data class ConsumerOptions(
     }
 
     companion object {
-        /** The most unacknowledged messages a consumer may ask for, and the size of its delivery buffer. */
+        /** The most unacknowledged messages a consumer may ask for. */
         const val MAX_PREFETCH = 64
+
+        /** The delivery buffer: twice [MAX_PREFETCH], so redeliveries after a recovery fit beside stale ones. */
+        const val DELIVERY_BUFFER = 2 * MAX_PREFETCH
     }
 }

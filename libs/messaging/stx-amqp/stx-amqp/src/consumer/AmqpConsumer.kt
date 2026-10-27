@@ -39,7 +39,7 @@ import kotlinx.serialization.json.Json
  * is allowed to have unacknowledged, and the default in the protocol is *all of them*. So a
  * consumer sets [ConsumerOptions.prefetch], and a slow handler then leaves the rest of the queue
  * where other consumers can reach it instead of hoarding it in memory. It is capped at
- * [ConsumerOptions.MAX_PREFETCH], the size of the buffer deliveries land in, so that buffer never
+ * [ConsumerOptions.MAX_PREFETCH], half the size of the buffer deliveries land in, so that buffer never
  * fills and the client's shared delivery thread is never parked waiting for the collector.
  *
  * **A delivery tag belongs to the channel it arrived on.** Acknowledging one on another channel is
@@ -91,9 +91,9 @@ class AmqpConsumer<T> internal constructor(
                             return@DeliverCallback
                         }
                     /* The one deliberate block on the client's delivery thread. Prefetch is capped at
-                       the buffer's size ([ConsumerOptions.MAX_PREFETCH]) and a consumer holds no more
-                       unacknowledged messages than its prefetch, so the buffer is never full here
-                       and this returns at once: bounded blocking as backpressure, never a wait for
+                       half the buffer's size ([ConsumerOptions.DELIVERY_BUFFER]) and a consumer holds
+                       no more unacknowledged messages than its prefetch, so the buffer is never full
+                       here and this returns at once: bounded blocking as backpressure, never a wait for
                        the collector. Uncapped, enough full buffers park every thread of the
                        connection's shared pool and starve its other consumers
                        (`DeliveryThreadsTest`). [AckStrategy.OnDelivery] is the exception: the broker
@@ -130,7 +130,7 @@ class AmqpConsumer<T> internal constructor(
                 )
 
             awaitClose { runCatching { broker.basicCancel(tag) } }
-        }.buffer(ConsumerOptions.MAX_PREFETCH)
+        }.buffer(ConsumerOptions.DELIVERY_BUFFER)
 
     /**
      * Hands every message to [handler] and acknowledges on the terms [ConsumerOptions.ack] set.

@@ -9,14 +9,22 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.Serializable
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
+@Serializable
+private data class Note(
+    val id: String = "x",
+)
 
 /**
  * Where the client delivers, and what a delivery callback that never returns costs the others —
@@ -150,6 +158,45 @@ class DeliveryThreadsTest :
                         } finally {
                             release.countDown()
                             (stuck + siblings).forEach { it.close() }
+                        }
+                    }
+                } finally {
+                    executor.shutdownNow()
+                }
+            }
+
+            scenario("a real consumer at the prefetch cap, never collected past one, leaves a sibling served") {
+                val executor =
+                    Executors.newFixedThreadPool(2) { Thread(it, "spec-delivery").apply { isDaemon = true } }
+                val hold = CompletableDeferred<Unit>()
+                try {
+                    connected(executor) { amqp ->
+                        val stalled = AmqpTestBroker.name("stalled")
+                        val setup = amqp.openChannel()
+                        setup.queueDeclare(stalled, true, false, false, null)
+                        repeat(200) { setup.basicPublish("", stalled, null, "{}".toByteArray()) }
+                        val delivered = CompletableDeferred<String>()
+                        val sibling = sibling(amqp, delivered)
+                        val consumer =
+                            amqp.consumer<Note>(stalled, ConsumerOptions(prefetch = ConsumerOptions.MAX_PREFETCH))
+                        try {
+                            coroutineScope {
+                                val collecting =
+                                    launch(kotlinx.coroutines.Dispatchers.IO) {
+                                        consumer.messages().collect { hold.await() }
+                                    }
+                                // Let the consumer take its prefetch: the first message is held, 63 sit buffered.
+                                kotlinx.coroutines.delay(1500.milliseconds)
+                                val thread = withTimeout(5.seconds) { delivered.await() }
+                                println("Threads: sibling served on [$thread] beside a stalled consumer")
+                                thread shouldBe "spec-delivery"
+                                collecting.cancel()
+                            }
+                        } finally {
+                            consumer.close()
+                            sibling.close()
+                            runCatching { setup.queueDelete(stalled) }
+                            runCatching { setup.close() }
                         }
                     }
                 } finally {
