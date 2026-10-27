@@ -33,9 +33,9 @@ import androidx.compose.ui.semantics.semantics
  * whole width when the caller fills it. Each item announces `Role.RadioButton` and
  * `selected`, not the checkbox a bare `ToggleButton` says, and the row is a `selectableGroup`.
  *
- * It is the body of [com.softistx.material.components.navigation.SegmentedControl] and [ViewToggle];
- * The segment colours come from M3's `toggleButtonColors` and are not themeable by [style].
- * [style] reaches every item, and a morphing control takes no press scale of its own.
+ * It is the body of [com.softistx.material.components.navigation.SegmentedControl] and [ViewToggle].
+ * [style] reaches every item, and a morphing control takes no press scale of its own. The segment
+ * colours come from M3's `toggleButtonColors` and are not themeable by [style].
  */
 @Composable
 internal fun ConnectedToggleGroup(

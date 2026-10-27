@@ -472,8 +472,6 @@ because M3 has neither.
 | `NavigationSuite` | `destinations`, `selected`, `onSelect`, `primaryAction?`, `content` | `navigation/navigation-suite` |
 | `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false`, `enabled`, `style` | `navigation/tabs` |
 | `SegmentedControl` | `options`, `selected`, `onSelect`, `enabled = true`, `style = Style`, `icons: List<ImageVector>? = null` | `navigation/segmented-control` |
-
-Each tab has its own interaction source, so its press style runs.
 | `FloatingToolbar` | `expanded`, `leading?`, `trailing?`, `content` | `navigation/floating-toolbar` |
 | `Breadcrumb` | `items: List<BreadcrumbItem>` | `navigation/breadcrumb` |
 | `Stepper` | `steps`, `current`, `onStep?`, `collapseBelow = 520.dp` | `navigation/stepper` |
@@ -481,6 +479,7 @@ Each tab has its own interaction source, so its press style runs.
 | `BottomBar` | `actions`, `fab?` | `navigation/bottom-bar` |
 
 `AppBarSize` — `Small`, `Centered`, `Medium`, `Large`, mapped onto M3's four top app bars.
+Each tab has its own interaction source, so its press style runs.
 `StepFooter` is Back (optional) and Continue under a stepper; `busy` turns Continue into a
 `BusyButton`. `BottomBar` is M3's `BottomAppBar` — verbs for this screen, not destinations
 (`NavigationSuite` is the destinations).
