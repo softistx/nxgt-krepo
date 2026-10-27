@@ -657,7 +657,9 @@ together. `ConfirmDialog`, `Sheet` and `Drawer` wrap M3. `Toaster` is a stack of
 `Tone` — M3's host holds one, a dashboard often needs two. `Accordion` is built here: M3 has no accordion.
 `Carousel` is M3's multi-browse carousel: one large page, the next one `peek` wide, and each page cut to a rounded
 mask that morphs with its size (the shape is `extraLarge`, applied to the content of `page`). `style` dresses the
-carousel as a whole (track and dots), never the pages, and has no default look.
+carousel as a whole (track and dots), never the pages, and has no default look; it is a layout wrapper, so only
+static properties and `disabled` apply. The carousel is announced as a collection, each page with its position, and
+the dots are hidden from screen readers.
 `Disclosure` is one panel; `Accordion` is a list with at most one open. `LabeledProgress` prints
 the percentage M3's indicator does not.
 `LoadingMark` is M3's morphing `LoadingIndicator` — use it when the wait *is* the content; `contained = true` seats it on a

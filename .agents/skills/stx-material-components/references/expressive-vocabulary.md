@@ -108,7 +108,7 @@ Also `ListItem(selected, onClick, …)`, `ListItem(checked, onCheckedChange, …
 | Navigation | `ShortNavigationBar` + `ShortNavigationBarItem`, `WideNavigationRail` + `WideNavigationRailItem`, `ModalWideNavigationRail` |
 | Indeterminate wait | `LoadingIndicator()`, `LoadingIndicator(progress = { 0.4f })`, `ContainedLoadingIndicator()` |
 | Wavy progress | `LinearWavyProgressIndicator`, `CircularWavyProgressIndicator` exist; the owner kept `Progress` linear |
-| Carousel | `HorizontalMultiBrowseCarousel(state = rememberCarouselState { n }, preferredItemWidth, …) { index -> }`, `HorizontalCenteredHeroCarousel`. `HorizontalUncontainedCarousel` is not in this version |
+| Carousel | `HorizontalMultiBrowseCarousel(state = rememberCarouselState { n }, preferredItemWidth, …) { index -> }`, `HorizontalCenteredHeroCarousel`. `HorizontalUncontainedCarousel` (fixed item width) exists too; `Carousel` uses multi-browse |
 
 Use `LoadingIndicator` when the length of the wait is unknown and a bar would lie; use `Progress` when a fraction is known.
 
@@ -119,4 +119,4 @@ Use `LoadingIndicator` when the length of the wait is unknown and a bar would li
 
 ## Not in this version
 
-`HorizontalUncontainedCarousel`; a `ConnectedButtonGroup` composable; a `MotionScheme` with no animation (`compose-motion` has the reduced-motion answer).
+a `ConnectedButtonGroup` composable; a `MotionScheme` with no animation (`compose-motion` has the reduced-motion answer).
