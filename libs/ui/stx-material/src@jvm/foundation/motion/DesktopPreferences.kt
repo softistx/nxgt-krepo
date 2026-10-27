@@ -31,7 +31,7 @@ internal object DesktopPreferences {
     /** A hand-set property, or null when there is none. Read on every call so a spec can set and clear it. */
     fun override(property: String): Boolean? = System.getProperty(property)?.trim()?.lowercase()?.toBooleanStrictOrNull()
 
-    /** What [osName] says about one setting (reduce motion, or else increase contrast), running its command through [run]; false when the command answers nothing. */
+    /** What [osName] says about one setting (reduce motion, or else increase contrast), via [run]; false when it answers nothing. */
     fun query(
         reduceMotion: Boolean,
         osName: String,
