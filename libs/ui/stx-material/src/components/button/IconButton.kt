@@ -27,6 +27,9 @@ import com.softistx.material.foundation.theme.ToneColors
  * a square itself. That is where the 48 dp touch target and the ripple come from; a hand-built
  * `Box` had to state the target as a magic number and still had no ripple.
  *
+ * It morphs: round at rest, squarer while pressed, through M3's `shapes =` overloads, so it takes
+ * no press scale and keeps M3's 40 dp container.
+ *
  * `description` is not defaulted. An icon button with no label is the one place a missing
  * `contentDescription` makes the control unusable rather than merely undescribed.
  */
@@ -46,6 +49,7 @@ fun IconButton(
     val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val styled = modifier.styleable(styleState, buttonStyle, style)
     val tone = iconButtonTone(color)
+    val shapes = IconButtonDefaults.shapes()
     val content = @Composable { Icon(icon = icon, description = description, size = size) }
 
     when (variant) {
@@ -53,6 +57,7 @@ fun IconButton(
             FilledIconButton(
                 onClick = onClick,
                 modifier = styled,
+                shapes = shapes,
                 enabled = enabled,
                 colors =
                     IconButtonDefaults.filledIconButtonColors(
@@ -68,6 +73,7 @@ fun IconButton(
             FilledTonalIconButton(
                 onClick = onClick,
                 modifier = styled,
+                shapes = shapes,
                 enabled = enabled,
                 colors =
                     IconButtonDefaults.filledTonalIconButtonColors(
@@ -83,8 +89,10 @@ fun IconButton(
             OutlinedIconButton(
                 onClick = onClick,
                 modifier = styled,
+                shapes = shapes,
                 enabled = enabled,
                 colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = tone.main),
+                border = buttonBorder(ButtonVariant.Outlined, color, enabled),
                 interactionSource = interactionSource,
                 content = content,
             )
@@ -96,6 +104,7 @@ fun IconButton(
             MaterialIconButton(
                 onClick = onClick,
                 modifier = styled,
+                shapes = shapes,
                 enabled = enabled,
                 colors = IconButtonDefaults.iconButtonColors(contentColor = tone.main),
                 interactionSource = interactionSource,

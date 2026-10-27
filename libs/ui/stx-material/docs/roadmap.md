@@ -42,12 +42,13 @@ ligne de plomberie.
 
 **Boutons**
 - [x] `ButtonVariant` × `ButtonColor` — 5 × 7, résolus dans une seule fonction
-- [x] `buttonStyle()` — un `Style` portant ses états `hovered` / `pressed` / `disabled` animés ; l'échelle d'appui ne reste que pour les composants qui ne se déforment pas
+- [x] `buttonStyle` — un `Style` unique pour la famille des boutons : l'alpha désactivé seulement, sans échelle d'appui puisque tous se déforment (`StxStyles.morphingButton` en est un alias déprécié)
 - [x] `Button(text, onClick)` et `ButtonSurface { }` avec `style: Style = Style`
 - [x] `IconButton`, `ButtonGroup`
 - [x] `StxIcons` — dix vecteurs tenus ici, faute de pack d'icônes atteignable
 - [x] `ResponsiveButton`
-- [x] Boutons : morphing de forme à l'appui (`StxStyles.morphingButton`) et `ButtonSize` (ExtraSmall à ExtraLarge, Small par défaut)
+- [x] Boutons : morphing de forme à l'appui (`StxStyles.button`) et `ButtonSize` (ExtraSmall à ExtraLarge, Small par défaut)
+- [x] `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton` et `Fab` : morphing de forme (rond au repos, plus carré à l'appui et coché) et `style: Style = Style`
 
 **Affichage**
 - [x] `Card`

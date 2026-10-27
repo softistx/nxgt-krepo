@@ -131,6 +131,9 @@ Getting this wrong is subtle rather than loud: giving a fade and a slide the sam
 what this library did before it was built on `MotionScheme`, makes a combined transition finish in
 two stages. `Transitions` now picks per half.
 
+The first line below illustrates the pattern; it is not the button family's own style (that one has no press
+scale, its press is the shape morph).
+
 ```kotlin
 pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
 disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
@@ -170,12 +173,14 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 ## Styles
 
 `StxTheme.styles` (from `com.softistx.material.foundation.style`) is every component default in one place —
-`button`, `morphingButton`, `card`, `chip`, `listTile`, `field`, `alert(tone)`. `morphingButton` is the one `Button`
-uses (the disabled alpha only); pick `button` over it only to bring the press scale back on a control that does not morph.
+`button`, `card`, `chip`, `listTile`, `field`, `alert(tone)`. `button` is the one style of the whole button family
+(`Button`, `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton`, `Fab`): the disabled alpha only, because all of
+them morph their shape. `morphingButton` is a deprecated alias of it: replace `StxStyles.morphingButton` with
+`StxStyles.button` and `morphingButtonStyle` with `buttonStyle`; the 0.97 press scale is gone from the family.
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and
 elevation moved into Material 3's own `*Colors` and `*Defaults` when the components were rebuilt on
-M3. What is left is what M3 has no parameter for — the press scale (not on `Button`, which morphs its shape: `StxStyles.morphingButton`), the disabled alpha, and the
+M3. What is left is what M3 has no parameter for — the press scale (not on the button family, which morphs its shape: `StxStyles.button`), the disabled alpha, and the
 alert's whole appearance, because M3 has no banner.
 
 Nothing is needed from it to *use* the library: each component already applies its own. It is the

@@ -4,8 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.animate
 import androidx.compose.foundation.style.disabled
-import androidx.compose.foundation.style.pressed
-import androidx.compose.foundation.style.scale
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -13,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.softistx.material.foundation.motion.MotionSpeed
 import com.softistx.material.foundation.style.motion
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.Tone
@@ -88,7 +85,12 @@ fun buttonBorder(
     }
 
 /**
- * What Material 3 has no parameter for: the press giving under the finger.
+ * What Material 3 has no parameter for: the disabled alpha, for every control of the button family.
+ *
+ * There is no press scale. The family — [Button], [IconButton], [IconToggle], [ToggleButton],
+ * [SplitButton] and [Fab] — morphs its shape under the finger (M3's `shapes =` overloads, or the
+ * corner morph [Fab] draws itself), so a scale on top would be a second give-under-the-finger
+ * effect fighting the first.
  *
  * Everything M3 *does* express — container, content, border, padding, shape — is absent here on
  * purpose. A `background()` or `shape()` in this block would paint on top of the button M3 already
@@ -96,20 +98,12 @@ fun buttonBorder(
  */
 val buttonStyle: Style =
     Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
         disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
     }
 
-/**
- * [buttonStyle] without the press scale, for a button that morphs its shape.
- *
- * `Button` hands M3 a pressed shape, so the corners already answer the finger; a scale on top
- * would be a second give-under-the-finger effect fighting the first.
- */
-val morphingButtonStyle: Style =
-    Style {
-        disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
-    }
+/** The name this style had while `Button` was the only control that morphed. */
+@Deprecated("Every button-family control morphs now: use buttonStyle.", ReplaceWith("buttonStyle"))
+val morphingButtonStyle: Style get() = buttonStyle
 
 /** Material 3's own disabled opacity, so a disabled wrapper matches a disabled M3 component. */
 const val DISABLED_ALPHA = 0.38f
