@@ -34,7 +34,8 @@ fun SwipeActions(
     SwipeToDismissBox(
         state = state,
         backgroundContent = background,
-        modifier = modifier
+        modifier =
+            modifier
                 .styledBy(style)
                 .then(if (customActions.isEmpty()) Modifier else Modifier.semantics { this.customActions = customActions }),
         onDismiss = { onDismiss() },

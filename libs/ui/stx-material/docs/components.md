@@ -639,13 +639,13 @@ Package `com.softistx.material.components.surface`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `ConfirmDialog` | `visible`, `title`, `text`, `onConfirm`, `onDismiss`, `destructive`, `style = Style` | `surfaces/confirm-dialog` |
-| `Sheet` | `visible`, `onDismiss`, `style = Style`, `content` | `surfaces/sheet` |
+| `ConfirmDialog` | `visible`, `title`, `text`, `onConfirm`, `onDismiss`, `destructive` | `surfaces/confirm-dialog` |
+| `Sheet` | `visible`, `onDismiss`, `content` | `surfaces/sheet` |
 | `Drawer` | `open`, `onDismiss`, `gesturesEnabled`, `drawer`, `style = Style`, `content` | `surfaces/drawer` |
 | `Tooltip` | `text`, `style = Style`, `content` | `surfaces/tooltip` |
 | `HelpTip` | `text`, `description = "More information"`, `style = Style` | `surfaces/help-tip` |
 | `HoverCard` | `title`, `text`, `action?`, `onAction?`, `style = Style`, `content` | `surfaces/hover-card` |
-| `Menu` | `expanded`, `onDismiss`, `items`, `offset`, `style = Style` | `surfaces/menu` |
+| `Menu` | `expanded`, `onDismiss`, `items`, `offset` | `surfaces/menu` |
 | `ContextMenu` | `items`, `style = Style`, `content` | `surfaces/context-menu` |
 | `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |
 | `Disclosure` | `title`, `expanded`, `onExpandedChange`, `content` | `surfaces/disclosure` |
@@ -760,8 +760,8 @@ shown and announced, with no click. A folded table has no headers, so it sorts t
 
 The defaults are named in `StxStyles`: `tableRow` (a 0.99 press scale; a row is never disabled, so no
 fade) and `sortHeader` (a 0.97 press scale, as a chip has, since a header is compact). `style`
-reaches the cards always and the table rows only with `onRowClick`; `headerStyle` reaches only the
-sortable headers. `Pagination` and `SortControl` hand their `style` to the buttons and field they
+reaches the cards and the table rows, and `headerStyle` every header; only the press look and the
+button role wait for `onRowClick` or a sortable header. `Pagination` and `SortControl` hand their `style` to the buttons and field they
 are made of.
 
 The parts that take no `style` are not interactive: `Description`, `Timeline`, `EntityHeader`
