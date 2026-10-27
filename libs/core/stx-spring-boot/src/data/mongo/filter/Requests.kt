@@ -35,8 +35,11 @@ fun List<SortOrder>.toSort(allowed: Set<String>? = null): Sort =
 
 private val SortOrder.clause get() = "$property:${if (descending) "DESC" else "ASC"}"
 
-/** The `?filter=` parameter of this request, as a query. */
-val ServerRequest.mongoFilter: Query get() = queryParamOrNull("filter").parseFilter()
+/** The `?filter=` parameter of this request, as a query. Every field is filterable: see [mongoFilter]. */
+val ServerRequest.mongoFilter: Query get() = mongoFilter(null)
+
+/** [mongoFilter] restricted to [allowed] — a field outside it fails as `filters.invalid`; null allows all. */
+fun ServerRequest.mongoFilter(allowed: Set<String>?): Query = queryParamOrNull("filter").parseFilter(allowed)
 
 /**
  * `?filter=` and `?sort=` together, which is what a list route actually wants.
@@ -44,7 +47,10 @@ val ServerRequest.mongoFilter: Query get() = queryParamOrNull("filter").parseFil
  * Paging is deliberately not applied: `limit`/`skip` on a query is offset paging, and which of that
  * or a keyset cursor a route wants is the route's decision, not a helper's.
  */
-val ServerRequest.mongoQuery: Query get() = mongoFilter.with(sort.toSort())
+val ServerRequest.mongoQuery: Query get() = mongoQuery(null)
+
+/** [mongoQuery] restricted to [allowed] for both `?filter=` and `?sort=`; null allows every field. */
+fun ServerRequest.mongoQuery(allowed: Set<String>?): Query = mongoFilter(allowed).with(sort.toSort(allowed))
 
 /**
  * The whole request as a page window — `?filter=`, `?sort=`, `?size=` and `?cursor=` together.
@@ -69,6 +75,6 @@ fun ServerRequest.mongoPage(
     MongoPage.first(
         size,
         cursor = cursor,
-        query = queryParamOrNull("filter").parseFilter(allowed),
+        query = mongoFilter(allowed),
         sort = sort.toSort(allowed),
     )

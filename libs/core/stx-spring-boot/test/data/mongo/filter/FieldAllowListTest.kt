@@ -78,6 +78,18 @@ class FieldAllowListTest :
                 shouldThrow<ApiException> { request(sort = "passwordHash:ASC").mongoPage(allowed = ALLOWED) }
             }
 
+            scenario("mongoFilter(allowed) refuses an unlisted field and passes a listed one") {
+                shouldThrow<ApiException> { request(filter = "secret:eq:1").mongoFilter(ALLOWED) }
+                request(filter = "status:eq:PAID").mongoFilter(ALLOWED).queryObject.toString() shouldContain "PAID"
+            }
+
+            scenario("mongoQuery(allowed) refuses an unlisted filter or sort field") {
+                shouldThrow<ApiException> { request(filter = "secret:eq:1").mongoQuery(ALLOWED) }
+                shouldThrow<ApiException> { request(sort = "secret:ASC").mongoQuery(ALLOWED) }
+                val query = request(filter = "status:eq:PAID", sort = "total:ASC").mongoQuery(ALLOWED)
+                query.sortObject.toString() shouldContain "total"
+            }
+
             scenario("passes allowed fields, and without a list passes any") {
                 val page = request(filter = "status:eq:PAID", sort = "total:DESC").mongoPage(allowed = ALLOWED)
                 page.sort.toString() shouldBe "total: DESC"
