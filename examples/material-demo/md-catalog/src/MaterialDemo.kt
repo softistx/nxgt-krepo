@@ -34,6 +34,7 @@ fun MaterialDemo(groups: List<StoryGroup> = CatalogGroups) {
                 seed = state.seed,
                 isDark = state.isDark,
                 dynamicColor = state.dynamicColor,
+                paletteStyle = state.paletteStyle,
             ),
         motionScheme = state.motion.scheme,
         motion = StxMotion(state.motion.scheme, enabled = state.motion.enabled),

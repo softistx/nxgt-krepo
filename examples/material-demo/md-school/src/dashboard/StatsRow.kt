@@ -29,7 +29,7 @@ fun StatsRow(session: SchoolSession) {
         listOf(
             StatSpec(Students.all.size.toString(), "Students", "${Students.classNames.size} classes", Tone.Info),
             StatSpec(Grades.average(session.grades).oneDecimal(), "Average mark", "+0.6 this term", Tone.Success),
-            StatSpec("96%", "Attendance", "-1% this week", Tone.Warning),
+            StatSpec("96%", "Attendance", "-1% this week", Tone.Info),
             StatSpec(session.unread.toString(), "Unread messages", "${session.familiesWaiting} families waiting", Tone.Info),
         )
     BoxWithConstraints {

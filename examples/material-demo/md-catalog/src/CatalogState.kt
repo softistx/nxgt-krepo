@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import com.materialkolor.PaletteStyle
 import com.softistx.material.foundation.theme.DefaultSeed
 
 /**
@@ -22,6 +23,9 @@ class CatalogState(
     var storyId by mutableStateOf(initialStoryId)
     var isDark by mutableStateOf(false)
     var seed by mutableStateOf(DefaultSeed)
+
+    /** How the seed is spread across the palettes: calm by default, louder on request. */
+    var paletteStyle by mutableStateOf(PaletteStyle.TonalSpot)
 
     /** Whether to prefer the platform's own palette where there is one. Android 12+ only. */
     var dynamicColor by mutableStateOf(false)
@@ -62,3 +66,7 @@ val CatalogSeeds: List<Pair<String, Color>> =
         "Rose" to Color(0xFFC2185B),
         "Slate" to Color(0xFF475569),
     )
+
+/** The palette styles the header offers: the calm default and the two louder ones. */
+val CatalogPaletteStyles: List<PaletteStyle> =
+    listOf(PaletteStyle.TonalSpot, PaletteStyle.Vibrant, PaletteStyle.Expressive)

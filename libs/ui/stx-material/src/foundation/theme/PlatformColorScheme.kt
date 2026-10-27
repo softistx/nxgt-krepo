@@ -3,6 +3,8 @@ package com.softistx.material.foundation.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.materialkolor.PaletteStyle
+import com.materialkolor.dynamiccolor.ColorSpec
 
 /**
  * Where the Material 3 scheme comes from on this platform.
@@ -12,12 +14,16 @@ import androidx.compose.ui.graphics.Color
  *
  * @param seed the brand colour, used whenever the platform has nothing better
  * @param dynamicColor whether to prefer the platform's own palette; ignored where there is none
+ * @param paletteStyle how the seed is spread across the palettes; the seed path only, never the wallpaper's
+ * @param specVersion the Material colour spec revision; the seed path only, never the wallpaper's
  */
 @Composable
 expect fun platformColorScheme(
     seed: Color,
     isDark: Boolean,
     dynamicColor: Boolean = true,
+    paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
+    specVersion: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2025,
 ): ColorScheme
 
 /**
