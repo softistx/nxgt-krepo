@@ -12,7 +12,7 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.v2.runComposeUiTest
 import com.softistx.material.components.content.ListTile
 import com.softistx.material.components.surface.Accordion
 import com.softistx.material.components.surface.AccordionItem

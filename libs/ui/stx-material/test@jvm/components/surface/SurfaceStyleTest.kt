@@ -20,7 +20,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.v2.runComposeUiTest
 import com.softistx.material.components.layout.LoadMoreButton
 import com.softistx.material.components.layout.RefreshBox
 import com.softistx.material.components.layout.ScrollToTop
