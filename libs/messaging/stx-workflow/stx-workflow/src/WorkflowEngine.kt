@@ -267,8 +267,9 @@ class WorkflowEngine internal constructor(
      * cancel or an [undo], or `Failed` again if the compensation still fails — it can be retried as
      * often as it takes.
      *
-     * An instance with a compensating `child` node needs the child fixed first: retry the child,
-     * then the parent.
+     * For a parent with a `child` node whose compensation failed, retry the child first. Until
+     * issue #319 is fixed the parent does not detect a child left `Failed` and counts it as
+     * compensated.
      *
      * Two refusals, both [WorkflowException]s. An id with no instance is [WorkflowNotFoundException].
      * Any instance that is not `Failed` with a failed compensation in its journal is

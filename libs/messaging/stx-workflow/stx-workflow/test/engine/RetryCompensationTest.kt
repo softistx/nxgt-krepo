@@ -6,6 +6,8 @@ import com.softistx.workflow.WorkflowNotFoundException
 import com.softistx.workflow.WorkflowNotRetryableException
 import com.softistx.workflow.WorkflowStatus
 import com.softistx.workflow.dsl.compensate
+import com.softistx.workflow.dsl.outcome
+import com.softistx.workflow.dsl.parallel
 import com.softistx.workflow.dsl.step
 import com.softistx.workflow.fixture.Calls
 import com.softistx.workflow.fixture.Ledger
@@ -16,7 +18,13 @@ import com.softistx.workflow.workflow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import java.util.concurrent.atomic.AtomicBoolean
+
+private val CHARGE = outcome<String>("charge")
+private val COURIER = outcome<String>("courier")
 
 class RetryCompensationTest :
     FeatureSpec({
@@ -147,6 +155,96 @@ class RetryCompensationTest :
                 store.guarded(id) {
                     shouldThrow<WorkflowConflictException> { engine.retryCompensation(id) }
                 }
+            }
+        }
+        feature("retrying under the other paths an unwind can take") {
+            scenario("two retries at once: one runs the compensation, the other is told no") {
+                val calls = Calls()
+                val reached = CompletableDeferred<Unit>()
+                val release = CompletableDeferred<Unit>()
+                val broken = AtomicBoolean(true)
+                val slow = AtomicBoolean(false)
+                val flow =
+                    workflow<Ledger>("racing") {
+                        step("a") { context } compensate {
+                            calls.record("undo:a")
+                            if (broken.get()) throw Wobble("refund refused")
+                            if (slow.get()) {
+                                reached.complete(Unit)
+                                release.await()
+                            }
+                        }
+                        step("b") { throw Wobble("no courier") }
+                    }
+                val engine = WorkflowEngine(InMemoryStore()) { register(flow) }
+                val id = engine.start(flow, Ledger()).id
+                broken.set(false)
+                slow.set(true)
+
+                val first = async(Dispatchers.Default) { engine.retryCompensation(id) }
+                reached.await()
+                // The first retry holds the instance and is inside the compensation.
+                shouldThrow<WorkflowConflictException> { engine.retryCompensation(id) }
+                release.complete(Unit)
+
+                first.await().status shouldBe WorkflowStatus.Compensated
+                // And once it is done there is nothing left to retry.
+                shouldThrow<WorkflowNotRetryableException> { engine.retryCompensation(id) }.status shouldBe
+                    WorkflowStatus.Compensated
+                calls.all() shouldBe listOf("undo:a", "undo:a")
+            }
+
+            scenario("a fan-out leg whose compensation failed is retried with the value it produced") {
+                val calls = Calls()
+                val broken = AtomicBoolean(true)
+                val flow =
+                    workflow<Ledger>("legs") {
+                        parallel("provision") {
+                            branch(CHARGE) { "c-1" } compensate { id ->
+                                calls.record("undo:charge:$id")
+                                if (broken.get()) throw Wobble("refund refused")
+                            }
+                            branch(COURIER) { "b-1" } compensate { id -> calls.record("undo:courier:$id") }
+                            merge { out -> context.copy(chargeId = out[CHARGE], booking = out[COURIER]) }
+                        }
+                        step("ship") { throw Wobble("no courier") }
+                    }
+                val engine = WorkflowEngine(InMemoryStore()) { register(flow) }
+                val id = engine.start(flow, Ledger()).id
+                engine.record(id)!!.status shouldBe WorkflowStatus.Failed
+
+                broken.set(false)
+                val retried = engine.retryCompensation(id)
+
+                retried.status shouldBe WorkflowStatus.Compensated
+                calls.all().filter { it.startsWith("undo:charge") } shouldBe
+                    listOf("undo:charge:c-1", "undo:charge:c-1")
+                calls.all().filter { it.startsWith("undo:courier") } shouldBe listOf("undo:courier:b-1")
+            }
+
+            scenario("a cancel whose compensation failed lands Cancelled once retried") {
+                val calls = Calls()
+                val broken = AtomicBoolean(true)
+                val store = InMemoryStore()
+                val flow =
+                    workflow<Ledger>("cancellable") {
+                        step("reserve") { context } compensate {
+                            calls.record("undo:reserve")
+                            if (broken.get()) throw Wobble("held")
+                        }
+                        step("wait") { context }
+                    }
+                val engine = WorkflowEngine(store) { register(flow) }
+                val id = engine.start(flow, Ledger()).id
+                val done = store.load(id)!!
+                // Put back to how it looked mid-run, as the cancel spec does.
+                store.save(done.copy(status = WorkflowStatus.Running, journal = done.journal.take(1)), done.version)
+
+                engine.cancel(id).status shouldBe WorkflowStatus.Failed
+                broken.set(false)
+
+                engine.retryCompensation(id).status shouldBe WorkflowStatus.Cancelled
+                calls.all() shouldBe listOf("undo:reserve", "undo:reserve")
             }
         }
     })

@@ -880,8 +880,10 @@ that is not `Failed`, or a `Failed` one whose journal names no failed compensati
 case is a context that no longer decodes, which failed before any step ran and needs its stored
 context repaired. An unknown id is `WorkflowNotFoundException`, and an instance another process is
 advancing is `WorkflowConflictException`, so an operator never mistakes a skipped retry for a done
-one. A `Failed` parent whose [`child` node](#child-workflows) could not be compensated needs the
-child retried first, then the parent.
+one. For a parent whose [`child` node](#child-workflows) could not be compensated, retry the **child**
+first. Until [#319](https://github.com/softistx/nxgt-krepo/issues/319) is fixed the parent does not
+detect a child left `Failed`: it counts it as compensated, so retrying the parent first would finish
+it over a child that is still stuck.
 
 Every store keeps an index for this: a sorted set per status in Redis, a `(status, updated_at)` index
 in SQL, a compound index in MongoDB. It is the second thing all three maintain on every write.
