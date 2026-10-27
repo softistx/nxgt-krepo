@@ -1,5 +1,12 @@
 # stx-migrations
 
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [[`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4)]:
+  - stx-ktor@0.3.1
+
 ## 0.2.2
 
 ### Patch Changes
