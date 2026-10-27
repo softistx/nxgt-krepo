@@ -1,5 +1,11 @@
 # stx-migrations
 
+## 0.2.4
+
+### Patch Changes
+
+- [#339](https://github.com/softistx/nxgt-krepo/pull/339) [`1007a7f`](https://github.com/softistx/nxgt-krepo/commit/1007a7f028e9902b62806e5902310ff0a49d486c) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Internal: `SqlMigrationLedger` is split by concern (lock, rows, writes). No behaviour or public API change.
+
 ## 0.2.3
 
 ### Patch Changes
