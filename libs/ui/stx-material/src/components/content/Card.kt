@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.Card as MaterialCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -16,6 +14,10 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -37,8 +39,10 @@ fun Card(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
-    val styled = modifier.styleable(styleState, cardStyle, style)
+    val styled =
+        modifier
+            .styledBy(style, enabled, cardStyle, interactionSource)
+            .semantics { if (onClick != null) role = Role.Button }
     val colors = cardColors(variant)
     val elevation = cardElevation(variant)
     val shape = MaterialTheme.shapes.large

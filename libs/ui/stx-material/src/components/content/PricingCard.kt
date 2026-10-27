@@ -3,6 +3,8 @@ package com.softistx.material.components.content
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import com.softistx.material.components.feedback.StatusBadge
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
@@ -35,7 +37,7 @@ fun PricingCard(
         if (badge != null) {
             StatusBadge(text = badge, tone = Tone.Info)
         }
-        Typography(text = name, variant = TypographyVariant.TitleMedium)
+        Typography(text = name, variant = TypographyVariant.TitleMedium, modifier = Modifier.semantics { heading() })
         if (description != null) {
             Typography(text = description, emphasis = Emphasis.Medium)
         }

@@ -177,8 +177,8 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 ## Styles
 
 `StxTheme.styles` (from `com.softistx.material.foundation.style`) is every component default in one place —
-`button`, `card`, `chip`, `listTile`, `field`, `dimmed`, `toggle`, `upload`, `tableRow`, `sortHeader`,
-`alert(tone)`. `button` is the one style of the whole button family
+`button`, `card`, `chip`, `listTile`, `field`, `dimmed`, `toggle`, `upload`, `tile`, `tableRow`,
+`sortHeader`, `alert(tone)`. `button` is the one style of the whole button family
 (`Button`, `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton`, `Fab`): the disabled alpha only, because all of
 them morph their shape. `morphingButton` is a deprecated alias of it: replace `StxStyles.morphingButton` with
 `StxStyles.button` and `morphingButtonStyle` with `buttonStyle`; the 0.97 press scale is gone from the family.
@@ -187,7 +187,9 @@ them morph their shape. `morphingButton` is a deprecated alias of it: replace `S
 `dimmed` is the 0.38 disabled fade for what M3 does not dim (`OtpField`, the rest text of
 `InlineEdit`). `toggle` is the 0.99 press scale of a checkbox, switch or radio row. `upload` is the
 0.99 press scale and disabled fade of `UploadField`. `tableRow` is the 0.99 press scale of a clickable
-`DataTable` row, and `sortHeader` the 0.97 press scale of a sortable header.
+`DataTable` row, and `sortHeader` the 0.97 press scale of a sortable header. `tile` is the 0.99
+press scale of a clickable `Gallery` image. `card` and `chip` are also the defaults of `PinBar`,
+`LinkPreview` and `PersonCard`, and of `MentionChip` and `FileChip`.
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and
 elevation moved into Material 3's own `*Colors` and `*Defaults` when the components were rebuilt on

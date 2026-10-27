@@ -1,13 +1,11 @@
 package com.softistx.material.components.data
 
 import androidx.compose.foundation.style.Style
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -28,39 +26,12 @@ import com.softistx.material.isPainted
 import com.softistx.material.painted
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
+import com.softistx.material.scanline
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 
 private val oneColumn = listOf(TableColumn<String>("Name") { it })
-
-/** The pixels of one scanline: the left edge at rest, and under the pointer at 1, 3 and 8 px in. */
-private class Scanline(
-    val rest: Color,
-    val pressed: Map<Int, Color>,
-)
-
-/**
- * The wide table at 400 dp (one column, so a header or a row spans the whole width), pressed at
- * [pressAt] and read along the scanline [y] of the table's bounds. At 1 px per dp a scale s moves
- * the edge in by 400 x (1 - s) / 2: 2 px for 0.99, 6 px for 0.97, so the pixel 3 px in is painted
- * for 0.99 and bare for 0.97. The ripple darkens the red, which is why only the green channel is read.
- */
-private fun scanline(
-    pressAt: (NodeBounds) -> Offset,
-    y: (NodeBounds) -> Float,
-    table: @Composable (Modifier) -> Unit,
-): Scanline {
-    val bounds = NodeBounds()
-    return renderProbe(width = 400, height = 200, content = {
-        StxTheme(isDark = false) { table(Modifier.probed(bounds)) }
-    }) {
-        val first = settle()
-        val at = { x: Int -> NodeBounds().also { it.rect = Rect(x.toFloat(), y(bounds), x + 1f, y(bounds) + 1f) } }
-        val down = press(pressAt(bounds))
-        Scanline(first.pixelAt(at(0), Corner.TopLeft), listOf(1, 3, 8).associateWith { down.pixelAt(at(it), Corner.TopLeft) })
-    }
-}
 
 @OptIn(ExperimentalTestApi::class)
 class DataStyleTest :
@@ -76,12 +47,12 @@ class DataStyleTest :
                 line.pressed.getValue(3).isPainted() shouldBe true
             }
 
-            scenario("a row without onRowClick takes no style: nothing is painted") {
+            scenario("a row without onRowClick still takes the caller's style (it is never dropped), but is not a press target") {
                 renderProbe(width = 400, height = 200, content = {
                     StxTheme(isDark = false) {
                         DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp, style = painted)
                     }
-                }) { settle().count { it.isPainted() } shouldBe 0 }
+                }) { settle().count { it.isPainted() } shouldBeGreaterThan 1000 }
             }
 
             scenario("a collapsed card gets the caller's style too: alpha 0 hides it, the default shows it") {

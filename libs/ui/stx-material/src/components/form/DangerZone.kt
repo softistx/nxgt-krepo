@@ -3,6 +3,8 @@ package com.softistx.material.components.form
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import com.softistx.material.components.content.Card
 import com.softistx.material.components.content.CardVariant
 import com.softistx.material.foundation.text.Emphasis
@@ -28,6 +30,7 @@ fun DangerZone(
             text = title,
             variant = TypographyVariant.TitleSmall,
             color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.semantics { heading() },
         )
         Typography(text = text, emphasis = Emphasis.Medium)
         action()

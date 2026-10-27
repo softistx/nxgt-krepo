@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.style.Style
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.VerticalDivider
@@ -26,6 +27,7 @@ import com.softistx.material.foundation.theme.StxTheme
  *
  * A [QuoteBlock] is a passage in a body of text. This is the chrome of "replying to": name, a
  * truncated line, and an optional dismiss. Material 3's `Surface` plus `VerticalDivider`.
+ * [style] reaches the dismiss button.
  */
 @Composable
 fun ReplyPreview(
@@ -33,6 +35,7 @@ fun ReplyPreview(
     text: String,
     modifier: Modifier = Modifier,
     onDismiss: (() -> Unit)? = null,
+    style: Style = Style,
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -66,6 +69,7 @@ fun ReplyPreview(
                     icon = StxIcons.Close,
                     description = "Dismiss reply",
                     onClick = onDismiss,
+                    style = style,
                 )
             }
         }

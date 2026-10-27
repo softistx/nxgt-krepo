@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import com.softistx.material.components.content.ListTile
 import com.softistx.material.components.content.ListTileGroup
 import com.softistx.material.components.datetime.RelativeTime
@@ -29,14 +30,16 @@ fun ConversationRow(
     session: SchoolSession,
     group: ListTileGroup,
 ) {
+    val archive: () -> Unit = {
+        session.archived += conversation.id
+        session.toaster.say("Archived ${conversation.title}", Tone.Info)
+    }
     SwipeActions(
-        onDismiss = {
-            session.archived += conversation.id
-            session.toaster.say("Archived ${conversation.title}", Tone.Info)
-        },
+        onDismiss = archive,
         background = {
             Typography(text = "Archive", modifier = Modifier.padding(StxTheme.spacing.md))
         },
+        customActions = listOf(CustomAccessibilityAction("Archive") { archive(); true }),
     ) {
         ListTile(
             title = conversation.title,

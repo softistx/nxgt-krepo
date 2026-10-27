@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.unit.dp
 import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonColor
@@ -181,6 +182,7 @@ val SurfaceStories =
                         Typography(text = "Delete", color = StxTheme.colors.tone(Tone.Error).onMain)
                     }
                 },
+                customActions = listOf(CustomAccessibilityAction("Delete") { true }),
             ) {
                 ListTile(title = "Amara Diallo", supporting = "Swipe to reveal")
             }

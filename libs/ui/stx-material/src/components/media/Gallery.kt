@@ -1,21 +1,23 @@
 package com.softistx.material.components.media
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.style.pressable
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
  * A grid of images. Columns follow [GridCells.Adaptive], so a wide pane shows more without a
- * `when` on width.
+ * `when` on width. With [onSelect] a tile is a button that presses to 0.99; without it [style] has
+ * nothing to dress.
  */
 @Composable
 fun Gallery(
@@ -23,6 +25,7 @@ fun Gallery(
     modifier: Modifier = Modifier,
     onSelect: ((Int) -> Unit)? = null,
     minSize: Dp = 160.dp,
+    style: Style = Style,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize),
@@ -37,13 +40,7 @@ fun Gallery(
                 modifier =
                     Modifier
                         .aspectRatio(1f)
-                        .then(
-                            if (onSelect != null) {
-                                Modifier.clickable { onSelect(index) }
-                            } else {
-                                Modifier
-                            },
-                        ),
+                        .pressable(tileStyle, style, onSelect?.let { select -> { select(index) } }),
             )
         }
     }

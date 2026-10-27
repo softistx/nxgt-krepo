@@ -1,6 +1,7 @@
 package com.softistx.material.components.content
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.style.Style
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +31,7 @@ fun ExpandableText(
     collapsedLines: Int = 3,
     more: String = "Read more",
     less: String = "Show less",
+    style: Style = Style,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var canExpand by remember { mutableStateOf(false) }
@@ -48,6 +50,7 @@ fun ExpandableText(
                 text = if (expanded) less else more,
                 onClick = { expanded = !expanded },
                 variant = ButtonVariant.Link,
+                style = style,
             )
         }
     }
