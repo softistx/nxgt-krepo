@@ -282,6 +282,9 @@ What the screen is about. Package `com.softistx.material.components.content`.
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
+`ListTileGroup(index, count)` — `count >= 1` and `index` in `0 until count`, otherwise it throws.
+`ListTileDefaults.GroupGap` — the vertical space M3 puts between the tiles of a segmented list.
+
 A `Card` is interactive **iff** `onClick` is not null: it grows a hover and a press state only when
 it does something. `ListTile` follows the same rule.
 
@@ -290,7 +293,8 @@ no scale. With `selected = null` an interactive tile is a button. With `selected
 is a single choice, as a list-detail's current row is: the chosen row takes M3's selected tone and is
 announced as a radio button that is or is not selected. `group = ListTileGroup(index, count)` makes it
 one tile of a segmented list (`SegmentedListItem`): round at the top of the first and the bottom of the
-last, squarer between, space them by `ListTileDefaults.GroupGap`. `selected` and `group` need `onClick`.
+last, squarer between, space them by `ListTileDefaults.GroupGap`. `selected` and `group` need `onClick` (M3 has no static segmented item), and a tile given either without one
+is refused with an `IllegalArgumentException`.
 
 `Chip` is M3's `FilterChip`, so selection, the tick mark, the border and the shape morph are all
 M3's and animate on their own. The hover is not: `SelectableChipColors` has thirteen colours and no

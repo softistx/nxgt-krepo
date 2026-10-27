@@ -35,6 +35,7 @@ private val button = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role
 private val radio = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)
 private val chosen = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
 private val notChosen = SemanticsMatcher.expectValue(SemanticsProperties.Selected, false)
+private val noRole = SemanticsMatcher.keyNotDefined(SemanticsProperties.Role)
 private val noClick = SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick)
 
 private fun probe(
@@ -142,19 +143,27 @@ class ListTileTest :
             scenario("the last tile is squarer on top and round below") {
                 corners(2, 3) shouldBe listOf(false, false, true, true)
             }
-            scenario("a group of one is a standalone tile") {
-                val bounds = NodeBounds()
-                var alone = emptyList<Color>()
-                var single = emptyList<Color>()
-                probe(bounds, { ListTile("Amara", onClick = {}, group = ListTileGroup(0, 1), modifier = it) }) {
-                    val grid = settle()
-                    single = listOf(grid.pixelAt(bounds, Corner.TopLeft, inset = 2), grid.pixelAt(bounds, Corner.BottomRight, inset = 2))
+            scenario("a group of one has a standalone tile's corners, all four") {
+                fun shape(group: ListTileGroup?): List<Boolean> {
+                    val bounds = NodeBounds()
+                    var out = emptyList<Boolean>()
+                    probe(bounds, { ListTile("Amara", onClick = {}, group = group, selected = true, modifier = it) }) {
+                        val grid = settle()
+                        out = listOf(Corner.TopLeft, Corner.TopRight, Corner.BottomLeft, Corner.BottomRight).map { grid.isTransparent(bounds, it, inset = 2) }
+                    }
+                    return out
                 }
-                probe(bounds, { ListTile("Amara", onClick = {}, modifier = it) }) {
-                    val grid = settle()
-                    alone = listOf(grid.pixelAt(bounds, Corner.TopLeft, inset = 2), grid.pixelAt(bounds, Corner.BottomRight, inset = 2))
+                shape(ListTileGroup(0, 1)) shouldBe shape(null)
+            }
+            scenario("selected or group without onClick is refused with a message") {
+                listOf<@Composable () -> Unit>(
+                    { ListTile("A", selected = true) },
+                    { ListTile("A", group = ListTileGroup(0, 2)) },
+                ).forEach { tile ->
+                    val failure =
+                        runCatching { runComposeUiTest { setContent { StxTheme(isDark = false) { tile() } } } }.exceptionOrNull()
+                    generateSequence(failure) { it.cause }.any { it.message?.contains("need an onClick") == true } shouldBe true
                 }
-                single.size shouldBe alone.size
             }
             scenario("an index outside the count is refused") {
                 runCatching { ListTileGroup(3, 3) }.isFailure shouldBe true
@@ -173,7 +182,7 @@ class ListTileTest :
             scenario("a tile without onClick has no click action and no role") {
                 runComposeUiTest {
                     setContent { StxTheme(isDark = false) { ListTile("Profile") } }
-                    onNodeWithText("Profile").assert(noClick)
+                    onNodeWithText("Profile").assert(noClick).assert(noRole)
                 }
             }
             scenario("selected = true/false is a radio button that is or is not selected") {

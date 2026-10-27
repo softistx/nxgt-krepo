@@ -21,15 +21,17 @@ import com.softistx.material.foundation.theme.StxTheme
 /**
  * One row of a list. Material 3's `ListItem`, which owns the two-line height, the leading and
  * trailing alignment, the content padding, the text colours and, when the tile is interactive, the
- * ripple and a shape that morphs under the press, the hover and the focus.
+ * state layers and a shape that morphs under the press, the hover and the focus.
  *
- * A tile is interactive **iff** [onClick] is not null. Interactive, it is announced as a button.
+ * A tile is interactive **iff** [onClick] is not null. Interactive and with [selected] left null, it
+ * is announced as a button.
  *
- * - [selected] makes it a single choice, as a list-detail's current row is: `null` (the default) is
- *   a plain button; `true`/`false` fills the chosen row with M3's selected tone and announces it as
- *   a radio button that is or is not selected. It needs [onClick].
+ * - [selected] makes it a single choice, as a list-detail's current row is: `true`/`false` fills the
+ *   chosen row with M3's selected tone and announces a radio button that is or is not selected.
+ *   It needs [onClick]; without one it is refused.
  * - [group] makes it one tile of a segmented list (see [ListTileGroup]): M3's `SegmentedListItem`,
- *   with a `surfaceContainerLow` container and squarer seams. It needs [onClick].
+ *   with a `surfaceContainerLow` container and squarer seams. M3 has no static segmented item, so
+ *   it needs [onClick] too; without one it is refused.
  */
 @Composable
 fun ListTile(
@@ -44,79 +46,123 @@ fun ListTile(
     selected: Boolean? = null,
     group: ListTileGroup? = null,
 ) {
+    require(onClick != null || (selected == null && group == null)) {
+        "ListTile: selected and group need an onClick; a tile without one is a plain row"
+    }
     val interactionSource = remember { MutableInteractionSource() }
     val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
+    val slots =
+        TileSlots(
+            headline = { Typography(text = title, variant = TypographyVariant.BodyLarge) },
+            supporting =
+                supporting?.let {
+                    { Typography(text = it, variant = TypographyVariant.BodySmall, emphasis = Emphasis.Medium) }
+                },
+            leading = leading,
+            trailing = trailing,
+        )
     val styled = modifier.styleable(styleState, listTileStyle, style)
-    val headline: @Composable () -> Unit = { Typography(text = title, variant = TypographyVariant.BodyLarge) }
-    val supportingContent: (@Composable () -> Unit)? =
-        supporting?.let {
-            { Typography(text = it, variant = TypographyVariant.BodySmall, emphasis = Emphasis.Medium) }
-        }
-    val segmented = ListItemDefaults.segmentedColors(containerColor = StxTheme.colors.scheme.surfaceContainerLow)
     when {
-        onClick == null ->
-            ListItem(
-                headlineContent = headline,
-                modifier = styled,
-                supportingContent = supportingContent,
-                leadingContent = leading,
-                trailingContent = trailing,
-                colors = ListItemDefaults.colors(),
-            )
+        onClick == null -> PlainRow(slots, styled)
+        group != null -> SegmentedRow(slots, styled, onClick, enabled, selected, group, interactionSource)
+        else -> ChoiceRow(slots, styled, onClick, enabled, selected, interactionSource)
+    }
+}
 
-        group != null && selected != null ->
-            SegmentedListItem(
-                selected = selected,
-                onClick = onClick,
-                shapes = ListItemDefaults.segmentedShapes(group.index, group.count),
-                modifier = styled,
-                enabled = enabled,
-                leadingContent = leading,
-                trailingContent = trailing,
-                supportingContent = supportingContent,
-                colors = segmented,
-                interactionSource = interactionSource,
-                content = headline,
-            )
+private class TileSlots(
+    val headline: @Composable () -> Unit,
+    val supporting: (@Composable () -> Unit)?,
+    val leading: (@Composable () -> Unit)?,
+    val trailing: (@Composable () -> Unit)?,
+)
 
-        group != null ->
-            SegmentedListItem(
-                onClick = onClick,
-                colors = segmented,
-                shapes = ListItemDefaults.segmentedShapes(group.index, group.count),
-                modifier = styled.asButton(),
-                enabled = enabled,
-                leadingContent = leading,
-                trailingContent = trailing,
-                supportingContent = supportingContent,
-                interactionSource = interactionSource,
-                content = headline,
-            )
+@Composable
+private fun PlainRow(
+    slots: TileSlots,
+    modifier: Modifier,
+) = ListItem(
+    headlineContent = slots.headline,
+    modifier = modifier,
+    supportingContent = slots.supporting,
+    leadingContent = slots.leading,
+    trailingContent = slots.trailing,
+    colors = ListItemDefaults.colors(),
+)
 
-        selected != null ->
-            ListItem(
-                selected = selected,
-                onClick = onClick,
-                modifier = styled,
-                enabled = enabled,
-                leadingContent = leading,
-                trailingContent = trailing,
-                supportingContent = supportingContent,
-                interactionSource = interactionSource,
-                content = headline,
-            )
+@Composable
+private fun ChoiceRow(
+    slots: TileSlots,
+    modifier: Modifier,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    selected: Boolean?,
+    interactionSource: MutableInteractionSource,
+) {
+    if (selected == null) {
+        ListItem(
+            onClick = onClick,
+            modifier = modifier.asButton(),
+            enabled = enabled,
+            leadingContent = slots.leading,
+            trailingContent = slots.trailing,
+            supportingContent = slots.supporting,
+            interactionSource = interactionSource,
+            content = slots.headline,
+        )
+    } else {
+        ListItem(
+            selected = selected,
+            onClick = onClick,
+            modifier = modifier,
+            enabled = enabled,
+            leadingContent = slots.leading,
+            trailingContent = slots.trailing,
+            supportingContent = slots.supporting,
+            interactionSource = interactionSource,
+            content = slots.headline,
+        )
+    }
+}
 
-        else ->
-            ListItem(
-                onClick = onClick,
-                modifier = styled.asButton(),
-                enabled = enabled,
-                leadingContent = leading,
-                trailingContent = trailing,
-                supportingContent = supportingContent,
-                interactionSource = interactionSource,
-                content = headline,
-            )
+@Composable
+private fun SegmentedRow(
+    slots: TileSlots,
+    modifier: Modifier,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    selected: Boolean?,
+    group: ListTileGroup,
+    interactionSource: MutableInteractionSource,
+) {
+    val shapes = ListItemDefaults.segmentedShapes(group.index, group.count)
+    val colors = ListItemDefaults.segmentedColors(containerColor = StxTheme.colors.scheme.surfaceContainerLow)
+    if (selected == null) {
+        SegmentedListItem(
+            onClick = onClick,
+            shapes = shapes,
+            modifier = modifier.asButton(),
+            enabled = enabled,
+            leadingContent = slots.leading,
+            trailingContent = slots.trailing,
+            supportingContent = slots.supporting,
+            colors = colors,
+            interactionSource = interactionSource,
+            content = slots.headline,
+        )
+    } else {
+        SegmentedListItem(
+            selected = selected,
+            onClick = onClick,
+            shapes = shapes,
+            modifier = modifier,
+            enabled = enabled,
+            leadingContent = slots.leading,
+            trailingContent = slots.trailing,
+            supportingContent = slots.supporting,
+            colors = colors,
+            interactionSource = interactionSource,
+            content = slots.headline,
+        )
     }
 }
 
