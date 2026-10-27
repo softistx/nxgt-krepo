@@ -1189,6 +1189,11 @@ the same each time, and the mistakes are the same each time too.
   telling you the feature names are missing, not that grouping does not apply. Nest a `feature`
   inside a `feature` when a case genuinely has sub-cases; do not reach for `context`, which belongs
   to the other spec styles. One spec class per file, named after the file.
+
+  The exception is a Spring wiring spec, one that only checks beans are wired and configured: it has
+  no behaviour to group, so it may be a `StringSpec` with flat `"..."` tests, as
+  `libs/core/stx-spring-boot/test/data/mongo/config/MongoAutoConfigurationTest.kt` is. Any spec that
+  tests behaviour stays a `FeatureSpec`.
 - **Every module's packages start with `com.softistx`.** The rest follows the module: `com.softistx.openapi` for `libs/api/stx-openapi-generator`, `com.softistx.openapi.plugin` for `plugins/openapi`, `com.softistx.demo.api` for `examples/demo-api`. Generated code follows the same rule — the `openapi` plugin's `packageName` setting is set per module, and defaults to `generated.api` only when nobody sets it.
 - **Organise by package, not as a flat pile of files — `test/` exactly as much as `src/`.** A module
   with more than one concern gets a directory per concern, and the directory matches the package —
