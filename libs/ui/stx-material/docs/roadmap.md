@@ -42,7 +42,7 @@ ligne de plomberie.
 
 **Boutons**
 - [x] `ButtonVariant` × `ButtonColor` — 5 × 7, résolus dans une seule fonction
-- [x] `buttonStyle` — un `Style` unique pour la famille des boutons : l'alpha désactivé seulement, sans échelle d'appui puisque tous se déforment (`StxStyles.morphingButton` en est un alias déprécié)
+- [x] `buttonStyle` — un `Style` unique pour la famille des boutons : l'alpha désactivé seulement, sans échelle d'appui puisque tous se déforment
 - [x] `Button(text, onClick)` et `ButtonSurface { }` avec `style: Style = Style`
 - [x] `IconButton`, `ButtonGroup`
 - [x] `StxIcons` — dix vecteurs tenus ici, faute de pack d'icônes atteignable

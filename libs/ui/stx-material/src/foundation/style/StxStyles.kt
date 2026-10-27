@@ -35,9 +35,6 @@ import com.softistx.material.foundation.theme.Tone
 object StxStyles {
     val button: Style get() = buttonStyle
 
-    @Deprecated("Every button-family control morphs now: use StxStyles.button.", ReplaceWith("button"))
-    val morphingButton: Style get() = buttonStyle
-
     val card: Style get() = cardStyle
 
     val chip: Style get() = chipStyle

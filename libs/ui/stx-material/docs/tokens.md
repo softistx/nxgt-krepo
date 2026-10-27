@@ -197,8 +197,7 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 `button`, `card`, `chip`, `listTile`, `field`, `dimmed`, `toggle`, `upload`, `tile`, `tableRow`,
 `sortHeader`, `alert(tone)`. `button` is the one style of the whole button family
 (`Button`, `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton`, `Fab`): the disabled alpha only, because all of
-them morph their shape. `morphingButton` is a deprecated alias of it: replace `StxStyles.morphingButton` with
-`StxStyles.button` and `morphingButtonStyle` with `buttonStyle`; the 0.97 press scale is gone from the family.
+them morph their shape. The 0.97 press scale is gone from the family.
 `listTile` is empty for the same reason: M3's `ListItem` morphs its shape, so the tile takes no scale.
 `field` is empty: the M3 text fields dim themselves, so a fade would dim a disabled field twice.
 `dimmed` is the 0.38 disabled fade for what M3 does not dim (`OtpField`, the rest text of

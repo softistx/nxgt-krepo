@@ -101,10 +101,6 @@ val buttonStyle: Style =
         disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
     }
 
-/** The name this style had while `Button` was the only control that morphed. */
-@Deprecated("Every button-family control morphs now: use buttonStyle.", ReplaceWith("buttonStyle"))
-val morphingButtonStyle: Style get() = buttonStyle
-
 /** Material 3's own disabled opacity, so a disabled wrapper matches a disabled M3 component. */
 const val DISABLED_ALPHA = 0.38f
 

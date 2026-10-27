@@ -183,19 +183,7 @@ Material 3's own `ButtonColors` — so M3 paints the container, the ripple and t
 and this library only decides *which* colours. Adding a colour touches one enum entry and one `when`
 branch; see `buttons/variant-and-colour-matrix` for the whole grid at once. `buttonBorder` answers
 the same way for the outline. A button's press is M3's shape morph, so `buttonStyle`, the one style of
-the whole family, keeps only the disabled alpha. (`morphingButtonStyle` was its name while only `Button` morphed;
-it is a deprecated alias.)
-
-Migrating from the old names, and from the press scale the family no longer has:
-
-```kotlin
-// before
-Modifier.styleable(state, StxStyles.morphingButton, style)
-val s = morphingButtonStyle
-// after: same style, and every control of the family morphs, none scales
-Modifier.styleable(state, StxStyles.button, style)
-val s = buttonStyle
-```
+the whole family, keeps only the disabled alpha.
 
 The button family dropped the 0.97 press scale: the shape morph is the press feedback now, so a
 `pressed { scale(0.97f) }` you relied on is gone unless you pass it back through `style`.

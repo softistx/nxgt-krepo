@@ -95,7 +95,7 @@ fun buttonColors(variant: ButtonVariant, color: ButtonColor): ButtonColors = …
 
 // The whole button family (Button, IconButton, IconToggle, ToggleButton, SplitButton, Fab)
 // morphs its shape under the finger, so its one Style keeps only the disabled alpha.
-// StxStyles.button names it; StxStyles.morphingButton is a deprecated alias.
+// StxStyles.button names it.
 val buttonStyle: Style = Style {
     disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
 }
