@@ -1,22 +1,27 @@
 package com.softistx.material.components.navigation
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.softistx.material.components.button.ConnectedToggleGroup
+import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.StxTheme
 
 /**
- * A single choice among a short, closed set. Material 3's `SingleChoiceSegmentedButtonRow`.
+ * A single choice among a short, closed set, as Material 3's connected button group: toggle
+ * buttons that touch, round at the two ends and morph under the press. The chosen one is filled
+ * and shows no checkmark.
  *
  * It is not a [com.softistx.material.components.button.ButtonRow] (a layout) and not [Tabs] (a destination).
  * Three to five options that partition one view — "Day / Week / Month" — is the size it is for.
+ * Each segment announces `Role.RadioButton` and `selected`; the row is a selectable group.
+ * [icons] puts a glyph before the label of the segment at the same index.
  */
 @Composable
 fun SegmentedControl(
@@ -26,20 +31,22 @@ fun SegmentedControl(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     style: Style = Style,
+    icons: List<ImageVector>? = null,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
-    SingleChoiceSegmentedButtonRow(
-        modifier = modifier.styleable(styleState, navigationItemStyle, style),
-    ) {
-        options.forEachIndexed { index, option ->
-            SegmentedButton(
-                selected = index == selected,
-                onClick = { onSelect(index) },
-                shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                enabled = enabled,
-                label = { Typography(text = option) },
-            )
+    ConnectedToggleGroup(
+        count = options.size,
+        selected = selected,
+        onSelect = onSelect,
+        modifier = modifier,
+        enabled = enabled,
+        style = style,
+    ) { index ->
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            icons?.getOrNull(index)?.let { Icon(icon = it, description = null) }
+            Typography(text = options[index], variant = TypographyVariant.LabelLarge)
         }
     }
 }

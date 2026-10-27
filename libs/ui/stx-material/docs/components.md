@@ -130,7 +130,7 @@ Package `com.softistx.material.components.button`.
 | `MoreMenu` | `items: List<MenuItem>`, `description = "More"` | `buttons/more-menu` |
 | `OverflowBar` | `actions: List<OverflowAction>`, `maxVisible` | `buttons/overflow-bar` |
 | `IconBadge` | `icon`, `description`, `onClick`, `count = 0`, `tone = Error` | `buttons/icon-badge` |
-| `ViewToggle` | `value: ViewMode`, `onChange` | `buttons/view-toggle` |
+| `ViewToggle` | `value: ViewMode`, `onChange`, `enabled = true`, `style = Style` | `buttons/view-toggle` |
 
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonSize` — `ExtraSmall` 32 dp, `Small` 40 dp (the default), `Medium` 56, `Large` 96, `ExtraLarge` 136: M3's own
@@ -219,7 +219,8 @@ small `expect` builds the plain-text entry.
 disarms. A sentence of warning still belongs on `ConfirmDialog`. `BusyButton` swaps the label
 for a spinner. `MoreMenu` is the trailing more on a row. `OverflowBar` is M3's `AppBarRow`:
 visible icons stay in the row, the rest land in the overflow menu. `IconBadge` is an `IconButton`
-in a `BadgedBox`; count zero shows no badge. `ViewToggle` is list-or-grid as two `IconToggle`s.
+in a `BadgedBox`; count zero shows no badge. `ViewToggle` is list-or-grid as a connected button group of two icon toggles (the same body as
+`SegmentedControl`: round ends, squarer seam, filled when chosen, no checkmark, `Role.RadioButton`).
 
 **Collapsed, it is an `IconButton`** — round, 40 × 40, M3's own metrics — not a pill with the label
 taken out. The two forms are two components and `AnimatedContent` morphs between them.
@@ -461,7 +462,7 @@ options, so the field holds the answer and reordering the options cannot silentl
 Package `com.softistx.material.components.navigation`.
 
 The chrome around a screen. Bar, rail and drawer are one list of destinations; the suite picks
-which. Tabs, search and a segmented control wrap Material 3. Breadcrumb and stepper are built here
+which. Tabs and search wrap Material 3; a segmented control is its connected button group of toggle buttons. Breadcrumb and stepper are built here
 because M3 has neither.
 
 | Component | Parameters | Story |
@@ -469,8 +470,8 @@ because M3 has neither.
 | `AppBar` | `title`, `size = Small`, `navigationIcon?`, `onNavigation?`, `actions` | `navigation/app-bar` |
 | `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `results` | `navigation/search` |
 | `NavigationSuite` | `destinations`, `selected`, `onSelect`, `primaryAction?`, `content` | `navigation/navigation-suite` |
-| `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false` | `navigation/tabs` |
-| `SegmentedControl` | `options`, `selected`, `onSelect` | `navigation/segmented-control` |
+| `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false`, `enabled`, `style` | `navigation/tabs` |
+| `SegmentedControl` | `options`, `selected`, `onSelect`, `enabled = true`, `style = Style`, `icons: List<ImageVector>? = null` | `navigation/segmented-control` |
 | `FloatingToolbar` | `expanded`, `leading?`, `trailing?`, `content` | `navigation/floating-toolbar` |
 | `Breadcrumb` | `items: List<BreadcrumbItem>` | `navigation/breadcrumb` |
 | `Stepper` | `steps`, `current`, `onStep?`, `collapseBelow = 520.dp` | `navigation/stepper` |
@@ -478,6 +479,7 @@ because M3 has neither.
 | `BottomBar` | `actions`, `fab?` | `navigation/bottom-bar` |
 
 `AppBarSize` — `Small`, `Centered`, `Medium`, `Large`, mapped onto M3's four top app bars.
+Each tab has its own interaction source, so its press style runs.
 `StepFooter` is Back (optional) and Continue under a stepper; `busy` turns Continue into a
 `BusyButton`. `BottomBar` is M3's `BottomAppBar` — verbs for this screen, not destinations
 (`NavigationSuite` is the destinations).

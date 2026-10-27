@@ -167,6 +167,7 @@ val NavigationStories =
                 selected = selected,
                 onSelect = { selected = it },
                 enabled = knobs.flag("Enabled", true),
+                icons = if (knobs.flag("Icons", false)) listOf(StxIcons.ViewList, StxIcons.ViewGrid, StxIcons.Calendar) else null,
             )
         }
 
