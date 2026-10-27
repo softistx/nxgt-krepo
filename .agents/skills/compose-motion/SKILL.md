@@ -82,9 +82,9 @@ Shared elements (`SharedTransitionLayout`) are in `references/animation-shared-e
 
 ## Reduced motion
 
-Reduced motion takes both: `StxTheme(motionScheme = SnapMotionScheme, motion = StxMotion(enabled = false))`, where `SnapMotionScheme` implements `MotionScheme` with `snap()` in all six specs. `enabled = false` alone leaves M3's morphs running. `SnapMotionScheme` is not in the library yet (proposed in #297); until it ships, copy the six-line object into the app. Every Style, `Transitions` and `animateStagger` then end finished and readable.
+With no `motionScheme` and no `motion`, `StxTheme` follows the OS: `systemReducesMotion()` (expect/actual) feeds `StxMotion.system(reduceMotion, scheme)`, and a reduce-motion preference also swaps in an internal `SnapMotionScheme` (all six specs `snap()`), because `enabled = false` alone leaves M3's morphs running. **Pass either `motionScheme` or `motion` and the OS is not read at all**: `motionScheme` alone keeps motion on, `motion` alone keeps the expressive scheme. `StxThemeProvider` forwards the same rule. The read is taken when the theme is composed, not observed.
 
-Where the OS preference comes from: Android scales all animation by `ANIMATOR_DURATION_SCALE` already; iOS (`UIAccessibility.isReduceMotionEnabled`) and desktop have no Compose hook, so the app reads it natively and passes the two settings. A component must look complete in its end state, with nothing that only the animation explained.
+Where it is read: Android the animator duration scale; iOS `UIAccessibilityIsReduceMotionEnabled`; desktop follows only `-Dstx.material.reduceMotion=true|false` (absent: not reduced, no process spawned). An app opts in to the OS with `suspend fun readDesktopReducedMotion(): Boolean?` (`defaults` on macOS, `gsettings` on GNOME, `null` on Windows and anything unknown; on `Dispatchers.IO`) and passes it in: `LaunchedEffect(Unit) { reduced = readDesktopReducedMotion() == true }`, then `StxTheme(motion = StxMotion.system(reduced))`. The test suite pins the property to `false` in `test@jvm/io/kotest/provided/ProjectConfig.kt`, so specs do not depend on the host. A component must look complete in its end state, with nothing that only the animation explained.
 
 ## What not to animate
 

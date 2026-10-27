@@ -44,7 +44,7 @@ Row(
 ## Targets, contrast, type
 
 - **48 dp.** M3 controls already apply `minimumInteractiveComponentSize()`. A custom clickable applies it before any size modifier; a 24 dp icon stays 24 dp to the eye and 48 dp to the finger. `LocalMinimumInteractiveComponentSize` is the 48 dp default.
-- **Contrast (WCAG AA).** 4.5:1 for normal text, 3:1 for large text and for the edges of controls. Pair every container with its own `on*` role; the default seed passes AA on all eight pairs checked (`primary`, `surface`, `secondaryContainer`, `surfaceContainer`, `success`, `warning`, `info`, `error`) in light and dark. Measured on the default theme: `Emphasis.Medium` (0.72) is 6.1–7.9:1 and safe; `Emphasis.Subtle` (0.5) is 3.2–4.4:1 and fails AA for body text, so use it for non-essential text only; `outline` is 4.3–5.8:1 and fine for a control edge; `outlineVariant` is 1.6–2.0:1 and decorative only.
+- **Contrast (WCAG AA).** 4.5:1 for normal text, 3:1 for large text and for the edges of controls. Pair every container with its own `on*` role; the default seed passes AA on all eight pairs checked (`primary`, `surface`, `secondaryContainer`, `surfaceContainer`, `success`, `warning`, `info`, `error`) in light and dark. Measured on the default theme (`EmphasisContrastTest`): `Emphasis.Subtle` (0.72) is 4.8-5.2:1 in light and 7.4-8.2:1 in dark on `surface`, `surfaceContainer` and `surfaceContainerHigh`, so it passes AA for body text; `Emphasis.Medium` (0.80) is 6.0-6.6:1 in light and 8.8-9.9:1 in dark; `outline` is 4.3–5.8:1 and fine for a control edge; `outlineVariant` is 1.6–2.0:1 and decorative only.
 - **High contrast.** material-kolor takes `contrastLevel` (`Contrast.Medium` 0.5, `High` 1.0) in `dynamicColorScheme`. Neither M3 nor Compose reads the OS setting in common code; iOS exposes it as `UIAccessibilityDarkerSystemColorsEnabled`, so an app passes the choice in (`references/compose-ios-accessibility.md`).
 - **Font scale.** Text is `sp`. No fixed `height` on a container that holds text; use `heightIn(min = …)`. A row that fits at 1× wraps or scrolls at 2×.
 
@@ -92,4 +92,4 @@ Re-check with `grep -rn 'heading()\|customActions' libs/ui/stx-material/src` bef
 - No component sets `heading()` (`SectionHeader`, `Dialog` titles, `FormSection`).
 - `SwipeActions` is gesture-only; it has no `customActions`.
 - `Card(onClick = …)` sets no `Role.Button`.
-- No component reads the OS reduced-motion or high-contrast setting.
+- Fixed in #297: `StxTheme` reads the OS reduce-motion setting when given neither `motionScheme` nor `motion` (`systemReducesMotion()`); `Emphasis.Subtle` holds 4.5:1. Still open: no read of the OS increase-contrast setting (follow-up in the roadmap).

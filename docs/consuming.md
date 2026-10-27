@@ -109,6 +109,19 @@ yet offer control over it.
   klibs are real. What is not covered is linking: a klib is compiled, never linked into a framework
   by anything here, and there are no iOS tests. Treat them as compiled but unexercised.
 
+## Accessibility settings on desktop
+
+`StxTheme` follows the OS "Reduce motion" setting on Android and iOS. The JVM has no hook for it, so desktop reads
+only a system property; nothing is spawned and an absent property means "not reduced".
+
+| Property | Values | Effect |
+| --- | --- | --- |
+| `-Dstx.material.reduceMotion` | `true`, `false` | `true` snaps every animation of `stx-material`; anything else is ignored |
+
+To follow the OS instead, call `readDesktopReducedMotion()` from a `LaunchedEffect` and pass the result to
+`StxTheme(motion = StxMotion.system(reduced))`. It returns `null` when the OS cannot say (Windows, a desktop other
+than macOS or GNOME), so `== true` is the safe reading.
+
 ## Pre-1.0
 
 These are `0.x`. A minor bump may break you — the group itself moved from `com.softistx` to

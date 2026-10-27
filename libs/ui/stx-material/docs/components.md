@@ -47,6 +47,24 @@ The header's **Motion** control switches the whole tree between `MotionScheme.ex
 `MotionScheme.standard()` and off. Off stops this library's motion; Material 3's own components
 keep their built-in animations, because a `MotionScheme` has no null.
 
+With no `motionScheme` and no `motion`, `StxTheme` follows the OS: "Reduce motion" installs a scheme whose
+every spec is a snap and an `StxMotion` with `enabled = false`. **Pass either one and the OS is not
+read**: `motionScheme` alone keeps motion on with your scheme, `motion` alone keeps the expressive scheme.
+`StxThemeProvider` forwards the same rule (its `motionScheme` is `null` by default). Android reads the
+animator scale and iOS `UIAccessibilityIsReduceMotionEnabled`. **Desktop follows only
+`-Dstx.material.reduceMotion=true|false`** (absent means not reduced; no process is spawned). An app
+that wants the OS's answer opts in with `readDesktopReducedMotion()` (`suspend`, on `Dispatchers.IO`;
+`null` is unknown; `defaults` on macOS, `gsettings` on GNOME, Windows is not readable) and passes it in:
+
+```kotlin
+var reduced by remember { mutableStateOf(false) }
+LaunchedEffect(Unit) { reduced = readDesktopReducedMotion() == true }
+StxTheme(motion = StxMotion.system(reduced)) { App() }
+```
+
+`StxMotion.system(reduced)` snaps this library's motion; add `motionScheme` to snap M3's own morphs too.
+The read is taken when the theme is composed, not observed. See `docs/troubleshooting.md`.
+
 ## Text
 
 Package `com.softistx.material.foundation.text`.
@@ -58,8 +76,9 @@ Package `com.softistx.material.foundation.text`.
 `TypographyVariant` is the 15 Material 3 roles plus five this library adds: `Overline`, `Caption`,
 `Metric` (a figure meant to be read at a glance), `Code` (monospaced), `Link` (underlined).
 
-`Emphasis` — `Full` (1.0), `Medium` (0.72), `Subtle` (0.5) — is an alpha on the content colour, so
-secondary text stays in the palette instead of picking a grey.
+`Emphasis` — `Full` (1.0), `Medium` (0.80), `Subtle` (0.72) — is an alpha on the content colour, so
+secondary text stays in the palette instead of picking a grey. `Subtle` holds 4.5:1 (AA for body
+text) on `surface`, `surfaceContainer` and `surfaceContainerHigh`, light and dark; `docs/tokens.md` has the ratios.
 
 `emphasized` is the other axis and does not touch colour: it picks the Material 3 `*Emphasized`
 style of the same role (15 of them), the heavier weight for the one line a screen wants read first.

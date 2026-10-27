@@ -66,6 +66,6 @@ enum class Emphasis(
     val alpha: Float,
 ) {
     Full(1f),
-    Medium(0.72f),
-    Subtle(0.5f),
+    Medium(0.80f),
+    Subtle(0.72f),
 }

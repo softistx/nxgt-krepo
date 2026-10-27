@@ -30,6 +30,10 @@ enum class MotionSpeed { Fast, Default, Slow }
  * installs the same scheme it hands `MaterialExpressiveTheme`, so a plain M3 component and one of
  * ours animate identically.
  *
+ * **A theme that is given neither a `StxMotion` nor a `MotionScheme` builds one from the OS** —
+ * [Companion.system] — so "Reduce motion" turns `enabled` off by itself on every platform. Passing
+ * either one is the opt-out: the OS is not read.
+ *
  * **`enabled = false` collapses every spec to [snap], leaving the composables untouched** — a
  * reduced-motion preference, or a screenshot test, is one flag at the theme rather than a branch
  * in each component.
@@ -77,4 +81,12 @@ data class StxMotion(
                 MotionSpeed.Slow -> scheme.slowEffectsSpec()
             }
         }
+
+    companion object {
+        /** A motion that follows the OS: [enabled] is off when [reduceMotion] is on, which `systemReducesMotion()` answers. */
+        fun system(
+            reduceMotion: Boolean,
+            scheme: MotionScheme = ExpressiveScheme,
+        ): StxMotion = StxMotion(scheme, enabled = !reduceMotion)
+    }
 }
