@@ -141,8 +141,10 @@ cap the buffer cannot fill, because a consumer holds no more unacknowledged mess
 prefetch. `DeliveryThreadsTest` asked the client about it: deliveries arrive on a `pool-N-thread-M`
 thread, one parked callback holds one thread and delays only its own channel, and as many parked
 callbacks as the pool has threads (`2 x cores` by default) stall a sibling consumer until one
-returns. A consumer with `AckStrategy.OnDelivery` is outside this: the broker does not apply
-prefetch to it, so keep its handler fast.
+returns. A consumer with `AckStrategy.OnDelivery` has no prefetch, so the broker bounds nothing for it: it
+never blocks the delivery thread, and a collector that falls behind until the buffer is full fails
+the flow with `AmqpBufferFullException` (naming the queue and the buffer size). Collect faster, or
+acknowledge manually or after the handler so that prefetch applies.
 
 **A failure is dead-lettered, not retried in place.** A requeued failure is redelivered immediately,
 fails again, and is requeued again: an infinite loop that reads as a busy consumer. A rejected

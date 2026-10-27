@@ -63,3 +63,20 @@ class AmqpClosedException(
     val exchange: String,
     val routingKey: String,
 ) : AmqpException("the publisher closed before the broker confirmed the message to '$exchange' with routing key '$routingKey'")
+
+/**
+ * An auto-acknowledging consumer ([com.softistx.amqp.consumer.AckStrategy.OnDelivery]) whose collector
+ * fell behind until its delivery buffer was full.
+ *
+ * The broker applies no prefetch to a consumer that acknowledges on delivery, so nothing bounds what
+ * it pushes. Blocking the client's delivery thread would starve the connection's other consumers and
+ * dropping a message would lose it unrecorded, so the flow fails instead. Collect faster, or use a
+ * manual or after-handler acknowledgement so that prefetch applies.
+ */
+class AmqpBufferFullException(
+    val queue: String,
+    val capacity: Int,
+) : AmqpException(
+        "the auto-ack consumer of '$queue' fell behind: its delivery buffer of $capacity messages is full. " +
+            "Collect faster, or acknowledge manually or after the handler so that prefetch bounds the deliveries",
+    )

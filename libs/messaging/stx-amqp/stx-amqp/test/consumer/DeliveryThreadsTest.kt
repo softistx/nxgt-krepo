@@ -3,12 +3,15 @@ package com.softistx.amqp.consumer
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DeliverCallback
 import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpBufferFullException
 import com.softistx.amqp.AmqpConfig
 import com.softistx.amqp.AmqpTestBroker
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.string.shouldStartWith
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
@@ -196,6 +199,45 @@ class DeliveryThreadsTest :
                             consumer.close()
                             sibling.close()
                             runCatching { setup.queueDelete(stalled) }
+                            runCatching { setup.close() }
+                        }
+                    }
+                } finally {
+                    executor.shutdownNow()
+                }
+            }
+
+            scenario("an auto-ack consumer with a stalled collector fails when full and parks no pool thread") {
+                val executor =
+                    Executors.newFixedThreadPool(2) { Thread(it, "spec-delivery").apply { isDaemon = true } }
+                val hold = CompletableDeferred<Unit>()
+                try {
+                    connected(executor) { amqp ->
+                        val queue = AmqpTestBroker.name("autoack")
+                        val setup = amqp.openChannel()
+                        setup.queueDeclare(queue, true, false, false, null)
+                        repeat(400) { setup.basicPublish("", queue, null, "{}".toByteArray()) }
+                        val delivered = CompletableDeferred<String>()
+                        val sibling = sibling(amqp, delivered)
+                        val consumer = amqp.consumer<Note>(queue, ConsumerOptions(ack = AckStrategy.OnDelivery))
+                        try {
+                            coroutineScope {
+                                val outcome =
+                                    async(kotlinx.coroutines.Dispatchers.IO) {
+                                        runCatching { consumer.messages().collect { hold.await() } }
+                                    }
+                                kotlinx.coroutines.delay(1500.milliseconds)
+                                // The buffer is full by now; a parked pool thread would starve this sibling.
+                                withTimeout(5.seconds) { delivered.await() } shouldBe "spec-delivery"
+                                hold.complete(Unit)
+                                val failure = withTimeout(10.seconds) { outcome.await() }.exceptionOrNull()
+                                println("Threads: auto-ack stalled collector failed with [${failure?.message}]")
+                                failure.shouldBeInstanceOf<AmqpBufferFullException>().capacity shouldBe 128
+                            }
+                        } finally {
+                            consumer.close()
+                            sibling.close()
+                            runCatching { setup.queueDelete(queue) }
                             runCatching { setup.close() }
                         }
                     }

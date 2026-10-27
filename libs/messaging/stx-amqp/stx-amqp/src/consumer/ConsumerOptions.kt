@@ -20,6 +20,9 @@ sealed interface AckStrategy {
      *
      * Faster and unrecoverable: a crash between delivery and handling loses the message, and there
      * is no record of it anywhere. For metrics and heartbeats, not for work.
+     *
+     * The broker applies no prefetch to it, so nothing bounds the deliveries: a collector that falls
+     * behind until the delivery buffer is full fails the flow with `AmqpBufferFullException`.
      */
     data object OnDelivery : AckStrategy
 

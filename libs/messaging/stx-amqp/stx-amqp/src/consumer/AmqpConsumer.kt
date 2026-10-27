@@ -6,6 +6,7 @@ import com.rabbitmq.client.ConsumerShutdownSignalCallback
 import com.rabbitmq.client.DeliverCallback
 import com.rabbitmq.client.Recoverable
 import com.softistx.amqp.Amqp
+import com.softistx.amqp.AmqpBufferFullException
 import com.softistx.amqp.AmqpValueException
 import com.softistx.amqp.codec.AmqpCodec
 import com.softistx.amqp.codec.jsonCodec
@@ -48,7 +49,9 @@ import kotlinx.serialization.json.Json
  *
  * **Delivery is at least once by default.** The acknowledgement happens after the handler returned,
  * so a handler that succeeds and then loses the connection sees its message again. The alternative
- * — [AckStrategy.OnDelivery] — trades duplicates for messages that are silently never handled.
+ * — [AckStrategy.OnDelivery] — trades duplicates for messages that are silently never handled, and
+ * has no prefetch: a collector that falls behind until the buffer is full fails the flow with
+ * [AmqpBufferFullException] rather than blocking the client's delivery thread.
  *
  * **A failure is dead-lettered, not retried in place.** A message that is requeued after failing is
  * redelivered immediately, fails again, and is requeued again — an infinite loop that reads as a
@@ -90,15 +93,20 @@ class AmqpConsumer<T> internal constructor(
                             rejectUndecodable(channel = broker, options, delivery, failure) { close(it) }
                             return@DeliverCallback
                         }
-                    /* The one deliberate block on the client's delivery thread. Prefetch is capped at
-                       half the buffer's size ([ConsumerOptions.DELIVERY_BUFFER]) and a consumer holds
-                       no more unacknowledged messages than its prefetch, so the buffer is never full
-                       here and this returns at once: bounded blocking as backpressure, never a wait for
-                       the collector. Uncapped, enough full buffers park every thread of the
-                       connection's shared pool and starve its other consumers
-                       (`DeliveryThreadsTest`). [AckStrategy.OnDelivery] is the exception: the broker
-                       does not apply prefetch to a consumer that acknowledges on delivery. */
-                    trySendBlocking(message).getOrThrow()
+                    /* Prefetch is capped at half the buffer's size ([ConsumerOptions.DELIVERY_BUFFER])
+                       and a consumer holds no more unacknowledged messages than its prefetch, so
+                       the buffer is never full here and the blocking send returns at once: the one
+                       deliberate block on the client's delivery thread, bounded backpressure that
+                       never waits for the collector. Uncapped, enough full buffers park every
+                       thread of the connection's shared pool (`DeliveryThreadsTest`). Auto-ack has
+                       no prefetch, so it never blocks: a full buffer fails the flow instead. */
+                    if (autoAck) {
+                        if (trySend(message).isFailure && !isClosedForSend) {
+                            close(AmqpBufferFullException(queue, ConsumerOptions.DELIVERY_BUFFER))
+                        }
+                    } else {
+                        trySendBlocking(message).getOrThrow()
+                    }
                 }
             val cancelled = CancelCallback { close() }
 
