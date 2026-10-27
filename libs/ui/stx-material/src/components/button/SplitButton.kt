@@ -8,11 +8,13 @@ import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.launch
 import com.softistx.material.components.surface.Menu
 import com.softistx.material.components.surface.MenuItem
 import com.softistx.material.foundation.icon.Icon
@@ -28,6 +30,10 @@ import com.softistx.material.foundation.text.Typography
  * Both halves morph through M3's own split-button shapes: each squares its inner corners while
  * pressed. The trailing half is a toggle that is checked while the menu is open, so it turns
  * round and its chevron points up. No press scale.
+ *
+ * [style] sees the whole control as one: its `pressed` and `hovered` blocks fire while either half
+ * is pressed or hovered, and `disabled` while [enabled] is false. Each half keeps its own
+ * interaction source for M3's shape morph, and both are forwarded into the one the style reads.
  */
 @Composable
 fun SplitButton(
@@ -39,12 +45,22 @@ fun SplitButton(
     style: Style = Style,
 ) {
     var open by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
+    val leadingSource = remember { MutableInteractionSource() }
+    val trailingSource = remember { MutableInteractionSource() }
+    val styleSource = remember { MutableInteractionSource() }
+    LaunchedEffect(leadingSource, trailingSource, styleSource) {
+        launch { leadingSource.interactions.collect { styleSource.emit(it) } }
+        launch { trailingSource.interactions.collect { styleSource.emit(it) } }
+    }
+    val styleState = rememberUpdatedStyleState(styleSource) { it.isEnabled = enabled }
     Box(modifier.styleable(styleState, buttonStyle, style)) {
         SplitButtonLayout(
             leadingButton = {
-                SplitButtonDefaults.LeadingButton(onClick = onClick, enabled = enabled) {
+                SplitButtonDefaults.LeadingButton(
+                    onClick = onClick,
+                    enabled = enabled,
+                    interactionSource = leadingSource,
+                ) {
                     Typography(text = text)
                 }
             },
@@ -53,6 +69,7 @@ fun SplitButton(
                     checked = open,
                     onCheckedChange = { open = it },
                     enabled = enabled && overflow.isNotEmpty(),
+                    interactionSource = trailingSource,
                 ) {
                     Icon(icon = if (open) StxIcons.ChevronUp else StxIcons.ChevronDown, description = "More actions")
                 }

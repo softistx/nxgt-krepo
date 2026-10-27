@@ -122,8 +122,8 @@ Package `com.softistx.material.components.button`.
 | `Fab` | `icon`, `description`, `onClick`, `text?`, `expanded = true`, `color = Primary`, `style` | `buttons/fab` |
 | `FabMenu` | `expanded`, `onExpandedChange`, `actions: List<FabAction>` | `buttons/fab-menu` |
 | `SplitButton` | `text`, `onClick`, `overflow: List<MenuItem>`, `enabled`, `style` | `buttons/split-button` |
-| `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled`, `style` | `buttons/toggle-button` |
-| `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color`, `enabled`, `style` | `buttons/icon-toggle` |
+| `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled`, `style` (no `size`: M3's default height) | `buttons/toggle-button` |
+| `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color`, `size = IconSize.Medium` (the glyph, not the container), `enabled`, `style` | `buttons/icon-toggle` |
 | `CopyButton` | `text`, `description = "Copy"` | `buttons/copy-button` |
 | `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000`, `size = Small` | `buttons/confirm-button` |
 | `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled`, `size = Small` | `buttons/busy-button` |
@@ -165,6 +165,37 @@ branch; see `buttons/variant-and-colour-matrix` for the whole grid at once. `but
 the same way for the outline. A button's press is M3's shape morph, so `buttonStyle`, the one style of
 the whole family, keeps only the disabled alpha. (`morphingButtonStyle` was its name while only `Button` morphed;
 it is a deprecated alias.)
+
+Migrating from the old names, and from the press scale the family no longer has:
+
+```kotlin
+// before
+Modifier.styleable(state, StxStyles.morphingButton, style)
+val s = morphingButtonStyle
+// after: same style, and every control of the family morphs, none scales
+Modifier.styleable(state, StxStyles.button, style)
+val s = buttonStyle
+```
+
+The button family dropped the 0.97 press scale: the shape morph is the press feedback now, so a
+`pressed { scale(0.97f) }` you relied on is gone unless you pass it back through `style`.
+
+Every control above takes `style: Style = Style`, merged over `buttonStyle`. Pass a block, not
+colour or shape parameters:
+
+```kotlin
+Fab(
+    icon = StxIcons.Add,
+    description = "Add",
+    onClick = onAdd,
+    style = Style {
+        disabled { alpha(0.2f) }             // fainter than M3's 0.38
+        pressed { animate(motion.effects()) { alpha(0.8f) } }
+    },
+)
+```
+
+On `SplitButton` the `pressed` and `hovered` blocks fire while either half is pressed or hovered.
 
 `ButtonRow` is a layout — it lines buttons up and spaces them. It is deliberately not named
 `ButtonGroup`: Material 3 has a `ButtonGroup`, and that one is a connected segmented control taking
