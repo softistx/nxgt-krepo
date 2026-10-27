@@ -54,7 +54,7 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
   `hashCode`, so two schemes built from identical inputs compare unequal and any data class
   holding one inherits that. A spec asserting a palette is deterministic must compare it role by
   role; `shouldBe` on the whole thing fails with a several-kilobyte diff of identical values.
-- **182 public entry points** across the root package and its subpackages (`carousel`,
+- **222 public entry points** across the root package and its subpackages (`carousel`,
   `pulltorefresh`). Presence in `components.md` is what settles whether a component exists in this
   version at all — check there before writing one, and before believing a web search that says M3
   has it. `HorizontalUncontainedCarousel` is **not** in 1.12.0-alpha03 (only

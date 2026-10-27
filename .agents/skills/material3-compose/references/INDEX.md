@@ -8,4 +8,4 @@
 | `typography.md` | 30 members |
 | `shapes.md` | 8 members |
 | `defaults.md` | 61 objects |
-| `components.md` | 182 functions in 3 packages |
+| `components.md` | 222 functions in 3 packages |

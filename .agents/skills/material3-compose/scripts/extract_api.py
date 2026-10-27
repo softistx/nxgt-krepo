@@ -34,7 +34,7 @@ PACKAGE = "androidx.compose.material3"
 # Kotlin mangles the name of any function returning an inline value class, so
 # `getPrimary` arrives as `getPrimary-0d7_KjU`. The suffix is an implementation
 # detail of the ABI, never something a caller writes.
-MANGLED = re.compile(r"-[A-Za-z0-9_]+$")
+MANGLED = re.compile(r"-.*$")
 
 
 def version_key(version: str) -> tuple:
@@ -85,7 +85,7 @@ def properties(jar: Path, cls: str) -> list[str]:
     """The public read-only properties of a class, in declaration order."""
     names = []
     for line in javap(jar, f"{PACKAGE}.{cls}").splitlines():
-        m = re.search(r"\bget([A-Z][A-Za-z0-9]*)(?:-[A-Za-z0-9_]+)?\(\)", line)
+        m = re.search(r"\bget([A-Z][A-Za-z0-9]*)(?:-[\w-]+)?\(\)", line)
         if m and "public" in line:
             name = m.group(1)[0].lower() + m.group(1)[1:]
             if name not in names:
@@ -110,11 +110,12 @@ def top_level_names(jar: Path, suffix: str, package: str = PACKAGE) -> list[str]
         )
 
 
+SIGNATURE = re.compile(r"\bpublic static final [^(]*?\s([\w$-]+)\(")
+
+
 def is_api_name(name: str) -> bool:
-    """Real entry points read as words; obfuscated internals (`WNYm7Xg`) do not."""
-    if name.startswith("remember"):
-        return True
-    return name[0].isupper() and re.search(r"[a-z]{3,}", name) is not None
+    """A capitalised composable or a remember* factory; never a synthetic `access$` accessor."""
+    return "$" not in name and (name[0].isupper() or name.startswith("remember"))
 
 
 def composables(jar: Path, package: str = PACKAGE) -> list[str]:
@@ -124,9 +125,11 @@ def composables(jar: Path, package: str = PACKAGE) -> list[str]:
     # javap over ~200 facades at once is one JVM start rather than two hundred.
     for chunk in (facades[i:i + 60] for i in range(0, len(facades), 60)):
         for line in javap(jar, *chunk).splitlines():
-            m = re.search(r"\bpublic static final .*\b([A-Z][A-Za-z0-9]*)(?:-[A-Za-z0-9_]+)?\(", line)
-            if m and is_api_name(m.group(1)):
-                found.add(m.group(1))
+            m = SIGNATURE.search(line)
+            if m:
+                name = m.group(1).split("-", 1)[0]
+                if name and is_api_name(name):
+                    found.add(name)
     return sorted(found)
 
 
