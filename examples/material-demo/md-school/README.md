@@ -16,6 +16,23 @@ It depends on `stx-material` as a **published artifact**, like every example her
 else of the owner's: any screen that needed something the library lacks would be a gap to report, not
 a component to write here.
 
+## The evaluation bench
+
+One command renders every screen of the School app at {phone 412x915, tablet 1024x1366, desktop
+1440x900} x {light, dark}, in the Loaded state, plus the student detail and a conversation thread:
+8 views x 6 = 48 PNGs, a `manifest.json` (file, screen, viewport, theme, size) and one
+`contact-<viewport>.png` per viewport (light and dark side by side, each labelled). Files are named
+`<screen>-<viewport>-<light|dark>.png`.
+
+```bash
+SCHOOL_BENCH_DIR=/abs/dir ./kotlin test -m md-school -p jvm
+# only some shots (comma-separated parts of a file name):
+SCHOOL_BENCH_DIR=/abs/dir SCHOOL_BENCH_FILTER=dashboard,tablet-dark ./kotlin test -m md-school -p jvm
+```
+
+Without `SCHOOL_BENCH_DIR` the bench spec writes nothing. Score the result with
+[`docs/design-grid.md`](docs/design-grid.md).
+
 ---
 
 Apache-2.0 · [Contributing](../../../CONTRIBUTING.md) · [All the libraries](../../../README.md)
