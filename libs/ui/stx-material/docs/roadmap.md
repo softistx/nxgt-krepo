@@ -24,7 +24,8 @@ ligne de plomberie.
 
 **Thème et tokens**
 - [x] `StxSpacing` — la seule échelle que M3 n'a pas ; formes et élévation restent celles de M3
-- [x] `StxColors` — `success` / `info` / `warning` dérivés par material-kolor, le reste délégué à M3
+- [x] `StxColors` — `success` et `warning` dérivés par material-kolor, `info` pris sur `secondary`, le reste délégué à M3
+- [x] Palette calme par défaut : TonalSpot et `SPEC_2025`, `info` sur `secondary`, point de `Stat` seulement pour Success, Warning et Error
 - [x] `StxTheme` enveloppant `MaterialTheme`, tokens sur `CompositionLocal` statiques
 - [x] `StyleScope.colors` / `.scheme` / `.shapes` / `.spacing` / `.motion` — les tokens dans un `Style`
 - [x] Un `StxStyles` accessible en `StxTheme.styles`, agrégeant les styles de composants

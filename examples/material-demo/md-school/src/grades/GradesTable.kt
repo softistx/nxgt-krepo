@@ -10,8 +10,6 @@ import com.softistx.material.components.content.Stat
 import com.softistx.material.components.data.DataTable
 import com.softistx.material.components.data.TableColumn
 import com.softistx.material.foundation.theme.StxTheme
-import com.softistx.material.foundation.theme.Tone
-import com.softistx.material.school.common.scoreTone
 import com.softistx.material.school.data.Grade
 import com.softistx.material.school.data.Grades
 import com.softistx.material.school.data.Students
@@ -57,7 +55,6 @@ fun GradesTable(
             Stat(
                 value = average.oneDecimal(),
                 label = "Average of ${rows.size} marks",
-                tone = if (scoreTone(average) == Tone.Error) Tone.Error else Tone.Success,
             )
             DataTable(
                 columns = Columns,

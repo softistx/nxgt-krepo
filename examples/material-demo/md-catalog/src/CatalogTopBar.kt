@@ -56,6 +56,18 @@ fun CatalogTopBar(
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            CatalogPaletteStyles.forEach { option ->
+                Chip(
+                    text = option.name,
+                    selected = state.paletteStyle == option,
+                    onClick = { state.paletteStyle = option },
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             CatalogMotion.entries.forEach { option ->
                 Chip(
                     text = option.label,

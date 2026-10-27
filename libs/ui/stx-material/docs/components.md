@@ -182,7 +182,7 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/chip` |
 | `ListTile` | `title`, `supporting?`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/list-tile` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
-| `Stat` | `value`, `label`, `delta?`, `tone = Info` | `content/stat` |
+| `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange` | `content/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `content/rating` |
 | `LabeledDivider` | `label` — no `style`: a divider is inert | `content/labeled-divider` |

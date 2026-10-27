@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.materialkolor.PaletteStyle
+import com.materialkolor.dynamiccolor.ColorSpec
 
 /** Material You landed in Android 12; below that the wallpaper palette does not exist. */
 actual val supportsDynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
@@ -24,11 +26,13 @@ actual fun platformColorScheme(
     seed: Color,
     isDark: Boolean,
     dynamicColor: Boolean,
+    paletteStyle: PaletteStyle,
+    specVersion: ColorSpec.SpecVersion,
 ): ColorScheme {
     val context = LocalContext.current
-    return remember(seed, isDark, dynamicColor, context) {
+    return remember(seed, isDark, dynamicColor, paletteStyle, specVersion, context) {
         when {
-            !dynamicColor || !supportsDynamicColor -> stxColorScheme(seed, isDark)
+            !dynamicColor || !supportsDynamicColor -> stxColorScheme(seed, isDark, paletteStyle, specVersion)
             isDark -> dynamicDarkColorScheme(context)
             else -> dynamicLightColorScheme(context)
         }
