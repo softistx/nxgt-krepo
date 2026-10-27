@@ -129,17 +129,16 @@ class DataStyleTest :
                 }
             }
 
-            scenario("sortable = { it == 0 }: column 0 is a button, column 1 is plain text") {
+            scenario("a column with sortable = false is plain text, the others are buttons") {
                 runComposeUiTest {
                     setContent {
                         StxTheme(isDark = false) {
                             DataTable(
-                                columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score") { it }),
+                                columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score", sortable = false) { it }),
                                 rows = listOf("Ada"),
                                 collapseBelow = 100.dp,
                                 onSortChange = {},
-                                sortable = { it == 0 },
-                            )
+                                                            )
                         }
                     }
                     onNodeWithText("Name").assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
