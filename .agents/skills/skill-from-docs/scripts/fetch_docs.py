@@ -74,7 +74,10 @@ def common_prefix(urls: list[str]) -> str:
 
 
 def discover(
-    base: str, sitemap: str | None = None, method: str = "auto"
+    base: str,
+    sitemap: str | None = None,
+    method: str = "auto",
+    pages: list[str] | None = None,
 ) -> tuple[list[str], str]:
     """Return (page URLs, the root they are relative to).
 
@@ -87,9 +90,23 @@ def discover(
     URLs out of it yields only the handful that prose happens to link to, each
     carrying the trailing `)` or `.` of the sentence it sat in. kotlinlang.org
     is one, which is why its config says `"discovery": "sitemap"`.
+
+    `"discovery": "list"` skips discovery: the config's `pages` array is the page list, each entry
+    a URL or a path relative to `base`. Use it when the site has no usable index
+    (developer.android.com) or a skill draws a few pages from several sites. The config's
+    `exclude` regexes are matched against a page's path relative to `base`, or against the full URL
+    for a page outside it.
     """
-    if method not in ("auto", "llms", "sitemap", "nav"):
+    if method not in ("auto", "llms", "sitemap", "nav", "list"):
         raise SystemExit(f"unknown discovery method {method!r}")
+
+    if method == "list":
+        # An explicit list, for a site with no usable sitemap or nav (developer.android.com
+        # redirects its section roots) or a skill that draws a few pages from several sites.
+        # Each entry is a URL, or a path relative to `base`.
+        if not pages:
+            raise SystemExit('"discovery": "list" needs a "pages" array in the config')
+        return [urljoin(base, p) for p in pages], base
 
     if method in ("auto", "llms"):
         try:
@@ -134,8 +151,13 @@ def discover(
 
 
 def slug_for(url: str, root: str) -> str:
-    path = url[len(root):] if url.startswith(root) else urlparse(url).path
-    return (path.strip("/").replace("/", "-") or "home").lower()
+    """The file name (without `.md`) a page is cached under; a trailing `.html` is dropped."""
+    if not url.startswith(root):
+        # A listed page from another site: its last path segment names it.
+        path = urlparse(url).path.strip("/").rsplit("/", 1)[-1]
+    else:
+        path = url[len(root):].strip("/").replace("/", "-")
+    return (re.sub(r"\.html?$", "", path) or "home").lower()
 
 
 # --- minimal HTML -> markdown -------------------------------------------------
@@ -304,6 +326,9 @@ def block(node, depth: int = 0) -> str:
 def page_to_markdown(html: str) -> tuple[str, str]:
     soup = BeautifulSoup(html, "html.parser")
     article = soup.find("article") or soup.find("main") or soup
+    # developer.android.com puts a breadcrumb trail ("Android Developers Develop ...") above the h1.
+    for crumbs in article.select("ul.devsite-breadcrumb-list"):
+        crumbs.decompose()
     for junk in article.select(CHROME_SELECTORS):
         junk.decompose()
     # Floated "Documentation issue? Report / edit" banners carry no class of
@@ -315,6 +340,9 @@ def page_to_markdown(html: str) -> tuple[str, str]:
     title_text = inline(title).strip() if title else ""
     body = block(article)
     body = re.sub(r"^Last update:.*$", "", body, flags=re.M)
+    # developer.android.com appends its "save to a collection" prompt to every h1.
+    body = re.sub(r"\s+Stay organized with collections\s+Save and categorize content based on your preferences\.", "", body)
+    title_text = re.sub(r"\s+Stay organized with collections.*$", "", title_text)
     body = re.sub(r"\n{3,}", "\n\n", body).strip()
     return title_text, body
 
@@ -390,7 +418,7 @@ def main() -> int:
     global SITE_ORIGIN
     SITE_ORIGIN = "{0.scheme}://{0.netloc}".format(urlparse(base))
 
-    urls, root = discover(base, cfg.get("sitemap"), cfg.get("discovery", "auto"))
+    urls, root = discover(base, cfg.get("sitemap"), cfg.get("discovery", "auto"), cfg.get("pages"))
     if not urls:
         print("no pages discovered", file=sys.stderr)
         return 1
@@ -414,6 +442,13 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     stamp = _dt.date.today().isoformat()
     fetched = 0
+
+    slugs: dict[str, str] = {}
+    for url in urls:
+        slug = slug_for(url, root)
+        if slug in slugs:
+            raise SystemExit(f"two pages share the file name {slug}.md: {slugs[slug]} and {url}")
+        slugs[slug] = url
 
     for url in urls:
         slug = slug_for(url, root)

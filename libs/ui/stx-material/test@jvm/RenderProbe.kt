@@ -16,6 +16,9 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Density
+import org.jetbrains.skia.EncodedImageFormat
+import java.nio.file.Files
+import java.nio.file.Path
 
 /** The corners of a node's bounds, for [RenderProbe.pixelAt]. */
 enum class Corner { TopLeft, TopRight, BottomLeft, BottomRight, Center }
@@ -81,6 +84,19 @@ class RenderProbe(
 
     /** Lifts the pointer from the middle of [node]. */
     fun release(node: NodeBounds): PixelGrid = release(node.rect.center)
+
+    /**
+     * Settles, then writes the frame to [path] as a PNG and answers the path, so a reader (or an
+     * agent) can open the picture and judge hierarchy, accent and surfaces instead of inferring
+     * them from code. Parent folders are created.
+     */
+    fun savePng(path: Path): Path {
+        settle()
+        val png = checkNotNull(scene.render(time).encodeToData(EncodedImageFormat.PNG)) { "PNG encoding failed" }
+        path.toAbsolutePath().parent?.let { Files.createDirectories(it) }
+        Files.write(path, png.bytes)
+        return path
+    }
 
     override fun close() = scene.close()
 
