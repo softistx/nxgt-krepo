@@ -1,5 +1,16 @@
 # stx-workflow
 
+## 0.4.0
+
+### Minor Changes
+
+- [#321](https://github.com/softistx/nxgt-krepo/pull/321) [`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Adds `WorkflowEngine.retryCompensation(id)`: an instance left `Failed` because a compensation failed can now be reopened after the cause is fixed, and its unwind continues from the failed compensation without re-running the ones that succeeded. It refuses anything else with `WorkflowNotRetryableException`.
+
+### Patch Changes
+
+- Updated dependencies [[`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4)]:
+  - stx-ktor@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes

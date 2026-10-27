@@ -1,5 +1,11 @@
 # stx-graphix
 
+## 0.2.3
+
+### Patch Changes
+
+- [#275](https://github.com/softistx/nxgt-krepo/pull/275) [`bfb34b5`](https://github.com/softistx/nxgt-krepo/commit/bfb34b55103af682e56c5333ef1f169eefb3fdd8) Thanks [@SteveGT96](https://github.com/SteveGT96)! - No change to the API or behaviour: `GraphixBuilder` moved out of `Graphix.kt` into its own file.
+
 ## 0.2.2
 
 ### Patch Changes

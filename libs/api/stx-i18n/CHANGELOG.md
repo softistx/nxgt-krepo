@@ -1,5 +1,12 @@
 # stx-i18n
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4)]:
+  - stx-ktor@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,19 @@
 # stx-jpa
 
+## 0.3.0
+
+### Minor Changes
+
+- [#321](https://github.com/softistx/nxgt-krepo/pull/321) [`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4) Thanks [@SteveGT96](https://github.com/SteveGT96)! - BREAKING: `findPage` throws `IllegalArgumentException`, naming the attribute, when its query fetches a collection. `limit` and `offset` cut the joined rows, so such a page truncated owners and collections and reported `hasNextPage = false`. Page the owners and load their collections separately, or project.
+
+### Patch Changes
+
+- [#321](https://github.com/softistx/nxgt-krepo/pull/321) [`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Documentation only: a provided `instance` is not closed by the plugin, but Ktor's DI still closes it at application stop. The KDoc and the `stx-ktor` README now say when that bites and how to replace `onShutdown` in `install(DI)`.
+
+- [#321](https://github.com/softistx/nxgt-krepo/pull/321) [`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Documents and pins `JpaSpec.or` with a side that restricts nothing: it keeps the other side alone, and the docs now show how to get "no restriction" instead.
+- Updated dependencies [[`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4)]:
+  - stx-ktor@0.3.1
+
 ## 0.2.2
 
 ### Patch Changes

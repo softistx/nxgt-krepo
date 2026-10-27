@@ -1,5 +1,18 @@
 # stx-spring-boot
 
+## 0.4.0
+
+### Minor Changes
+
+- [#321](https://github.com/softistx/nxgt-krepo/pull/321) [`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4) Thanks [@SteveGT96](https://github.com/SteveGT96)! - `parseFilter`, `toSort`, `mongoPage` and the new `mongoFilter(allowed)` / `mongoQuery(allowed)` (for `find` routes; the properties of those names stay the open case) take an optional `allowed: Set<String>`, the fields a client may name in `?filter=` and `?sort=`. A field outside it is refused as `filters.invalid`, for a sort as well as a filter; dotted paths are matched whole. Left null, every field stays reachable, so `?filter=passwordHash:like:a` remains an oracle: set it on any route over a collection with a field that must not leak.
+  
+  The defaulted `allowed` parameter changes the JVM signatures of `parseFilter`, `toSort` and `mongoPage`, so consumers must recompile (source-compatible).
+
+### Patch Changes
+
+- Updated dependencies []:
+  - stx-i18n@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes
