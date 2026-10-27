@@ -14,7 +14,7 @@
     },
     "libs/api/stx-graphix": {
       "name": "stx-graphix",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "dependencies": {
         "stx-common": "workspace:*",
       },
@@ -64,7 +64,7 @@
     },
     "libs/data/stx-migrations": {
       "name": "stx-migrations",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -88,7 +88,7 @@
     },
     "libs/data/stx-storage": {
       "name": "stx-storage",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -112,7 +112,7 @@
     },
     "libs/messaging/stx-workflow": {
       "name": "stx-workflow",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",

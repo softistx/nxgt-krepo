@@ -1,5 +1,11 @@
 # stx-graphix
 
+## 0.2.4
+
+### Patch Changes
+
+- [#337](https://github.com/softistx/nxgt-krepo/pull/337) [`8308d02`](https://github.com/softistx/nxgt-krepo/commit/8308d02b607c91cc93a4cbe24a8efe548d2f2dc5) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Internal: splits `TypeMapper`, `GraphixBuilder` and the Ktor plugin into single-purpose files. No behaviour or public API change.
+
 ## 0.2.3
 
 ### Patch Changes
