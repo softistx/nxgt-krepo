@@ -3,12 +3,11 @@ package com.softistx.material.components.form
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 
 /**
@@ -35,7 +34,6 @@ fun TextareaField(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     // A count is a hint about this field, so it goes where the hint goes rather than beside the
     // label, and it gives way to an error the way any other hint does.
     val counted = maxLength?.let { "${value.length} / $it" }
@@ -46,7 +44,7 @@ fun TextareaField(
         modifier =
             modifier
                 .fillMaxWidth()
-                .styleable(styleState, fieldStyle, style),
+                .styledBy(style, enabled = enabled, base = fieldStyle, interactionSource = interactionSource),
         enabled = enabled,
         label = label?.let { { Typography(text = it) } },
         placeholder = placeholder?.let { { Typography(text = it) } },

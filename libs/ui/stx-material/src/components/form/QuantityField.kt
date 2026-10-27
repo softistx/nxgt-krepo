@@ -1,17 +1,14 @@
 package com.softistx.material.components.form
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
@@ -41,10 +38,9 @@ fun QuantityField(
     enabled: Boolean = true,
     style: Style = Style,
 ) {
-    val styleState = rememberUpdatedStyleState(remember { MutableInteractionSource() }) { it.isEnabled = enabled }
     FieldScaffold(modifier = modifier, label = label, helper = helper) {
         Row(
-            modifier = Modifier.styleable(styleState, style),
+            modifier = Modifier.styledBy(style, enabled = enabled),
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {

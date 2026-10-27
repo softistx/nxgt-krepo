@@ -5,14 +5,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import androidx.compose.material3.Button as MaterialButton
@@ -83,12 +82,15 @@ fun ButtonSurface(
     content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val minHeight = if (variant == ButtonVariant.Link) 0.dp else size.height
     MaterialButton(
         onClick = onClick,
         shapes = ButtonDefaults.shapesFor(size.height),
-        modifier = modifier.heightIn(min = minHeight).styleable(styleState, buttonStyle, style),
+        modifier =
+            modifier
+                .heightIn(
+                    min = minHeight,
+                ).styledBy(style, enabled = enabled, base = buttonStyle, interactionSource = interactionSource),
         enabled = enabled,
         colors = buttonColors(variant, color),
         elevation = null,

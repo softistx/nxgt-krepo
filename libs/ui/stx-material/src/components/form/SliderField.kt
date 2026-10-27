@@ -5,14 +5,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 
@@ -40,7 +39,6 @@ fun SliderField(
     format: (Float) -> String = { it.toInt().toString() },
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     FieldScaffold(modifier = modifier, helper = helper, error = supportingText) {
         if (label != null) {
             Row(
@@ -55,7 +53,7 @@ fun SliderField(
         Slider(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth().styleable(styleState, style),
+            modifier = Modifier.fillMaxWidth().styledBy(style, enabled = enabled, interactionSource = interactionSource),
             enabled = enabled,
             interactionSource = interactionSource,
             valueRange = range,
@@ -84,7 +82,6 @@ fun SliderField(
     style: Style = Style,
     format: (Float) -> String = { it.toInt().toString() },
 ) {
-    val styleState = rememberUpdatedStyleState(remember { MutableInteractionSource() }) { it.isEnabled = enabled }
     FieldScaffold(modifier = modifier, helper = helper, error = supportingText) {
         if (label != null) {
             Row(
@@ -102,7 +99,7 @@ fun SliderField(
         RangeSlider(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth().styleable(styleState, style),
+            modifier = Modifier.fillMaxWidth().styledBy(style, enabled = enabled),
             enabled = enabled,
             valueRange = range,
             steps = steps,

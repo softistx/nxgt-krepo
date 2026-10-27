@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.OutlinedToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TonalToggleButton
@@ -17,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.foundation.icon.Icon
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
@@ -76,12 +75,7 @@ fun ToggleButtonSurface(
     content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState =
-        rememberUpdatedStyleState(interactionSource) {
-            it.isEnabled = enabled
-            it.isSelected = checked
-        }
-    val styled = modifier.styleable(styleState, buttonStyle, style)
+    val styled = modifier.styledBy(style, enabled = enabled, base = buttonStyle, interactionSource = interactionSource, selected = checked)
     val tone = buttonTone(color)
     val shapes = ToggleButtonDefaults.shapes()
     val colors =

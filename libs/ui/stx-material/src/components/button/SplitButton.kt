@@ -3,8 +3,6 @@ package com.softistx.material.components.button
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.runtime.Composable
@@ -18,6 +16,7 @@ import com.softistx.material.components.surface.Menu
 import com.softistx.material.components.surface.MenuItem
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import kotlinx.coroutines.launch
 
@@ -52,8 +51,7 @@ fun SplitButton(
         launch { leadingSource.interactions.collect { styleSource.emit(it) } }
         launch { trailingSource.interactions.collect { styleSource.emit(it) } }
     }
-    val styleState = rememberUpdatedStyleState(styleSource) { it.isEnabled = enabled }
-    Box(modifier.styleable(styleState, buttonStyle, style)) {
+    Box(modifier.styledBy(style, enabled = enabled, base = buttonStyle, interactionSource = styleSource)) {
         SplitButtonLayout(
             leadingButton = {
                 SplitButtonDefaults.LeadingButton(

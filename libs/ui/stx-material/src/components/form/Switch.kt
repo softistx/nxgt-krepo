@@ -7,14 +7,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -40,12 +39,11 @@ fun Switch(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .styleable(styleState, toggleStyle, style)
+                .styledBy(style, enabled = enabled, base = toggleStyle, interactionSource = interactionSource)
                 .toggleable(
                     value = value,
                     enabled = enabled,

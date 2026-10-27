@@ -2,8 +2,6 @@ package com.softistx.material.components.content
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.SegmentedListItem
@@ -13,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -50,7 +49,6 @@ fun ListTile(
         "ListTile: selected and group need an onClick; a tile without one is a plain row"
     }
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val slots =
         TileSlots(
             headline = { Typography(text = title, variant = TypographyVariant.BodyLarge) },
@@ -61,7 +59,7 @@ fun ListTile(
             leading = leading,
             trailing = trailing,
         )
-    val styled = modifier.styleable(styleState, listTileStyle, style)
+    val styled = modifier.styledBy(style, enabled = enabled, base = listTileStyle, interactionSource = interactionSource)
     when {
         onClick == null -> PlainRow(slots, styled)
         group != null -> SegmentedRow(slots, styled, onClick, enabled, selected, group, interactionSource)

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.pressBase
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -38,7 +39,7 @@ fun FileChip(
         selected = false,
         onClick = onClick ?: {},
         label = { Typography(text = label, variant = TypographyVariant.LabelMedium) },
-        modifier = modifier.styledBy(style, enabled, if (onClick != null) chipStyle else Style, interactionSource),
+        modifier = modifier.styledBy(style, enabled, pressBase(chipStyle, onClick), interactionSource),
         enabled = enabled,
         interactionSource = interactionSource,
         leadingIcon = { Icon(icon = StxIcons.Attach, description = null, size = IconSize.Small) },

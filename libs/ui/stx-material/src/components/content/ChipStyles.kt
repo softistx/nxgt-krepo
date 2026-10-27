@@ -2,8 +2,6 @@ package com.softistx.material.components.content
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.animate
-import androidx.compose.foundation.style.pressed
 import androidx.compose.foundation.style.scale
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -12,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
-import com.softistx.material.foundation.motion.MotionSpeed
+import com.softistx.material.foundation.style.compactPress
 import com.softistx.material.foundation.style.motion
 import com.softistx.material.foundation.theme.StxTheme
 
@@ -64,10 +62,7 @@ fun chipColors(hovered: Boolean): SelectableChipColors {
  * style block duplicating work the component already did, and painting a `background` over a
  * `FilterChip` hid its selected container entirely. The press scale is what is left.
  */
-val chipStyle: Style =
-    Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
-    }
+val chipStyle: Style = compactPress
 
 /** Material's state-layer opacity for a hovered surface, over a container that is transparent. */
 private const val HOVER_STATE_LAYER_ALPHA = 0.08f

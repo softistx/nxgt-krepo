@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -19,6 +17,7 @@ import com.softistx.material.components.navigation.navigationItemStyle
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.motion.Transitions
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
@@ -39,13 +38,12 @@ fun Disclosure(
     content: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
     Column(modifier = modifier) {
         Row(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .styleable(styleState, navigationItemStyle, style)
+                    .styledBy(style, base = navigationItemStyle, interactionSource = interactionSource)
                     .clickable(
                         interactionSource = interactionSource,
                         role = Role.Button,

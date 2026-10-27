@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -48,14 +47,13 @@ fun UploadField(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val shape = MaterialTheme.shapes.large
     val outline = MaterialTheme.colorScheme.outlineVariant
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .styleable(styleState, uploadStyle, style)
+                .styledBy(style, enabled = enabled, base = uploadStyle, interactionSource = interactionSource)
                 .clip(shape)
                 .dashedBorder(1.dp, outline, shape)
                 .clickable(

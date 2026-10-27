@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ToggleButtonDefaults
@@ -21,6 +19,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import com.softistx.material.foundation.style.styledBy
 import androidx.compose.material3.ToggleButton as MaterialToggleButton
 
 /**
@@ -55,11 +54,6 @@ internal fun ConnectedToggleGroup(
         repeat(count) { index ->
             val interactionSource = remember { MutableInteractionSource() }
             val checked = index == selected
-            val styleState =
-                rememberUpdatedStyleState(interactionSource) {
-                    it.isEnabled = enabled
-                    it.isSelected = checked
-                }
             val scheme = MaterialTheme.colorScheme
             MaterialToggleButton(
                 checked = checked,
@@ -70,7 +64,7 @@ internal fun ConnectedToggleGroup(
                         .semantics {
                             role = Role.RadioButton
                             this.selected = checked
-                        }.styleable(styleState, buttonStyle, style),
+                        }.styledBy(style, enabled = enabled, base = buttonStyle, interactionSource = interactionSource, selected = checked),
                 enabled = enabled,
                 shapes = connectedShapes(index, count),
                 colors =

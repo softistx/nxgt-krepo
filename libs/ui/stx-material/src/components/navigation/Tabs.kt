@@ -2,8 +2,6 @@ package com.softistx.material.components.navigation
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
@@ -12,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.foundation.icon.Icon
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 
 /**
@@ -40,15 +39,18 @@ fun Tabs(
         labels.forEachIndexed { index, label ->
             // The press is per tab: a row-level source has no child feeding it, so its style never fired.
             val interactionSource = remember { MutableInteractionSource() }
-            val styleState =
-                rememberUpdatedStyleState(interactionSource) {
-                    it.isEnabled = enabled
-                    it.isSelected = index == selected
-                }
             Tab(
                 selected = index == selected,
                 onClick = { onSelect(index) },
-                modifier = Modifier.styleable(styleState, navigationItemStyle, style),
+                modifier =
+                    Modifier.styledBy(
+                        style,
+                        enabled = enabled,
+                        base = navigationItemStyle,
+                        interactionSource = interactionSource,
+                        selected =
+                            index == selected,
+                    ),
                 enabled = enabled,
                 interactionSource = interactionSource,
                 text = { Typography(text = label) },

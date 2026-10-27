@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
@@ -20,6 +18,7 @@ import com.softistx.material.components.navigation.navigationItemStyle
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.motion.Transitions
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
@@ -49,12 +48,11 @@ fun Accordion(
         items.forEachIndexed { index, item ->
             val open = index == expanded
             val interactionSource = remember(index) { MutableInteractionSource() }
-            val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
             Row(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .styleable(styleState, navigationItemStyle, style)
+                        .styledBy(style, base = navigationItemStyle, interactionSource = interactionSource)
                         .clickable(
                             interactionSource = interactionSource,
                             role = Role.Button,

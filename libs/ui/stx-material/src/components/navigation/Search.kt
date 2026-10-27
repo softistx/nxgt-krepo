@@ -4,8 +4,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.runtime.Composable
@@ -13,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 
 /**
@@ -38,7 +37,6 @@ fun Search(
     results: @Composable ColumnScope.() -> Unit = {},
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     SearchBar(
         inputField = {
             SearchBarDefaults.InputField(
@@ -56,7 +54,13 @@ fun Search(
         },
         expanded = active,
         onExpandedChange = onActiveChange,
-        modifier = modifier.fillMaxWidth().styleable(styleState, navigationItemStyle, style),
+        modifier =
+            modifier.fillMaxWidth().styledBy(
+                style,
+                enabled = enabled,
+                base = navigationItemStyle,
+                interactionSource = interactionSource,
+            ),
         content = results,
     )
 }

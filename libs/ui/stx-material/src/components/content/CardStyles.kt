@@ -1,16 +1,13 @@
 package com.softistx.material.components.content
 
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.animate
-import androidx.compose.foundation.style.pressed
 import androidx.compose.foundation.style.scale
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import com.softistx.material.foundation.motion.MotionSpeed
-import com.softistx.material.foundation.style.motion
+import com.softistx.material.foundation.style.rowPress
 
 /** Which of Material 3's three cards this is. */
 enum class CardVariant {
@@ -73,7 +70,4 @@ fun cardElevation(variant: CardVariant): CardElevation =
  * so it moves less — 0.99 rather than 0.97, which is the difference between responding and
  * flinching.
  */
-val cardStyle: Style =
-    Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.99f) } }
-    }
+val cardStyle: Style = rowPress
