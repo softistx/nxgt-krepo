@@ -14,6 +14,9 @@ import androidx.compose.ui.text.platform.Font
  * to a system face with every weight, while a headless Linux runner resolves it to whatever fontconfig
  * has (DejaVu on ubuntu-24.04), where a heavier weight can render identical to the regular one and the
  * glyph shapes differ. With this family the same bytes are drawn on every host.
+ *
+ * Medium and SemiBold are the Bold face, so a spec on this family can tell regular from heavier, never
+ * one heavy weight from another.
  */
 object TestFonts {
     val family: FontFamily by lazy {
