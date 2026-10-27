@@ -9,7 +9,9 @@ import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.ints.shouldBeInRange
 
@@ -52,6 +54,7 @@ class NewIconsTest :
                         },
                     ) {
                         val frame = settle()
+                        withClue(name) { frame.ink() shouldBeGreaterThan 0 }
                         val columns = frame.inkSpan(horizontal = true)
                         val rows = frame.inkSpan(horizontal = false)
                         (columns.last() - columns.first() + 1) shouldBeGreaterThanOrEqual MIN_COVER

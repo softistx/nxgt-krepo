@@ -587,9 +587,12 @@ the bar's badge slot and the leading; everything that needs a labelled row waits
 
 `NavigationSuite` is `NavigationSuiteScaffold`. The caller never writes a `when` on width: compact
 is a short bar, a tabletop or short window is a medium bar, anything wider is a collapsed wide
-rail. `primaryAction` is the FAB the suite places in the rail header or above the bar. A compact bar holds three to five
-destinations (M3's rule); past that, labels truncate to one line with an ellipsis, so move the extra
-destinations behind a "More" entry, a drawer or the rail.
+rail. `primaryAction` is the FAB the suite places in the rail header or above the bar.
+
+A compact bar holds three to five destinations (M3's rule); past that, labels truncate to one line
+with an ellipsis, so move the extra destinations behind a "More" entry, a drawer or the rail.
+`NavigationSuiteDefaults.CompactBelow` (600 dp) is the width under which the bar is compact, for an
+app that decides which destinations to show.
 
 A `Breadcrumb` of more than four items collapses the middle behind a menu. The last crumb is never
 a control. A `Stepper` only lets a completed step be pressed, so it cannot skip ahead on a tap;
