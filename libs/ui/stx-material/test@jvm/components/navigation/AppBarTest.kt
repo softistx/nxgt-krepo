@@ -139,7 +139,7 @@ class AppBarTest :
                             StxTheme(isDark = false) {
                                 AppBar(
                                     title = LONG_TITLE,
-                                    modifier = Modifier.testTag("bar"),
+                                    modifier = Modifier.testTag("bar").width(360.dp),
                                     size = size,
                                     navigationIcon = StxIcons.Menu,
                                     onNavigation = {},
