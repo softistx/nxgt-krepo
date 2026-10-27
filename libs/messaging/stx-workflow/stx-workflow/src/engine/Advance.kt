@@ -3,16 +3,13 @@ package com.softistx.workflow.engine
 import com.softistx.workflow.Workflow
 import com.softistx.workflow.WorkflowEngine
 import com.softistx.workflow.WorkflowError
-import com.softistx.workflow.WorkflowException
 import com.softistx.workflow.WorkflowInstance
 import com.softistx.workflow.WorkflowNotAwaitingException
 import com.softistx.workflow.WorkflowNotFoundException
 import com.softistx.workflow.WorkflowStatus
 import com.softistx.workflow.store.WorkflowRecord
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.JsonElement
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Takes the instance's lock and moves it along.
@@ -30,60 +27,6 @@ internal suspend fun <C> WorkflowEngine.advance(
     if (record.status.isTerminal && !reopen) return instance(workflow, record)
     val advanced = advanceOnce(workflow, record, cancelling, reopen = reopen) ?: store.load(record.id) ?: record
     return instance(workflow, advanced)
-}
-
-/**
- * Tells a parent its child has finished, best effort.
- *
- * Best effort is the whole design, not a shortcut. The child's terminal state and the parent's
- * progress are two records and cannot be written together, so this is what makes the handoff
- * *prompt* while the parent's poll is what makes it *correct*. It therefore must not be able to
- * fail the child: the child did its job, and an exception thrown on the way to telling somebody
- * would undo work that succeeded.
- *
- * Failing to take the parent's lock is the ordinary case, not an error — it is what happens when
- * the parent is the very run that started this child, and that run reads the result itself
- * rather than waiting to be told.
- */
-internal suspend fun WorkflowEngine.wake(parent: String) {
-    try {
-        resume(parent)
-    } catch (_: WorkflowException) {
-        // The parent's poll will come back for it.
-    }
-}
-
-/**
- * Starts a child instance, or picks up the one a previous attempt already started.
- *
- * The id is derived from the parent's, so "did I already start it" is answered by looking rather
- * than by a flag: a parent that died between the child's creation and its own checkpoint finds
- * the child here and carries on with it instead of starting a second.
- */
-internal suspend fun <D> WorkflowEngine.startChild(
-    workflow: Workflow<D>,
-    context: D,
-    id: String,
-    parent: String,
-): WorkflowRecord {
-    require(definitions[workflow.name] === workflow) {
-        "child workflow '${workflow.name}' is not registered with this engine — an instance it cannot " +
-            "look up again is an instance that cannot be resumed after a restart"
-    }
-    store.load(id)?.let { return advance(workflow, it).record }
-    val now = Clock.System.now()
-    val record =
-        WorkflowRecord(
-            id = id,
-            workflow = workflow.name,
-            status = WorkflowStatus.Running,
-            context = json.encodeToJsonElement(workflow.serializer, context),
-            parent = parent,
-            createdAt = now,
-            updatedAt = now,
-        )
-    store.create(record)
-    return advance(workflow, record).record
 }
 
 /**
@@ -165,44 +108,3 @@ private suspend fun <C> WorkflowEngine.runFor(
         )
         null
     }
-
-/**
- * Writes the payload into the record, under the lock the caller already holds.
- *
- * It wakes the instance only when the instance was parked on *this* signal. A delivery that
- * arrived early, or for a later wait, leaves the status alone: the run that follows walks the
- * declaration as it would have anyway, and either reaches the wait and reads the payload or
- * parks again where it was. Waking an instance parked on a different signal would step over
- * that wait, which is the one thing an early delivery must not be allowed to do.
- */
-private suspend fun <C> WorkflowEngine.deliver(
-    run: Run<C>,
-    delivery: Delivery,
-) {
-    val awaited = run.record.status == WorkflowStatus.Awaiting && run.record.awaiting == delivery.signal
-    run.checkpoint {
-        it.copy(
-            status = if (awaited) WorkflowStatus.Running else it.status,
-            awaiting = if (awaited) null else it.awaiting,
-            wakeAt = if (awaited) null else it.wakeAt,
-            signals = it.signals + (delivery.signal to delivery.payload),
-        )
-    }
-}
-
-/**
- * How many times [WorkflowEngine.signal] tries for a lock somebody else is holding, and how long it
- * waits between tries.
- *
- * The lock is held while an instance is being advanced, so the wait this covers is one step, not one
- * approval. Four hundred milliseconds is long enough for the step that triggered the callback to
- * finish and short enough to sit inside the request the callback arrived on.
- */
-internal const val DELIVERY_ATTEMPTS = 5
-internal val DELIVERY_RETRY = 100.milliseconds
-
-/** A signal on its way in: the name it belongs to, and its payload already encoded. */
-internal class Delivery(
-    val signal: String,
-    val payload: JsonElement,
-)
