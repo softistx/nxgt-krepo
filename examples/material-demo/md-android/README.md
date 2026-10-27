@@ -1,6 +1,6 @@
 # md-android
 
-The Android launcher: one `ComponentActivity` around `MaterialDemo()`, and a manifest.
+The Android launcher: one `ComponentActivity` around `MaterialDemo()`, a second around `SchoolApp()` (its own launcher icon, "stx School"), and a manifest.
 
 ```bash
 ./kotlin run -m md-android     # with a device or emulator connected

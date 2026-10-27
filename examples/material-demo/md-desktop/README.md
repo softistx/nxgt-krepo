@@ -1,9 +1,10 @@
 # md-desktop
 
-The desktop launcher: a `Window` around `MaterialDemo()`, and a `main`.
+The desktop launcher: a `Window` around `MaterialDemo()` (or `SchoolApp()` with `-- school`), and a `main`.
 
 ```bash
-./kotlin run -m md-desktop     # a window, sized for the three-pane layout
+./kotlin run -m md-desktop              # the catalogue, in a window sized for the three-pane layout
+./kotlin run -m md-desktop -- school    # the School showcase app ([`md-school`](../md-school/README.md))
 ```
 
 **[`examples/material-demo`](../README.md) is the README.** This module is about twenty lines and
