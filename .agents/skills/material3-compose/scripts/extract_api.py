@@ -24,7 +24,11 @@ from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 REFERENCES = SKILL_DIR / "references"
-CACHE = Path.home() / ".cache/JetBrains/Kotlin/.m2.cache/org/jetbrains/compose/material3"
+# The toolchain's cache lives under ~/.cache on Linux and ~/Library/Caches on macOS.
+CACHES = [
+    Path.home() / ".cache/JetBrains/Kotlin/.m2.cache/org/jetbrains/compose/material3",
+    Path.home() / "Library/Caches/JetBrains/Kotlin/.m2.cache/org/jetbrains/compose/material3",
+]
 PACKAGE = "androidx.compose.material3"
 
 # Kotlin mangles the name of any function returning an inline value class, so
@@ -33,11 +37,23 @@ PACKAGE = "androidx.compose.material3"
 MANGLED = re.compile(r"-[A-Za-z0-9_]+$")
 
 
+def version_key(version: str) -> tuple:
+    """Order 1.9.0 before 1.12.0-alpha03 (a plain string sort does not); alphas sort below the release."""
+    core, _, pre = version.partition("-")
+    nums = tuple(int(n) for n in re.findall(r"\d+", core))
+    pre_nums = tuple(int(n) for n in re.findall(r"\d+", pre))
+    return nums, (0 if pre else 1), pre_nums
+
+
 def newest_jar() -> Path:
-    jars = sorted(CACHE.glob("material3-desktop/*/material3-desktop-*.jar"))
+    jars = sorted(
+        (j for c in CACHES for j in c.glob("material3-desktop/*/material3-desktop-*.jar")
+         if not j.stem.endswith("-sources")),
+        key=lambda j: version_key(j.parent.name),
+    )
     if not jars:
         sys.exit(
-            f"no material3-desktop jar under {CACHE}\n"
+            f"no material3-desktop jar under {CACHES}\n"
             "run `./kotlin build -m stx-material` once to populate the cache"
         )
     return jars[-1]
@@ -49,6 +65,18 @@ def javap(jar: Path, *classes: str) -> str:
         capture_output=True, text=True, check=False,
     )
     return out.stdout
+
+
+def subpackages(jar: Path) -> list[str]:
+    """Public subpackages of the root package that hold classes (carousel, pulltorefresh, …)."""
+    prefix = PACKAGE.replace(".", "/") + "/"
+    with zipfile.ZipFile(jar) as z:
+        subs = {
+            n[len(prefix):].split("/")[0]
+            for n in z.namelist()
+            if n.startswith(prefix) and n.endswith(".class") and "/" in n[len(prefix):]
+        }
+    return sorted(s for s in subs if s != "internal")
 
 
 def properties(jar: Path, cls: str) -> list[str]:
@@ -63,10 +91,10 @@ def properties(jar: Path, cls: str) -> list[str]:
     return names
 
 
-def top_level_names(jar: Path, suffix: str) -> list[str]:
-    """Class names in the package ending with `suffix` (e.g. `Defaults`, `Kt`)."""
+def top_level_names(jar: Path, suffix: str, package: str = PACKAGE) -> list[str]:
+    """Class names in `package` ending with `suffix` (e.g. `Defaults`, `Kt`)."""
     with zipfile.ZipFile(jar) as z:
-        prefix = PACKAGE.replace(".", "/") + "/"
+        prefix = package.replace(".", "/") + "/"
         return sorted(
             {
                 n[len(prefix):-len(".class")]
@@ -80,9 +108,9 @@ def top_level_names(jar: Path, suffix: str) -> list[str]:
         )
 
 
-def composables(jar: Path) -> list[str]:
+def composables(jar: Path, package: str = PACKAGE) -> list[str]:
     """Public @Composable entry points, read off the generated *Kt facade classes."""
-    facades = [f"{PACKAGE}.{n}" for n in top_level_names(jar, "Kt")]
+    facades = [f"{package}.{n}" for n in top_level_names(jar, "Kt", package)]
     found: set[str] = set()
     # javap over ~200 facades at once is one JVM start rather than two hundred.
     for chunk in (facades[i:i + 60] for i in range(0, len(facades), 60)):
@@ -129,31 +157,42 @@ def main() -> int:
         (REFERENCES / filename).write_text(page(title, version, body), encoding="utf-8")
         written.append((filename, f"{len(names)} members"))
 
-    defaults = top_level_names(jar, "Defaults")
+    packages = [PACKAGE] + [f"{PACKAGE}.{sub}" for sub in subpackages(jar)]
+
+    def sections(items: dict[str, list[str]]) -> str:
+        return "\n\n".join(
+            f"## `{pkg}`\n\n{bullets(names)}" for pkg, names in items.items() if names
+        )
+
+    defaults = {pkg: top_level_names(jar, "Defaults", pkg) for pkg in packages}
+    count = sum(len(v) for v in defaults.values())
     (REFERENCES / "defaults.md").write_text(
         page(
             "Defaults objects",
             version,
-            "Every `*Defaults` object in the package. These hold the colours, shapes, "
-            "elevations and sizes a component falls back to, and are the supported way "
-            "to restyle one without reimplementing it.\n\n" + bullets(defaults),
+            "Every `*Defaults` object in the root package and its public subpackages. These "
+            "hold the colours, shapes, elevations and sizes a component falls back to, and are "
+            "the supported way to restyle one without reimplementing it.\n\n" + sections(defaults),
         ),
         encoding="utf-8",
     )
-    written.append(("defaults.md", f"{len(defaults)} objects"))
+    written.append(("defaults.md", f"{count} objects"))
 
-    comps = composables(jar)
+    comps = {pkg: composables(jar, pkg) for pkg in packages}
+    count = sum(len(v) for v in comps.values())
     (REFERENCES / "components.md").write_text(
         page(
             "Public entry points",
             version,
-            "Every public top-level function in the package — the components plus the "
-            "`remember*` state factories. Presence here is what settles whether a "
-            "component exists in this version at all.\n\n" + bullets(comps),
+            "Every public top-level function in the root package and each public subpackage "
+            "(carousel, pulltorefresh, …) — the components plus the `remember*` state factories. "
+            "Presence here is what settles whether a component exists in this version at all. "
+            "Short mixed-case names such as `WNYm7Xg` are obfuscated internals, not API.\n\n"
+            + sections(comps),
         ),
         encoding="utf-8",
     )
-    written.append(("components.md", f"{len(comps)} functions"))
+    written.append(("components.md", f"{count} functions in {sum(1 for v in comps.values() if v)} packages"))
 
     index = [
         f"<!-- Generated on {date.today().isoformat()}; do not edit. -->",

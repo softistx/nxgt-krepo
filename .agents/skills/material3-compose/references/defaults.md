@@ -1,8 +1,10 @@
-<!-- Generated from androidx.compose.material3 1.11.0-alpha07 on 2026-08-28. Do not edit; re-run scripts/extract_api.py. -->
+<!-- Generated from androidx.compose.material3 1.12.0-alpha03 on 2026-10-26. Do not edit; re-run scripts/extract_api.py. -->
 
 # Defaults objects
 
-Every `*Defaults` object in the package. These hold the colours, shapes, elevations and sizes a component falls back to, and are the supported way to restyle one without reimplementing it.
+Every `*Defaults` object in the root package and its public subpackages. These hold the colours, shapes, elevations and sizes a component falls back to, and are the supported way to restyle one without reimplementing it.
+
+## `androidx.compose.material3`
 
 - `AlertDialogDefaults`
 - `AssistChipDefaults`
@@ -27,7 +29,6 @@ Every `*Defaults` object in the package. These hold the colours, shapes, elevati
 - `LoadingIndicatorDefaults`
 - `MenuDefaults`
 - `ModalBottomSheetDefaults`
-- `ModalWideNavigationRailDefaults`
 - `NavigationBarDefaults`
 - `NavigationBarItemDefaults`
 - `NavigationDrawerItemDefaults`
@@ -39,6 +40,8 @@ Every `*Defaults` object in the package. These hold the colours, shapes, elevati
 - `RippleDefaults`
 - `ScaffoldDefaults`
 - `ScrimDefaults`
+- `ScrollFieldDefaults`
+- `ScrollbarDefaults`
 - `SearchBarDefaults`
 - `SegmentedButtonDefaults`
 - `ShapeDefaults`
@@ -62,3 +65,11 @@ Every `*Defaults` object in the package. These hold the colours, shapes, elevati
 - `WavyProgressIndicatorDefaults`
 - `WideNavigationRailDefaults`
 - `WideNavigationRailItemDefaults`
+
+## `androidx.compose.material3.carousel`
+
+- `CarouselDefaults`
+
+## `androidx.compose.material3.pulltorefresh`
+
+- `PullToRefreshDefaults`

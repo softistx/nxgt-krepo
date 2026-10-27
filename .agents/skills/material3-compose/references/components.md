@@ -1,10 +1,12 @@
-<!-- Generated from androidx.compose.material3 1.11.0-alpha07 on 2026-08-28. Do not edit; re-run scripts/extract_api.py. -->
+<!-- Generated from androidx.compose.material3 1.12.0-alpha03 on 2026-10-26. Do not edit; re-run scripts/extract_api.py. -->
 
 # Public entry points
 
-Every public top-level function in the package — the components plus the `remember*` state factories. Presence here is what settles whether a component exists in this version at all.
+Every public top-level function in the root package and each public subpackage (carousel, pulltorefresh, …) — the components plus the `remember*` state factories. Presence here is what settles whether a component exists in this version at all. Short mixed-case names such as `WNYm7Xg` are obfuscated internals, not API.
 
-- `AGcomas`
+## `androidx.compose.material3`
+
+- `A`
 - `AX2PdCw`
 - `AlertDialog`
 - `AlertDialogContent`
@@ -58,6 +60,9 @@ Every public top-level function in the package — the components plus the `reme
 - `DropdownMenu`
 - `DropdownMenuItem`
 - `DropdownMenuItemContent`
+- `DropdownMenuPopup`
+- `DropdownMenuPopupContent`
+- `DropdownMenuPopupImpl`
 - `E`
 - `EQC0FA8`
 - `EU0dCGE`
@@ -139,21 +144,23 @@ Every public top-level function in the package — the components plus the `reme
 - `NavigationItem`
 - `NavigationRail`
 - `NavigationRailItem`
+- `NdgjQFA`
 - `Nur2B3k`
 - `Nvy7gAk`
 - `Oix01E0`
 - `OnPlatformWindowBoundsChange`
+- `Ou1YvPQ`
 - `OutlinedButton`
 - `OutlinedCard`
 - `OutlinedIconButton`
 - `OutlinedIconToggleButton`
 - `OutlinedTextField`
-- `OutlinedTextFieldLayout`
 - `OutlinedToggleButton`
 - `PXWvyXQ`
 - `PermanentDrawerSheet`
 - `PermanentNavigationDrawer`
 - `PlainTooltip`
+- `PlainTooltipInternal`
 - `PrimaryScrollableTabRow`
 - `PrimaryTabRow`
 - `ProvideTextStyle`
@@ -163,6 +170,7 @@ Every public top-level function in the package — the components plus the `reme
 - `RadioButton`
 - `RangeSlider`
 - `Scrim`
+- `ScrollField`
 - `ScrollableTabRow`
 - `SearchBar`
 - `SearchBarImpl`
@@ -182,12 +190,12 @@ Every public top-level function in the package — the components plus the `reme
 - `SwipeToDismissBox`
 - `Switch`
 - `T9BRK9s`
+- `TYlY6FY`
 - `Tab`
 - `TabRow`
 - `Text`
 - `TextButton`
 - `TextField`
-- `TextFieldLayout`
 - `Thumb`
 - `TimeInput`
 - `TimePicker`
@@ -227,3 +235,21 @@ Every public top-level function in the package — the components plus the `reme
 - `YhN2O0w`
 - `Z58ophY`
 - `ZmokQxo`
+
+## `androidx.compose.material3.carousel`
+
+- `Carousel`
+- `HorizontalCenteredHeroCarousel`
+- `HorizontalMultiBrowseCarousel`
+- `KeylineSnapPosition`
+- `MultiAspectCarouselItemDrawInfo`
+- `MultiAspectCarouselScope`
+- `VUP9l70`
+- `WNYm7Xg`
+
+## `androidx.compose.material3.pulltorefresh`
+
+- `PullToRefreshBox`
+- `PullToRefreshState`
+- `RPmYEkk`
+- `Z4HSEVQ`
