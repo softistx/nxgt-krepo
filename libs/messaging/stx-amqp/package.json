@@ -1,6 +1,6 @@
 {
   "name": "stx-amqp",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "description": "AMQP over the RabbitMQ client, made suspending — publishing, consuming, and the confirm and ack rules",
   "dependencies": {

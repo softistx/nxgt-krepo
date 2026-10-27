@@ -1,6 +1,6 @@
 package com.softistx.i18n.spring
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ReactiveWebApplicationContextRunner
@@ -51,48 +51,49 @@ private class OwnResolver {
 }
 
 class LocaleResolverPrecedenceTest :
-    StringSpec({
-
-        "stx.i18n narrows the resolver to the languages it actually loaded" {
-            runner().run { context ->
-                val resolver = context.getBean(LocaleContextResolver::class.java)
-                // Boot's is an AcceptHeaderLocaleContextResolver too, so the type alone proves
-                // nothing — the supported set is what distinguishes them.
-                (resolver as AcceptHeaderLocaleContextResolver).supportedLocales shouldBe
-                    listOf(Locale.ENGLISH, Locale.FRENCH)
-                resolver.defaultLocale shouldBe Locale.FRENCH
+    FeatureSpec({
+        feature("resolver precedence") {
+            scenario("stx.i18n narrows the resolver to the languages it actually loaded") {
+                runner().run { context ->
+                    val resolver = context.getBean(LocaleContextResolver::class.java)
+                    // Boot's is an AcceptHeaderLocaleContextResolver too, so the type alone proves
+                    // nothing — the supported set is what distinguishes them.
+                    (resolver as AcceptHeaderLocaleContextResolver).supportedLocales shouldBe
+                        listOf(Locale.ENGLISH, Locale.FRENCH)
+                    resolver.defaultLocale shouldBe Locale.FRENCH
+                }
             }
-        }
 
-        "spring.web.locale-resolver wins, because the application asked for it by name" {
-            runner()
-                .withPropertyValues("spring.web.locale=de", "spring.web.locale-resolver=fixed")
-                .run { context ->
+            scenario("spring.web.locale-resolver wins, because the application asked for it by name") {
+                runner()
+                    .withPropertyValues("spring.web.locale=de", "spring.web.locale-resolver=fixed")
+                    .run { context ->
+                        context.getBean(LocaleContextResolver::class.java)::class.java shouldBe
+                            FixedLocaleContextResolver::class.java
+                    }
+            }
+
+            scenario("spring.web.locale alone is enough to stand this module's resolver down") {
+                runner().withPropertyValues("spring.web.locale=de").run { context ->
+                    val resolver = context.getBean(LocaleContextResolver::class.java) as AcceptHeaderLocaleContextResolver
+                    // Boot's, configured from spring.web.locale — not this module's [en, fr]/fr.
+                    resolver.supportedLocales shouldBe emptyList()
+                    resolver.defaultLocale shouldBe Locale.GERMAN
+                }
+            }
+
+            scenario("an application's own bean beats both of us") {
+                runner().withUserConfiguration(OwnResolver::class.java).run { context ->
+                    context.getBeanNamesForType(LocaleContextResolver::class.java).size shouldBe 1
                     context.getBean(LocaleContextResolver::class.java)::class.java shouldBe
                         FixedLocaleContextResolver::class.java
                 }
-        }
-
-        "spring.web.locale alone is enough to stand this module's resolver down" {
-            runner().withPropertyValues("spring.web.locale=de").run { context ->
-                val resolver = context.getBean(LocaleContextResolver::class.java) as AcceptHeaderLocaleContextResolver
-                // Boot's, configured from spring.web.locale — not this module's [en, fr]/fr.
-                resolver.supportedLocales shouldBe emptyList()
-                resolver.defaultLocale shouldBe Locale.GERMAN
             }
-        }
 
-        "an application's own bean beats both of us" {
-            runner().withUserConfiguration(OwnResolver::class.java).run { context ->
-                context.getBeanNamesForType(LocaleContextResolver::class.java).size shouldBe 1
-                context.getBean(LocaleContextResolver::class.java)::class.java shouldBe
-                    FixedLocaleContextResolver::class.java
-            }
-        }
-
-        "the catalogs load either way — only the resolver stands down" {
-            runner().withPropertyValues("spring.web.locale=de").run { context ->
-                context.getBeanNamesForType(com.softistx.i18n.Messages::class.java).size shouldBe 1
+            scenario("the catalogs load either way — only the resolver stands down") {
+                runner().withPropertyValues("spring.web.locale=de").run { context ->
+                    context.getBeanNamesForType(com.softistx.i18n.Messages::class.java).size shouldBe 1
+                }
             }
         }
     })

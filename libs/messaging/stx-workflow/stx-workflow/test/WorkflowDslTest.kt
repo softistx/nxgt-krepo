@@ -28,6 +28,12 @@ class WorkflowDslTest :
                 }.message!! shouldContain "declares 'charge' twice"
             }
 
+            scenario("a node named after the marker the engine reserves for an undecodable context") {
+                shouldThrow<IllegalArgumentException> {
+                    workflow<Ledger>("reserved") { step("<context>") { context } }
+                }.message!! shouldContain "reserves"
+            }
+
             scenario("a step given two compensations") {
                 shouldThrow<IllegalArgumentException> {
                     workflow<Ledger>("two-undos") {

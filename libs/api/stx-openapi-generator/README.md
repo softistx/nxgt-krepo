@@ -142,7 +142,10 @@ Two things a client has to do — decide which error type a status maps to, and 
 attach a credential — are per-operation facts, and both have to happen at the HTTP layer, where the
 status code and the body live but the operation is anonymous. So every generated function carries
 `@ApiOperation(id, security)`, added in `emit/ApiFile.kt` rather than by either emitter, and each
-style reads it its own way:
+style reads it its own way. `security` holds the operation's *alternatives* (OR), one string each
+with an alternative's schemes joined by `,` and `""` for the anonymous `{}`; `emit/ApiAuthChoice.kt`
+writes the choice among them once for both styles, so the rule cannot drift between them
+(`docs/openapi-support.md` has it):
 
 - **Ktorfit** puts a function's own annotations on the request; a `createClientPlugin` reads them
   through `HttpRequest.annotations`. `ApiErrors` hooks `on(Send)`, which is the one hook that sees

@@ -15,6 +15,9 @@ import io.ktor.server.routing.get
  * token to reach it. `/echo` overrides that with `security: []` and reports what it received,
  * which is the only way to see that the client attached *nothing* — a header that is correctly
  * absent leaves no other trace.
+ *
+ * `/either` and `/optional` have `security` with several alternatives, and report the header the
+ * same way: it is what shows which alternative a client chose, and that it did not send two.
  */
 internal fun Route.sessionRoutes() {
     get("/session/whoami") {
@@ -30,6 +33,16 @@ internal fun Route.sessionRoutes() {
     }
 
     get("/session/echo") {
+        call.respond(SessionInfo(authorization = call.request.headers[HttpHeaders.Authorization]))
+    }
+
+    // The server does not check the credential here: what these two exist for is the header the
+    // client chose to send, which the echo shows.
+    get("/session/either") {
+        call.respond(SessionInfo(authorization = call.request.headers[HttpHeaders.Authorization]))
+    }
+
+    get("/session/optional") {
         call.respond(SessionInfo(authorization = call.request.headers[HttpHeaders.Authorization]))
     }
 }

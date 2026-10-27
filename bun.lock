@@ -14,14 +14,14 @@
     },
     "libs/api/stx-graphix": {
       "name": "stx-graphix",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "dependencies": {
         "stx-common": "workspace:*",
       },
     },
     "libs/api/stx-i18n": {
       "name": "stx-i18n",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -29,7 +29,7 @@
     },
     "libs/api/stx-openapi-generator": {
       "name": "stx-openapi-generator",
-      "version": "0.2.2",
+      "version": "0.3.0",
     },
     "libs/core/stx-common": {
       "name": "stx-common",
@@ -37,14 +37,14 @@
     },
     "libs/core/stx-ktor": {
       "name": "stx-ktor",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "dependencies": {
         "stx-common": "workspace:*",
       },
     },
     "libs/core/stx-spring-boot": {
       "name": "stx-spring-boot",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-i18n": "workspace:*",
@@ -56,7 +56,7 @@
     },
     "libs/data/stx-jpa": {
       "name": "stx-jpa",
-      "version": "0.2.2",
+      "version": "0.3.0",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -64,7 +64,7 @@
     },
     "libs/data/stx-migrations": {
       "name": "stx-migrations",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -72,7 +72,7 @@
     },
     "libs/data/stx-mongo": {
       "name": "stx-mongo",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -80,7 +80,7 @@
     },
     "libs/data/stx-redis": {
       "name": "stx-redis",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -88,7 +88,7 @@
     },
     "libs/data/stx-storage": {
       "name": "stx-storage",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -96,7 +96,7 @@
     },
     "libs/messaging/stx-amqp": {
       "name": "stx-amqp",
-      "version": "0.2.2",
+      "version": "0.3.0",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -104,7 +104,7 @@
     },
     "libs/messaging/stx-kafka": {
       "name": "stx-kafka",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -112,7 +112,7 @@
     },
     "libs/messaging/stx-workflow": {
       "name": "stx-workflow",
-      "version": "0.3.0",
+      "version": "0.4.1",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -120,7 +120,7 @@
     },
     "libs/observability/stx-telemetry": {
       "name": "stx-telemetry",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",

@@ -101,6 +101,11 @@ class NonRetryableException(
  * it. That is the honest reading of a delegated piece of work that could not be done, and it is the
  * same shape as a step that threw — the parent does not get to inspect *how* the child failed and
  * carry on regardless, because the child has already compensated whatever it did.
+ *
+ * It is also thrown when a parent's compensation cannot take the child back, and [status] says why:
+ * `Failed` (its own compensation failed: retry the child first, then the parent), or `Running`,
+ * `Awaiting` or `Completed` because another worker still holds the child's lock (retry the parent
+ * once the child is free). The parent's unwind stops on that node and lands `Failed`.
  */
 class ChildFailedException(
     val id: String,
@@ -136,3 +141,21 @@ class WorkflowNotUndoableException(
     val id: String,
     val status: WorkflowStatus,
 ) : WorkflowException("workflow instance '$id' is $status; only a Completed instance can be undone")
+
+/**
+ * `retryCompensation` was asked for an instance whose compensation has not failed.
+ *
+ * Only an instance that is [WorkflowStatus.Failed] **because a compensation failed** has something to
+ * retry. Anything else has its own verb or nothing at all: one still in flight is advancing, one
+ * `Compensated`, `Cancelled` or `Completed` has nothing outstanding, and a `Failed` one whose journal
+ * names no failed compensation has no step to run again, except one the engine retired because its
+ * stored context no longer decoded (`error` names the node `<context>`): that is retryable once the
+ * context decodes again. While it still does not decode, it is refused untouched, because reopening
+ * it would fail the same way.
+ */
+class WorkflowNotRetryableException(
+    val id: String,
+    val status: WorkflowStatus,
+    message: String =
+        "workflow instance '$id' is $status; only a Failed instance with a failed compensation can be retried",
+) : WorkflowException(message)

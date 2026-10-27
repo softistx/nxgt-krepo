@@ -1,5 +1,13 @@
 # stx-kafka
 
+## 0.2.3
+
+### Patch Changes
+
+- [#275](https://github.com/softistx/nxgt-krepo/pull/275) [`bfb34b5`](https://github.com/softistx/nxgt-krepo/commit/bfb34b55103af682e56c5333ef1f169eefb3fdd8) Thanks [@SteveGT96](https://github.com/SteveGT96)! - No change to the API or behaviour: `KafkaSubscriber`'s poll loop, commit bookkeeping and per-partition processing moved into files of their own.
+- Updated dependencies [[`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4)]:
+  - stx-ktor@0.3.1
+
 ## 0.2.2
 
 ### Patch Changes

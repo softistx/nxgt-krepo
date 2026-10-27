@@ -8,6 +8,7 @@ import com.softistx.openapi.emit.EmitOptions
 import com.softistx.openapi.emit.GENERATED_COMMENT
 import com.softistx.openapi.emit.authConfigType
 import com.softistx.openapi.emit.basicCredentialsType
+import com.softistx.openapi.emit.chooseAlternative
 import com.softistx.openapi.emit.credentialSchemes
 import com.softistx.openapi.emit.needsBasicCredentials
 import com.squareup.kotlinpoet.ClassName
@@ -64,28 +65,26 @@ internal fun apiAuthFile(
                 A credential slot suspends and a filter does not, so each is resolved inside
                 `mono { }`: the credential is fetched when the request is made, not once at startup,
                 which is what lets a token expire and be replaced.
+
+                `security` is a list of alternatives: the first one whose credentials are all
+                configured is sent, and only those. When none is configured and the document allows
+                anonymous access (`{}`) nothing is sent; otherwise the call fails with an
+                [IllegalStateException] naming the expected alternatives, before it leaves.
                 """.trimIndent(),
             ).addCode(
                 CodeBlock
                     .builder()
                     .beginControlFlow("return %T { request, next ->", EXCHANGE_FILTER)
                     .addStatement(
-                        "val required = request.attributes()[%L] as %T?",
+                        "val alternatives = request.attributes()[%L] as %T?",
                         SECURITY_ATTRIBUTE,
                         LIST.parameterizedBy(STRING),
-                    ).beginControlFlow("if (required.isNullOrEmpty()) next.exchange(request) else")
+                    ).addStatement("val operation = request.attributes()[%L] as String?", OPERATION_ATTRIBUTE)
+                    .beginControlFlow("if (alternatives.isNullOrEmpty()) next.exchange(request) else")
                     .beginControlFlow("%M(%T.Unconfined) {", MONO_BUILDER, DISPATCHERS)
                     .addStatement("val authorized = %T.from(request)", CLIENT_REQUEST)
                     .addStatement("val url = %T.fromUri(request.url())", URI_BUILDER)
-                    .beginControlFlow("required.forEach { scheme ->")
-                    .beginControlFlow("when (scheme)")
-                    .apply { schemes.forEach { add(it.attach()) } }
-                    // Unreachable: the parser rejects a requirement the document does not declare,
-                    // and the emitter rejects one no client can satisfy. `when` over a String is
-                    // not exhaustive, so it still has to be written.
-                    .addStatement("else -> Unit")
-                    .endControlFlow()
-                    .endControlFlow()
+                    .add(chooseAlternative(schemes, "alternatives", "operation") { it.attach() })
                     .addStatement("authorized.url(url.build(true).toUri()).build()")
                     .endControlFlow()
                     .addStatement(".flatMap { next.exchange(it) }")
@@ -103,47 +102,39 @@ internal fun apiAuthFile(
         .build()
 }
 
-/** One `when` branch: where this scheme's credential goes on the request. */
+/** The statements that put this scheme's credential, held in `value`, on the request. */
 private fun SecurityScheme.attach(): CodeBlock {
-    val builder = CodeBlock.builder().beginControlFlow("%S ->", name)
+    val builder = CodeBlock.builder()
     when (kind) {
         SecurityKind.HttpBearer, SecurityKind.OAuthToken -> {
-            builder.addStatement(
-                "credentials.%N?.invoke()?.let { authorized.header(%S, %P) }",
-                propertyName,
-                "Authorization",
-                "Bearer \$it",
-            )
+            builder.addStatement("authorized.header(%S, %P)", "Authorization", "Bearer \$value")
         }
 
         SecurityKind.HttpBasic -> {
             builder
-                .addStatement("val basic = credentials.%N?.invoke()", propertyName)
-                .beginControlFlow("if (basic != null)")
-                .addStatement("val encoded = %T.encode(%P.encodeToByteArray())", BASE64, "\${basic.username}:\${basic.password}")
+                .addStatement("val encoded = %T.encode(%P.encodeToByteArray())", BASE64, "\${value.username}:\${value.password}")
                 .addStatement("authorized.header(%S, %P)", "Authorization", "Basic \$encoded")
-                .endControlFlow()
         }
 
         SecurityKind.ApiKeyHeader -> {
-            builder.addStatement("credentials.%N?.invoke()?.let { authorized.header(%S, it) }", propertyName, parameterName.orEmpty())
+            builder.addStatement("authorized.header(%S, value)", parameterName.orEmpty())
         }
 
         // A ClientRequest.Builder cannot append to the query string, so the URL is rebuilt around
         // it and handed back through `url(...)`.
         SecurityKind.ApiKeyQuery -> {
-            builder.addStatement("credentials.%N?.invoke()?.let { url.queryParam(%S, it) }", propertyName, parameterName.orEmpty())
+            builder.addStatement("url.queryParam(%S, value)", parameterName.orEmpty())
         }
 
         SecurityKind.ApiKeyCookie -> {
-            builder.addStatement("credentials.%N?.invoke()?.let { authorized.cookie(%S, it) }", propertyName, parameterName.orEmpty())
+            builder.addStatement("authorized.cookie(%S, value)", parameterName.orEmpty())
         }
 
         SecurityKind.Unsupported -> {
             error("a scheme with no credential slot should not be here")
         }
     }
-    return builder.endControlFlow().build()
+    return builder.build()
 }
 
 private val EXCHANGE_FILTER = ClassName("org.springframework.web.reactive.function.client", "ExchangeFilterFunction")

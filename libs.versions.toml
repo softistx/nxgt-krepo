@@ -5,23 +5,23 @@
 #
 # A family name is also a `[libraries]` alias below. That is fine and already common in this file —
 # `junit`, `minio` and `testcontainers` do it too — the two tables are separate namespaces.
-stx-amqp = "0.2.2"
+stx-amqp = "0.3.0"
 stx-common = "0.3.0"
-stx-graphix = "0.2.2"
-stx-i18n = "0.3.0"
-stx-jpa = "0.2.2"
-stx-kafka = "0.2.2"
-stx-ktor = "0.3.0"
+stx-graphix = "0.2.4"
+stx-i18n = "0.3.1"
+stx-jpa = "0.3.0"
+stx-kafka = "0.2.3"
+stx-ktor = "0.3.1"
 stx-material = "0.2.3"
-stx-migrations = "0.2.2"
-stx-mongo = "0.3.0"
-stx-openapi-generator = "0.2.2"
-stx-redis = "0.2.2"
-stx-spring-boot = "0.3.0"
-stx-storage = "0.2.2"
-stx-telemetry = "0.3.0"
+stx-migrations = "0.2.4"
+stx-mongo = "0.3.1"
+stx-openapi-generator = "0.3.0"
+stx-redis = "0.2.3"
+stx-spring-boot = "0.4.0"
+stx-storage = "0.2.4"
+stx-telemetry = "0.3.1"
 stx-testing = "0.2.2"
-stx-workflow = "0.3.0"
+stx-workflow = "0.4.1"
 agp = "9.0.1"
 kotlin = "2.4.20"
 ksp = "2.3.12"
@@ -66,7 +66,6 @@ ktor = "3.6.0"
 kotlinx-rpc = "0.10.4"
 logback = "1.6.6"
 mongodb = "5.13.0"
-coroutines = "1.11.0"
 graalvm-native = "1.1.4"
 swagger-parser = "2.1.48"
 kotlinpoet = "2.4.0"
@@ -237,8 +236,8 @@ jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations
 
 kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css", version = "2026.8.5" }
 
-kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "coroutines" }
-kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "coroutines" }
+kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "kotlinx-coroutines" }
 
 kotlinx-rpc-bom = { module = "org.jetbrains.kotlinx:kotlinx-rpc-bom", version.ref = "kotlinx-rpc" }
 kotlinx-rpc-krpc-client = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krpc-client" }

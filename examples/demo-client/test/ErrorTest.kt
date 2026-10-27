@@ -27,7 +27,7 @@ class ErrorTest :
         beforeSpec {
             val started = startDemoServer(port = 0)
             server = started
-            client = DemoClient(started.baseUrl)
+            client = DemoClient(started.baseUrl, token = { "s3cret" })
         }
 
         afterSpec {

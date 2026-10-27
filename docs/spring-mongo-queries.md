@@ -126,6 +126,51 @@ given the ones that do not.
 The failure arrives as `ApiException.badRequest("filters.invalid", mapOf("filter" to clause))`, so
 the response names the clause it could not read, translated.
 
+## Which fields a client may name
+
+**Unset, every field of the collection is filterable and sortable.** `?filter=passwordHash:like:a`
+answers whether a hash contains an `a`, and a client repeats that per character until it has read
+the field — an oracle on data the response never returns. `parseFilter`, `toSort` and `mongoPage`
+therefore take an optional `allowed: Set<String>`; null keeps the open behaviour, so an existing
+route compiles and behaves as before, and **any route over a collection with a field that must not
+leak should set it**.
+
+```kotlin
+private val FILTERABLE = setOf("status", "total", "placedAt", "customer.city")
+
+// A paged route: ?filter= ?sort= ?size= ?cursor=
+suspend fun page(request: ServerRequest): ServerResponse =
+    ServerResponse.ok().bodyValueAndAwait(template.findPage<Order>(request.mongoPage(allowed = FILTERABLE)))
+
+// A find route: ?filter= and ?sort=
+suspend fun list(request: ServerRequest): List<Order> =
+    template.find(request.mongoQuery(allowed = FILTERABLE), Order::class.java).asFlow().toList()
+
+// Without a ServerRequest: filter.parseFilter(FILTERABLE) and sort.parseSort().toSort(FILTERABLE)
+```
+
+`request.mongoFilter` and `request.mongoQuery` stay properties for the open case; the functions of
+the same names, `mongoFilter(allowed)` and `mongoQuery(allowed)`, take the list.
+
+- **The list names full paths, matched exactly.** `customer.city` allows `customer.city` and nothing
+  else: listing `customer` does not open `customer.passwordHash`, and `customer.city` does not open
+  `customer`.
+- **The same list gates `?filter=` and `?sort=`.** Sorting by a hidden field leaks its order.
+- **A field outside the list is refused, never dropped** — for a sort too, although an unreadable sort
+  clause is dropped. The client sent a field name it was not offered; silently ignoring it would hand
+  back a different answer than the one it asked for.
+- **The client gets** the same 400 as an unreadable clause, `filters.invalid`. The `ApiException`
+  carries `args = {"filter": <clause>}`; a sort clause is reported normalised as `prop:ASC|DESC`,
+  whatever case the client wrote. The wire body is the module's `ErrorResponse`, where `code` is
+  the key and `message` is the translated text (illustrative; `args` feed the message, they are
+  not a field of the body):
+
+```json
+{"message": "<translated filters.invalid>", "status": "400", "code": "filters.invalid", "timestamp": "…"}
+```
+
+The refusal does not say whether the field exists, so it is not an oracle itself.
+
 ## The sort grammar
 
 ```
@@ -206,10 +251,13 @@ and they arrive translated.
 
 ```kotlin
 val page = request.mongoPage()          // ?filter= ?sort= ?size= ?cursor= — what a paged route wants
+val safe = request.mongoPage(allowed = setOf("status", "total"))   // only these fields may be named
 val query = request.mongoQuery          // ?filter= and ?sort=, for `find`; never for a page window
 val filter = request.mongoFilter        // ?filter= alone
 ```
 
+`mongoPage`, `mongoQuery(allowed)` and `mongoFilter(allowed)` take the field allow-list of
+[Which fields a client may name](#which-fields-a-client-may-name); the properties allow every field.
 `mongoPage()` is the one a paged route wants; `mongoQuery` is for a `find` that returns everything
 matching. `page`, `size`, `cursor`, `sort`, `requiredParam`, `listParam` and `body()` are in `web/`
 and documented in the module README — they have no Mongo in them.

@@ -1,5 +1,30 @@
 # stx-workflow
 
+## 0.4.1
+
+### Patch Changes
+
+- [#343](https://github.com/softistx/nxgt-krepo/pull/343) [`2ed7ccc`](https://github.com/softistx/nxgt-krepo/commit/2ed7ccc53870c19e6fc3f9dfcb13495ec42aac6f) Thanks [@SteveGT96](https://github.com/SteveGT96)! - `retryCompensation` now recovers an instance the engine set to `Failed` because its stored context no longer decoded. Once the context decodes again (the stored context repaired, or the definition fixed), it runs the instance's unwind; for a child, retry the child and then its parent. While the context still does not decode, the call keeps refusing with `WorkflowNotRetryableException`.
+
+- [#335](https://github.com/softistx/nxgt-krepo/pull/335) [`22e5e6e`](https://github.com/softistx/nxgt-krepo/commit/22e5e6ecf8cea2046e25339d85db368f18c66f98) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Internal: `WorkflowEngine.kt` is split by concern. `WorkflowEngineBuilder` has its own file, and the advancing machinery (`advance`, `signal` delivery, `startChild`) and the operator verbs' bodies (`undo`, `undoChild`, `retryCompensation`) moved to `engine/` as internal extensions. No behaviour or public API change.
+
+- [#338](https://github.com/softistx/nxgt-krepo/pull/338) [`b8306aa`](https://github.com/softistx/nxgt-krepo/commit/b8306aa88c76d06c96090c250cca34215e746cdb) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Internal: `JpaWorkflowStore.kt` and `MongoWorkflowStore.kt` are split by concern. The lease updates (`take`, `renew`, `release`) and the mapping between a `WorkflowRecord` and its row or document (encoding, decoding, `dueAt`, retention) moved to internal files beside each store. No behaviour or public API change.
+
+- [#332](https://github.com/softistx/nxgt-krepo/pull/332) [`bdd375b`](https://github.com/softistx/nxgt-krepo/commit/bdd375b9a7230329217d9d37fb2022142009516f) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Fixes a parent's unwind counting a `child` node as compensated when the child itself was left `Failed` (its own compensation failed). The parent now fails on that node with `ChildFailedException` and lands `Failed`; retry the child with `retryCompensation`, then the parent.
+
+- [#343](https://github.com/softistx/nxgt-krepo/pull/343) [`2ed7ccc`](https://github.com/softistx/nxgt-krepo/commit/2ed7ccc53870c19e6fc3f9dfcb13495ec42aac6f) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Fixes a parent's unwind recording a child as compensated when it was not. `undoChild` now accepts only a `Cancelled` or `Compensated` child: any other child (one another worker still holds, or one left `Failed`) fails the parent's node with a `ChildFailedException` whose `status` says which. The parent then lands `Failed` instead of `Compensated`: retry the parent once a held child is free, or retry a `Failed` child and then the parent. A node named `<context>` is now refused at build time, since the engine reserves that name.
+
+## 0.4.0
+
+### Minor Changes
+
+- [#321](https://github.com/softistx/nxgt-krepo/pull/321) [`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Adds `WorkflowEngine.retryCompensation(id)`: an instance left `Failed` because a compensation failed can now be reopened after the cause is fixed, and its unwind continues from the failed compensation without re-running the ones that succeeded. It refuses anything else with `WorkflowNotRetryableException`.
+
+### Patch Changes
+
+- Updated dependencies [[`18abc6f`](https://github.com/softistx/nxgt-krepo/commit/18abc6ff525567c44b66049f578785f0cc675da4)]:
+  - stx-ktor@0.3.1
+
 ## 0.3.0
 
 ### Minor Changes

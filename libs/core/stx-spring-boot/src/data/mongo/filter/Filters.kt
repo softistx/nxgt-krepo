@@ -41,8 +41,15 @@ import kotlin.time.Instant
  * where lenience is the wrong instinct: dropping a filter nobody could read returns *more* rows than
  * the caller asked for, and a caller who wrote `status:eq:PIAD` would get the whole collection back
  * rather than an empty page. Sorting can afford to shrug; narrowing cannot.
+ *
+ * **[allowed] is the list of fields a client may filter on, and leaving it null is a risk.** Null
+ * lets every field name reach the query, so `?filter=passwordHash:like:a` answers whether a hash
+ * contains an `a` — a character-by-character oracle on a field the response never returns. A clause
+ * naming a field outside [allowed] fails as `filters.invalid`, exactly like one that does not parse.
+ * Names are matched whole and exactly, so a nested field is listed by its full dotted path
+ * (`address.city`); listing `address` does not allow `address.city`.
  */
-fun String?.parseFilter(): Query {
+fun String?.parseFilter(allowed: Set<String>? = null): Query {
     if (isNullOrBlank()) return Criteria().query
 
     val body = removePrefix(OR_PREFIX)
@@ -50,7 +57,7 @@ fun String?.parseFilter(): Query {
         body
             .split(";")
             .filter { it.isNotBlank() }
-            .map { clause -> clause.trim().toCriteria() }
+            .map { clause -> clause.trim().toCriteria(allowed) }
 
     return when {
         criteria.isEmpty() -> Criteria().query
@@ -64,9 +71,10 @@ private const val OR_PREFIX = "or@"
 /** `field:operator:value`, anchored — see the note on [parseFilter] about scanning versus matching. */
 private val CLAUSE = Regex("""([a-zA-Z_][a-zA-Z0-9_.]*):([a-z!]+):(.+)""", RegexOption.DOT_MATCHES_ALL)
 
-private fun String.toCriteria(): Criteria {
+private fun String.toCriteria(allowed: Set<String>?): Criteria {
     val match = CLAUSE.matchEntire(this) ?: throw invalid(this)
     val (field, token, value) = match.destructured
+    if (allowed != null && field !in allowed) throw invalid(this)
     val operator = Operator.of(token) ?: throw invalid(this)
 
     return when (operator) {
@@ -151,7 +159,7 @@ private fun circle(
 }
 
 /** The one failure this file raises, so a caller sees the clause it could not read. */
-private fun invalid(clause: String) = ApiException.badRequest(KEY_INVALID_FILTER, mapOf("filter" to clause))
+internal fun invalid(clause: String) = ApiException.badRequest(KEY_INVALID_FILTER, mapOf("filter" to clause))
 
 /** What an unreadable filter clause is reported as. */
 const val KEY_INVALID_FILTER = "filters.invalid"

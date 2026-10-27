@@ -34,7 +34,7 @@ class PolymorphismTest :
 
         beforeSpec {
             server = startDemoServer(port = 0)
-            client = SpringDemoClient(server.baseUrl)
+            client = SpringDemoClient(server.baseUrl, token = { "s3cret" })
         }
 
         afterSpec { server.close() }
