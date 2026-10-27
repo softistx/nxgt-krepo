@@ -31,7 +31,7 @@ class RealSpecTest :
 
         feature("endpoint constants over a real document") {
             scenario("every operation gets one, and no two collide") {
-                // 51 operations across 10 tags is where a derived name actually gets tested: the
+                // 53 operations across 10 tags is where a derived name actually gets tested: the
                 // parser would have thrown on a collision, so reaching the assertion is half of it,
                 // and the count proves none were quietly merged away.
                 val model = OpenApiParser().parse(specPath())
@@ -63,9 +63,9 @@ class RealSpecTest :
                         "UploadsApi",
                         "UsersApi",
                     )
-                // The document declares 52; `purgeNotifications` is marked x-internal, so a
+                // The document declares 54; `purgeNotifications` is marked x-internal, so a
                 // generated client is one operation smaller than the document it came from.
-                model.groups.sumOf { it.operations.size } shouldBe 51
+                model.groups.sumOf { it.operations.size } shouldBe 53
                 operationsOf(model).none { it.name == "purgeNotifications" } shouldBe true
                 model.models.size shouldBeGreaterThan 10
 
@@ -84,7 +84,7 @@ class RealSpecTest :
                 // Not every operation declares one: the two `/notifications` reads and
                 // `/session/echo` do not, and a document is entitled to say nothing about how an
                 // operation fails.
-                operations.count { it.errors.isEmpty() } shouldBe 3
+                operations.count { it.errors.isEmpty() } shouldBe 5
                 // One error schema throughout, which is what makes one generated exception enough.
                 operations
                     .flatMap { it.errors }
@@ -98,12 +98,15 @@ class RealSpecTest :
 
                 model.securitySchemes.map { it.name to it.kind } shouldContainAll
                     listOf("Basic" to SecurityKind.HttpBasic, "Bearer" to SecurityKind.HttpBearer)
-                // The document's root is `security: - Bearer: []`, which 36 operations inherit;
-                // the remaining 14 override it with `security: []`.
+                // The document's root is `security: - Bearer: []`, which 37 operations inherit;
+                // 14 override it with `security: []`, and `/session/either` and `/session/optional`
+                // list alternatives of their own.
+                val bearer = listOf(SecurityRequirement("Bearer"))
+                val basic = listOf(SecurityRequirement("Basic"))
                 operations.count { it.security.isEmpty() } shouldBe 14
-                operations
-                    .filter { it.security.isNotEmpty() }
-                    .all { it.security == listOf(listOf(SecurityRequirement("Bearer"))) } shouldBe true
+                operations.count { it.security == listOf(bearer) } shouldBe 37
+                operations.single { it.name == "echoEither" }.security shouldBe listOf(bearer, basic)
+                operations.single { it.name == "echoOptional" }.security shouldBe listOf(bearer, emptyList())
             }
         }
     })
