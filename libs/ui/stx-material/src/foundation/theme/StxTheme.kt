@@ -21,8 +21,8 @@ import com.softistx.material.foundation.style.colors
  * third-party M3 library — keeps working inside it. That is what makes this adoptable in an
  * application that already exists.
  *
- * Its signature is Material 3's own: a [ColorScheme], a [Typography], [Shapes] and a
- * [MotionScheme], each with a default. A caller that already computes one of the four — from a
+ * Its signature is Material 3's own: a [ColorScheme], a [Typography] and [Shapes], each with a
+ * default, plus an [StxMotion] for motion. A caller that already computes one of them — from a
  * wallpaper, from a brand kit, from a designer's export — passes it and keeps everything else.
  * `StxThemeProvider` is the shorthand for the common case, and the only thing that knows the
  * scheme comes from the wallpaper on Android and from a seed everywhere else.
@@ -33,13 +33,14 @@ import com.softistx.material.foundation.style.colors
  * (`success`, `info`, `warning`) that M3 leaves to the product.
  *
  * It installs `MaterialExpressiveTheme`: rounder shapes, springier motion, and a `MotionScheme`
- * that overshoots where the standard one settles. `motionScheme = MotionScheme.standard()` calms
+ * that overshoots where the standard one settles. `motion = StxMotion(MotionScheme.standard())` calms
  * that for the whole tree, and every animation here follows — nothing holds its own curve.
  *
- * **With no `motionScheme` and no `motion` it follows the OS**: "Reduce motion" installs a scheme
- * whose every spec is a snap and an [StxMotion] with `enabled = false`. Pass either one and the OS is
- * not read at all: `motionScheme` alone keeps motion on, `motion` alone keeps the expressive scheme.
- * Desktop reads only `-Dstx.material.reduceMotion`; `readDesktopReducedMotion()` is the app's opt-in to the OS.
+ * **[motion] is the one motion input**, and Material 3's scheme derives from it: a motion with
+ * `enabled = false` installs a scheme whose every spec is a snap, any other installs its `scheme`.
+ * **With no [motion] it follows the OS**: "Reduce motion" gives an `enabled = false` motion. Pass one
+ * and the OS is not read at all. Desktop reads only `-Dstx.material.reduceMotion`;
+ * `readDesktopReducedMotion()` is the app's opt-in to the OS.
  */
 @Composable
 fun StxTheme(
@@ -47,16 +48,14 @@ fun StxTheme(
     colorScheme: ColorScheme = remember(isDark) { stxColorScheme(DefaultSeed, isDark) },
     colors: StxColors = remember(colorScheme, isDark) { stxColors(colorScheme, isDark) },
     spacing: StxSpacing = StxSpacing(),
-    motionScheme: MotionScheme? = null,
     motion: StxMotion? = null,
     typography: Typography = MaterialTheme.typography,
     shapes: Shapes = MaterialTheme.shapes,
     content: @Composable () -> Unit,
 ) {
-    val followOs = motionScheme == null && motion == null
-    val reduced = followOs && systemReducesMotion()
-    val scheme = motionScheme ?: if (reduced) SnapMotionScheme else MotionScheme.expressive()
-    val stxMotion = motion ?: remember(scheme, reduced) { StxMotion.system(reduced, scheme) }
+    val reduced = motion == null && systemReducesMotion()
+    val stxMotion = motion ?: remember(reduced) { StxMotion.system(reduced) }
+    val scheme = if (stxMotion.enabled) stxMotion.scheme else SnapMotionScheme
     CompositionLocalProvider(
         LocalStrangeColors provides colors,
         LocalStrangeSpacing provides spacing,

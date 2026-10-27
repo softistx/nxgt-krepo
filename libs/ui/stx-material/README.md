@@ -37,15 +37,16 @@ is what makes this adoptable in an application that already exists, and a caller
 computes one of the four passes it and keeps the other three.
 
 It installs `MaterialExpressiveTheme` and `MotionScheme.expressive()`: rounder shapes, springier
-motion. `motionScheme = MotionScheme.standard()` calms it for the whole tree, and every
-animation follows — nothing here holds its own curve.
+motion. `motion = StxMotion(MotionScheme.standard())` calms it for the whole tree, and every
+animation follows — nothing here holds its own curve. `motion` is the one motion input: Material 3's
+scheme derives from it (a snapping one when `enabled = false`).
 
-**It follows the OS "Reduce motion" setting** on Android and iOS when you pass neither `motionScheme` nor
-`motion`; pass either one and the OS is not read. Desktop reads only `-Dstx.material.reduceMotion`, and an app
+**It follows the OS "Reduce motion" setting** on Android and iOS when you pass no `motion`; pass one and the
+OS is not read. Desktop reads only `-Dstx.material.reduceMotion`, and an app
 can opt in to the OS's answer with `readDesktopReducedMotion()`:
 
 ```kotlin
-StxTheme(motion = StxMotion(enabled = false)) { App() }   // opt out: no animation, whatever the OS says
+StxTheme(motion = StxMotion(enabled = false)) { App() }   // opt out: no animation, M3 morphs included, whatever the OS says
 ```
 
 ```kotlin
@@ -55,7 +56,7 @@ StxThemeProvider(seed = Color(0xFF5B5BD6)) {
 }
 
 // Anything more specific goes straight to StxTheme.
-StxTheme(colorScheme = brandScheme, motionScheme = MotionScheme.standard()) { … }
+StxTheme(colorScheme = brandScheme, motion = StxMotion(MotionScheme.standard())) { … }
 ```
 
 **Only one decision is platform-specific**, and it is behind `expect`/`actual`:

@@ -44,13 +44,12 @@ Package `com.softistx.material.foundation.motion`.
 | `motion/every-speed-at-once` | `Fast` / `Default` / `Slow` on the same move |
 
 The header's **Motion** control switches the whole tree between `MotionScheme.expressive()`,
-`MotionScheme.standard()` and off. Off stops this library's motion; Material 3's own components
-keep their built-in animations, because a `MotionScheme` has no null.
+`MotionScheme.standard()` and off. Off snaps this library's motion and Material 3's own: the theme derives M3's scheme from `motion`.
 
-With no `motionScheme` and no `motion`, `StxTheme` follows the OS: "Reduce motion" installs a scheme whose
-every spec is a snap and an `StxMotion` with `enabled = false`. **Pass either one and the OS is not
-read**: `motionScheme` alone keeps motion on with your scheme, `motion` alone keeps the expressive scheme.
-`StxThemeProvider` forwards the same rule (its `motionScheme` is `null` by default). Android reads the
+`motion` is the one motion input of `StxTheme`, and Material 3's scheme derives from it: a motion with
+`enabled = false` installs a scheme whose every spec is a snap, any other installs its `scheme`. With no
+`motion`, `StxTheme` follows the OS: "Reduce motion" gives an `enabled = false` motion. **Pass a `motion` and the
+OS is not read.** `StxThemeProvider` forwards it (its `motion` is `null` by default). Android reads the
 animator scale and iOS `UIAccessibilityIsReduceMotionEnabled`. **Desktop follows only
 `-Dstx.material.reduceMotion=true|false`** (absent means not reduced; no process is spawned). An app
 that wants the OS's answer opts in with `readDesktopReducedMotion()` (`suspend`, on `Dispatchers.IO`;
@@ -62,7 +61,7 @@ LaunchedEffect(Unit) { reduced = readDesktopReducedMotion() == true }
 StxTheme(motion = StxMotion.system(reduced)) { App() }
 ```
 
-`StxMotion.system(reduced)` snaps this library's motion; add `motionScheme` to snap M3's own morphs too.
+`StxMotion.system(reduced)` snaps this library's motion and, through the theme, M3's own morphs.
 The read is taken when the theme is composed, not observed. See `docs/troubleshooting.md`.
 
 ## Text

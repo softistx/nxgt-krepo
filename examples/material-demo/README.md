@@ -112,8 +112,8 @@ Two things beyond looking at components:
   repaint and re-time every story, and no component is told about any of them. If something does
   not follow, it is holding a colour or a curve it should be reading.
 - **The Motion control switches Material 3's own `MotionScheme`** between expressive, standard and
-  off. Off stops this library's motion only — M3's built-in components keep animating, because a
-  `MotionScheme` has no null. `motion/spatial-and-effects` shows the distinction M3 draws: the
+  off. Off snaps this library's motion and M3's own, since the theme derives M3's scheme from `motion`.
+  `motion/spatial-and-effects` shows the distinction M3 draws: the
   square overshoots its mark, the colour swatch does not.
 - **Wallpaper colours appear as a switch only on Android 12+**, because `supportsDynamicColor` says
   so. A switch that cannot change anything is worse than no switch.

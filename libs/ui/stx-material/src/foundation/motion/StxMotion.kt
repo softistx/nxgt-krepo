@@ -27,12 +27,12 @@ enum class MotionSpeed { Fast, Default, Slow }
  *
  * The scheme is *held*, not read from the composition, because a `Style` block is not a composable
  * scope: `pressed { animate(motion.spatial(Fast)) { … } }` runs at apply time. [StxTheme]
- * installs the same scheme it hands `MaterialExpressiveTheme`, so a plain M3 component and one of
- * ours animate identically.
+ * installs the same scheme it hands `MaterialExpressiveTheme` (a snapping one when [enabled] is
+ * false), so a plain M3 component and one of ours animate identically.
  *
- * **A theme that is given neither a `StxMotion` nor a `MotionScheme` builds one from the OS** —
- * [Companion.system] — so "Reduce motion" turns `enabled` off by itself on every platform. Passing
- * either one is the opt-out: the OS is not read.
+ * **A theme that is given no `StxMotion` builds one from the OS** — [Companion.system] — so
+ * "Reduce motion" turns `enabled` off by itself on every platform. Passing one is the opt-out: the
+ * OS is not read. It is the theme's one motion input: Material 3's scheme derives from it.
  *
  * **`enabled = false` collapses every spec to [snap], leaving the composables untouched** — a
  * reduced-motion preference, or a screenshot test, is one flag at the theme rather than a branch
