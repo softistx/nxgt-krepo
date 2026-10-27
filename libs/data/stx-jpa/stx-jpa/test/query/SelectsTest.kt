@@ -7,6 +7,7 @@ import com.softistx.jpa.JpaTestDatabase
 import com.softistx.jpa.criteria.asc
 import com.softistx.jpa.criteria.eq
 import com.softistx.jpa.criteria.fetch
+import com.softistx.jpa.criteria.fetchEach
 import com.softistx.jpa.criteria.get
 import com.softistx.jpa.criteria.gt
 import com.softistx.jpa.entity.Buyer
@@ -137,6 +138,30 @@ class SelectsTest :
                     jpa.session { session ->
                         shouldThrow<IllegalArgumentException> { session.findPage<Purchase>(limit = 0) }
                         shouldThrow<IllegalArgumentException> { session.findPage<Purchase>(limit = 1, offset = -1) }
+                    }
+                }
+            }
+
+            scenario("refuses a page over a collection fetch, and names the attribute") {
+                seeded { jpa ->
+                    jpa.session { session ->
+                        val error =
+                            shouldThrow<IllegalArgumentException> {
+                                session.findPage<Purchase>(limit = 2) { criteria, purchase ->
+                                    purchase.fetchEach(Purchase::lines)
+                                    criteria.orderBy(asc(purchase[Purchase::id]))
+                                }
+                            }
+                        error.message.shouldNotBeNull() shouldContain "lines"
+                        error.message.shouldNotBeNull() shouldContain "separately"
+
+                        // A to-one fetch multiplies no rows, so a page over it is still a page.
+                        session
+                            .findPage<Purchase>(limit = 2) { criteria, purchase ->
+                                purchase.fetch(Purchase::customer)
+                                criteria.orderBy(asc(purchase[Purchase::id]))
+                            }.data
+                            .map { it.reference } shouldContainExactly listOf("P-1", "P-2")
                     }
                 }
             }
