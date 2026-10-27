@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
+import com.softistx.material.contrast
 import com.softistx.material.foundation.motion.StxMotion
 import com.softistx.material.foundation.motion.rememberMorphShape
 import com.softistx.material.foundation.theme.DefaultSeed
@@ -34,10 +35,10 @@ import com.softistx.material.foundation.theme.stxColorScheme
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.doubles.shouldBeGreaterThan as doubleGreater
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 
 private val scheme = stxColorScheme(DefaultSeed, isDark = false)
 
@@ -83,7 +84,7 @@ class StepperMarkerTest :
                 }
             }
 
-            scenario("the current marker is the scalloped nine-sided cookie, which covers less than the circle") {
+            scenario("the current marker covers less than the circle, and its corner is clear") {
                 val bounds = NodeBounds()
                 var circle = 0
                 markerProbe(StepStatus.Upcoming, bounds) { circle = ink(bounds) }
@@ -103,6 +104,24 @@ class StepperMarkerTest :
                 markerProbe(StepStatus.Upcoming, bounds) {
                     count(scheme.surfaceContainerHighest) shouldBeGreaterThan 400
                     count(scheme.primary) shouldBe 0
+                }
+            }
+        }
+
+        feature("the colour") {
+            scenario("the number holds 3:1 on its plate, upcoming and current, read off the rendered pixels") {
+                listOf(
+                    StepStatus.Upcoming to (scheme.surfaceContainerHighest to scheme.onSurfaceVariant),
+                    StepStatus.Current to (scheme.primary to scheme.onPrimary),
+                ).forEach { (status, pair) ->
+                    val bounds = NodeBounds()
+                    markerProbe(status, bounds) {
+                        val plate = pixelAt(bounds, Corner.TopLeft, inset = 8)
+                        val number = pixelAt(bounds, Corner.Center)
+                        plate shouldBe pair.first
+                        number shouldBe pair.second
+                        contrast(number, plate) doubleGreater 3.0
+                    }
                 }
             }
         }
@@ -135,15 +154,15 @@ class StepperMarkerTest :
                 }
             }
 
-            scenario("the outline passes through a shape that is neither the circle nor the cookie") {
+            scenario("mid-morph the outline covers strictly between the circle's area and the cookie's") {
                 runMorph(StxMotion()) { circle, cookie, mid ->
                     cookie shouldBeLessThan circle
-                    mid shouldNotBe circle
-                    mid shouldNotBe cookie
+                    mid shouldBeLessThan circle
+                    mid shouldBeGreaterThan cookie
                 }
             }
 
-            scenario("a marker whose step becomes current is mid-morph a frame later, then the cookie") {
+            scenario("a marker whose step becomes current covers strictly between the two areas a few frames in") {
                 runComposeUiTest {
                     var status by mutableStateOf(StepStatus.Upcoming)
                     mainClock.autoAdvance = false
@@ -168,8 +187,8 @@ class StepperMarkerTest :
                     mainClock.advanceTimeBy(3000)
                     val cookie = covered()
                     cookie shouldBeLessThan circle
-                    mid shouldNotBe circle
-                    mid shouldNotBe cookie
+                    mid shouldBeLessThan circle
+                    mid shouldBeGreaterThan cookie
                 }
             }
 

@@ -2,12 +2,11 @@ package com.softistx.material.components.feedback
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
+import com.softistx.material.contrast
 import com.softistx.material.foundation.theme.DefaultSeed
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.stxColorScheme
@@ -19,14 +18,6 @@ import io.kotest.matchers.ints.shouldBeGreaterThan as intGreater
 import io.kotest.matchers.shouldBe
 
 private val scheme = stxColorScheme(DefaultSeed, isDark = false)
-
-private fun contrast(
-    a: Color,
-    b: Color,
-): Double {
-    val (hi, lo) = listOf(a.luminance(), b.luminance()).sortedDescending()
-    return (hi + 0.05) / (lo + 0.05)
-}
 
 private fun <T> markProbe(
     bounds: NodeBounds,

@@ -48,7 +48,9 @@ enum class AppBarSize {
  * The title is emphasised and announced as a heading. A [Medium] or [Large] bar takes the type of
  * M3's flexible bar for its expanded title, so it is larger than the small one and wraps instead of
  * truncating; pass [scrollBehavior] (`TopAppBarDefaults.exitUntilCollapsedScrollBehavior()`) to
- * make it collapse. The bar is inert, so it takes no `style`.
+ * make it collapse; a [Small] or [Centered] bar given `enterAlwaysScrollBehavior()` slides away on
+ * scroll and returns on the first scroll back. The bar itself has no interaction state (the
+ * navigation button keeps its own style), so it takes no `style`.
  */
 @Composable
 fun AppBar(
@@ -116,13 +118,14 @@ fun AppBar(
     }
 }
 
-/** The one line of a small bar: the emphasised headline, announced as a heading. */
+/** The one line of a small bar: the emphasised title, kept to one line and announced as a heading. */
 @Composable
 private fun BarTitle(title: String) {
     Typography(
         text = title,
-        variant = TypographyVariant.HeadlineSmall,
+        variant = TypographyVariant.TitleLarge,
         emphasized = true,
+        maxLines = 1,
         modifier = Modifier.semantics { heading() },
     )
 }
