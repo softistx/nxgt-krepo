@@ -27,6 +27,8 @@ import com.softistx.material.components.content.Kbd
 import com.softistx.material.components.content.LabeledDivider
 import com.softistx.material.components.content.LinkPreview
 import com.softistx.material.components.content.ListTile
+import com.softistx.material.components.content.ListTileDefaults
+import com.softistx.material.components.content.ListTileGroup
 import com.softistx.material.components.content.MentionChip
 import com.softistx.material.components.content.MessageBubble
 import com.softistx.material.components.content.PinBar
@@ -90,16 +92,25 @@ val ContentStories =
 
         story("List tile") { knobs ->
             val supporting = knobs.flag("Supporting text", true)
-            Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
-                listOf("Amara Diallo", "Jonas Weber", "Priya Raman").forEach { name ->
+            val grouped = knobs.flag("Segmented group", true)
+            val choosable = knobs.flag("Single choice", true)
+            var chosen by remember { mutableStateOf(1) }
+            val names = listOf("Amara Diallo", "Jonas Weber", "Priya Raman")
+            Column(
+                verticalArrangement = Arrangement.spacedBy(if (grouped) ListTileDefaults.GroupGap else StxTheme.spacing.xxs),
+            ) {
+                names.forEachIndexed { index, name ->
                     ListTile(
                         title = name,
                         supporting = if (supporting) "Last seen this morning" else null,
-                        onClick = {},
+                        onClick = { chosen = index },
+                        selected = if (choosable) chosen == index else null,
+                        group = if (grouped) ListTileGroup(index, names.size) else null,
                         leading = { Icon(icon = StxIcons.Person, description = null) },
                         trailing = { StatusBadge(text = "active", tone = Tone.Success) },
                     )
                 }
+                ListTile(title = "Archived (disabled)", onClick = {}, enabled = false, group = if (grouped) ListTileGroup(0, 1) else null)
             }
         }
 

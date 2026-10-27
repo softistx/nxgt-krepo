@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,6 +15,8 @@ import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.content.EmptyState
+import com.softistx.material.components.content.ListTileDefaults
+import com.softistx.material.components.content.ListTileGroup
 import com.softistx.material.components.form.InputGroup
 import com.softistx.material.components.navigation.Search
 import com.softistx.material.foundation.icon.StxIcons
@@ -56,8 +58,10 @@ fun ConversationList(
                 )
             shown.isEmpty() -> EmptyState(title = "No conversation matches", description = "Try another name.")
             else ->
-                LazyColumn(Modifier.fillMaxSize()) {
-                    items(shown, key = { it.id }) { ConversationRow(it, session) }
+                LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(ListTileDefaults.GroupGap)) {
+                    itemsIndexed(shown, key = { _, it -> it.id }) { index, it ->
+                        ConversationRow(it, session, ListTileGroup(index, shown.size))
+                    }
                 }
         }
     }

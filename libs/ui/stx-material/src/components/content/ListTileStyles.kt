@@ -1,17 +1,11 @@
 package com.softistx.material.components.content
 
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.animate
-import androidx.compose.foundation.style.pressed
-import androidx.compose.foundation.style.scale
-import com.softistx.material.foundation.motion.MotionSpeed
-import com.softistx.material.foundation.style.motion
 
 /**
- * The press. Height, padding and colours are `ListItem`'s — the 56 dp two-line height this file
- * used to state as a constant is one of the things M3 was already getting right.
+ * Nothing: `ListItem` owns the whole look — the 56 dp two-line height, the padding, the colours,
+ * the disabled and selected tones, and the shape that morphs under the press. A tile therefore
+ * takes no scale (two give-under-the-finger effects would fight); this is the default a caller's
+ * `style` is applied after.
  */
-val listTileStyle: Style =
-    Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.99f) } }
-    }
+val listTileStyle: Style = Style
