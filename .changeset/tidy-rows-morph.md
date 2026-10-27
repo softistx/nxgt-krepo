@@ -2,7 +2,7 @@
 "stx-material": minor
 ---
 
-`ListTile` is Material 3's interactive `ListItem`. New parameters, after every existing one: `selected: Boolean? = null` makes a tile a single choice, as a list-detail's current row is (the chosen row takes M3's selected tone and is announced as a `RadioButton` that is or is not selected), and `group: ListTileGroup? = null` (`ListTileGroup(index, count)`) makes it one tile of a segmented list, spaced by the new `ListTileDefaults.GroupGap`. Both need `onClick` (M3 has no static segmented item): `selected` or `group` without one throws an `IllegalArgumentException`.
+`ListTile` is Material 3's interactive `ListItem`. New parameters, placed before `style` (see the lead changeset): `selected: Boolean? = null` makes a tile a single choice, as a list-detail's current row is (the chosen row takes M3's selected tone and is announced as a `RadioButton` that is or is not selected), and `group: ListTileGroup? = null` (`ListTileGroup(index, count)`) makes it one tile of a segmented list, spaced by the new `ListTileDefaults.GroupGap`. Both need `onClick` (M3 has no static segmented item): `selected` or `group` without one throws an `IllegalArgumentException`.
 
 Visible default changes of a clickable `ListTile`, before then after:
 - The press: the whole row scaled to 0.99 under a plain rectangular ripple; now M3's state layers (pressed, hovered, focused) and a shape that morphs, with no scale. `StxStyles.listTile` had no effect and is gone (see the lead changeset).
