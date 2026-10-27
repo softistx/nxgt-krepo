@@ -16,6 +16,9 @@ enum class Viewport(
     val height: Int,
 ) {
     Phone(412, 915),
+
+    /** A tablet held upright; the navigation rail already shows from 600 dp, so landscape adds no new layout. */
+    Tablet(1024, 1366),
     Desktop(1440, 900),
 }
 
