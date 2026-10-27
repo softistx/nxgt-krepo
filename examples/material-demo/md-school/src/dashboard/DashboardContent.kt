@@ -32,7 +32,7 @@ fun DashboardContent(
             onDismiss = { barVisible = false },
         )
     }
-    PromoBanner(text = "Parent evening on 5 November. Booking code", code = "PTM2026", tone = Tone.Success)
+    PromoBanner(text = "Parent evening on 5 November. Booking code", code = "PTM2026", tone = Tone.Info)
     StatsRow(session)
     BoxWithConstraints {
         val gap = Arrangement.spacedBy(StxTheme.spacing.md)

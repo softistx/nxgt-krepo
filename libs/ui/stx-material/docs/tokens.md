@@ -19,9 +19,9 @@ finished.
 
 | Role | Members | Where it comes from |
 | --- | --- | --- |
-| The 48 M3 roles | `colors.scheme.primary`, `.surfaceContainerHigh`, … | `dynamicColorScheme(seed, isDark)` |
+| The 48 M3 roles | `colors.scheme.primary`, `.surfaceContainerHigh`, … | `stxColorScheme(seed, isDark, paletteStyle, specVersion)` |
 | `success` | `success`, `onSuccess`, `successContainer`, `onSuccessContainer` | derived from its own seed |
-| `info` | same four | derived from its own seed |
+| `info` | same four | **the scheme's `secondary*` roles** by default; `stxColors(info = colour)` grows a dedicated one |
 | `warning` | same four | derived from its own seed |
 | `error` | same four | **delegated to `scheme`** — never re-derived |
 
@@ -34,11 +34,43 @@ without naming twelve colours: `colors.tone(tone)` returns a `ToneColors` — `m
 `container`, `onContainer`. `StatusBadge` and `Alert` take a `Tone` for exactly this reason.
 
 **Where the scheme comes from is a platform decision, and only that decision is
-platform-specific.** `platformColorScheme(seed, isDark, dynamicColor)` answers with the user's
+platform-specific.** `platformColorScheme(seed, isDark, dynamicColor, paletteStyle, specVersion)` answers with the user's
 wallpaper palette on Android 12+ and with the seed everywhere else; `supportsDynamicColor` says
 which, so a settings screen can decide whether to *offer* the choice rather than showing a switch
-that does nothing. `stxColors(scheme, isDark)` then adds the semantic roles to whichever scheme
+that does nothing (`paletteStyle` and `specVersion` act on the seed path only). `stxColors(scheme, isDark)` then adds the semantic roles to whichever scheme
 arrived — the extra roles are not tied to the seed path.
+
+**A calm palette, one accent per screen.** The seed path defaults to `PaletteStyle.TonalSpot` on
+`ColorSpec.SpecVersion.SPEC_2025`: muted secondary and tertiary roles around a single primary, so
+the primary is the one accent and the rest of the screen stays quiet. `paletteStyle` and
+`specVersion` are parameters of `stxColorScheme`, `stxColors(seed, …)`, `platformColorScheme` and
+`StxThemeProvider`; `PaletteStyle.Vibrant` and `PaletteStyle.Expressive` stay available for a
+brand that wants more colour. They apply to the seed path only — Android's wallpaper palette is
+the system's and is left alone. Every on-pair (`onPrimary` on `primary`, …, plus `onSurface` and
+`onSurfaceVariant` over each `surfaceContainer*` role) meets AA (4.5:1) in light and dark for each of these styles, which
+`ThemeColorTest` checks over several seeds.
+
+```kotlin
+import com.materialkolor.PaletteStyle
+import com.materialkolor.dynamiccolor.ColorSpec
+
+// Keep the old, more vivid look.
+StxThemeProvider(seed = brand, paletteStyle = PaletteStyle.Vibrant) { … }
+
+// Keep a dedicated info colour instead of `secondary`.
+val colors = stxColors(scheme, isDark, info = Color(0xFF2563EB))
+```
+
+`info` is a parameter of the `stxColors(scheme, isDark, …)` overload only; the seed overload,
+`stxColors(seed, isDark, paletteStyle, specVersion)`, takes no `info`.
+
+The `success` and `warning` roles, grown from their own seeds, are pinned to `SPEC_2025` too.
+
+`info` follows the same budget: it is the scheme's `secondary`, so there is no fourth hue sitting
+close to the primary. Tones belong where they change what the reader does — a `StatusBadge` for a
+mark below the pass line, a `StatusDot` beside a delta that went the wrong way — and not as
+decoration. `Stat` therefore draws its delta as text and adds a dot only for `Success`, `Warning`
+and `Error`; `Tone.Info` is a plain line.
 
 No component holds a colour of its own, so changing the scheme repaints all of them.
 
