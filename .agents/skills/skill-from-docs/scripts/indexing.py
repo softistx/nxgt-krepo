@@ -18,7 +18,6 @@ def slug_for(url: str, root: str) -> str:
     return (re.sub(r"\.html?$", "", path) or "home").lower()
 
 
-
 def write_index(out: Path, cfg: dict, base: str, version: str, stamp: str) -> None:
     """Rebuild INDEX.md from every cached page, so a partial fetch keeps the full map.
 

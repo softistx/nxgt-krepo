@@ -19,7 +19,6 @@ def get(url: str) -> str:
         return resp.read().decode("utf-8", "replace")
 
 
-
 def common_prefix(urls: list[str]) -> str:
     """The root the sitemap declares for itself, which may not be where it is served."""
     if len(urls) == 1:
