@@ -34,7 +34,7 @@ without naming twelve colours: `colors.tone(tone)` returns a `ToneColors` — `m
 `container`, `onContainer`. `StatusBadge` and `Alert` take a `Tone` for exactly this reason.
 
 `Alert`, `AnnouncementBar` and `PromoBanner`: the plate takes the tone's solid pair (`main` with
-`onMain`); the notice is `surfaceContainerHigh`, `largeIncreased`, no border, except `Tone.Error`,
+`onMain`), except on an error, where it is inverted (`onContainer` plate, `container` icon) to hold 3:1; the notice is `surfaceContainerHigh`, `largeIncreased`, no border, except `Tone.Error`,
 which keeps its container.
 
 **Where the scheme comes from is a platform decision, and only that decision is

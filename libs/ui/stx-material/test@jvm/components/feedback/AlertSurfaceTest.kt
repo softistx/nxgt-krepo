@@ -107,10 +107,10 @@ class AlertSurfaceTest :
         }
 
         feature("the leading plate") {
-            scenario("every tone, error included, paints its solid main colour with the plate and not without it") {
+            scenario("every tone paints its plate colour with the plate and not without it") {
                 Tone.entries.forEach { tone ->
                     val bounds = NodeBounds()
-                    val main = colors.tone(tone).main
+                    val main = if (tone == Tone.Error) colors.tone(tone).onContainer else colors.tone(tone).main
                     alertProbe(bounds, { Alert("Saved.", modifier = it, tone = tone) }) {
                         // 36 dp plate: a cookie, so well under a 36 x 36 square, well over a thin line.
                         settle().count(main) shouldBeGreaterThan 400
@@ -122,21 +122,17 @@ class AlertSurfaceTest :
                 }
             }
 
-            scenario("the plate colour read off the rendered pixels holds 3:1 on surfaceContainerHigh, for every tone") {
+            scenario("the plate colour read off the rendered pixels holds 3:1 on its own notice surface, for every tone") {
                 Tone.entries.forEach { tone ->
                     val bounds = NodeBounds()
                     alertProbe(bounds, { Alert("Saved.", modifier = it, tone = tone) }) {
                         val frame = settle()
-                        // The plate sits at the start of the row: its centre-left, past the 16 dp padding.
+                        val role = colors.tone(tone)
                         val plate = frame.pixelAt(bounds, Corner.TopLeft, inset = 16 + 8)
                         val surface = frame.pixelAt(bounds, Corner.BottomRight, inset = 12)
-                        plate shouldBe colors.tone(tone).main
-                        val expected =
-                            if (tone == Tone.Error) colors.tone(Tone.Error).container else colors.scheme.surfaceContainerHigh
-                        surface shouldBe expected
-                        // Measured against surfaceContainerHigh for every tone; an error's own backdrop is
-                        // errorContainer, where the plate is a decorative 2.4:1 and its icon the readable part.
-                        contrast(plate, colors.scheme.surfaceContainerHigh) doubleGreater 3.0
+                        plate shouldBe (if (tone == Tone.Error) role.onContainer else role.main)
+                        surface shouldBe (if (tone == Tone.Error) role.container else colors.scheme.surfaceContainerHigh)
+                        contrast(plate, surface) doubleGreater 3.0
                     }
                 }
             }

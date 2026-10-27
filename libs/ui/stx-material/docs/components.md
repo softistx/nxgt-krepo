@@ -251,7 +251,7 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 `Alert`, `AnnouncementBar` and `PromoBanner` share one surface (`StxStyles.alert(tone)`): a tonal
 `surfaceContainerHigh` with no outline and a `largeIncreased` (20 dp) corner, except `Tone.Error`,
 which keeps the error container because it is the one tone that must interrupt. The tone lives on
-a leading 36 dp `MaterialShapes.Cookie6Sided` plate in the tone's solid pair, carrying
+a leading 36 dp `MaterialShapes.Cookie6Sided` plate in the tone's solid pair (inverted on an error, to hold 3:1 on its container), carrying
 `AlertDefaults.icon(tone)` (check, info, warning). `icon` replaces that icon and `icon = null`
 drops the plate. `icon` sits before the trailing `action` lambda, so `Alert("x") { … }` still
 compiles. The tone is a plate, not a slab.

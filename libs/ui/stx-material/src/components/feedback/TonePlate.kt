@@ -26,8 +26,9 @@ object AlertDefaults {
 /**
  * The tone of a notice, carried by a small `MaterialShapes.Cookie6Sided` plate with an icon.
  *
- * A notice spends one spot of colour here instead of a slab, and the plate is the tone's solid
- * pair (`main` with `onMain`) for every tone, so it holds its contrast on the notice's surface.
+ * A notice spends one spot of colour here instead of a slab. The plate is the tone's solid pair
+ * (`main` with `onMain`), except on an error: the error notice is `errorContainer`, so its plate is
+ * inverted (`onErrorContainer` plate, `errorContainer` icon) to hold 3:1 against it.
  */
 @Composable
 internal fun TonePlate(
@@ -36,5 +37,6 @@ internal fun TonePlate(
     modifier: Modifier = Modifier,
 ) {
     val role = StxTheme.colors.tone(tone)
-    ShapedIconPlate(icon, MaterialShapes.Cookie6Sided.toShape(), role.main, role.onMain, 36.dp, IconSize.Medium, modifier)
+    val (plate, ink) = if (tone == Tone.Error) role.onContainer to role.container else role.main to role.onMain
+    ShapedIconPlate(icon, MaterialShapes.Cookie6Sided.toShape(), plate, ink, 36.dp, IconSize.Medium, modifier)
 }
