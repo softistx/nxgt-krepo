@@ -26,7 +26,7 @@ import com.softistx.material.foundation.theme.Tone
  * toast.
  *
  * Same surface as [Alert] — tonal, no outline, `largeIncreased` — with the tone's icon on a
- * leading plate ([icon] replaces it, [showIcon] = false drops it).
+ * leading plate ([icon] replaces its icon, `null` drops the plate).
  */
 @Composable
 fun AnnouncementBar(
@@ -35,18 +35,16 @@ fun AnnouncementBar(
     tone: Tone = Tone.Info,
     style: Style = Style,
     onDismiss: (() -> Unit)? = null,
+    icon: ImageVector? = AlertDefaults.icon(tone),
     action: @Composable (() -> Unit)? = null,
-    icon: ImageVector? = null,
-    showIcon: Boolean = true,
 ) {
-    require(showIcon || icon == null) { "AnnouncementBar: icon is set but showIcon = false; drop one of them" }
     val styleState = remember { MutableStyleState(MutableInteractionSource()) }
     Row(
         modifier = modifier.fillMaxWidth().styleable(styleState, alertStyle(tone), style),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
     ) {
-        if (showIcon) TonePlate(tone, icon)
+        if (icon != null) TonePlate(tone, icon)
         Typography(text = text, modifier = Modifier.weight(1f))
         action?.invoke()
         if (onDismiss != null) {

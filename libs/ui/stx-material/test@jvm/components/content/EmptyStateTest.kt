@@ -1,5 +1,7 @@
 package com.softistx.material.components.content
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
@@ -10,15 +12,17 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.unit.dp
+import com.softistx.material.Corner
+import com.softistx.material.NodeBounds
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.DefaultSeed
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.stxColors
+import com.softistx.material.probed
 import com.softistx.material.renderProbe
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan as intGreater
-import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 
@@ -55,15 +59,32 @@ class EmptyStateTest :
         feature("the icon plate") {
             val soft = stxColors(DefaultSeed, isDark = false).scheme.secondaryContainer
 
-            scenario("a SoftBurst plate in secondaryContainer appears with an icon, and not without") {
+            scenario("a SoftBurst plate in secondaryContainer is a burst, not a square, and absent without the slot") {
+                val bounds = NodeBounds()
+                renderProbe(
+                    width = 200,
+                    height = 200,
+                    content = {
+                        StxTheme(isDark = false) {
+                            EmptyStateDefaults.IconPlate(StxIcons.Inbox, Modifier.padding(20.dp).probed(bounds))
+                        }
+                    },
+                ) {
+                    val frame = settle()
+                    frame.isTransparent(bounds, Corner.TopLeft) shouldBe true
+                    frame.isTransparent(bounds, Corner.BottomRight) shouldBe true
+                    frame.count(soft) intGreater 3000
+                }
                 renderProbe(
                     width = 400,
                     height = 300,
-                    content = { StxTheme(isDark = false) { EmptyState("Nothing here", icon = StxIcons.Inbox) } },
+                    content = {
+                        StxTheme(isDark = false) {
+                            EmptyState("Nothing here", illustration = { EmptyStateDefaults.IconPlate(StxIcons.Inbox) })
+                        }
+                    },
                 ) {
-                    // 96 dp plate: a burst, so under the 9216 px square and well over a sliver.
                     settle().count(soft) intGreater 3000
-                    settle().count(soft) shouldBeLessThan 9216
                 }
                 renderProbe(
                     width = 400,
@@ -72,17 +93,6 @@ class EmptyStateTest :
                 ) {
                     settle().count(soft) shouldBe 0
                 }
-            }
-
-            scenario("an illustration with an icon is refused, by message") {
-                val failure =
-                    shouldThrow<IllegalArgumentException> {
-                        runComposeUiTest {
-                            setContent { StxTheme { EmptyState("x", illustration = {}, icon = StxIcons.Inbox) } }
-                        }
-                    }
-                failure.message shouldBe
-                    "EmptyState: illustration and icon both set; the icon plate is the default picture, pass one of them"
             }
         }
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.feedback.Alert
+import com.softistx.material.components.feedback.AlertDefaults
 import com.softistx.material.components.feedback.AnnouncementBar
 import com.softistx.material.components.feedback.LabeledProgress
 import com.softistx.material.components.feedback.LoadingMark
@@ -43,12 +44,13 @@ val FeedbackStories =
         }
 
         story("Alert") { knobs ->
+            val tone = knobs.enumChoice("Tone", Tone.Warning)
             Alert(
                 text = knobs.text("Text", "Two invoices could not be reconciled."),
-                tone = knobs.enumChoice("Tone", Tone.Warning),
+                tone = tone,
                 title = if (knobs.flag("Title", true)) "Reconciliation paused" else null,
                 visible = knobs.flag("Visible", true),
-                showIcon = knobs.flag("Icon", true),
+                icon = if (knobs.flag("Icon", true)) AlertDefaults.icon(tone) else null,
                 action = { Button(text = "Review", onClick = {}, variant = ButtonVariant.Link) },
             )
         }
@@ -79,12 +81,13 @@ val FeedbackStories =
         }
 
         story("Announcement bar") { knobs ->
+            val tone = knobs.enumChoice("Tone", Tone.Warning)
             var visible by remember { mutableStateOf(true) }
             if (visible) {
                 AnnouncementBar(
                     text = knobs.text("Text", "The bank is delayed until Tuesday."),
-                    tone = knobs.enumChoice("Tone", Tone.Warning),
-                    showIcon = knobs.flag("Icon", true),
+                    tone = tone,
+                    icon = if (knobs.flag("Icon", true)) AlertDefaults.icon(tone) else null,
                     onDismiss = { visible = false },
                     action = { Button(text = "Details", onClick = {}, variant = ButtonVariant.Link) },
                 )
@@ -94,11 +97,14 @@ val FeedbackStories =
         }
 
         story("Promo banner") { knobs ->
+            val tone = knobs.enumChoice("Tone", Tone.Success)
             var visible by remember { mutableStateOf(true) }
             if (visible) {
                 PromoBanner(
                     text = knobs.text("Text", "Spring sale — 20% off the first year."),
                     code = knobs.text("Code", "SPRING20").ifBlank { null },
+                    tone = tone,
+                    icon = if (knobs.flag("Icon", true)) AlertDefaults.icon(tone) else null,
                     onDismiss = { visible = false },
                 )
             } else {

@@ -65,6 +65,7 @@ secondary text stays in the palette instead of picking a grey.
 style of the same role (15 of them), the heavier weight for the one line a screen wants read first.
 `emphasis` says how *loud the colour* is, `emphasized` how *heavy the type* is; they combine.
 `TypographyVariant.style(emphasized)` is the same mapping for a caller that needs the `TextStyle`.
+The `Alert` title (`TitleSmall`) and the `EmptyState` title (`TitleLarge`) are emphasised and announced as headings.
 One emphasised title per screen: `SectionHeader` (`TitleMedium`) and `EntityHeader`
 (`HeadlineMedium`) wear it by default (`emphasized = false` turns it off). M3 documents the
 emphasised styles as `Medium` (500), but a default `Typography()` in 1.12.0-alpha03 returns the
@@ -98,10 +99,10 @@ correctly on the caller's behalf.
 
 `IconSize` — `Small` 16, `Medium` 20, `Large` 24, `XLarge` 32 dp.
 
-`StxIcons` holds twenty-nine hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
+`StxIcons` holds thirty hand-built vectors: `Add`, `Check`, `Close`, `ChevronLeft`,
 `ChevronRight`, `ChevronDown`, `ChevronUp`, `Eye`, `EyeOff`, `Delete`, `Edit`, `Inbox`, `Person`,
 `Home`, `Menu`, `MoreHoriz`, `Calendar`, `Schedule`, `Star`, `Search`, `Warning`, `Copy`, `Minus`,
-`Attach`, `Info`, `ViewList`, `ViewGrid`, `Send`, `Pin`. They are defined
+`Attach`, `Info`, `ViewList`, `ViewGrid`, `Send`, `Pin`, `Touch`. They are defined
 in code because **no icon pack is reachable from here**: the Kotlin Toolchain's `$compose` catalog
 has no key for the Material icons, `$compose.material` does not carry `material-icons-core` in
 Compose Multiplatform 1.11, and the AndroidX icon artifacts are Android-only. An application that
@@ -233,11 +234,11 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `feedback/status-badge` |
-| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `style = Style`, `action?`, `icon: ImageVector? = null`, `showIcon = true` | `feedback/alert` |
+| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `style = Style`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `action?` | `feedback/alert` |
 | `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `feedback/skeleton` |
 | `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `feedback/status-dot` |
-| `AnnouncementBar` | `text`, `tone = Info`, `style = Style`, `onDismiss?`, `action?`, `icon: ImageVector? = null`, `showIcon = true` | `feedback/announcement-bar` |
-| `PromoBanner` | `text`, `code?`, `tone = Success`, `style = Style`, `onDismiss?`, `icon: ImageVector? = null`, `showIcon = true` | `feedback/promo-banner` |
+| `AnnouncementBar` | `text`, `tone = Info`, `style = Style`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `action?` | `feedback/announcement-bar` |
+| `PromoBanner` | `text`, `code?`, `tone = Success`, `style = Style`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)` | `feedback/promo-banner` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `feedback/progress` |
 | `LabeledProgress` | `progress`, `caption?`, `kind` | `feedback/labeled-progress` |
 | `LoadingMark` | `progress: Float? = null` | `feedback/loading-mark` |
@@ -250,10 +251,10 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 `Alert`, `AnnouncementBar` and `PromoBanner` share one surface (`StxStyles.alert(tone)`): a tonal
 `surfaceContainerHigh` with no outline and a `largeIncreased` (20 dp) corner, except `Tone.Error`,
 which keeps the error container because it is the one tone that must interrupt. The tone lives on
-a leading 36 dp `MaterialShapes.Cookie6Sided` plate carrying the tone's icon (check, info,
-warning); `icon` replaces that icon and `showIcon = false` drops the plate. Naming an `icon` while
-hiding it throws `IllegalArgumentException` rather than ignoring the icon. An `Alert`'s `title` is
-`TitleSmall` emphasised and is announced as a heading.
+a leading 36 dp `MaterialShapes.Cookie6Sided` plate in the tone's solid pair, carrying
+`AlertDefaults.icon(tone)` (check, info, warning). `icon` replaces that icon and `icon = null`
+drops the plate. `icon` sits before the trailing `action` lambda, so `Alert("x") { … }` still
+compiles. The tone is a plate, not a slab.
 
 ## Content
 
@@ -264,7 +265,7 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `content: ColumnScope` | `content/card` |
 | `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/chip` |
 | `ListTile` | `title`, `supporting? = null`, `onClick: (() -> Unit)? = null`, `enabled = true`, `style = Style`, `leading? = null`, `trailing? = null`, `selected: Boolean? = null`, `group: ListTileGroup? = null` | `content/list-tile` |
-| `EmptyState` | `title`, `description?`, `illustration?`, `action?`, `icon: ImageVector? = null` | `content/empty-state` |
+| `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
 | `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info`, `reserveDelta = true` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange` | `content/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `content/rating` |
@@ -320,9 +321,10 @@ floor.
 
 `EmptyState` fades in on its own, so the caller writes no `AnimatedVisibility`: it starts hidden
 and targets visible (`AnimatedVisibility(visible = true)` is already shown on its first
-composition and never animates). `icon` draws a 96 dp `MaterialShapes.SoftBurst` plate on
-`secondaryContainer` above the title; an `illustration` replaces the plate, and passing both throws
-`IllegalArgumentException`. The title is `TitleLarge` emphasised and is announced as a heading.
+composition and never animates). For a picture made of one icon, pass
+`illustration = { EmptyStateDefaults.IconPlate(StxIcons.Inbox) }`: a 96 dp
+`MaterialShapes.SoftBurst` plate on `secondaryContainer`. `EmptyState` has no `icon` parameter, so
+the one `illustration` slot stays the only way to give it a picture.
 
 `Stat` is a `Card` wearing `TypographyVariant.Metric`; it reserves the height of a delta (`reserveDelta = true`)
 so stats in a row keep the same height with or without one. `FilterBar` is a row of `Chip`s — not the

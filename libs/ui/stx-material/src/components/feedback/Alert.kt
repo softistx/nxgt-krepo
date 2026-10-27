@@ -36,9 +36,8 @@ import com.softistx.material.foundation.theme.Tone
  * succeeds".
  *
  * A tonal surface with no outline, a `largeIncreased` shape, and the tone on a leading plate: the
- * tone's icon, or [icon] when the caller names one, on a `MaterialShapes` cookie. [showIcon] =
- * false leaves the plate out; naming an [icon] while hiding it is refused. The [title] is
- * emphasised and announced as a heading.
+ * tone's icon, or [icon] when the caller names one, on a `MaterialShapes` cookie; `icon = null`
+ * leaves the plate out. The [title] is emphasised and announced as a heading.
  */
 @Composable
 fun Alert(
@@ -48,11 +47,9 @@ fun Alert(
     title: String? = null,
     visible: Boolean = true,
     style: Style = Style,
+    icon: ImageVector? = AlertDefaults.icon(tone),
     action: @Composable (() -> Unit)? = null,
-    icon: ImageVector? = null,
-    showIcon: Boolean = true,
 ) {
-    require(showIcon || icon == null) { "Alert: icon is set but showIcon = false; drop one of them" }
     AnimatedVisibility(
         visible = visible,
         enter = Transitions.riseIn,
@@ -64,7 +61,7 @@ fun Alert(
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
             verticalAlignment = Alignment.Top,
         ) {
-            if (showIcon) TonePlate(tone, icon)
+            if (icon != null) TonePlate(tone, icon)
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),

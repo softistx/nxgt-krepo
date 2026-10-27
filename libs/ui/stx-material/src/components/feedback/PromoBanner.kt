@@ -27,8 +27,7 @@ fun PromoBanner(
     tone: Tone = Tone.Success,
     style: Style = Style,
     onDismiss: (() -> Unit)? = null,
-    icon: ImageVector? = null,
-    showIcon: Boolean = true,
+    icon: ImageVector? = AlertDefaults.icon(tone),
 ) {
     AnnouncementBar(
         text = text,
@@ -37,7 +36,6 @@ fun PromoBanner(
         style = style,
         onDismiss = onDismiss,
         icon = icon,
-        showIcon = showIcon,
         action =
             if (code == null) {
                 null

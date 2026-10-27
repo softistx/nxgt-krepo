@@ -18,6 +18,7 @@ import com.softistx.material.components.content.Chip
 import com.softistx.material.components.content.CodeBlock
 import com.softistx.material.components.content.Comment
 import com.softistx.material.components.content.EmptyState
+import com.softistx.material.components.content.EmptyStateDefaults
 import com.softistx.material.components.content.ExpandableText
 import com.softistx.material.components.content.FeatureItem
 import com.softistx.material.components.content.FeatureList
@@ -117,7 +118,7 @@ val ContentStories =
             EmptyState(
                 title = knobs.text("Title", "No invoices yet"),
                 description = "Invoices appear here as soon as an order is settled.",
-                icon = StxIcons.Inbox.takeIf { knobs.flag("Icon plate", true) },
+                illustration = if (knobs.flag("Icon plate", true)) ({ EmptyStateDefaults.IconPlate(StxIcons.Inbox) }) else null,
                 action = if (knobs.flag("Action", true)) ({ Button("New invoice", {}) }) else null,
             )
         }
