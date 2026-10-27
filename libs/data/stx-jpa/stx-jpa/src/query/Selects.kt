@@ -7,6 +7,8 @@ import com.softistx.jpa.criteria.JpaSpec
 import com.softistx.jpa.session.JpaQueries
 import com.softistx.jpa.session.createQuery
 import jakarta.persistence.criteria.CriteriaQuery
+import jakarta.persistence.criteria.Fetch
+import jakarta.persistence.criteria.FetchParent
 import jakarta.persistence.criteria.Root
 
 /**
@@ -94,6 +96,13 @@ suspend inline fun <reified T : Any> JpaQueries.exists(noinline spec: JpaSpec<T>
  * Say it in [shape].
  *
  * A [limit] above `MAX_PAGE_SIZE` (1000) is refused, which also keeps `limit + 1` from overflowing.
+ *
+ * **A collection fetch is refused**, with an [IllegalArgumentException] naming the attribute. The
+ * database applies `limit` and `offset` to the *joined* rows, not to the owners, so a page over a
+ * `fetchEach` returns fewer owners than asked for, cuts one of them off mid-collection, and reports
+ * `hasNextPage = false` while owners remain. Page the owners, then load their collections in a second
+ * query off the ids, or project the columns the page shows. A to-one `fetch` multiplies no rows and
+ * is allowed.
  */
 suspend inline fun <reified T : Any> JpaQueries.findPage(
     limit: Int,
@@ -105,8 +114,10 @@ suspend inline fun <reified T : Any> JpaQueries.findPage(
     require(offset >= 0) { "an offset cannot be negative, got $offset" }
 
     val rows =
-        select(spec, shape)
-            .offset(offset)
+        select(spec) { criteria, root ->
+            shape(criteria, root)
+            refuseCollectionFetch(root)
+        }.offset(offset)
             .limit(limit + 1)
             .list()
 
@@ -114,4 +125,20 @@ suspend inline fun <reified T : Any> JpaQueries.findPage(
         data = rows.take(limit),
         info = PageInfo(hasPreviousPage = offset > 0, hasNextPage = rows.size > limit),
     )
+}
+
+/**
+ * What [findPage] calls on the finished criteria: throws when a plural attribute is fetched, at any
+ * depth, because a page cut over a collection join is wrong and says nothing.
+ */
+@PublishedApi
+internal fun refuseCollectionFetch(parent: FetchParent<*, *>) {
+    parent.fetches.forEach { fetch: Fetch<*, *> ->
+        require(!fetch.attribute.isCollection) {
+            "findPage cannot fetch the collection '${fetch.attribute.name}': limit and offset cut the joined " +
+                "rows, not the owners, so owners and collections are truncated and hasNextPage is wrong. " +
+                "Page the owners and load their collections separately, or project the columns."
+        }
+        refuseCollectionFetch(fetch)
+    }
 }

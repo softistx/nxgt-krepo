@@ -1050,8 +1050,10 @@ the same each time, and the mistakes are the same each time too.
   the answer is an entity graph:
   `session.entityGraph<Purchase>().add(…)` is a fetch plan that is also a value, so a `find` and a
   query cannot disagree about what they load. `docs/jpa-criteria.md` has the rules for both,
-  including the one nothing enforces: `limit` and `offset` silently truncate whenever a query loads a
-  collection, whether by `fetchEach` or by a graph naming one.
+  including the one trap left: `limit` and `offset` silently truncate whenever a query loads a
+  collection, whether by `fetchEach` or by a graph naming one. Only `findPage` enforces it — it throws
+  `IllegalArgumentException` naming the collection it was asked to fetch; `select(...).limit(...)` and
+  a graph on a query still say nothing, so the caller pages owners and collections separately.
 - **Keep the fast tests fast and the slow ones optional.** Timing claims — a full buffer pausing, a
   strategy committing when it says it does, partitions running concurrently — belong on Kafka's own
   `MockConsumer`/`MockProducer` and run in about two seconds. A real server is for behaviour that
