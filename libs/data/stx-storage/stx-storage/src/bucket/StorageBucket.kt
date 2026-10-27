@@ -1,27 +1,11 @@
 package com.softistx.storage.bucket
 
-import com.softistx.storage.NO_SUCH_KEY
 import com.softistx.storage.ObjectNotFoundException
-import com.softistx.storage.absentAsNull
-import io.minio.CopyObjectArgs
-import io.minio.GetObjectArgs
-import io.minio.ListObjectsArgs
 import io.minio.MinioAsyncClient
-import io.minio.PutObjectArgs
-import io.minio.RemoveObjectArgs
-import io.minio.RemoveObjectsArgs
-import io.minio.SourceObject
-import io.minio.StatObjectArgs
-import io.minio.messages.DeleteRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.future.await
-import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
 import java.io.InputStream
-import kotlin.time.toKotlinInstant
 
 /**
  * One bucket's objects.
@@ -67,48 +51,14 @@ class StorageBucket internal constructor(
         size: Long = -1,
         contentType: String? = null,
         metadata: Map<String, String> = emptyMap(),
-    ): StoredObject =
-        withContext(Dispatchers.IO) {
-            val response =
-                client
-                    .putObject(
-                        PutObjectArgs
-                            .builder()
-                            .bucket(name)
-                            .`object`(key)
-                            .stream(stream, size, if (size < 0) PART_SIZE else -1)
-                            .apply {
-                                contentType?.let { contentType(it) }
-                                if (metadata.isNotEmpty()) userMetadata(metadata)
-                            }.build(),
-                    ).await()
-            StoredObject(key, response.etag(), response.versionId())
-        }
+    ): StoredObject = putObject(key, stream, size, contentType, metadata)
 
     /** Copies within this bucket, or into [targetBucket]. Server-side: the bytes never come here. */
     suspend fun copy(
         sourceKey: String,
         targetKey: String,
         targetBucket: String = name,
-    ): StoredObject =
-        withContext(Dispatchers.IO) {
-            val response =
-                client
-                    .copyObject(
-                        CopyObjectArgs
-                            .builder()
-                            .bucket(targetBucket)
-                            .`object`(targetKey)
-                            .source(
-                                SourceObject
-                                    .builder()
-                                    .bucket(name)
-                                    .`object`(sourceKey)
-                                    .build(),
-                            ).build(),
-                    ).await()
-            StoredObject(targetKey, response.etag(), response.versionId())
-        }
+    ): StoredObject = copyObject(sourceKey, targetKey, targetBucket)
 
     // ─── Reads ────────────────────────────────────────────────────────────────
 
@@ -130,42 +80,13 @@ class StorageBucket internal constructor(
         offset: Long? = null,
         length: Long? = null,
         block: suspend (InputStream) -> T,
-    ): T? =
-        withContext(Dispatchers.IO) {
-            absentAsNull(NO_SUCH_KEY) {
-                client
-                    .getObject(
-                        GetObjectArgs
-                            .builder()
-                            .bucket(name)
-                            .`object`(key)
-                            .apply {
-                                offset?.let { offset(it) }
-                                length?.let { length(it) }
-                            }.build(),
-                    ).await()
-            }?.use { block(it) }
-        }
+    ): T? = readObject(key, offset, length, block)
 
     /** [get], for a caller that has nothing to say about an object that is not there. */
     suspend fun require(key: String): ByteArray = get(key) ?: throw ObjectNotFoundException(name, key)
 
     /** What the store knows about [key] without sending its bytes, or null if it is not there. */
-    suspend fun stat(key: String): ObjectInfo? =
-        withContext(Dispatchers.IO) {
-            absentAsNull(NO_SUCH_KEY) {
-                client
-                    .statObject(
-                        StatObjectArgs
-                            .builder()
-                            .bucket(name)
-                            .`object`(key)
-                            .build(),
-                    ).await()
-            }?.let {
-                ObjectInfo(key, it.size(), it.lastModified()?.toInstant()?.toKotlinInstant(), it.etag(), it.contentType())
-            }
-        }
+    suspend fun stat(key: String): ObjectInfo? = statObject(key)
 
     suspend fun exists(key: String): Boolean = stat(key) != null
 
@@ -182,38 +103,12 @@ class StorageBucket internal constructor(
     fun list(
         prefix: String = "",
         recursive: Boolean = true,
-    ): Flow<ObjectInfo> =
-        flow {
-            val results =
-                client.listObjects(
-                    ListObjectsArgs
-                        .builder()
-                        .bucket(name)
-                        .prefix(prefix)
-                        .recursive(recursive)
-                        .build(),
-                )
-            results.forEach { result ->
-                val item = result.get()
-                emit(ObjectInfo(item.objectName(), item.size(), item.lastModified()?.toInstant()?.toKotlinInstant(), item.etag()))
-            }
-        }.flowOn(Dispatchers.IO)
+    ): Flow<ObjectInfo> = listObjects(prefix, recursive)
 
     // ─── Deletion ─────────────────────────────────────────────────────────────
 
     /** Deleting an object that is not there is not an error, in S3 or here. */
-    suspend fun delete(key: String) {
-        withContext(Dispatchers.IO) {
-            client
-                .removeObject(
-                    RemoveObjectArgs
-                        .builder()
-                        .bucket(name)
-                        .`object`(key)
-                        .build(),
-                ).await()
-        }
-    }
+    suspend fun delete(key: String) = removeObject(key)
 
     /**
      * Deletes [keys] in one request, and answers with the ones the store refused.
@@ -224,20 +119,6 @@ class StorageBucket internal constructor(
      */
     suspend fun deleteAll(keys: Collection<String>): List<String> {
         if (keys.isEmpty()) return emptyList()
-        return withContext(Dispatchers.IO) {
-            client
-                .removeObjects(
-                    RemoveObjectsArgs
-                        .builder()
-                        .bucket(name)
-                        .objects(keys.map { DeleteRequest.Object(it) })
-                        .build(),
-                ).map { it.get().objectName() }
-        }
-    }
-
-    private companion object {
-        /** The SDK's minimum part size, used only when the stream's length is unknown. */
-        const val PART_SIZE = 5L * 1024 * 1024
+        return removeObjects(keys)
     }
 }

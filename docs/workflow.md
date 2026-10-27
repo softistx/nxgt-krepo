@@ -51,7 +51,8 @@ to one run.
 | It holds **references** to large things, never the things | The whole context is written again after every node. A document belongs in it as a storage key, not as bytes |
 
 A context that will not decode does not crash-loop a worker: the instance is marked `Failed`, leaves
-the runnable index, and waits for somebody.
+the runnable index, and waits for somebody. Repair the stored context (or the definition), then call
+[`retryCompensation`](#the-operators-inbox): it unwinds the instance once the context decodes again.
 
 **Every node name must be unique within the workflow**, checked when it is built. The journal is keyed
 on names, and two nodes called `charge` would make "has this run?" unanswerable. Names nest: a leg of
@@ -364,6 +365,13 @@ would leak a running instance every time.
 
 A child that is no longer in the store cannot be taken back. That fails the parent's compensation and
 the parent lands `Failed`, which is the status that means a person should look.
+
+Only a child that ends `Cancelled` or `Compensated` counts as taken back. Anything else fails the
+parent's node with a `ChildFailedException` whose `status` says what the child is, and the parent
+lands `Failed` (a child's undo is tried once; the operator runs `retryCompensation`). A child left
+`Failed` by a compensation of its own: retry the child, then the parent. A child another worker
+still holds the lock of is handed back unchanged — running, waiting or completed: retry the parent
+once the child is free. The parent never records a child as compensated while its effects stand.
 
 ### Waiting is a park, and it is polled
 
@@ -876,14 +884,19 @@ due again and reopens the instance, so the unwind **continues from where it stop
   takes. `error` keeps naming the node whose forward step failed.
 
 The call refuses with `WorkflowNotRetryableException` when there is nothing to retry: an instance
-that is not `Failed`, or a `Failed` one whose journal names no failed compensation. It also refuses an
-instance whose stored context no longer decodes (a redeploy changed the context type): nothing is
-reopened or written, `error` is kept, and the stored context has to be repaired first. An unknown id is `WorkflowNotFoundException`, and an instance another process is
+that is not `Failed`, or a `Failed` one whose journal names no failed compensation. One `Failed`
+instance without a failed compensation is recoverable: the one the engine retired because its stored
+context no longer decodes (a redeploy changed the context type; `error` names the node `<context>`).
+Once the context decodes again, `retryCompensation` runs its unwind from where its journal stands
+and the instance lands `Compensated` (or `Cancelled`); while it still does not decode the call
+refuses with a message asking for the stored context to be repaired, and nothing is reopened or
+written. An unknown id is `WorkflowNotFoundException`, and an instance another process is
 advancing is `WorkflowConflictException`, so an operator never mistakes a skipped retry for a done
 one. For a parent whose [`child` node](#child-workflows) could not be compensated, retry the **child**
-first. Until [#319](https://github.com/softistx/nxgt-krepo/issues/319) is fixed the parent does not
-detect a child left `Failed`: it counts it as compensated, so retrying the parent first would finish
-it over a child that is still stuck.
+first. A child still `Failed` fails the parent's compensation of that node too (`ChildFailedException`),
+so the parent stays `Failed` until the child is fixed. A child another worker still held when the
+parent unwound fails it the same way, with its running, waiting or completed `status`: wait for the
+child to be free, then retry the parent.
 
 Every store keeps an index for this: a sorted set per status in Redis, a `(status, updated_at)` index
 in SQL, a compound index in MongoDB. It is the second thing all three maintain on every write.

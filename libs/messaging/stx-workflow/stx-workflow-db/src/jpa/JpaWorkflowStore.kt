@@ -11,7 +11,6 @@ import com.softistx.workflow.store.WorkflowRecord
 import com.softistx.workflow.store.WorkflowStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
-import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -50,10 +49,9 @@ class JpaWorkflowStore(
     private val lease: Duration = 30.seconds,
     private val json: Json = jpa.config.json,
 ) : WorkflowStore {
-    /** Who this process is, in `locked_by`. One per store, so a release can prove it holds the lease. */
-    private val owner: String = UUID.randomUUID().toString()
+    private val locks = JpaLeaseQueries(jpa, lease)
 
-    private val guard = Lease(lease, ::take, ::renew, ::release)
+    private val guard = Lease(lease, locks::take, locks::renew, locks::release)
 
     override suspend fun create(record: WorkflowRecord) {
         try {
@@ -61,7 +59,7 @@ class JpaWorkflowStore(
                 require(session.find<WorkflowInstanceRow>(record.id) == null) {
                     "workflow instance '${record.id}' already exists"
                 }
-                session.persist(row(record))
+                session.persist(workflowRow(record, json, lease))
             }
         } catch (e: CancellationException) {
             throw e
@@ -88,7 +86,7 @@ class JpaWorkflowStore(
 
     override suspend fun load(id: String): WorkflowRecord? {
         val row = jpa.find<WorkflowInstanceRow>(id) ?: return null
-        return json.decodeFromString(WorkflowRecord.serializer(), row.record).copy(version = row.version)
+        return decode(row, json)
     }
 
     /**
@@ -115,11 +113,11 @@ class JpaWorkflowStore(
                      where r.id = :id and r.version = :expected
                     """.trimIndent(),
                 ).parameters(
-                    "record" to encode(record),
+                    "record" to encode(record, json),
                     "status" to record.status.name,
                     "updatedAt" to record.updatedAt,
                     "next" to expectedVersion + 1,
-                    "dueAt" to dueAt(record, now),
+                    "dueAt" to dueAt(record, now, lease),
                     "finishedAt" to finishedAt(record, now),
                     "id" to record.id,
                     "expected" to expectedVersion,
@@ -165,7 +163,7 @@ class JpaWorkflowStore(
                     .offset(offset)
                     .limit(limit)
                     .list()
-            }.map { row -> json.decodeFromString(WorkflowRecord.serializer(), row.record).copy(version = row.version) }
+            }.map { row -> decode(row, json) }
     }
 
     /**
@@ -201,84 +199,4 @@ class JpaWorkflowStore(
                 .parameter("before", before)
                 .execute()
         }
-
-    /**
-     * When this instance became eligible for retention, and null when it never does.
-     *
-     * Terminal, except [WorkflowStatus.Failed]. The exemption is the same one the Redis store makes
-     * by withholding the TTL, for the same reason: a failed compensation is waiting for a person,
-     * and deleting it removes the only description of what has to be fixed.
-     */
-    private fun finishedAt(
-        record: WorkflowRecord,
-        now: Instant,
-    ): Instant? = now.takeIf { record.status.isTerminal && record.status != WorkflowStatus.Failed }
-
-    private fun row(record: WorkflowRecord) =
-        WorkflowInstanceRow(
-            id = record.id,
-            workflow = record.workflow,
-            record = encode(record),
-            status = record.status.name,
-            updatedAt = record.updatedAt,
-            version = record.version,
-            dueAt = dueAt(record, record.updatedAt),
-        )
-
-    private fun encode(record: WorkflowRecord) = json.encodeToString(WorkflowRecord.serializer(), record)
-
-    /**
-     * When this instance should next be looked at, and null when the answer is never.
-     *
-     * The same three cases as the Redis store's score, which is the point — a second store that
-     * answered "what is due" differently would be a second set of rules for the same engine.
-     * A finished instance and one parked on a signal are both out of the index; everything else is
-     * due at its `wakeAt`, or one lease after its last checkpoint.
-     */
-    private fun dueAt(
-        record: WorkflowRecord,
-        now: Instant,
-    ): Instant? =
-        when {
-            record.status.isTerminal || record.isParked -> null
-            else -> record.wakeAt ?: (now + lease)
-        }
-
-    private suspend fun take(id: String): Boolean {
-        val now = Clock.System.now()
-        return jpa.transaction { session ->
-            session
-                .mutate(
-                    """
-                    update WorkflowInstanceRow r set r.lockedBy = :owner, r.lockedUntil = :until
-                     where r.id = :id and (r.lockedUntil is null or r.lockedUntil < :now)
-                    """.trimIndent(),
-                ).parameters("owner" to owner, "until" to now + lease, "id" to id, "now" to now)
-                .execute()
-        } == 1
-    }
-
-    private suspend fun renew(id: String): Boolean =
-        jpa.transaction { session ->
-            session
-                .mutate("update WorkflowInstanceRow r set r.lockedUntil = :until where r.id = :id and r.lockedBy = :owner")
-                .parameters("until" to Clock.System.now() + lease, "id" to id, "owner" to owner)
-                .execute()
-        } == 1
-
-    private suspend fun release(id: String) {
-        // The row may be gone — a purge, or a spec that dropped its schema — and a release that
-        // failed is a lease that expires on its own a moment later. Nothing here is worth failing
-        // a completed step for.
-        runCatching {
-            jpa.transaction { session ->
-                session
-                    .mutate(
-                        "update WorkflowInstanceRow r set r.lockedBy = null, r.lockedUntil = null " +
-                            "where r.id = :id and r.lockedBy = :owner",
-                    ).parameters("id" to id, "owner" to owner)
-                    .execute()
-            }
-        }.onFailure { if (it is CancellationException) throw it }
-    }
 }

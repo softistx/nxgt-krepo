@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.json.Json
 import org.bson.Document
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -92,14 +91,13 @@ class MongoWorkflowStore internal constructor(
     private val retention: Duration?,
     private val json: Json,
 ) : WorkflowStore {
-    /** Who this process is, in `lockedBy`. One per store, so a release can prove it holds the lease. */
-    private val owner: String = UUID.randomUUID().toString()
+    private val locks = MongoLeaseUpdates(instances, lease)
 
-    private val guard = Lease(lease, ::take, ::renew, ::release)
+    private val guard = Lease(lease, locks::take, locks::renew, locks::release)
 
     override suspend fun create(record: WorkflowRecord) {
         try {
-            instances.insert(document(record, Clock.System.now()))
+            instances.insert(workflowDocument(record, Clock.System.now(), json, lease, retention))
         } catch (e: MongoWriteException) {
             // A duplicate _id is the server refusing exactly what this method promises to refuse.
             // Anything else is a real write failure and is not ours to translate.
@@ -110,7 +108,7 @@ class MongoWorkflowStore internal constructor(
 
     override suspend fun load(id: String): WorkflowRecord? {
         val document = instances.findById(id) ?: return null
-        return json.decodeFromString(WorkflowRecord.serializer(), document.record).copy(version = document.version)
+        return decode(document, json)
     }
 
     /**
@@ -125,7 +123,7 @@ class MongoWorkflowStore internal constructor(
         expectedVersion: Long,
     ): Boolean {
         val now = Clock.System.now()
-        val updated = document(record, now).copy(version = expectedVersion + 1)
+        val updated = workflowDocument(record, now, json, lease, retention).copy(version = expectedVersion + 1)
         return instances
             .update(
                 Filters.and(byId(record.id), Filters.eq(WorkflowInstanceDocument::version.name, expectedVersion)),
@@ -177,7 +175,7 @@ class MongoWorkflowStore internal constructor(
             .sort(Indexes.descending(WorkflowInstanceDocument::updatedAt.name))
             .skip(offset)
             .limit(limit)
-            .map { json.decodeFromString(WorkflowRecord.serializer(), it.record).copy(version = it.version) }
+            .map { decode(it, json) }
             .toList()
     }
 
@@ -193,72 +191,4 @@ class MongoWorkflowStore internal constructor(
         id: String,
         block: suspend () -> T,
     ): T? = guard.guard(id, block)
-
-    private fun document(
-        record: WorkflowRecord,
-        now: Instant,
-    ) = WorkflowInstanceDocument(
-        id = record.id,
-        workflow = record.workflow,
-        record = json.encodeToString(WorkflowRecord.serializer(), record),
-        status = record.status.name,
-        updatedAt = record.updatedAt,
-        version = record.version,
-        dueAt = dueAt(record, now),
-        expiresAt = expiresAt(record, now),
-    )
-
-    /**
-     * When this instance should next be looked at, and null when the answer is never.
-     *
-     * The same three cases as `RedisWorkflowStore.due` and `JpaWorkflowStore.dueAt`, which is the
-     * point — a store that answered "what is due" differently would be a second set of rules for the
-     * same engine. A finished instance and one parked on a signal are both out of the index;
-     * everything else is due at its `wakeAt`, or one lease after its last checkpoint.
-     */
-    private fun dueAt(
-        record: WorkflowRecord,
-        now: Instant,
-    ): Instant? =
-        when {
-            record.status.isTerminal || record.isParked -> null
-            else -> record.wakeAt ?: (now + lease)
-        }
-
-    private fun expiresAt(
-        record: WorkflowRecord,
-        now: Instant,
-    ): Instant? = retention?.takeIf { record.status.isTerminal && record.status != WorkflowStatus.Failed }?.let { now + it }
-
-    private suspend fun take(id: String): Boolean {
-        val now = Clock.System.now()
-        val until = WorkflowInstanceDocument::lockedUntil.name
-        return instances
-            .update(
-                Filters.and(byId(id), Filters.or(Filters.eq(until, null), Filters.lt(until, now))),
-                Updates.combine(
-                    Updates.set(WorkflowInstanceDocument::lockedBy.name, owner),
-                    Updates.set(until, now + lease),
-                ),
-            ).matchedCount == 1L
-    }
-
-    private suspend fun renew(id: String): Boolean =
-        instances
-            .update(
-                mine(id),
-                Updates.set(WorkflowInstanceDocument::lockedUntil.name, Clock.System.now() + lease),
-            ).matchedCount == 1L
-
-    private suspend fun release(id: String) {
-        instances.update(
-            mine(id),
-            Updates.combine(
-                Updates.set(WorkflowInstanceDocument::lockedBy.name, null),
-                Updates.set(WorkflowInstanceDocument::lockedUntil.name, null),
-            ),
-        )
-    }
-
-    private fun mine(id: String) = Filters.and(byId(id), Filters.eq(WorkflowInstanceDocument::lockedBy.name, owner))
 }

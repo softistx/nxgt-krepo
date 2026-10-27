@@ -1,8 +1,6 @@
 package com.softistx.graphix
 
-import com.softistx.graphix.error.ErrorHandlers
 import com.softistx.graphix.error.GraphixExceptionHandler
-import com.softistx.graphix.execute.errorDispatch
 import com.softistx.graphix.http.GraphqlWsInit
 import com.softistx.graphix.intercept.GraphixInterceptor
 import com.softistx.graphix.message.GraphixMessages
@@ -12,12 +10,8 @@ import com.softistx.graphix.schema.FieldDirectiveWrap
 import com.softistx.graphix.schema.GraphixDirective
 import com.softistx.graphix.schema.GraphixTypeName
 import com.softistx.graphix.schema.carriesMappings
-import com.softistx.graphix.schema.graphQLSchema
-import com.softistx.graphix.schema.loadSchemaFiles
 import com.softistx.graphix.validation.GraphixValidation
 import com.softistx.graphix.validation.GraphixValidationBuilder
-import graphql.GraphQL
-import graphql.execution.instrumentation.fieldvalidation.FieldValidationInstrumentation
 import graphql.schema.GraphQLScalarType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
@@ -29,30 +23,30 @@ import kotlin.reflect.KClass
  * construct a new one per request.
  */
 class GraphixBuilder internal constructor(
-    private val json: Json,
+    internal val json: Json,
 ) {
-    private val instances = mutableListOf<Any>()
-    private var resourceLocations: List<String> = DefaultSchemaLocations
-    private var resourceExtensions: List<String> = DefaultSchemaExtensions
-    private val customScalars = mutableListOf<GraphQLScalarType>()
-    private val kotlinScalars = mutableMapOf<KClass<*>, GraphQLScalarType>()
-    private val fieldDirectives = mutableMapOf<String, FieldDirectiveWrap>()
-    private val typeResolvers = mutableMapOf<String, GraphixTypeName>()
-    private var introspection = true
-    private var builtInScalars = true
-    private var maxListElements: Int? = null
-    private val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
+    internal val instances = mutableListOf<Any>()
+    internal var resourceLocations: List<String> = DefaultSchemaLocations
+    internal var resourceExtensions: List<String> = DefaultSchemaExtensions
+    internal val customScalars = mutableListOf<GraphQLScalarType>()
+    internal val kotlinScalars = mutableMapOf<KClass<*>, GraphQLScalarType>()
+    internal val fieldDirectives = mutableMapOf<String, FieldDirectiveWrap>()
+    internal val typeResolvers = mutableMapOf<String, GraphixTypeName>()
+    internal var introspection = true
+    internal var builtInScalars = true
+    internal var maxListElements: Int? = null
+    internal val engineCustomizers = mutableListOf<GraphQLEngineCustomizer>()
 
     // Whoever fills the operation context registers the type. The core fills exactly one:
     // GraphqlWsSession puts the client's `connection_init` payload on every graphql-ws operation.
-    private val contextTypes = mutableSetOf<KClass<*>>(GraphqlWsInit::class)
-    private val interceptors = mutableListOf<GraphixInterceptor>()
-    private var validation: GraphixValidation? = null
-    private var messages: GraphixMessages = GraphixMessages.Bundled
+    internal val contextTypes = mutableSetOf<KClass<*>>(GraphqlWsInit::class)
+    internal val interceptors = mutableListOf<GraphixInterceptor>()
+    internal var validation: GraphixValidation? = null
+    internal var messages: GraphixMessages = GraphixMessages.Bundled
 
     // Ordered: the first handler to answer wins, the way the first interceptor to run is outermost.
-    private val errorHandlers = mutableListOf<GraphixExceptionHandler>()
-    private var errorFallback: GraphixExceptionHandler? = null
+    internal val errorHandlers = mutableListOf<GraphixExceptionHandler>()
+    internal var errorFallback: GraphixExceptionHandler? = null
 
     /**
      * Registers [instances]. Each one's annotated functions say what they are: `@QueryMapping`
@@ -242,41 +236,5 @@ class GraphixBuilder internal constructor(
      */
     fun validation(block: GraphixValidationBuilder.() -> Unit) {
         validation = GraphixValidationBuilder().apply(block).build()
-    }
-
-    internal fun build(): Graphix {
-        val files = resourceLocations.loadSchemaFiles(resourceExtensions)
-        val (schema, loaders) =
-            graphQLSchema(
-                instances,
-                json,
-                files,
-                customScalars,
-                kotlinScalars,
-                fieldDirectives,
-                typeResolvers,
-                builtInScalars,
-                contextTypes,
-            )
-        val builder = GraphQL.newGraphQL(schema)
-        validation?.fieldValidation()?.let { builder.instrumentation(FieldValidationInstrumentation(it)) }
-        val handlers = ErrorHandlers(errorHandlers.toList(), errorFallback)
-        // Before the customizers, not after: `engine { defaultDataFetcherExceptionHandler(…) }` is an
-        // explicit choice and should still win. What it cannot survive is
-        // `engine { queryExecutionStrategy(…) }` — graphql-java only applies the default handler to
-        // strategies left null at build, so setting one silently drops this seat. Documented, not
-        // guessable from the API.
-        if (!handlers.isEmpty()) builder.defaultDataFetcherExceptionHandler(errorDispatch(handlers, messages))
-        engineCustomizers.forEach { with(it) { builder.customize() } }
-        return Graphix(
-            builder.build(),
-            loaders,
-            validation,
-            introspection,
-            messages,
-            interceptors.toList(),
-            handlers,
-            maxListElements,
-        )
     }
 }
