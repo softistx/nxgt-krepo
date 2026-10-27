@@ -177,11 +177,12 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 ## Styles
 
 `StxTheme.styles` (from `com.softistx.material.foundation.style`) is every component default in one place —
-`button`, `card`, `chip`, `listTile`, `field`, `alert(tone)`. `button` is the one style of the whole button family
+`button`, `card`, `chip`, `listTile`, `field`, `toggle`, `upload`, `alert(tone)`. `button` is the one style of the whole button family
 (`Button`, `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton`, `Fab`): the disabled alpha only, because all of
 them morph their shape. `morphingButton` is a deprecated alias of it: replace `StxStyles.morphingButton` with
 `StxStyles.button` and `morphingButtonStyle` with `buttonStyle`; the 0.97 press scale is gone from the family.
 `listTile` is empty for the same reason: M3's `ListItem` morphs its shape, so the tile takes no scale.
+`field` is the disabled fade of the text fields and `OtpField`; `toggle` is the 0.97 press scale of a checkbox, switch or radio row; `upload` is the 0.99 press scale and disabled fade of `UploadField`.
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and
 elevation moved into Material 3's own `*Colors` and `*Defaults` when the components were rebuilt on

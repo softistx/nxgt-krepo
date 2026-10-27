@@ -1,12 +1,18 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,16 +45,25 @@ fun UploadField(
     label: String = "Drop a file or browse",
     supporting: String? = "PDF, PNG or JPEG, up to 10 MB",
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val shape = MaterialTheme.shapes.large
     val outline = MaterialTheme.colorScheme.outlineVariant
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
+                .styleable(styleState, uploadStyle, style)
                 .clip(shape)
                 .dashedBorder(1.dp, outline, shape)
-                .clickable(enabled = enabled, onClick = onClick)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = LocalIndication.current,
+                    enabled = enabled,
+                    onClick = onClick,
+                )
                 .padding(StxTheme.spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),

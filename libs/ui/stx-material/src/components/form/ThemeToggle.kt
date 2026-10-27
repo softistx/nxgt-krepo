@@ -1,5 +1,6 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.navigation.SegmentedControl
@@ -19,6 +20,7 @@ fun ThemeToggle(
     onChange: (ColorMode) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     SegmentedControl(
         options = listOf("Light", "Dark", "System"),
@@ -26,5 +28,6 @@ fun ThemeToggle(
         onSelect = { onChange(ColorMode.entries[it]) },
         modifier = modifier,
         enabled = enabled,
+        style = style,
     )
 }

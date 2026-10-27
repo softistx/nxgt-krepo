@@ -1,8 +1,12 @@
 package com.softistx.material.components.form
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,7 +33,7 @@ import com.softistx.material.foundation.theme.StxTheme
  *
  * The draft is local until it is committed — IME Done or the check — so Escape (or the close
  * control) can put the previous value back. A live-writing field that cannot be cancelled is just
- * a [TextField].
+ * a [TextField]. [style] dresses the field while editing and the text at rest.
  */
 @Composable
 fun InlineEdit(
@@ -39,7 +43,9 @@ fun InlineEdit(
     placeholder: String = "Add a title",
     enabled: Boolean = true,
     variant: TypographyVariant = TypographyVariant.TitleMedium,
+    style: Style = Style,
 ) {
+    val styleState = rememberUpdatedStyleState(remember { MutableInteractionSource() }) { it.isEnabled = enabled }
     var editing by remember { mutableStateOf(false) }
     var draft by remember(value) { mutableStateOf(value) }
 
@@ -75,6 +81,7 @@ fun InlineEdit(
                         },
                 placeholder = placeholder,
                 enabled = enabled,
+                style = style,
                 imeAction = ImeAction.Done,
                 keyboardActions = KeyboardActions(onDone = { commit() }),
             )
@@ -103,6 +110,7 @@ fun InlineEdit(
                 modifier =
                     Modifier
                         .weight(1f)
+                        .styleable(styleState, fieldStyle, style)
                         .clickable(enabled = enabled) { editing = true },
             )
             if (enabled) {

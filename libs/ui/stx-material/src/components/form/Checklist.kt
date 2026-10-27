@@ -2,6 +2,7 @@ package com.softistx.material.components.form
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
@@ -27,7 +28,8 @@ fun toggleCheckItem(
  * A list of boxes. Each row is a [Checkbox], so the label is part of the target.
  *
  * The list holds [CheckItem]s rather than a parallel `List<Boolean>`, so reordering the labels
- * cannot silently change what is ticked — the same rule as [CheckboxGroup].
+ * cannot silently change what is ticked — the same rule as [CheckboxGroup]. [style] is handed to
+ * every row.
  */
 @Composable
 fun Checklist(
@@ -35,6 +37,7 @@ fun Checklist(
     onToggle: (Int) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     Column(
         modifier = modifier,
@@ -46,6 +49,7 @@ fun Checklist(
                 onValueChange = { onToggle(index) },
                 label = item.label,
                 enabled = enabled,
+                style = style,
             )
         }
     }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.InputChip
 import androidx.compose.runtime.Composable
@@ -48,7 +49,7 @@ fun removeTag(
  *
  * Type and confirm (IME Done, a trailing comma, or Enter) to add. Backspace on an empty draft
  * removes the last tag. The empty list is "none", which is the honest default for a set the
- * reader builds.
+ * reader builds. [style] dresses the draft field; the chips are M3's `InputChip`.
  */
 @Composable
 fun TagField(
@@ -59,6 +60,7 @@ fun TagField(
     placeholder: String = "Add a tag",
     helper: String? = null,
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     var draft by remember { mutableStateOf("") }
 
@@ -122,6 +124,7 @@ fun TagField(
                         },
                 placeholder = placeholder,
                 enabled = enabled,
+                style = style,
                 imeAction = ImeAction.Done,
                 keyboardActions = KeyboardActions(onDone = { commit() }),
             )
