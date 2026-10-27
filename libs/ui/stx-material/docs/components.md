@@ -233,11 +233,11 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `feedback/status-badge` |
-| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `action?` | `feedback/alert` |
+| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `style = Style`, `action?`, `icon: ImageVector? = null`, `showIcon = true` | `feedback/alert` |
 | `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `feedback/skeleton` |
 | `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `feedback/status-dot` |
-| `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `action?` | `feedback/announcement-bar` |
-| `PromoBanner` | `text`, `code?`, `tone = Success`, `onDismiss?` | `feedback/promo-banner` |
+| `AnnouncementBar` | `text`, `tone = Info`, `style = Style`, `onDismiss?`, `action?`, `icon: ImageVector? = null`, `showIcon = true` | `feedback/announcement-bar` |
+| `PromoBanner` | `text`, `code?`, `tone = Success`, `style = Style`, `onDismiss?`, `icon: ImageVector? = null`, `showIcon = true` | `feedback/promo-banner` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `feedback/progress` |
 | `LabeledProgress` | `progress`, `caption?`, `kind` | `feedback/labeled-progress` |
 | `LoadingMark` | `progress: Float? = null` | `feedback/loading-mark` |
@@ -246,6 +246,14 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 
 `Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
 `AnimatedVisibility` for the caller to write. `Skeleton` shimmers on its own.
+
+`Alert`, `AnnouncementBar` and `PromoBanner` share one surface (`StxStyles.alert(tone)`): a tonal
+`surfaceContainerHigh` with no outline and a `largeIncreased` (20 dp) corner, except `Tone.Error`,
+which keeps the error container because it is the one tone that must interrupt. The tone lives on
+a leading 36 dp `MaterialShapes.Cookie6Sided` plate carrying the tone's icon (check, info,
+warning); `icon` replaces that icon and `showIcon = false` drops the plate. Naming an `icon` while
+hiding it throws `IllegalArgumentException` rather than ignoring the icon. An `Alert`'s `title` is
+`TitleSmall` emphasised and is announced as a heading.
 
 ## Content
 
@@ -256,7 +264,7 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `content: ColumnScope` | `content/card` |
 | `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/chip` |
 | `ListTile` | `title`, `supporting? = null`, `onClick: (() -> Unit)? = null`, `enabled = true`, `style = Style`, `leading? = null`, `trailing? = null`, `selected: Boolean? = null`, `group: ListTileGroup? = null` | `content/list-tile` |
-| `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
+| `EmptyState` | `title`, `description?`, `illustration?`, `action?`, `icon: ImageVector? = null` | `content/empty-state` |
 | `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info`, `reserveDelta = true` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange` | `content/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `content/rating` |
@@ -310,7 +318,11 @@ the same 8 % over a transparent container shifts it by 0.145 — visible in one 
 other, which is exactly how it was reported. `ChipHoverTest` renders both cases and holds the
 floor.
 
-`EmptyState` fades in on its own, so the caller writes no `AnimatedVisibility`.
+`EmptyState` fades in on its own, so the caller writes no `AnimatedVisibility`: it starts hidden
+and targets visible (`AnimatedVisibility(visible = true)` is already shown on its first
+composition and never animates). `icon` draws a 96 dp `MaterialShapes.SoftBurst` plate on
+`secondaryContainer` above the title; an `illustration` replaces the plate, and passing both throws
+`IllegalArgumentException`. The title is `TitleLarge` emphasised and is announced as a heading.
 
 `Stat` is a `Card` wearing `TypographyVariant.Metric`; it reserves the height of a delta (`reserveDelta = true`)
 so stats in a row keep the same height with or without one. `FilterBar` is a row of `Chip`s — not the

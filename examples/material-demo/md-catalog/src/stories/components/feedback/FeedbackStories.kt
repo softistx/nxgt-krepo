@@ -48,6 +48,7 @@ val FeedbackStories =
                 tone = knobs.enumChoice("Tone", Tone.Warning),
                 title = if (knobs.flag("Title", true)) "Reconciliation paused" else null,
                 visible = knobs.flag("Visible", true),
+                showIcon = knobs.flag("Icon", true),
                 action = { Button(text = "Review", onClick = {}, variant = ButtonVariant.Link) },
             )
         }
@@ -83,6 +84,7 @@ val FeedbackStories =
                 AnnouncementBar(
                     text = knobs.text("Text", "The bank is delayed until Tuesday."),
                     tone = knobs.enumChoice("Tone", Tone.Warning),
+                    showIcon = knobs.flag("Icon", true),
                     onDismiss = { visible = false },
                     action = { Button(text = "Details", onClick = {}, variant = ButtonVariant.Link) },
                 )

@@ -171,6 +171,13 @@ class PixelGrid(
         return count
     }
 
+    /** Pixels of the frame that are exactly [color]. */
+    fun count(color: Color): Int {
+        var count = 0
+        for (y in 0 until map.height) for (x in 0 until map.width) if (map[x, y] == color) count++
+        return count
+    }
+
     /** Pixels of [node]'s bounds that are not the background. */
     fun ink(node: NodeBounds): Int = ink(node.rect)
 }

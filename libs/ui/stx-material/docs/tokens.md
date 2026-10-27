@@ -31,7 +31,7 @@ same colour.
 
 `Tone` (`Success` / `Info` / `Warning` / `Error`) is how a component asks for one of the four
 without naming twelve colours: `colors.tone(tone)` returns a `ToneColors` — `main`, `onMain`,
-`container`, `onContainer`. `StatusBadge` and `Alert` take a `Tone` for exactly this reason.
+`container`, `onContainer`. `StatusBadge` and `Alert` take a `Tone` for exactly this reason. `Alert`, `AnnouncementBar` and `PromoBanner` use the container pair only on the icon plate (and, for `Tone.Error`, as their own surface): their surface is `scheme.surfaceContainerHigh`, with no border, in `shapes.largeIncreased`.
 
 **Where the scheme comes from is a platform decision, and only that decision is
 platform-specific.** `platformColorScheme(seed, isDark, dynamicColor, paletteStyle, specVersion)` answers with the user's

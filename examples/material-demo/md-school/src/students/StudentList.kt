@@ -24,8 +24,6 @@ import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.data.Pagination
 import com.softistx.material.components.layout.ResponsiveGrid
 import com.softistx.material.components.layout.ScrollToTop
-import com.softistx.material.foundation.icon.Icon
-import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
@@ -51,13 +49,14 @@ fun StudentList(
         when {
             students.isEmpty() ->
                 EmptyState(
+                    icon = StxIcons.Person,
                     title = "No students enrolled",
                     description = "Enrol the first student to start tracking marks.",
                     action = { Button(text = "Enrol a student", onClick = { enrolling = true }) },
                 )
             shown.isEmpty() ->
                 EmptyState(
-                    illustration = { Icon(StxIcons.Search, description = null, size = IconSize.XLarge) },
+                    icon = StxIcons.Search,
                     title = "No student matches",
                     description = "Try another name or clear the class filter.",
                     action = { Button(text = "Clear filters", onClick = query::clear) },

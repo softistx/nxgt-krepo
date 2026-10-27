@@ -48,6 +48,7 @@ fun ConversationList(
         when {
             conversations.isEmpty() ->
                 EmptyState(
+                    icon = StxIcons.Inbox,
                     title = "Inbox zero",
                     description = "No conversation here.",
                     action = {
