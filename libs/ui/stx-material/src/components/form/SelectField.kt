@@ -3,8 +3,6 @@ package com.softistx.material.components.form
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -16,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 
 /**
@@ -43,7 +42,6 @@ fun <T> SelectField(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -57,7 +55,7 @@ fun <T> SelectField(
                 Modifier
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth()
-                    .styleable(styleState, fieldStyle, style),
+                    .styledBy(style, enabled = enabled, interactionSource = interactionSource),
             enabled = enabled,
             readOnly = true,
             label = label?.let { { Typography(text = it) } },

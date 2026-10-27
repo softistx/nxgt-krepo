@@ -259,7 +259,7 @@ class ConnectedGroupTest :
             }
 
             scenario("icons put a glyph before the label") {
-                fun inkOf(icons: List<ImageVector>?): Int {
+                fun inkOf(icons: List<ImageVector>): Int {
                     val bounds = NodeBounds()
                     var ink = 0
                     probe(bounds, { SegmentedControl(listOf("XXXX", "XXXX"), selected = 0, onSelect = {}, modifier = it, icons = icons) }) {
@@ -267,7 +267,7 @@ class ConnectedGroupTest :
                     }
                     return ink
                 }
-                (inkOf(listOf(StxIcons.Calendar, StxIcons.Calendar)) != inkOf(null)) shouldBe true
+                (inkOf(listOf(StxIcons.Calendar, StxIcons.Calendar)) != inkOf(emptyList())) shouldBe true
             }
 
             scenario("a caller style with a background reaches a segment") {

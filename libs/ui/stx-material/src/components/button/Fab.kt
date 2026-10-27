@@ -7,8 +7,6 @@ import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -26,6 +24,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.util.lerp
 import com.softistx.material.foundation.icon.Icon
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 
@@ -51,8 +50,7 @@ fun Fab(
 ) {
     val tone = buttonTone(color)
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource)
-    val styled = modifier.styleable(styleState, buttonStyle, style)
+    val styled = modifier.styledBy(style, base = buttonStyle, interactionSource = interactionSource)
     val leading = @Composable { Icon(icon = icon, description = description) }
     if (text == null) {
         FloatingActionButton(

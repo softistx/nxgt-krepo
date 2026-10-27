@@ -1,17 +1,6 @@
 package com.softistx.material.components.button
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ImageComposeScene
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toComposeImageBitmap
-import androidx.compose.ui.graphics.toPixelMap
-import androidx.compose.ui.unit.dp
 import com.softistx.material.components.content.ActionChip
 import com.softistx.material.components.content.Kbd
 import com.softistx.material.components.feedback.Progress
@@ -23,8 +12,8 @@ import com.softistx.material.components.form.TagField
 import com.softistx.material.components.media.AvatarGroup
 import com.softistx.material.components.media.AvatarItem
 import com.softistx.material.foundation.icon.StxIcons
-import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.Tone
+import com.softistx.material.renderPage
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 
@@ -41,36 +30,7 @@ class ToggleRenderTest :
         }
     })
 
-private fun render(content: @Composable () -> Unit): Int {
-    val scene = ImageComposeScene(width = 480, height = 1400)
-    try {
-        scene.setContent {
-            StxTheme(isDark = false) {
-                Column(
-                    modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    content()
-                }
-            }
-        }
-        var time = 0L
-        repeat(8) {
-            time += 100_000_000L
-            scene.render(time)
-        }
-        val map = scene.render(time).toComposeImageBitmap().toPixelMap()
-        var ink = 0
-        for (y in 0 until map.height) {
-            for (x in 0 until map.width) {
-                if (map[x, y] != Color.White) ink++
-            }
-        }
-        return ink
-    } finally {
-        scene.close()
-    }
-}
+private fun render(content: @Composable () -> Unit): Int = renderPage(480, 1400, content)
 
 @Composable
 private fun paint() {

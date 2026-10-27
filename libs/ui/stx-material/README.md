@@ -12,7 +12,7 @@ first `android` target. `examples/material-demo` is its catalogue and its test b
 libs/ui/stx-material/
   src/foundation/            what everything else is built from            (com.softistx.material.foundation.*)
     theme/    tokens, StxTheme, the colour seed, and the platform scheme's expect
-    style/    StxStyles — every component default in one place — and the StyleScope token extensions
+    style/    the StyleScope token extensions, styledBy/pressable and the shared presses
     motion/   the M3 MotionScheme, transitions, shimmer, stagger
     layout/   the window-size and responsive helpers (Breakpoints, wCompact, LocalWindowSize, …)
     text/     Typography and the variant scale
@@ -30,24 +30,23 @@ A component's `*Styles.kt` sits beside it. `foundation` holds no components: the
 
 ## The shape of it
 
-**`StxTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes` and a
-`MotionScheme`, each with a default — the same four `MaterialTheme` takes. It wraps M3 rather than
+**`StxTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes`, each with a default, and
+`motion: StxMotion?`, from which the theme derives M3's `MotionScheme`. It wraps M3 rather than
 replacing it, so a plain M3 component, or any third-party M3 library, keeps working inside it. That
 is what makes this adoptable in an application that already exists, and a caller that already
 computes one of the four passes it and keeps the other three.
 
-Typography: M3's `*Emphasized` styles are no-ops in material3 1.12.0-alpha03, so `style(emphasized = true)` raises the weight itself.
-
 It installs `MaterialExpressiveTheme` and `MotionScheme.expressive()`: rounder shapes, springier
-motion. `motionScheme = MotionScheme.standard()` calms it for the whole tree, and every
-animation follows — nothing here holds its own curve.
+motion. `motion = StxMotion(MotionScheme.standard())` calms it for the whole tree, and every
+animation follows — nothing here holds its own curve. `motion` is the one motion input: Material 3's
+scheme derives from it (a snapping one when `enabled = false`).
 
-**It follows the OS "Reduce motion" setting** on Android and iOS when you pass neither `motionScheme` nor
-`motion`; pass either one and the OS is not read. Desktop reads only `-Dstx.material.reduceMotion`, and an app
+**It follows the OS "Reduce motion" setting** on Android and iOS when you pass no `motion`; pass one and the
+OS is not read. Desktop reads only `-Dstx.material.reduceMotion`, and an app
 can opt in to the OS's answer with `readDesktopReducedMotion()`:
 
 ```kotlin
-StxTheme(motion = StxMotion(enabled = false)) { App() }   // opt out: no animation, whatever the OS says
+StxTheme(motion = StxMotion(enabled = false)) { App() }   // opt out: no animation, M3 morphs included, whatever the OS says
 ```
 
 ```kotlin
@@ -57,7 +56,7 @@ StxThemeProvider(seed = Color(0xFF5B5BD6)) {
 }
 
 // Anything more specific goes straight to StxTheme.
-StxTheme(colorScheme = brandScheme, motionScheme = MotionScheme.standard()) { … }
+StxTheme(colorScheme = brandScheme, motion = StxMotion(MotionScheme.standard())) { … }
 ```
 
 **Only one decision is platform-specific**, and it is behind `expect`/`actual`:
@@ -95,8 +94,8 @@ fun buttonColors(variant: ButtonVariant, color: ButtonColor): ButtonColors = …
 
 // The whole button family (Button, IconButton, IconToggle, ToggleButton, SplitButton, Fab)
 // morphs its shape under the finger, so its one Style keeps only the disabled alpha.
-// StxStyles.button names it; StxStyles.morphingButton is a deprecated alias.
-val buttonStyle: Style = Style {
+// StxStyles.button names it; the val itself is internal.
+internal val buttonStyle: Style = Style {
     disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
 }
 ```

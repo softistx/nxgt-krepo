@@ -18,6 +18,7 @@ import com.softistx.material.foundation.theme.StxTheme
 @Immutable
 data class TableColumn<T>(
     val header: String,
+    val sortable: Boolean = true,
     val value: (T) -> String,
 )
 
@@ -39,7 +40,7 @@ data class TableSort(
  *
  * With [onSortChange] every header is a button: a click sorts by that column, ascending first and
  * then flipping with [cycleSortDirection], and [sort] marks the current one with an arrow and
- * announces it; [sortable] says which columns (by index) take a click, the others stay plain text.
+ * announces it; a column with `sortable = false` stays plain text.
  * The table only reports the click: the caller re-sorts `rows`. With [sort] and no [onSortChange]
  * the arrow and its announcement are display-only. The cards have no headers, so a folded table sorts through a [SortControl] beside it.
  * [style] dresses the cards and, with [onRowClick], the rows; [headerStyle] only the sortable headers; a row is
@@ -53,9 +54,8 @@ fun <T> DataTable(
     collapseBelow: Dp = 600.dp,
     sort: TableSort? = null,
     onSortChange: ((TableSort) -> Unit)? = null,
-    style: Style = Style,
     headerStyle: Style = Style,
-    sortable: (Int) -> Boolean = { true },
+    style: Style = Style,
     onRowClick: ((T) -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -78,7 +78,7 @@ fun <T> DataTable(
                         TableHeader(
                             text = column.header,
                             direction = sort?.takeIf { it.column == index }?.direction,
-                            onClick = onSortChange?.takeIf { sortable(index) }?.let { change -> { change(nextSort(sort, index)) } },
+                            onClick = onSortChange?.takeIf { column.sortable }?.let { change -> { change(nextSort(sort, index)) } },
                             style = headerStyle,
                             modifier = Modifier.weight(1f),
                         )

@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -18,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softistx.material.components.media.Avatar
+import com.softistx.material.foundation.style.pressBase
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -43,7 +43,6 @@ fun MessageBubble(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
     val scheme = MaterialTheme.colorScheme
     val colors =
         if (outgoing) {
@@ -86,7 +85,7 @@ fun MessageBubble(
             val bubble =
                 Modifier
                     .weight(1f, fill = false)
-                    .styleable(styleState, if (onClick != null) cardStyle else Style, style)
+                    .styledBy(style, base = pressBase(cardStyle, onClick), interactionSource = interactionSource)
             if (onClick == null) {
                 MaterialCard(bubble, shape, colors, elevation, content = { padded() })
             } else {

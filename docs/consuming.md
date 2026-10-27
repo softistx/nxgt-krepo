@@ -116,7 +116,7 @@ only a system property; nothing is spawned and an absent property means "not red
 
 | Property | Values | Effect |
 | --- | --- | --- |
-| `-Dstx.material.reduceMotion` | `true`, `false` | `true` snaps every animation of `stx-material`; anything else is ignored |
+| `-Dstx.material.reduceMotion` | `true`, `false` | `true` snaps every animation of `stx-material`, M3's included; anything else is ignored |
 
 To follow the OS instead, call `readDesktopReducedMotion()` from a `LaunchedEffect` and pass the result to
 `StxTheme(motion = StxMotion.system(reduced))`. It returns `null` when the OS cannot say (Windows, a desktop other

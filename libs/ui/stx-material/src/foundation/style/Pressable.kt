@@ -15,7 +15,8 @@ import androidx.compose.ui.semantics.Role
  * This modifier dressed by [base] then the caller's [style]. [enabled] is what a `disabled { }`
  * block reads. [interactionSource] is the one the part's own input is wired to; without it the
  * style state has no input behind it, so on a wrapper only static properties and `disabled`
- * apply, and `pressed`, `hovered` and `focused` never fire.
+ * apply, and `pressed`, `hovered` and `focused` never fire. [selected] is what a `selected { }`
+ * block reads.
  */
 @Composable
 internal fun Modifier.styledBy(
@@ -23,11 +24,25 @@ internal fun Modifier.styledBy(
     enabled: Boolean = true,
     base: Style = Style,
     interactionSource: MutableInteractionSource? = null,
+    selected: Boolean = false,
 ): Modifier {
     val source = interactionSource ?: remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(source) { it.isEnabled = enabled }
+    val styleState =
+        rememberUpdatedStyleState(source) {
+            it.isEnabled = enabled
+            it.isSelected = selected
+        }
     return styleable(styleState, base, style)
 }
+
+/**
+ * The press look [base] when the part is clickable, and nothing when it is not: a plain header or a
+ * row with no click does not give under a finger.
+ */
+internal fun pressBase(
+    base: Style,
+    onClick: (() -> Unit)?,
+): Style = if (onClick != null) base else Style
 
 /**
  * A press target: this modifier, dressed by [base] then the caller's [style], and clickable as a
@@ -43,7 +58,7 @@ internal fun Modifier.pressable(
     label: String? = null,
 ): Modifier {
     val interactionSource = remember { MutableInteractionSource() }
-    val styled = styledBy(style, base = if (onClick != null) base else Style, interactionSource = interactionSource)
+    val styled = styledBy(style, base = pressBase(base, onClick), interactionSource = interactionSource)
     if (onClick == null) return styled
     return styled.clickable(
         interactionSource = interactionSource,

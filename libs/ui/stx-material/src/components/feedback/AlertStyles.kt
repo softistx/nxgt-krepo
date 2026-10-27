@@ -16,7 +16,7 @@ import com.softistx.material.foundation.theme.Tone
  * two notices spends two small spots of colour rather than two slabs. Only an error earns a
  * coloured container, because it is the one tone that must interrupt.
  */
-fun alertStyle(tone: Tone): Style =
+internal fun alertStyle(tone: Tone): Style =
     Style {
         if (tone == Tone.Error) {
             background(colors.tone(Tone.Error).container)

@@ -96,14 +96,10 @@ fun buttonBorder(
  * purpose. A `background()` or `shape()` in this block would paint on top of the button M3 already
  * painted, which is the sign the value belonged in [buttonColors] instead.
  */
-val buttonStyle: Style =
+internal val buttonStyle: Style =
     Style {
         disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
     }
-
-/** The name this style had while `Button` was the only control that morphed. */
-@Deprecated("Every button-family control morphs now: use buttonStyle.", ReplaceWith("buttonStyle"))
-val morphingButtonStyle: Style get() = buttonStyle
 
 /** Material 3's own disabled opacity, so a disabled wrapper matches a disabled M3 component. */
 const val DISABLED_ALPHA = 0.38f

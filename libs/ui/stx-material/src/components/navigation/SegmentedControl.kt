@@ -30,8 +30,8 @@ fun SegmentedControl(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    icons: List<ImageVector> = emptyList(),
     style: Style = Style,
-    icons: List<ImageVector>? = null,
 ) {
     ConnectedToggleGroup(
         count = options.size,
@@ -45,7 +45,7 @@ fun SegmentedControl(
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            icons?.getOrNull(index)?.let { Icon(icon = it, description = null) }
+            icons.getOrNull(index)?.let { Icon(icon = it, description = null) }
             Typography(text = options[index], variant = TypographyVariant.LabelLarge)
         }
     }

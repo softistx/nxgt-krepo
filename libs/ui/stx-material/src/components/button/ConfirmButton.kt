@@ -26,9 +26,9 @@ fun ConfirmButton(
     variant: ButtonVariant = ButtonVariant.Filled,
     color: ButtonColor = ButtonColor.Danger,
     enabled: Boolean = true,
-    style: Style = Style,
     holdMs: Long = 3_000L,
     size: ButtonSize = ButtonSize.Small,
+    style: Style = Style,
 ) {
     var armed by remember { mutableStateOf(false) }
     LaunchedEffect(armed) {

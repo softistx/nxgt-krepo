@@ -1,12 +1,9 @@
 package com.softistx.material.components.form
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,6 +20,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.input.ImeAction
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -45,7 +43,6 @@ fun InlineEdit(
     variant: TypographyVariant = TypographyVariant.TitleMedium,
     style: Style = Style,
 ) {
-    val styleState = rememberUpdatedStyleState(remember { MutableInteractionSource() }) { it.isEnabled = enabled }
     var editing by remember { mutableStateOf(false) }
     var draft by remember(value) { mutableStateOf(value) }
 
@@ -110,7 +107,7 @@ fun InlineEdit(
                 modifier =
                     Modifier
                         .weight(1f)
-                        .styleable(styleState, dimmedStyle, style)
+                        .styledBy(style, enabled = enabled, base = dimmedStyle)
                         .clickable(enabled = enabled) { editing = true },
             )
             if (enabled) {

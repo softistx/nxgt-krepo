@@ -24,8 +24,8 @@ fun BusyButton(
     variant: ButtonVariant = ButtonVariant.Filled,
     color: ButtonColor = ButtonColor.Primary,
     enabled: Boolean = true,
-    style: Style = Style,
     size: ButtonSize = ButtonSize.Small,
+    style: Style = Style,
 ) {
     ButtonSurface(
         onClick = onClick,

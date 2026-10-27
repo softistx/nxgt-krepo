@@ -1,22 +1,19 @@
 package com.softistx.material.components.feedback
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.style.MutableStyleState
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.softistx.material.foundation.motion.Transitions
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -46,8 +43,8 @@ fun Alert(
     tone: Tone = Tone.Info,
     title: String? = null,
     visible: Boolean = true,
-    style: Style = Style,
     icon: ImageVector? = AlertDefaults.icon(tone),
+    style: Style = Style,
     action: @Composable (() -> Unit)? = null,
 ) {
     AnimatedVisibility(
@@ -55,9 +52,8 @@ fun Alert(
         enter = Transitions.riseIn,
         exit = Transitions.fadeAway,
     ) {
-        val styleState = remember { MutableStyleState(MutableInteractionSource()) }
         Row(
-            modifier = modifier.fillMaxWidth().styleable(styleState, alertStyle(tone), style),
+            modifier = modifier.fillMaxWidth().styledBy(style, base = alertStyle(tone)),
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
             verticalAlignment = Alignment.Top,
         ) {

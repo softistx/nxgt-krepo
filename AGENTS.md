@@ -199,7 +199,7 @@ The shape of a wrapper:
 
 A claim about **pixels is measured in pixels.** `ImageComposeScene` renders a composable into a
 bitmap with no window, in milliseconds, on a headless host, and `sendPointerEvent` drives hover and
-press. `libs/ui/stx-material/test@jvm/` holds the rendering specs (thirteen files, one per group of components); the two that were written
+press. `libs/ui/stx-material/test@jvm/` holds the rendering specs (eleven `*RenderTest` files, one per group of components, and a few single-component specs beside them); the two that were written
 because something looked right and was not are a hover state that was invisible on *selected* chips
 because they already wear the focus layer, and a collapsed `ResponsiveButton` that kept the padding
 its label had left behind. Rendering specs are jvm-only — skiko's native library comes from
@@ -221,8 +221,8 @@ settings:
 
 The shape a component takes:
 
-- **Its look is a `Style`, in its own file** — `components/button/ButtonStyles.kt` holds `buttonStyle(variant,
-  color)` and `components/button/Button.kt` holds no colours at all. A style reaches theme tokens through the
+- **Its look is a `Style`, in its own file** — `components/button/ButtonStyles.kt` holds an internal `buttonStyle` and
+  `buttonColors(variant, color)`, and `components/button/Button.kt` holds no colours at all. A style reaches theme tokens through the
   `StyleScope` extensions in `foundation/style/StyleTokens.kt` (`colors`, `scheme`, `shapes`, `spacing`,
   `motion`), which read the `CompositionLocal`s at resolve time rather than closing over whatever
   was in scope when the style was built.
@@ -233,11 +233,13 @@ The shape a component takes:
   better and in one place.
 - **The signature carries no styling parameters.** No `backgroundColor`, no `shape`, no
   `contentPadding`. Instead one `style: Style = Style` parameter, defaulting to exactly `Style`
-  (the companion, which is the empty style) and applied *last* so a caller's override wins:
-  `Modifier.styleable(styleState, base, style)`.
-- **Presentation state belongs to the component.** `rememberUpdatedStyleState(interactionSource) {
-  it.isEnabled = enabled }` gives pressed, hovered and focused for nothing; the caller passes
-  business state and never remembers a boolean for a visual.
+  (the companion, which is the empty style), the last parameter (or the last before a trailing lambda), and applied *last* so a caller's override wins:
+  `Modifier.styledBy(style, enabled, base, interactionSource)`.
+- **Presentation state belongs to the component.** `styledBy` (or `pressable` for a part that is a
+  press target only when clickable, with `pressBase` for the base alone) remembers the style state
+  and gives pressed, hovered and focused for nothing; the caller passes business state and never
+  remembers a boolean for a visual. Nothing writes `rememberUpdatedStyleState` + `styleable` inline,
+  and the 0.99 and 0.97 presses are the shared `rowPress` and `compactPress`.
 - **Every curve comes from Material 3's `MotionScheme`.** `StxMotion` holds the scheme
   `StxTheme` installed, and offers M3's two axes — `spatial(speed)` for anything that moves,
   which is a spring and may overshoot, and `effects(speed)` for colour and alpha, which must land
@@ -247,8 +249,9 @@ The shape a component takes:
   scope.
 - **Every default has a name in `StxStyles`**, reached as `StxTheme.styles.card`.
   It is a plain `object` behind an extension property, not a `CompositionLocal` — a `Style` reads
-  its tokens when it is applied, not when it is written — and it lives in `src/foundation/style/` so
-  `foundation/theme` keeps knowing nothing about the components. Restating a default before editing it is what stops a
+  its tokens when it is applied, not when it is written — and it lives in `src/components/StxStyles.kt`
+  (`com.softistx.material.components`) so `foundation` keeps knowing nothing about the components. The `xStyle` vals
+  behind it are `internal`: `StxStyles.x` is the only public name. Restating a default before editing it is what stops a
   one-off drifting away from the rest of the screen.
 
 The `styles` skill has the full vocabulary, the state-animation guide and the migration workflow.
@@ -1166,6 +1169,9 @@ the same each time, and the mistakes are the same each time too.
   | `libs/ui/stx-material/README.md` | How is the UI library shaped, how does `StxTheme` slot into an application that already uses Material 3, and how do I add a component? |
   | `libs/ui/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
   | `libs/ui/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
+  | `libs/ui/stx-material/docs/troubleshooting.md` | What a consumer hits and the fix, one entry per symptom (today: animations that differ between machines, from the OS "Reduce motion" setting) |
+  | `examples/material-demo/md-school/README.md` | What the School app is, how to run and test it, and where its README lives (the demo README holds the rest) |
+  | `examples/material-demo/md-school/docs/design-grid.md` | How a visual slice of the School app is scored: the criteria, the 1 to 5 scale, and the bench it is read against |
   | `libs/ui/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
   | `examples/artifacts-ktor/README.md` | Why two modules exist that demonstrate nothing: the nine coordinates of `stx-amqp`, `stx-kafka` and `stx-storage` that no other module resolves, and what the compile and the spec each prove about a POM |
   | `examples/artifacts-spring/README.md` | What booting a context proves that loading a class cannot — and the two things that bit while writing it |
@@ -1173,7 +1179,7 @@ the same each time, and the mistakes are the same each time too.
   | `examples/graphix-shop/README.md` | What the GraphQL catalogue shows — split SDL, annotated DataFetchers, how to run it |
   | `examples/graphix-codegen/README.md` | The two GraphQL codegen plugins on one schema |
   | `examples/workflow-checkout/README.md` | What the checkout saga shows — the journal each run leaves, and the window between an effect and its checkpoint that the idempotency key exists to cover |
-  | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
+  | `examples/material-demo/README.md` | Why the demo is four modules, how to run it, and how a story is registered |
   | `libs/core/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 

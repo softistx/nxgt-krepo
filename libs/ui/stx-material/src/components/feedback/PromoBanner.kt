@@ -25,9 +25,9 @@ fun PromoBanner(
     modifier: Modifier = Modifier,
     code: String? = null,
     tone: Tone = Tone.Success,
-    style: Style = Style,
     onDismiss: (() -> Unit)? = null,
     icon: ImageVector? = AlertDefaults.icon(tone),
+    style: Style = Style,
 ) {
     AnnouncementBar(
         text = text,

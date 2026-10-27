@@ -2,13 +2,13 @@
 "stx-material": minor
 ---
 
-BREAKING: the packages moved to `com.softistx.material.foundation.*` and `com.softistx.material.components.*`. Nothing else changed: no signature, no behaviour. Fix the imports with the table below (the symbol names after the package are unchanged).
+The packages moved to `com.softistx.material.foundation.*` and `com.softistx.material.components.*`. The package move changes no behaviour; the other breaks of 0.3.0 are in the lead changeset. Fix the imports with the table below (the symbol names after the package are unchanged).
 
 | Old package, under `com.softistx.material` | New package, under `com.softistx.material` |
 | --- | --- |
 | `theme` | `foundation.theme` |
 | `theme.StyleTokens` (the `StyleScope.colors` / `scheme` / `shapes` / `spacing` / `motion` extensions) | `foundation.style` |
-| `style` (`StxStyles`, `StxTheme.styles`) | `foundation.style` |
+| `style` (`StxStyles`, `StxTheme.styles`) | `components` (`StxStyles` and `StxTheme.styles` live in `components.StxStyles`) |
 | `motion` | `foundation.motion` |
 | `layout`: `ResponsiveGrid`, `ScrollToTop`, `LoadMoreButton`, `SelectionBar`, `RefreshBox` | `components.layout` |
 | `helpers` (`Breakpoints`, `wCompact`, `hExpanded`, …) | `foundation.layout` (window-size helpers only) |
@@ -29,7 +29,7 @@ BREAKING: the packages moved to `com.softistx.material.foundation.*` and `com.so
 | `models.DataMode` | `components.form` |
 | `models.QueryFilter` | `components.data` |
 
-`com.softistx.material.foundation.style` now holds both `StxStyles` and the `StyleScope` token extensions, so a file that imported `theme.colors` and `style.StxStyles` imports both from one package.
+`com.softistx.material.foundation.style` holds the `StyleScope` token extensions; `StxStyles` and `StxTheme.styles` are in `com.softistx.material.components`, so `foundation` knows no component.
 
 ## How to migrate
 

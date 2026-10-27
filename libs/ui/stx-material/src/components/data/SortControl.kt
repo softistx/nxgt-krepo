@@ -24,8 +24,8 @@ fun cycleSortDirection(direction: SortDirection): SortDirection =
  *
  * Material 3 has no sort chrome. The field names the key; the icon names the direction, so a
  * screen reader hears "Customer, descending" rather than two unlabelled buttons. [cycleSortDirection]
- * is the usual next value. [style] goes to both, which already carry `StxStyles.field` and
- * `StxStyles.button`.
+ * is the usual next value. [style] goes to both; the button already carries
+ * `StxStyles.button`, the field (M3's) has no default.
  */
 @Composable
 fun SortControl(

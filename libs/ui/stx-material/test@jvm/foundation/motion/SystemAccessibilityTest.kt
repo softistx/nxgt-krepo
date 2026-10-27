@@ -49,10 +49,10 @@ private fun Installed.snaps(): Boolean =
 private fun Installed.runs(): Boolean =
     motion.enabled && motion.spatial<Float>() !is SnapSpec<*> && scheme.fastSpatialSpec<Float>() !is SnapSpec<*>
 
-/** The OS setting reaches the theme only when the caller passes neither a `motionScheme` nor a `motion`. */
+/** The OS setting reaches the theme only when the caller passes no `motion`; M3's scheme derives from the motion. */
 class SystemAccessibilityTest :
     FeatureSpec({
-        feature("a theme with neither motionScheme nor motion follows the OS") {
+        feature("a theme with no motion follows the OS") {
             scenario("reduce motion on: StxMotion is disabled and every spec, M3's included, snaps") {
                 val theme = installed(os = true) { StxTheme { it() } }
                 theme.motion.enabled shouldBe false
@@ -64,54 +64,35 @@ class SystemAccessibilityTest :
             }
         }
 
-        feature("passing either one opts out of the OS read") {
-            scenario("only motionScheme: the OS is not read, so motion stays on with the caller's scheme") {
-                val theme = installed(os = true) { StxTheme(motionScheme = MotionScheme.standard()) { it() } }
+        feature("passing a motion opts out of the OS read, and M3's scheme derives from it") {
+            scenario("an enabled motion keeps motion on with its own scheme, whatever the OS says") {
+                val theme = installed(os = true) { StxTheme(motion = StxMotion(MotionScheme.standard(), enabled = true)) { it() } }
                 theme.motion.enabled shouldBe true
                 theme.runs() shouldBe true
             }
 
-            scenario("only motion: the OS is not read, so M3 keeps its expressive scheme and the caller's motion is as given") {
-                val on = installed(os = true) { StxTheme(motion = StxMotion(enabled = true)) { it() } }
-                on.runs() shouldBe true
+            scenario("a disabled motion snaps M3's own specs too, whatever the OS says") {
                 val off = installed(os = false) { StxTheme(motion = StxMotion(enabled = false)) { it() } }
                 off.motion.enabled shouldBe false
-                (off.scheme.fastSpatialSpec<Float>() is SnapSpec<*>) shouldBe false
-            }
-
-            scenario("both: the caller's pair is installed untouched, whatever the OS says") {
-                val standard = MotionScheme.standard()
-                installed(os = true) { StxTheme(motionScheme = standard, motion = StxMotion(enabled = true)) { it() } }.runs() shouldBe true
-                installed(os = false) { StxTheme(motionScheme = standard, motion = StxMotion(enabled = false)) { it() } }
-                    .motion.enabled shouldBe false
+                off.snaps() shouldBe true
             }
         }
 
         feature("StxThemeProvider forwards the same rule") {
-            scenario("with no motionScheme it follows the OS") {
+            scenario("with no motion it follows the OS") {
                 installed(os = true) { StxThemeProvider(dynamicColor = false) { it() } }.snaps() shouldBe true
             }
         }
 
         feature("the desktop theme default reads only the property") {
-            scenario("with the property absent it is not reduced, and no command runs") {
-                val calls = mutableListOf<List<String>>()
-                val before = DesktopPreferences.runner
+            scenario("with the property absent it is not reduced") {
                 val beforeProperty = System.getProperty(REDUCE_MOTION_PROPERTY)
                 try {
-                    DesktopPreferences.runner = {
-                        calls += it
-                        "1"
-                    }
                     System.clearProperty(REDUCE_MOTION_PROPERTY)
                     var motion: StxMotion? = null
                     renderProbe(width = 20, height = 20, content = { StxTheme { motion = StxTheme.motion } }) { settle() }
                     checkNotNull(motion).enabled shouldBe true
-                    calls shouldBe emptyList()
-                    readDesktopReducedMotion()
-                    calls.size shouldBe 1
                 } finally {
-                    DesktopPreferences.runner = before
                     if (beforeProperty != null) System.setProperty(REDUCE_MOTION_PROPERTY, beforeProperty)
                 }
             }
@@ -136,17 +117,13 @@ class SystemAccessibilityTest :
                 os: String,
                 output: String?,
             ): Pair<Boolean?, List<String>> {
-                val before = DesktopPreferences.runner
                 val asked = mutableListOf<String>()
-                try {
-                    DesktopPreferences.runner = {
+                val answer =
+                    DesktopPreferences.reducedMotion(os) {
                         asked += it.joinToString(" ")
                         output
                     }
-                    return DesktopPreferences.reducedMotion(os) to asked
-                } finally {
-                    DesktopPreferences.runner = before
-                }
+                return answer to asked
             }
 
             scenario("macOS asks defaults for reduceMotion and reads 1 as on, 0 as off") {

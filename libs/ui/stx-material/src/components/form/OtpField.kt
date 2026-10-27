@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +20,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
@@ -50,7 +49,6 @@ fun OtpField(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val scheme = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.small
 
@@ -62,7 +60,7 @@ fun OtpField(
     ) {
         BasicTextField(
             value = value,
-            modifier = Modifier.styleable(styleState, dimmedStyle, style),
+            modifier = Modifier.styledBy(style, enabled = enabled, base = dimmedStyle, interactionSource = interactionSource),
             onValueChange = { next -> onValueChange(next.filter(Char::isDigit).take(length)) },
             enabled = enabled,
             interactionSource = interactionSource,

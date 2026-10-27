@@ -2,11 +2,10 @@ package com.softistx.material.components.content
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import androidx.compose.material3.SuggestionChip as MaterialSuggestionChip
@@ -27,11 +26,10 @@ fun SuggestionChip(
     leading: @Composable (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     MaterialSuggestionChip(
         onClick = onClick,
         label = { Typography(text = text, variant = TypographyVariant.LabelMedium) },
-        modifier = modifier.styleable(styleState, chipStyle, style),
+        modifier = modifier.styledBy(style, enabled = enabled, base = chipStyle, interactionSource = interactionSource),
         enabled = enabled,
         icon = leading,
         interactionSource = interactionSource,

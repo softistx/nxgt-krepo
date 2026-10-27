@@ -1,18 +1,8 @@
 package com.softistx.material.components.form
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ImageComposeScene
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toComposeImageBitmap
-import androidx.compose.ui.graphics.toPixelMap
-import androidx.compose.ui.unit.dp
-import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.renderPage
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -46,36 +36,7 @@ class FormRenderTest :
     })
 
 /** How many pixels are not the page — a crude but honest measure of "something was drawn". */
-private fun render(content: @Composable () -> Unit): Int {
-    val scene = ImageComposeScene(width = 420, height = 1100)
-    try {
-        scene.setContent {
-            StxTheme(isDark = false) {
-                Column(
-                    modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    content()
-                }
-            }
-        }
-        var time = 0L
-        repeat(8) {
-            time += 100_000_000L
-            scene.render(time)
-        }
-        val map = scene.render(time).toComposeImageBitmap().toPixelMap()
-        var ink = 0
-        for (y in 0 until map.height) {
-            for (x in 0 until map.width) {
-                if (map[x, y] != Color.White) ink++
-            }
-        }
-        return ink
-    } finally {
-        scene.close()
-    }
-}
+private fun render(content: @Composable () -> Unit): Int = renderPage(420, 1100, content)
 
 @Composable
 private fun paint(complaining: Boolean) {

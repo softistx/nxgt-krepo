@@ -5,8 +5,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
@@ -21,6 +19,7 @@ import androidx.compose.ui.semantics.Role
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -102,14 +101,13 @@ private fun CrumbLabel(
     }
     val current = crumb.current || crumb.item.onClick == null
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = !current }
     Typography(
         text = crumb.item.label,
         variant = TypographyVariant.LabelLarge,
         emphasis = if (current) Emphasis.Full else Emphasis.Medium,
         modifier =
             Modifier
-                .styleable(styleState, breadcrumbStyle, style)
+                .styledBy(style, enabled = !current, base = breadcrumbStyle, interactionSource = interactionSource)
                 .then(
                     if (current) {
                         Modifier
@@ -131,14 +129,13 @@ private fun OverflowCrumb(
 ) {
     var open by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
     Typography(
         text = "…",
         variant = TypographyVariant.LabelLarge,
         emphasis = Emphasis.Medium,
         modifier =
             Modifier
-                .styleable(styleState, breadcrumbStyle, style)
+                .styledBy(style, base = breadcrumbStyle, interactionSource = interactionSource)
                 .clickable(
                     interactionSource = interactionSource,
                     role = Role.Button,

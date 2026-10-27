@@ -1,15 +1,13 @@
-package com.softistx.material.foundation.style
+package com.softistx.material.components
 
 import androidx.compose.foundation.style.Style
 import com.softistx.material.components.button.buttonStyle
 import com.softistx.material.components.content.cardStyle
 import com.softistx.material.components.content.chipStyle
-import com.softistx.material.components.content.listTileStyle
 import com.softistx.material.components.data.sortHeaderStyle
 import com.softistx.material.components.data.tableRowStyle
 import com.softistx.material.components.feedback.alertStyle
 import com.softistx.material.components.form.dimmedStyle
-import com.softistx.material.components.form.fieldStyle
 import com.softistx.material.components.form.toggleStyle
 import com.softistx.material.components.form.uploadStyle
 import com.softistx.material.components.media.tileStyle
@@ -35,14 +33,9 @@ import com.softistx.material.foundation.theme.Tone
 object StxStyles {
     val button: Style get() = buttonStyle
 
-    @Deprecated("Every button-family control morphs now: use StxStyles.button.", ReplaceWith("button"))
-    val morphingButton: Style get() = buttonStyle
-
     val card: Style get() = cardStyle
 
     val chip: Style get() = chipStyle
-
-    val field: Style get() = fieldStyle
 
     val dimmed: Style get() = dimmedStyle
 
@@ -55,8 +48,6 @@ object StxStyles {
     val tableRow: Style get() = tableRowStyle
 
     val sortHeader: Style get() = sortHeaderStyle
-
-    val listTile: Style get() = listTileStyle
 
     val navigationItem: Style get() = navigationItemStyle
 

@@ -25,8 +25,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.Card as MaterialCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +35,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -61,7 +60,6 @@ fun ChoiceTile(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     MaterialCard(
         onClick = onClick,
         modifier =
@@ -70,7 +68,7 @@ fun ChoiceTile(
                     role = Role.RadioButton
                     this.selected = selected
                 }
-                .styleable(styleState, choiceTileStyle, style),
+                .styledBy(style, enabled, choiceTileStyle, interactionSource),
         enabled = enabled,
         shape = MaterialTheme.shapes.largeIncreased,
         colors = choiceTileColors(selected),
@@ -137,7 +135,7 @@ internal val choiceTileStyle: Style =
     }
 ```
 
-## `src/foundation/style/StxStyles.kt`
+## `src/components/StxStyles.kt`
 
 Name the default, so a caller can restate it and edit it (`style = StxTheme.styles.choiceTile then { … }`):
 

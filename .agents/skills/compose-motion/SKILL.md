@@ -14,7 +14,7 @@ M3's `MotionScheme` (installed by `MaterialExpressiveTheme`, which `StxTheme` wr
 - **Spatial**: anything that moves or changes size or shape. A spring damped below 1, so it overshoots and settles. Default damping 0.8, stiffness 380; fast 0.6 / 800; slow 0.8 / 200 (expressive).
 - **Effects**: colour, alpha, elevation. Critically damped (1.0), lands exactly on target.
 
-`MotionScheme.standard()` damps at 0.9 and is stiffer: calmer, for dense tools. Expressive is the default of this library; pass `motionScheme = MotionScheme.standard()` to `StxTheme` to calm a whole app.
+`MotionScheme.standard()` damps at 0.9 and is stiffer: calmer, for dense tools. Expressive is the default of this library; pass `motion = StxMotion(MotionScheme.standard())` to `StxTheme` to calm a whole app.
 
 `StxTheme.motion` (`StxMotion`) is the only source of specs in this library:
 
@@ -30,16 +30,16 @@ motion.effects<Color>()                    // colour, alpha  (Default speed)
 ## Interaction states: Style `animate`
 
 ```kotlin
-internal val tileStyle: Style =
-    Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.99f) } }
-        disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
-    }
+internal val choiceTileStyle: Style =
+    rowPress then
+        Style {
+            disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
+        }
 ```
 
 - `motion` inside a Style block is a held reference (a Style is not a composable scope); `StxTheme` provides it.
 - Scale and offset use `spatial`, colour and alpha use `effects`. No `animate*AsState` for pressed, hovered, focused, selected.
-- Press scale follows the family (0.99 cards and rows, 0.97 chips, buttons, navigation items); a morphing control gets none: `stx-material-components` section 4.
+- Press scale follows the family (0.99 cards and rows, 0.97 chips and navigation items); a morphing control gets none: `stx-material-components` section 4.
 
 ## Shape morph
 
@@ -82,7 +82,7 @@ Shared elements (`SharedTransitionLayout`) are in `references/animation-shared-e
 
 ## Reduced motion
 
-With no `motionScheme` and no `motion`, `StxTheme` follows the OS: `systemReducesMotion()` (expect/actual) feeds `StxMotion.system(reduceMotion, scheme)`, and a reduce-motion preference also swaps in an internal `SnapMotionScheme` (all six specs `snap()`), because `enabled = false` alone leaves M3's morphs running. **Pass either `motionScheme` or `motion` and the OS is not read at all**: `motionScheme` alone keeps motion on, `motion` alone keeps the expressive scheme. `StxThemeProvider` forwards the same rule. The read is taken when the theme is composed, not observed.
+`motion` is the only motion input of `StxTheme`; M3's scheme derives from it (`enabled = false` installs an internal `SnapMotionScheme`, all six specs `snap()`, because the flag alone leaves M3's morphs running). With no `motion`, `StxTheme` follows the OS: `systemReducesMotion()` (expect/actual) feeds `StxMotion.system(reduceMotion)`. **Pass a `motion` and the OS is not read at all.** `StxThemeProvider` forwards it. The read is taken when the theme is composed, not observed.
 
 Where it is read: Android the animator duration scale; iOS `UIAccessibilityIsReduceMotionEnabled`; desktop follows only `-Dstx.material.reduceMotion=true|false` (absent: not reduced, no process spawned). An app opts in to the OS with `suspend fun readDesktopReducedMotion(): Boolean?` (`defaults` on macOS, `gsettings` on GNOME, `null` on Windows and anything unknown; on `Dispatchers.IO`) and passes it in: `LaunchedEffect(Unit) { reduced = readDesktopReducedMotion() == true }`, then `StxTheme(motion = StxMotion.system(reduced))`. The test suite pins the property to `false` in `test@jvm/io/kotest/provided/ProjectConfig.kt`, so specs do not depend on the host. A component must look complete in its end state, with nothing that only the animation explained.
 

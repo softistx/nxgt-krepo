@@ -91,14 +91,4 @@ class IconButtonSemanticsTest :
                 }
             }
         }
-
-        feature("the button-family style") {
-            scenario("morphingButton is the same style under its old name") {
-                @Suppress("DEPRECATION")
-                (
-                    com.softistx.material.foundation.style.StxStyles.morphingButton shouldBe
-                        com.softistx.material.foundation.style.StxStyles.button
-                )
-            }
-        }
     })

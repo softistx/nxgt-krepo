@@ -1,11 +1,11 @@
 package com.softistx.material.foundation.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
+import com.softistx.material.foundation.motion.StxMotion
 
 /**
  * The theme as an application wants it: name a brand colour, and get the platform's best answer.
@@ -23,7 +23,7 @@ fun StxThemeProvider(
     dynamicColor: Boolean = true,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     specVersion: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2025,
-    motionScheme: MotionScheme? = null,
+    motion: StxMotion? = null,
     content: @Composable () -> Unit,
 ) {
     StxTheme(
@@ -36,7 +36,7 @@ fun StxThemeProvider(
                 paletteStyle = paletteStyle,
                 specVersion = specVersion,
             ),
-        motionScheme = motionScheme,
+        motion = motion,
         content = content,
     )
 }

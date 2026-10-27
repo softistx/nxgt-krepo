@@ -6,13 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
 import androidx.compose.material3.Checkbox as MaterialCheckbox
@@ -70,11 +69,10 @@ private fun OptionRow(
     style: Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     Row(
         modifier =
             Modifier
-                .styleable(styleState, toggleStyle, style)
+                .styledBy(style, enabled = enabled, base = toggleStyle, interactionSource = interactionSource)
                 .toggleable(
                     value = ticked,
                     enabled = enabled,

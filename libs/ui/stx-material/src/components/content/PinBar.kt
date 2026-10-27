@@ -16,6 +16,7 @@ import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.feedback.AnnouncementBar
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.pressBase
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
@@ -37,7 +38,7 @@ fun PinBar(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val styled =
-        modifier.fillMaxWidth().styledBy(style, base = if (onClick != null) cardStyle else Style, interactionSource = interactionSource)
+        modifier.fillMaxWidth().styledBy(style, base = pressBase(cardStyle, onClick), interactionSource = interactionSource)
     val content: @Composable () -> Unit = {
         Row(
             modifier =

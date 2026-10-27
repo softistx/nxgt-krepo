@@ -2,8 +2,6 @@ package com.softistx.material.components.button
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -16,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.IconSize
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.theme.ToneColors
 import androidx.compose.material3.IconButton as MaterialIconButton
 
@@ -46,8 +45,7 @@ fun IconButton(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
-    val styled = modifier.styleable(styleState, buttonStyle, style)
+    val styled = modifier.styledBy(style, enabled = enabled, base = buttonStyle, interactionSource = interactionSource)
     val tone = iconButtonTone(color)
     val shapes = IconButtonDefaults.shapes()
     val content = @Composable { Icon(icon = icon, description = description, size = size) }

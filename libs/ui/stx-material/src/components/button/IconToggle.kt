@@ -2,8 +2,6 @@ package com.softistx.material.components.button
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.IconButtonDefaults
@@ -14,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.IconSize
+import com.softistx.material.foundation.style.styledBy
 import androidx.compose.material3.IconToggleButton as MaterialIconToggleButton
 
 /**
@@ -39,12 +38,7 @@ fun IconToggle(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState =
-        rememberUpdatedStyleState(interactionSource) {
-            it.isEnabled = enabled
-            it.isSelected = checked
-        }
-    val styled = modifier.styleable(styleState, buttonStyle, style)
+    val styled = modifier.styledBy(style, enabled = enabled, base = buttonStyle, interactionSource = interactionSource, selected = checked)
     val tone = iconButtonTone(color)
     val shapes = IconButtonDefaults.toggleableShapes()
     val content = @Composable {

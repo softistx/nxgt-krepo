@@ -44,13 +44,12 @@ Package `com.softistx.material.foundation.motion`.
 | `motion/every-speed-at-once` | `Fast` / `Default` / `Slow` on the same move |
 
 The header's **Motion** control switches the whole tree between `MotionScheme.expressive()`,
-`MotionScheme.standard()` and off. Off stops this library's motion; Material 3's own components
-keep their built-in animations, because a `MotionScheme` has no null.
+`MotionScheme.standard()` and off. Off snaps this library's motion and Material 3's own: the theme derives M3's scheme from `motion`.
 
-With no `motionScheme` and no `motion`, `StxTheme` follows the OS: "Reduce motion" installs a scheme whose
-every spec is a snap and an `StxMotion` with `enabled = false`. **Pass either one and the OS is not
-read**: `motionScheme` alone keeps motion on with your scheme, `motion` alone keeps the expressive scheme.
-`StxThemeProvider` forwards the same rule (its `motionScheme` is `null` by default). Android reads the
+`motion` is the one motion input of `StxTheme`, and Material 3's scheme derives from it: a motion with
+`enabled = false` installs a scheme whose every spec is a snap, any other installs its `scheme`. With no
+`motion`, `StxTheme` follows the OS: "Reduce motion" gives an `enabled = false` motion. **Pass a `motion` and the
+OS is not read.** `StxThemeProvider` forwards it (its `motion` is `null` by default). Android reads the
 animator scale and iOS `UIAccessibilityIsReduceMotionEnabled`. **Desktop follows only
 `-Dstx.material.reduceMotion=true|false`** (absent means not reduced; no process is spawned). An app
 that wants the OS's answer opts in with `readDesktopReducedMotion()` (`suspend`, on `Dispatchers.IO`;
@@ -62,7 +61,7 @@ LaunchedEffect(Unit) { reduced = readDesktopReducedMotion() == true }
 StxTheme(motion = StxMotion.system(reduced)) { App() }
 ```
 
-`StxMotion.system(reduced)` snaps this library's motion; add `motionScheme` to snap M3's own morphs too.
+`StxMotion.system(reduced)` snaps this library's motion and, through the theme, M3's own morphs.
 The read is taken when the theme is composed, not observed. See `docs/troubleshooting.md`.
 
 ## Text
@@ -134,10 +133,10 @@ Package `com.softistx.material.components.button`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `Button` | `text`, `onClick`, `variant = Filled`, `color = Primary`, `enabled`, `size = Small` | `buttons/button` |
+| `Button` | `text`, `onClick`, `variant = Filled`, `color = Primary`, `enabled`, `size = Small`, `style = Style` | `buttons/button` |
 | `ButtonSurface` | as `Button`, plus a `RowScope` `content` slot instead of `text` | `buttons/button` |
 | `IconButton` | `icon`, `description`, `onClick`, `variant = Ghost`, `color = Neutral`, `size`, `enabled`, `style` | `buttons/icon-button` |
-| `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp`, `size = Small` | `buttons/responsive-button` |
+| `ResponsiveButton` | `text`, `icon`, `onClick`, `variant`, `color`, `enabled`, `collapseBelow = 360.dp`, `size = Small`, `style = Style` | `buttons/responsive-button` |
 | `ButtonRow` | `align = End`, `content: RowScope` | `buttons/button-row` |
 | `Fab` | `icon`, `description`, `onClick`, `text?`, `expanded = true`, `color = Primary`, `style` | `buttons/fab` |
 | `FabMenu` | `expanded`, `onExpandedChange`, `actions: List<FabAction>` | `buttons/fab-menu` |
@@ -145,8 +144,8 @@ Package `com.softistx.material.components.button`.
 | `ToggleButton` | `text`, `checked`, `onCheckedChange`, `variant = Tonal`, `color`, `icon?`, `enabled`, `style` (no `size`: M3's default height) | `buttons/toggle-button` |
 | `IconToggle` | `icon`, `description`, `checked`, `onCheckedChange`, `checkedIcon`, `variant`, `color`, `size = IconSize.Medium` (the glyph, not the container), `enabled`, `style` | `buttons/icon-toggle` |
 | `CopyButton` | `text`, `description = "Copy"` | `buttons/copy-button` |
-| `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000`, `size = Small` | `buttons/confirm-button` |
-| `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled`, `size = Small` | `buttons/busy-button` |
+| `ConfirmButton` | `text`, `onConfirm`, `confirmText = "Confirm?"`, `color = Danger`, `holdMs = 3000`, `size = Small`, `style = Style` | `buttons/confirm-button` |
+| `BusyButton` | `text`, `onClick`, `busy`, `variant`, `color`, `enabled`, `size = Small`, `style = Style` | `buttons/busy-button` |
 | `MoreMenu` | `items: List<MenuItem>`, `description = "More"` | `buttons/more-menu` |
 | `OverflowBar` | `actions: List<OverflowAction>`, `maxVisible` | `buttons/overflow-bar` |
 | `IconBadge` | `icon`, `description`, `onClick`, `count = 0`, `tone = Error` | `buttons/icon-badge` |
@@ -182,25 +181,13 @@ The 5 × 7 matrix is resolved in **one** function, `buttonColors(variant, color)
 Material 3's own `ButtonColors` — so M3 paints the container, the ripple and the disabled treatment,
 and this library only decides *which* colours. Adding a colour touches one enum entry and one `when`
 branch; see `buttons/variant-and-colour-matrix` for the whole grid at once. `buttonBorder` answers
-the same way for the outline. A button's press is M3's shape morph, so `buttonStyle`, the one style of
-the whole family, keeps only the disabled alpha. (`morphingButtonStyle` was its name while only `Button` morphed;
-it is a deprecated alias.)
-
-Migrating from the old names, and from the press scale the family no longer has:
-
-```kotlin
-// before
-Modifier.styleable(state, StxStyles.morphingButton, style)
-val s = morphingButtonStyle
-// after: same style, and every control of the family morphs, none scales
-Modifier.styleable(state, StxStyles.button, style)
-val s = buttonStyle
-```
+the same way for the outline. A button's press is M3's shape morph, so `StxStyles.button`, the one style of
+the whole family, keeps only the disabled alpha.
 
 The button family dropped the 0.97 press scale: the shape morph is the press feedback now, so a
 `pressed { scale(0.97f) }` you relied on is gone unless you pass it back through `style`.
 
-Every control above takes `style: Style = Style`, merged over `buttonStyle`. Pass a block, not
+Every control above takes `style: Style = Style`, merged over `StxStyles.button`. Pass a block, not
 colour or shape parameters:
 
 ```kotlin
@@ -256,11 +243,11 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `feedback/status-badge` |
-| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `style = Style`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `action?` | `feedback/alert` |
+| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/alert` |
 | `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `feedback/skeleton` |
 | `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `feedback/status-dot` |
-| `AnnouncementBar` | `text`, `tone = Info`, `style = Style`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `action?` | `feedback/announcement-bar` |
-| `PromoBanner` | `text`, `code?`, `tone = Success`, `style = Style`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)` | `feedback/promo-banner` |
+| `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/announcement-bar` |
+| `PromoBanner` | `text`, `code?`, `tone = Success`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style` | `feedback/promo-banner` |
 | `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `feedback/progress` |
 | `LabeledProgress` | `progress`, `caption?`, `kind` | `feedback/labeled-progress` |
 | `LoadingMark` | `progress: Float? = null`, `contained = false` | `feedback/loading-mark` |
@@ -285,14 +272,14 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `style = Style`, `content: ColumnScope` | `content/card` |
-| `Chip` | `text`, `selected`, `onClick?`, `enabled`, `style = Style`, `leading?`, `trailing?` | `content/chip` |
-| `ListTile` | `title`, `supporting? = null`, `onClick: (() -> Unit)? = null`, `enabled = true`, `style = Style`, `leading? = null`, `trailing? = null`, `selected: Boolean? = null`, `group: ListTileGroup? = null` | `content/list-tile` |
+| `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `style = Style`, `trailing?` | `content/chip` |
+| `ListTile` | `title`, `supporting? = null`, `onClick: (() -> Unit)? = null`, `enabled = true`, `leading? = null`, `selected: Boolean? = null`, `group: ListTileGroup? = null`, `style = Style`, `trailing? = null` | `content/list-tile` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
 | `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info`, `reserveDelta = true` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange`, `style = Style` | `content/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled`, `style = Style` | `content/rating` |
 | `LabeledDivider` | `label` — no `style`: a divider is inert | `content/labeled-divider` |
-| `ActionChip` | `text`, `onClick`, `enabled`, `style = Style`, `leading?`, `trailing?` | `content/action-chip` |
+| `ActionChip` | `text`, `onClick`, `enabled`, `leading?`, `style = Style`, `trailing?` | `content/action-chip` |
 | `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `content/keyboard-shortcut` |
 | `SuggestionChip` | `text`, `onClick`, `enabled`, `style = Style`, `leading?` | `content/suggestion-chip` |
 | `FileChip` | `name`, `sizeLabel?`, `enabled`, `onClick?`, `onRemove?`, `style = Style` | `content/file-chip` |
@@ -484,8 +471,7 @@ matching(form.password) }`.
 
 Every interactive part takes `style: Style = Style`, applied last so the caller's wins, and puts it
 just before a trailing lambda (`optionLabel`, `format`) so `RadioGroup(…) { it.label }` still compiles.
-The defaults are named in `StxStyles`: `field` (`TextField`, `TextareaField`, `Autocomplete` and
-`SelectField`: empty, because M3 already dims them), `dimmed` (`OtpField` and `InlineEdit` at rest:
+The defaults are named in `StxStyles`: `dimmed` (`OtpField` and `InlineEdit` at rest:
 the 0.38 disabled fade M3 does not give them), `toggle` (the rows of `Checkbox`, `TriStateCheckbox`,
 `Switch`, `RadioGroup` and `CheckboxGroup`: a 0.99 press scale) and `upload` (`UploadField`: a 0.99
 press scale and the disabled fade). `CopyField`, `Composer`, `TagField`, `ThemeToggle` and `Checklist` hand their `style` to the
@@ -554,10 +540,10 @@ because M3 has neither.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `AppBar` | `title`, `size = Small`, `navigationIcon?`, `navigationDescription?`, `onNavigation?`, `scrollBehavior: TopAppBarScrollBehavior? = null`, `actions` | `navigation/app-bar` |
-| `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `results` | `navigation/search` |
+| `Search` | `query`, `onQueryChange`, `placeholder`, `active`, `trailing?`, `style = Style`, `results` | `navigation/search` |
 | `NavigationSuite` | `destinations`, `selected`, `onSelect`, `primaryAction?`, `content` | `navigation/navigation-suite` |
 | `Tabs` | `labels`, `selected`, `onSelect`, `icons?`, `scrollable = false`, `enabled`, `style` | `navigation/tabs` |
-| `SegmentedControl` | `options`, `selected`, `onSelect`, `enabled = true`, `style = Style`, `icons: List<ImageVector>? = null` | `navigation/segmented-control` |
+| `SegmentedControl` | `options`, `selected`, `onSelect`, `enabled = true`, `icons: List<ImageVector> = emptyList()`, `style = Style` | `navigation/segmented-control` |
 | `FloatingToolbar` | `expanded`, `leading?`, `trailing?`, `content` | `navigation/floating-toolbar` |
 | `Breadcrumb` | `items: List<BreadcrumbItem>` | `navigation/breadcrumb` |
 | `Stepper` | `steps`, `current`, `onStep?`, `collapseBelow = 520.dp` | `navigation/stepper` |
@@ -743,7 +729,7 @@ inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate`
 a frozen instant.
 
 `DateField`, `DateRangeField` and `TimeField` hand their `style` to the `TextField` they are made of
-(`StxStyles.field`, empty). `RelativeTime` is not interactive and takes no `style`.
+(M3 dims them itself, so they carry no default). `RelativeTime` is not interactive and takes no `style`.
 
 The exceptions, each because Material 3 imposes its own `*Defaults`:
 
@@ -759,7 +745,7 @@ Package `com.softistx.material.components.data`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `CommandPalette` | `visible`, `query`, `onQueryChange`, `items`, `onDismiss`, `style = Style` | `data/command-palette` |
-| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp`, `sort: TableSort? = null`, `onSortChange?`, `style = Style`, `headerStyle = Style`, `sortable: (Int) -> Boolean = { true }`, `onRowClick?` | `data/data-table` |
+| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp`, `sort: TableSort? = null`, `onSortChange?`, `headerStyle = Style`, `style = Style`, `onRowClick?` | `data/data-table` |
 | `Description` | `items: List<DescriptionItem>` | `data/description` |
 | `EntityHeader` | `title`, `supporting?`, `leading?`, `actions`, `emphasized = true` | `data/entity-header` |
 | `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext`, `label?`, `style = Style` | `data/pagination` |
@@ -777,10 +763,10 @@ The table only reports the click; the caller re-sorts `rows`:
 
 ```kotlin
 var sort by remember { mutableStateOf<TableSort?>(null) }
-DataTable(columns, rows, sort = sort, onSortChange = { sort = it }, sortable = { it != 1 }) { row -> open(row) }
+DataTable(columns, rows, sort = sort, onSortChange = { sort = it }) { row -> open(row) }
 ```
 
-With `onSortChange` the headers `sortable` accepts are buttons (ascending first, then flipped); the
+`TableColumn(header, sortable = true) { value }`: with `onSortChange` the headers of the sortable columns are buttons (ascending first, then flipped); the
 others are plain text. `sort` alone is display-only: the arrow and "Ascending" or "Descending" are
 shown and announced, with no click. A folded table has no headers, so it sorts through a
 `SortControl` beside it. `EntityHeader` announces its title as a heading; `Description` and

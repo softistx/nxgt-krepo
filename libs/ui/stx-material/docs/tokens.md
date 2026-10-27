@@ -173,15 +173,14 @@ is damped below 1, every effects spec at exactly 1.
 composable scope — it runs at apply time.
 
 **Which scheme.** `MotionScheme.expressive()` is the default: springier, allowed to overshoot.
-`MotionScheme.standard()` settles instead. Passing one to `StxTheme` changes every animation in
+`MotionScheme.standard()` settles instead. Passing `StxMotion(MotionScheme.standard())` as `motion` to `StxTheme` changes every animation in
 the tree, this library's and Material 3's alike. Both are singletons, so two default themes compare
 equal and installing one is not a recomposition.
 
 **`enabled = false` collapses every spec to `snap()`** rather than removing the animation. The
 states, the transitions and the composables are identical either way — only the clock stops. That
-is what lets a reduced-motion preference, or a screenshot test, be one flag at the theme. It stops
-*this library's* motion; Material 3's own components keep their built-in animations, because a
-`MotionScheme` has no null.
+is what lets a reduced-motion preference, or a screenshot test, be one flag at the theme. The theme also installs a snapping M3
+scheme, so Material 3's own morphs stop with it.
 
 `Transitions` names the `EnterTransition` / `ExitTransition` pairs built from these: `fade` /
 `fadeAway`, `riseIn` / `sinkOut`, `popIn` / `popOut`, `widen` / `narrow`, `expand` / `collapse`.
@@ -193,14 +192,14 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 
 ## Styles
 
-`StxTheme.styles` (from `com.softistx.material.foundation.style`) is every component default in one place —
-`button`, `card`, `chip`, `listTile`, `field`, `dimmed`, `toggle`, `upload`, `tile`, `tableRow`,
+`StxTheme.styles` (from `com.softistx.material.components`) is every component default in one place, and the only public
+name of them (the `*Style` vals behind it are `internal`) —
+`button`, `card`, `chip`, `dimmed`, `toggle`, `upload`, `tile`, `tableRow`,
 `sortHeader`, `alert(tone)`. `button` is the one style of the whole button family
 (`Button`, `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton`, `Fab`): the disabled alpha only, because all of
-them morph their shape. `morphingButton` is a deprecated alias of it: replace `StxStyles.morphingButton` with
-`StxStyles.button` and `morphingButtonStyle` with `buttonStyle`; the 0.97 press scale is gone from the family.
-`listTile` is empty for the same reason: M3's `ListItem` morphs its shape, so the tile takes no scale.
-`field` is empty: the M3 text fields dim themselves, so a fade would dim a disabled field twice.
+them morph their shape. The 0.97 press scale is gone from the family.
+`ListTile` and the M3 text fields have no entry: M3's `ListItem` morphs its shape and the text fields dim
+themselves, so there is nothing to restate; pass `style = Style { … }` on its own.
 `dimmed` is the 0.38 disabled fade for what M3 does not dim (`OtpField`, the rest text of
 `InlineEdit`). `toggle` is the 0.99 press scale of a checkbox, switch or radio row. `upload` is the
 0.99 press scale and disabled fade of `UploadField`. `tableRow` is the 0.99 press scale of a clickable
@@ -210,7 +209,7 @@ press scale of a clickable `Gallery` image. `card` and `chip` are also the defau
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and
 elevation moved into Material 3's own `*Colors` and `*Defaults` when the components were rebuilt on
-M3. What is left is what M3 has no parameter for — the press scale (not on the button family or `listTile`, which morph their shape), the disabled alpha, and the
+M3. What is left is what M3 has no parameter for — the press scale (not on the button family or `ListTile`, which morph their shape), the disabled alpha, and the
 alert's whole appearance, because M3 has no banner.
 
 Nothing is needed from it to *use* the library: each component already applies its own. It is the

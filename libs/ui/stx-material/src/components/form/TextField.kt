@@ -2,8 +2,6 @@ package com.softistx.material.components.form
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -19,6 +17,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 
 /**
@@ -55,12 +54,11 @@ fun TextField(
 ) {
     var revealed by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
 
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.styleable(styleState, fieldStyle, style),
+        modifier = modifier.styledBy(style, enabled = enabled, interactionSource = interactionSource),
         enabled = enabled,
         readOnly = readOnly,
         label = label?.let { { Typography(text = it) } },

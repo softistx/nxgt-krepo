@@ -3,14 +3,13 @@ package com.softistx.material.components.content
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.FilterChip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.feedback.StatusBadge
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 
@@ -30,24 +29,26 @@ fun Chip(
     selected: Boolean = false,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
-    style: Style = Style,
     leading: @Composable (() -> Unit)? = null,
+    style: Style = Style,
     trailing: @Composable (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     // A chip with no `onClick` does nothing when tapped, so lighting it up under the pointer would
     // promise an interaction that is not there.
     val hovered by interactionSource.collectIsHoveredAsState()
-    val styleState =
-        rememberUpdatedStyleState(interactionSource) {
-            it.isEnabled = enabled
-            it.isSelected = selected
-        }
     FilterChip(
         selected = selected,
         onClick = onClick ?: {},
         label = { Typography(text = text, variant = TypographyVariant.LabelMedium) },
-        modifier = modifier.styleable(styleState, chipStyle, style),
+        modifier =
+            modifier.styledBy(
+                style,
+                enabled = enabled,
+                base = chipStyle,
+                interactionSource = interactionSource,
+                selected = selected,
+            ),
         enabled = enabled,
         leadingIcon = leading,
         trailingIcon = trailing,

@@ -2,7 +2,7 @@
 "stx-material": minor
 ---
 
-`Alert`, `AnnouncementBar` and `PromoBanner` lose their tone border and carry the tone on a leading plate; `EmptyState` finally fades in. New API: `icon: ImageVector? = AlertDefaults.icon(tone)` on the three notices (`null` drops the plate, a vector replaces the icon), `EmptyStateDefaults.IconPlate(icon)` for `EmptyState`'s `illustration` slot, and `StxIcons.Touch`. Parameter placement: `icon` sits immediately before the trailing `action` lambda of `Alert` and `AnnouncementBar` (and after `onDismiss` on `PromoBanner`), so a trailing-lambda call `Alert("x") { … }` still compiles, while a positional call that passed `action` right after `style` must name it. Visible default changes:
+`Alert`, `AnnouncementBar` and `PromoBanner` lose their tone border and carry the tone on a leading plate; `EmptyState` finally fades in. New API: `icon: ImageVector? = AlertDefaults.icon(tone)` on the three notices (`null` drops the plate, a vector replaces the icon), `EmptyStateDefaults.IconPlate(icon)` for `EmptyState`'s `illustration` slot, and `StxIcons.Touch`. Parameter placement: `icon` sits before `style`, and `style` before the trailing `action` lambda of `Alert` and `AnnouncementBar` (after `onDismiss` on `PromoBanner`, where `style` is last), so a trailing-lambda call `Alert("x") { … }` still compiles. Visible default changes:
 
 - Border: the 1 dp border in the tone colour is gone.
 - Colours: the tone container (`Success`, `Info`, `Warning`) becomes `surfaceContainerHigh` with `onSurface` text; `Tone.Error` keeps its error container.

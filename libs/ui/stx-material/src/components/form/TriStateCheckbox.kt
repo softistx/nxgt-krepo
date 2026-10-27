@@ -6,14 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.selection.triStateToggleable
 import androidx.compose.foundation.style.Style
-import androidx.compose.foundation.style.rememberUpdatedStyleState
-import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
+import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
 import androidx.compose.material3.TriStateCheckbox as MaterialTriStateCheckbox
@@ -61,13 +60,12 @@ fun TriStateCheckbox(
     style: Style = Style,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val toggleable = state.toToggleableState()
     Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
         Row(
             modifier =
                 modifier
-                    .styleable(styleState, toggleStyle, style)
+                    .styledBy(style, enabled = enabled, base = toggleStyle, interactionSource = interactionSource)
                     .triStateToggleable(
                         state = toggleable,
                         enabled = enabled,
