@@ -1,7 +1,9 @@
 package com.softistx.material.school.settings
 
 import androidx.compose.runtime.Composable
+import com.softistx.material.components.button.Button
 import com.softistx.material.components.content.Card
+import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.content.SectionHeader
 import com.softistx.material.components.data.Description
 import com.softistx.material.components.data.DescriptionItem
@@ -19,10 +21,18 @@ fun AccountSection(session: SchoolSession) {
     Card {
         SectionHeader(title = "Account")
         StateHost(
-            state = session.data.of(true, true),
+            state = session.data.of(full = true, empty = false),
             onRetry = { session.data = DataState.Loaded },
             loading = { SkeletonCards(count = 1) },
-        ) {
+        ) { linked ->
+            if (!linked) {
+                EmptyState(
+                    title = "No account linked",
+                    description = "Link your staff account to see your classes.",
+                    action = { Button(text = "Link account", onClick = { session.data = DataState.Loaded }) },
+                )
+                return@StateHost
+            }
             PersonCard(name = "Elena Alvarez", supporting = "$CurrentTeacher, Mathematics")
             Description(
                 items =

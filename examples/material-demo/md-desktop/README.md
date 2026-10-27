@@ -7,7 +7,7 @@ The desktop launcher: a `Window` around `MaterialDemo()` (or `SchoolApp()` with 
 ./kotlin run -m md-desktop -- school    # the School showcase app ([`md-school`](../md-school/README.md))
 ```
 
-**[`examples/material-demo`](../README.md) is the README.** This module is about twenty lines and
+**[`examples/material-demo`](../README.md) is the README.** This module is a window and a `main`, and
 contains no stories and no logic — a module has exactly one product type, so `jvm/app` and
 `android/app` cannot be the same one, which is the only reason the demo is three modules instead of
 one. Everything lives in [`md-catalog`](../md-catalog/README.md). If this file grows, something is

@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.components.content.Stat
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.Tone
-import com.softistx.material.school.data.Conversations
 import com.softistx.material.school.data.Grades
 import com.softistx.material.school.data.Students
 import com.softistx.material.school.data.oneDecimal
@@ -28,10 +27,10 @@ private class StatSpec(
 fun StatsRow(session: SchoolSession) {
     val specs =
         listOf(
-            StatSpec(Students.all.size.toString(), "Students", "4 classes", Tone.Info),
+            StatSpec(Students.all.size.toString(), "Students", "${Students.classNames.size} classes", Tone.Info),
             StatSpec(Grades.average(session.grades).oneDecimal(), "Average mark", "+0.6 this term", Tone.Success),
             StatSpec("96%", "Attendance", "-1% this week", Tone.Warning),
-            StatSpec(Conversations.all.sumOf { it.unread }.toString(), "Unread messages", "2 families waiting", Tone.Info),
+            StatSpec(session.unread.toString(), "Unread messages", "${session.familiesWaiting} families waiting", Tone.Info),
         )
     BoxWithConstraints {
         val gap = Arrangement.spacedBy(StxTheme.spacing.sm)

@@ -1,12 +1,12 @@
 # md-android
 
-The Android launcher: one `ComponentActivity` around `MaterialDemo()`, a second around `SchoolApp()` (its own launcher icon, "stx School"), and a manifest.
+The Android launcher: one `ComponentActivity` around `MaterialDemo()`, a second around `SchoolApp()` (its own launcher entry, "stx School"), and a manifest.
 
 ```bash
 ./kotlin run -m md-android     # with a device or emulator connected
 ```
 
-**[`examples/material-demo`](../README.md) is the README.** This module is about twenty lines and
+**[`examples/material-demo`](../README.md) is the README.** This module is two small activities and
 contains no stories and no logic, for the same reason [`md-desktop`](../md-desktop/README.md) does
 not: a module has exactly one product type. Everything lives in
 [`md-catalog`](../md-catalog/README.md).

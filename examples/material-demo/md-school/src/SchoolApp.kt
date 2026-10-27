@@ -11,7 +11,6 @@ import com.softistx.material.components.navigation.NavigationDestination
 import com.softistx.material.components.navigation.NavigationSuite
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.school.common.SchoolCommands
-import com.softistx.material.school.data.Conversations
 import com.softistx.material.school.session.SchoolScreen
 import com.softistx.material.school.session.SchoolSession
 import com.softistx.material.school.session.SchoolStart
@@ -40,7 +39,7 @@ fun SchoolApp(
 /** Bar on a phone, rail on a tablet and a desktop window: [NavigationSuite] picks. */
 @Composable
 private fun SchoolNavigation(session: SchoolSession) {
-    val unread = Conversations.all.sumOf { it.unread }
+    val unread = session.unread
     NavigationSuite(
         destinations =
             SchoolScreen.entries.map { screen ->

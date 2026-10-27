@@ -38,6 +38,8 @@ fun AppearanceSection(preferences: Preferences) {
                         preferences.seed = color
                         preferences.dynamicColor = false
                     },
+                    // Not StatusDot: it takes a Tone (success, info, warning, error), not an arbitrary
+                    // colour, and a seed swatch is neither. Tracked in #295.
                     leading = { Box(Modifier.size(12.dp).clip(CircleShape).background(color)) },
                 )
             }

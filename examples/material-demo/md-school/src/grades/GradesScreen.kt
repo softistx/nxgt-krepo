@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.navigation.SegmentedControl
@@ -21,7 +24,8 @@ import com.softistx.material.school.session.of
 @Composable
 fun GradesScreen(session: SchoolSession) {
     val query = rememberGradesQuery()
-    val state = session.data.of(query.apply(session.grades), emptyList())
+    val rows by remember { derivedStateOf { query.apply(session.grades) } }
+    val state = session.data.of(rows, emptyList())
     ScreenFrame(title = "Grades", session = session) {
         BoxWithConstraints {
             val gap = Arrangement.spacedBy(StxTheme.spacing.md)

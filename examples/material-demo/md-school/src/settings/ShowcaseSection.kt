@@ -43,7 +43,7 @@ fun ShowcaseSection(session: SchoolSession) {
             if (syncing) {
                 delay(1200)
                 syncing = false
-                session.toaster.say("Synced with the school server")
+                session.finishSync()
             }
         }
         BusyButton(text = "Sync now", onClick = { syncing = true }, busy = syncing, variant = ButtonVariant.Outlined)

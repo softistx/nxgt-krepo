@@ -45,7 +45,7 @@ fun GradeFormCard(
     }
     fun save(addAnother: Boolean) =
         form.submit { input ->
-            val grade = input.toGrade(id = session.grades.maxOf { it.id } + 1)
+            val grade = input.toGrade(id = session.grades.maxOf { it.id } + 1) ?: return@submit
             val at = session.grades.indexOfFirst { it.id == grade.id }
             if (at >= 0) session.grades[at] = grade else session.grades.add(grade)
             session.toaster.say(if (at >= 0) "Grade updated" else "Grade saved for ${input.student?.name}")

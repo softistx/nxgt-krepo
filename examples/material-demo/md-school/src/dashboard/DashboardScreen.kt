@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,7 +21,6 @@ import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.school.common.ScreenFrame
 import com.softistx.material.school.common.SkeletonCards
 import com.softistx.material.school.common.StateHost
-import com.softistx.material.school.common.say
 import com.softistx.material.school.session.DataState
 import com.softistx.material.school.session.SchoolSession
 import com.softistx.material.school.session.of
@@ -34,10 +34,11 @@ fun DashboardScreen(session: SchoolSession) {
         if (refreshing) {
             delay(600)
             refreshing = false
-            session.toaster.say("Dashboard is up to date")
+            session.finishRefresh()
         }
     }
-    val state = session.data.of(DashboardData.of(session), DashboardData.Empty)
+    val dashboard by remember { derivedStateOf { DashboardData.of(session) } }
+    val state = session.data.of(dashboard, DashboardData.Empty)
     ScreenFrame(title = "Dashboard", session = session, scroll = false) {
         RefreshBox(refreshing = refreshing, onRefresh = { refreshing = true }, modifier = Modifier.weight(1f)) {
             Column(

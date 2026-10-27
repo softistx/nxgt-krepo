@@ -21,7 +21,7 @@ platforms — so the demo cannot be a single module. It is not three application
 | `md-desktop/` | `jvm/app`. A `Window` around `MaterialDemo()`, or around `SchoolApp()` when started with `-- school`. |
 | `md-android/` | `android/app`. One `ComponentActivity` per app (`MaterialDemo()` and `SchoolApp()`), and a manifest with both. |
 
-The launchers are about twenty lines each and contain no logic and no stories. The one
+The launchers are short and contain no logic and no stories. The one
 decision `md-desktop` makes is which app the window holds, and it takes it from the first program
 argument (`school`) rather than from a second `main`, a flag in the catalogue or a third module;
 `md-android` makes it by declaring a second launcher activity, so both apps install together and are

@@ -1,5 +1,6 @@
 package com.softistx.material.demo.desktop
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -15,14 +16,20 @@ import com.softistx.material.school.SchoolApp
  * window is dragged narrower.
  */
 fun main(args: Array<String>) {
-    val school = args.firstOrNull() == "school"
+    val picked: Pair<String, @Composable () -> Unit> =
+        if (args.firstOrNull() == "school") {
+            "stx-material School" to { SchoolApp() }
+        } else {
+            "stx-material" to { MaterialDemo() }
+        }
+    val (title, content) = picked
     application {
         Window(
             onCloseRequest = ::exitApplication,
-            title = if (school) "stx-material School" else "stx-material",
+            title = title,
             state = rememberWindowState(size = DpSize(1360.dp, 900.dp)),
         ) {
-            if (school) SchoolApp() else MaterialDemo()
+            content()
         }
     }
 }

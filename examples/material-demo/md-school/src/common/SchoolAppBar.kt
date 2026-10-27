@@ -16,7 +16,6 @@ import com.softistx.material.components.surface.MenuItem
 import com.softistx.material.components.surface.Tooltip
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.Tone
-import com.softistx.material.school.data.Conversations
 import com.softistx.material.school.session.SchoolScreen
 import com.softistx.material.school.session.SchoolSession
 
@@ -46,7 +45,7 @@ fun SchoolAppBar(
             IconBadge(
                 icon = StxIcons.Inbox,
                 description = "Unread messages",
-                count = Conversations.all.sumOf { it.unread },
+                count = session.unread,
                 onClick = { session.open(SchoolScreen.Messages) },
             )
             MoreMenu(

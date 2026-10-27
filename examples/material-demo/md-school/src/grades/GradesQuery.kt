@@ -31,13 +31,15 @@ class GradesQuery {
     fun apply(grades: List<Grade>): List<Grade> {
         val className = ClassFilters[classIndex].takeIf { classIndex > 0 }
         val subject = Subject.entries.getOrNull(subjectIndex - 1)
+        val start = from
+        val end = to
         val filtered =
             grades.filter { g ->
                 val student = Students.byId(g.studentId)
                 (className == null || student?.className == className) &&
                     (subject == null || g.subject == subject) &&
-                    (from == null || g.date >= from!!) &&
-                    (to == null || g.date <= to!!)
+                    (start == null || g.date >= start) &&
+                    (end == null || g.date <= end)
             }
         val sorted =
             when (sort) {

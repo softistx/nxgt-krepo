@@ -26,17 +26,23 @@ data class GradeInput(
     val notify: Boolean = true,
     val editing: Int? = null,
 ) {
-    fun toGrade(id: Int): Grade =
-        Grade(
+    /** The grade this input describes, or null while a required field is still missing. */
+    fun toGrade(id: Int): Grade? {
+        val who = student ?: return null
+        val what = subject ?: return null
+        val type = kind ?: return null
+        val mark = score.toDoubleOrNull() ?: return null
+        return Grade(
             id = editing ?: id,
-            studentId = student!!.id,
-            subject = subject!!,
-            score = score.toDouble(),
+            studentId = who.id,
+            subject = what,
+            score = mark,
             weight = weight,
-            kind = kind!!,
+            kind = type,
             date = date ?: SchoolClock.today,
             comment = comment,
         )
+    }
 
     companion object {
         fun from(grade: Grade) =

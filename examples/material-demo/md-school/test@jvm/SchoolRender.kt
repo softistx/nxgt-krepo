@@ -61,8 +61,15 @@ private fun save(
     val detail = listOfNotNull(start.studentId?.let { "student$it" }, start.conversationId?.let { "thread$it" })
     val name = (listOf(screen.name, viewport.name, if (dark) "dark" else "light", start.data.name) + detail).joinToString("-")
     val folder = File(dir).also { it.mkdirs() }
-    File(folder, "$name.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
+    File(folder, "$name.png").writeBytes(png(image))
 }
+
+/** The frame as PNG bytes; also what two frames are compared by. */
+fun png(image: Image): ByteArray =
+    image.encodeToData(EncodedImageFormat.PNG)?.bytes ?: error("Skia could not encode the frame as PNG")
+
+/** A frame with fewer distinct colours than this is blank or failed: a real screen holds dozens. */
+const val MinColours = 8
 
 /** How many distinct colours the frame holds: a blank or failed render holds one or two. */
 fun distinctColours(image: Image): Int {
