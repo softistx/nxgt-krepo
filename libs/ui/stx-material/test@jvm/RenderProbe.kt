@@ -142,6 +142,12 @@ class PixelGrid(
         return map[x.toInt().coerceIn(0, map.width - 1), y.toInt().coerceIn(0, map.height - 1)]
     }
 
+    /** The pixel at ([x], [y]) of the frame. */
+    fun pixelAt(
+        x: Int,
+        y: Int,
+    ): Color = map[x.coerceIn(0, map.width - 1), y.coerceIn(0, map.height - 1)]
+
     /** True when the pixel shows the scene's background, i.e. nothing was painted there. */
     fun isTransparent(
         node: NodeBounds,

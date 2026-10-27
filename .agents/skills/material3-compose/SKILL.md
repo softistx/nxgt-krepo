@@ -57,8 +57,9 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
 - **222 public entry points** across the root package and its subpackages (`carousel`,
   `pulltorefresh`). Presence in `components.md` is what settles whether a component exists in this
   version at all — check there before writing one, and before believing a web search that says M3
-  has it. `HorizontalUncontainedCarousel` is **not** in 1.12.0-alpha03 (only
-  `HorizontalMultiBrowseCarousel` and `HorizontalCenteredHeroCarousel` are); it was in 1.9.0.
+  has it. `HorizontalMultiBrowseCarousel`, `HorizontalCenteredHeroCarousel` and
+  `HorizontalUncontainedCarousel` (fixed `itemWidth`) are all in 1.12.0-alpha03 — see the `carousel`
+  section of `references/components.md`.
 
 ## Restyle through `*Defaults`, never by reimplementing
 
