@@ -22,8 +22,8 @@ import com.softistx.material.foundation.theme.StxTheme
  * choreography, so item 20 does not wait two seconds. Beyond [maxIndex] every item shares the last
  * delay, which keeps a long list feeling instant while a short one still cascades.
  *
- * The wait is counted in frames of the composition's own clock, not in wall-clock time, so a test
- * that steps `mainClock` and a headless `ImageComposeScene` render both see the item mid-arrival.
+ * The wait is counted in frames of the composition's own clock, not in wall-clock time, so a headless
+ * `ImageComposeScene` render, which steps frames without waiting, sees the item arrive.
  */
 fun Modifier.animateStagger(
     index: Int,
@@ -59,6 +59,8 @@ fun Modifier.animateStagger(
         alpha(fade).graphicsLayer { translationY = lift * rise.toPx() }
     }
 
+private const val NANOS_PER_MILLI = 1_000_000L
+
 /** Suspends until [millis] of frame time has passed; with nothing to wait for it takes no frame. */
 private suspend fun waitFrames(millis: Long) {
     if (millis <= 0L) return
@@ -67,5 +69,3 @@ private suspend fun waitFrames(millis: Long) {
         val now = withFrameNanos { it }
     } while (now - start < millis * NANOS_PER_MILLI)
 }
-
-private const val NANOS_PER_MILLI = 1_000_000L

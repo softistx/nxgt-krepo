@@ -195,6 +195,7 @@ object StxIcons {
                 "4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.9-1.38z",
         )
 
+    /** A notification bell: alerts, unread activity. */
     val Bell: ImageVector =
         icon(
             "Bell",
@@ -202,6 +203,7 @@ object StxIcons {
                 "s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z",
         )
 
+    /** A printer: print the page or a document. */
     val Printer: ImageVector =
         icon(
             "Printer",
@@ -209,6 +211,7 @@ object StxIcons {
                 "s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z",
         )
 
+    /** A telephone handset: call a number, or a phone contact. */
     val Phone: ImageVector =
         icon(
             "Phone",

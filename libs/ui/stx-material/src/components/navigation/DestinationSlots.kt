@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularProgressIndicator
@@ -114,21 +113,13 @@ internal fun DestinationBadge(destination: NavigationDestination) {
 }
 
 /**
- * The destination's name. On a compact bar it is one line that ends in an ellipsis, with half of
- * M3's 8 dp item gap on each side, so "Dashboard" never wraps and two neighbours never touch.
+ * The destination's name. On a compact bar it is one line that ends in an ellipsis, a guard for the
+ * odd long label: M3 spaces its items itself, and a compact bar holds three to five destinations.
  */
 @Composable
 private fun DestinationName(
     label: String,
     compact: Boolean,
 ) {
-    if (compact) {
-        Typography(
-            text = label,
-            maxLines = 1,
-            modifier = Modifier.padding(horizontal = StxTheme.spacing.xs),
-        )
-    } else {
-        Typography(text = label)
-    }
+    Typography(text = label, maxLines = if (compact) 1 else Int.MAX_VALUE)
 }

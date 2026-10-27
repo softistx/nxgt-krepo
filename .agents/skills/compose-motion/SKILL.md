@@ -76,7 +76,7 @@ Shared elements (`SharedTransitionLayout`) are in `references/animation-shared-e
 
 ## Lists and waits
 
-- `Modifier.animateStagger(index)`: a list that arrives in sequence, 40 ms a step, capped at index 8 so item 20 does not wait. Use it on first appearance only, not on every recomposition or scroll.
+- `Modifier.animateStagger(index)`: a list that arrives in sequence, 40 ms a step, capped at index 8 so item 20 does not wait. The wait is counted in frames of the composition's clock, so tests and headless renders step through it. Use it on first appearance only, not on every recomposition or scroll.
 - A wait that is the content: `LoadingMark` (M3's shape-morphing `LoadingIndicator`). Content of known shape: `Skeleton`, which shimmers on its own. A wait attached to a control, or a known fraction: `Progress`.
 - Lazy list items: `Modifier.animateItem()` for reorder and insert, with a stable `key`.
 

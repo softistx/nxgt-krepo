@@ -65,6 +65,18 @@ class RenderProbe(
         return PixelGrid(scene.render(time).toComposeImageBitmap().toPixelMap(), background)
     }
 
+    /** The very first frame, before any animation has had a chance to run. */
+    fun firstFrame(): PixelGrid = PixelGrid(scene.render(time).toComposeImageBitmap().toPixelMap(), background)
+
+    /** Renders [frames] more frames, 100 ms of animation time apart, and answers the last one. */
+    fun advance(frames: Int): PixelGrid {
+        repeat(frames) {
+            time += FRAME_NANOS
+            scene.render(time)
+        }
+        return PixelGrid(scene.render(time).toComposeImageBitmap().toPixelMap(), background)
+    }
+
     /** Presses (and holds) the pointer at [at] — a move first, so hover state is entered — then settles. */
     fun press(at: Offset): PixelGrid {
         scene.sendPointerEvent(PointerEventType.Enter, at)

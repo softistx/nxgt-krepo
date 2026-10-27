@@ -23,6 +23,9 @@ import com.softistx.material.foundation.theme.StxTheme
  * in front of it, so a caller never writes three layouts and a `when` on width. [primaryAction]
  * is the FAB that the suite places in the rail header or above the bar, depending on which it is.
  *
+ * A compact bar holds three to five destinations (M3's rule). Past that its labels truncate to one
+ * line with an ellipsis: move the extra destinations behind a "More" entry, a drawer or the rail.
+ *
  * Compact drops section headers, supporting text, chips and shortcuts. Badge and unread dot stay:
  * they are why M3's item has a badge slot.
  */

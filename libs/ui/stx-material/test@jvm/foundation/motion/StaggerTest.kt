@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
@@ -13,9 +14,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
-import com.softistx.material.NodeBounds
 import com.softistx.material.foundation.theme.StxTheme
-import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.floats.shouldBeGreaterThan
@@ -37,19 +36,12 @@ private fun ComposeUiTest.darkness(): Float {
 class StaggerTest :
     FeatureSpec({
         feature("animateStagger") {
-            scenario("an item waits for its turn on the test clock, arrives mid-animation, then settles") {
+            scenario("timing is unchanged on the test clock: it waits, arrives mid-animation, then settles") {
                 runComposeUiTest {
                     mainClock.autoAdvance = false
                     setContent {
                         StxTheme(isDark = false) {
-                            Box(Modifier.fillMaxSize().background(Color.White)) {
-                                Box(
-                                    Modifier
-                                        .size(40.dp)
-                                        .animateStagger(index = 4, stepMillis = STEP_MILLIS)
-                                        .background(Color.Black),
-                                )
-                            }
+                            Box(Modifier.fillMaxSize().background(Color.White)) { item() }
                         }
                     }
                     mainClock.advanceTimeBy(300)
@@ -62,20 +54,29 @@ class StaggerTest :
                 }
             }
             scenario("a headless render, which has no wall clock, sees the item arrive") {
-                val bounds = NodeBounds()
+                renderProbe(content = { item() }) {
+                    firstFrame().ink() shouldBe 0
+                    // 200 ms of a 400 ms wait: still invisible, so the wait is counted in frames, not skipped.
+                    advance(2).ink() shouldBe 0
+                    settle().ink() inkShouldBeGreaterThan 0
+                }
+            }
+            scenario("with reduced motion the item is shown at once") {
                 renderProbe(
-                    content = {
-                        Box(
-                            Modifier
-                                .probed(bounds)
-                                .size(40.dp)
-                                .animateStagger(index = 4, stepMillis = STEP_MILLIS)
-                                .background(Color.Black),
-                        )
-                    },
+                    content = { StxTheme(isDark = false, motion = StxMotion(enabled = false)) { item() } },
                 ) {
-                    settle().ink(bounds) inkShouldBeGreaterThan 0
+                    firstFrame().ink() inkShouldBeGreaterThan 0
                 }
             }
         }
     })
+
+@Composable
+private fun item() {
+    Box(
+        Modifier
+            .size(40.dp)
+            .animateStagger(index = 4, stepMillis = STEP_MILLIS)
+            .background(Color.Black),
+    )
+}

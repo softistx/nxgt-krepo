@@ -5,17 +5,15 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.WindowInfo
-import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.textLayout
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 
@@ -30,13 +28,9 @@ private val phone =
         override val containerDpSize: DpSize = DpSize(PHONE_WIDTH.dp, PHONE_HEIGHT.dp)
     }
 
-private val labels = listOf("Dashboard", "Timetable", "Messages", "Attendance", "Homework")
+private const val LONG_LABEL = "Parent-teacher conferences"
 
-private fun SemanticsNodeInteraction.lineCount(): Int {
-    val results = mutableListOf<TextLayoutResult>()
-    fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
-    return results.first().lineCount
-}
+private val labels = listOf("Dashboard", "Timetable", "Messages", "Attendance", "Homework")
 
 /** On a phone the bar's labels each stay on one line, whatever the destination is called. */
 @OptIn(ExperimentalTestApi::class)
@@ -57,7 +51,7 @@ class NavigationSuiteLabelTest :
                             }
                         }
                     }
-                    labels.forEach { onNodeWithText(it, useUnmergedTree = true).lineCount() shouldBe 1 }
+                    labels.forEach { onNodeWithText(it, useUnmergedTree = true).textLayout()!!.lineCount shouldBe 1 }
                 }
             }
             scenario("ellipsizes a label that cannot fit on one line") {
@@ -68,7 +62,7 @@ class NavigationSuiteLabelTest :
                                 NavigationSuite(
                                     destinations =
                                         listOf(
-                                            NavigationDestination("Parent-teacher conferences", StxIcons.Home),
+                                            NavigationDestination(LONG_LABEL, StxIcons.Home),
                                             NavigationDestination("Messages", StxIcons.Send),
                                             NavigationDestination("Timetable", StxIcons.Calendar),
                                             NavigationDestination("Attendance", StxIcons.Check),
@@ -80,7 +74,10 @@ class NavigationSuiteLabelTest :
                             }
                         }
                     }
-                    onNodeWithText("Parent-teacher conferences", useUnmergedTree = true).lineCount() shouldBe 1
+                    val label = onNodeWithText(LONG_LABEL, useUnmergedTree = true)
+                    label.assertExists()
+                    label.textLayout()!!.lineCount shouldBe 1
+                    label.textLayout()!!.hasVisualOverflow shouldBe true
                 }
             }
         }
