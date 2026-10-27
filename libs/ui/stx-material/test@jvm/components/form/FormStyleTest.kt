@@ -33,7 +33,6 @@ private const val TOLERANCE = 0.03f
 /** A painted red pixel has no green; a ripple or an antialiased edge adds a little, uncovered white adds a lot. */
 private const val PAINTED_GREEN = 0.1f
 
-
 /** A form part, drawn at [modifier] with the caller's [style] and the given [enabled]. */
 private typealias FormPart = @Composable (modifier: Modifier, style: Style, enabled: Boolean) -> Unit
 

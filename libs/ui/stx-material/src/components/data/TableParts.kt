@@ -65,7 +65,9 @@ internal fun TableHeader(
         modifier =
             modifier
                 .pressable(sortHeaderStyle, style, onClick, "Sort by $text")
-                .semantics(mergeDescendants = true) { direction?.let { stateDescription = if (it == SortDirection.Asc) "Ascending" else "Descending" } },
+                .semantics(mergeDescendants = true) {
+                    direction?.let { stateDescription = if (it == SortDirection.Asc) "Ascending" else "Descending" }
+                },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
     ) {
