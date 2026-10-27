@@ -29,7 +29,7 @@ MaterialButton(
 | Split button | `SplitButtonLayout(leadingButton, trailingButton, modifier, spacing)` with `SplitButtonDefaults.LeadingButton(onClick) { }` and `TrailingButton(onClick) { }` |
 | FAB menu | `FloatingActionButtonMenu(expanded, button = { ToggleFloatingActionButton(checked, onCheckedChange) { … } }) { FloatingActionButtonMenuItem(onClick, text, icon) }` |
 
-Where a button morphs, its Style carries no press `scale`: two give-under-the-finger effects on one control fight. Everything that does not morph (cards, rows, chips) keeps `scale`.
+A morphing control gets no press `scale` (`SKILL.md` section 4).
 
 ## Connected button group, for choosing one of a few
 
@@ -53,7 +53,7 @@ Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSp
 }
 ```
 
-`ToggleButton` announces itself as `Role.Checkbox`. For a single choice pass `Modifier.semantics { role = Role.RadioButton }` (the modifier you pass wins; measured) and wrap the row in `Modifier.selectableGroup()`. See `compose-accessibility`.
+Roles for a single-choice group (`ToggleButton` announces `Role.Checkbox`): see `compose-accessibility`.
 
 The standard (unconnected) `ButtonGroup(overflowIndicator = { ButtonGroupDefaults.OverflowIndicator(it) }) { clickableItem(onClick, label, icon?); toggleableItem(checked, label, onCheckedChange, icon?); customItem(buttonGroupContent, menuContent) }` expands the pressed child and overflows into a menu. `SingleChoiceSegmentedButtonRow` and `SegmentedButton` still exist; the owner chose the connected group for segments.
 
@@ -119,4 +119,4 @@ Use `LoadingIndicator` when the length of the wait is unknown and a bar would li
 
 ## Not in this version
 
-`HorizontalUncontainedCarousel`; a `ConnectedButtonGroup` composable; a `MotionScheme` with no animation (hence `StxMotion(enabled = false)`).
+`HorizontalUncontainedCarousel`; a `ConnectedButtonGroup` composable; a `MotionScheme` with no animation (`compose-motion` has the reduced-motion answer).

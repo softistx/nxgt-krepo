@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/touch-input/focus (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Focus in Compose
 
 When users interact with your app, they often do so using non-touch input mechanisms:

@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/accessibility/semantics (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Semantics
 
 Aside from the primary information that a composable carries, like a text string of a [`Text`](https://developer.android.com/reference/kotlin/androidx/compose/material3/Text.composable) composable, it can be helpful to have more supplemental information about UI elements.

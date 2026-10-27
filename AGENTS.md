@@ -148,7 +148,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 
 - **`kotlin-toolchain`** — manifest schema, catalog and template rules, commands, plus `references/`: a markdown cache of the full official documentation (50 pages, version recorded in `references/INDEX.md`).
 - **`ktorfit`** — the Ktorfit HTTP client, including how it is wired up here through KSP alone, without its Gradle plugin.
-- **`compose-multiplatform`** — the UI stack behind `libs/ui/stx-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 59 pages of the official documentation.
+- **`compose-multiplatform`** — the UI stack behind `libs/ui/stx-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 67 pages of the official documentation.
 - **`material3-compose`** — the Material 3 API surface that actually compiles here. Its `references/` are *not* fetched: `$compose.material3` resolves to its own alpha version line, so the pages are generated from the resolved jar by `scripts/extract_api.py`.
 - **`skill-from-docs`** — builds and refreshes docs-backed skills. Each such skill declares its source in a `docs-source.json`; refresh one with:
   ```bash
@@ -158,7 +158,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 - **`openapi-spec-first`** — how a REST API is authored here: a Redocly-split OpenAPI document under `<module>/openapi/`, the file and naming conventions the generator reads, and the repository → service → controller layering over the generated `@HttpExchange` interface. Read it before adding or changing an endpoint. Its `references/` are written by hand rather than fetched — `document-layout.md` for the split document and the redocly config, `spring-api.md` for the five files a Spring API is made of — and they stay in step with `examples/spring-orders`, which is the same thing running.
 - **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on one integration branch, which then lands on `develop` as the feature.
 - **`stx-material-components`** — the order of work for a `libs/ui/stx-material` component: place it, check M3, wrap through `*Defaults`, dress it with a `Style`, reach for Expressive, meet the quality bar, prove it with a pixel and a semantics spec, story, docs and changeset. `references/` holds the verified Expressive vocabulary, the visual-quality bar, a worked example and the pre-PR checklist (written by hand).
-- **`compose-accessibility`** — semantics, roles, 48 dp targets, contrast, font scale, keyboard focus and reduced motion on Android, iOS and desktop, and how to test them. `references/` caches 15 pages of the Android and JetBrains documentation.
+- **`compose-accessibility`** — semantics, roles, 48 dp targets, contrast, font scale, keyboard focus and reduced motion on Android, iOS and desktop, and how to test them. `references/` caches 14 pages of the Android and JetBrains documentation.
 - **`compose-motion`** — spatial against effects specs, `StxMotion`, Style `animate`, shape morph, enter and exit, stagger, reduced motion and what not to animate. `references/` caches 10 pages of the Android animation documentation.
 
 Four come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/ui/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
@@ -166,7 +166,7 @@ Four come from Google's [`android/skills`](https://github.com/android/skills) ca
 - **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/ui/stx-material`**, not background reading; see *Styling a component* below.
 - **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
 - **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
-- **`jetpack-compose-performance`** — recomposition, stability, lazy lists and deferred state reads. Its *Compose Multiplatform notes* section lists what does not apply here (baseline profiles, Android-only tooling).
+- **`jetpack-compose-performance`** — recomposition, stability, lazy lists and deferred state reads. What does not apply on Compose Multiplatform (baseline profiles, Android-only tooling, `computedStateOf`) is in `compose-multiplatform`'s `references/performance-notes.md`; the skill itself stays byte-identical to upstream.
 
 ## Building a component
 
@@ -287,7 +287,7 @@ so that every agent and every person working here loads the same ones.
 
 A skill's `references/` do not have to come from a docs site. When the published documentation describes a different version than the one that compiles — `material3-compose` is the case here — generating the pages from the artifact is the accurate option, and it follows the same rule: the output is generated, so fix the script rather than the page.
 
-Skills are budgeted: a `description` is in context every session (keep it ≤250 chars), a SKILL.md body loads on activation (≤~120 lines), and `references/` pages load only when opened. Put cost in the deepest tier that can hold it.
+Skills are budgeted: a `description` is in context every session (keep it ≤250 chars), a SKILL.md body loads on activation (≤~120 lines), and `references/` pages load only when opened. Skills installed from Google's catalogue are exempt from the body budget, because they stay byte-identical to upstream. Put cost in the deepest tier that can hold it.
 
 ## Commands
 

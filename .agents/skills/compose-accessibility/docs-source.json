@@ -13,7 +13,6 @@
     "accessibility/inspect-debug",
     "touch-input/focus",
     "touch-input/keyboard-input/commands",
-    "https://developer.android.com/guide/topics/ui/accessibility/principles",
     "https://kotlinlang.org/docs/multiplatform/compose-accessibility.html",
     "https://kotlinlang.org/docs/multiplatform/compose-ios-accessibility.html",
     "https://kotlinlang.org/docs/multiplatform/compose-desktop-accessibility.html",

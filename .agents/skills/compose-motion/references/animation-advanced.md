@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/animation/advanced (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Advanced animation example: Gestures
 
 There are several things we have to take into consideration when we are working with touch events and animations, compared to when we are working with animations alone. First of all, we might need to interrupt an ongoing animation when touch events begin as user interaction should have the highest priority.

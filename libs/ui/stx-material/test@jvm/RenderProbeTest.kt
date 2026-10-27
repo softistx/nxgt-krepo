@@ -21,9 +21,22 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import java.nio.file.Files
 
 class RenderProbeTest :
     FeatureSpec({
+        feature("saving a frame") {
+            scenario("writes a PNG a reader can open") {
+                val file = Files.createTempDirectory("probe").resolve("swatch.png")
+                renderProbe(content = { Swatch(CircleShape, NodeBounds()) }) {
+                    savePng(file) shouldBe file
+                }
+                val bytes = Files.readAllBytes(file)
+                bytes.take(4) shouldBe listOf(0x89, 0x50, 0x4E, 0x47).map { it.toByte() }
+                Files.deleteIfExists(file)
+            }
+        }
+
         feature("reading a pixel at a node's corner") {
             scenario("a circle leaves its corner transparent and fills its centre") {
                 val box = NodeBounds()

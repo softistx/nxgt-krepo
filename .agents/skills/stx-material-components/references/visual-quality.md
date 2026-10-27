@@ -4,7 +4,7 @@ The eight points of the quality bar in `SKILL.md`, with the library's own means 
 
 ## 1. Hierarchy from the type scale
 
-One line dominates; everything else steps back. Size is not the only lever: the same size at `Emphasis.Medium` (0.72) or `Subtle` (0.5) is how secondary text stays in the palette instead of picking a grey. `TypographyVariant` has the 15 M3 roles plus `Overline`, `Caption`, `Metric` (a figure read at a glance), `Code` and `Link`. An Expressive screen spends the `*Emphasized` weight once per region — the hero title, the headline figure — and leaves body regular. Two emphasised lines side by side cancel each other.
+One line dominates; everything else steps back. Size is not the only lever: the same size at `Emphasis.Medium` (0.72) is how secondary text stays in the palette instead of picking a grey. `Subtle` (0.5) fails AA for body text: non-essential text only. `TypographyVariant` has the 15 M3 roles plus `Overline`, `Caption`, `Metric` (a figure read at a glance), `Code` and `Link`. An Expressive screen spends the `*Emphasized` weight once per region — the hero title, the headline figure — and leaves body regular. Two emphasised lines side by side cancel each other.
 
 Tell: if you cannot say which line the eye lands on first, the hierarchy is missing.
 
@@ -30,13 +30,13 @@ Motion answers one of three questions: what did my touch do (press give, shape m
 
 ## 7. The states around the happy path
 
-A component that shows data also has: **empty** (`EmptyState` with a way out in its `action` slot), **loading** (`Skeleton` for content whose shape is known, `LoadingMark` or `LoadingIndicator` for a wait of unknown length), **error** (`Alert` with a tone, or a field's `error`, with the fix in words) and **disabled** (alpha 0.38 via `DISABLED_ALPHA`, never a different hue). `UiState<T>` (`Loading`, `Data`, `Error`) is the carrier. A story shows each of them.
+A component that shows data also has: **empty** (`EmptyState` with a way out in its `action` slot), **loading** (`Skeleton` for content whose shape is known, `LoadingMark`, M3's `LoadingIndicator`, when the wait is the content, `Progress` when it is attached to a control), **error** (`Alert` with a tone, or a field's `error`, with the fix in words) and **disabled** (alpha 0.38 via `DISABLED_ALPHA`, never a different hue). `UiState<T>` (`Loading`, `Data`, `Error`) is the carrier. A story shows each of them.
 
 ## 8. Dark, large type and no motion
 
 - **Dark:** only scheme roles, so dark is free; check any `Color(...)` you wrote, and that images and illustrations have a dark treatment.
 - **Large type:** at 2× font scale text wraps and containers grow; fixed `height` on text containers clips. Use `heightIn(min = …)`, not `height(…)`.
-- **No motion:** `StxMotion(enabled = false)` snaps every spec; the component must look finished in its end state.
+- **No motion:** `compose-motion` says how to turn it off; the component must look finished in its end state.
 
 ## Signs of a flat or templated screen
 

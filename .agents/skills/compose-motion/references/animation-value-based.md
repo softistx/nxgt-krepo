@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/animation/value-based (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Value-based animations
 
 This page describes how to create value-based animations in Jetpack Compose, focusing on APIs that animate values based on their current and target states.

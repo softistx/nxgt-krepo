@@ -9,7 +9,7 @@ Every assistive tool reads one thing, the **semantics tree**: TalkBack, VoiceOve
 
 ## Semantics you set
 
-All imports are `androidx.compose.ui.semantics.*`.
+Properties (`role`, `stateDescription`, `heading`, `liveRegion`, …) import from `androidx.compose.ui.semantics`; `clickable` from `androidx.compose.foundation`; `toggleable`, `selectable` and `selectableGroup` from `androidx.compose.foundation.selection`; `minimumInteractiveComponentSize` from `androidx.compose.material3`.
 
 | Need | Write |
 | --- | --- |
@@ -27,7 +27,7 @@ All imports are `androidx.compose.ui.semantics.*`.
 
 Rules that bite:
 
-- **M3 does not set every role.** A clickable `Card` has none (measured; this library's specs add `Role.Button`). `ToggleButton` announces `Role.Checkbox`; in a single-choice group pass `Modifier.semantics { role = Role.RadioButton }` — a role passed in `modifier` wins over the one inside the M3 component (measured).
+- **M3 does not set every role.** A clickable `Card` has none (measured): the component adds `Role.Button`, and its spec asserts it. `ToggleButton` announces `Role.Checkbox`; in a single-choice group pass `Modifier.semantics { role = Role.RadioButton }` — a role passed in `modifier` wins over the one inside the M3 component (measured).
 - Merge before you describe: put `contentDescription` on the merged parent, not on each child, or the reader says it twice.
 - A swipe, drag or long-press that is the only way to do something needs a `customActions` entry.
 - State lives in semantics, not in colour: a selected tile says `selected`; a tone also gets an icon or a word.
@@ -45,21 +45,16 @@ Row(
 
 - **48 dp.** M3 controls already apply `minimumInteractiveComponentSize()`. A custom clickable applies it before any size modifier; a 24 dp icon stays 24 dp to the eye and 48 dp to the finger. `LocalMinimumInteractiveComponentSize` is the 48 dp default.
 - **Contrast (WCAG AA).** 4.5:1 for normal text, 3:1 for large text and for the edges of controls. Pair every container with its own `on*` role; the default seed passes AA on all eight pairs checked (`primary`, `surface`, `secondaryContainer`, `surfaceContainer`, `success`, `warning`, `info`, `error`) in light and dark. Measured on the default theme: `Emphasis.Medium` (0.72) is 6.1–7.9:1 and safe; `Emphasis.Subtle` (0.5) is 3.2–4.4:1 and fails AA for body text, so use it for non-essential text only; `outline` is 4.3–5.8:1 and fine for a control edge; `outlineVariant` is 1.6–2.0:1 and decorative only.
-- **High contrast.** material-kolor takes `contrastLevel` (`Contrast.Medium` 0.5, `High` 1.0) in `dynamicColorScheme`. Neither M3 nor Compose reads the OS setting in common code; iOS exposes it as `UIAccessibilityDarkerSystemColorsEnabled`, so an app passes the choice in (`references/compose-ios-accessibility.html.md`).
+- **High contrast.** material-kolor takes `contrastLevel` (`Contrast.Medium` 0.5, `High` 1.0) in `dynamicColorScheme`. Neither M3 nor Compose reads the OS setting in common code; iOS exposes it as `UIAccessibilityDarkerSystemColorsEnabled`, so an app passes the choice in (`references/compose-ios-accessibility.md`).
 - **Font scale.** Text is `sp`. No fixed `height` on a container that holds text; use `heightIn(min = …)`. A row that fits at 1× wraps or scrolls at 2×.
 
 ## Keyboard, focus and pointer
 
-Desktop and iPad users arrive by keyboard. `clickable`, `toggleable` and every M3 control are focusable and show a focus layer; a custom one adds `Modifier.focusable()`. Tab order is composition order; `FocusRequester` with `Modifier.focusRequester(..)` moves focus on purpose (a dialog's first field). Key handling is `onPreviewKeyEvent { it.type == KeyEventType.KeyUp && it.key == Key.Enter }`. In a `Style`, a `focused { }` block draws the ring and `hovered { }` the pointer state; give both a visible change. See `references/touch-input-focus.md` and `references/compose-desktop-keyboard.html.md`.
+Desktop and iPad users arrive by keyboard. `clickable`, `toggleable` and every M3 control are focusable and show a focus layer; a custom one adds `Modifier.focusable()`. Tab order is composition order; `FocusRequester` with `Modifier.focusRequester(..)` moves focus on purpose (a dialog's first field). Key handling is `onPreviewKeyEvent { it.type == KeyEventType.KeyUp && it.key == Key.Enter }`. M3 controls draw their own focus and hover layers. Add a `focused { }`/`hovered { }` change in a Style only on a component built from primitives, or where a render spec shows the M3 layer is invisible (`ChipHoverTest`). See `references/touch-input-focus.md` and `references/compose-desktop-keyboard.md`.
 
 ## Reduced motion
 
-`StxMotion(enabled = false)` snaps every spec in this library, set once at the theme: `StxTheme(motion = StxMotion(enabled = false))`. Where the OS preference comes from differs:
-
-- **Android:** Compose already reads `Settings.Global.ANIMATOR_DURATION_SCALE` and scales every animation by it; 0 ends a motion on the next frame (source: `WindowRecomposer.android.kt`).
-- **iOS, desktop:** no Compose hook reads the OS setting (iOS: `UIAccessibility.isReduceMotionEnabled`). An app reads it natively and passes `enabled`.
-
-`compose-motion` has the rest, including what not to animate.
+`compose-motion` owns it (both settings, and where the OS preference comes from on each platform).
 
 ## Platform differences
 
@@ -73,15 +68,14 @@ Desktop and iPad users arrive by keyboard. `clickable`, `toggleable` and every M
 
 ## Test it here
 
-Specs live in `libs/ui/stx-material/test@jvm/`; `ClickableRolesTest` is the model, and `stx-material-components/references/worked-example.md` a complete one. Import `androidx.compose.ui.test.v2.runComposeUiTest` (v1 is deprecated).
+Specs live in `libs/ui/stx-material/test@jvm/`; `ClickableRolesTest` is the model, and `stx-material-components/references/worked-example.md` a complete one (`ChoiceTileSemanticsTest`). Import `androidx.compose.ui.test.v2.runComposeUiTest` (v1 is deprecated).
 
 ```kotlin
 runComposeUiTest {
-    setContent { StxTheme(isDark = false) { ChoiceTile("Pro", selected = false, onClick = {}) } }
+    setContent { StxTheme(isDark = false) { ListTile("Pro", onClick = {}) } }
     onNodeWithText("Pro")
         .assertHasClickAction()
         .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
-        .assertIsNotSelected()
         .assertHeightIsAtLeast(48.dp)
 }
 ```
@@ -89,7 +83,7 @@ runComposeUiTest {
 - `onNodeWithContentDescription("…")`, `assertContentDescriptionEquals`, `assertIsOn`/`assertIsOff`, `assertTouchHeightIsEqualTo(48.dp)`; `onRoot(useUnmergedTree = true).printToLog("TREE")` shows what merging hid.
 - Contrast: `com.materialkolor.ktx.hasEnoughContrast(other, ContrastThreshold.WCAG_AA_NORMAL_TEXT)` on `colorScheme` pairs, in both modes; composite an `Emphasis` alpha with `compositeOver(surface)` first.
 - Font scale: `CompositionLocalProvider(LocalDensity provides Density(1f, fontScale = 2f)) { … }`, then assert the node is still displayed and at least 48 dp.
-- Motion off: `StxMotion(enabled = false).spatial<Float>()` is a `SnapSpec`.
+- Reduced motion: see `compose-motion`.
 
 ## Gaps in this library when this was written (2026-10-26)
 

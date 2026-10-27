@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/touch-input/keyboard-input/commands (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Handle keyboard actions
 
 When the user gives focus to an editable text component, such as a `TextField`, and the device has a hardware keyboard attached, all input is handled by the system. You can provide keyboard shortcuts by handling key events.

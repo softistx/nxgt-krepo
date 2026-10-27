@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/accessibility (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Accessibility in Jetpack Compose
 
 Developing with accessibility in mind means making your apps usable for everyone, including people with accessibility needs, who may use Android devices in many different ways. Compose provides a foundation for building more accessible UIs with its declarative APIs and tools that help make your apps more inclusive.

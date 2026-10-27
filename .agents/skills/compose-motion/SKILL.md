@@ -33,35 +33,34 @@ motion.effects<Color>()                    // colour, alpha  (Default speed)
 internal val tileStyle: Style =
     Style {
         pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.98f) } }
-        hovered { animate(motion.effects(MotionSpeed.Fast)) { background(scheme.surfaceContainerHigh) } }
         disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
     }
 ```
 
 - `motion` inside a Style block is a held reference (a Style is not a composable scope); `StxTheme` provides it.
 - Scale and offset use `spatial`, colour and alpha use `effects`. No `animate*AsState` for pressed, hovered, focused, selected.
-- Press scale: 0.98 to 0.99 for cards and rows, up to 0.95 for small chips. A control that morphs its shape (below) gets no scale.
+- Press scale follows the family (0.99 cards and rows, 0.97 chips, buttons, navigation items); a morphing control gets none: `stx-material-components` section 4.
 
 ## Shape morph
 
-M3 buttons morph between `shape`, `pressedShape` and, for toggles, `checkedShape`. Use the `shapes =` overload with `ButtonDefaults.shapes()`, `IconButtonDefaults.shapes()`, `ToggleButtonDefaults.shapes()`, `ListItemDefaults.shapes()`. `Button` drives the morph with the effects spec (no bounce); `ToggleButton` with the fast spatial one. Do not also set `shape =` or a press `scale`. `references/` of `stx-material-components` lists every overload.
+M3 buttons morph between `shape`, `pressedShape` and, for toggles, `checkedShape`. Use the `shapes =` overload with `ButtonDefaults.shapes()`, `IconButtonDefaults.shapes()`, `ToggleButtonDefaults.shapes()`, `ListItemDefaults.shapes()`. `Button` drives the morph with the effects spec (no bounce); `ToggleButton` with the fast spatial one. It does not combine with `shape =`. `stx-material-components/references/expressive-vocabulary.md` lists every overload.
 
 ## Enter and exit
 
 Use `Transitions` (in `foundation/motion`) rather than writing `fadeIn(tween(..))`: `fade`, `fadeAway`, `riseIn`, `sinkOut`, `popIn`, `popOut`, `widen`, `narrow`, `expand`, `collapse`. Each half picks its own axis (the fade on effects, the slide or scale on spatial), and exits run one speed faster than entrances: what leaves gets out of the way.
 
 ```kotlin
-AnimatedVisibility(visible = open, enter = Transitions.riseIn + Transitions.fade, exit = Transitions.sinkOut + Transitions.fadeAway) { Panel() }
+AnimatedVisibility(visible = open, enter = Transitions.riseIn, exit = Transitions.sinkOut) { Panel() }
 ```
 
 **`AnimatedVisibility(visible = true)` never animates its first appearance** (measured: alpha 1.0 on the first frame, no series). To animate content that is there from the first composition, start from a false state:
 
 ```kotlin
 val state = remember { MutableTransitionState(false).apply { targetState = true } }
-AnimatedVisibility(visibleState = state, enter = Transitions.riseIn + Transitions.fade) { Banner() }
+AnimatedVisibility(visibleState = state, enter = Transitions.riseIn) { Banner() }
 ```
 
-With `enabled = false` the specs snap, so the same code is correct for reduced motion.
+With reduced motion on, the specs snap, so the same code is correct.
 
 `AnimatedContent`: read the transition specs from `StxTheme.motion` outside the `transitionSpec` lambda (the lambda is not composable), and use `SizeTransform` when the size changes, so the container does not jump.
 
@@ -78,12 +77,14 @@ Shared elements (`SharedTransitionLayout`) are in `references/animation-shared-e
 ## Lists and waits
 
 - `Modifier.animateStagger(index)`: a list that arrives in sequence, 40 ms a step, capped at index 8 so item 20 does not wait. Use it on first appearance only, not on every recomposition or scroll.
-- A wait of unknown length: `LoadingIndicator` (the shape-morphing one). Content of known shape: `Skeleton` with `shimmer()`. A known fraction: `Progress`.
+- A wait that is the content: `LoadingMark` (M3's shape-morphing `LoadingIndicator`). Content of known shape: `Skeleton`, which shimmers on its own. A wait attached to a control, or a known fraction: `Progress`.
 - Lazy list items: `Modifier.animateItem()` for reorder and insert, with a stable `key`.
 
 ## Reduced motion
 
-`StxTheme(motion = StxMotion(enabled = false))` collapses every spec to `snap`, so every Style, `Transitions` and `animateStagger` end finished and readable. Android scales all animation by `ANIMATOR_DURATION_SCALE` already; iOS and desktop have no Compose hook, so the app reads the OS preference and passes `enabled` (details in `compose-accessibility`). A component must look complete in its end state, with nothing that only the animation explained.
+Reduced motion takes both: `StxTheme(motionScheme = SnapMotionScheme, motion = StxMotion(enabled = false))`, where `SnapMotionScheme` implements `MotionScheme` with `snap()` in all six specs. `enabled = false` alone leaves M3's morphs running. `SnapMotionScheme` is not in the library yet (proposed in #297); until it ships, copy the six-line object into the app. Every Style, `Transitions` and `animateStagger` then end finished and readable.
+
+Where the OS preference comes from: Android scales all animation by `ANIMATOR_DURATION_SCALE` already; iOS (`UIAccessibility.isReduceMotionEnabled`) and desktop have no Compose hook, so the app reads it natively and passes the two settings. A component must look complete in its end state, with nothing that only the animation explained.
 
 ## What not to animate
 
@@ -91,6 +92,6 @@ Layout on every keystroke or scroll; anything on first load of a dense screen (a
 
 ## Test it
 
-Specs live in `libs/ui/stx-material/test@jvm/`. Use `androidx.compose.ui.test.v2.runComposeUiTest`, take control with `mainClock.autoAdvance = false`, then `mainClock.advanceTimeBy(ms)` and `onRoot().captureToImage()` to read a mid-frame pixel. `StxMotion(enabled = false).spatial<Float>()` is a `SnapSpec`; assert that for reduced motion. `references/animation-testing.md` covers `ComposeTestRule` clocks. A spring is not a duration: assert direction and the settled value, not the midpoint.
+Specs live in `libs/ui/stx-material/test@jvm/`. Use `androidx.compose.ui.test.v2.runComposeUiTest`, take control with `mainClock.autoAdvance = false`, then `mainClock.advanceTimeBy(ms)` and `onRoot().captureToImage()` to read a mid-frame pixel. `StxMotion(enabled = false).spatial<Float>()` and `SnapMotionScheme.fastSpatialSpec<Float>()` are `SnapSpec`s; assert both for reduced motion. `references/animation-testing.md` covers `ComposeTestRule` clocks. A spring is not a duration: assert direction and the settled value, not the midpoint.
 
 Neighbours: `stx-material-components` (workflow and pixel specs), `compose-accessibility` (reduced motion, announcements), `styles` (the Style API itself).

@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/accessibility/merging-clearing (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Merging and clearing
 
 As accessibility services navigate through elements on the screen, it is important that these elements are grouped, separated, or even hidden at the right granularity. When every single low-level composable in your screen is highlighted independently, users have to interact a lot to move across the screen. If elements merge together too aggressively, users might not understand which elements logically belong together. If there are elements on the screen that are purely decorative, these could be hidden from accessibility services. In these cases, you can use Compose APIs for merging, clearing, and hiding semantics.

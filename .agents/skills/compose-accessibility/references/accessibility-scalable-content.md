@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/accessibility/scalable-content (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Support user-scalable content
 
 Implement **pinch-to-zoom** gestures to support scalable content in your app. This is the standard, platform-consistent method for improving accessibility, allowing users to intuitively adjust the size of text and UI elements to fit their needs. Your app can define custom scaling behavior with granular control and contextual behavior that offers an experience that users often discover more quickly than a system-level feature like screen magnification.

@@ -32,7 +32,7 @@ Skills live in `.agents/skills/` (the cross-client Agent Skills convention); `.c
 - **`stx-material-components`** before adding, restyling or reviewing a `libs/ui/stx-material` component. It is the order of work (M3 first, wrap through `*Defaults`, a `Style` for the rest, Expressive vocabulary, quality bar) and the proof (pixel spec, semantics spec, story, docs, changeset); `references/worked-example.md` is a complete component.
 - **`compose-accessibility`** when a composable is interactive or carries meaning: roles, labels, state, 48 dp targets, contrast, font scale, keyboard focus, reduced motion, and the `runComposeUiTest` specs that prove them.
 - **`compose-motion`** before adding any animation: `StxMotion` spatial against effects, Style `animate`, shape morph, `Transitions`, the `AnimatedVisibility(visible = true)` trap, and what not to animate.
-- **`jetpack-compose-performance`** when a screen janks or a lazy list recomposes too much; it is Jetpack-oriented, and its *Compose Multiplatform notes* section says what does not apply here.
+- **`jetpack-compose-performance`** when a screen janks or a lazy list recomposes too much; it is Jetpack-oriented; read `compose-multiplatform`'s `references/performance-notes.md` for what does not apply here.
 - **`large-feature-branch-workflow`** when a feature needs more than one PR — it owns the two-level shape: an integration branch off `develop`, a slice PR'd into it per step, then one PR from the integration branch to `develop`.
 
 ## Working here

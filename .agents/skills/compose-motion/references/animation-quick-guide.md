@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/animation/quick-guide (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Quick guide to Animations in Compose
 
 Compose has many built-in animation mechanisms and it can be overwhelming to know which one to choose. The following is a list of common animation use cases. For more detailed information about the full set of different API options available to you, read the full [Compose Animation documentation](https://developer.android.com/develop/ui/compose/animation/introduction).

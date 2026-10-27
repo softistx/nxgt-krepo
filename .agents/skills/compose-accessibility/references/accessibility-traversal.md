@@ -1,11 +1,5 @@
 <!-- Generated from https://developer.android.com/develop/ui/compose/accessibility/traversal (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [Core areas](https://developer.android.com/develop/core-areas)
-- [UI](https://developer.android.com/develop/ui)
-- [Docs](https://developer.android.com/develop/ui/compose/documentation)
-
 # Modify traversal order
 
 Traversal order is the order in which accessibility services navigate through UI elements. In a Compose app, elements are arranged in expected reading order, which is usually left-to-right, then top-to-bottom. However, there are some scenarios where Compose might need additional hints to determine the correct reading order.

@@ -1,8 +1,8 @@
 <!-- Generated from https://developer.android.com/reference/kotlin/androidx/compose/material3/MotionScheme (v) on 2026-10-26. Do not edit; re-run fetch_docs.py. -->
 
-- [Android Developers](https://developer.android.com/)
-- [Develop](https://developer.android.com/develop)
-- [API reference](https://developer.android.com/reference)
+Stay organized with collections
+
+Save and categorize content based on your preferences.
 
 # MotionScheme
 

@@ -90,6 +90,12 @@ def discover(
     URLs out of it yields only the handful that prose happens to link to, each
     carrying the trailing `)` or `.` of the sentence it sat in. kotlinlang.org
     is one, which is why its config says `"discovery": "sitemap"`.
+
+    `"discovery": "list"` skips discovery: the config's `pages` array is the page list, each entry
+    a URL or a path relative to `base`. Use it when the site has no usable index
+    (developer.android.com) or a skill draws a few pages from several sites. The config's
+    `exclude` regexes are matched against a page's path relative to `base`, or against the full URL
+    for a page outside it.
     """
     if method not in ("auto", "llms", "sitemap", "nav", "list"):
         raise SystemExit(f"unknown discovery method {method!r}")
@@ -145,11 +151,13 @@ def discover(
 
 
 def slug_for(url: str, root: str) -> str:
+    """The file name (without `.md`) a page is cached under; a trailing `.html` is dropped."""
     if not url.startswith(root):
         # A listed page from another site: its last path segment names it.
-        return (urlparse(url).path.strip("/").rsplit("/", 1)[-1] or "home").lower()
-    path = url[len(root):]
-    return (path.strip("/").replace("/", "-") or "home").lower()
+        path = urlparse(url).path.strip("/").rsplit("/", 1)[-1]
+    else:
+        path = url[len(root):].strip("/").replace("/", "-")
+    return (re.sub(r"\.html?$", "", path) or "home").lower()
 
 
 # --- minimal HTML -> markdown -------------------------------------------------
@@ -318,6 +326,9 @@ def block(node, depth: int = 0) -> str:
 def page_to_markdown(html: str) -> tuple[str, str]:
     soup = BeautifulSoup(html, "html.parser")
     article = soup.find("article") or soup.find("main") or soup
+    # developer.android.com puts a breadcrumb trail ("Android Developers Develop ...") above the h1.
+    for crumbs in article.select("ul.devsite-breadcrumb-list"):
+        crumbs.decompose()
     for junk in article.select(CHROME_SELECTORS):
         junk.decompose()
     # Floated "Documentation issue? Report / edit" banners carry no class of
@@ -431,6 +442,13 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     stamp = _dt.date.today().isoformat()
     fetched = 0
+
+    slugs: dict[str, str] = {}
+    for url in urls:
+        slug = slug_for(url, root)
+        if slug in slugs:
+            raise SystemExit(f"two pages share the file name {slug}.md: {slugs[slug]} and {url}")
+        slugs[slug] = url
 
     for url in urls:
         slug = slug_for(url, root)
