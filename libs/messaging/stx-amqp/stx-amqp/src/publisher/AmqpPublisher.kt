@@ -43,9 +43,9 @@ import kotlin.time.Instant
  *
  * **Confirms arrive on the client's own thread, which cannot suspend**, so they are posted to a
  * [Mailbox] and applied by one coroutine that owns everything they touch. That is what lets the
- * bookkeeping below be a plain map with no synchronisation on it, and it is what makes a return and
- * the confirm that follows it arrive in that order — the order the broker sent them in — rather
- * than as two writes racing across two threads.
+ * settler's bookkeeping (`settle`, in ConfirmSettler.kt) be a plain map with no synchronisation on
+ * it, and it is what makes a return and the confirm that follows it arrive in that order — the
+ * order the broker sent them in — rather than as two writes racing across two threads.
  *
  * **An unroutable message is a silent success unless asked otherwise.** With
  * [PublisherOptions.mandatory] the broker returns a message that matched no queue, and this turns
