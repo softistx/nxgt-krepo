@@ -1,7 +1,13 @@
 package com.softistx.material.components.button
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.Role
@@ -15,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
+import com.softistx.material.foundation.icon.Icon
+import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.probed
@@ -32,18 +40,27 @@ import io.kotest.matchers.shouldBe
 class ButtonMorphTest :
     FeatureSpec({
         feature("a button's corner") {
-            scenario("is a pill at rest, squarer while pressed, and a pill again once released") {
-                val bounds = NodeBounds()
-                renderProbe(
-                    content = {
-                        StxTheme(isDark = false) {
-                            Button("Save", onClick = {}, modifier = Modifier.padding(20.dp).probed(bounds))
-                        }
-                    },
-                ) {
-                    settle().isTransparent(bounds, Corner.TopLeft, inset = INSET) shouldBe true
-                    press(bounds).isFilled(bounds, Corner.TopLeft, inset = INSET) shouldBe true
-                    release(bounds).isTransparent(bounds, Corner.TopLeft, inset = INSET) shouldBe true
+            listOf(ButtonSize.ExtraSmall, ButtonSize.Small, ButtonSize.Large).forEach { size ->
+                scenario("${size.name} is a pill at rest, squarer pressed, and a pill again once released") {
+                    val bounds = NodeBounds()
+                    renderProbe(
+                        width = 400,
+                        height = 300,
+                        content = {
+                            StxTheme(isDark = false) {
+                                // Without M3's 48 dp touch target the node's corner is the container's corner.
+                                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                                    Button("Save", onClick = {}, size = size, modifier = Modifier.padding(20.dp).probed(bounds))
+                                }
+                            }
+                        },
+                    ) {
+                        // Inset a tenth of the height, so the pill is still clear there and the squarer corner is not.
+                        val inset = (size.height.value / 10).toInt().coerceAtLeast(3)
+                        settle().isTransparent(bounds, Corner.TopLeft, inset = inset) shouldBe true
+                        press(bounds).isFilled(bounds, Corner.TopLeft, inset = inset) shouldBe true
+                        release(bounds).isTransparent(bounds, Corner.TopLeft, inset = inset) shouldBe true
+                    }
                 }
             }
         }
@@ -99,6 +116,93 @@ class ButtonMorphTest :
             }
         }
 
+        feature("a link button") {
+            scenario("is as tall at Small as at Large: a link is text in a sentence") {
+                // M3's 48 dp touch target would hide the container; take it away to measure it.
+                fun height(size: ButtonSize): Float {
+                    val bounds = NodeBounds()
+                    return renderProbe(
+                        content = {
+                            StxTheme(isDark = false) {
+                                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+                                    Button(
+                                        text = "Docs",
+                                        onClick = {},
+                                        variant = ButtonVariant.Link,
+                                        size = size,
+                                        modifier = Modifier.probed(bounds),
+                                    )
+                                }
+                            }
+                        },
+                    ) {
+                        settle()
+                        bounds.rect.height
+                    }
+                }
+                height(ButtonSize.Large) shouldBe height(ButtonSize.Small)
+                // Measured: M3 keeps its own 40 dp minimum under a link, so Small is where it stops.
+                height(ButtonSize.Small) shouldBe ButtonDefaults.MinHeight.value
+            }
+        }
+
+        feature("the default size") {
+            scenario("is as wide as the old M3 content padding made it") {
+                fun width(content: @Composable (Modifier) -> Unit): Float {
+                    val bounds = NodeBounds()
+                    return renderProbe(
+                        content = { StxTheme(isDark = false) { content(Modifier.probed(bounds)) } },
+                    ) {
+                        settle()
+                        bounds.rect.width
+                    }
+                }
+                val ours = width { Button("Save changes", onClick = {}, modifier = it) }
+                val old =
+                    width {
+                        MaterialButton(
+                            onClick = {},
+                            shapes = ButtonDefaults.shapes(),
+                            modifier = it,
+                            contentPadding = ButtonDefaults.ContentPadding,
+                        ) { Text("Save changes", style = ButtonDefaults.textStyleFor(ButtonDefaults.MinHeight)) }
+                    }
+                ours shouldBe old
+            }
+        }
+
+        feature("the expanded responsive button") {
+            scenario("sets its label at the size's text style, as Button does") {
+                fun width(content: @Composable (Modifier) -> Unit): Float {
+                    val bounds = NodeBounds()
+                    return renderProbe(
+                        width = 700,
+                        height = 300,
+                        content = { StxTheme(isDark = false) { content(Modifier.probed(bounds)) } },
+                    ) {
+                        settle()
+                        bounds.rect.width
+                    }
+                }
+                val responsive =
+                    width {
+                        Box(it) {
+                            ResponsiveButton("Add item", StxIcons.Add, onClick = {}, collapseBelow = 100.dp, size = ButtonSize.Large)
+                        }
+                    }
+                val reference =
+                    width {
+                        Box(it) {
+                            ButtonSurface(onClick = {}, size = ButtonSize.Large) {
+                                Icon(StxIcons.Add, description = null, size = IconSize.XLarge)
+                                Text("Add item", style = ButtonDefaults.textStyleFor(ButtonSize.Large.height))
+                            }
+                        }
+                    }
+                responsive shouldBe reference
+            }
+        }
+
         feature("a button's semantics") {
             scenario("keeps Role.Button") {
                 runComposeUiTest {
@@ -109,7 +213,6 @@ class ButtonMorphTest :
         }
     })
 
-private const val INSET = 4
 
 /**
  * The painted container's height down the node's centre line. The node's own bounds include M3's

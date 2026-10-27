@@ -84,10 +84,11 @@ fun ButtonSurface(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
+    val minHeight = if (variant == ButtonVariant.Link) 0.dp else size.height
     MaterialButton(
         onClick = onClick,
         shapes = ButtonDefaults.shapesFor(size.height),
-        modifier = modifier.heightIn(min = if (variant == ButtonVariant.Link) 0.dp else size.height).styleable(styleState, morphingButtonStyle, style),
+        modifier = modifier.heightIn(min = minHeight).styleable(styleState, morphingButtonStyle, style),
         enabled = enabled,
         colors = buttonColors(variant, color),
         elevation = null,
@@ -108,6 +109,9 @@ private fun contentPadding(
 ): PaddingValues =
     if (variant == ButtonVariant.Link) {
         PaddingValues(0.dp)
+    } else if (size == ButtonSize.Small) {
+        // contentPaddingFor(40.dp) is 16 dp a side; the default button was 24 dp and keeps it.
+        ButtonDefaults.ContentPadding
     } else {
         ButtonDefaults.contentPaddingFor(size.height)
     }
