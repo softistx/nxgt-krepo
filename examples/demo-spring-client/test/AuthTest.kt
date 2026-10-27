@@ -71,7 +71,7 @@ class AuthTest :
                 client.session.whoAmI().subject shouldBe "second"
             }
         }
-    
+
         // The same alternatives the Ktorfit client's AuthTest asks about: any one is enough, and a
         // client sends the first it holds a credential for and never two.
         feature("an operation whose security lists a bearer token or basic credentials") {

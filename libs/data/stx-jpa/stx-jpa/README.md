@@ -392,12 +392,14 @@ and to a query cannot disagree about what "a purchase with its buyer" means, and
 startup serves every request. `add`, `subgraphOf` and `subgraphEachOf` are extensions on JPA's own
 `Graph`, so the plan is built by ordinary calls and can be handed around half-built.
 
-Two refusals are worth knowing here rather than in the vocabulary, because nothing enforces them:
+Two refusals are worth knowing here rather than in the vocabulary, because little enforces them:
 
 - **A collection fetch and a row limit do not compose.** The limit applies to the *joined* rows, so
   three purchases holding 3, 1 and 0 lines under `limit(2)` come back as one purchase holding two of
   its three lines — silently incomplete, and cached that way for the rest of the session. An entity
-  graph naming a collection truncates identically. Both are measured in specs rather than described.
+  graph naming a collection truncates identically. Only `findPage` checks it, and throws
+  `IllegalArgumentException` naming the collection; `select(...).limit(...)` and a graph on a query do not.
+  Both are measured in specs rather than described.
 - **A fetch has no place in a projection.** `select reference, customer` over a fetched join is a
   `SemanticException`: a fetch says *fill this object in*, and a projection is not returning the
   object to fill. Use a plain `join` there.

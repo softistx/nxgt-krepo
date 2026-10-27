@@ -1,8 +1,8 @@
 ---
-"stx-openapi-generator": major
+"stx-openapi-generator": minor
 ---
 
-`security` is modelled as alternatives (OR), each an AND of schemes, instead of being flattened. `Operation.security`
+BREAKING: `security` is modelled as alternatives (OR), each an AND of schemes, instead of being flattened. `Operation.security`
 is now `List<List<SecurityRequirement>>` and `@ApiOperation(security = [...])` carries one string per alternative,
 its schemes joined by `,`, with `""` for the anonymous alternative `{}`.
 

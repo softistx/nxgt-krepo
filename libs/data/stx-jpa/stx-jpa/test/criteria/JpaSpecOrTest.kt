@@ -45,8 +45,7 @@ class JpaSpecOrTest :
                 block(jpa)
             }
 
-        suspend fun Jpa.refs(spec: JpaSpec<Purchase>?): List<String> =
-            session { it.findAll<Purchase>(spec) }.map { it.reference }.sorted()
+        suspend fun Jpa.refs(spec: JpaSpec<Purchase>?): List<String> = session { it.findAll<Purchase>(spec) }.map { it.reference }.sorted()
 
         feature("or with a side that restricts nothing").config(enabled = JpaTestDatabase.available) {
             scenario("keeps the other side alone, and two empty sides stay empty") {

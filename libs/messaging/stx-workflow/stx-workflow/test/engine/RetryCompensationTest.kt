@@ -21,6 +21,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.serialization.json.JsonPrimitive
 import java.util.concurrent.atomic.AtomicBoolean
 
 private val CHARGE = outcome<String>("charge")
@@ -115,10 +116,11 @@ class RetryCompensationTest :
                         step("one") { context } compensate { }
                         step("two") { throw Wobble() }
                     }
-                val both = WorkflowEngine(InMemoryStore()) {
-                    register(flow)
-                    register(failing)
-                }
+                val both =
+                    WorkflowEngine(InMemoryStore()) {
+                        register(flow)
+                        register(failing)
+                    }
                 val completed = both.start(flow, Ledger()).id
                 val compensated = both.start(failing, Ledger()).id
 
@@ -143,6 +145,30 @@ class RetryCompensationTest :
                 shouldThrow<WorkflowNotRetryableException> { engine.retryCompensation(id) }.status shouldBe
                     WorkflowStatus.Failed
                 engine.record(id)!!.status shouldBe WorkflowStatus.Failed
+            }
+
+            scenario("a Failed instance with a failed compensation whose context no longer decodes is left untouched") {
+                val calls = Calls()
+                val store = InMemoryStore()
+                val flow = saga(calls, AtomicBoolean(true))
+                val engine = WorkflowEngine(store) { register(flow) }
+                val id = engine.start(flow, Ledger()).id
+                val failed = store.load(id)!!
+                failed.journal.any { it.outcome == NodeOutcome.CompensationFailed } shouldBe true
+                store.save(failed.copy(context = JsonPrimitive("not a ledger")), failed.version)
+                val before = store.load(id)!!
+
+                val refused = shouldThrow<WorkflowNotRetryableException> { engine.retryCompensation(id) }
+                refused.status shouldBe WorkflowStatus.Failed
+                refused.message!!.contains("repair the stored context") shouldBe true
+
+                val after = engine.record(id)!!
+                after.status shouldBe WorkflowStatus.Failed
+                after.error shouldBe before.error
+                after.error!!.node shouldBe "d"
+                after.journal shouldBe before.journal
+                after.version shouldBe before.version
+                calls.all() shouldBe listOf("undo:c", "undo:b")
             }
 
             scenario("an instance another process is advancing is a conflict, not a silent no-op") {

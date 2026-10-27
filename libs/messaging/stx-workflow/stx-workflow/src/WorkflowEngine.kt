@@ -273,9 +273,10 @@ class WorkflowEngine internal constructor(
      *
      * Two refusals, both [WorkflowException]s. An id with no instance is [WorkflowNotFoundException].
      * Any instance that is not `Failed` with a failed compensation in its journal is
-     * [WorkflowNotRetryableException]: there is nothing to run again. That includes a `Failed`
-     * instance whose context no longer decodes, which failed before any step ran and has no
-     * compensation to retry; it needs its stored context repaired, not this.
+     * [WorkflowNotRetryableException]: there is nothing to run again. So is one whose stored context
+     * no longer decodes (a redeploy changed the context type): the compensations need the context,
+     * so it is refused before anything is reopened, nothing is written and `error` keeps naming the
+     * node whose forward step failed. The stored context has to be repaired first.
      *
      * When another process holds the instance this throws [WorkflowConflictException] rather than
      * returning quietly: an operator who asked for a retry has to know it did not happen.
@@ -289,7 +290,17 @@ class WorkflowEngine internal constructor(
                 if (fresh.status != WorkflowStatus.Failed || fresh.failedCompensations().isEmpty()) {
                     throw WorkflowNotRetryableException(id, fresh.status)
                 }
-                val run = runFor(workflow, fresh) ?: return@guarded store.load(id)!!
+                val run =
+                    try {
+                        Run(this, store, json, workflow, fresh)
+                    } catch (e: SerializationException) {
+                        throw WorkflowNotRetryableException(
+                            id,
+                            fresh.status,
+                            "workflow instance '$id' has a stored context that no longer decodes " +
+                                "(${e.message}); repair the stored context before retrying its compensation",
+                        )
+                    }
                 run.reopenFailedCompensations()
                 run.advance()
                 run.record

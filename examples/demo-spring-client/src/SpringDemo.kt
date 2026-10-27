@@ -48,10 +48,11 @@ public class SpringDemoClient(
 ) {
     // Generated: one credential slot per scheme the document declares. The same class the Ktorfit
     // client configures, because a credential is a fact about the document, not about the client.
-    private val credentials = ApiAuthConfig().apply {
-        bearer = token
-        this.basic = basic
-    }
+    private val credentials =
+        ApiAuthConfig().apply {
+            bearer = token
+            this.basic = basic
+        }
 
     private val webClient =
         WebClient
