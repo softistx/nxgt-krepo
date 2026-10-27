@@ -51,7 +51,8 @@ to one run.
 | It holds **references** to large things, never the things | The whole context is written again after every node. A document belongs in it as a storage key, not as bytes |
 
 A context that will not decode does not crash-loop a worker: the instance is marked `Failed`, leaves
-the runnable index, and waits for somebody.
+the runnable index, and waits for somebody. Repair the stored context (or the definition), then call
+[`retryCompensation`](#the-operators-inbox): it unwinds the instance once the context decodes again.
 
 **Every node name must be unique within the workflow**, checked when it is built. The journal is keyed
 on names, and two nodes called `charge` would make "has this run?" unanswerable. Names nest: a leg of
@@ -365,12 +366,12 @@ would leak a running instance every time.
 A child that is no longer in the store cannot be taken back. That fails the parent's compensation and
 the parent lands `Failed`, which is the status that means a person should look.
 
-Only a child that ends `Cancelled` or `Compensated` counts as taken back. A child left `Failed` by
-a compensation of its own fails the parent's node without a retry (retrying finds it `Failed` again):
-retry the child with `retryCompensation`, then the parent. A child another worker still holds the
-lock of is handed back unchanged — running, waiting or completed — and the parent's node fails with
-a retryable `ChildFailedException` instead of recording the child as compensated while its effects
-stand.
+Only a child that ends `Cancelled` or `Compensated` counts as taken back. Anything else fails the
+parent's node with a `ChildFailedException` whose `status` says what the child is, and the parent
+lands `Failed` (a child's undo is tried once; the operator runs `retryCompensation`). A child left
+`Failed` by a compensation of its own: retry the child, then the parent. A child another worker
+still holds the lock of is handed back unchanged — running, waiting or completed: retry the parent
+once the child is free. The parent never records a child as compensated while its effects stand.
 
 ### Waiting is a park, and it is polled
 
@@ -893,7 +894,9 @@ written. An unknown id is `WorkflowNotFoundException`, and an instance another p
 advancing is `WorkflowConflictException`, so an operator never mistakes a skipped retry for a done
 one. For a parent whose [`child` node](#child-workflows) could not be compensated, retry the **child**
 first. A child still `Failed` fails the parent's compensation of that node too (`ChildFailedException`),
-so the parent stays `Failed` until the child is fixed.
+so the parent stays `Failed` until the child is fixed. A child another worker still held when the
+parent unwound fails it the same way, with its running, waiting or completed `status`: wait for the
+child to be free, then retry the parent.
 
 Every store keeps an index for this: a sorted set per status in Redis, a `(status, updated_at)` index
 in SQL, a compound index in MongoDB. It is the second thing all three maintain on every write.
