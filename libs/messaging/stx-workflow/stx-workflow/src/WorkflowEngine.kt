@@ -287,11 +287,11 @@ class WorkflowEngine internal constructor(
     ): List<String> = store.runnable(now, limit)
 
     internal fun definitionFor(record: WorkflowRecord): Workflow<Any?> {
-
         @Suppress("UNCHECKED_CAST")
         return definitions[record.workflow] as Workflow<Any?>?
             ?: throw WorkflowUnknownException(record.workflow)
     }
+
     internal fun <C> instance(
         workflow: Workflow<C>,
         record: WorkflowRecord,

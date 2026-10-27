@@ -1,5 +1,6 @@
 package com.softistx.workflow.engine
 
+import com.softistx.workflow.UNDECODABLE_CONTEXT_NODE
 import com.softistx.workflow.Workflow
 import com.softistx.workflow.WorkflowEngine
 import com.softistx.workflow.WorkflowError
@@ -81,9 +82,6 @@ private suspend fun <C> WorkflowEngine.guardedAdvance(
         run.advance()
         run.record
     }
-
-/** The node name [runFor] records as the failure of an instance whose context no longer decodes. */
-internal const val UNDECODABLE_CONTEXT_NODE = "<context>"
 
 /**
  * Builds the run, or retires the instance when its context no longer decodes.

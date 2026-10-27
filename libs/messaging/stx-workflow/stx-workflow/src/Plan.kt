@@ -10,7 +10,9 @@ import com.softistx.workflow.dsl.Sleep
 import com.softistx.workflow.dsl.Step
 import com.softistx.workflow.dsl.WorkflowNode
 import com.softistx.workflow.dsl.qualify
-import com.softistx.workflow.engine.UNDECODABLE_CONTEXT_NODE
+
+/** The node name the engine records as the failure of an instance whose context no longer decodes. */
+internal const val UNDECODABLE_CONTEXT_NODE = "<context>"
 
 /**
  * Walks a declaration once, when it is built, to do the two things that must not wait until it runs.

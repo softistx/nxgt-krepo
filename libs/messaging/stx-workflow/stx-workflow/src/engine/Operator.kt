@@ -2,6 +2,7 @@ package com.softistx.workflow.engine
 
 import com.softistx.workflow.ChildFailedException
 import com.softistx.workflow.ChildLostException
+import com.softistx.workflow.UNDECODABLE_CONTEXT_NODE
 import com.softistx.workflow.WorkflowConflictException
 import com.softistx.workflow.WorkflowEngine
 import com.softistx.workflow.WorkflowNotFoundException
@@ -63,11 +64,21 @@ internal suspend fun WorkflowEngine.retryFailedCompensation(id: String): Workflo
                 }
             // An instance retired for its context holds no failed compensation to reopen; it is put
             // back to unwinding from where its journal stands, and its stale decode error is dropped
-            // so a later failed compensation is retried like any other.
+            // so a later failed compensation is retried like any other. One write, so a crash
+            // cannot leave a Failed record that has lost the marker that makes it recoverable.
             if (undecodable) {
-                run.checkpoint { it.copy(error = null, awaiting = null, signals = emptyMap(), wakeAt = null) }
+                run.checkpoint {
+                    it.copy(
+                        status = WorkflowStatus.Compensating,
+                        error = null,
+                        awaiting = null,
+                        signals = emptyMap(),
+                        wakeAt = null,
+                    )
+                }
+            } else {
+                run.reopenFailedCompensations()
             }
-            run.reopenFailedCompensations()
             run.advance()
             run.record
         } ?: throw WorkflowConflictException(id)
