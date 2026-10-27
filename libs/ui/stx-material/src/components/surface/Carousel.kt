@@ -52,7 +52,8 @@ fun Carousel(
     Column(modifier = modifier.styledBy(style), horizontalAlignment = Alignment.CenterHorizontally) {
         HorizontalMultiBrowseCarousel(
             state = state,
-            preferredItemWidth = Dp.Infinity,
+            // M3 clamps it to the viewport; the width specs pin the result.
+            preferredItemWidth = 10_000.dp,
             itemSpacing = spacing,
             minSmallItemWidth = peek,
             maxSmallItemWidth = peek,

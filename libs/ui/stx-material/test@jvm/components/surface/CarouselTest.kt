@@ -19,8 +19,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.PixelGrid
@@ -132,7 +132,7 @@ class CarouselTest :
         }
 
         feature("semantics") {
-            scenario("the carousel announces its length, each page its position, and the dots are hidden") {
+            scenario("M3 reports the collection (1 row, count columns); each page reports its index; the dots are hidden") {
                 runComposeUiTest {
                     setContent {
                         StxTheme(isDark = false) {
@@ -143,8 +143,12 @@ class CarouselTest :
                     val info = onNode(SemanticsMatcher.keyIsDefined(key)).fetchSemanticsNode().config[key]
                     withClue("rows") { info.rowCount shouldBe 1 }
                     withClue("columns") { info.columnCount shouldBe 3 }
-                    val item = onNodeWithText("Class 2", useUnmergedTree = true).fetchSemanticsNode().parent!!.config
-                    item[SemanticsProperties.CollectionItemInfo].columnIndex shouldBe 1
+                    val itemKey = SemanticsProperties.CollectionItemInfo
+                    val indexes =
+                        onAllNodes(SemanticsMatcher.keyIsDefined(itemKey), useUnmergedTree = true)
+                            .fetchSemanticsNodes()
+                            .map { it.config[itemKey].columnIndex }
+                    indexes.toSet() shouldBe setOf(0, 1, 2)
                     onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility), useUnmergedTree = true)
                         .assertCountEquals(1)
                 }
