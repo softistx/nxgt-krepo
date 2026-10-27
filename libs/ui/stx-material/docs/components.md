@@ -112,7 +112,7 @@ Package `com.softistx.material.components.button`.
 `ButtonVariant` — `Filled`, `Tonal`, `Outlined`, `Ghost`, `Link`.
 `ButtonSize` — `ExtraSmall` 32 dp, `Small` 40 dp (the default), `Medium` 56, `Large` 96, `ExtraLarge` 136: M3's own
 heights, each bringing its padding, label style and pressed corner. Buttons morph: a pill at rest, squarer while
-pressed, so they take no press scale; a `Link` ignores the size, being text in a sentence. Story: `buttons/size-and-variant-grid`. The collapsed `ResponsiveButton` stays an
+pressed, so they take no press scale; a `Link` keeps its 40 dp height at every size instead of growing with `size`, being text in a sentence. Story: `buttons/size-and-variant-grid`. The collapsed `ResponsiveButton` stays an
 icon button, 40 × 40, at any size.
 `ButtonColor` — `Primary`, `Secondary`, `Success`, `Info`, `Warning`, `Danger`, `Neutral`.
 
