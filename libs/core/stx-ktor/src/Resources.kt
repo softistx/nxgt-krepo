@@ -46,6 +46,11 @@ fun <T : AutoCloseable> Application.own(
  * whoever built it. Ktor's own DI closes every `AutoCloseable` it created when the application
  * stops, and Koin closes through `onClose` — a plugin that adopts one of those and also closes it
  * closes it twice, which no `close()` in these libraries promises to survive.
+ *
+ * This is about the plugin only. A plugin that registers [resource] with Ktor's DI hands the
+ * container its own claim on closing it, and the container closes every `AutoCloseable` it has
+ * resolved, one that went through here included. Only the application can stop that, by replacing
+ * `onShutdown` in `install(DI)`; the `stx-ktor` README says when it matters.
  */
 fun <T : Any> Application.publish(
     key: AttributeKey<T>,
@@ -59,8 +64,9 @@ fun <T : Any> Application.publish(
  * The rule every plugin here follows, in one place: **whoever created it closes it.**
  *
  * [provided] is what the application handed in — from a DI container, or built by hand. When there
- * is one it is published and otherwise left alone; when there is not, [create] makes one and this
- * closes it on [ApplicationStopped].
+ * is one it is published and the plugin never closes it; when there is not, [create] makes one and this
+ * closes it on [ApplicationStopped]. A provided instance can still be closed by Ktor's DI if the
+ * plugin registers it there — see [publish].
  */
 fun <T : AutoCloseable> Application.resource(
     key: AttributeKey<T>,

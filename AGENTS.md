@@ -655,8 +655,13 @@ reach it.** Three rules, and the next integration is built to them rather than r
   and the plugin adopts what an application or a container already built, instead of opening a
   second one.
 - **Whoever created it closes it.** `Resources.kt` says this once, as `own` (we opened it, we close
-  it on `ApplicationStopped`) and `publish` (someone else's, we leave it alone). A plugin that
-  adopts a connection and also closes it is the second close.
+  it on `ApplicationStopped`) and `publish` (someone else's, the *plugin* leaves it alone). A plugin
+  that adopts a connection and also closes it is the second close. This is about the plugin, not
+  the container: the plugin registers an adopted `instance` with Ktor's DI as well, and the
+  container closes every `AutoCloseable` it has resolved at application stop, adopted ones
+  included. An `instance` shared between two servers, or kept across a test bench's restarts, is
+  closed under its owner; the way out is the application replacing `onShutdown` in `install(DI)`,
+  shown in the `stx-ktor` README.
 - **Reaching a resource only through `call.x` is a service locator.** A class a container builds
   has no `ApplicationCall`, so each plugin registers what it installed with Ktor's DI —
   `install(RedisConnection) { config = … }` and the same connection is then both `call.redis` and a
