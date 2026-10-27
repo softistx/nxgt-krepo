@@ -60,7 +60,8 @@ enum class TypographyVariant {
  * axis, `Medium` (500) weight with the role's size and spacing. It is a different thing from
  * `Emphasis` (see [Typography]'s `emphasis`), which only dims the colour. The five extra variants
  * have no emphasised twin and ignore the flag: `Metric` is already emphasised, at `SemiBold`
- * rather than M3's `Medium`, so a figure never gets lighter than it was.
+ * rather than M3's `Medium`, and heavier still when the theme's `displaySmallEmphasized` is: the
+ * figure is never lighter than `SemiBold` nor than the theme.
  */
 @Composable
 @ReadOnlyComposable
@@ -84,7 +85,7 @@ fun TypographyVariant.style(emphasized: Boolean = false): TextStyle {
         TypographyVariant.LabelSmall -> type.labelSmall.weighted(type.labelSmallEmphasized, emphasized)
         TypographyVariant.Overline -> overline(type.labelSmall)
         TypographyVariant.Caption -> type.bodySmall
-        TypographyVariant.Metric -> type.displaySmallEmphasized.copy(fontWeight = FontWeight.SemiBold)
+        TypographyVariant.Metric -> type.displaySmallEmphasized.atLeast(FontWeight.SemiBold)
         TypographyVariant.Code -> type.bodyMedium.copy(fontFamily = FontFamily.Monospace)
         TypographyVariant.Link -> type.bodyMedium.copy(textDecoration = TextDecoration.Underline)
     }
@@ -110,5 +111,8 @@ private fun TextStyle.weighted(
     val floor = if (own < FontWeight.Medium.weight) FontWeight.Medium else FontWeight.SemiBold
     return if (theirs > own) emphasised else emphasised.copy(fontWeight = floor)
 }
+
+private fun TextStyle.atLeast(floor: FontWeight): TextStyle =
+    if ((fontWeight ?: FontWeight.Normal).weight >= floor.weight) this else copy(fontWeight = floor)
 
 private fun overline(base: TextStyle): TextStyle = base.copy(letterSpacing = base.fontSize * 0.1f)

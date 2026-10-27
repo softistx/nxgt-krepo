@@ -73,6 +73,17 @@ role, `SemiBold` for a role that is already `Medium`, unless the theme's own emp
 heavier. `Metric` is display-sized and stays `SemiBold`, never lighter than M3's `Medium` figure.
 The five extra variants ignore the flag.
 
+```kotlin
+Typography("Results", variant = TitleLarge, emphasized = true)   // the heavier twin of TitleLarge
+Text("Results", style = TitleLarge.style(emphasized = true))      // the same, as a TextStyle
+SectionHeader("Results", emphasized = false)                      // opt out of the default
+```
+
+Visible defaults that changed on the guide: `SectionHeader` is now `TitleMedium` emphasised (was
+`TitleSmall`), `EntityHeader` `HeadlineMedium` emphasised (was `HeadlineSmall`), `Metric` is
+display-sized (was `headlineMedium`), and `Stat` reserves a delta line by default
+(`reserveDelta = false` gives it back).
+
 ## Icons
 
 Package `com.softistx.material.foundation.icon`.
@@ -190,7 +201,7 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/chip` |
 | `ListTile` | `title`, `supporting?`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/list-tile` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
-| `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info` | `content/stat` |
+| `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info`, `reserveDelta = true` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange` | `content/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `content/rating` |
 | `LabeledDivider` | `label` — no `style`: a divider is inert | `content/labeled-divider` |
@@ -198,7 +209,7 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `content/keyboard-shortcut` |
 | `SuggestionChip` | `text`, `onClick`, `leading?` | `content/suggestion-chip` |
 | `FileChip` | `name`, `sizeLabel?`, `onRemove?`, `onClick?` | `content/file-chip` |
-| `SectionHeader` | `title`, `supporting?`, `action?` | `content/section-header` |
+| `SectionHeader` | `title`, `supporting?`, `action?`, `emphasized = true` | `content/section-header` |
 | `CodeBlock` | `text`, `copyable = true` | `content/code-block` |
 | `ExpandableText` | `text`, `collapsedLines = 3`, `more`, `less` | `content/expandable-text` |
 | `ReactionBar` | `reactions: List<Reaction>` | `content/reaction-bar` |
@@ -533,7 +544,7 @@ Package `com.softistx.material.components.data`.
 | `CommandPalette` | `visible`, `query`, `items`, `onDismiss` | `data/command-palette` |
 | `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp` | `data/data-table` |
 | `Description` | `items: List<DescriptionItem>` | `data/description` |
-| `EntityHeader` | `title`, `supporting?`, `leading?`, `actions` | `data/entity-header` |
+| `EntityHeader` | `title`, `supporting?`, `leading?`, `actions`, `emphasized = true` | `data/entity-header` |
 | `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext` | `data/pagination` |
 | `Timeline` | `items: List<TimelineItem>` | `data/timeline` |
 | `SortControl` | `options`, `selected`, `direction`, `onSelectedChange`, `onDirectionChange` | `data/sort-control` |

@@ -1,6 +1,7 @@
 package com.softistx.material.foundation.text
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.softistx.material.foundation.theme.StxTheme
@@ -63,6 +64,40 @@ class TypographyEmphasizedTest :
                 metric.fontWeight shouldBe FontWeight.SemiBold
                 metric.fontSize shouldBe emphasisedDisplay.fontSize
                 (metric.fontWeight!!.weight >= FontWeight.SemiBold.weight) shouldBe true
+            }
+
+            scenario("keeps a theme's genuinely heavier emphasised style") {
+                var got: FontWeight? = null
+                val heavy = Typography().headlineMedium.copy(fontWeight = FontWeight.Bold)
+                val bold = Typography(headlineMediumEmphasized = heavy)
+                renderProbe(width = 40, height = 40, content = {
+                    StxTheme(isDark = false, typography = bold) {
+                        got = TypographyVariant.HeadlineMedium.style(true).fontWeight
+                    }
+                }) { settle() }
+                got shouldBe FontWeight.Bold
+            }
+
+            scenario("takes a role that is already Medium to SemiBold") {
+                var got: FontWeight? = null
+                val medium = Typography(titleSmall = TextStyle(fontWeight = FontWeight.Medium))
+                renderProbe(width = 40, height = 40, content = {
+                    StxTheme(isDark = false, typography = medium) {
+                        got = TypographyVariant.TitleSmall.style(true).fontWeight
+                    }
+                }) { settle() }
+                got shouldBe FontWeight.SemiBold
+            }
+
+            scenario("keeps a heavier theme weight on Metric") {
+                var got: FontWeight? = null
+                val black = Typography(displaySmallEmphasized = TextStyle(fontWeight = FontWeight.Black))
+                renderProbe(width = 40, height = 40, content = {
+                    StxTheme(isDark = false, typography = black) {
+                        got = TypographyVariant.Metric.style().fontWeight
+                    }
+                }) { settle() }
+                got shouldBe FontWeight.Black
             }
         }
     })

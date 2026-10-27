@@ -36,6 +36,8 @@ replacing it, so a plain M3 component, or any third-party M3 library, keeps work
 is what makes this adoptable in an application that already exists, and a caller that already
 computes one of the four passes it and keeps the other three.
 
+Typography: M3's `*Emphasized` styles are no-ops in material3 1.12.0-alpha03, so `style(emphasized = true)` raises the weight itself.
+
 It installs `MaterialExpressiveTheme` and `MotionScheme.expressive()`: rounder shapes, springier
 motion. `motionScheme = MotionScheme.standard()` turns that off for the whole tree, and every
 animation follows — nothing here holds its own curve.

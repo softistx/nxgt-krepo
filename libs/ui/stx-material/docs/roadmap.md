@@ -226,7 +226,8 @@ dont la forme se lit dans les imports.
       famille de composants, et son registre suit le même ordre
 - [x] **Typographie emphasised (#281).** `Typography(…, emphasized)` et `TypographyVariant.style(emphasized)` vers
       les 15 rôles `*Emphasized` ; `SectionHeader` et `EntityHeader` les portent ; le chiffre d'un `Stat`
-      reste `SemiBold` en taille display, et les `Stat` d'une rangée gardent la même hauteur
+      reste `SemiBold` en taille display, et les `Stat` d'une rangée gardent la même hauteur (`reserveDelta = true`) ;
+      tailles par défaut changées : `SectionHeader` en `TitleMedium`, `EntityHeader` en `HeadlineMedium`, `Metric` en display
 - [ ] Les composants Expressive eux-mêmes — voir #291
 
 ## Phases suivantes

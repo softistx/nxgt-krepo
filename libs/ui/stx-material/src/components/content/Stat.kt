@@ -43,11 +43,13 @@ fun Stat(
         Typography(text = label, variant = TypographyVariant.LabelLarge, emphasis = Emphasis.Medium)
         val density = LocalDensity.current
         // A display-sized figure at 2x font scale is wider than a phone's half row: cap its scale.
-        CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale.coerceAtMost(METRIC_MAX_FONT_SCALE))) {
+        val capped = Density(density.density, density.fontScale.coerceAtMost(METRIC_MAX_FONT_SCALE))
+        CompositionLocalProvider(LocalDensity provides capped) {
             Typography(text = value, variant = TypographyVariant.Metric, maxLines = 1)
         }
         if (delta == null && reserveDelta) {
-            Spacer(Modifier.height(with(LocalDensity.current) { MaterialTheme.typography.labelMedium.lineHeight.toDp() }))
+            val line = MaterialTheme.typography.labelMedium.lineHeight
+            Spacer(Modifier.height(with(LocalDensity.current) { line.toDp() }))
         }
         if (delta != null) {
             Row(
