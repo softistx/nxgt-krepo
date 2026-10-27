@@ -28,6 +28,7 @@ fun ConfirmButton(
     enabled: Boolean = true,
     style: Style = Style,
     holdMs: Long = 3_000L,
+    size: ButtonSize = ButtonSize.Small,
 ) {
     var armed by remember { mutableStateOf(false) }
     LaunchedEffect(armed) {
@@ -51,5 +52,6 @@ fun ConfirmButton(
         color = color,
         enabled = enabled,
         style = style,
+        size = size,
     )
 }

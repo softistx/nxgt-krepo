@@ -142,7 +142,7 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and
 elevation moved into Material 3's own `*Colors` and `*Defaults` when the components were rebuilt on
-M3. What is left is what M3 has no parameter for — the press scale, the disabled alpha, and the
+M3. What is left is what M3 has no parameter for — the press scale (not on `Button`, which morphs its shape: `StxStyles.morphingButton`), the disabled alpha, and the
 alert's whole appearance, because M3 has no banner.
 
 Nothing is needed from it to *use* the library: each component already applies its own. It is the

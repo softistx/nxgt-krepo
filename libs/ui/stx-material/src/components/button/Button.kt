@@ -3,12 +3,13 @@ package com.softistx.material.components.button
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.rememberUpdatedStyleState
 import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -22,7 +23,11 @@ import com.softistx.material.foundation.text.TypographyVariant
  * It is Material 3's `Button` with this library's vocabulary in front of it — five variants and
  * seven colours instead of five separate composables and a `ButtonColors` to hand-build. M3 keeps
  * the ripple, the 48 dp touch target, the semantics and the disabled treatment; [buttonStyle] adds
- * the press scale M3 has no parameter for.
+ * the disabled alpha M3 has no parameter for.
+ *
+ * It morphs: round at rest, squarer while pressed, through M3's `shapes =` overload, so it takes
+ * no press scale. The morph follows `MaterialTheme.motionScheme`. [size] picks one of M3's five
+ * heights and brings its padding and label style with it.
  */
 @Composable
 fun Button(
@@ -33,6 +38,7 @@ fun Button(
     color: ButtonColor = ButtonColor.Primary,
     enabled: Boolean = true,
     style: Style = Style,
+    size: ButtonSize = ButtonSize.Small,
 ) {
     ButtonSurface(
         onClick = onClick,
@@ -41,18 +47,26 @@ fun Button(
         color = color,
         enabled = enabled,
         style = style,
+        size = size,
     ) {
-        Typography(
-            text = text,
-            // A link reads as text in a sentence, so it keeps the underline M3's Button has no
-            // parameter for. Everything else is a label.
-            variant =
-                if (variant == ButtonVariant.Link) {
-                    TypographyVariant.Link
-                } else {
-                    TypographyVariant.LabelLarge
-                },
-        )
+        ButtonLabel(text, variant, size)
+    }
+}
+
+/**
+ * The label of a text button: a link keeps the underline M3's Button has no parameter for;
+ * everything else is a label at the size's own text style.
+ */
+@Composable
+internal fun ButtonLabel(
+    text: String,
+    variant: ButtonVariant,
+    size: ButtonSize,
+) {
+    if (variant == ButtonVariant.Link) {
+        Typography(text = text, variant = TypographyVariant.Link)
+    } else {
+        Text(text = text, style = ButtonDefaults.textStyleFor(size.height))
     }
 }
 
@@ -65,28 +79,32 @@ fun ButtonSurface(
     color: ButtonColor = ButtonColor.Primary,
     enabled: Boolean = true,
     style: Style = Style,
+    size: ButtonSize = ButtonSize.Small,
     content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     MaterialButton(
         onClick = onClick,
-        modifier = modifier.styleable(styleState, buttonStyle, style),
+        shapes = ButtonDefaults.shapesFor(size.height),
+        modifier = modifier.heightIn(min = size.height).styleable(styleState, morphingButtonStyle, style),
         enabled = enabled,
-        shape = CircleShape,
         colors = buttonColors(variant, color),
         elevation = null,
         border = buttonBorder(variant, color, enabled),
-        contentPadding = contentPadding(variant),
+        contentPadding = contentPadding(variant, size),
         interactionSource = interactionSource,
         content = content,
     )
 }
 
 /** A link is text in a sentence, so it keeps no padding of its own; the rest use M3's. */
-private fun contentPadding(variant: ButtonVariant): PaddingValues =
+private fun contentPadding(
+    variant: ButtonVariant,
+    size: ButtonSize,
+): PaddingValues =
     if (variant == ButtonVariant.Link) {
         PaddingValues(0.dp)
     } else {
-        ButtonDefaults.ContentPadding
+        ButtonDefaults.contentPaddingFor(size.height)
     }
