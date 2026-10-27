@@ -12,7 +12,7 @@ first `android` target. `examples/material-demo` is its catalogue and its test b
 libs/ui/stx-material/
   src/foundation/            what everything else is built from            (com.softistx.material.foundation.*)
     theme/    tokens, StxTheme, the colour seed, and the platform scheme's expect
-    style/    StxStyles — every component default in one place — and the StyleScope token extensions
+    style/    the StyleScope token extensions, styledBy/pressable and the shared presses
     motion/   the M3 MotionScheme, transitions, shimmer, stagger
     layout/   the window-size and responsive helpers (Breakpoints, wCompact, LocalWindowSize, …)
     text/     Typography and the variant scale
@@ -94,8 +94,8 @@ fun buttonColors(variant: ButtonVariant, color: ButtonColor): ButtonColors = …
 
 // The whole button family (Button, IconButton, IconToggle, ToggleButton, SplitButton, Fab)
 // morphs its shape under the finger, so its one Style keeps only the disabled alpha.
-// StxStyles.button names it.
-val buttonStyle: Style = Style {
+// StxStyles.button names it; the val itself is internal.
+internal val buttonStyle: Style = Style {
     disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
 }
 ```

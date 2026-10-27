@@ -59,7 +59,7 @@ fun ListTile(
             leading = leading,
             trailing = trailing,
         )
-    val styled = modifier.styledBy(style, enabled = enabled, base = listTileStyle, interactionSource = interactionSource)
+    val styled = modifier.styledBy(style, enabled = enabled, interactionSource = interactionSource)
     when {
         onClick == null -> PlainRow(slots, styled)
         group != null -> SegmentedRow(slots, styled, onClick, enabled, selected, group, interactionSource)

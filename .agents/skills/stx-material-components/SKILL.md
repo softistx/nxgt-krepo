@@ -64,7 +64,7 @@ internal val choiceTileStyle: Style =
 - Press scale follows the family: 0.99 for cards and rows, 0.97 for chips and navigation items. **A control that morphs its shape (`shapes =`, section 5) gets no `scale`**: two give-under-the-finger effects fight.
 - A `background()` or `shape()` in a Style over an M3 container paints twice; it belonged in `*Colors` or `shape =`. A border drawn by the Style needs the same `shape(..)` as the container.
 
-Done when `Name.kt` holds no colour literal, the Styles file holds nothing M3 has a parameter for, and `StxStyles` (`foundation/style/StxStyles.kt`) names the default (`val choiceTile: Style get() = choiceTileStyle`).
+Done when `Name.kt` holds no colour literal, the Styles file holds nothing M3 has a parameter for, and `StxStyles` (`components/StxStyles.kt`) names the default (`val choiceTile: Style get() = choiceTileStyle`), with the `*Style` val itself `internal`.
 
 ## 5. Reach for Expressive
 

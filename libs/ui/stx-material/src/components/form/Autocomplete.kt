@@ -62,7 +62,7 @@ fun <T> Autocomplete(
                 Modifier
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                     .fillMaxWidth()
-                    .styledBy(style, enabled = enabled, base = fieldStyle, interactionSource = interactionSource),
+                    .styledBy(style, enabled = enabled, interactionSource = interactionSource),
             enabled = enabled,
             label = label?.let { { Typography(text = it) } },
             placeholder = { Typography(text = placeholder) },

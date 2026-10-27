@@ -44,7 +44,7 @@ fun TextareaField(
         modifier =
             modifier
                 .fillMaxWidth()
-                .styledBy(style, enabled = enabled, base = fieldStyle, interactionSource = interactionSource),
+                .styledBy(style, enabled = enabled, interactionSource = interactionSource),
         enabled = enabled,
         label = label?.let { { Typography(text = it) } },
         placeholder = placeholder?.let { { Typography(text = it) } },

@@ -96,7 +96,7 @@ fun buttonBorder(
  * purpose. A `background()` or `shape()` in this block would paint on top of the button M3 already
  * painted, which is the sign the value belonged in [buttonColors] instead.
  */
-val buttonStyle: Style =
+internal val buttonStyle: Style =
     Style {
         disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
     }

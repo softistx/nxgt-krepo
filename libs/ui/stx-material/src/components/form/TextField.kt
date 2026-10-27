@@ -58,7 +58,7 @@ fun TextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.styledBy(style, enabled = enabled, base = fieldStyle, interactionSource = interactionSource),
+        modifier = modifier.styledBy(style, enabled = enabled, interactionSource = interactionSource),
         enabled = enabled,
         readOnly = readOnly,
         label = label?.let { { Typography(text = it) } },

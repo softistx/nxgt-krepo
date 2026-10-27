@@ -15,14 +15,14 @@ import com.softistx.material.foundation.style.motion
  * Colour, indicator, container and shape stay on M3's `*Defaults`. A `background()` here would
  * paint over the tab or the rail item M3 already painted.
  */
-val navigationItemStyle: Style =
+internal val navigationItemStyle: Style =
     compactPress then
         Style {
             disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
         }
 
 /** A trail segment is a quiet control; the press is the only state it owns. */
-val breadcrumbStyle: Style = navigationItemStyle
+internal val breadcrumbStyle: Style = navigationItemStyle
 
 /** A completed step is the one that can be pressed to go back. */
-val stepperStyle: Style = navigationItemStyle
+internal val stepperStyle: Style = navigationItemStyle

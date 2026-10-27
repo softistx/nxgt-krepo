@@ -10,10 +10,10 @@ import com.softistx.material.foundation.style.rowPress
  * list row has. A row is never disabled, so there is no fade; the collapsed cards are `Card`s and
  * carry the card style.
  */
-val tableRowStyle: Style = rowPress
+internal val tableRowStyle: Style = rowPress
 
 /**
  * A sortable column header of a [DataTable]: a press scale of 0.97, as a chip has, since a header
  * is a compact control and not a full-width row.
  */
-val sortHeaderStyle: Style = compactPress
+internal val sortHeaderStyle: Style = compactPress

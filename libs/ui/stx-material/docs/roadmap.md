@@ -214,7 +214,7 @@ dont la forme se lit dans les imports.
       tout le reste est fait, sans aucun composant ;
       `com.softistx.material.components.*` (`button`, `form`, `navigation`, `layout`, `feedback`, `content`,
       `surface`, `media`, `data`, `datetime`) porte les composants, une famille par dossier. Un
-      dossier est un paquet, et le `*Styles.kt` d'un composant reste à côté de lui
+      dossier est un paquet, et le `*Styles.kt` d'un composant reste à côté de lui ; `StxStyles` vit dans `components`, de sorte que `foundation` ne connaît aucun composant
 - [x] **Ce qui rend compte d'un état est au même endroit.** Alertes, bandeaux, badges de statut,
       pastilles, squelette, progression, indicateur de saisie et toasts sont dans `feedback` ; cartes,
       tuiles, chips, statistiques et états vides sont dans `content`

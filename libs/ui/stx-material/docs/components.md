@@ -181,13 +181,13 @@ The 5 × 7 matrix is resolved in **one** function, `buttonColors(variant, color)
 Material 3's own `ButtonColors` — so M3 paints the container, the ripple and the disabled treatment,
 and this library only decides *which* colours. Adding a colour touches one enum entry and one `when`
 branch; see `buttons/variant-and-colour-matrix` for the whole grid at once. `buttonBorder` answers
-the same way for the outline. A button's press is M3's shape morph, so `buttonStyle`, the one style of
+the same way for the outline. A button's press is M3's shape morph, so `StxStyles.button`, the one style of
 the whole family, keeps only the disabled alpha.
 
 The button family dropped the 0.97 press scale: the shape morph is the press feedback now, so a
 `pressed { scale(0.97f) }` you relied on is gone unless you pass it back through `style`.
 
-Every control above takes `style: Style = Style`, merged over `buttonStyle`. Pass a block, not
+Every control above takes `style: Style = Style`, merged over `StxStyles.button`. Pass a block, not
 colour or shape parameters:
 
 ```kotlin
@@ -471,8 +471,7 @@ matching(form.password) }`.
 
 Every interactive part takes `style: Style = Style`, applied last so the caller's wins, and puts it
 just before a trailing lambda (`optionLabel`, `format`) so `RadioGroup(…) { it.label }` still compiles.
-The defaults are named in `StxStyles`: `field` (`TextField`, `TextareaField`, `Autocomplete` and
-`SelectField`: empty, because M3 already dims them), `dimmed` (`OtpField` and `InlineEdit` at rest:
+The defaults are named in `StxStyles`: `dimmed` (`OtpField` and `InlineEdit` at rest:
 the 0.38 disabled fade M3 does not give them), `toggle` (the rows of `Checkbox`, `TriStateCheckbox`,
 `Switch`, `RadioGroup` and `CheckboxGroup`: a 0.99 press scale) and `upload` (`UploadField`: a 0.99
 press scale and the disabled fade). `CopyField`, `Composer`, `TagField`, `ThemeToggle` and `Checklist` hand their `style` to the
@@ -730,7 +729,7 @@ inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate`
 a frozen instant.
 
 `DateField`, `DateRangeField` and `TimeField` hand their `style` to the `TextField` they are made of
-(`StxStyles.field`, empty). `RelativeTime` is not interactive and takes no `style`.
+(M3 dims them itself, so they carry no default). `RelativeTime` is not interactive and takes no `style`.
 
 The exceptions, each because Material 3 imposes its own `*Defaults`:
 

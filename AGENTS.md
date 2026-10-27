@@ -221,7 +221,7 @@ settings:
 
 The shape a component takes:
 
-- **Its look is a `Style`, in its own file** — `components/button/ButtonStyles.kt` holds `buttonStyle` and
+- **Its look is a `Style`, in its own file** — `components/button/ButtonStyles.kt` holds an internal `buttonStyle` and
   `buttonColors(variant, color)`, and `components/button/Button.kt` holds no colours at all. A style reaches theme tokens through the
   `StyleScope` extensions in `foundation/style/StyleTokens.kt` (`colors`, `scheme`, `shapes`, `spacing`,
   `motion`), which read the `CompositionLocal`s at resolve time rather than closing over whatever
@@ -249,8 +249,9 @@ The shape a component takes:
   scope.
 - **Every default has a name in `StxStyles`**, reached as `StxTheme.styles.card`.
   It is a plain `object` behind an extension property, not a `CompositionLocal` — a `Style` reads
-  its tokens when it is applied, not when it is written — and it lives in `src/foundation/style/` so
-  `foundation/theme` keeps knowing nothing about the components. Restating a default before editing it is what stops a
+  its tokens when it is applied, not when it is written — and it lives in `src/components/StxStyles.kt`
+  (`com.softistx.material.components`) so `foundation` keeps knowing nothing about the components. The `xStyle` vals
+  behind it are `internal`: `StxStyles.x` is the only public name. Restating a default before editing it is what stops a
   one-off drifting away from the rest of the screen.
 
 The `styles` skill has the full vocabulary, the state-animation guide and the migration workflow.

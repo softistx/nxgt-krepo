@@ -70,4 +70,4 @@ fun cardElevation(variant: CardVariant): CardElevation =
  * so it moves less — 0.99 rather than 0.97, which is the difference between responding and
  * flinching.
  */
-val cardStyle: Style = rowPress
+internal val cardStyle: Style = rowPress

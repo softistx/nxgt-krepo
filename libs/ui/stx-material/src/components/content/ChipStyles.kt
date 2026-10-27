@@ -62,7 +62,7 @@ fun chipColors(hovered: Boolean): SelectableChipColors {
  * style block duplicating work the component already did, and painting a `background` over a
  * `FilterChip` hid its selected container entirely. The press scale is what is left.
  */
-val chipStyle: Style = compactPress
+internal val chipStyle: Style = compactPress
 
 /** Material's state-layer opacity for a hovered surface, over a container that is transparent. */
 private const val HOVER_STATE_LAYER_ALPHA = 0.08f

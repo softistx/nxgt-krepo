@@ -55,7 +55,7 @@ fun <T> SelectField(
                 Modifier
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                     .fillMaxWidth()
-                    .styledBy(style, enabled = enabled, base = fieldStyle, interactionSource = interactionSource),
+                    .styledBy(style, enabled = enabled, interactionSource = interactionSource),
             enabled = enabled,
             readOnly = true,
             label = label?.let { { Typography(text = it) } },

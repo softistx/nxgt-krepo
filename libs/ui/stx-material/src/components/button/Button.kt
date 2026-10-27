@@ -21,7 +21,7 @@ import androidx.compose.material3.Button as MaterialButton
  *
  * It is Material 3's `Button` with this library's vocabulary in front of it — five variants and
  * seven colours instead of five separate composables and a `ButtonColors` to hand-build. M3 keeps
- * the ripple, the 48 dp touch target, the semantics and the disabled treatment; [buttonStyle] adds
+ * the ripple, the 48 dp touch target, the semantics and the disabled treatment; `StxStyles.button` adds
  * the disabled alpha M3 has no parameter for.
  *
  * It morphs: round at rest, squarer while pressed, through M3's `shapes =` overload, so it takes
