@@ -7,19 +7,19 @@ component or token to change. A slice is judged by re-running the bench and comp
 Scale: 1 broken or default, 2 weak, 3 acceptable, 4 good, 5 exemplary. Score what is on the stills; only
 motion intent is scored from the code.
 
-| Criterion | What a 5 looks like |
-| --- | --- |
-| Hierarchy | A clear type scale, one focal point per screen, and the eye finds the title, the primary data and the action in that order. |
-| Spacing rhythm | Every gap is a multiple of 4 or 8 dp, related items sit closer than unrelated ones, and nothing touches an edge. |
-| Accent discipline | One accent colour per screen; tones (success, warning, error) appear only where they carry meaning. |
-| Surfaces | Depth comes from tonal surface layers (container roles), not from borders or outlines; no box inside a box. |
-| Shape language | Radii come from one scale; expressive shapes are used where they carry meaning (selection, primary action), not as decoration. |
-| Density and touch targets | Targets are at least 48 dp, rows are scannable, and the density suits the viewport (tighter on desktop, roomier on phone). |
-| State design | Empty, loading and error faces are designed (illustration or skeleton, message, recovery action), not a default blank or a bare string. |
-| Dark mode quality | Dark is its own tonal ladder, not an inversion: text contrast holds (AA), accents stay calm, surfaces keep their separation. |
-| Adaptive layout | Phone, tablet and desktop each use the space: bar to rail, single pane to list-detail, no stretched phone layout and no empty half-screen. |
-| Motion intent | Read from code: motion explains a change (enter, exit, selection, feedback), uses the shared spring or tween tokens, and respects reduced motion. |
-| Polish | Alignment on shared baselines, no clipped or ellipsised text that hides meaning, icons from one family at one weight and size. |
+| Criterion | What a 5 looks like | What a 3 looks like |
+| --- | --- | --- |
+| Hierarchy | A clear type scale, one focal point per screen, and the eye finds the title, the primary data and the action in that order. | Title and data are distinguishable, but two or three elements compete or the scale is flat in places. |
+| Spacing rhythm | Every gap is a multiple of 4 or 8 dp, related items sit closer than unrelated ones, and nothing touches an edge. | Mostly on a 4/8 grid with a few odd gaps; some areas feel cramped or loose. |
+| Accent discipline | One accent colour per screen; tones (success, warning, error) appear only where they carry meaning. | The accent is consistent, but a second colour or a tone is used for decoration on some screens. |
+| Surfaces | Depth comes from tonal surface layers (container roles), not from borders or outlines; no box inside a box. | Tonal layers are used, but borders or outlines still do part of the separating. |
+| Shape language | Radii come from one scale; expressive shapes are used where they carry meaning (selection, primary action), not as decoration. | Radii mostly agree; some components keep their own shape without a reason. |
+| Density and touch targets | Targets are at least 48 dp, rows are scannable, and the density suits the viewport (tighter on desktop, roomier on phone). | Most targets reach 48 dp; some rows or controls are too tight or too sparse for the viewport. |
+| State design | Empty, loading and error faces are designed (illustration or skeleton, message, recovery action), not a default blank or a bare string. | Empty, loading and error faces exist and are readable, but are plain text or a generic placeholder. |
+| Dark mode quality | Dark is its own tonal ladder, not an inversion: text contrast holds (AA), accents stay calm, surfaces keep their separation. | Readable and coherent, but some surfaces merge or an accent glares. |
+| Adaptive layout | Phone, tablet and desktop each use the space: bar to rail, single pane to list-detail, no stretched phone layout and no empty half-screen. | Each viewport works, but tablet or desktop mostly stretches the phone layout. |
+| Motion intent | Read from code: motion explains a change (enter, exit, selection, feedback), uses the shared spring or tween tokens, and respects reduced motion. | Some transitions exist and are purposeful; others are missing or ad hoc, with no shared tokens. |
+| Polish | Alignment on shared baselines, no clipped or ellipsised text that hides meaning, icons from one family at one weight and size. | Small misalignments or ellipsised text, and icons that are mostly consistent. |
 
 ## Scorecard template
 
@@ -29,7 +29,7 @@ Copy it per slice, one block per run (`before`, then `after`).
 ### <slice>, <before|after>, bench <dir>
 
 | Screen | Hierarchy | Spacing | Accent | Surfaces | Shape | Density | States | Dark | Adaptive | Motion | Polish | Mean |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| --- | --- | --- |
 | dashboard | | | | | | | | | | | | |
 | students | | | | | | | | | | | | |
 | grades | | | | | | | | | | | | |

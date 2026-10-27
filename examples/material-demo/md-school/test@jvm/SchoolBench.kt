@@ -59,9 +59,9 @@ fun writeBench(
         }
         File(dir, "manifest.json").writeText(manifest(shots))
         shots.groupBy { it.viewport }.forEach { (viewport, group) ->
-            val sheet = contactSheet(viewport, group, frames)
-            File(dir, "contact-${viewport.name.lowercase()}.png").writeBytes(png(sheet))
-            sheet.close()
+            contactSheet(viewport, group, frames).use {
+                File(dir, "contact-${viewport.name.lowercase()}.png").writeBytes(png(it))
+            }
         }
     } finally {
         frames.values.forEach { it.close() }
@@ -99,21 +99,30 @@ private fun contactSheet(
     val cellHeight = LabelHeight + frameHeight
     val width = perRow * cellWidth + (perRow + 1) * Gap
     val height = rows * (cellHeight + Gap) + Gap
-    val surface = Surface.makeRasterN32Premul(width, height)
-    val canvas = surface.canvas
-    canvas.clear(Color.makeRGB(236, 236, 240))
-    val font = Font(labelTypeface(), 22f)
-    val ink = Paint().apply { color = Color.makeRGB(30, 30, 36) }
-    names.forEachIndexed { index, name ->
-        val x = Gap + (index % perRow) * (cellWidth + Gap)
-        val y = Gap + (index / perRow) * (cellHeight + Gap)
-        canvas.drawString("$name  (${viewport.name.lowercase()}, light | dark)", x.toFloat(), y + 24f, font, ink)
-        listOf(false, true).forEachIndexed { column, dark ->
-            val image = shots.firstOrNull { it.name == name && it.dark == dark }?.let(frames::get) ?: return@forEachIndexed
-            canvas.drawFrame(image, x + column * (frameWidth + Gap), y + LabelHeight, frameWidth, frameHeight)
+    val typeface = labelTypeface()
+    try {
+        Font(typeface, 22f).use { font ->
+            Paint().apply { color = Color.makeRGB(30, 30, 36) }.use { ink ->
+                Surface.makeRasterN32Premul(width, height).use { surface ->
+                    val canvas = surface.canvas
+                    canvas.clear(Color.makeRGB(236, 236, 240))
+                    names.forEachIndexed { index, name ->
+                        val x = Gap + (index % perRow) * (cellWidth + Gap)
+                        val y = Gap + (index / perRow) * (cellHeight + Gap)
+                        canvas.drawString("$name  (${viewport.name.lowercase()}, light | dark)", x.toFloat(), y + 24f, font, ink)
+                        listOf(false, true).forEachIndexed { column, dark ->
+                            val shot = shots.firstOrNull { it.name == name && it.dark == dark }
+                            val image = shot?.let(frames::get) ?: return@forEachIndexed
+                            canvas.drawFrame(image, x + column * (frameWidth + Gap), y + LabelHeight, frameWidth, frameHeight)
+                        }
+                    }
+                    return surface.makeImageSnapshot()
+                }
+            }
         }
+    } finally {
+        typeface?.close()
     }
-    return surface.makeImageSnapshot().also { surface.close() }
 }
 
 private fun Canvas.drawFrame(
@@ -123,10 +132,15 @@ private fun Canvas.drawFrame(
     width: Int,
     height: Int,
 ) {
-    drawImageRect(image, Rect.makeWH(image.width.toFloat(), image.height.toFloat()), Rect.makeXYWH(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat()))
+    val source = Rect.makeWH(image.width.toFloat(), image.height.toFloat())
+    val target = Rect.makeXYWH(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat())
+    drawImageRect(image, source, target)
 }
 
-/** A system sans-serif for the labels; the first family this host has, or the manager's default. */
+/**
+ * A system sans-serif for the labels: the first family this host has, or the manager's default.
+ * Null is deliberate: a host with no fonts at all gets blank labels, and the bench still runs.
+ */
 private fun labelTypeface(): Typeface? =
     listOf("Helvetica", "Arial", "DejaVu Sans", "Liberation Sans", "Segoe UI")
         .firstNotNullOfOrNull { FontMgr.default.matchFamilyStyle(it, FontStyle.NORMAL) }
