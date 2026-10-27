@@ -4,7 +4,7 @@ The eight points of the quality bar in `SKILL.md`, with the library's own means 
 
 ## 1. Hierarchy from the type scale
 
-One line dominates; everything else steps back. Size is not the only lever: the same size at `Emphasis.Medium` (0.72) is how secondary text stays in the palette instead of picking a grey. `Subtle` (0.5) fails AA for body text: non-essential text only. `TypographyVariant` has the 15 M3 roles plus `Overline`, `Caption`, `Metric` (a figure read at a glance), `Code` and `Link`. An Expressive screen spends the `*Emphasized` weight once per region — the hero title, the headline figure — and leaves body regular. Two emphasised lines side by side cancel each other.
+One line dominates; everything else steps back. Size is not the only lever: the same size at `Emphasis.Medium` (0.80) is how secondary text stays in the palette instead of picking a grey. `Subtle` (0.72) passes AA (4.8 to 5.2 in light, 7.4 to 8.2 in dark) and is kept for non-essential text. `TypographyVariant` has the 15 M3 roles plus `Overline`, `Caption`, `Metric` (a figure read at a glance), `Code` and `Link`. An Expressive screen spends the `*Emphasized` weight once per region — the hero title, the headline figure — and leaves body regular. Two emphasised lines side by side cancel each other.
 
 Tell: if you cannot say which line the eye lands on first, the hierarchy is missing.
 

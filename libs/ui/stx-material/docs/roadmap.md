@@ -25,7 +25,6 @@ ligne de plomberie.
 **Thème et tokens**
 - [x] `StxSpacing` — la seule échelle que M3 n'a pas ; formes et élévation restent celles de M3
 - [x] `StxColors` — `success` et `warning` dérivés par material-kolor, `info` pris sur `secondary`, le reste délégué à M3
-- [x] Palette calme par défaut : TonalSpot et `SPEC_2025`, `info` sur `secondary`, point de `Stat` seulement pour Success, Warning et Error
 - [x] `StxTheme` enveloppant `MaterialTheme`, tokens sur `CompositionLocal` statiques
 - [x] `StyleScope.colors` / `.scheme` / `.shapes` / `.spacing` / `.motion` — les tokens dans un `Style`
 - [x] Un `StxStyles` accessible en `StxTheme.styles`, agrégeant les styles de composants
@@ -42,13 +41,10 @@ ligne de plomberie.
 
 **Boutons**
 - [x] `ButtonVariant` × `ButtonColor` — 5 × 7, résolus dans une seule fonction
-- [x] `buttonStyle` — un `Style` unique pour la famille des boutons : l'alpha désactivé seulement, sans échelle d'appui puisque tous se déforment
 - [x] `Button(text, onClick)` et `ButtonSurface { }` avec `style: Style = Style`
 - [x] `IconButton`, `ButtonGroup`
-- [x] `StxIcons` — dix vecteurs tenus ici, faute de pack d'icônes atteignable
+- [x] `StxIcons` — 34 vecteurs tenus ici, faute de pack d'icônes atteignable
 - [x] `ResponsiveButton`
-- [x] Boutons : morphing de forme à l'appui (`StxStyles.button`) et `ButtonSize` (ExtraSmall à ExtraLarge, Small par défaut)
-- [x] `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton` et `Fab` : morphing de forme (rond au repos, plus carré à l'appui et coché) et `style: Style = Style`
 
 **Affichage**
 - [x] `Card`
@@ -208,7 +204,7 @@ qui attendent leur tour, un bouton qui sait s'il peut être pressé — s'écrit
 
 ---
 
-## Maintenant — Modernisation M3 Expressive (0.3.0)
+## Livré — Modernisation M3 Expressive (0.3.0)
 
 Suivi dans #291. Une version mineure marquée *breaking* : ce que l'on y gagne, c'est une librairie
 dont la forme se lit dans les imports.
@@ -226,6 +222,10 @@ dont la forme se lit dans les imports.
       ancien → nouveau est dans le changeset, de quoi corriger ses imports d'un seul passage
 - [x] Le catalogue suit les mêmes familles : ses stories sont rangées par `foundation` et par
       famille de composants, et son registre suit le même ordre
+- [x] **Palette (#280).** Palette calme par défaut : TonalSpot et `SPEC_2025`, `info` sur `secondary`, point de `Stat` seulement pour Success, Warning et Error
+- [x] **Famille des boutons (#282).** `buttonStyle` — un `Style` unique pour la famille des boutons : l'alpha désactivé seulement, sans échelle d'appui puisque tous se déforment
+- [x] **Famille des boutons (#282).** Boutons : morphing de forme à l'appui (`StxStyles.button`) et `ButtonSize` (ExtraSmall à ExtraLarge, Small par défaut)
+- [x] **Morphing des boutons d'icône (#283).** `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton` et `Fab` : morphing de forme (rond au repos, plus carré à l'appui et coché) et `style: Style = Style`
 - [x] **Typographie emphasised (#281).** `Typography(…, emphasized)` et `TypographyVariant.style(emphasized)` vers
       les 15 rôles `*Emphasized` ; `SectionHeader` et `EntityHeader` les portent ; le chiffre d'un `Stat`
       reste `SemiBold` en taille display, et les `Stat` d'une rangée gardent la même hauteur (`reserveDelta = true`) ;
@@ -240,8 +240,10 @@ dont la forme se lit dans les imports.
 - [x] **Carousel sur le carrousel M3 (#289).** `Carousel(count, modifier, peek, style, page)` repose sur `HorizontalMultiBrowseCarousel` : une grande page, la suivante large de `peek`, chaque page découpée par un masque `extraLarge` qui se déforme avec sa taille ; les pages intermédiaires rétrécissent vers la petite. Tous les paramètres gardent leur sens ; `style: Style = Style` juste avant le lambda final habille l'ensemble (piste et points), jamais les pages. `HorizontalUncontainedCarousel` existe bien dans le jar 1.12.0-alpha03 mais sa largeur fixe ne se règle pas sur `peek`. #291 reste ouvert.
 - [x] **Lacunes du showcase School (#295, fin).** La barre compacte de `NavigationSuite` garde chaque libellé sur une ligne (ellipse en garde-fou) : « Dashboard » ne passe plus à la ligne. Une barre compacte tient trois à cinq destinations (règle M3) ; au-delà, déplacer les autres derrière « More », un tiroir ou le rail, comme md-school sur téléphone. `StxIcons` gagne `Bell`, `Printer`, `Phone` et `EditNote` (34 vecteurs). `animateStagger` compte son attente en images de l'horloge de composition au lieu d'un `delay` : un rendu sans tête, qui avance les images sans attendre, voit l'élément arriver. Aucune signature ne change. #291 reste ouvert.
 - [x] **Accessibilité (#297, fin).** `Emphasis.Subtle` passe de 0,5 à 0,72 et `Medium` de 0,72 à 0,80 : `Subtle` tient 4,5:1 sur `surface`, `surfaceContainer` et `surfaceContainerHigh`, en clair et en sombre (avant : 2,7 à 2,8 en clair, 4,3 à 4,5 en sombre). `StxTheme` sans `motionScheme` ni `motion` suit le système : « Réduire les animations » coupe `StxMotion` et installe un schéma M3 qui n'anime plus ; passer l'un des deux désactive la lecture. Lecture par Android (échelle d'animation), iOS (`UIAccessibility`) et bureau (`-Dstx.material.reduceMotion` seul ; `readDesktopReducedMotion()` pour lire le système sur demande). Les specs passent au `runComposeUiTest` v2. #291 reste ouvert.
+
+## Maintenant
+
 - [ ] **Suite de #297 : contraste élevé.** Lire « Augmenter le contraste » (iOS `UIAccessibilityDarkerSystemColorsEnabled`, Android `UiModeManager.getContrast`, bureau) et l'exposer au thème quand un premier composant en a besoin.
-- [ ] Les composants Expressive eux-mêmes — voir #291
 
 ## Phases suivantes
 

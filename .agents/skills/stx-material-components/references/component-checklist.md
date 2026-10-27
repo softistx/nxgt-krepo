@@ -14,7 +14,7 @@ Run it before opening the PR. Each line is checkable; a line you cannot tick is 
 
 - [ ] Required parameters first, then `modifier: Modifier = Modifier`, then optional ones, `enabled`, `style: Style = Style`, content last.
 - [ ] No `color`, `shape`, `backgroundColor` or `contentPadding` parameter: those are a `*Colors`, a `*Defaults.shapes()` or a Style.
-- [ ] Business state is passed in; presentation state (pressed, hovered, focused) is remembered inside through `rememberUpdatedStyleState`.
+- [ ] Business state is passed in; presentation state (pressed, hovered, focused) is remembered inside and fed to the style through `styledBy` (or `pressable`), not an inline `rememberUpdatedStyleState` + `styleable`.
 - [ ] An inert component (a divider, a keycap) has no `style` and says why.
 - [ ] A new parameter is defaulted. A removed or renamed one, or a new required one, is a source break: stop and ask the owner.
 
