@@ -137,7 +137,7 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 
 ## Styles
 
-`StxTheme.styles` (from `com.softistx.material.style`) is every component default in one place —
+`StxTheme.styles` (from `com.softistx.material.foundation.style`) is every component default in one place —
 `button`, `card`, `chip`, `listTile`, `field`, `alert(tone)`.
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and

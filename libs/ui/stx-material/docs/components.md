@@ -8,6 +8,10 @@ title. Every component takes `modifier: Modifier`, and every *interactive* one t
 `style: Style = Style` — both are left out of the tables below because they are on everything that
 has them.
 
+Story ids such as `surfaces/menu` or `feedback/skeleton` are catalogue ids (group, then story), not packages.
+A section is a package: the foundation ones live under `com.softistx.material.foundation.*` and
+the component families under `com.softistx.material.components.*`, in the same folders under `src/`.
+
 **Most of these are Material 3's components, dressed.** `Button` is M3's `Button`, `Chip` is its
 `FilterChip`, `Card`, `ListTile` and `StatusBadge` are its `Card`, `ListItem` and `Badge`. What is
 added is the default that was missing: the colour matrix resolved into M3's own `*Colors`, the
@@ -20,6 +24,8 @@ to start from. AGENTS.md's *Building a component* is the rule.
 
 ## Foundation
 
+Package `com.softistx.material.foundation.theme` and `com.softistx.material.foundation.style`.
+
 | Story | Shows |
 | --- | --- |
 | `foundation/typography` | The 20 `TypographyVariant` roles at each `Emphasis` |
@@ -29,6 +35,8 @@ to start from. AGENTS.md's *Building a component* is the rule.
 | `foundation/semantic-colours` | `success` / `info` / `warning` / `error`, main and container |
 
 ## Motion
+
+Package `com.softistx.material.foundation.motion`.
 
 | Story | Shows |
 | --- | --- |
@@ -41,6 +49,8 @@ keep their built-in animations, because a `MotionScheme` has no null.
 
 ## Text
 
+Package `com.softistx.material.foundation.text`.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `Typography` | `text`, `variant = BodyMedium`, `emphasis = Full`, `color`, `align`, `decoration`, `maxLines`, `overflow` | `foundation/typography` |
@@ -52,6 +62,8 @@ keep their built-in animations, because a `MotionScheme` has no null.
 secondary text stays in the palette instead of picking a grey.
 
 ## Icons
+
+Package `com.softistx.material.foundation.icon`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -74,6 +86,8 @@ wants a thousand glyphs should depend on a pack directly and pass the `ImageVect
 component here takes one.
 
 ## Buttons
+
+Package `com.softistx.material.components.button`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -133,42 +147,59 @@ in a `BadgedBox`; count zero shows no badge. `ViewToggle` is list-or-grid as two
 taken out. The two forms are two components and `AnimatedContent` morphs between them.
 `ResponsiveButtonTest` renders it and measures the box: 40 × 40 collapsed, 130 × 40 expanded.
 
-## Display
+## Feedback
+
+What reports state to the reader. Package `com.softistx.material.components.feedback`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `content: ColumnScope` | `display/card` |
-| `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `display/chip` |
-| `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `display/status-badge` |
-| `ListTile` | `title`, `supporting?`, `onClick?`, `enabled`, `leading?`, `trailing?` | `display/list-tile` |
-| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `action?` | `display/alert` |
-| `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `display/empty-state` |
-| `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `display/skeleton` |
-| `Stat` | `value`, `label`, `delta?`, `tone = Info` | `display/stat` |
-| `FilterBar` | `options`, `selected`, `onChange` | `display/filter-bar` |
-| `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `display/rating` |
-| `LabeledDivider` | `label` — no `style`: a divider is inert | `display/labeled-divider` |
-| `ActionChip` | `text`, `onClick`, `leading?`, `trailing?` | `display/action-chip` |
-| `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `display/status-dot` |
-| `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `display/keyboard-shortcut` |
-| `SuggestionChip` | `text`, `onClick`, `leading?` | `display/suggestion-chip` |
-| `FileChip` | `name`, `sizeLabel?`, `onRemove?`, `onClick?` | `display/file-chip` |
-| `SectionHeader` | `title`, `supporting?`, `action?` | `display/section-header` |
-| `CodeBlock` | `text`, `copyable = true` | `display/code-block` |
-| `ExpandableText` | `text`, `collapsedLines = 3`, `more`, `less` | `display/expandable-text` |
-| `ReactionBar` | `reactions: List<Reaction>` | `display/reaction-bar` |
-| `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `action?` | `display/announcement-bar` |
-| `QuoteBlock` | `text`, `attribution?` | `display/quote-block` |
-| `LinkPreview` | `title`, `url`, `description?`, `onClick?`, `leading?` | `display/link-preview` |
-| `MessageBubble` | `text`, `outgoing`, `name?`, `meta?`, `onClick?` | `display/message-bubble` |
-| `Comment` | `name`, `text`, `supporting?`, `trailing?` | `display/comment` |
-| `ReplyPreview` | `name`, `text`, `onDismiss?` | `display/reply-preview` |
-| `PinBar` | `text`, `onClick?`, `onDismiss?` | `display/pin-bar` |
-| `MentionChip` | `name`, `onClick`, `onRemove?` | `display/mention-chip` |
-| `Price` | `amount`, `compareAt?`, `period?`, `tone?` | `display/price` |
-| `FeatureList` | `items: List<FeatureItem>` | `display/feature-list` |
-| `PricingCard` | `name`, `amount`, `features`, `highlighted`, `badge?`, `action?` | `display/pricing-card` |
-| `PromoBanner` | `text`, `code?`, `tone = Success`, `onDismiss?` | `display/promo-banner` |
+| `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `feedback/status-badge` |
+| `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `action?` | `feedback/alert` |
+| `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `feedback/skeleton` |
+| `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `feedback/status-dot` |
+| `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `action?` | `feedback/announcement-bar` |
+| `PromoBanner` | `text`, `code?`, `tone = Success`, `onDismiss?` | `feedback/promo-banner` |
+| `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `feedback/progress` |
+| `LabeledProgress` | `progress`, `caption?`, `kind` | `feedback/labeled-progress` |
+| `LoadingMark` | `progress: Float? = null` | `feedback/loading-mark` |
+| `TypingIndicator` | `label = "Someone is typing"` | `feedback/typing-indicator` |
+| `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `feedback/toast` |
+
+`Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
+`AnimatedVisibility` for the caller to write. `Skeleton` shimmers on its own.
+
+## Content
+
+What the screen is about. Package `com.softistx.material.components.content`.
+
+| Component | Parameters | Story |
+| --- | --- | --- |
+| `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `content: ColumnScope` | `content/card` |
+| `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/chip` |
+| `ListTile` | `title`, `supporting?`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/list-tile` |
+| `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
+| `Stat` | `value`, `label`, `delta?`, `tone = Info` | `content/stat` |
+| `FilterBar` | `options`, `selected`, `onChange` | `content/filter-bar` |
+| `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `content/rating` |
+| `LabeledDivider` | `label` — no `style`: a divider is inert | `content/labeled-divider` |
+| `ActionChip` | `text`, `onClick`, `leading?`, `trailing?` | `content/action-chip` |
+| `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `content/keyboard-shortcut` |
+| `SuggestionChip` | `text`, `onClick`, `leading?` | `content/suggestion-chip` |
+| `FileChip` | `name`, `sizeLabel?`, `onRemove?`, `onClick?` | `content/file-chip` |
+| `SectionHeader` | `title`, `supporting?`, `action?` | `content/section-header` |
+| `CodeBlock` | `text`, `copyable = true` | `content/code-block` |
+| `ExpandableText` | `text`, `collapsedLines = 3`, `more`, `less` | `content/expandable-text` |
+| `ReactionBar` | `reactions: List<Reaction>` | `content/reaction-bar` |
+| `QuoteBlock` | `text`, `attribution?` | `content/quote-block` |
+| `LinkPreview` | `title`, `url`, `description?`, `onClick?`, `leading?` | `content/link-preview` |
+| `MessageBubble` | `text`, `outgoing`, `name?`, `meta?`, `onClick?` | `content/message-bubble` |
+| `Comment` | `name`, `text`, `supporting?`, `trailing?` | `content/comment` |
+| `ReplyPreview` | `name`, `text`, `onDismiss?` | `content/reply-preview` |
+| `PinBar` | `text`, `onClick?`, `onDismiss?` | `content/pin-bar` |
+| `MentionChip` | `name`, `onClick`, `onRemove?` | `content/mention-chip` |
+| `Price` | `amount`, `compareAt?`, `period?`, `tone?` | `content/price` |
+| `FeatureList` | `items: List<FeatureItem>` | `content/feature-list` |
+| `PricingCard` | `name`, `amount`, `features`, `highlighted`, `badge?`, `action?` | `content/pricing-card` |
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
@@ -189,9 +220,7 @@ the same 8 % over a transparent container shifts it by 0.145 — visible in one 
 other, which is exactly how it was reported. `ChipHoverTest` renders both cases and holds the
 floor.
 
-`Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
-`AnimatedVisibility` for the caller to write. `EmptyState` fades in for the same reason, and
-`Skeleton` shimmers on its own.
+`EmptyState` fades in on its own, so the caller writes no `AnimatedVisibility`.
 
 `Stat` is a `Card` wearing `TypographyVariant.Metric`. `FilterBar` is a row of `Chip`s — not the
 filter subsystem of phase 7, a selected subset of names. The empty set is "everything". `Rating`
@@ -225,6 +254,8 @@ a form. `PricingCard` is name + `Price` + `FeatureList` + the CTA; `highlighted`
 `PromoBanner` is an `AnnouncementBar` with a code and a `CopyButton`.
 
 ## Forms
+
+Package `com.softistx.material.components.form` (state and rules in `com.softistx.material.components.form.state`).
 
 The part of the library that removes the most work, because a form is where plumbing usually lives.
 A form is **one value** — the request body, the GraphQL input — held by a `FormState<T>`. A control
@@ -348,6 +379,8 @@ options, so the field holds the answer and reordering the options cannot silentl
 
 ## Navigation
 
+Package `com.softistx.material.components.navigation`.
+
 The chrome around a screen. Bar, rail and drawer are one list of destinations; the suite picks
 which. Tabs, search and a segmented control wrap Material 3. Breadcrumb and stepper are built here
 because M3 has neither.
@@ -398,6 +431,8 @@ below `collapseBelow` it stacks.
 
 ### Layout
 
+Package `com.softistx.material.components.layout`.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `ResponsiveGrid` | `items`, `minSize = 200.dp`, `item` | `layout/responsive-grid` |
@@ -411,6 +446,8 @@ over a list and only appears once the reader has left the top. `RefreshBox` is M
 `PullToRefreshBox`. `SelectionBar` is hidden at count zero.
 
 ### Navigation 3 scenes
+
+Package `com.softistx.material.components.navigation`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -429,6 +466,8 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 
 ## Surfaces
 
+Package `com.softistx.material.components.surface`.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `ConfirmDialog` | `visible`, `title`, `text`, `onConfirm`, `onDismiss`, `destructive` | `surfaces/confirm-dialog` |
@@ -439,11 +478,6 @@ effects axis — Adaptive already owns the spatial motion of the panes.
 | `HoverCard` | `title`, `text`, `action?`, `onAction?`, `content` | `surfaces/hover-card` |
 | `Menu` | `expanded`, `onDismiss`, `items` | `surfaces/menu` |
 | `ContextMenu` | `items`, `content` | `surfaces/context-menu` |
-| `Progress` | `progress: Float? = null`, `kind = Linear` (`Circular`, `Wavy`, `WavyCircular`) | `surfaces/progress` |
-| `LabeledProgress` | `progress`, `caption?`, `kind` | `surfaces/labeled-progress` |
-| `LoadingMark` | `progress: Float? = null` | `surfaces/loading-mark` |
-| `TypingIndicator` | `label = "Someone is typing"` | `surfaces/typing-indicator` |
-| `Toaster` / `rememberToasterState` | `show(text, tone)`, stacked | `surfaces/toast` |
 | `Accordion` | `items`, `expanded: Int?`, `onExpandedChange` | `surfaces/accordion` |
 | `Disclosure` | `title`, `expanded`, `onExpandedChange`, `content` | `surfaces/disclosure` |
 | `Carousel` | `count`, `peek = 48.dp`, `page` | `surfaces/carousel` |
@@ -462,6 +496,8 @@ in turn on the effects axis; Material 3 has no typing mark.
 
 ## Date and time
 
+Package `com.softistx.material.components.datetime`.
+
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `DateField` | `value: LocalDate?`, `onValueChange`, `label` | `date-and-time/date-field` |
@@ -476,6 +512,8 @@ inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate`
 a frozen instant.
 
 ## Data
+
+Package `com.softistx.material.components.data`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -494,6 +532,8 @@ measured on the offered width. `Pagination` is previous/next for a keyset page, 
 value.
 
 ## Media
+
+Package `com.softistx.material.components.media`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
@@ -516,9 +556,11 @@ the slot with a renderer, so `Button` never pays for Media3, PdfRenderer or Came
 
 ## Motion helpers
 
+Package `com.softistx.material.foundation.motion`.
+
 | Helper | What it does | Story |
 | --- | --- | --- |
-| `Modifier.shimmer()` | The sweeping highlight `Skeleton` is built from | `display/skeleton` |
+| `Modifier.shimmer()` | The sweeping highlight `Skeleton` is built from | `feedback/skeleton` |
 | `Modifier.animateStagger(index)` | Rises and fades a list item in, offset by its position | `screens/orders-screen` |
 
 `animateStagger` runs **two** animations, not one: the rise is spatial and the fade is effects. A

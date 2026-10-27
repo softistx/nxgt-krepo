@@ -205,6 +205,26 @@ qui attendent leur tour, un bouton qui sait s'il peut être pressé — s'écrit
 
 ---
 
+## Maintenant — Modernisation M3 Expressive (0.3.0)
+
+Suivi dans #291. Une version mineure marquée *breaking* : ce que l'on y gagne, c'est une librairie
+dont la forme se lit dans les imports.
+
+- [x] **Des paquets qui disent à quoi ils servent.** `com.softistx.material.foundation.*` (`theme`,
+      `style`, `motion`, `layout` pour les aides de taille de fenêtre, `icon`, `text`) porte ce dont
+      tout le reste est fait, sans aucun composant ;
+      `com.softistx.material.components.*` (`button`, `form`, `navigation`, `layout`, `feedback`, `content`,
+      `surface`, `media`, `data`, `datetime`) porte les composants, une famille par dossier. Un
+      dossier est un paquet, et le `*Styles.kt` d'un composant reste à côté de lui
+- [x] **Ce qui rend compte d'un état est au même endroit.** Alertes, bandeaux, badges de statut,
+      pastilles, squelette, progression, indicateur de saisie et toasts sont dans `feedback` ; cartes,
+      tuiles, chips, statistiques et états vides sont dans `content`
+- [x] **Aucun changement de comportement.** Seuls les noms de paquets bougent ; la table
+      ancien → nouveau est dans le changeset, de quoi corriger ses imports d'un seul passage
+- [x] Le catalogue suit les mêmes familles : ses stories sont rangées par `foundation` et par
+      famille de composants, et son registre suit le même ordre
+- [ ] Les composants Expressive eux-mêmes — voir #291
+
 ## Phases suivantes
 
 Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.

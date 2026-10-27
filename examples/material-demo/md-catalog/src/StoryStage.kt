@@ -13,11 +13,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.softistx.material.motion.Transitions
-import com.softistx.material.text.Emphasis
-import com.softistx.material.text.Typography
-import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StxTheme
+import com.softistx.material.foundation.motion.Transitions
+import com.softistx.material.foundation.text.Emphasis
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.StxTheme
 
 /**
  * The middle pane. The story swaps through the library's own transitions rather than appearing

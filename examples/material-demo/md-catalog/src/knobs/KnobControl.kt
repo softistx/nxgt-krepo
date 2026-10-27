@@ -11,11 +11,11 @@ import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.softistx.material.display.Chip
-import com.softistx.material.text.Emphasis
-import com.softistx.material.text.Typography
-import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StxTheme
+import com.softistx.material.components.content.Chip
+import com.softistx.material.foundation.text.Emphasis
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.StxTheme
 
 /**
  * One row of the control panel. Material 3 supplies the switch, the slider and the text field:

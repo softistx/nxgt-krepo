@@ -38,7 +38,7 @@ dependencies:
   # exported. It publishes iosArm64 and iosSimulatorArm64 — this module's two Apple targets —
   # along with jvm, so naming it here resolves on every platform the module declares.
   - $libs.konform: exported
-  # WindowSizeClass is the receiver of the wCompact/hExpanded extensions in helpers/Responsive.kt
+  # WindowSizeClass is the receiver of the wCompact/hExpanded extensions in foundation/layout/Responsive.kt
   # and the value LocalWindowSize carries, so it is public API here. This is the Compose
   # Multiplatform build, not the androidx one — see the alias's note in libs.versions.toml.
   - $libs.compose.multiplatform.window.size.class: exported

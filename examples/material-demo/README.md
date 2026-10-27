@@ -31,7 +31,7 @@ list, then the stage with its knobs. Compact shows one at a time; a wide window 
 ## Adding a story
 
 ```kotlin
-val DisplayStories = storyGroup("Display") {
+val ContentStories = storyGroup("Content") {
     story("Card") { knobs ->
         Card(variant = knobs.enumChoice("Variant", CardVariant.Filled)) { … }
     }

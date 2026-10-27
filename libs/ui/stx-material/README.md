@@ -10,25 +10,23 @@ first `android` target. `examples/material-demo` is its catalogue and its test b
 
 ```
 libs/ui/stx-material/
-  src/theme/          tokens, StxTheme, and the platform scheme's expect
-  src@android/theme/  the wallpaper palette          ┐ the only platform-specific
-  src@jvm/theme/      the seed                       │ decision in the library
-  src@ios/theme/      the seed                       ┘
-  src/motion/   the M3 MotionScheme, transitions, shimmer, stagger
-  src/style/    StxStyles — every component default in one place
-  src/text/     Typography and the variant scale
-  src/icon/     Icon and the library's own icon set
-  src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar, IconBadge, ViewToggle
-  src/display/  Card, Chip, ActionChip, SuggestionChip, FileChip, StatusBadge, StatusDot, Kbd, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText, ReactionBar, AnnouncementBar, QuoteBlock, LinkPreview, MessageBubble, Comment, ReplyPreview, PinBar, MentionChip, Price, FeatureList, PricingCard, PromoBanner
-  src/form/     the field/form state layer, the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter, CopyField, TriStateCheckbox, ThemeToggle, FormSection, DangerZone, Composer, Checklist
-  src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, StepFooter, BottomBar, Breadcrumb
-  src/layout/     ResponsiveGrid, ScrollToTop, LoadMoreButton, SelectionBar, RefreshBox
-  src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, HelpTip, HoverCard, Menu, ContextMenu, Accordion, Disclosure, Carousel, SwipeActions
-  src/feedback/   Progress, LabeledProgress, LoadingMark, TypingIndicator, Toaster
-  src/datetime/   DateField, DateRangeField, TimeField, Calendar, RelativeTime
-  src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline, SortControl
-  src/media/      Avatar, AvatarGroup, PersonCard, SeenBy, StxImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
+  src/foundation/            what everything else is built from            (com.softistx.material.foundation.*)
+    theme/    tokens, StxTheme, the colour seed, and the platform scheme's expect
+    style/    StxStyles — every component default in one place — and the StyleScope token extensions
+    motion/   the M3 MotionScheme, transitions, shimmer, stagger
+    layout/   the window-size and responsive helpers (Breakpoints, wCompact, LocalWindowSize, …)
+    text/     Typography and the variant scale
+    icon/     Icon and the library's own icon set
+  src/components/            one folder per family, listed in docs/components.md  (com.softistx.material.components.*)
+    button/ form/ (+ state/) navigation/ layout/ feedback/ content/ surface/ media/ data/ datetime/
+  src@android/foundation/theme/  the wallpaper palette          ┐ the only platform-specific
+  src@jvm/foundation/theme/      the seed                       │ decision in the library
+  src@ios/foundation/theme/      the seed                       ┘
 ```
+
+A folder is a package: `src/components/button/Button.kt` is `com.softistx.material.components.button`.
+A component's `*Styles.kt` sits beside it. `foundation` holds no components: the layout components live in
+`components/layout/`, and `foundation/layout/` keeps only the window-size helpers.
 
 ## The shape of it
 
@@ -107,16 +105,16 @@ Card(style = StxTheme.styles.card then { alpha(0.6f) })
 0. **Check Material 3 first.** If M3 has the component, wrap it — `material3-compose`'s
    `references/components.md` is the list. Rebuilding one is a decision to justify in the KDoc, not
    a default.
-1. **The colours and the style**, in `src/<area>/<Name>Styles.kt`. Whatever M3 can express goes in a
+1. **The colours and the style**, in `src/components/<family>/<Name>Styles.kt`. Whatever M3 can express goes in a
    function returning its `*Colors` / `*Elevation` / `BorderStroke`; whatever it cannot goes in a
    `Style`, reading tokens through `StyleScope` (`scheme`, `shapes`, `spacing`, `motion`)
    and putting interaction states in `pressed` / `hovered` / `disabled` blocks with `animate { }`
    *inside* them. Mind the axis: `spatial` overshoots, `effects` does not.
-2. **The composable**, in `src/<area>/<Name>.kt`. Its signature carries `modifier`, then the
+2. **The composable**, in `src/components/<family>/<Name>.kt`. Its signature carries `modifier`, then the
    semantic parameters, then `style: Style = Style` — no `Color`, `Shape` or `Dp` parameters that
    the style or M3's defaults already own. Slots (`leading`, `trailing`, `content`) are
    `@Composable`, never `iconName: String`.
-3. **Register its story in the same change**, in `examples/material-demo/md-catalog/src/stories/`. The
+3. **Register its story in the same change**, in `examples/material-demo/md-catalog/src/stories/<foundation|components|screens>/`. The
    catalogue is never caught up with afterwards.
 4. **Document it in `docs/components.md`** and tick its box in `docs/roadmap.md`, in that same
    change.
@@ -146,7 +144,7 @@ the build. What is still uncovered is linking, and there are no iOS tests. The
 
 ## Publishing
 
-`io.github.softistx:stx-material:0.1.0`, like every other module under `libs/` — but a `kmp/lib` publishes one
+`io.github.softistx:stx-material:0.2.3`, like every other module under `libs/` — but a `kmp/lib` publishes one
 artifact per platform beside the root one: `stx-material-jvm`, `stx-material-android`,
 `stx-material-iosarm64`, `stx-material-iossimulatorarm64`. A consumer depends on the root artifact
 and the platform one is selected for it.

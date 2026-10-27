@@ -11,9 +11,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
+import com.softistx.material.components.navigation.AdaptiveNavDisplay
+import com.softistx.material.components.navigation.ListDetail
 import com.softistx.material.demo.knobs.KnobsPanel
-import com.softistx.material.navigation.AdaptiveNavDisplay
-import com.softistx.material.navigation.ListDetail
 
 private sealed interface CatalogRoute
 

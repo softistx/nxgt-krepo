@@ -1,0 +1,76 @@
+package com.softistx.material.components.content
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import com.softistx.material.components.button.IconButton
+import com.softistx.material.components.feedback.AnnouncementBar
+import com.softistx.material.foundation.icon.Icon
+import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.StxTheme
+
+/**
+ * The pinned message at the top of a thread. Material 3's `Surface`.
+ *
+ * An [AnnouncementBar] is an incident; this is a message the room chose to keep. Missing
+ * [onDismiss] means it cannot be unpinned from here — pinning is a permission.
+ */
+@Composable
+fun PinBar(
+    text: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null,
+) {
+    val content: @Composable () -> Unit = {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = StxTheme.spacing.sm,
+                        vertical = StxTheme.spacing.xs,
+                    ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
+        ) {
+            Icon(icon = StxIcons.Pin, description = null)
+            Typography(text = text, modifier = Modifier.weight(1f), maxLines = 1)
+            if (onDismiss != null) {
+                IconButton(
+                    icon = StxIcons.Close,
+                    description = "Unpin",
+                    onClick = onDismiss,
+                )
+            }
+        }
+    }
+    val color = MaterialTheme.colorScheme.surfaceContainerHigh
+    val contentColor = MaterialTheme.colorScheme.onSurface
+    val shape = MaterialTheme.shapes.medium
+    if (onClick == null) {
+        Surface(
+            modifier = modifier.fillMaxWidth(),
+            color = color,
+            contentColor = contentColor,
+            shape = shape,
+            content = content,
+        )
+    } else {
+        Surface(
+            onClick = onClick,
+            modifier = modifier.fillMaxWidth(),
+            color = color,
+            contentColor = contentColor,
+            shape = shape,
+            content = content,
+        )
+    }
+}
