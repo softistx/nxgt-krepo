@@ -23,7 +23,7 @@ fun StxThemeProvider(
     dynamicColor: Boolean = true,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     specVersion: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2025,
-    motionScheme: MotionScheme = MotionScheme.expressive(),
+    motionScheme: MotionScheme? = null,
     content: @Composable () -> Unit,
 ) {
     StxTheme(

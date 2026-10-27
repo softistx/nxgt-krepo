@@ -30,9 +30,9 @@ enum class MotionSpeed { Fast, Default, Slow }
  * installs the same scheme it hands `MaterialExpressiveTheme`, so a plain M3 component and one of
  * ours animate identically.
  *
- * **A theme that is given no `StxMotion` builds one from the OS settings** — [Companion.system] — so
- * "Reduce motion" turns `enabled` off by itself on every platform; passing a `StxMotion` of your own
- * is the override, and it wins.
+ * **A theme that is given neither a `StxMotion` nor a `MotionScheme` builds one from the OS** —
+ * [Companion.system] — so "Reduce motion" turns `enabled` off by itself on every platform. Passing
+ * either one is the opt-out: the OS is not read.
  *
  * **`enabled = false` collapses every spec to [snap], leaving the composables untouched** — a
  * reduced-motion preference, or a screenshot test, is one flag at the theme rather than a branch
@@ -42,11 +42,6 @@ enum class MotionSpeed { Fast, Default, Slow }
 data class StxMotion(
     val scheme: MotionScheme = ExpressiveScheme,
     val enabled: Boolean = true,
-    /**
-     * The OS asked for more contrast (iOS "Increase Contrast", Android contrast level, a desktop high-contrast theme).
-     * Nothing here changes by itself; a component or an app that has a stronger look reads it from the theme.
-     */
-    val increaseContrast: Boolean = false,
 ) {
     /**
      * Position, size, rotation — anything the eye tracks across the screen.
@@ -88,10 +83,10 @@ data class StxMotion(
         }
 
     companion object {
-        /** A motion that follows the OS: [enabled] is off when the system asks to reduce motion. */
+        /** A motion that follows the OS: [enabled] is off when [reduceMotion] is on, which `systemReducesMotion()` answers. */
         fun system(
+            reduceMotion: Boolean,
             scheme: MotionScheme = ExpressiveScheme,
-            accessibility: SystemAccessibility,
-        ): StxMotion = StxMotion(scheme, enabled = !accessibility.reduceMotion, increaseContrast = accessibility.increaseContrast)
+        ): StxMotion = StxMotion(scheme, enabled = !reduceMotion)
     }
 }

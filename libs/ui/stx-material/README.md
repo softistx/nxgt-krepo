@@ -39,8 +39,16 @@ computes one of the four passes it and keeps the other three.
 Typography: M3's `*Emphasized` styles are no-ops in material3 1.12.0-alpha03, so `style(emphasized = true)` raises the weight itself.
 
 It installs `MaterialExpressiveTheme` and `MotionScheme.expressive()`: rounder shapes, springier
-motion. `motionScheme = MotionScheme.standard()` turns that off for the whole tree, and every
+motion. `motionScheme = MotionScheme.standard()` calms it for the whole tree, and every
 animation follows — nothing here holds its own curve.
+
+**It follows the OS "Reduce motion" setting** on Android and iOS when you pass neither `motionScheme` nor
+`motion`; pass either one and the OS is not read. Desktop reads only `-Dstx.material.reduceMotion`, and an app
+can opt in to the OS's answer with `readDesktopReducedMotion()`:
+
+```kotlin
+StxTheme(motion = StxMotion(enabled = false)) { App() }   // opt out: no animation, whatever the OS says
+```
 
 ```kotlin
 // An application: one line, and the platform decides where the scheme comes from.
@@ -150,6 +158,7 @@ consumer. Nothing here does today — worth knowing before the first one is adde
 | [`docs/roadmap.md`](docs/roadmap.md) | Where the library is — the phases, ticked as they land |
 | [`docs/tokens.md`](docs/tokens.md) | What a token may say: colours, spacing, durations, easings — shapes and elevation are M3's |
 | [`docs/components.md`](docs/components.md) | Every component, its parameters, and its story in the catalogue |
+| [`docs/troubleshooting.md`](docs/troubleshooting.md) | Errors and surprises, headed by what you will see |
 | [`../../examples/material-demo/`](../../../examples/material-demo) | The catalogue: `./kotlin run -m md-desktop` |
 
 [material-kolor]: https://github.com/jordond/MaterialKolor

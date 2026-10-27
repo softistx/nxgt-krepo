@@ -1,72 +1,90 @@
 package com.softistx.material.foundation.motion
 
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/** The system property that sets reduce motion by hand: the only thing the desktop theme reads by default. */
+internal const val REDUCE_MOTION_PROPERTY = "stx.material.reduceMotion"
+private const val MAC = "com.apple.universalaccess"
+private const val GNOME_INTERFACE = "org.gnome.desktop.interface"
+private const val COMMAND_TIMEOUT_MILLIS = 2_000L
 
 /**
- * Where each desktop OS keeps the two settings, and how to ask for them without a native library.
+ * Asks the desktop OS whether the user wants reduced motion, for an app that opts in. Nothing in the
+ * theme calls this: the theme reads only `-Dstx.material.reduceMotion`. It runs on [Dispatchers.IO]
+ * and does not block the caller.
  *
- * - **macOS**: `defaults read com.apple.universalaccess reduceMotion` / `increaseContrast`, the
- *   preferences behind `NSWorkspace.accessibilityDisplayShould…`.
- * - **Linux (GNOME)**: `gsettings` `enable-animations` (false means reduced) and `high-contrast`.
- *   Another desktop answers nothing, which reads as "no preference".
- * - **Windows**: high contrast from the `HighContrast\Flags` registry value. Windows keeps "Animation
- *   effects" in a bit mask with no command that reads it, so reduce motion is **not read there**:
- *   set `-Dstx.material.reduceMotion=true`.
+ * - **macOS**: `defaults read com.apple.universalaccess reduceMotion`, the preference behind
+ *   `NSWorkspace.accessibilityDisplayShouldReduceMotion` (not reachable from the JVM without JNA).
+ * - **Linux (GNOME)**: `gsettings get org.gnome.desktop.interface enable-animations`.
+ * - **Windows**: "Animation effects" lives in a bit mask no command reads, so the answer is `null`.
+ *
+ * `null` means unknown: another desktop, a command that is missing, fails or takes over two seconds.
+ * Pass the answer in, it is not installed for you:
+ *
+ * ```kotlin
+ * var reduced by remember { mutableStateOf(false) }
+ * LaunchedEffect(Unit) { reduced = readDesktopReducedMotion() == true }
+ * StxTheme(motion = StxMotion.system(reduced)) { App() }
+ * ```
  */
+suspend fun readDesktopReducedMotion(): Boolean? = DesktopPreferences.reducedMotion(System.getProperty("os.name").orEmpty())
+
 internal object DesktopPreferences {
-    private const val MAC = "com.apple.universalaccess"
-    private const val GNOME = "org.gnome.desktop"
-    private const val WIN_CONTRAST = "HKCU\\Control Panel\\Accessibility\\HighContrast"
+    /** The command runner [reducedMotion] uses; a spec swaps it to count calls and to fake the output. */
+    var runner: suspend (List<String>) -> String? = ::runCommand
 
-    /** (reduce motion, increase contrast) as the OS answers, asked once per process. */
-    private val os by lazy {
-        val osName = System.getProperty("os.name").orEmpty()
-        query(reduceMotion = true, osName, ::run) to query(reduceMotion = false, osName, ::run)
-    }
-
-    fun reduceMotion(): Boolean = override(REDUCE_MOTION_PROPERTY) ?: os.first
-
-    fun increaseContrast(): Boolean = override(INCREASE_CONTRAST_PROPERTY) ?: os.second
-
-    /** A hand-set property, or null when there is none. Read on every call so a spec can set and clear it. */
+    /** A hand-set property, or null when there is none or it is not `true` or `false`. */
     fun override(property: String): Boolean? = System.getProperty(property)?.trim()?.lowercase()?.toBooleanStrictOrNull()
 
-    /** What [osName] says about one setting (reduce motion, or else increase contrast), via [run]; false when it answers nothing. */
-    fun query(
-        reduceMotion: Boolean,
-        osName: String,
-        run: (List<String>) -> String?,
-    ): Boolean {
+    /** What [osName] says about reduce motion, through [runner]; null when unknown. */
+    suspend fun reducedMotion(osName: String): Boolean? {
         val name = osName.lowercase()
         return when {
-            "mac" in name -> {
-                val key = if (reduceMotion) "reduceMotion" else "increaseContrast"
-                run(listOf("defaults", "read", MAC, key))?.trim() == "1"
-            }
-            "windows" in name -> !reduceMotion && windowsContrast(run)
-            reduceMotion -> run(listOf("gsettings", "get", "$GNOME.interface", "enable-animations"))?.trim() == "false"
-            else -> run(listOf("gsettings", "get", "$GNOME.a11y.interface", "high-contrast"))?.trim() == "true"
+            "mac" in name -> runner(listOf("defaults", "read", MAC, "reduceMotion"))?.trim()?.let { it == "1" }
+            "windows" in name -> null
+            else ->
+                when (runner(listOf("gsettings", "get", GNOME_INTERFACE, "enable-animations"))?.trim()) {
+                    "false" -> true
+                    "true" -> false
+                    else -> null
+                }
         }
     }
-
-    private fun windowsContrast(run: (List<String>) -> String?): Boolean {
-        val flags = run(listOf("reg", "query", WIN_CONTRAST, "/v", "Flags"))?.trim()?.substringAfterLast(' ')?.toIntOrNull()
-        return flags != null && flags and HIGH_CONTRAST_ON != 0
-    }
-
-    private fun run(command: List<String>): String? =
-        runCatching {
-            val process = ProcessBuilder(command).redirectErrorStream(true).start()
-            if (!process.waitFor(COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                process.destroyForcibly()
-                null
-            } else if (process.exitValue() == 0) {
-                process.inputStream.bufferedReader().readText()
-            } else {
-                null
-            }
-        }.getOrNull()
-
-    private const val HIGH_CONTRAST_ON = 1
-    private const val COMMAND_TIMEOUT_SECONDS = 2L
 }
+
+/**
+ * Runs [command] and answers its output, or null when it fails, is missing or outlives [timeoutMillis].
+ *
+ * The output is read before the exit is awaited, so a full pipe cannot deadlock the child; a watchdog
+ * destroys the process at the timeout, which ends the read; and the process is always reaped.
+ */
+internal suspend fun runCommand(
+    command: List<String>,
+    timeoutMillis: Long = COMMAND_TIMEOUT_MILLIS,
+    start: (List<String>) -> Process = { ProcessBuilder(it).redirectErrorStream(true).start() },
+): String? =
+    withContext(Dispatchers.IO) {
+        val process = runCatching { start(command) }.getOrNull() ?: return@withContext null
+        var timedOut = false
+        var text: String? = null
+        try {
+            coroutineScope {
+                val watchdog =
+                    launch {
+                        delay(timeoutMillis)
+                        timedOut = true
+                        process.destroyForcibly()
+                    }
+                text = runCatching { process.inputStream.bufferedReader().use { it.readText() } }.getOrNull()
+                watchdog.cancel()
+            }
+        } finally {
+            if (process.isAlive) process.destroyForcibly()
+            process.waitFor()
+        }
+        if (timedOut || process.exitValue() != 0) null else text
+    }

@@ -13,7 +13,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import com.softistx.material.foundation.motion.SnapMotionScheme
 import com.softistx.material.foundation.motion.StxMotion
-import com.softistx.material.foundation.motion.systemAccessibility
+import com.softistx.material.foundation.motion.systemReducesMotion
 import com.softistx.material.foundation.style.colors
 
 /**
@@ -37,8 +37,9 @@ import com.softistx.material.foundation.style.colors
  * that for the whole tree, and every animation here follows — nothing holds its own curve.
  *
  * **With no `motionScheme` and no `motion` it follows the OS**: "Reduce motion" installs a scheme
- * whose every spec is a snap and an [StxMotion] with `enabled = false`, and "Increase contrast"
- * lands on `StxTheme.motion.increaseContrast`. Passing either is the override, and it wins.
+ * whose every spec is a snap and an [StxMotion] with `enabled = false`. Pass either one and the OS is
+ * not read at all: `motionScheme` alone keeps motion on, `motion` alone keeps the expressive scheme.
+ * Desktop reads only `-Dstx.material.reduceMotion`; `readDesktopReducedMotion()` is the app's opt-in to the OS.
  */
 @Composable
 fun StxTheme(
@@ -46,21 +47,25 @@ fun StxTheme(
     colorScheme: ColorScheme = remember(isDark) { stxColorScheme(DefaultSeed, isDark) },
     colors: StxColors = remember(colorScheme, isDark) { stxColors(colorScheme, isDark) },
     spacing: StxSpacing = StxSpacing(),
-    motionScheme: MotionScheme = if (systemAccessibility().reduceMotion) SnapMotionScheme else MotionScheme.expressive(),
-    motion: StxMotion = systemAccessibility().let { os -> remember(motionScheme, os) { StxMotion.system(motionScheme, os) } },
+    motionScheme: MotionScheme? = null,
+    motion: StxMotion? = null,
     typography: Typography = MaterialTheme.typography,
     shapes: Shapes = MaterialTheme.shapes,
     content: @Composable () -> Unit,
 ) {
+    val followOs = motionScheme == null && motion == null
+    val reduced = followOs && systemReducesMotion()
+    val scheme = motionScheme ?: if (reduced) SnapMotionScheme else MotionScheme.expressive()
+    val stxMotion = motion ?: remember(scheme, reduced) { StxMotion.system(reduced, scheme) }
     CompositionLocalProvider(
         LocalStrangeColors provides colors,
         LocalStrangeSpacing provides spacing,
-        LocalStrangeMotion provides motion,
+        LocalStrangeMotion provides stxMotion,
         LocalStrangeShapes provides shapes,
     ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,
-            motionScheme = motionScheme,
+            motionScheme = scheme,
             shapes = shapes,
             typography = typography,
             content = content,

@@ -85,13 +85,14 @@ default theme (`EmphasisContrastTest`):
 
 | Surface | Subtle light | Subtle dark | Medium light | Medium dark |
 | --- | --- | --- | --- | --- |
-| `surface` | 5.21 | 8.21 | 7.90 | 11.41 |
-| `surfaceContainer` | 4.91 | 7.81 | 7.26 | 10.48 |
-| `surfaceContainerHigh` | 4.83 | 7.40 | 7.03 | 9.92 |
+| `surface` | 5.21 | 8.21 | 6.56 | 9.87 |
+| `surfaceContainer` | 4.91 | 7.81 | 6.19 | 9.25 |
+| `surfaceContainerHigh` | 4.83 | 7.40 | 5.99 | 8.76 |
 
-`Subtle` is 0.72 and `Medium` 0.86 (before: 0.5 and 0.72, where `Subtle` read 2.71 to 2.82 in light
-and 4.27 to 4.49 in dark). `Medium` rose with it so the steps stay visibly apart: at 0.72 it would
-have sat 0.1 above the AA line. Text on a tinted container (`primaryContainer`, an alert) is not
+`Subtle` is 0.72 and `Medium` 0.80 (before: 0.5 and 0.72). `Subtle` read 2.71 to 2.82 in light and 4.27
+to 4.49 in dark before; `Medium` read 4.83 to 5.21 in light and 7.40 to 8.21 in dark, and rose so the
+steps stay apart: at 0.72 it would have been `Subtle`'s new value. The gap between them is 1.17 to 1.65
+contrast points on every surface. Text on a tinted container (`primaryContainer`, an alert) is not
 measured here; pass a `color` there.
 
 ## Spacing

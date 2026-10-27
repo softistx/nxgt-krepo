@@ -11,10 +11,16 @@ import com.softistx.material.foundation.theme.stxColorScheme
 import com.softistx.material.renderProbe
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FeatureSpec
-import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 
 private const val BODY_AA = 4.5
+
+/**
+ * Medium (0.80) over Subtle (0.72), measured on the default theme as Medium minus Subtle contrast:
+ * light 1.34 / 1.28 / 1.17 and dark 1.65 / 1.45 / 1.36 on surface / surfaceContainer / surfaceContainerHigh.
+ * The smallest gap is 1.17; the floor is that minus a tolerance, so a Medium that drifts onto Subtle fails.
+ */
+private const val MIN_GAP = 1.0
 
 private fun surfaces(scheme: ColorScheme): Map<String, Color> =
     mapOf(
@@ -52,11 +58,11 @@ class EmphasisContrastTest :
                         }
                     }
 
-                    scenario("stays quieter than Medium on $name in $mode") {
+                    scenario("stays at least $MIN_GAP below Medium on $name in $mode") {
                         val subtle = rendered(Emphasis.Subtle, scheme, surface, isDark)
                         val medium = rendered(Emphasis.Medium, scheme, surface, isDark)
                         withClue("$mode $name subtle=$subtle medium=$medium") {
-                            medium shouldBeGreaterThan subtle + 1.0
+                            (medium - subtle) shouldBeGreaterThanOrEqual MIN_GAP
                         }
                     }
                 }
