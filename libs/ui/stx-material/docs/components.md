@@ -646,10 +646,10 @@ Package `com.softistx.material.components.datetime`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `DateField` | `value: LocalDate?`, `onValueChange`, `label` | `date-and-time/date-field` |
-| `DateRangeField` | `start`, `end`, `onValueChange` | `date-and-time/date-range-field` |
-| `TimeField` | `value: LocalTime?`, `onValueChange`, `label` | `date-and-time/time-field` |
-| `Calendar` | `value: LocalDate?`, `onValueChange` | `date-and-time/calendar` |
+| `DateField` | `value: LocalDate?`, `onValueChange`, `label`, `enabled`, `style = Style` | `date-and-time/date-field` |
+| `DateRangeField` | `start`, `end`, `onValueChange`, `label`, `enabled`, `style = Style` | `date-and-time/date-range-field` |
+| `TimeField` | `value: LocalTime?`, `onValueChange`, `label`, `enabled`, `style = Style` | `date-and-time/time-field` |
+| `Calendar` | `value: LocalDate?`, `onValueChange`, `style = Style` | `date-and-time/calendar` |
 | `RelativeTime` | `at: Instant`, `now: Instant`, `zone = UTC` | `date-and-time/relative-time` |
 
 The fields are how a form asks; the pickers stay in a dialog. `Calendar` is the same `DatePicker`
@@ -657,25 +657,59 @@ inline, for a page that *is* a calendar. Values are `kotlinx.datetime.LocalDate`
 `RelativeTime` takes `now` as an argument: a ticking label is the screen's, a snapshot test needs
 a frozen instant.
 
+`DateField`, `DateRangeField` and `TimeField` hand their `style` to the `TextField` they are made of
+(`StxStyles.field`, empty). `RelativeTime` is not interactive and takes no `style`.
+
+The exceptions, each because Material 3 imposes its own `*Defaults`:
+
+- The three fields add no alpha: M3's text field dims a disabled field itself, so a fade would dim
+  it twice.
+- `Calendar` takes `style = Style` but has no default look (no `StxStyles` entry): M3's `DatePicker`
+  paints and dims its container, days and selection (`DatePickerDefaults`).
+
 ## Data
 
 Package `com.softistx.material.components.data`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `CommandPalette` | `visible`, `query`, `items`, `onDismiss` | `data/command-palette` |
-| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp` | `data/data-table` |
+| `CommandPalette` | `visible`, `query`, `onQueryChange`, `items`, `onDismiss`, `style = Style` | `data/command-palette` |
+| `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp`, `sort: TableSort? = null`, `onSortChange?`, `style = Style`, `headerStyle = Style`, `onRowClick?` | `data/data-table` |
 | `Description` | `items: List<DescriptionItem>` | `data/description` |
 | `EntityHeader` | `title`, `supporting?`, `leading?`, `actions`, `emphasized = true` | `data/entity-header` |
-| `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext` | `data/pagination` |
+| `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext`, `label?`, `style = Style` | `data/pagination` |
 | `Timeline` | `items: List<TimelineItem>` | `data/timeline` |
-| `SortControl` | `options`, `selected`, `direction`, `onSelectedChange`, `onDirectionChange` | `data/sort-control` |
+| `SortControl` | `options`, `selected`, `direction`, `onSelectedChange`, `onDirectionChange`, `label`, `enabled`, `style = Style` | `data/sort-control` |
 
 `DataTable` is a table in expanded panes and a stack of `Description` cards below `collapseBelow`,
 measured on the offered width. `Pagination` is previous/next for a keyset page, not `page=3`.
 `CommandPalette` filters by a case-insensitive contains; the host opens it (typically ⌘K).
 `SortControl` is a `SelectField` plus a direction icon; `cycleSortDirection` is the usual next
 value.
+
+`DataTable` with `onSortChange` turns every header into a button: a click sorts that column
+ascending, then flips it, `sort` shows the arrow and announces "Ascending" or "Descending", and
+`TableSort(column, direction)` is the value (the column's index). A folded table has no headers, so it
+sorts through a `SortControl` beside it. `onRowClick` also makes the rows of the wide table
+clickable (it only did for the cards before). `EntityHeader` announces its title as a heading;
+`Description` and `Timeline` titles are item labels, not headings.
+
+Every interactive part takes `style: Style = Style`, applied last. The defaults are named in
+`StxStyles`: `tableRow` (the clickable rows of the wide `DataTable`: a 0.99 press scale, no fade, a
+row is never disabled) and `sortHeader` (a sortable header: a 0.97 press scale, as a chip has, since
+a header is compact). `style` goes to the rows and cards, `headerStyle` to the headers. `Pagination`
+and `SortControl` hand theirs to the buttons and the field they are made of.
+
+The parts that take no `style` are not interactive: `Description`, `Timeline`, `EntityHeader`
+(`leading` and `actions` carry their own).
+
+The exceptions, each because Material 3 imposes its own `*Defaults`:
+
+- `CommandPalette` takes `style = Style` but has no default look (no `StxStyles` entry), and it
+  dresses the list of commands, not the dialog: M3's `AlertDialog` paints its own container over its
+  modifier, and each command is a `ListTile` with the list-tile style.
+- The collapsed cards of `DataTable` are `Card`s: they keep `StxStyles.card`, and `style` is
+  added to it.
 
 ## Media
 

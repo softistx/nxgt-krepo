@@ -1,5 +1,6 @@
 package com.softistx.material.components.datetime
 
+import androidx.compose.foundation.style.Style
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.rememberDatePickerState
@@ -29,6 +30,7 @@ fun DateField(
     modifier: Modifier = Modifier,
     label: String = "Date",
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     var open by remember { mutableStateOf(false) }
     val state = rememberDatePickerState(initialSelectedDateMillis = value?.toEpochMillis())
@@ -39,6 +41,7 @@ fun DateField(
         label = label,
         readOnly = true,
         enabled = enabled,
+        style = style,
         trailing = {
             IconButton(
                 icon = StxIcons.Calendar,

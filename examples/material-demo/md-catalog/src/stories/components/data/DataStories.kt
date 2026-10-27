@@ -20,6 +20,7 @@ import com.softistx.material.components.data.Pagination
 import com.softistx.material.components.data.SortControl
 import com.softistx.material.components.data.SortDirection
 import com.softistx.material.components.data.TableColumn
+import com.softistx.material.components.data.TableSort
 import com.softistx.material.components.data.Timeline
 import com.softistx.material.components.data.TimelineItem
 import com.softistx.material.demo.storyGroup
@@ -57,6 +58,7 @@ val DataStories =
         }
 
         story("Data table") { knobs ->
+            var sort by remember { mutableStateOf<TableSort?>(TableSort(1)) }
             DataTable(
                 columns =
                     listOf(
@@ -71,6 +73,8 @@ val DataStories =
                         OrderRow("4414", "Priya Raman", "€210.00"),
                     ),
                 collapseBelow = if (knobs.flag("Force cards", false)) 10_000.dp else 600.dp,
+                sort = sort,
+                onSortChange = { sort = it },
             )
         }
 

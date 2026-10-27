@@ -2,6 +2,7 @@ package com.softistx.material.components.data
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,7 +24,8 @@ fun cycleSortDirection(direction: SortDirection): SortDirection =
  *
  * Material 3 has no sort chrome. The field names the key; the icon names the direction, so a
  * screen reader hears "Customer, descending" rather than two unlabelled buttons. [cycleSortDirection]
- * is the usual next value.
+ * is the usual next value. [style] goes to both, which already carry `StxStyles.field` and
+ * `StxStyles.button`.
  */
 @Composable
 fun SortControl(
@@ -35,6 +37,7 @@ fun SortControl(
     modifier: Modifier = Modifier,
     label: String = "Sort by",
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     Row(
         modifier = modifier,
@@ -48,12 +51,14 @@ fun SortControl(
             modifier = Modifier.weight(1f),
             label = label,
             enabled = enabled,
+            style = style,
         )
         IconButton(
             icon = if (direction == SortDirection.Asc) StxIcons.ChevronUp else StxIcons.ChevronDown,
             description = if (direction == SortDirection.Asc) "Ascending" else "Descending",
             onClick = { onDirectionChange(cycleSortDirection(direction)) },
             enabled = enabled,
+            style = style,
         )
     }
 }

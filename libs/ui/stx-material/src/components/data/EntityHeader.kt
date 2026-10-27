@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
@@ -16,7 +18,7 @@ import com.softistx.material.foundation.theme.StxTheme
 /**
  * The top of a detail page: identity, a line of meta, and the actions that apply to it. The title
  * is `HeadlineMedium` in M3's emphasised weight ([emphasized], on by default): the page's one
- * emphasised title.
+ * emphasised title, announced as a heading.
  */
 @Composable
 fun EntityHeader(
@@ -34,7 +36,12 @@ fun EntityHeader(
     ) {
         leading?.invoke()
         Column(modifier = Modifier.weight(1f)) {
-            Typography(text = title, variant = TypographyVariant.HeadlineMedium, emphasized = emphasized)
+            Typography(
+                text = title,
+                variant = TypographyVariant.HeadlineMedium,
+                emphasized = emphasized,
+                modifier = Modifier.semantics { heading() },
+            )
             if (supporting != null) {
                 Typography(text = supporting, emphasis = Emphasis.Medium)
             }
