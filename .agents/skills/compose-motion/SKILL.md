@@ -82,9 +82,9 @@ Shared elements (`SharedTransitionLayout`) are in `references/animation-shared-e
 
 ## Reduced motion
 
-Reduced motion takes both: `StxTheme(motionScheme = SnapMotionScheme, motion = StxMotion(enabled = false))`, where `SnapMotionScheme` implements `MotionScheme` with `snap()` in all six specs. `enabled = false` alone leaves M3's morphs running. `SnapMotionScheme` is not in the library yet (proposed in #297); until it ships, copy the six-line object into the app. Every Style, `Transitions` and `animateStagger` then end finished and readable.
+With no `motionScheme` and no `motion`, `StxTheme` follows the OS: `systemAccessibility()` (expect/actual) feeds `StxMotion.system(scheme, accessibility)`, and a reduce-motion preference also swaps in an internal `SnapMotionScheme` (all six specs `snap()`), because `enabled = false` alone leaves M3's morphs running. Passing your own `motionScheme` or `motion` is the override and wins. Both settings are read when the theme is composed, not observed. `StxTheme.motion.increaseContrast` carries the contrast preference; nothing restyles by itself yet.
 
-Where the OS preference comes from: Android scales all animation by `ANIMATOR_DURATION_SCALE` already; iOS (`UIAccessibility.isReduceMotionEnabled`) and desktop have no Compose hook, so the app reads it natively and passes the two settings. A component must look complete in its end state, with nothing that only the animation explained.
+Where it is read: Android the animator duration scale and `UiModeManager.getContrast`; iOS `UIAccessibilityIsReduceMotionEnabled` and `UIAccessibilityDarkerSystemColorsEnabled`; desktop has no Compose hook and `NSWorkspace` needs JNA, so it runs `defaults` (macOS), `gsettings` (GNOME) or `reg` (Windows high contrast only; Windows reduce motion is not readable), once per process, and `-Dstx.material.reduceMotion` / `-Dstx.material.increaseContrast` (`true`/`false`) win. `DesktopPreferences` in `src@jvm` holds the commands. A component must look complete in its end state, with nothing that only the animation explained.
 
 ## What not to animate
 

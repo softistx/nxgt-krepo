@@ -11,7 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
+import com.softistx.material.foundation.motion.SnapMotionScheme
 import com.softistx.material.foundation.motion.StxMotion
+import com.softistx.material.foundation.motion.systemAccessibility
 import com.softistx.material.foundation.style.colors
 
 /**
@@ -31,8 +33,12 @@ import com.softistx.material.foundation.style.colors
  * (`success`, `info`, `warning`) that M3 leaves to the product.
  *
  * It installs `MaterialExpressiveTheme`: rounder shapes, springier motion, and a `MotionScheme`
- * that overshoots where the standard one settles. `motionScheme = MotionScheme.standard()` turns
- * that off for the whole tree, and every animation here follows — nothing holds its own curve.
+ * that overshoots where the standard one settles. `motionScheme = MotionScheme.standard()` calms
+ * that for the whole tree, and every animation here follows — nothing holds its own curve.
+ *
+ * **With no `motionScheme` and no `motion` it follows the OS**: "Reduce motion" installs a scheme
+ * whose every spec is a snap and an [StxMotion] with `enabled = false`, and "Increase contrast"
+ * lands on `StxTheme.motion.increaseContrast`. Passing either is the override, and it wins.
  */
 @Composable
 fun StxTheme(
@@ -40,8 +46,8 @@ fun StxTheme(
     colorScheme: ColorScheme = remember(isDark) { stxColorScheme(DefaultSeed, isDark) },
     colors: StxColors = remember(colorScheme, isDark) { stxColors(colorScheme, isDark) },
     spacing: StxSpacing = StxSpacing(),
-    motionScheme: MotionScheme = MotionScheme.expressive(),
-    motion: StxMotion = remember(motionScheme) { StxMotion(motionScheme) },
+    motionScheme: MotionScheme = if (systemAccessibility().reduceMotion) SnapMotionScheme else MotionScheme.expressive(),
+    motion: StxMotion = systemAccessibility().let { os -> remember(motionScheme, os) { StxMotion.system(motionScheme, os) } },
     typography: Typography = MaterialTheme.typography,
     shapes: Shapes = MaterialTheme.shapes,
     content: @Composable () -> Unit,

@@ -78,6 +78,22 @@ and `Error`; `Tone.Info` is a plain line.
 
 No component holds a colour of its own, so changing the scheme repaints all of them.
 
+### Emphasis contrast
+
+`Emphasis` is an alpha on the content colour (`onSurface`). Measured off rendered glyph pixels on the
+default theme (`EmphasisContrastTest`):
+
+| Surface | Subtle light | Subtle dark | Medium light | Medium dark |
+| --- | --- | --- | --- | --- |
+| `surface` | 5.21 | 8.21 | 7.90 | 11.41 |
+| `surfaceContainer` | 4.91 | 7.81 | 7.26 | 10.48 |
+| `surfaceContainerHigh` | 4.83 | 7.40 | 7.03 | 9.92 |
+
+`Subtle` is 0.72 and `Medium` 0.86 (before: 0.5 and 0.72, where `Subtle` read 2.71 to 2.82 in light
+and 4.27 to 4.49 in dark). `Medium` rose with it so the steps stay visibly apart: at 0.72 it would
+have sat 0.1 above the AA line. Text on a tinted container (`primaryContainer`, an alert) is not
+measured here; pass a `color` there.
+
 ## Spacing
 
 `StxSpacing` — an eight-step scale, and nothing between the steps.

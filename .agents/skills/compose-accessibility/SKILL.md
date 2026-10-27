@@ -92,4 +92,4 @@ Re-check with `grep -rn 'heading()\|customActions' libs/ui/stx-material/src` bef
 - No component sets `heading()` (`SectionHeader`, `Dialog` titles, `FormSection`).
 - `SwipeActions` is gesture-only; it has no `customActions`.
 - `Card(onClick = …)` sets no `Role.Button`.
-- No component reads the OS reduced-motion or high-contrast setting.
+- Fixed in #297: `StxTheme` reads the OS reduced-motion and increase-contrast settings (`StxMotion.system`, `StxTheme.motion.increaseContrast`); `Emphasis.Subtle` holds 4.5:1.
