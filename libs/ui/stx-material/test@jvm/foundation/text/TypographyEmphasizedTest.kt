@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import com.softistx.material.TestFonts
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.renderProbe
 import io.kotest.assertions.withClue
@@ -105,7 +106,7 @@ class TypographyEmphasizedTest :
 /** Ink laid down by one headline line, regular or emphasised. */
 private fun ink(emphasized: Boolean): Int =
     renderProbe(width = 520, height = 90, content = {
-        StxTheme(isDark = false) {
+        StxTheme(isDark = false, typography = TestFonts.typography()) {
             Typography("Mathematics and Physics", TypographyVariant.HeadlineMedium, emphasized = emphasized)
         }
     }) { settle().ink() }
