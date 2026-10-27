@@ -11,6 +11,9 @@ import com.softistx.workflow.dsl.Step
 import com.softistx.workflow.dsl.WorkflowNode
 import com.softistx.workflow.dsl.qualify
 
+/** The node name the engine records as the failure of an instance whose context no longer decodes. */
+internal const val UNDECODABLE_CONTEXT_NODE = "<context>"
+
 /**
  * Walks a declaration once, when it is built, to do the two things that must not wait until it runs.
  *
@@ -37,6 +40,9 @@ internal fun <C> index(
 ) {
     for (node in nodes) {
         val path = qualify(prefix, node.name)
+        require(path != UNDECODABLE_CONTEXT_NODE) {
+            "workflow '$workflow' declares a node named '$UNDECODABLE_CONTEXT_NODE', which the engine reserves for an instance whose context no longer decodes"
+        }
         require(seen.add(path)) { "workflow '$workflow' declares '$path' twice" }
         when (node) {
             is Step -> {

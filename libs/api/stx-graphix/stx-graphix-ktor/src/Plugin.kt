@@ -87,6 +87,5 @@ val GraphQL =
         application.provideGraphix()
     }
 
-
 /** Application attribute the [GraphQL] plugin writes. */
 internal val GraphixKey = AttributeKey<Graphix>("com.softistx.graphix.Graphix")
