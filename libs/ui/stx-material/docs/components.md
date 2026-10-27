@@ -53,13 +53,36 @@ Package `com.softistx.material.foundation.text`.
 
 | Component | Parameters | Story |
 | --- | --- | --- |
-| `Typography` | `text`, `variant = BodyMedium`, `emphasis = Full`, `color`, `align`, `decoration`, `maxLines`, `overflow` | `foundation/typography` |
+| `Typography` | `text`, `variant = BodyMedium`, `emphasis = Full`, `color`, `align`, `decoration`, `maxLines`, `overflow`, `emphasized = false` | `foundation/typography` |
 
 `TypographyVariant` is the 15 Material 3 roles plus five this library adds: `Overline`, `Caption`,
 `Metric` (a figure meant to be read at a glance), `Code` (monospaced), `Link` (underlined).
 
 `Emphasis` — `Full` (1.0), `Medium` (0.72), `Subtle` (0.5) — is an alpha on the content colour, so
 secondary text stays in the palette instead of picking a grey.
+
+`emphasized` is the other axis and does not touch colour: it picks the Material 3 `*Emphasized`
+style of the same role (15 of them), the heavier weight for the one line a screen wants read first.
+`emphasis` says how *loud the colour* is, `emphasized` how *heavy the type* is; they combine.
+`TypographyVariant.style(emphasized)` is the same mapping for a caller that needs the `TextStyle`.
+One emphasised title per screen: `SectionHeader` (`TitleMedium`) and `EntityHeader`
+(`HeadlineMedium`) wear it by default (`emphasized = false` turns it off). M3 documents the
+emphasised styles as `Medium` (500), but a default `Typography()` in 1.12.0-alpha03 returns the
+regular weight for most roles, so `style(true)` raises the weight itself: `Medium` for a regular
+role, `SemiBold` for a role that is already `Medium`, unless the theme's own emphasised style is
+heavier. `Metric` is display-sized and at least `SemiBold`: a theme whose emphasised display weight is heavier keeps it.
+The five extra variants ignore the flag.
+
+```kotlin
+Typography("Results", variant = TitleLarge, emphasized = true)   // the heavier twin of TitleLarge
+Text("Results", style = TitleLarge.style(emphasized = true))      // the same, as a TextStyle
+SectionHeader("Results", emphasized = false)                      // opt out of the default
+```
+
+Visible defaults that changed on the guide: `SectionHeader` is now `TitleMedium` emphasised (was
+`TitleSmall`), `EntityHeader` `HeadlineMedium` emphasised (was `HeadlineSmall`), `Metric` is
+display-sized (was `headlineMedium`), and `Stat` reserves a delta line by default
+(`reserveDelta = false` gives it back).
 
 ## Icons
 
@@ -189,7 +212,7 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/chip` |
 | `ListTile` | `title`, `supporting?`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/list-tile` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
-| `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info` | `content/stat` |
+| `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info`, `reserveDelta = true` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange` | `content/filter-bar` |
 | `Rating` | `value`, `onChange`, `max = 5`, `enabled` | `content/rating` |
 | `LabeledDivider` | `label` — no `style`: a divider is inert | `content/labeled-divider` |
@@ -197,7 +220,7 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | `Kbd` | `keys: List<String>` — no `style`: a keycap is inert | `content/keyboard-shortcut` |
 | `SuggestionChip` | `text`, `onClick`, `leading?` | `content/suggestion-chip` |
 | `FileChip` | `name`, `sizeLabel?`, `onRemove?`, `onClick?` | `content/file-chip` |
-| `SectionHeader` | `title`, `supporting?`, `action?` | `content/section-header` |
+| `SectionHeader` | `title`, `supporting?`, `action?`, `emphasized = true` | `content/section-header` |
 | `CodeBlock` | `text`, `copyable = true` | `content/code-block` |
 | `ExpandableText` | `text`, `collapsedLines = 3`, `more`, `less` | `content/expandable-text` |
 | `ReactionBar` | `reactions: List<Reaction>` | `content/reaction-bar` |
@@ -233,7 +256,8 @@ floor.
 
 `EmptyState` fades in on its own, so the caller writes no `AnimatedVisibility`.
 
-`Stat` is a `Card` wearing `TypographyVariant.Metric`. `FilterBar` is a row of `Chip`s — not the
+`Stat` is a `Card` wearing `TypographyVariant.Metric`; it reserves the height of a delta (`reserveDelta = true`)
+so stats in a row keep the same height with or without one. `FilterBar` is a row of `Chip`s — not the
 filter subsystem of phase 7, a selected subset of names. The empty set is "everything". `Rating`
 is a row of `IconButton`s; M3 has no rating control. `LabeledDivider` is M3's `HorizontalDivider`
 with a word in the gap.
@@ -531,7 +555,7 @@ Package `com.softistx.material.components.data`.
 | `CommandPalette` | `visible`, `query`, `items`, `onDismiss` | `data/command-palette` |
 | `DataTable` | `columns`, `rows`, `collapseBelow = 600.dp` | `data/data-table` |
 | `Description` | `items: List<DescriptionItem>` | `data/description` |
-| `EntityHeader` | `title`, `supporting?`, `leading?`, `actions` | `data/entity-header` |
+| `EntityHeader` | `title`, `supporting?`, `leading?`, `actions`, `emphasized = true` | `data/entity-header` |
 | `Pagination` | `hasPrevious`, `hasNext`, `onPrevious`, `onNext` | `data/pagination` |
 | `Timeline` | `items: List<TimelineItem>` | `data/timeline` |
 | `SortControl` | `options`, `selected`, `direction`, `onSelectedChange`, `onDirectionChange` | `data/sort-control` |
