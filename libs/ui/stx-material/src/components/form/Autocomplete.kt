@@ -1,6 +1,10 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -17,7 +21,8 @@ import com.softistx.material.foundation.text.Typography
  * A field that offers matches as you type. Material 3's `ExposedDropdownMenuBox`, editable.
  *
  * [SelectField] is choose-from-a-closed-list. This is type-and-narrow. Matching is a
- * case-insensitive contains; ranking is the caller's if they outgrow that.
+ * case-insensitive contains; ranking is the caller's if they outgrow that. [isError] and
+ * [supportingText] are the other fields': a complaint under the field, in the error colours.
  */
 @Composable
 fun <T> Autocomplete(
@@ -29,9 +34,14 @@ fun <T> Autocomplete(
     label: String? = null,
     placeholder: String = "Search",
     enabled: Boolean = true,
+    isError: Boolean = false,
+    supportingText: String? = null,
+    style: Style = Style,
     optionLabel: (T) -> String = { it.toString() },
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val needle = value.trim()
     val shown =
         if (needle.isEmpty()) {
@@ -50,11 +60,18 @@ fun <T> Autocomplete(
                 onValueChange(it)
                 expanded = true
             },
-            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable).fillMaxWidth(),
+            modifier =
+                Modifier
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
+                    .fillMaxWidth()
+                    .styleable(styleState, fieldStyle, style),
             enabled = enabled,
             label = label?.let { { Typography(text = it) } },
             placeholder = { Typography(text = placeholder) },
+            supportingText = supportingText?.let { { Typography(text = it) } },
+            isError = isError,
             singleLine = true,
+            interactionSource = interactionSource,
         )
         ExposedDropdownMenu(
             expanded = expanded && shown.isNotEmpty(),

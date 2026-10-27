@@ -1,13 +1,18 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -35,6 +40,7 @@ fun <T> RadioGroup(
     helper: String? = null,
     supportingText: String? = null,
     enabled: Boolean = true,
+    style: Style = Style,
     optionLabel: (T) -> String = { it.toString() },
 ) {
     FieldScaffold(
@@ -49,22 +55,44 @@ fun <T> RadioGroup(
             verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
         ) {
             options.forEach { option ->
-                Row(
-                    modifier =
-                        Modifier
-                            .selectable(
-                                selected = value == option,
-                                enabled = enabled,
-                                role = Role.RadioButton,
-                                onClick = { onValueChange(option) },
-                            ).minimumInteractiveComponentSize(),
-                    horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(selected = value == option, onClick = null, enabled = enabled)
-                    Typography(text = optionLabel(option))
-                }
+                RadioRow(
+                    selected = value == option,
+                    onSelect = { onValueChange(option) },
+                    label = optionLabel(option),
+                    enabled = enabled,
+                    style = style,
+                )
             }
         }
+    }
+}
+
+/** One option of a [RadioGroup]: its own press state, so a press scales this row alone. */
+@Composable
+private fun RadioRow(
+    selected: Boolean,
+    onSelect: () -> Unit,
+    label: String,
+    enabled: Boolean,
+    style: Style,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
+    Row(
+        modifier =
+            Modifier
+                .styleable(styleState, toggleStyle, style)
+                .selectable(
+                    selected = selected,
+                    enabled = enabled,
+                    interactionSource = interactionSource,
+                    role = Role.RadioButton,
+                    onClick = onSelect,
+                ).minimumInteractiveComponentSize(),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null, enabled = enabled)
+        Typography(text = label)
     }
 }

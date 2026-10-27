@@ -2,14 +2,19 @@ package com.softistx.material.components.form
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,7 +47,10 @@ fun OtpField(
     enabled: Boolean = true,
     cellWidth: Dp = 44.dp,
     cellHeight: Dp = 44.dp,
+    style: Style = Style,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val scheme = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.small
 
@@ -54,8 +62,10 @@ fun OtpField(
     ) {
         BasicTextField(
             value = value,
+            modifier = Modifier.styleable(styleState, dimmedStyle, style),
             onValueChange = { next -> onValueChange(next.filter(Char::isDigit).take(length)) },
             enabled = enabled,
+            interactionSource = interactionSource,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             cursorBrush = SolidColor(scheme.primary),
             decorationBox = {

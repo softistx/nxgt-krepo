@@ -1,6 +1,10 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -34,9 +38,12 @@ fun <T> SelectField(
     isError: Boolean = false,
     supportingText: String? = null,
     enabled: Boolean = true,
+    style: Style = Style,
     optionLabel: (T) -> String = { it.toString() },
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -46,7 +53,11 @@ fun <T> SelectField(
         OutlinedTextField(
             value = value?.let(optionLabel).orEmpty(),
             onValueChange = {},
-            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+            modifier =
+                Modifier
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                    .fillMaxWidth()
+                    .styleable(styleState, fieldStyle, style),
             enabled = enabled,
             readOnly = true,
             label = label?.let { { Typography(text = it) } },
@@ -55,6 +66,7 @@ fun <T> SelectField(
             supportingText = (supportingText ?: helper)?.let { { Typography(text = it) } },
             isError = isError,
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            interactionSource = interactionSource,
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->

@@ -1,8 +1,13 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.IconButton
@@ -22,7 +27,8 @@ fun stepQuantity(
  * A whole number chosen with plus and minus. Material 3 has no stepper.
  *
  * Each end is an [IconButton], so the 48 dp target is M3's. The value sits between them as
- * [TypographyVariant.Metric]. [range] disables the button that would leave it.
+ * [TypographyVariant.Metric]. [range] disables the button that would leave it. [style] dresses the
+ * row with no default of its own: the two buttons keep the button family's.
  */
 @Composable
 fun QuantityField(
@@ -33,9 +39,12 @@ fun QuantityField(
     label: String? = null,
     helper: String? = null,
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
+    val styleState = rememberUpdatedStyleState(remember { MutableInteractionSource() }) { it.isEnabled = enabled }
     FieldScaffold(modifier = modifier, label = label, helper = helper) {
         Row(
+            modifier = Modifier.styleable(styleState, style),
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {

@@ -1,11 +1,16 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.selection.triStateToggleable
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.TriStateCheckbox as MaterialTriStateCheckbox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -53,17 +58,23 @@ fun TriStateCheckbox(
     modifier: Modifier = Modifier,
     helper: String? = null,
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     val toggleable = state.toToggleableState()
     Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
         Row(
             modifier =
-                modifier.triStateToggleable(
-                    state = toggleable,
-                    enabled = enabled,
-                    role = Role.Checkbox,
-                    onClick = onClick,
-                ),
+                modifier
+                    .styleable(styleState, toggleStyle, style)
+                    .triStateToggleable(
+                        state = toggleable,
+                        enabled = enabled,
+                        interactionSource = interactionSource,
+                        role = Role.Checkbox,
+                        onClick = onClick,
+                    ),
             horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {

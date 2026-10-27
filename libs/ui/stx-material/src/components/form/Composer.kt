@@ -3,6 +3,7 @@ package com.softistx.material.components.form
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +16,8 @@ import com.softistx.material.foundation.theme.StxTheme
  *
  * Return still inserts a newline — that is what [TextareaField] is for. Send is the button, so a
  * reader on a desktop keyboard is not fighting the field for Enter. [onAttach] missing hides
- * attach; [sendEnabled] defaults to "there is something to send".
+ * attach; [sendEnabled] defaults to "there is something to send". [style] dresses the message
+ * field; the two buttons keep the button family's.
  */
 @Composable
 fun Composer(
@@ -27,6 +29,7 @@ fun Composer(
     enabled: Boolean = true,
     sendEnabled: Boolean = value.isNotBlank(),
     onAttach: (() -> Unit)? = null,
+    style: Style = Style,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -49,6 +52,7 @@ fun Composer(
             enabled = enabled,
             minLines = 1,
             maxLines = 4,
+            style = style,
         )
         IconButton(
             icon = StxIcons.Send,

@@ -1,16 +1,20 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
-import com.softistx.material.foundation.theme.StxTheme
 
 /**
  * A number chosen by dragging, with the number visible.
@@ -18,7 +22,8 @@ import com.softistx.material.foundation.theme.StxTheme
  * Material 3's `Slider` shows its value only while the thumb is held, which is fine for a volume
  * control and not for a form field — the reader needs to see what they are about to submit. So the
  * value is printed beside the label, formatted by the caller, since only the caller knows whether
- * it is "40" or "40 %" or "£40".
+ * it is "40" or "40 %" or "£40". [style] dresses the slider itself, with no default of its own: M3
+ * paints and dims the track and the thumb, and a press scale would fight the drag.
  */
 @Composable
 fun SliderField(
@@ -31,8 +36,11 @@ fun SliderField(
     enabled: Boolean = true,
     range: ClosedFloatingPointRange<Float> = 0f..100f,
     steps: Int = 0,
+    style: Style = Style,
     format: (Float) -> String = { it.toInt().toString() },
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
     FieldScaffold(modifier = modifier, helper = helper, error = supportingText) {
         if (label != null) {
             Row(
@@ -47,8 +55,9 @@ fun SliderField(
         Slider(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().styleable(styleState, style),
             enabled = enabled,
+            interactionSource = interactionSource,
             valueRange = range,
             steps = steps,
         )
@@ -72,8 +81,10 @@ fun SliderField(
     enabled: Boolean = true,
     range: ClosedFloatingPointRange<Float> = 0f..100f,
     steps: Int = 0,
+    style: Style = Style,
     format: (Float) -> String = { it.toInt().toString() },
 ) {
+    val styleState = rememberUpdatedStyleState(remember { MutableInteractionSource() }) { it.isEnabled = enabled }
     FieldScaffold(modifier = modifier, helper = helper, error = supportingText) {
         if (label != null) {
             Row(
@@ -91,7 +102,7 @@ fun SliderField(
         RangeSlider(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().styleable(styleState, style),
             enabled = enabled,
             valueRange = range,
             steps = steps,

@@ -6,7 +6,10 @@ import com.softistx.material.components.content.cardStyle
 import com.softistx.material.components.content.chipStyle
 import com.softistx.material.components.content.listTileStyle
 import com.softistx.material.components.feedback.alertStyle
+import com.softistx.material.components.form.dimmedStyle
 import com.softistx.material.components.form.fieldStyle
+import com.softistx.material.components.form.toggleStyle
+import com.softistx.material.components.form.uploadStyle
 import com.softistx.material.components.navigation.breadcrumbStyle
 import com.softistx.material.components.navigation.navigationItemStyle
 import com.softistx.material.components.navigation.stepperStyle
@@ -37,6 +40,12 @@ object StxStyles {
     val chip: Style get() = chipStyle
 
     val field: Style get() = fieldStyle
+
+    val dimmed: Style get() = dimmedStyle
+
+    val toggle: Style get() = toggleStyle
+
+    val upload: Style get() = uploadStyle
 
     val listTile: Style get() = listTileStyle
 

@@ -1,5 +1,6 @@
 package com.softistx.material.components.form
 
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.CopyButton
@@ -17,6 +18,7 @@ fun CopyField(
     modifier: Modifier = Modifier,
     label: String? = null,
     helper: String? = null,
+    style: Style = Style,
 ) {
     TextField(
         value = value,
@@ -25,6 +27,7 @@ fun CopyField(
         label = label,
         helper = helper,
         readOnly = true,
+        style = style,
         trailing = { CopyButton(text = value) },
     )
 }

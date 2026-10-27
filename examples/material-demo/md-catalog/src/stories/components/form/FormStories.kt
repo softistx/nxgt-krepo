@@ -105,7 +105,8 @@ val FormStories =
             }
         }
 
-        story("Autocomplete") { _ ->
+        story("Autocomplete") { knobs ->
+            val complaining = knobs.flag("Complaint", false)
             var query by remember { mutableStateOf("") }
             Stack {
                 Autocomplete(
@@ -115,6 +116,8 @@ val FormStories =
                     onSelect = { query = it },
                     label = "Customer",
                     placeholder = "Type a name",
+                    isError = complaining,
+                    supportingText = if (complaining) "Pick a customer from the list" else null,
                 )
             }
         }

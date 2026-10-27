@@ -7,7 +7,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.softistx.material.components.datetime.DateField
 import com.softistx.material.components.form.Autocomplete
 import com.softistx.material.components.form.Checkbox
-import com.softistx.material.components.form.HelperText
 import com.softistx.material.components.form.QuantityField
 import com.softistx.material.components.form.RadioGroup
 import com.softistx.material.components.form.SelectField
@@ -40,8 +39,9 @@ fun GradeFields(
             label = "Student",
             placeholder = "Start typing a name",
             optionLabel = { it.name },
+            isError = form.hasError(GradeInput::student),
+            supportingText = form.error(GradeInput::student),
         )
-        form.error(GradeInput::student)?.let { HelperText(helper = null, error = it) }
         SelectField(
             value = form.value.subject,
             onValueChange = { v -> form.update(GradeInput::subject) { it.copy(subject = v) } },
