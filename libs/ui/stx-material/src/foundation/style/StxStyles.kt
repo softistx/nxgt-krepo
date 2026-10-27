@@ -12,6 +12,7 @@ import com.softistx.material.components.form.dimmedStyle
 import com.softistx.material.components.form.fieldStyle
 import com.softistx.material.components.form.toggleStyle
 import com.softistx.material.components.form.uploadStyle
+import com.softistx.material.components.media.tileStyle
 import com.softistx.material.components.navigation.breadcrumbStyle
 import com.softistx.material.components.navigation.navigationItemStyle
 import com.softistx.material.components.navigation.stepperStyle
@@ -48,6 +49,8 @@ object StxStyles {
     val toggle: Style get() = toggleStyle
 
     val upload: Style get() = uploadStyle
+
+    val tile: Style get() = tileStyle
 
     val tableRow: Style get() = tableRowStyle
 

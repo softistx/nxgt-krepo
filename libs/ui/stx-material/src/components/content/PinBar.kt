@@ -1,12 +1,17 @@
 package com.softistx.material.components.content
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.style.Style
+import androidx.compose.foundation.style.rememberUpdatedStyleState
+import androidx.compose.foundation.style.styleable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.IconButton
@@ -21,6 +26,7 @@ import com.softistx.material.foundation.theme.StxTheme
  *
  * An [AnnouncementBar] is an incident; this is a message the room chose to keep. Missing
  * [onDismiss] means it cannot be unpinned from here — pinning is a permission.
+ * A clickable bar presses to 0.99, as a card does.
  */
 @Composable
 fun PinBar(
@@ -28,7 +34,11 @@ fun PinBar(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     onDismiss: (() -> Unit)? = null,
+    style: Style = Style,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = true }
+    val styled = modifier.fillMaxWidth().styleable(styleState, if (onClick != null) cardStyle else Style, style)
     val content: @Composable () -> Unit = {
         Row(
             modifier =
@@ -57,7 +67,7 @@ fun PinBar(
     val shape = MaterialTheme.shapes.medium
     if (onClick == null) {
         Surface(
-            modifier = modifier.fillMaxWidth(),
+            modifier = styled,
             color = color,
             contentColor = contentColor,
             shape = shape,
@@ -66,7 +76,8 @@ fun PinBar(
     } else {
         Surface(
             onClick = onClick,
-            modifier = modifier.fillMaxWidth(),
+            modifier = styled,
+            interactionSource = interactionSource,
             color = color,
             contentColor = contentColor,
             shape = shape,

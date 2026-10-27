@@ -1,5 +1,6 @@
 package com.softistx.material.components.surface
 
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.IconButton
@@ -16,12 +17,14 @@ fun HelpTip(
     text: String,
     modifier: Modifier = Modifier,
     description: String = "More information",
+    style: Style = Style,
 ) {
     Tooltip(text = text, modifier = modifier) {
         IconButton(
             icon = StxIcons.Info,
             description = description,
             onClick = {},
+            style = style,
         )
     }
 }

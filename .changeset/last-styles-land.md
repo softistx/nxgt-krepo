@@ -1,0 +1,12 @@
+---
+"stx-material": minor
+---
+
+Every remaining interactive part takes `style: Style = Style`, applied last, and `SwipeActions` reaches screen readers and keyboards (#288, 3/3). New API: `style` on `PinBar`, `MentionChip`, `FileChip`, `Rating`, `FilterBar`, `ReactionBar`, `LinkPreview`, `ExpandableText`, `PersonCard`, `Gallery`, `LoadMoreButton`, `ScrollToTop`, `RefreshBox`, `HelpTip`, `Tooltip`, `HoverCard`, `Menu`, `ContextMenu`, `ConfirmDialog`, `Sheet`, `Drawer` and `SwipeActions`; `SwipeActions(customActions: List<CustomAccessibilityAction> = emptyList())`, whose labels are the caller's; `StxStyles.tile` (0.99 press scale of a clickable `Gallery` image). `PinBar`, `LinkPreview` and `PersonCard` reuse `StxStyles.card`, `MentionChip` and `FileChip` reuse `StxStyles.chip`. Parameter placement: `style` comes after the existing parameters and just before a trailing lambda (`LinkPreview(leading)`, `PersonCard(action)`, `Sheet`/`Tooltip`/`HoverCard`/`ContextMenu`/`RefreshBox(content)`, `SwipeActions(content)`, `Drawer(content)`), so `Tooltip("x") { … }` and the like still compile; only a positional call that passed such a lambda in place of a parameter that moved needs to name it. `Drawer` and `SwipeActions` put `style` after `drawer` and `background`. The popups and gesture hosts (`Menu`, `ContextMenu`, `ConfirmDialog`, `Sheet`, `Drawer`, `HoverCard`, `Tooltip`, `SwipeActions`, `RefreshBox`) have no default look: Material 3 paints their container over a `background`. `FilterBar`, `ReactionBar` and `Rating` hand `style` to every chip or star; `ExpandableText`, `LoadMoreButton`, `ScrollToTop` and `HelpTip` to the button they are made of. Visible default changes:
+
+- `PinBar` with `onClick`, `LinkPreview` with `onClick` and `PersonCard` with `onClick` press to 0.99 (before: `LinkPreview` and `PersonCard` already did through `Card`; `PinBar` did not scale).
+- `MentionChip` and `FileChip` (with `onClick`) press to 0.97 (before: no scale). A `FileChip` without `onClick` does not scale.
+- A clickable `Gallery` tile presses to 0.99 and is announced as a button (before: a bare click with no role and no press).
+- `Card` with `onClick` is announced as a button (before: no role).
+- `SectionHeader`, the name of a `PricingCard` and the title of a `DangerZone` are announced as headings (before: plain text).
+- `SwipeActions` with `customActions` lists them in the row's actions menu (before: the swipe was the only way in).

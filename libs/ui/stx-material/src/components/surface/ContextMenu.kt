@@ -2,6 +2,7 @@ package com.softistx.material.components.surface
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,17 +14,20 @@ import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
+import com.softistx.material.foundation.style.styledBy
 
 /**
  * A menu on right-click (desktop) or long-press (touch).
  *
  * Foundation's context-menu area is internal, so this is [Menu] at the pointer — the same items,
- * the gesture the platform actually uses.
+ * the gesture the platform actually uses. [style] dresses the area the menu opens on and has no
+ * default look; the menu itself is [Menu]'s.
  */
 @Composable
 fun ContextMenu(
     items: List<MenuItem>,
     modifier: Modifier = Modifier,
+    style: Style = Style,
     content: @Composable () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -41,6 +45,7 @@ fun ContextMenu(
     Box(
         modifier =
             modifier
+                .styledBy(style)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {

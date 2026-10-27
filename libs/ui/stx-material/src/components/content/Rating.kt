@@ -1,6 +1,7 @@
 package com.softistx.material.components.content
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.ButtonColor
@@ -13,7 +14,7 @@ import com.softistx.material.foundation.icon.StxIcons
  *
  * [value] is 1..[max]; 0 is none. Each star is an [IconButton], so the 48 dp target, the ripple
  * and the semantics are M3's rather than a clickable icon. Tapping the current value clears it.
- * Filled stars use the warning colour — the one that already means "attention without alarm".
+ * [style] reaches every star. Filled stars use the warning colour — the one that already means "attention without alarm".
  */
 @Composable
 fun Rating(
@@ -22,6 +23,7 @@ fun Rating(
     modifier: Modifier = Modifier,
     max: Int = 5,
     enabled: Boolean = true,
+    style: Style = Style,
 ) {
     Row(modifier = modifier) {
         repeat(max) { index ->
@@ -33,6 +35,7 @@ fun Rating(
                 color = if (star <= value) ButtonColor.Warning else ButtonColor.Neutral,
                 size = IconSize.Large,
                 enabled = enabled,
+                style = style,
             )
         }
     }

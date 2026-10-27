@@ -16,6 +16,9 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -38,7 +41,10 @@ fun Card(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val styleState = rememberUpdatedStyleState(interactionSource) { it.isEnabled = enabled }
-    val styled = modifier.styleable(styleState, cardStyle, style)
+    val styled =
+        modifier
+            .styleable(styleState, cardStyle, style)
+            .semantics { if (onClick != null) role = Role.Button }
     val colors = cardColors(variant)
     val elevation = cardElevation(variant)
     val shape = MaterialTheme.shapes.large

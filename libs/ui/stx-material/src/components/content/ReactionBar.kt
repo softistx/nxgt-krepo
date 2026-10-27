@@ -2,6 +2,7 @@ package com.softistx.material.components.content
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
@@ -31,12 +32,13 @@ fun toggleReaction(
  * A row of reactions. Each is a [Chip], so selection, the tick and the shape morph are M3's.
  *
  * The label is the emoji or short name; the count sits after it. Toggling is the caller's —
- * [toggleReaction] is the usual arithmetic.
+ * [toggleReaction] is the usual arithmetic. [style] reaches every chip.
  */
 @Composable
 fun ReactionBar(
     reactions: List<Reaction>,
     modifier: Modifier = Modifier,
+    style: Style = Style,
 ) {
     FlowRow(
         modifier = modifier,
@@ -47,6 +49,7 @@ fun ReactionBar(
             Chip(
                 text = "${reaction.label} ${reaction.count}",
                 selected = reaction.selected,
+                style = style,
                 onClick = reaction.onClick,
             )
         }

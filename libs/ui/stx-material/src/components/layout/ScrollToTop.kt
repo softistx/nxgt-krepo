@@ -3,6 +3,7 @@ package com.softistx.material.components.layout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -28,6 +29,7 @@ fun BoxScope.ScrollToTop(
     listState: LazyListState,
     modifier: Modifier = Modifier,
     after: Int = 2,
+    style: Style = Style,
 ) {
     val visible by remember(listState, after) {
         derivedStateOf { listState.firstVisibleItemIndex >= after }
@@ -45,6 +47,7 @@ fun BoxScope.ScrollToTop(
             onClick = { scope.launch { listState.animateScrollToItem(0) } },
             variant = ButtonVariant.Filled,
             color = ButtonColor.Primary,
+            style = style,
         )
     }
 }

@@ -2,6 +2,7 @@ package com.softistx.material.components.content
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.style.Style
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.foundation.theme.StxTheme
@@ -16,7 +17,7 @@ fun toggleFilter(
  * A row of filters as chips. Not the full filter subsystem: a set of names, a selected subset.
  *
  * Tapping a selected chip removes it; tapping another adds it. The empty set is "everything",
- * which is the only default that does not lie.
+ * which is the only default that does not lie. [style] reaches every chip.
  */
 @Composable
 fun FilterBar(
@@ -24,6 +25,7 @@ fun FilterBar(
     selected: Set<String>,
     onChange: (Set<String>) -> Unit,
     modifier: Modifier = Modifier,
+    style: Style = Style,
 ) {
     FlowRow(
         modifier = modifier,
@@ -35,6 +37,7 @@ fun FilterBar(
             Chip(
                 text = option,
                 selected = on,
+                style = style,
                 onClick = { onChange(toggleFilter(selected, option)) },
             )
         }
