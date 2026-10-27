@@ -231,6 +231,7 @@ dont la forme se lit dans les imports.
       reste `SemiBold` en taille display, et les `Stat` d'une rangée gardent la même hauteur (`reserveDelta = true`) ;
       tailles par défaut changées : `SectionHeader` en `TitleMedium`, `EntityHeader` en `HeadlineMedium`, `Metric` en display
 - [x] **Segments connectés (#284).** `SegmentedControl` et `ViewToggle` sont le groupe de boutons connecté de M3 (extrémités rondes, jonctions plus carrées, choisi = rempli, sans coche, `Role.RadioButton` + `selected`) ; `SegmentedControl` gagne `icons`, `ViewToggle` gagne `style` ; la pression de `Tabs` atteint enfin son style.
+- [x] **`ListTile` sur le `ListItem` interactif de M3 (#285).** Un `ListTile` cliquable est `ListItem(onClick, shapes = ListItemDefaults.shapes())` : la forme se déforme à l'appui, au survol et au focus (4 dp au repos, 16 dp appuyé) au lieu de l'échelle 0,99 ; `selected: Boolean? = null` en fait un choix unique (liste-détail : fond sélectionné, `Role.RadioButton` + `selected`) ; `group: ListTileGroup? = null` le range dans une liste segmentée (`SegmentedListItem`, première / milieu / dernière tuile) ; `ListTileDefaults.GroupGap` espace les tuiles.
 - [ ] Les composants Expressive eux-mêmes — voir #291
 
 ## Phases suivantes

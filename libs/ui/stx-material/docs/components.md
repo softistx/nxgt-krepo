@@ -255,7 +255,7 @@ What the screen is about. Package `com.softistx.material.components.content`.
 | --- | --- | --- |
 | `Card` | `variant = Filled`, `onClick: (() -> Unit)? = null`, `enabled`, `content: ColumnScope` | `content/card` |
 | `Chip` | `text`, `selected`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/chip` |
-| `ListTile` | `title`, `supporting?`, `onClick?`, `enabled`, `leading?`, `trailing?` | `content/list-tile` |
+| `ListTile` | `title`, `supporting? = null`, `onClick: (() -> Unit)? = null`, `enabled = true`, `style = Style`, `leading? = null`, `trailing? = null`, `selected: Boolean? = null`, `group: ListTileGroup? = null` | `content/list-tile` |
 | `EmptyState` | `title`, `description?`, `illustration?`, `action?` | `content/empty-state` |
 | `Stat` | `value`, `label`, `delta?` (a plain line; only Success, Warning and Error add a dot), `tone = Info`, `reserveDelta = true` | `content/stat` |
 | `FilterBar` | `options`, `selected`, `onChange` | `content/filter-bar` |
@@ -282,8 +282,19 @@ What the screen is about. Package `com.softistx.material.components.content`.
 
 `CardVariant` — `Filled`, `Outlined`, `Elevated`.
 
+`ListTileGroup(index, count)` — `count >= 1` and `index` in `0 until count`, otherwise it throws.
+`ListTileDefaults.GroupGap` — the vertical space M3 puts between the tiles of a segmented list.
+
 A `Card` is interactive **iff** `onClick` is not null: it grows a hover and a press state only when
 it does something. `ListTile` follows the same rule.
+
+A `ListTile` is M3's `ListItem`, so the press is a shape morph (4 dp at rest, 16 dp pressed) and takes
+no scale. With `selected = null` an interactive tile is a button. With `selected = true` or `false` it
+is a single choice, as a list-detail's current row is: the chosen row takes M3's selected tone and is
+announced as a radio button that is or is not selected. `group = ListTileGroup(index, count)` makes it
+one tile of a segmented list (`SegmentedListItem`): round at the top of the first and the bottom of the
+last, squarer between, space them by `ListTileDefaults.GroupGap`. `selected` and `group` need `onClick` (M3 has no static segmented item), and a tile given either without one
+is refused with an `IllegalArgumentException`.
 
 `Chip` is M3's `FilterChip`, so selection, the tick mark, the border and the shape morph are all
 M3's and animate on their own. The hover is not: `SelectableChipColors` has thirteen colours and no
