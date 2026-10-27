@@ -110,7 +110,7 @@ fun InlineEdit(
                 modifier =
                     Modifier
                         .weight(1f)
-                        .styleable(styleState, fieldStyle, style)
+                        .styleable(styleState, dimmedStyle, style)
                         .clickable(enabled = enabled) { editing = true },
             )
             if (enabled) {

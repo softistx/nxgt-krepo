@@ -422,7 +422,7 @@ matching(form.password) }`.
 | `TextField` | `value`, `onValueChange`, `label?`, `placeholder?`, `helper?`, `secret`, `keyboardType`, `leading?`, `trailing?`, `style = Style` | `forms/text-field` |
 | `TextareaField` | `value`, `onValueChange`, `label?`, `minLines = 3`, `maxLines = 8`, `maxLength?`, `style = Style` | `forms/textarea` |
 | `SelectField` | `value`, `onValueChange`, `options`, `label?`, `placeholder`, `isError`, `supportingText?`, `enabled`, `style = Style`, `optionLabel` | `forms/select` |
-| `Autocomplete` | `value`, `onValueChange`, `options`, `onSelect`, `label?`, `placeholder`, `isError = false`, `supportingText? = null`, `enabled`, `style = Style`, `optionLabel` | `forms/autocomplete` |
+| `Autocomplete` | `value`, `onValueChange`, `options`, `onSelect`, `label?`, `placeholder`, `enabled`, `isError`, `supportingText?`, `style = Style`, `optionLabel` | `forms/autocomplete` |
 | `Checkbox` | `value`, `onValueChange`, `label`, `helper?`, `supportingText?`, `enabled`, `style = Style` | `forms/checkbox-and-switch` |
 | `TriStateCheckbox` | `state: CheckState`, `onClick`, `label`, `helper?`, `enabled`, `style = Style` | `forms/tri-state-checkbox` |
 | `Switch` | `value`, `onValueChange`, `label`, `description?`, `enabled`, `style = Style` | `forms/checkbox-and-switch` |
@@ -448,10 +448,11 @@ matching(form.password) }`.
 
 Every interactive part takes `style: Style = Style`, applied last so the caller's wins, and puts it
 just before a trailing lambda (`optionLabel`, `format`) so `RadioGroup(…) { it.label }` still compiles.
-The defaults are named in `StxStyles`: `field` (the text fields, `OtpField`, `InlineEdit` at rest: the
-disabled fade), `toggle` (the rows of `Checkbox`, `TriStateCheckbox`, `Switch`, `RadioGroup` and
-`CheckboxGroup`: a 0.97 press scale) and `upload` (`UploadField`: a 0.99 press scale and the disabled
-fade). `CopyField`, `Composer`, `TagField`, `ThemeToggle` and `Checklist` hand their `style` to the
+The defaults are named in `StxStyles`: `field` (`TextField`, `TextareaField`, `Autocomplete` and
+`SelectField`: empty, because M3 already dims them), `dimmed` (`OtpField` and `InlineEdit` at rest:
+the 0.38 disabled fade M3 does not give them), `toggle` (the rows of `Checkbox`, `TriStateCheckbox`,
+`Switch`, `RadioGroup` and `CheckboxGroup`: a 0.99 press scale) and `upload` (`UploadField`: a 0.99
+press scale and the disabled fade). `CopyField`, `Composer`, `TagField`, `ThemeToggle` and `Checklist` hand their `style` to the
 field or the rows they are made of.
 
 The parts that take no `style` are not interactive: `FormSection`, `DangerZone`, `InputGroup`,
@@ -459,15 +460,16 @@ The parts that take no `style` are not interactive: `FormSection`, `DangerZone`,
 
 The exceptions, each because Material 3 imposes its own `*Defaults`:
 
-- `SliderField` (both overloads): `style` has no default. M3's `Slider` and `RangeSlider` paint and
+- `SliderField` (both overloads): takes `style = Style` but has no default look (no `StxStyles`
+  entry). M3's `Slider` and `RangeSlider` paint and
   dim the track and the thumb themselves, and a press scale would fight the drag.
-- `QuantityField`: `style` has no default. Its two buttons are `IconButton`s that carry the button
+- `QuantityField`: takes `style = Style` but has no default look (no `StxStyles` entry). Its two buttons are `IconButton`s that carry the button
   family's style and dim themselves, so a fade on the row would dim them twice.
-- `Checkbox`, `Switch` and `RadioGroup` have no disabled fade in `toggle`: M3's box, thumb and dot
-  dim themselves.
+- `Checkbox`, `TriStateCheckbox`, `Switch`, `RadioGroup` and `CheckboxGroup` have no disabled fade in
+  `toggle`: M3's box, thumb and dot dim themselves.
 - The text fields keep M3's container, outline, label and error colours (`TextFieldDefaults`): the
-  `field` style carries the disabled fade only, and a `background` in a caller's style paints behind
-  M3's transparent container.
+  `field` style is empty (a fade would dim a disabled field twice), and a `background` in a caller's
+  style paints behind M3's transparent container.
 
 `TextField`, `TextareaField` and `SelectField` are Material 3's `OutlinedTextField` — M3 already
 carries the floating label, the supporting text and the error colours, so wrapping it in a second

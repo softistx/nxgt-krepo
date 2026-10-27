@@ -62,7 +62,7 @@ fun OtpField(
     ) {
         BasicTextField(
             value = value,
-            modifier = Modifier.styleable(styleState, fieldStyle, style),
+            modifier = Modifier.styleable(styleState, dimmedStyle, style),
             onValueChange = { next -> onValueChange(next.filter(Char::isDigit).take(length)) },
             enabled = enabled,
             interactionSource = interactionSource,

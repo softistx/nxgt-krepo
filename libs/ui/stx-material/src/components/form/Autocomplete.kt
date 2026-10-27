@@ -33,9 +33,9 @@ fun <T> Autocomplete(
     modifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String = "Search",
+    enabled: Boolean = true,
     isError: Boolean = false,
     supportingText: String? = null,
-    enabled: Boolean = true,
     style: Style = Style,
     optionLabel: (T) -> String = { it.toString() },
 ) {

@@ -9,15 +9,19 @@ import com.softistx.material.foundation.motion.MotionSpeed
 import com.softistx.material.foundation.style.motion
 
 /**
- * What Material 3's inputs have no parameter for.
+ * The M3 text fields (`TextField`, `TextareaField`, `Autocomplete`, `SelectField`).
  *
- * Which is very little, and that is the finding rather than an omission: M3's text field animates
- * its own label, container and error colours, and its checkbox, switch and slider each animate
- * their own thumb. Painting over any of them would replace an animation with a worse one. The
- * disabled fade is what is left — M3 dims its own colours but not a leading icon or a label the
- * caller has slotted in.
+ * Empty, and that is the finding rather than an omission: M3's text field animates and dims its own
+ * label, container, text and icons, so any alpha here would dim a disabled field twice. The name
+ * exists so a caller can restate the default and edit it: `StxStyles.field then { … }`.
  */
-val fieldStyle: Style =
+val fieldStyle: Style = Style
+
+/**
+ * The disabled fade for a control M3 does not dim: the cells of an `OtpField` and the text of an
+ * `InlineEdit` at rest. 0.38, so a disabled one matches a disabled button.
+ */
+val dimmedStyle: Style =
     Style {
         disabled { animate(motion.effects(MotionSpeed.Fast)) { alpha(DISABLED_FIELD_ALPHA) } }
     }
@@ -26,11 +30,11 @@ val fieldStyle: Style =
  * What a checkbox, a switch and a radio row need and M3 has no parameter for: the press scale.
  *
  * The box, the thumb and the dot are M3's and dim themselves when disabled, so there is no alpha
- * here — the row would dim the control twice. The scale is 0.97, the chips-and-toggles value.
+ * here — the row would dim the control twice. The scale is 0.99, the value of a full-width row with its label.
  */
 val toggleStyle: Style =
     Style {
-        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
+        pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.99f) } }
     }
 
 /**

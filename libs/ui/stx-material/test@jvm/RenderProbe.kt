@@ -178,6 +178,13 @@ class PixelGrid(
         return count
     }
 
+    /** Pixels of the frame that satisfy [matches], for a colour a ripple or a state layer shifts a little. */
+    fun count(matches: (Color) -> Boolean): Int {
+        var count = 0
+        for (y in 0 until map.height) for (x in 0 until map.width) if (matches(map[x, y])) count++
+        return count
+    }
+
     /** Pixels of [node]'s bounds that are not the background. */
     fun ink(node: NodeBounds): Int = ink(node.rect)
 }

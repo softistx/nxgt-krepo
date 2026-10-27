@@ -106,7 +106,7 @@ val FormStories =
         }
 
         story("Autocomplete") { knobs ->
-            val failing = knobs.flag("Error", false)
+            val complaining = knobs.flag("Complaint", false)
             var query by remember { mutableStateOf("") }
             Stack {
                 Autocomplete(
@@ -116,8 +116,8 @@ val FormStories =
                     onSelect = { query = it },
                     label = "Customer",
                     placeholder = "Type a name",
-                    isError = failing,
-                    supportingText = if (failing) "Pick a customer from the list" else null,
+                    isError = complaining,
+                    supportingText = if (complaining) "Pick a customer from the list" else null,
                 )
             }
         }
