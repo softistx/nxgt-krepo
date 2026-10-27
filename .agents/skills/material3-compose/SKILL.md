@@ -10,7 +10,7 @@ underneath so ordinary M3 components and third-party M3 libraries keep working i
 
 ## Why this skill has no fetched documentation
 
-`$compose.material3` resolves to **1.12.0-alpha03** while `foundation` and `ui` are `1.12.0` —
+`$compose.material3` resolves to **1.12.0-alpha03** (androidx 1.5.0-alpha22) while `foundation` and `ui` are `1.12.0` —
 Material 3 in Compose Multiplatform is on its own alpha line. The androidx documentation on the web
 describes a *different artifact at a different version*, and its component list, colour roles and
 shape slots do not all agree with what compiles here.
@@ -33,7 +33,7 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
   rather than duplicating it.
 - **8 shape slots**, including the expressive `largeIncreased`, `extraLargeIncreased` and
   `extraExtraLarge` that the older M3 documentation does not mention.
-- **30 type styles** and **58 `*Defaults` objects**.
+- **30 type styles** and **61 `*Defaults` objects**.
 - **The Compose Styles API is here, experimental, in `foundation` rather than `material3`.**
   `androidx.compose.foundation.style` ships in Compose Multiplatform: 36 classes at foundation
   1.11.1, 84 at 1.12.0. `Modifier.styleable(StyleState, Style)` exists today, along with `Style`,
@@ -54,9 +54,12 @@ python3 .agents/skills/material3-compose/scripts/extract_api.py
   `hashCode`, so two schemes built from identical inputs compare unequal and any data class
   holding one inherits that. A spec asserting a palette is deterministic must compare it role by
   role; `shouldBe` on the whole thing fails with a several-kilobyte diff of identical values.
-- **223 public entry points.** Presence in `components.md` is what settles whether a component
-  exists in this version at all — check there before writing one, and before believing a web
-  search that says M3 has it.
+- **222 public entry points** across the root package and its subpackages (`carousel`,
+  `pulltorefresh`). Presence in `components.md` is what settles whether a component exists in this
+  version at all — check there before writing one, and before believing a web search that says M3
+  has it. `HorizontalMultiBrowseCarousel`, `HorizontalCenteredHeroCarousel` and
+  `HorizontalUncontainedCarousel` (fixed `itemWidth`) are all in 1.12.0-alpha03 — see the `carousel`
+  section of `references/components.md`.
 
 ## Restyle through `*Defaults`, never by reimplementing
 
@@ -74,7 +77,7 @@ component's source to change a colour is the failure mode this avoids.
 | `references/typography.md` | every `Typography` style |
 | `references/shapes.md` | every `Shapes` slot |
 | `references/defaults.md` | every `*Defaults` object |
-| `references/components.md` | every public function in the package |
+| `references/components.md` | every public function, per package |
 
 For how Material 3 behaves across platforms — and for anything about resources, lifecycle,
 navigation or testing — read the `compose-multiplatform` skill instead.

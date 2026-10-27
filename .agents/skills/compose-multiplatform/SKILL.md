@@ -53,7 +53,7 @@ publishes, made on its own and with its own changeset.
   `$compose.material` does **not** carry `material-icons-core` in 1.11 — `androidx.compose.material.icons`
   is simply unresolved — and the AndroidX icon artifacts in `libs.versions.toml` are Android-only,
   so they cannot serve a `kmp/lib`. `libs/ui/stx-material` defines its own vectors in
-  `icon/StxIcons.kt` from Material path data via `addPathNodes`; a caller that needs a full pack
+  `foundation/icon/StxIcons.kt` from Material path data via `addPathNodes`; a caller that needs a full pack
   passes its own `ImageVector` in.
 - **M3 1.11 has its own `MotionScheme`, and `MaterialTheme` takes it.** There is a
   `MaterialTheme(colorScheme, motionScheme, shapes, typography, content)` overload,
@@ -124,18 +124,19 @@ launcher modules.
 
 | Question | Page |
 | --- | --- |
-| What is in each Compose version | `whats-new-compose-111.html.md`, `whats-new-compose-112.html.md` |
-| Which Compose version pairs with which Kotlin | `compose-compatibility-and-versioning.html.md` |
-| Images, strings and fonts in a shared module | `compose-multiplatform-resources*.html.md` |
-| Where the composition's lifecycle comes from | `compose-lifecycle.html.md`, `compose-viewmodel.html.md` |
-| Navigation, routes, deep links | `compose-navigation*.html.md`, `compose-navigation-3.html.md` |
-| Window size classes and multi-pane layouts | `compose-adaptive-layouts.html.md` |
-| Testing composables | `compose-test.html.md`, `compose-desktop-ui-testing.html.md` |
-| Desktop-only surfaces (tray, menu bar, scrollbars, tooltips, mouse) | `compose-desktop-*.html.md` |
-| What differs per platform | `compose-platform-specifics.html.md`, `compose-android-only-components.html.md` |
-| Which Jetpack libraries are multiplatform | `compose-multiplatform-jetpack-libraries.html.md` |
-| `expect`/`actual` and the source-set hierarchy | `multiplatform-expect-actual.html.md`, `multiplatform-hierarchy.html.md` |
-| Hot reload | `compose-hot-reload.html.md` |
+| What is in each Compose version | `whats-new-compose-111.md`, `whats-new-compose-112.md` |
+| Which Compose version pairs with which Kotlin | `compose-compatibility-and-versioning.md` |
+| Images, strings and fonts in a shared module | `compose-multiplatform-resources*.md` |
+| Where the composition's lifecycle comes from | `compose-lifecycle.md`, `compose-viewmodel.md` |
+| Navigation, routes, deep links | `compose-navigation*.md`, `compose-navigation-3.md` |
+| Window size classes and multi-pane layouts | `compose-adaptive-layouts.md` |
+| Testing composables | `compose-test.md`, `compose-desktop-ui-testing.md` |
+| Desktop-only surfaces (tray, menu bar, scrollbars, tooltips, mouse) | `compose-desktop-*.md` |
+| What differs per platform | `compose-platform-specifics.md`, `compose-android-only-components.md` |
+| Which Jetpack libraries are multiplatform | `compose-multiplatform-jetpack-libraries.md` |
+| `expect`/`actual` and the source-set hierarchy | `multiplatform-expect-actual.md`, `multiplatform-hierarchy.md` |
+| Hot reload | `compose-hot-reload.md` |
+| What of `jetpack-compose-performance` applies here (hand-written) | `performance-notes.md` |
 
 Refresh the cache with
 `python3 .agents/skills/skill-from-docs/scripts/fetch_docs.py --skill compose-multiplatform`.

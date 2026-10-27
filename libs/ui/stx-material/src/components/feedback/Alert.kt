@@ -1,0 +1,82 @@
+package com.softistx.material.components.feedback
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.style.Style
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import com.softistx.material.foundation.motion.Transitions
+import com.softistx.material.foundation.style.styledBy
+import com.softistx.material.foundation.text.Emphasis
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.foundation.theme.Tone
+
+/**
+ * A message about what just happened, or about what is about to.
+ *
+ * ```kotlin
+ * Alert("Vos modifications ont été enregistrées.", tone = Tone.Success)
+ * ```
+ *
+ * It fades and rises into place on its own — [visible] drives an `AnimatedVisibility` inside the
+ * component, so a caller that flips a boolean gets the animation without asking for it. Passing
+ * `visible = false` initially and flipping it is the whole API for "show this when the save
+ * succeeds".
+ *
+ * A tonal surface with no outline, a `largeIncreased` shape, and the tone on a leading plate: the
+ * tone's icon, or [icon] when the caller names one, on a `MaterialShapes` cookie; `icon = null`
+ * leaves the plate out. The [title] is emphasised and announced as a heading.
+ */
+@Composable
+fun Alert(
+    text: String,
+    modifier: Modifier = Modifier,
+    tone: Tone = Tone.Info,
+    title: String? = null,
+    visible: Boolean = true,
+    icon: ImageVector? = AlertDefaults.icon(tone),
+    style: Style = Style,
+    action: @Composable (() -> Unit)? = null,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = Transitions.riseIn,
+        exit = Transitions.fadeAway,
+    ) {
+        Row(
+            modifier = modifier.fillMaxWidth().styledBy(style, base = alertStyle(tone)),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.md),
+            verticalAlignment = Alignment.Top,
+        ) {
+            if (icon != null) TonePlate(tone, icon)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
+            ) {
+                if (title != null) {
+                    Typography(
+                        text = title,
+                        variant = TypographyVariant.TitleSmall,
+                        emphasized = true,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                }
+                Typography(
+                    text = text,
+                    variant = TypographyVariant.BodyMedium,
+                    emphasis = if (title != null) Emphasis.Medium else Emphasis.Full,
+                )
+            }
+            action?.invoke()
+        }
+    }
+}

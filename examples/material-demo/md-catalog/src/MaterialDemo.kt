@@ -5,9 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.softistx.material.motion.StxMotion
-import com.softistx.material.theme.StxTheme
-import com.softistx.material.theme.platformColorScheme
+import com.softistx.material.foundation.motion.StxMotion
+import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.foundation.theme.platformColorScheme
 
 /**
  * The whole demo. Both launchers call this and nothing else, so the Android application and the
@@ -34,8 +34,8 @@ fun MaterialDemo(groups: List<StoryGroup> = CatalogGroups) {
                 seed = state.seed,
                 isDark = state.isDark,
                 dynamicColor = state.dynamicColor,
+                paletteStyle = state.paletteStyle,
             ),
-        motionScheme = state.motion.scheme,
         motion = StxMotion(state.motion.scheme, enabled = state.motion.enabled),
     ) {
         Surface(

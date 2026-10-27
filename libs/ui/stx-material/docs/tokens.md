@@ -19,9 +19,9 @@ finished.
 
 | Role | Members | Where it comes from |
 | --- | --- | --- |
-| The 48 M3 roles | `colors.scheme.primary`, `.surfaceContainerHigh`, … | `dynamicColorScheme(seed, isDark)` |
+| The 48 M3 roles | `colors.scheme.primary`, `.surfaceContainerHigh`, … | `stxColorScheme(seed, isDark, paletteStyle, specVersion)` |
 | `success` | `success`, `onSuccess`, `successContainer`, `onSuccessContainer` | derived from its own seed |
-| `info` | same four | derived from its own seed |
+| `info` | same four | **the scheme's `secondary*` roles** by default; `stxColors(info = colour)` grows a dedicated one |
 | `warning` | same four | derived from its own seed |
 | `error` | same four | **delegated to `scheme`** — never re-derived |
 
@@ -33,14 +33,67 @@ same colour.
 without naming twelve colours: `colors.tone(tone)` returns a `ToneColors` — `main`, `onMain`,
 `container`, `onContainer`. `StatusBadge` and `Alert` take a `Tone` for exactly this reason.
 
+`Alert`, `AnnouncementBar` and `PromoBanner`: the plate takes the tone's solid pair (`main` with
+`onMain`), except on an error, where it is inverted (`onContainer` plate, `container` icon) to hold 3:1; the notice is `surfaceContainerHigh`, `largeIncreased`, no border, except `Tone.Error`,
+which keeps its container.
+
 **Where the scheme comes from is a platform decision, and only that decision is
-platform-specific.** `platformColorScheme(seed, isDark, dynamicColor)` answers with the user's
+platform-specific.** `platformColorScheme(seed, isDark, dynamicColor, paletteStyle, specVersion)` answers with the user's
 wallpaper palette on Android 12+ and with the seed everywhere else; `supportsDynamicColor` says
 which, so a settings screen can decide whether to *offer* the choice rather than showing a switch
-that does nothing. `stxColors(scheme, isDark)` then adds the semantic roles to whichever scheme
+that does nothing (`paletteStyle` and `specVersion` act on the seed path only). `stxColors(scheme, isDark)` then adds the semantic roles to whichever scheme
 arrived — the extra roles are not tied to the seed path.
 
+**A calm palette, one accent per screen.** The seed path defaults to `PaletteStyle.TonalSpot` on
+`ColorSpec.SpecVersion.SPEC_2025`: muted secondary and tertiary roles around a single primary, so
+the primary is the one accent and the rest of the screen stays quiet. `paletteStyle` and
+`specVersion` are parameters of `stxColorScheme`, `stxColors(seed, …)`, `platformColorScheme` and
+`StxThemeProvider`; `PaletteStyle.Vibrant` and `PaletteStyle.Expressive` stay available for a
+brand that wants more colour. They apply to the seed path only — Android's wallpaper palette is
+the system's and is left alone. Every on-pair (`onPrimary` on `primary`, …, plus `onSurface` and
+`onSurfaceVariant` over each `surfaceContainer*` role) meets AA (4.5:1) in light and dark for each of these styles, which
+`ThemeColorTest` checks over several seeds.
+
+```kotlin
+import com.materialkolor.PaletteStyle
+import com.materialkolor.dynamiccolor.ColorSpec
+
+// Keep the old, more vivid look.
+StxThemeProvider(seed = brand, paletteStyle = PaletteStyle.Vibrant) { … }
+
+// Keep a dedicated info colour instead of `secondary`.
+val colors = stxColors(scheme, isDark, info = Color(0xFF2563EB))
+```
+
+`info` is a parameter of the `stxColors(scheme, isDark, …)` overload only; the seed overload,
+`stxColors(seed, isDark, paletteStyle, specVersion)`, takes no `info`.
+
+The `success` and `warning` roles, grown from their own seeds, are pinned to `SPEC_2025` too.
+
+`info` follows the same budget: it is the scheme's `secondary`, so there is no fourth hue sitting
+close to the primary. Tones belong where they change what the reader does — a `StatusBadge` for a
+mark below the pass line, a `StatusDot` beside a delta that went the wrong way — and not as
+decoration. `Stat` therefore draws its delta as text and adds a dot only for `Success`, `Warning`
+and `Error`; `Tone.Info` is a plain line.
+
 No component holds a colour of its own, so changing the scheme repaints all of them.
+
+### Emphasis contrast
+
+`Emphasis` is an alpha on the content colour (`onSurface`). Measured off rendered glyph pixels on the
+default theme (`EmphasisContrastTest`):
+
+| Surface | Subtle light | Subtle dark | Medium light | Medium dark |
+| --- | --- | --- | --- | --- |
+| `surface` | 5.21 | 8.21 | 6.56 | 9.87 |
+| `surfaceContainer` | 4.91 | 7.81 | 6.19 | 9.25 |
+| `surfaceContainerHigh` | 4.83 | 7.40 | 5.99 | 8.76 |
+
+`Subtle` is 0.72 and `Medium` 0.80 (before: 0.5 and 0.72). `Subtle` read 2.71 to 2.82 in light and 4.27
+to 4.49 in dark before; `Medium` read 4.83 to 5.21 in light and 7.40 to 8.21 in dark, and rose so the
+steps stay apart: at 0.72 it would have been `Subtle`'s new value. The gap between them is 1.17 to 1.65
+contrast points on every surface. Text on a tinted container (`primaryContainer`, an alert) is not
+measured here; pass a `color` there.
 
 ## Spacing
 
@@ -99,6 +152,9 @@ Getting this wrong is subtle rather than loud: giving a fade and a slide the sam
 what this library did before it was built on `MotionScheme`, makes a combined transition finish in
 two stages. `Transitions` now picks per half.
 
+The first line below illustrates the pattern; it is not the button family's own style (that one has no press
+scale, its press is the shape morph).
+
 ```kotlin
 pressed { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
 disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
@@ -117,15 +173,14 @@ is damped below 1, every effects spec at exactly 1.
 composable scope — it runs at apply time.
 
 **Which scheme.** `MotionScheme.expressive()` is the default: springier, allowed to overshoot.
-`MotionScheme.standard()` settles instead. Passing one to `StxTheme` changes every animation in
+`MotionScheme.standard()` settles instead. Passing `StxMotion(MotionScheme.standard())` as `motion` to `StxTheme` changes every animation in
 the tree, this library's and Material 3's alike. Both are singletons, so two default themes compare
 equal and installing one is not a recomposition.
 
 **`enabled = false` collapses every spec to `snap()`** rather than removing the animation. The
 states, the transitions and the composables are identical either way — only the clock stops. That
-is what lets a reduced-motion preference, or a screenshot test, be one flag at the theme. It stops
-*this library's* motion; Material 3's own components keep their built-in animations, because a
-`MotionScheme` has no null.
+is what lets a reduced-motion preference, or a screenshot test, be one flag at the theme. The theme also installs a snapping M3
+scheme, so Material 3's own morphs stop with it.
 
 `Transitions` names the `EnterTransition` / `ExitTransition` pairs built from these: `fade` /
 `fadeAway`, `riseIn` / `sinkOut`, `popIn` / `popOut`, `widen` / `narrow`, `expand` / `collapse`.
@@ -137,12 +192,24 @@ change, so it names its own cadence. `MotionScheme` has no spec for something th
 
 ## Styles
 
-`StxTheme.styles` (from `com.softistx.material.style`) is every component default in one place —
-`button`, `card`, `chip`, `listTile`, `field`, `alert(tone)`.
+`StxTheme.styles` (from `com.softistx.material.components`) is every component default in one place, and the only public
+name of them (the `*Style` vals behind it are `internal`) —
+`button`, `card`, `chip`, `dimmed`, `toggle`, `upload`, `tile`, `tableRow`,
+`sortHeader`, `alert(tone)`. `button` is the one style of the whole button family
+(`Button`, `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton`, `Fab`): the disabled alpha only, because all of
+them morph their shape. The 0.97 press scale is gone from the family.
+`ListTile` and the M3 text fields have no entry: M3's `ListItem` morphs its shape and the text fields dim
+themselves, so there is nothing to restate; pass `style = Style { … }` on its own.
+`dimmed` is the 0.38 disabled fade for what M3 does not dim (`OtpField`, the rest text of
+`InlineEdit`). `toggle` is the 0.99 press scale of a checkbox, switch or radio row. `upload` is the
+0.99 press scale and disabled fade of `UploadField`. `tableRow` is the 0.99 press scale of a clickable
+`DataTable` row, and `sortHeader` the 0.97 press scale of a sortable header. `tile` is the 0.99
+press scale of a clickable `Gallery` image. `card` and `chip` are also the defaults of `PinBar`,
+`LinkPreview` and `PersonCard`, and of `MentionChip` and `FileChip`.
 
 There is less there than there once was, and that is the point: colour, shape, border, padding and
 elevation moved into Material 3's own `*Colors` and `*Defaults` when the components were rebuilt on
-M3. What is left is what M3 has no parameter for — the press scale, the disabled alpha, and the
+M3. What is left is what M3 has no parameter for — the press scale (not on the button family or `ListTile`, which morph their shape), the disabled alpha, and the
 alert's whole appearance, because M3 has no banner.
 
 Nothing is needed from it to *use* the library: each component already applies its own. It is the

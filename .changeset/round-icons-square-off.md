@@ -1,0 +1,5 @@
+---
+"stx-material": minor
+---
+
+`IconButton`, `IconToggle`, `ToggleButton`, `SplitButton` and `Fab` morph their shape and no longer scale: icon buttons and toggles are round at rest and squarer pressed (toggles also while checked), through M3's `shapes =` overloads; the `SplitButton` trailing half is a toggle that is checked while its menu is open, so it changes shape and its chevron points up; `Fab` draws its own corner morph (the corners shrink to the theme's `small` slot while pressed) since M3's FAB has none. `SplitButton` and `Fab` gain `style: Style = Style`. One button-family style: `buttonStyle` (`StxStyles.button`) now keeps only the disabled alpha. Visible default changes: the 0.97 press scale is gone from icon buttons and toggle buttons, a checked toggle is squarer, and the `SplitButton` chevron flips while its menu is open. Sizes are unchanged. Also fixed, found in the look check: an Outlined `IconButton` or `IconToggle` draws its border in the button colour (it was near-black, invisible in dark), and an unchecked Tonal `IconToggle` takes the tone's content colour (its icon was black).

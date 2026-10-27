@@ -1,11 +1,11 @@
-<!-- Generated on 2026-08-28; do not edit. -->
+<!-- Generated on 2026-10-26; do not edit. -->
 
-# Material 3 API reference (1.11.0-alpha07)
+# Material 3 API reference (1.12.0-alpha03)
 
 | File | Holds |
 | --- | --- |
 | `color-scheme.md` | 48 members |
 | `typography.md` | 30 members |
 | `shapes.md` | 8 members |
-| `defaults.md` | 58 objects |
-| `components.md` | 223 functions |
+| `defaults.md` | 61 objects |
+| `components.md` | 222 functions in 3 packages |

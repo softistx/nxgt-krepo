@@ -1,0 +1,96 @@
+package com.softistx.material.components.form
+
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.style.Style
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import com.softistx.material.foundation.style.styledBy
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.StxTheme
+
+/**
+ * One of several, where seeing all of them at once is the point.
+ *
+ * Material 3 has the button and no group, so the two things that make a group a group are added
+ * here: `selectableGroup()`, which is what lets a screen reader say "2 of 4" instead of reading
+ * four unrelated buttons, and a row-wide target so the label is clickable.
+ *
+ * [options] is a list of values and [optionLabel] turns one into its wording — the control reports
+ * the value, never the string, so a selection survives a change of copy.
+ */
+@Composable
+fun <T> RadioGroup(
+    value: T?,
+    onValueChange: (T) -> Unit,
+    options: List<T>,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    required: Boolean = false,
+    helper: String? = null,
+    supportingText: String? = null,
+    enabled: Boolean = true,
+    style: Style = Style,
+    optionLabel: (T) -> String = { it.toString() },
+) {
+    FieldScaffold(
+        modifier = modifier,
+        label = label,
+        required = required,
+        helper = helper,
+        error = supportingText,
+    ) {
+        Column(
+            modifier = Modifier.selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),
+        ) {
+            options.forEach { option ->
+                RadioRow(
+                    selected = value == option,
+                    onSelect = { onValueChange(option) },
+                    label = optionLabel(option),
+                    enabled = enabled,
+                    style = style,
+                )
+            }
+        }
+    }
+}
+
+/** One option of a [RadioGroup]: its own press state, so a press scales this row alone. */
+@Composable
+private fun RadioRow(
+    selected: Boolean,
+    onSelect: () -> Unit,
+    label: String,
+    enabled: Boolean,
+    style: Style,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier =
+            Modifier
+                .styledBy(style, enabled = enabled, base = toggleStyle, interactionSource = interactionSource)
+                .selectable(
+                    selected = selected,
+                    enabled = enabled,
+                    interactionSource = interactionSource,
+                    role = Role.RadioButton,
+                    onClick = onSelect,
+                ).minimumInteractiveComponentSize(),
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null, enabled = enabled)
+        Typography(text = label)
+    }
+}

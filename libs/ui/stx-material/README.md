@@ -10,37 +10,44 @@ first `android` target. `examples/material-demo` is its catalogue and its test b
 
 ```
 libs/ui/stx-material/
-  src/theme/          tokens, StxTheme, and the platform scheme's expect
-  src@android/theme/  the wallpaper palette          ┐ the only platform-specific
-  src@jvm/theme/      the seed                       │ decision in the library
-  src@ios/theme/      the seed                       ┘
-  src/motion/   the M3 MotionScheme, transitions, shimmer, stagger
-  src/style/    StxStyles — every component default in one place
-  src/text/     Typography and the variant scale
-  src/icon/     Icon and the library's own icon set
-  src/button/   Button, IconButton, ResponsiveButton, ButtonRow, Fab, FabMenu, SplitButton, ToggleButton, IconToggle, CopyButton, ConfirmButton, BusyButton, MoreMenu, OverflowBar, IconBadge, ViewToggle
-  src/display/  Card, Chip, ActionChip, SuggestionChip, FileChip, StatusBadge, StatusDot, Kbd, ListTile, Alert, EmptyState, Skeleton, Stat, FilterBar, Rating, LabeledDivider, SectionHeader, CodeBlock, ExpandableText, ReactionBar, AnnouncementBar, QuoteBlock, LinkPreview, MessageBubble, Comment, ReplyPreview, PinBar, MentionChip, Price, FeatureList, PricingCard, PromoBanner
-  src/form/     the field/form state layer, the rules, and every input including UploadField, TagField, QuantityField, InlineEdit, PasswordMeter, CopyField, TriStateCheckbox, ThemeToggle, FormSection, DangerZone, Composer, Checklist
-  src/navigation/ AppBar, NavigationSuite, Tabs, Search, AdaptiveNavDisplay, Stepper, StepFooter, BottomBar, Breadcrumb
-  src/layout/     ResponsiveGrid, ScrollToTop, LoadMoreButton, SelectionBar, RefreshBox
-  src/surface/    ConfirmDialog, Sheet, Drawer, Tooltip, HelpTip, HoverCard, Menu, ContextMenu, Accordion, Disclosure, Carousel, SwipeActions
-  src/feedback/   Progress, LabeledProgress, LoadingMark, TypingIndicator, Toaster
-  src/datetime/   DateField, DateRangeField, TimeField, Calendar, RelativeTime
-  src/data/       DataTable, CommandPalette, Description, Pagination, EntityHeader, Timeline, SortControl
-  src/media/      Avatar, AvatarGroup, PersonCard, SeenBy, StxImage, Gallery, Lightbox, Video/Pdf/Camera surfaces
+  src/foundation/            what everything else is built from            (com.softistx.material.foundation.*)
+    theme/    tokens, StxTheme, the colour seed, and the platform scheme's expect
+    style/    the StyleScope token extensions, styledBy/pressable and the shared presses
+    motion/   the M3 MotionScheme, transitions, shimmer, stagger
+    layout/   the window-size and responsive helpers (Breakpoints, wCompact, LocalWindowSize, …)
+    text/     Typography and the variant scale
+    icon/     Icon and the library's own icon set
+  src/components/            one folder per family, listed in docs/components.md  (com.softistx.material.components.*)
+    button/ form/ (+ state/) navigation/ layout/ feedback/ content/ surface/ media/ data/ datetime/
+  src@android/foundation/theme/  the wallpaper palette          ┐ the only platform-specific
+  src@jvm/foundation/theme/      the seed                       │ decision in the library
+  src@ios/foundation/theme/      the seed                       ┘
 ```
+
+A folder is a package: `src/components/button/Button.kt` is `com.softistx.material.components.button`.
+A component's `*Styles.kt` sits beside it. `foundation` holds no components: the layout components live in
+`components/layout/`, and `foundation/layout/` keeps only the window-size helpers.
 
 ## The shape of it
 
-**`StxTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes` and a
-`MotionScheme`, each with a default — the same four `MaterialTheme` takes. It wraps M3 rather than
+**`StxTheme` takes Material 3's own inputs.** A `ColorScheme`, a `Typography`, `Shapes`, each with a default, and
+`motion: StxMotion?`, from which the theme derives M3's `MotionScheme`. It wraps M3 rather than
 replacing it, so a plain M3 component, or any third-party M3 library, keeps working inside it. That
 is what makes this adoptable in an application that already exists, and a caller that already
 computes one of the four passes it and keeps the other three.
 
 It installs `MaterialExpressiveTheme` and `MotionScheme.expressive()`: rounder shapes, springier
-motion. `motionScheme = MotionScheme.standard()` turns that off for the whole tree, and every
-animation follows — nothing here holds its own curve.
+motion. `motion = StxMotion(MotionScheme.standard())` calms it for the whole tree, and every
+animation follows — nothing here holds its own curve. `motion` is the one motion input: Material 3's
+scheme derives from it (a snapping one when `enabled = false`).
+
+**It follows the OS "Reduce motion" setting** on Android and iOS when you pass no `motion`; pass one and the
+OS is not read. Desktop reads only `-Dstx.material.reduceMotion`, and an app
+can opt in to the OS's answer with `readDesktopReducedMotion()`:
+
+```kotlin
+StxTheme(motion = StxMotion(enabled = false)) { App() }   // opt out: no animation, M3 morphs included, whatever the OS says
+```
 
 ```kotlin
 // An application: one line, and the platform decides where the scheme comes from.
@@ -49,17 +56,20 @@ StxThemeProvider(seed = Color(0xFF5B5BD6)) {
 }
 
 // Anything more specific goes straight to StxTheme.
-StxTheme(colorScheme = brandScheme, motionScheme = MotionScheme.standard()) { … }
+StxTheme(colorScheme = brandScheme, motion = StxMotion(MotionScheme.standard())) { … }
 ```
 
 **Only one decision is platform-specific**, and it is behind `expect`/`actual`:
-`platformColorScheme(seed, isDark, dynamicColor)` reads the user's wallpaper palette on Android 12+
+`platformColorScheme(seed, isDark, dynamicColor, paletteStyle, specVersion)` reads the user's wallpaper palette on Android 12+
 and falls back to the seed everywhere else. `supportsDynamicColor` says which, so a settings screen
 can decide whether to offer the choice at all. Everything above that — the provider, the tokens,
-every component — is written once in the common source set.
+every component — is written once in the common source set. `paletteStyle` and `specVersion` act on
+the seed path only; the default is a calm TonalSpot palette on `SPEC_2025`, described under
+"A calm palette" in [docs/tokens.md](docs/tokens.md#colour).
 
-The rest of the palette derives from one seed by [material-kolor], including the `success` / `info`
-/ `warning` roles Material 3 does not define; those are added to *whatever* scheme arrives, seed or
+The rest of the palette derives from one seed by [material-kolor], including the `success` and
+`warning` roles Material 3 does not define, each from its own seed; `info` follows the scheme's
+`secondary` unless a colour is passed. Those roles are added to *whatever* scheme arrives, seed or
 wallpaper. `error` is not re-derived — it is delegated to the M3 scheme, so there is exactly one
 red.
 
@@ -82,9 +92,10 @@ for what M3 has no parameter for:
 // The 5 × 7 matrix, resolved once, in the shape M3 accepts.
 fun buttonColors(variant: ButtonVariant, color: ButtonColor): ButtonColors = …
 
-// What is left: the press giving under the finger.
-val buttonStyle: Style = Style {
-    pressed  { animate(motion.spatial(MotionSpeed.Fast)) { scale(0.97f) } }
+// The whole button family (Button, IconButton, IconToggle, ToggleButton, SplitButton, Fab)
+// morphs its shape under the finger, so its one Style keeps only the disabled alpha.
+// StxStyles.button names it; the val itself is internal.
+internal val buttonStyle: Style = Style {
     disabled { animate(motion.effects()) { alpha(DISABLED_ALPHA) } }
 }
 ```
@@ -104,29 +115,11 @@ Card(style = StxTheme.styles.card then { alpha(0.6f) })
 
 ## Adding a component
 
-0. **Check Material 3 first.** If M3 has the component, wrap it — `material3-compose`'s
-   `references/components.md` is the list. Rebuilding one is a decision to justify in the KDoc, not
-   a default.
-1. **The colours and the style**, in `src/<area>/<Name>Styles.kt`. Whatever M3 can express goes in a
-   function returning its `*Colors` / `*Elevation` / `BorderStroke`; whatever it cannot goes in a
-   `Style`, reading tokens through `StyleScope` (`scheme`, `shapes`, `spacing`, `motion`)
-   and putting interaction states in `pressed` / `hovered` / `disabled` blocks with `animate { }`
-   *inside* them. Mind the axis: `spatial` overshoots, `effects` does not.
-2. **The composable**, in `src/<area>/<Name>.kt`. Its signature carries `modifier`, then the
-   semantic parameters, then `style: Style = Style` — no `Color`, `Shape` or `Dp` parameters that
-   the style or M3's defaults already own. Slots (`leading`, `trailing`, `content`) are
-   `@Composable`, never `iconName: String`.
-3. **Register its story in the same change**, in `examples/material-demo/md-catalog/src/stories/`. The
-   catalogue is never caught up with afterwards.
-4. **Document it in `docs/components.md`** and tick its box in `docs/roadmap.md`, in that same
-   change.
-5. **Spec whatever does not need a renderer**: token derivation, colour derivation, enum totality,
-   path data. A claim about *pixels* — a hover that has to be visible, a collapsed button that has
-   to be round — is measured in pixels instead: `ImageComposeScene` renders a composable to a
-   bitmap with no window, in milliseconds, on a headless host. Those specs live in `test@jvm/`
-   (`ChipHoverTest`, `ResponsiveButtonTest`) because skiko's native library comes from
-   `$compose.desktop.currentOs`, which is jvm-only. Both were written because something looked
-   right and was not.
+The order of work, the checks and the proof are the `stx-material-components` skill
+(`.agents/skills/stx-material-components/SKILL.md`); AGENTS.md's *Building a component* and
+*Styling a component* hold the rules. In short: M3 first, a `Style` for the rest, its story, its
+`docs/components.md` row and `docs/roadmap.md` box in the same change, and a pixel spec in
+`test@jvm/` for any claim about pixels.
 
 ## Platforms
 
@@ -146,7 +139,7 @@ the build. What is still uncovered is linking, and there are no iOS tests. The
 
 ## Publishing
 
-`io.github.softistx:stx-material:0.1.0`, like every other module under `libs/` — but a `kmp/lib` publishes one
+`io.github.softistx:stx-material:0.2.3`, like every other module under `libs/` — but a `kmp/lib` publishes one
 artifact per platform beside the root one: `stx-material-jvm`, `stx-material-android`,
 `stx-material-iosarm64`, `stx-material-iossimulatorarm64`. A consumer depends on the root artifact
 and the platform one is selected for it.
@@ -164,6 +157,7 @@ consumer. Nothing here does today — worth knowing before the first one is adde
 | [`docs/roadmap.md`](docs/roadmap.md) | Where the library is — the phases, ticked as they land |
 | [`docs/tokens.md`](docs/tokens.md) | What a token may say: colours, spacing, durations, easings — shapes and elevation are M3's |
 | [`docs/components.md`](docs/components.md) | Every component, its parameters, and its story in the catalogue |
+| [`docs/troubleshooting.md`](docs/troubleshooting.md) | Errors and surprises, headed by what you will see |
 | [`../../examples/material-demo/`](../../../examples/material-demo) | The catalogue: `./kotlin run -m md-desktop` |
 
 [material-kolor]: https://github.com/jordond/MaterialKolor

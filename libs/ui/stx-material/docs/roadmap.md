@@ -24,7 +24,7 @@ ligne de plomberie.
 
 **Thème et tokens**
 - [x] `StxSpacing` — la seule échelle que M3 n'a pas ; formes et élévation restent celles de M3
-- [x] `StxColors` — `success` / `info` / `warning` dérivés par material-kolor, le reste délégué à M3
+- [x] `StxColors` — `success` et `warning` dérivés par material-kolor, `info` pris sur `secondary`, le reste délégué à M3
 - [x] `StxTheme` enveloppant `MaterialTheme`, tokens sur `CompositionLocal` statiques
 - [x] `StyleScope.colors` / `.scheme` / `.shapes` / `.spacing` / `.motion` — les tokens dans un `Style`
 - [x] Un `StxStyles` accessible en `StxTheme.styles`, agrégeant les styles de composants
@@ -41,10 +41,9 @@ ligne de plomberie.
 
 **Boutons**
 - [x] `ButtonVariant` × `ButtonColor` — 5 × 7, résolus dans une seule fonction
-- [x] `buttonStyle()` — un `Style` portant ses états `hovered` / `pressed` / `disabled` animés
 - [x] `Button(text, onClick)` et `ButtonSurface { }` avec `style: Style = Style`
 - [x] `IconButton`, `ButtonGroup`
-- [x] `StxIcons` — dix vecteurs tenus ici, faute de pack d'icônes atteignable
+- [x] `StxIcons` — 34 vecteurs tenus ici, faute de pack d'icônes atteignable
 - [x] `ResponsiveButton`
 
 **Affichage**
@@ -98,7 +97,7 @@ Après la phase 1, `StxTheme` ne prenait qu'une graine et fabriquait tout le res
 prend maintenant les quatre entrées de `MaterialTheme` — `ColorScheme`, `Typography`, `Shapes`,
 `MotionScheme` — chacune avec un défaut, comme M3.
 
-- [x] `StxTheme(colorScheme, typography, shapes, motionScheme, …)` — un appelant qui calcule
+- [x] `StxTheme(colorScheme, typography, shapes, motionScheme, …)` (remplacé par `motion` en 0.3.0) — un appelant qui calcule
       déjà l'une des quatre la passe et garde les trois autres
 - [x] `MaterialExpressiveTheme` + `MotionScheme.expressive()` par défaut
 - [x] `expect`/`actual platformColorScheme` — palette du fond d'écran sur Android 12+, graine
@@ -204,6 +203,48 @@ qui attendent leur tour, un bouton qui sait s'il peut être pressé — s'écrit
 - [x] Une story par contrôle, plus `screens/sign-up-form`
 
 ---
+
+## Livré — Modernisation M3 Expressive (0.3.0)
+
+Suivi dans #291. Une version mineure marquée *breaking* : ce que l'on y gagne, c'est une librairie
+dont la forme se lit dans les imports.
+
+- [x] **Des paquets qui disent à quoi ils servent.** `com.softistx.material.foundation.*` (`theme`,
+      `style`, `motion`, `layout` pour les aides de taille de fenêtre, `icon`, `text`) porte ce dont
+      tout le reste est fait, sans aucun composant ;
+      `com.softistx.material.components.*` (`button`, `form`, `navigation`, `layout`, `feedback`, `content`,
+      `surface`, `media`, `data`, `datetime`) porte les composants, une famille par dossier. Un
+      dossier est un paquet, et le `*Styles.kt` d'un composant reste à côté de lui ; `StxStyles` vit dans `components`, de sorte que `foundation` ne connaît aucun composant
+- [x] **Ce qui rend compte d'un état est au même endroit.** Alertes, bandeaux, badges de statut,
+      pastilles, squelette, progression, indicateur de saisie et toasts sont dans `feedback` ; cartes,
+      tuiles, chips, statistiques et états vides sont dans `content`
+- [x] **Aucun changement de comportement.** Seuls les noms de paquets bougent ; la table
+      ancien → nouveau est dans le changeset, de quoi corriger ses imports d'un seul passage
+- [x] Le catalogue suit les mêmes familles : ses stories sont rangées par `foundation` et par
+      famille de composants, et son registre suit le même ordre
+- [x] **Palette (#280).** Palette calme par défaut : TonalSpot et `SPEC_2025`, `info` sur `secondary`, point de `Stat` seulement pour Success, Warning et Error
+- [x] **Famille des boutons (#282).** `buttonStyle` — un `Style` unique pour la famille des boutons : l'alpha désactivé seulement, sans échelle d'appui puisque tous se déforment
+- [x] **Famille des boutons (#282).** Boutons : morphing de forme à l'appui (`StxStyles.button`) et `ButtonSize` (ExtraSmall à ExtraLarge, Small par défaut)
+- [x] **Morphing des boutons d'icône (#283).** `IconButton`, `IconToggle`, `ToggleButton`, `SplitButton` et `Fab` : morphing de forme (rond au repos, plus carré à l'appui et coché) et `style: Style = Style`
+- [x] **Typographie emphasised (#281).** `Typography(…, emphasized)` et `TypographyVariant.style(emphasized)` vers
+      les 15 rôles `*Emphasized` ; `SectionHeader` et `EntityHeader` les portent ; le chiffre d'un `Stat`
+      reste `SemiBold` en taille display, et les `Stat` d'une rangée gardent la même hauteur (`reserveDelta = true`) ;
+      tailles par défaut changées : `SectionHeader` en `TitleMedium`, `EntityHeader` en `HeadlineMedium`, `Metric` en display
+- [x] **Segments connectés (#284).** `SegmentedControl` et `ViewToggle` sont le groupe de boutons connecté de M3 (extrémités rondes, jonctions plus carrées, choisi = rempli, sans coche, `Role.RadioButton` + `selected`) ; `SegmentedControl` gagne `icons`, `ViewToggle` gagne `style` ; la pression de `Tabs` atteint enfin son style.
+- [x] **`ListTile` sur le `ListItem` interactif de M3 (#285).** Un `ListTile` cliquable est `ListItem(onClick, shapes = ListItemDefaults.shapes())` : la forme se déforme à l'appui, au survol et au focus (4 dp au repos, 16 dp appuyé) au lieu de l'échelle 0,99 ; `selected: Boolean? = null` en fait un choix unique (liste-détail : fond sélectionné, `Role.RadioButton` + `selected`) ; `group: ListTileGroup? = null` le range dans une liste segmentée (`SegmentedListItem`, première / milieu / dernière tuile) ; `ListTileDefaults.GroupGap` espace les tuiles.
+- [x] **Alertes, bannières et `EmptyState` (#286).** `Alert`, `AnnouncementBar` et `PromoBanner` : surface tonale `surfaceContainerHigh` sans contour (l'erreur garde son conteneur), coin `largeIncreased`, ton porté par une plaque `Cookie6Sided` en paire pleine, inversée pour l'erreur, au moins 3:1 (`icon: ImageVector? = AlertDefaults.icon(tone)`, `null` retire la plaque), titre d'`Alert` emphasised et annoncé comme titre. `EmptyState` : l'animation d'entrée joue enfin (`AnimatedVisibility(visible = true)` ne s'animait jamais), `EmptyStateDefaults.IconPlate(icon)` dessine une plaque `SoftBurst` dans le slot `illustration`, titre emphasised et annoncé comme titre ; nouvelle icône `StxIcons.Touch`.
+- [x] **Barres d'app flexibles, marqueur de `Stepper`, `LoadingMark` contenu (#287).** `AppBarSize.Medium` et `Large` sont les barres flexibles de M3 (titre `headlineMedium` / `displaySmall`) et se replient en barre `Small` avec `scrollBehavior: TopAppBarScrollBehavior? = null` ; le titre de toute barre est emphasised (`Small` et `Centered` en `TitleLarge` emphasised, sur une ligne ; `Large` passe de 152 à 120 dp déployée, `Medium` reste à 112 dp) et annoncé comme titre. Le marqueur d'étape de `Stepper` passe de 28 à 32 dp : cercle, ou `Cookie9Sided` pour l'étape courante, avec un morph sur `motion.spatial` quand l'étape avance. `LoadingMark(contained = false)` : `true` pose la forme sur un disque `primaryContainer` (`ContainedLoadingIndicator`).
+- [x] **Style partout — formulaires (#288, 1/3).** Chaque partie interactive de `components/form` prend `style: Style = Style`, appliqué en dernier et placé juste avant un lambda final (`optionLabel`, `format`) : `TextField`/`TextareaField` (déjà), `Autocomplete`, `SelectField`, `CopyField`, `Composer`, `Checkbox`, `TriStateCheckbox`, `Switch`, `RadioGroup`, `CheckboxGroup`, `Checklist`, `SliderField` (deux surcharges), `QuantityField`, `InlineEdit`, `TagField`, `OtpField`, `UploadField`, `ThemeToggle`. Nouveaux noms dans `StxStyles` : `toggle` (échelle d'appui 0,99 d'une rangée à cocher), `dimmed` (estompage désactivé de `OtpField` et `InlineEdit`, que M3 n'estompe pas ; `field` reste vide) et `upload` (0,99 et estompage désactivé). `Autocomplete` gagne `isError` et `supportingText` (#295). Exceptions listées dans `docs/components.md` : `SliderField` et `QuantityField` sans style par défaut.
+- [x] **Style partout — données et dates (#288, 2/3).** `style: Style = Style` sur `DataTable` (et `headerStyle`), `Pagination`, `SortControl`, `CommandPalette`, `DateField`, `DateRangeField`, `TimeField` et `Calendar`, appliqué en dernier ; `DataTable` placé juste avant `onRowClick`. Nouveaux noms dans `StxStyles` : `tableRow` (appui 0,99 d'une ligne cliquable) et `sortHeader` (appui 0,97 d'un en-tête triable). En-têtes triables (#295) : `sort: TableSort?` et `onSortChange` font de chaque en-tête un bouton avec flèche et annonce « Ascending » / « Descending » ; `onRowClick` rend aussi cliquables les lignes du tableau large. Le titre d'`EntityHeader` est annoncé comme titre (#297). Exceptions listées dans `docs/components.md` : `Calendar` et `CommandPalette` sans style par défaut, les champs date et heure sans estompage (M3 s'en charge).
+- [x] **Style partout — 3/3 (#288).** `style: Style = Style` sur chaque partie interactive restante, appliqué en dernier et placé juste avant un lambda final : `PinBar`, `MentionChip`, `FileChip`, `Rating`, `FilterBar`, `ReactionBar`, `LinkPreview`, `ExpandableText`, `PersonCard`, `Gallery`, `LoadMoreButton`, `ScrollToTop`, `RefreshBox`, `HelpTip`, `Tooltip`, `HoverCard`, `ContextMenu`, `Drawer` et `SwipeActions` ; `CodeBlock` et `ReplyPreview` le passent à leur unique bouton. Nouveau nom dans `StxStyles` : `tile` (appui 0,99 d'une image cliquable de `Gallery`) ; `card` et `chip` servent aussi de défaut aux nouvelles parties. Les surfaces M3 (tiroir, infobulles) n'ont pas de style par défaut : M3 peint son conteneur par-dessus ; `Menu`, `Sheet` et `ConfirmDialog` ne prennent pas de `style`, qu'il n'atteindrait pas. Un `style` s'applique aussi sans gestionnaire de clic : seuls l'appui et le rôle en dépendent. Famille retours : rien à ajouter, tout y est déjà stylé ou inerte. Accessibilité (#297) : `Card(onClick)` est annoncée comme bouton, `SectionHeader` et les titres de `PricingCard` et `DangerZone` sont des titres (case « heading » cochée), et `SwipeActions` gagne `customActions` pour les lecteurs d'écran et le clavier. #291 reste ouvert.
+- [x] **Carousel sur le carrousel M3 (#289).** `Carousel(count, modifier, peek, style, page)` repose sur `HorizontalMultiBrowseCarousel` : une grande page, la suivante large de `peek`, chaque page découpée par un masque `extraLarge` qui se déforme avec sa taille ; les pages intermédiaires rétrécissent vers la petite. Tous les paramètres gardent leur sens ; `style: Style = Style` juste avant le lambda final habille l'ensemble (piste et points), jamais les pages. `HorizontalUncontainedCarousel` existe bien dans le jar 1.12.0-alpha03 mais sa largeur fixe ne se règle pas sur `peek`. #291 reste ouvert.
+- [x] **Lacunes du showcase School (#295, fin).** La barre compacte de `NavigationSuite` garde chaque libellé sur une ligne (ellipse en garde-fou) : « Dashboard » ne passe plus à la ligne. Une barre compacte tient trois à cinq destinations (règle M3) ; au-delà, déplacer les autres derrière « More », un tiroir ou le rail, comme md-school sur téléphone. `StxIcons` gagne `Bell`, `Printer`, `Phone` et `EditNote` (34 vecteurs). `animateStagger` compte son attente en images de l'horloge de composition au lieu d'un `delay` : un rendu sans tête, qui avance les images sans attendre, voit l'élément arriver. Aucune signature ne change. #291 reste ouvert.
+- [x] **Accessibilité (#297, fin).** `Emphasis.Subtle` passe de 0,5 à 0,72 et `Medium` de 0,72 à 0,80 : `Subtle` tient 4,5:1 sur `surface`, `surfaceContainer` et `surfaceContainerHigh`, en clair et en sombre (avant : 2,7 à 2,8 en clair, 4,3 à 4,5 en sombre). `StxTheme` sans `motion` suit le système : « Réduire les animations » coupe `StxMotion` et installe un schéma M3 qui n'anime plus ; passer un `motion` désactive la lecture. Lecture par Android (échelle d'animation), iOS (`UIAccessibility`) et bureau (`-Dstx.material.reduceMotion` seul ; `readDesktopReducedMotion()` pour lire le système sur demande). Les specs passent au `runComposeUiTest` v2. #291 reste ouvert.
+- [x] **Ruptures de la revue approfondie (#358).** `style` est le dernier paramètre (ou le dernier avant un lambda final) de chaque composable public ; `sortable` est un champ de `TableColumn` ; `StxStyles` vit dans `components` ; les `xStyle` sont `internal` ; `motionScheme` disparaît de `StxTheme` au profit de `motion`, dont dérive le schéma M3
+
+## Maintenant
+
+- [ ] **Suite de #297 : contraste élevé.** Lire « Augmenter le contraste » (iOS `UIAccessibilityDarkerSystemColorsEnabled`, Android `UiModeManager.getContrast`, bureau) et l'exposer au thème quand un premier composant en a besoin.
 
 ## Phases suivantes
 

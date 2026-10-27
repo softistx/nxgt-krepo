@@ -46,7 +46,7 @@ What exists:
 | `examples/graphix-codegen` | Both GraphQL codegen plugins on one schema: DGS types and an Apollo `OPERATION_DOCUMENT` |
 | `examples/spring-orders` | A Spring Boot order book over MongoDB showing `stx-spring-boot` with no configuration class: a spec-first REST API whose controllers implement the generated `@HttpExchange` interfaces, translated failures, keyset paging, an audit trail and two `stx-migrations` migrations run as a startup gate — and `stx-telemetry-spring`, a server span per request with the service's own span nesting inside it and typed events into a collection |
 | `examples/workflow-checkout` | A checkout saga over `stx-workflow` and Redis: a step with its compensation, a fan-out whose legs are undone one by one, and a run whose process is killed between the charge and the checkpoint so the idempotency key has something to prove |
-| `examples/material-demo` | The `stx-material` catalogue — one Compose Multiplatform app in three modules: `md-catalog` holds every story, `md-desktop` and `md-android` are launchers |
+| `examples/material-demo` | The `stx-material` catalogue and the School showcase app — Compose Multiplatform, four modules: `md-catalog` holds every story, `md-school` holds the School app, `md-desktop` and `md-android` are launchers for both |
 | `.agents/skills/` | Kotlin Toolchain reference + docs-sync skills (see below) |
 
 A module is a directory with a `module.yaml`, registered by path in `project.yaml`.
@@ -151,7 +151,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 
 - **`kotlin-toolchain`** — manifest schema, catalog and template rules, commands, plus `references/`: a markdown cache of the full official documentation (50 pages, version recorded in `references/INDEX.md`).
 - **`ktorfit`** — the Ktorfit HTTP client, including how it is wired up here through KSP alone, without its Gradle plugin.
-- **`compose-multiplatform`** — the UI stack behind `libs/ui/stx-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 59 pages of the official documentation.
+- **`compose-multiplatform`** — the UI stack behind `libs/ui/stx-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 67 pages of the official documentation.
 - **`material3-compose`** — the Material 3 API surface that actually compiles here. Its `references/` are *not* fetched: `$compose.material3` resolves to its own alpha version line, so the pages are generated from the resolved jar by `scripts/extract_api.py`.
 - **`skill-from-docs`** — builds and refreshes docs-backed skills. Each such skill declares its source in a `docs-source.json`; refresh one with:
   ```bash
@@ -160,12 +160,16 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
   Run it after a version bump, or whenever a cached page disagrees with the tool. Files under `references/` are generated — fix the script, not the output.
 - **`openapi-spec-first`** — how a REST API is authored here: a Redocly-split OpenAPI document under `<module>/openapi/`, the file and naming conventions the generator reads, and the repository → service → controller layering over the generated `@HttpExchange` interface. Read it before adding or changing an endpoint. Its `references/` are written by hand rather than fetched — `document-layout.md` for the split document and the redocly config, `spring-api.md` for the five files a Spring API is made of — and they stay in step with `examples/spring-orders`, which is the same thing running.
 - **`large-feature-branch-workflow`** — how to split work too large for a single PR into slices that each land on one integration branch, which then lands on `develop` as the feature.
+- **`stx-material-components`** — the order of work for a `libs/ui/stx-material` component: place it, check M3, wrap through `*Defaults`, dress it with a `Style`, reach for Expressive, meet the quality bar, prove it with a pixel and a semantics spec, story, docs and changeset. `references/` holds the verified Expressive vocabulary, the visual-quality bar, a worked example and the pre-PR checklist (written by hand).
+- **`compose-accessibility`** — semantics, roles, 48 dp targets, contrast, font scale, keyboard focus and reduced motion on Android, iOS and desktop, and how to test them. `references/` caches 14 pages of the Android and JetBrains documentation.
+- **`compose-motion`** — spatial against effects specs, `StxMotion`, Style `animate`, shape morph, enter and exit, stagger, reduced motion and what not to animate. `references/` caches 10 pages of the Android animation documentation.
 
-Three come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/ui/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
+Four come from Google's [`android/skills`](https://github.com/android/skills) catalogue rather than being written here. They describe **Jetpack Compose (`androidx.compose.*`)**, and `libs/ui/stx-material` builds on **Compose Multiplatform (`org.jetbrains.compose.*`)** — an API named in one of them may not exist in the version that compiles here, so check it against `material3-compose`'s `references/components.md` before using it:
 
 - **`styles`** — the Compose Styles API. **This is the default pattern for every component in `libs/ui/stx-material`**, not background reading; see *Styling a component* below.
 - **`adaptive`** — window sizes, pointer and keyboard input, multi-pane layouts.
 - **`edge-to-edge`** — drawing behind the system bars, for the demo's Android launcher.
+- **`jetpack-compose-performance`** — recomposition, stability, lazy lists and deferred state reads. What does not apply on Compose Multiplatform (baseline profiles, Android-only tooling, `computedStateOf`) is in `compose-multiplatform`'s `references/performance-notes.md`; the skill itself stays byte-identical to upstream.
 
 ## Building a component
 
@@ -195,7 +199,7 @@ The shape of a wrapper:
 
 A claim about **pixels is measured in pixels.** `ImageComposeScene` renders a composable into a
 bitmap with no window, in milliseconds, on a headless host, and `sendPointerEvent` drives hover and
-press. `libs/ui/stx-material/test@jvm/` holds the rendering specs (thirteen files, one per group of components); the two that were written
+press. `libs/ui/stx-material/test@jvm/` holds the rendering specs (eleven `*RenderTest` files, one per group of components, and a few single-component specs beside them); the two that were written
 because something looked right and was not are a hover state that was invisible on *selected* chips
 because they already wear the focus layer, and a collapsed `ResponsiveButton` that kept the padding
 its label had left behind. Rendering specs are jvm-only — skiko's native library comes from
@@ -217,9 +221,9 @@ settings:
 
 The shape a component takes:
 
-- **Its look is a `Style`, in its own file** — `button/ButtonStyles.kt` holds `buttonStyle(variant,
-  color)` and `button/Button.kt` holds no colours at all. A style reaches theme tokens through the
-  `StyleScope` extensions in `theme/StyleTokens.kt` (`colors`, `scheme`, `shapes`, `spacing`,
+- **Its look is a `Style`, in its own file** — `components/button/ButtonStyles.kt` holds an internal `buttonStyle` and
+  `buttonColors(variant, color)`, and `components/button/Button.kt` holds no colours at all. A style reaches theme tokens through the
+  `StyleScope` extensions in `foundation/style/StyleTokens.kt` (`colors`, `scheme`, `shapes`, `spacing`,
   `motion`), which read the `CompositionLocal`s at resolve time rather than closing over whatever
   was in scope when the style was built.
 - **Interaction states are declared, not wired.** `pressed { }`, `hovered { }`, `focused { }`,
@@ -229,11 +233,13 @@ The shape a component takes:
   better and in one place.
 - **The signature carries no styling parameters.** No `backgroundColor`, no `shape`, no
   `contentPadding`. Instead one `style: Style = Style` parameter, defaulting to exactly `Style`
-  (the companion, which is the empty style) and applied *last* so a caller's override wins:
-  `Modifier.styleable(styleState, base, style)`.
-- **Presentation state belongs to the component.** `rememberUpdatedStyleState(interactionSource) {
-  it.isEnabled = enabled }` gives pressed, hovered and focused for nothing; the caller passes
-  business state and never remembers a boolean for a visual.
+  (the companion, which is the empty style), the last parameter (or the last before a trailing lambda), and applied *last* so a caller's override wins:
+  `Modifier.styledBy(style, enabled, base, interactionSource)`.
+- **Presentation state belongs to the component.** `styledBy` (or `pressable` for a part that is a
+  press target only when clickable, with `pressBase` for the base alone) remembers the style state
+  and gives pressed, hovered and focused for nothing; the caller passes business state and never
+  remembers a boolean for a visual. Nothing writes `rememberUpdatedStyleState` + `styleable` inline,
+  and the 0.99 and 0.97 presses are the shared `rowPress` and `compactPress`.
 - **Every curve comes from Material 3's `MotionScheme`.** `StxMotion` holds the scheme
   `StxTheme` installed, and offers M3's two axes — `spatial(speed)` for anything that moves,
   which is a spring and may overshoot, and `effects(speed)` for colour and alpha, which must land
@@ -243,8 +249,9 @@ The shape a component takes:
   scope.
 - **Every default has a name in `StxStyles`**, reached as `StxTheme.styles.card`.
   It is a plain `object` behind an extension property, not a `CompositionLocal` — a `Style` reads
-  its tokens when it is applied, not when it is written — and it lives in `src/style/` so `theme`
-  keeps knowing nothing about the components. Restating a default before editing it is what stops a
+  its tokens when it is applied, not when it is written — and it lives in `src/components/StxStyles.kt`
+  (`com.softistx.material.components`) so `foundation` keeps knowing nothing about the components. The `xStyle` vals
+  behind it are `internal`: `StxStyles.x` is the only public name. Restating a default before editing it is what stops a
   one-off drifting away from the rest of the screen.
 
 The `styles` skill has the full vocabulary, the state-animation guide and the migration workflow.
@@ -286,7 +293,7 @@ so that every agent and every person working here loads the same ones.
 
 A skill's `references/` do not have to come from a docs site. When the published documentation describes a different version than the one that compiles — `material3-compose` is the case here — generating the pages from the artifact is the accurate option, and it follows the same rule: the output is generated, so fix the script rather than the page.
 
-Skills are budgeted: a `description` is in context every session (keep it ≤250 chars), a SKILL.md body loads on activation (≤~120 lines), and `references/` pages load only when opened. Put cost in the deepest tier that can hold it.
+Skills are budgeted: a `description` is in context every session (keep it ≤250 chars), a SKILL.md body loads on activation (≤~120 lines), and `references/` pages load only when opened. Skills installed from Google's catalogue are exempt from the body budget, because they stay byte-identical to upstream. Put cost in the deepest tier that can hold it.
 
 ## Commands
 
@@ -1162,6 +1169,9 @@ the same each time, and the mistakes are the same each time too.
   | `libs/ui/stx-material/README.md` | How is the UI library shaped, how does `StxTheme` slot into an application that already uses Material 3, and how do I add a component? |
   | `libs/ui/stx-material/docs/tokens.md` | What a token may say — the colour roles, spacing, durations and easings, and why shapes and elevation are M3's. **This is where a new token is documented** |
   | `libs/ui/stx-material/docs/components.md` | Every component, its parameters, and its story in the catalogue. **This is where a new component is documented** |
+  | `libs/ui/stx-material/docs/troubleshooting.md` | What a consumer hits and the fix, one entry per symptom (today: animations that differ between machines, from the OS "Reduce motion" setting) |
+  | `examples/material-demo/md-school/README.md` | What the School app is, how to run and test it, and where its README lives (the demo README holds the rest) |
+  | `examples/material-demo/md-school/docs/design-grid.md` | How a visual slice of the School app is scored: the criteria, the 1 to 5 scale, and the bench it is read against |
   | `libs/ui/stx-material/docs/roadmap.md` | Where the library is — the phases and what each delivered. **A box is ticked in the change that delivers it, never after** |
   | `examples/artifacts-ktor/README.md` | Why two modules exist that demonstrate nothing: the nine coordinates of `stx-amqp`, `stx-kafka` and `stx-storage` that no other module resolves, and what the compile and the spec each prove about a POM |
   | `examples/artifacts-spring/README.md` | What booting a context proves that loading a class cannot — and the two things that bit while writing it |
@@ -1169,7 +1179,7 @@ the same each time, and the mistakes are the same each time too.
   | `examples/graphix-shop/README.md` | What the GraphQL catalogue shows — split SDL, annotated DataFetchers, how to run it |
   | `examples/graphix-codegen/README.md` | The two GraphQL codegen plugins on one schema |
   | `examples/workflow-checkout/README.md` | What the checkout saga shows — the journal each run leaves, and the window between an effect and its checkpoint that the idempotency key exists to cover |
-  | `examples/material-demo/README.md` | Why the demo is three modules, how to run it, and how a story is registered |
+  | `examples/material-demo/README.md` | Why the demo is four modules, how to run it, and how a story is registered |
   | `libs/core/stx-testing/README.md` | Where an integration spec's server comes from, how a container declared there is cleaned up, and the two conventions every harness follows — `requireEndpoint()` and `TestNames` |
   | `AGENTS.md` | How do I work in this repo? One paragraph per capability, never the detail. |
 

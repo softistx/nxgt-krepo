@@ -1,0 +1,74 @@
+package com.softistx.material.components.surface
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.style.Style
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import com.softistx.material.components.navigation.navigationItemStyle
+import com.softistx.material.foundation.icon.Icon
+import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.motion.Transitions
+import com.softistx.material.foundation.style.styledBy
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.StxTheme
+
+/**
+ * One panel that opens. Material 3 has no disclosure.
+ *
+ * [Accordion] is a *list* with at most one section open. This is a single question, a settings
+ * group, a footnote — the chevron is decoration, the whole row is the target.
+ */
+@Composable
+fun Disclosure(
+    title: String,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    style: Style = Style,
+    content: @Composable () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Column(modifier = modifier) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .styledBy(style, base = navigationItemStyle, interactionSource = interactionSource)
+                    .clickable(
+                        interactionSource = interactionSource,
+                        role = Role.Button,
+                        onClick = { onExpandedChange(!expanded) },
+                    ).padding(vertical = StxTheme.spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Typography(
+                text = title,
+                variant = TypographyVariant.TitleSmall,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                icon = if (expanded) StxIcons.ChevronDown else StxIcons.ChevronRight,
+                description = null,
+            )
+        }
+        AnimatedVisibility(
+            visible = expanded,
+            enter = Transitions.expand,
+            exit = Transitions.collapse,
+        ) {
+            Column(modifier = Modifier.padding(bottom = StxTheme.spacing.md)) {
+                content()
+            }
+        }
+    }
+}

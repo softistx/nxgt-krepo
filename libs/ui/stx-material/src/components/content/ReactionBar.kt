@@ -1,0 +1,57 @@
+package com.softistx.material.components.content
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.style.Style
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.Modifier
+import com.softistx.material.foundation.theme.StxTheme
+
+/** One reaction in a [ReactionBar]. */
+@Immutable
+data class Reaction(
+    val label: String,
+    val count: Int,
+    val selected: Boolean = false,
+    val onClick: () -> Unit = {},
+)
+
+/** Adds one if it was off, removes one if it was on, never below zero. */
+fun toggleReaction(
+    count: Int,
+    selected: Boolean,
+): Pair<Int, Boolean> =
+    if (selected) {
+        (count - 1).coerceAtLeast(0) to false
+    } else {
+        count + 1 to true
+    }
+
+/**
+ * A row of reactions. Each is a [Chip], so selection, the tick and the shape morph are M3's.
+ *
+ * The label is the emoji or short name; the count sits after it. Toggling is the caller's —
+ * [toggleReaction] is the usual arithmetic. [style] reaches every chip.
+ */
+@Composable
+fun ReactionBar(
+    reactions: List<Reaction>,
+    modifier: Modifier = Modifier,
+    style: Style = Style,
+) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+    ) {
+        reactions.forEach { reaction ->
+            Chip(
+                text = "${reaction.label} ${reaction.count}",
+                selected = reaction.selected,
+                style = style,
+                onClick = reaction.onClick,
+            )
+        }
+    }
+}

@@ -15,12 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.softistx.material.display.Chip
-import com.softistx.material.text.Emphasis
-import com.softistx.material.text.Typography
-import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StxTheme
-import com.softistx.material.theme.supportsDynamicColor
+import com.softistx.material.components.content.Chip
+import com.softistx.material.foundation.text.Emphasis
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.foundation.theme.supportsDynamicColor
 
 /**
  * The header: the two dials that prove the theme is live. Changing either repaints every story
@@ -49,6 +49,18 @@ fun CatalogTopBar(
                     leading = {
                         Box(Modifier.size(12.dp).clip(CircleShape).background(color))
                     },
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CatalogPaletteStyles.forEach { option ->
+                Chip(
+                    text = option.name,
+                    selected = state.paletteStyle == option,
+                    onClick = { state.paletteStyle = option },
                 )
             }
         }

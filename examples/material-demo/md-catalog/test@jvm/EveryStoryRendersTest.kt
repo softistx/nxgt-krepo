@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
-import com.softistx.material.theme.StxTheme
+import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -32,14 +32,15 @@ class EveryStoryRendersTest :
                         "Foundation",
                         "Motion",
                         "Buttons",
-                        "Display",
                         "Forms",
                         "Navigation",
                         "Layout",
+                        "Feedback",
+                        "Content",
                         "Surfaces",
-                        "Date and time",
-                        "Data",
                         "Media",
+                        "Data",
+                        "Date and time",
                         "Screens",
                     )
                 CatalogGroups.forEach { it.stories.size shouldBeGreaterThan 0 }

@@ -1,0 +1,252 @@
+package com.softistx.material.components.data
+
+import androidx.compose.foundation.style.Style
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
+import com.softistx.material.Corner
+import com.softistx.material.NodeBounds
+import com.softistx.material.foundation.theme.StxTheme
+import com.softistx.material.isBare
+import com.softistx.material.isPainted
+import com.softistx.material.painted
+import com.softistx.material.probed
+import com.softistx.material.renderProbe
+import com.softistx.material.scanline
+import io.kotest.core.spec.style.FeatureSpec
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.shouldBe
+
+private val oneColumn = listOf(TableColumn<String>("Name") { it })
+
+@OptIn(ExperimentalTestApi::class)
+class DataStyleTest :
+    FeatureSpec({
+        feature("DataTable rows") {
+            scenario("a clickable row of the wide table takes the caller's style and presses to 0.99") {
+                val line =
+                    scanline(pressAt = { Offset(200f, it.rect.bottom - 12f) }, y = { it.rect.bottom - 4f }) { m ->
+                        DataTable(oneColumn, listOf("Ada"), m, collapseBelow = 100.dp, style = painted, onRowClick = {})
+                    }
+                line.rest.isPainted() shouldBe true
+                line.pressed.getValue(1).isBare() shouldBe true
+                line.pressed.getValue(3).isPainted() shouldBe true
+            }
+
+            scenario("a row without onRowClick still takes the caller's style (it is never dropped), but is not a press target") {
+                renderProbe(width = 400, height = 200, content = {
+                    StxTheme(isDark = false) {
+                        DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp, style = painted)
+                    }
+                }) { settle().count { it.isPainted() } shouldBeGreaterThan 1000 }
+            }
+
+            scenario("a collapsed card gets the caller's style too: alpha 0 hides it, the default shows it") {
+                fun ink(style: Style) =
+                    renderProbe(width = 400, height = 300, content = {
+                        StxTheme(isDark = false) {
+                            DataTable(oneColumn, listOf("Ada"), collapseBelow = 10_000.dp, style = style)
+                        }
+                    }) { settle().ink() }
+                ink(Style) shouldBeGreaterThan 500
+                ink(Style { alpha(0f) }) shouldBe 0
+            }
+        }
+
+        feature("DataTable sortable headers") {
+            scenario("a header takes the header style and presses to 0.97") {
+                val line =
+                    scanline(pressAt = { Offset(200f, it.rect.top + 8f) }, y = { it.rect.top + 6f }) { m ->
+                        DataTable(oneColumn, listOf("Ada"), m, collapseBelow = 100.dp, onSortChange = {}, headerStyle = painted)
+                    }
+                line.rest.isPainted() shouldBe true
+                line.pressed.getValue(3).isBare() shouldBe true
+                line.pressed.getValue(8).isPainted() shouldBe true
+            }
+
+            scenario("a click sorts ascending first, then flips, and the current header announces its direction") {
+                runComposeUiTest {
+                    val asked = mutableListOf<TableSort>()
+                    var sort by mutableStateOf<TableSort?>(null)
+                    setContent {
+                        StxTheme(isDark = false) {
+                            DataTable(
+                                columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score") { it }),
+                                rows = listOf("Ada"),
+                                collapseBelow = 100.dp,
+                                sort = sort,
+                                onSortChange = {
+                                    asked += it
+                                    sort = it
+                                },
+                            )
+                        }
+                    }
+                    val button = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
+                    onNodeWithText("Name").assert(button).assertHasClickAction().performClick()
+                    onNodeWithText("Name").performClick()
+                    onNodeWithText("Score").performClick()
+                    asked shouldBe
+                        listOf(
+                            TableSort(0, SortDirection.Asc),
+                            TableSort(0, SortDirection.Desc),
+                            TableSort(1, SortDirection.Asc),
+                        )
+                }
+            }
+
+            scenario("the sorted header says Ascending or Descending; the others say nothing") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false) {
+                            DataTable(
+                                columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score") { it }),
+                                rows = listOf("Ada"),
+                                collapseBelow = 100.dp,
+                                sort = TableSort(1, SortDirection.Desc),
+                                onSortChange = {},
+                            )
+                        }
+                    }
+                    onNodeWithText("Score").assert(
+                        SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Descending"),
+                    )
+                    onNodeWithText("Name").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
+                }
+            }
+
+            scenario("a column can be built with named arguments") {
+                TableColumn<String>(header = "a", value = { it }).sortable shouldBe true
+            }
+
+            scenario("a column with sortable = false is plain text, the others are buttons") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false) {
+                            DataTable(
+                                columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score", sortable = false) { it }),
+                                rows = listOf("Ada"),
+                                collapseBelow = 100.dp,
+                                onSortChange = {},
+                            )
+                        }
+                    }
+                    onNodeWithText("Name").assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+                    onNodeWithText("Score").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Role))
+                    onNodeWithText("Score").assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
+                }
+            }
+
+            scenario("a display-only sort (no onSortChange) still announces its direction, without a click") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false) {
+                            DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp, sort = TableSort(0, SortDirection.Asc))
+                        }
+                    }
+                    onNodeWithText("Name").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Ascending"))
+                    onNodeWithText("Name").assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
+                }
+            }
+
+            scenario("without onSortChange a header is plain text, not a button") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false) { DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp) }
+                    }
+                    onNodeWithText("Name").assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
+                }
+            }
+
+            scenario("nextSort starts a new column ascending and flips the current one") {
+                nextSort(null, 2) shouldBe TableSort(2, SortDirection.Asc)
+                nextSort(TableSort(2, SortDirection.Asc), 1) shouldBe TableSort(1, SortDirection.Asc)
+                nextSort(TableSort(2, SortDirection.Asc), 2) shouldBe TableSort(2, SortDirection.Desc)
+            }
+        }
+
+        feature("the forwarded styles") {
+            scenario("Pagination hands its style to both buttons: the left edge and the right edge of the row are Red") {
+                val bounds = NodeBounds()
+                renderProbe(width = 400, height = 200, content = {
+                    StxTheme(isDark = false) {
+                        Pagination(true, true, {}, {}, Modifier.probed(bounds), style = painted)
+                    }
+                }) {
+                    val grid = settle()
+                    grid.pixelAt(bounds, Corner.TopLeft) shouldBe Color.Red
+                    grid.pixelAt(bounds, Corner.TopRight) shouldBe Color.Red
+                }
+            }
+
+            scenario("SortControl hands its style to the field: the corner is Red, not faded, when disabled") {
+                val bounds = NodeBounds()
+                renderProbe(width = 400, height = 200, content = {
+                    StxTheme(isDark = false) {
+                        SortControl(
+                            options = listOf("A"),
+                            selected = "A",
+                            direction = SortDirection.Asc,
+                            onSelectedChange = {},
+                            onDirectionChange = {},
+                            modifier = Modifier.probed(bounds),
+                            enabled = false,
+                            style = painted,
+                        )
+                    }
+                }) { settle().pixelAt(bounds, Corner.TopLeft) shouldBe Color.Red }
+            }
+        }
+
+        feature("CommandPalette") {
+            scenario("the caller's style dresses the list of commands, and nothing is painted without it") {
+                fun paintedCount(style: Style) =
+                    renderProbe(width = 600, height = 600, content = {
+                        StxTheme(isDark = false) {
+                            CommandPalette(true, "", {}, listOf(CommandItem("Open", {})), {}, style = style)
+                        }
+                    }) { settle().count { it.isPainted() } }
+                paintedCount(Style) shouldBe 0
+                paintedCount(painted) shouldBeGreaterThan 1000
+            }
+        }
+
+        feature("the title") {
+            scenario("EntityHeader announces its title as a heading") {
+                runComposeUiTest {
+                    setContent { StxTheme(isDark = false) { EntityHeader(title = "Amara Diallo", supporting = "Customer") } }
+                    onNodeWithText("Amara Diallo").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+                    onNodeWithText("Customer").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Heading))
+                }
+            }
+        }
+
+        feature("the signature") {
+            scenario("signature guard: a trailing lambda is still the row click, after style") {
+                runComposeUiTest {
+                    var clicked: String? = null
+                    setContent {
+                        StxTheme(isDark = false) {
+                            DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp) { clicked = it }
+                        }
+                    }
+                    onNodeWithText("Ada").performClick()
+                    clicked shouldBe "Ada"
+                }
+            }
+        }
+    })

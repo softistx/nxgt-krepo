@@ -4,11 +4,12 @@ The catalogue for `libs/ui/stx-material`: every component, with typed controls b
 whole screen at the end.
 
 ```bash
-./kotlin run -m md-desktop     # a window, sized for the three-pane layout
-./kotlin run -m md-android     # with a device or emulator connected
+./kotlin run -m md-desktop              # the catalogue: a window, sized for the three-pane layout
+./kotlin run -m md-desktop -- school    # the School showcase app, in the same window
+./kotlin run -m md-android              # with a device or emulator connected; two launcher icons
 ```
 
-## One application, three modules
+## One application, four modules
 
 A module has exactly one product type, and neither `android/app` nor `jvm/app` covers both
 platforms — so the demo cannot be a single module. It is not three applications either:
@@ -16,10 +17,15 @@ platforms — so the demo cannot be a single module. It is not three application
 | | |
 | --- | --- |
 | `md-catalog/` | `kmp/lib` on `[jvm, android]`. **Everything**: `MaterialDemo()`, the story registry, the panes, the knobs, the stories. |
-| `md-desktop/` | `jvm/app`. A `Window` around `MaterialDemo()`. |
-| `md-android/` | `android/app`. One `ComponentActivity` around `MaterialDemo()`, and a manifest. |
+| `md-school/` | `kmp/lib` on `[jvm, android]`. **The School showcase app**: `SchoolApp()`, six screens, in-memory data. See below. |
+| `md-desktop/` | `jvm/app`. A `Window` around `MaterialDemo()`, or around `SchoolApp()` when started with `-- school`. |
+| `md-android/` | `android/app`. One `ComponentActivity` per app (`MaterialDemo()` and `SchoolApp()`), and a manifest with both. |
 
-The launchers are about twenty lines each and contain no logic and no stories. If one starts
+The launchers are short and contain no logic and no stories. The one
+decision `md-desktop` makes is which app the window holds, and it takes it from the first program
+argument (`school`) rather than from a second `main`, a flag in the catalogue or a third module;
+`md-android` makes it by declaring a second launcher activity, so both apps install together and are
+one tap apart. If one starts
 growing, something is in the wrong module.
 
 There is no iOS launcher: the library declares the Apple targets, the demo runs where it can be run
@@ -28,10 +34,50 @@ from here. Adding `ios/app` on a macOS host touches nothing in `md-catalog`.
 The three panes of the catalogue are Navigation 3 list-detail (`AdaptiveNavDisplay`): the story
 list, then the stage with its knobs. Compact shows one at a time; a wide window shows both.
 
+## The School app
+
+`md-school` is a realistic school-management app written **only** against `stx-material` — what the
+single-component stories cannot show: a navigation suite that becomes a bar, a rail or both as the
+window grows, forms with validation, tables, list-detail, and every screen's loading, empty and
+error face. It is also the evaluation bench for the visual work on the library, so it uses the
+components in their current look and restyles nothing.
+
+```bash
+./kotlin run -m md-desktop -- school
+./kotlin test -m md-school -p jvm
+```
+
+| Screen | What it holds |
+| --- | --- |
+| Home (`Dashboard`) | stats, today's timetable, recent grades, announcements, a to-do list, pull to refresh |
+| Students | searchable, filterable, sortable list or grid; detail with profile, grades, attendance, contacts; an enrolment wizard |
+| Grades | filtered, sortable table; a validated form to enter or correct a mark |
+| Timetable | a week of lesson cards on a wide window, a tab per day on a phone; calendar |
+| Messages | conversations (swipe to archive), thread with bubbles, quick replies and a composer |
+| Settings | light / dark / system, accent colour, language, notification switches, security, help, and the showcase's own switches |
+
+Layout is `src/<screen>/` per screen, `src/common/` for what two screens share (the screen frame,
+the loading/error host, the list-detail split), `src/session/` for the state they read, and
+`src/data/` for the data: about thirty students, their marks, a timetable, conversations and
+announcements, all built from index arithmetic with no randomness and a fixed "now"
+(`SchoolClock`), so a screenshot is the same tomorrow.
+
+**Testing a screen without clicking.** `SchoolScreen.entries` lists the six screens and
+`SchoolApp(initialScreen, start)` opens any of them on any face: `SchoolStart` carries the colour
+mode, the `DataState` (`Loaded`, `Loading`, `Empty`, `Failed`), an open student or conversation, and
+`animated = false` so the motion helpers settle at once. `test@jvm/SchoolRender.kt` turns that into
+`renderSchool(screen, viewport, dark, start)`, and `EveryScreenRendersTest` walks the grid: six
+screens at phone (412 x 915) and desktop (1440 x 900), light and dark, then each screen on the three
+non-default data states, then the two detail views. Set `SCHOOL_SHOTS_DIR=/some/dir` and every render
+is also written there as a PNG.
+
+The `DataState` is also a control in Settings ("Showcase"), so the same states can be looked at by
+hand.
+
 ## Adding a story
 
 ```kotlin
-val DisplayStories = storyGroup("Display") {
+val ContentStories = storyGroup("Content") {
     story("Card") { knobs ->
         Card(variant = knobs.enumChoice("Variant", CardVariant.Filled)) { … }
     }
@@ -66,8 +112,8 @@ Two things beyond looking at components:
   repaint and re-time every story, and no component is told about any of them. If something does
   not follow, it is holding a colour or a curve it should be reading.
 - **The Motion control switches Material 3's own `MotionScheme`** between expressive, standard and
-  off. Off stops this library's motion only — M3's built-in components keep animating, because a
-  `MotionScheme` has no null. `motion/spatial-and-effects` shows the distinction M3 draws: the
+  off. Off snaps this library's motion and M3's own, since the theme derives M3's scheme from `motion`.
+  `motion/spatial-and-effects` shows the distinction M3 draws: the
   square overshoots its mark, the colour swatch does not.
 - **Wallpaper colours appear as a switch only on Android 12+**, because `supportsDynamicColor` says
   so. A switch that cannot change anything is worse than no switch.

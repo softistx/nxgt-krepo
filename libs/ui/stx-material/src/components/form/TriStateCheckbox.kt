@@ -1,0 +1,90 @@
+package com.softistx.material.components.form
+
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.triStateToggleable
+import androidx.compose.foundation.style.Style
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.state.ToggleableState
+import com.softistx.material.foundation.style.styledBy
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.StxTheme
+import androidx.compose.material3.TriStateCheckbox as MaterialTriStateCheckbox
+
+/** The three values a parent checkbox can take when its children disagree. */
+enum class CheckState {
+    Off,
+    On,
+    Indeterminate,
+}
+
+fun CheckState.toToggleableState(): ToggleableState =
+    when (this) {
+        CheckState.Off -> ToggleableState.Off
+        CheckState.On -> ToggleableState.On
+        CheckState.Indeterminate -> ToggleableState.Indeterminate
+    }
+
+/**
+ * Cycles [CheckState] Off → On → Indeterminate → Off. The parent of a group uses this; a
+ * two-state box is [Checkbox].
+ */
+fun cycleCheckState(state: CheckState): CheckState =
+    when (state) {
+        CheckState.Off -> CheckState.On
+        CheckState.On -> CheckState.Indeterminate
+        CheckState.Indeterminate -> CheckState.Off
+    }
+
+/**
+ * A checkbox that can be neither on nor off. Material 3's `TriStateCheckbox`.
+ *
+ * The whole row is the target, label included — the same rule as [Checkbox]. [onClick] fires on
+ * each tap; [cycleCheckState] is the usual next value, kept out of the composable so a parent
+ * that maps "some children" onto Indeterminate can do its own arithmetic.
+ */
+@Composable
+fun TriStateCheckbox(
+    state: CheckState,
+    onClick: () -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    helper: String? = null,
+    enabled: Boolean = true,
+    style: Style = Style,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val toggleable = state.toToggleableState()
+    Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs)) {
+        Row(
+            modifier =
+                modifier
+                    .styledBy(style, enabled = enabled, base = toggleStyle, interactionSource = interactionSource)
+                    .triStateToggleable(
+                        state = toggleable,
+                        enabled = enabled,
+                        interactionSource = interactionSource,
+                        role = Role.Checkbox,
+                        onClick = onClick,
+                    ),
+            horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MaterialTriStateCheckbox(
+                state = toggleable,
+                onClick = null,
+                enabled = enabled,
+            )
+            Typography(text = label)
+        }
+        if (helper != null) {
+            HelperText(helper = helper)
+        }
+    }
+}

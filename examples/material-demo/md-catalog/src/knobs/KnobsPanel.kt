@@ -12,10 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.demo.PaneScrollbar
-import com.softistx.material.text.Emphasis
-import com.softistx.material.text.Typography
-import com.softistx.material.text.TypographyVariant
-import com.softistx.material.theme.StxTheme
+import com.softistx.material.foundation.text.Emphasis
+import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.StxTheme
 
 /**
  * The right pane. It draws whatever the story asked for, in the order it asked — no story

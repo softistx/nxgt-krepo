@@ -32,7 +32,7 @@ Refresh when the tool's version moves past the `version` in its `docs-source.jso
    ```
    `exclude` entries are **regexes matched against each page's path relative to `base`** — anchor them (`^responseconverter/$`) so dropping a stale top-level page doesn't also drop the current nested one. Exclude changelogs, licences, and superseded duplicates: they are pure token cost. `version` and `last_sync` are filled in by the script.
 
-   Add `"discovery": "sitemap"` (or `"llms"` / `"nav"`) to pin one method instead of trying them in order. Pin it when a site serves a **full-text** `llms.txt` — the whole documentation inlined rather than a link index. kotlinlang.org does, and harvesting URLs out of it yielded 8 pages instead of 132, each carrying the trailing `)` of the sentence it was linked from.
+   Add `"discovery": "sitemap"` (or `"llms"` / `"nav"`, or `"list"` with a `pages` array of URLs when the site has no usable index, as developer.android.com does; `exclude` regexes then match a page's path relative to `base`, or its full URL for a page on another site) to pin one method instead of trying them in order. Pin it when a site serves a **full-text** `llms.txt` — the whole documentation inlined rather than a link index. kotlinlang.org does, and harvesting URLs out of it yielded 8 pages instead of 132, each carrying the trailing `)` of the sentence it was linked from.
 3. **Fetch:** `fetch_docs.py --skill <name>`. Check the output: fences labelled, no site chrome, no navigation.
 4. **Read the pages, then write `SKILL.md` by hand.** The cache is raw documentation; the skill body is the curated layer — the rules that are easy to get wrong plus a routing table into `references/`. Never paste doc prose into SKILL.md; point at the file instead.
 5. **Verify load-bearing claims against the real tool** before writing them down. Build a throwaway project in the scratchpad and run the tool. Docs lag reality: this is what established that the Kotlin Toolchain ignores catalog `[bundles]`, and that Ktorfit needs no Gradle plugin here.
@@ -45,7 +45,7 @@ Skills load in three tiers, and cost belongs in the deepest tier that can hold i
 | Tier | When it loads | Budget |
 | --- | --- | --- |
 | `description` | every session, for every skill | **≤ 250 chars.** What it is + when to use it, nothing else. |
-| SKILL.md body | on activation | **≤ ~120 lines** (hard ceiling ~5k tokens). Decisions and gotchas, not documentation. |
+| SKILL.md body | on activation | **≤ ~120 lines** (hard ceiling ~5k tokens). Decisions and gotchas, not documentation. Skills installed from Google's catalogue are exempt: they stay byte-identical to upstream. |
 | `references/` | only when a page is opened | unbounded, but each page must be worth opening |
 
 `INDEX.md` is the routing table someone reads to *choose* a page, so it carries file and topic only — no URLs (each page's own first line has its source), no fetch dates (the header has the sync date), and a size hint only where it changes the decision. The script regenerates it from disk on every run, so a `--only` fetch never truncates the map.
