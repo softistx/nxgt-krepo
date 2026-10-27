@@ -1,0 +1,39 @@
+# A school management app written only against stx-material: the realistic screens the catalogue's
+# single-component stories cannot show. Same shape as md-catalog — a `kmp/lib` that holds the whole
+# app, so that `md-desktop` and `md-android` launch it with a window and an activity and nothing else.
+product:
+  type: kmp/lib
+  platforms: [ jvm, android ]
+
+apply:
+  - //stx-artifacts.module-template.yaml
+
+dependencies:
+  # The only library the app is built on, as a published artifact exactly like md-catalog does it.
+  # Its public API carries kotlinx-datetime and Konform, so the app needs nothing else for dates
+  # and form validation.
+  - $libs.stx.material: exported
+  # Surface and the page background come from Material 3 directly; no stx-material component
+  # stands for "the page". From the catalog, as in md-catalog.
+  - $libs.compose.multiplatform.material3: exported
+  - $compose.foundation: exported
+  - $compose.ui: exported
+  - $compose.animation
+
+# Every screen is rendered headlessly with ImageComposeScene, which needs skiko's native library.
+test-dependencies@jvm:
+  - $libs.kotest.framework.engine
+  - $libs.kotest.assertions.core
+  - $libs.kotest.runner.junit5
+  - $compose.desktop.currentOs
+
+settings:
+  kotlin:
+    optIns:
+      - androidx.compose.foundation.style.ExperimentalFoundationStyleApi
+      - androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+  compose:
+    enabled: true
+    version: 1.12.0
+  android:
+    namespace: com.softistx.material.school
