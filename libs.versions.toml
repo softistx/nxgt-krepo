@@ -22,9 +22,7 @@ stx-storage = "0.2.4"
 stx-telemetry = "0.3.1"
 stx-testing = "0.2.2"
 stx-workflow = "0.4.1"
-agp = "9.0.1"
 kotlin = "2.4.20"
-ksp = "2.3.12"
 kotlinx-coroutines = "1.11.0"
 coreKtx = "1.19.1"
 junit = "4.13.2"
@@ -37,15 +35,12 @@ kodein = "7.33.0"
 apollo = "5.2.0"
 room = "2.8.5"
 work = "2.12.0"
-accompanist = "0.37.3"
 # Follows the toolchain's serialization default (`./kotlin show settings -m stx-common`) and moves
 # with the toolchain, as the Ktor pin does.
 kotlinx-serialization = "1.11.0"
 material3 = "1.4.0"
 datastore = "1.3.0"
-coil = "2.7.0"
-# Coil 3 is the Compose Multiplatform line (android, jvm, ios). The 2.7.0 alias above is
-# Android-only (`io.coil-kt:coil-compose`) and stays for Gradle consumers of the compose bundle.
+# Coil 3 is the Compose Multiplatform line (android, jvm, ios).
 coil3 = "3.6.3"
 # Material 3 for Compose Multiplatform. **Not `$compose.material3`**, which the toolchain cannot
 # resolve for Compose 1.12.0: it guesses 1.11.0-alpha07 and warns that it is guessing, and the build
@@ -60,13 +55,10 @@ compose-multiplatform-adaptive = "1.3.0"
 # CMP 1.12.0 pairing table named 1.2.0-alpha02; the stable 1.2.0 is what is pinned.
 compose-multiplatform-nav3 = "1.2.0"
 material-kolor = "5.0.1"
-compose-destinations = "2.3.0"
 
 ktor = "3.6.0"
-kotlinx-rpc = "0.10.4"
 logback = "1.6.6"
 mongodb = "5.13.0"
-graalvm-native = "1.1.4"
 swagger-parser = "2.1.48"
 kotlinpoet = "2.4.0"
 ktorfit = "2.7.5"
@@ -79,7 +71,6 @@ lettuce = "7.7.0.RELEASE"
 minio = "9.0.3"
 kafka = "4.4.0"
 amqp-client = "5.37.0"
-confluent = "8.4.0"
 hibernate-reactive = "4.5.12.Final"
 # What hibernate-reactive-core 4.5.12.Final resolves for each of these. All three have to move with
 # it: a mismatched pair fails at runtime with a driver or a provider it cannot find, not at build
@@ -117,8 +108,6 @@ androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecyc
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidx-biometric" }
 
-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
-compose-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3" }
 compose-material3-window-size = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "material3" }
 # Material 3 itself, the Compose Multiplatform build — what `$compose.material3` would have been if
 # the toolchain could resolve it for Compose 1.12.0. See the version's note above for why it cannot.
@@ -138,8 +127,6 @@ compose-multiplatform-adaptive-navigation-suite = { module = "org.jetbrains.comp
 # Navigation 3 UI, the CMP artifact. `navigation3-common` arrives transitively.
 jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "compose-multiplatform-nav3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
-androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version = "1.12.0" }
-compose-viewmodel-lifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version = "2.11.0" }
 androidx-animation = { module = "androidx.compose.animation:animation" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.10.0" }
 androidx-paging = { module = "androidx.paging:paging-compose", version = "3.5.1" }
@@ -150,16 +137,12 @@ datastore-preferences = { module = "androidx.datastore:datastore-preferences", v
 
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-paging = { module = "androidx.room:room-paging", version.ref = "room" }
 
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 work-gcm = { module = "androidx.work:work-gcm", version.ref = "work" }
 work-multiprocess = { module = "androidx.work:work-multiprocess", version.ref = "work" }
 work-testing = { module = "androidx.work:work-testing", version.ref = "work" }
-
-accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
-accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -170,9 +153,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version 
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 
 kodein-di-framework-compose = { module = "org.kodein.di:kodein-di-framework-compose", version.ref = "kodein" }
-faker = { module = "io.github.serpro69:kotlin-faker", version = "1.16.2" }
 konform = { module = "io.konform:konform", version = "0.11.1" }
-coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 coil3-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil3" }
 # CMP cannot use OkHttp on iOS; Ktor 3 is the network engine Coil documents for multiplatform.
 coil3-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil3" }
@@ -180,27 +161,14 @@ coil3-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.r
 apollo-api = { module = "com.apollographql.apollo:apollo-api", version.ref = "apollo" }
 apollo-compiler = { module = "com.apollographql.apollo:apollo-compiler", version.ref = "apollo" }
 apollo-runtime = { module = "com.apollographql.apollo:apollo-runtime", version.ref = "apollo" }
-apollo-idling-resource = { module = "com.apollographql.apollo:apollo-idling-resource", version.ref = "apollo" }
-apollo-http-cache = { module = "com.apollographql.apollo:apollo-http-cache", version.ref = "apollo" }
-apollo-normalized-cache-sqlite = { module = "com.apollographql.apollo:apollo-normalized-cache-sqlite", version.ref = "apollo" }
-apollo-adapters-core = { module = "com.apollographql.adapters:apollo-adapters-core", version = "0.8.0" }
-apollo-adapters-kotlinx-datetime = { module = "com.apollographql.adapters:apollo-adapters-kotlinx-datetime", version = "0.8.0" }
-apollo-compose-support = { module = "com.apollographql.compose:compose-support", version = "0.0.2" }
-apollo-compose-paging-support = { module = "com.apollographql.compose:compose-paging-support", version = "0.0.2" }
-
-compose-destinations-core = { module = "io.github.raamcosta.compose-destinations:core", version.ref = "compose-destinations" }
-compose-destinations-bottom-sheet = { module = "io.github.raamcosta.compose-destinations:bottom-sheet", version.ref = "compose-destinations" }
-compose-destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "compose-destinations" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "material-kolor" }
 
 koin-compiler = { module = "io.insert-koin:koin-compiler-plugin", version.ref = "koin-compiler" }
-koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
-koin-androidx-workmanager = { module = "io.insert-koin:koin-androidx-workmanager" }
 koin-androidx-compose-navigation = { module = "io.insert-koin:koin-androidx-compose-navigation" }
-# Versioned, unlike the koin aliases around it: those are resolved through `koin-bom` by the
-# Gradle consumers of this catalog, and the toolchain modules that use this one name no BOM.
+# Versioned, unlike the two unversioned koin-androidx aliases above, which take their version
+# from whatever BOM the consuming module names.
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin" }
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
@@ -221,7 +189,6 @@ java-dataloader = { module = "com.graphql-java:java-dataloader", version = "6.0.
 swagger-parser = { module = "io.swagger.parser.v3:swagger-parser", version.ref = "swagger-parser" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
-ktorfit-lib-light = { module = "de.jensklingenberg.ktorfit:ktorfit-lib-light", version.ref = "ktorfit" }
 ktorfit-ksp = { module = "de.jensklingenberg.ktorfit:ktorfit-ksp", version.ref = "ktorfit" }
 
 spring-context = { module = "org.springframework:spring-context", version.ref = "spring" }
@@ -239,21 +206,18 @@ kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css", version = "2
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "kotlinx-coroutines" }
 
-kotlinx-rpc-bom = { module = "org.jetbrains.kotlinx:kotlinx-rpc-bom", version.ref = "kotlinx-rpc" }
 kotlinx-rpc-krpc-client = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krpc-client" }
 kotlinx-rpc-krpc-server = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krpc-server" }
 kotlinx-rpc-krpc-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krpc-serialization-json" }
 kotlinx-rpc-krpc-ktor-client = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krpc-ktor-client" }
 kotlinx-rpc-krpc-ktor-server = { module = "org.jetbrains.kotlinx:kotlinx-rpc-krpc-ktor-server" }
 
-# The four artifacts below carry `version.ref` explicitly even though the BOM pins them all to the
+# The four artifacts below carry `version.ref` explicitly even though the MongoDB driver BOM would pin them all to the
 # same number. They must: a `bom:` entry reaches the published POM as an ordinary dependency and the
 # Gradle metadata as an ordinary `requires`, not as a platform — so a versionless alias publishes a
 # dependency with no version and no constraint, which no consumer can resolve. `examples/spring-orders`
 # is what found that, on the day it started depending on `io.github.softistx:stx-mongo:0.1.0` instead of on
-# `//libs/data/stx-mongo/stx-mongo`. The BOM entry stays: it still aligns any other org.mongodb artifact
-# that arrives transitively.
-mongodb-driver-bom = { module = "org.mongodb:mongodb-driver-bom", version.ref = "mongodb" }
+# `//libs/data/stx-mongo/stx-mongo`.
 mongodb-driver = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version.ref = "mongodb" }
 mongodb-driver-extensions = { module = "org.mongodb:mongodb-driver-kotlin-extensions", version.ref = "mongodb" }
 mongodb-bsonx = { module = "org.mongodb:bson-kotlinx", version.ref = "mongodb" }
@@ -266,13 +230,6 @@ spring-security-crypto = { module = "org.springframework.security:spring-securit
 javers-core = { module = "org.javers:javers-core", version.ref = "javers" }
 commons-logging = { module = "commons-logging:commons-logging", version = "1.4.0" }
 
-kotlin-faker-bom = { module = "io.github.serpro69:kotlin-faker-bom", version = "2.0.0-rc.13" }
-kotlin-faker = { module = "io.github.serpro69:kotlin-faker" }
-kotlin-faker-books = { module = "io.github.serpro69:kotlin-faker-books" }
-kotlin-faker-tech = { module = "io.github.serpro69:kotlin-faker-tech" }
-kotlin-faker-lorem = { module = "io.github.serpro69:kotlin-faker-lorem" }
-kotlin-faker-databases = { module = "io.github.serpro69:kotlin-faker-databases" }
-kotlin-faker-tvshows = { module = "io.github.serpro69:kotlin-faker-tvshows" }
 
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
@@ -318,7 +275,6 @@ jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "j
 
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 amqp-client = { module = "com.rabbitmq:amqp-client", version.ref = "amqp-client" }
-confluent-kafka-avro-serializer = { module = "io.confluent:kafka-avro-serializer", version.ref = "confluent" }
 
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
 icu4j = { module = "com.ibm.icu:icu4j", version = "78.3" }
@@ -333,7 +289,6 @@ stx-graphix-ktor = { module = "io.github.softistx:stx-graphix-ktor", version.ref
 stx-graphix-koin = { module = "io.github.softistx:stx-graphix-koin", version.ref = "stx-graphix" }
 stx-jpa = { module = "io.github.softistx:stx-jpa", version.ref = "stx-jpa" }
 stx-jpa-ktor = { module = "io.github.softistx:stx-jpa-ktor", version.ref = "stx-jpa" }
-stx-jpa-spring = { module = "io.github.softistx:stx-jpa-spring", version.ref = "stx-jpa" }
 stx-i18n-spring = { module = "io.github.softistx:stx-i18n-spring", version.ref = "stx-i18n" }
 stx-kafka = { module = "io.github.softistx:stx-kafka", version.ref = "stx-kafka" }
 stx-kafka-ktor = { module = "io.github.softistx:stx-kafka-ktor", version.ref = "stx-kafka" }
@@ -400,7 +355,6 @@ ktor = [
 	"kotlinx-rpc-krpc-server", "kotlinx-rpc-krpc-ktor-server", "kotlinx-rpc-krpc-serialization-json"
 ]
 kotlinx = ["kotlinx-coroutines-core", "kotlinx-coroutines-reactive", "kotlinx-datetime"]
-faker = ["kotlin-faker", "kotlin-faker-books", "kotlin-faker-databases", "kotlin-faker-lorem", "kotlin-faker-tech", "kotlin-faker-tvshows"]
 ktor-mix = [
 	"icu4j", "spring-security-crypto", "commons-logging", "mail",
 	"mongodb-bsonx", "mongodb-driver", "mongodb-driver-extensions", "kasechange",
