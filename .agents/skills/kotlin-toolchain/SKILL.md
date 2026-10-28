@@ -23,9 +23,9 @@ kotlin clean                              # drop build/ and project caches
 Single test:
 
 ```bash
-kotlin test --include-test com.example.MyTest.myTestMethod
-kotlin test --include-test 'com.example.MyTest/Nested.myTestMethod'   # '/' separates nested classes
-kotlin test --include-classes 'com.example.*ServiceTest'              # wildcards, repeatable
+kotlin test -m my-module --include-classes 'com.example.MyTest'       # exact FQN, repeatable; -m is mandatory with a filter
+kotlin test -m my-module --include-test com.example.MyTest.myTestMethod   # one method; a bare class name finds nothing
+# --include-classes wildcards did not narrow in practice (a pattern matching nothing ran the whole module): name classes in full.
 ```
 
 Inspect the resolved model instead of guessing — these are fast and catch manifest errors without compiling:

@@ -27,7 +27,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
       - run: bun install --frozen-lockfile
 
       - name: Cache the toolchain and the dependency cache

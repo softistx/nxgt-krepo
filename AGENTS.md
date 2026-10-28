@@ -152,7 +152,7 @@ The skills in `.agents/skills/` carry this repo's working knowledge; use them in
 - **`kotlin-toolchain`** — manifest schema, catalog and template rules, commands, plus `references/`: a markdown cache of the full official documentation (50 pages, version recorded in `references/INDEX.md`).
 - **`ktorfit`** — the Ktorfit HTTP client, including how it is wired up here through KSP alone, without its Gradle plugin.
 - **`compose-multiplatform`** — the UI stack behind `libs/ui/stx-material`: which platforms a Compose library may declare, what a non-Apple host does and does not verify, the real `$compose.*` catalog keys, and how kotest runs from a common `test/` tree. `references/` caches 67 pages of the official documentation.
-- **`material3-compose`** — the Material 3 API surface that actually compiles here. Its `references/` are *not* fetched: `$compose.material3` resolves to its own alpha version line, so the pages are generated from the resolved jar by `scripts/extract_api.py`.
+- **`material3-compose`** — the Material 3 API surface that actually compiles here. Its `references/` are *not* fetched: `$compose.material3` resolves to its own alpha version line, so the pages are generated from the resolved jar by `.agents/skills/material3-compose/scripts/extract_api.py`.
 - **`skill-from-docs`** — builds and refreshes docs-backed skills. Each such skill declares its source in a `docs-source.json`; refresh one with:
   ```bash
   python3 .agents/skills/skill-from-docs/scripts/fetch_docs.py --skill <name>
@@ -501,9 +501,11 @@ concluding the library is at fault.
 Running a single test:
 
 ```bash
-./kotlin test --include-test com.example.MyTest.myTestMethod
-./kotlin test --include-test 'com.example.MyTest/Nested.myTestMethod'   # '/' separates nested classes
-./kotlin test --include-classes 'com.example.*ServiceTest'              # wildcard pattern, repeatable
+# A filter needs -m: without it the CLI refuses ("required to use --include-module").
+./kotlin test -m my-module --include-classes 'com.example.MyTest'       # one class: exact FQN, repeatable
+./kotlin test -m my-module --include-test com.example.MyTest.myTestMethod   # one method; a bare class name finds nothing
+# Do not use a wildcard in --include-classes: here it did not narrow, even a pattern matching
+# nothing ran the whole module. Name each class in full.
 ```
 
 Inspecting the resolved project model — cheap, and it catches manifest errors without a compile:
@@ -730,7 +732,7 @@ initiating one per run is the slowest container start here.
 **CI is the second case, and it has to be.** `ci.yml` starts one of each server, exports the
 variables, and then runs the tests **one module at a time** — `./kotlin test -m` in a loop. Each of
 those invocations is a fresh JVM that shares nothing with the last, so without the exports every one
-of the fifty-seven would start its own Postgres and its own Mongo. The two halves only work together.
+of the test modules would start its own Postgres and its own Mongo. The two halves only work together.
 Sharing a server is safe for data because every spec names its schema, database, key prefix, queue
 or bucket through `TestNames`, whose run id differs per JVM. What the loop protects is the CPU. A bare
 `./kotlin test` is about twice as fast, because the CLI then starts once, but it runs module JVMs as

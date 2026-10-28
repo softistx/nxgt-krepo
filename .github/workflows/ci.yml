@@ -30,7 +30,7 @@ jobs:
       # repository has for Changesets are not needed here and downloading them would be waste.
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
 
       # The wrapper downloads the Kotlin CLI and a JRE on first use, then the compiler and every
       # dependency. Without this the first step of every run is a multi-minute download.
@@ -189,7 +189,7 @@ jobs:
       # | `-m` under `xargs -P 2`                 | 419 s     | 1 of 1                            |
       # | bare `./kotlin test`                    | 167–233 s | 3 of 5, harness timeouts raised   |
       #
-      # The bare run is faster because it pays the CLI's start-up once instead of fifty-seven times
+      # The bare run is faster because it pays the CLI's start-up once instead of once per module
       # (about four seconds each), not because of parallelism: two invocations at once already
       # saturate the CPU, which is why -P 2 bought nothing. But the CLI then runs module JVMs as wide
       # as it likes — some sixteen at once, and it has no setting for it — and that starved the specs
@@ -205,14 +205,14 @@ jobs:
       #
       # This is also what makes the step above load-bearing rather than an optimisation: each
       # invocation is a fresh JVM, so without the environment variables every one of these
-      # fifty-seven would start its own Postgres, its own Mongo, its own RabbitMQ. Sharing them is
+      # modules would start its own Postgres, its own Mongo, its own RabbitMQ. Sharing them is
       # safe for data: every spec works in a namespace of its own — a schema, a database, a key
       # prefix, a queue or a bucket named through libs/core/stx-testing's TestNames, which carries a
       # per-JVM run id — and removes only that.
       #
       # The list is derived from the filesystem rather than written down, so a module that gains a
       # test tree is picked up by the change that adds it. Every module runs even after one fails:
-      # "which of the fifty-seven" is the useful answer, and fail-fast gives the first one only.
+      # "which module" is the useful answer, and fail-fast gives the first one only.
       - name: Test, one module at a time
         run: |
           modules=$(find libs examples plugins server -type d \( -name test -o -name 'test@*' \) \
@@ -262,7 +262,7 @@ jobs:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
 
       # Not "libs/ changed and no .changeset/*.md exists" any more. A version is now per family, so
       # a changeset naming the wrong family is worse than none: it releases a library nobody
@@ -281,7 +281,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
       - run: bun install --frozen-lockfile
 
       # bun strips types, it does not check them — so TypeScript under `bun scripts/*.ts` buys

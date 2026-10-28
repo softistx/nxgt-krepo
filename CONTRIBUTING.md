@@ -31,7 +31,7 @@ Use `./kotlin`, never a bare `kotlin`: the wrapper pins the toolchain version.
 ./kotlin show modules              # every module name accepted by -m
 ./kotlin show settings -m stx-jpa  # the resolved model, templates applied
 ./kotlin build -m stx-jpa          # one module
-./kotlin test --include-test com.softistx.jpa.FetchJoinTest
+./kotlin test -m stx-jpa --include-classes 'com.softistx.jpa.FetchJoinTest'  # one class: -m and an exact name
 ```
 
 Prefer `./kotlin show` over reading manifests and inferring — it resolves the real model in seconds
