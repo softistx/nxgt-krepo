@@ -279,6 +279,10 @@ class ListDetailLayoutTest :
     })
 
 private fun collectTexts(node: SemanticsNode): List<String> {
-    val own = node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text }
+    val own =
+        node.config
+            .getOrNull(SemanticsProperties.Text)
+            .orEmpty()
+            .map { it.text }
     return own + node.children.flatMap(::collectTexts)
 }
