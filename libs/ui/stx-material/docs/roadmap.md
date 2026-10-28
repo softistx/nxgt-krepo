@@ -247,7 +247,7 @@ dont la forme se lit dans les imports.
 - [x] **`StateHost` (#360).** `StateHost(state, onRetry, modifier, errorTitle, retryLabel, loadingLabel, loading, content)` rend un `UiState<T>` : `SkeletonCards` (cartes décalées, d'un coup sous « Réduire les animations ») annoncées « Loading » pendant le chargement, `content` sur les données, une `Alert(Tone.Error)` avec un bouton Retry de 56 dp sinon. Libellés en paramètres ; `SkeletonCards(modifier, count)` est public. md-school retire sa copie.
 - [x] **`ListDetailLayout` (#361).** `ListDetailLayout(selected, modifier, wideThreshold = 720.dp, listWidth = 380.dp, placeholder, list, detail)` : deux volets dès que la largeur offerte atteint le seuil, un seul en dessous (le détail s'il y a une sélection, sinon la liste), sans pile Navigation 3. Il se replie dans une destination ou une fenêtre de bureau étroite, là où `AdaptiveNavDisplay` suit la classe de fenêtre. Le retour du détail à la liste reste à l'appelant. Nommé `ListDetailLayout` car `ListDetail` désigne déjà les métadonnées de scène. md-school retire sa copie.
 
-## Maintenant
+## Plus tard
 
 - [ ] **Suite de #297 : contraste élevé.** Lire « Augmenter le contraste » (iOS `UIAccessibilityDarkerSystemColorsEnabled`, Android `UiModeManager.getContrast`, bureau) et l'exposer au thème quand un premier composant en a besoin.
 
