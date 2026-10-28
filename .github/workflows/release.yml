@@ -30,14 +30,18 @@ jobs:
           bun-version: 1.4.4
       - run: bun install --frozen-lockfile
 
+      # Same paths, prefix and key as ci.yml's cache step: the `v2` prefix marks that path list, so the
+      # two change together (see the comment there).
       - name: Cache the toolchain and the dependency cache
         uses: actions/cache@v6
         with:
           path: |
             ~/.cache/JetBrains/Kotlin
             ~/.m2/repository
-          key: kotlin-${{ runner.os }}-${{ hashFiles('kotlin', 'libs.versions.toml') }}
-          restore-keys: kotlin-${{ runner.os }}-
+            ~/.gradle/wrapper/dists
+            ~/.gradle/caches/modules-2
+          key: kotlin-v2-${{ runner.os }}-${{ hashFiles('kotlin', 'libs.versions.toml') }}
+          restore-keys: kotlin-v2-${{ runner.os }}-
 
       # Opens or updates a "Version Packages" pull request against develop, carrying CHANGELOG.md,
       # package.json, and the two lines scripts/sync-version.ts propagates into the Kotlin build.
