@@ -1,22 +1,27 @@
 package com.softistx.material.demo.stories.components.layout
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.content.Card
 import com.softistx.material.components.content.ListTile
 import com.softistx.material.components.layout.ListDetailLayout
+import com.softistx.material.components.layout.ListDetailLayoutDefaults
 import com.softistx.material.components.layout.LoadMoreButton
 import com.softistx.material.components.layout.RefreshBox
 import com.softistx.material.components.layout.ResponsiveGrid
@@ -44,18 +49,20 @@ val LayoutStories =
             Box(Modifier.width(width.dp).height(320.dp)) {
                 ListDetailLayout(
                     selected = open != null,
-                    placeholderTitle = "Select a row",
+                    placeholder = { ListDetailLayoutDefaults.Placeholder("Select a row", it) },
                     list = { pane ->
                         LazyColumn(pane) {
-                            itemsIndexed((1..8).toList()) { _, n ->
+                            items((1..8).toList()) { n ->
                                 ListTile(title = "Row $n", onClick = { open = n })
                             }
                         }
                     },
                     detail = { pane ->
-                        Box(pane) {
-                            Typography(text = "Detail of row $open")
-                            IconButton(icon = StxIcons.Close, description = "Back to the list", onClick = { open = null })
+                        Column(pane) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Typography(text = "Detail of row $open", modifier = Modifier.weight(1f))
+                                IconButton(icon = StxIcons.Close, description = "Back to the list", onClick = { open = null })
+                            }
                         }
                     },
                 )

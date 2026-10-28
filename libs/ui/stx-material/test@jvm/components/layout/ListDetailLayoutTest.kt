@@ -1,7 +1,16 @@
 package com.softistx.material.components.layout
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,10 +31,12 @@ import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.runBlocking
 
 private class Panes {
     val list = NodeBounds()
     val detail = NodeBounds()
+    var listRuns = 0
     var detailRuns = 0
 }
 
@@ -42,10 +53,12 @@ private fun layoutAt(
         StxTheme(isDark = false) {
             ListDetailLayout(
                 selected = selected,
-                placeholderTitle = "Select a row",
                 wideThreshold = wideThreshold,
                 listWidth = listWidth,
-                list = { Box(it.probed(panes.list)) },
+                list = {
+                    panes.listRuns++
+                    Box(it.probed(panes.list))
+                },
                 detail = {
                     panes.detailRuns++
                     Box(it.probed(panes.detail))
@@ -72,6 +85,7 @@ class ListDetailLayoutTest :
                 layoutAt(width = 600, selected = true, panes = panes)
                 panes.detail.rect.width shouldBe 600f
                 panes.list.rect.width shouldBe 0f
+                panes.listRuns shouldBe 0
             }
 
             scenario("from the threshold the list is 380 dp and the detail takes the rest after the divider") {
@@ -105,7 +119,7 @@ class ListDetailLayoutTest :
                         StxTheme(isDark = false) {
                             ListDetailLayout(
                                 selected = selected,
-                                placeholderTitle = "Select a row",
+                                placeholder = { ListDetailLayoutDefaults.Placeholder("Select a row", it) },
                                 list = { Typography(text = "the list", modifier = it) },
                                 detail = { Typography(text = "the detail", modifier = it) },
                             )
@@ -113,12 +127,128 @@ class ListDetailLayoutTest :
                     }
                     onNodeWithText("the list").assertExists()
                     onNodeWithText("Select a row").assertExists()
+                    onNodeWithText("Select an item").assertDoesNotExist()
                     onNodeWithText("the detail").assertDoesNotExist()
                     selected = true
                     onNodeWithText("the detail").assertExists()
                     onNodeWithText("Select a row").assertDoesNotExist()
                     selected = false
                     onNodeWithText("the detail").assertDoesNotExist()
+                }
+            }
+        }
+
+        feature("the default placeholder") {
+            scenario("without a placeholder the second pane reads \"Select an item\"") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false) {
+                            Box(Modifier.width(900.dp)) {
+                                ListDetailLayout(
+                                    selected = false,
+                                    list = { Typography(text = "the list", modifier = it) },
+                                    detail = { Typography(text = "the detail", modifier = it) },
+                                )
+                            }
+                        }
+                    }
+                    onNodeWithText("Select an item").assertExists()
+                }
+            }
+        }
+
+        feature("pane state") {
+            scenario("the list's scroll position survives a fold and unfold") {
+                runComposeUiTest {
+                    var width by mutableStateOf(900.dp)
+                    lateinit var listState: LazyListState
+                    setContent {
+                        StxTheme(isDark = false) {
+                            Box(Modifier.width(width).height(200.dp)) {
+                                ListDetailLayout(
+                                    selected = false,
+                                    list = { pane ->
+                                        listState = rememberLazyListState()
+                                        LazyColumn(pane, state = listState) {
+                                            items((1..40).toList()) { Typography(text = "Row $it") }
+                                        }
+                                    },
+                                    detail = { Typography(text = "the detail", modifier = it) },
+                                )
+                            }
+                        }
+                    }
+                    runOnIdle { listState.requestScrollToItem(12) }
+                    waitForIdle()
+                    width = 500.dp
+                    waitForIdle()
+                    width = 900.dp
+                    waitForIdle()
+                    runOnIdle { listState.firstVisibleItemIndex shouldBe 12 }
+                }
+            }
+
+            scenario("single pane: list, detail, list keeps the scroll position") {
+                runComposeUiTest {
+                    var selected by mutableStateOf(false)
+                    lateinit var listState: LazyListState
+                    setContent {
+                        StxTheme(isDark = false) {
+                            Box(Modifier.width(500.dp).height(200.dp)) {
+                                ListDetailLayout(
+                                    selected = selected,
+                                    list = { pane ->
+                                        listState = rememberLazyListState()
+                                        LazyColumn(pane, state = listState) {
+                                            items((1..40).toList()) { Typography(text = "Row $it") }
+                                        }
+                                    },
+                                    detail = { Typography(text = "the detail", modifier = it) },
+                                )
+                            }
+                        }
+                    }
+                    runOnIdle { listState.requestScrollToItem(12) }
+                    waitForIdle()
+                    selected = true
+                    waitForIdle()
+                    onNodeWithText("the detail").assertExists()
+                    selected = false
+                    waitForIdle()
+                    runOnIdle { listState.firstVisibleItemIndex shouldBe 12 }
+                }
+            }
+        }
+
+        feature("detail state") {
+            scenario("narrow: the detail's scroll resets when it is deselected and selected again") {
+                runComposeUiTest {
+                    var selected by mutableStateOf(true)
+                    lateinit var scroll: ScrollState
+                    setContent {
+                        StxTheme(isDark = false) {
+                            Box(Modifier.width(500.dp).height(200.dp)) {
+                                ListDetailLayout(
+                                    selected = selected,
+                                    list = { Typography(text = "the list", modifier = it) },
+                                    detail = { pane ->
+                                        scroll = rememberScrollState()
+                                        Column(pane.verticalScroll(scroll)) {
+                                            repeat(40) { Typography(text = "Line $it") }
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    runOnIdle { runBlocking { scroll.scrollTo(80) } }
+                    waitForIdle()
+                    runOnIdle { scroll.value shouldBe 80 }
+                    selected = false
+                    waitForIdle()
+                    selected = true
+                    waitForIdle()
+                    runOnIdle { scroll.value shouldBe 0 }
                 }
             }
         }
@@ -148,5 +278,7 @@ class ListDetailLayoutTest :
         }
     })
 
-private fun collectTexts(node: SemanticsNode): List<String> =
-    node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } + node.children.flatMap(::collectTexts)
+private fun collectTexts(node: SemanticsNode): List<String> {
+    val own = node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text }
+    return own + node.children.flatMap(::collectTexts)
+}

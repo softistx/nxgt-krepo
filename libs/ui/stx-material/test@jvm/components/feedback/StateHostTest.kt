@@ -1,21 +1,33 @@
 package com.softistx.material.components.feedback
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertHeightIsEqualTo
+import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.foundation.motion.StxMotion
@@ -137,6 +149,50 @@ class StateHostTest :
                     }
                     onNodeWithText("Échec").assertExists()
                     onNodeWithText("Réessayer").assertExists()
+                }
+            }
+        }
+
+        feature("the faces") {
+            scenario("the data face is laid out within the modifier's bounds") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false) {
+                            StateHost(UiState.Data("ok"), onRetry = {}, modifier = Modifier.size(120.dp, 60.dp)) {
+                                Box(Modifier.fillMaxSize().testTag("data"))
+                            }
+                        }
+                    }
+                    onNodeWithTag("data").assertWidthIsEqualTo(120.dp).assertHeightIsEqualTo(60.dp)
+                }
+            }
+
+            scenario("a custom loading slot replaces the default skeletons") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(isDark = false, motion = StxMotion(enabled = false)) {
+                            StateHost<String>(UiState.Loading, onRetry = {}, loading = { Typography(text = "my skeleton") }) {}
+                        }
+                    }
+                    onNodeWithText("my skeleton").assertExists()
+                    (onNodeWithContentDescription("Loading").getUnclippedBoundsInRoot().height < 60.dp) shouldBe true
+                }
+            }
+
+            scenario("the loading and error faces are polite live regions") {
+                runComposeUiTest {
+                    var state: UiState<String> by mutableStateOf(UiState.Loading)
+                    setContent {
+                        StxTheme(isDark = false, motion = StxMotion(enabled = false)) {
+                            StateHost(state, onRetry = {}) {}
+                        }
+                    }
+                    val polite = SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
+                    onNodeWithContentDescription("Loading").assert(polite)
+                    state = UiState.Error("Down.")
+                    waitForIdle()
+                    onNode(polite and hasAnyDescendant(hasText("Could not load")), useUnmergedTree = true).assertExists()
+                    onNodeWithContentDescription("Loading").assertDoesNotExist()
                 }
             }
         }

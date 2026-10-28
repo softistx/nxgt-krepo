@@ -1,10 +1,12 @@
 package com.softistx.material.school.students
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.components.feedback.UiState
 import com.softistx.material.components.layout.ListDetailLayout
+import com.softistx.material.components.layout.ListDetailLayoutDefaults
 import com.softistx.material.school.common.ScreenFrame
 import com.softistx.material.school.data.Student
 import com.softistx.material.school.data.Students
@@ -21,14 +23,14 @@ fun StudentsScreen(session: SchoolSession) {
     ScreenFrame(title = "Students", session = session, scroll = false) {
         ListDetailLayout(
             selected = selected != null,
-            placeholderTitle = "Select a student",
             modifier = Modifier.weight(1f),
+            placeholder = { ListDetailLayoutDefaults.Placeholder("Select a student", it) },
             list = { modifier ->
                 StateHost(
                     state = state,
                     onRetry = { session.data = DataState.Loaded },
                     modifier = modifier,
-                ) { students -> StudentList(students, query, session, modifier) }
+                ) { students -> StudentList(students, query, session, Modifier.fillMaxSize()) }
             },
             detail = { modifier -> selected?.let { StudentDetail(it, session, modifier) } },
         )
