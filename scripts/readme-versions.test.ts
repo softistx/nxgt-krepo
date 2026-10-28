@@ -16,7 +16,7 @@ function fixture(): string {
     const dir = "libs/data/stx-jpa";
     for (const m of ["stx-jpa", "stx-jpa-ktor"]) {
         mkdirSync(`${root}${dir}/${m}`, { recursive: true });
-        writeFileSync(`${root}${dir}/${m}/module.yaml`, "product: jvm/lib\n");
+        writeFileSync(`${root}${dir}/${m}/module.yaml`, "product:\n  type: kmp/lib\n  platforms: [ jvm, android, iosArm64, iosSimulatorArm64 ]\n");
     }
     writeFileSync(`${root}${dir}/package.json`, JSON.stringify({ name: "stx-jpa", version: "0.3.1" }));
     writeFileSync(`${root}${dir}/stx-jpa.module-template.yaml`, "settings:\n  publishing:\n    version: 0.3.1\n");
@@ -66,6 +66,19 @@ test("--check reports the drift and writes nothing", () => {
     try {
         expect(syncReadmeVersions(root, true).filter((w) => w.changed)).toHaveLength(2);
         expect(read(root, "README.md")).toBe(SNIPPET("0.2.1", "9.9.9"));
+    } finally {
+        rmSync(root, { recursive: true });
+    }
+});
+
+test("a target a manifest adds is picked up", () => {
+    const root = fixture();
+    try {
+        const yaml = "product:\n  type: kmp/lib\n  platforms: [ jvm, iosX64 ]\n";
+        writeFileSync(`${root}libs/data/stx-jpa/stx-jpa/module.yaml`, yaml);
+        writeFileSync(root + "README.md", "io.github.softistx:stx-jpa-iosx64:0.1.0\n");
+        syncReadmeVersions(root);
+        expect(read(root, "README.md")).toContain("stx-jpa-iosx64:0.3.1");
     } finally {
         rmSync(root, { recursive: true });
     }
