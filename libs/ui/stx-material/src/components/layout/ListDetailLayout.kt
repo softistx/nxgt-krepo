@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
@@ -40,9 +41,10 @@ import com.softistx.material.foundation.icon.StxIcons
  * handling stays the caller's (a back button or `BackHandler` that clears the selection).
  *
  * A pane that is not shown leaves composition, but its `rememberSaveable` state is kept per pane
- * (a `SaveableStateHolder`), so a list's scroll position (`rememberLazyListState`) and a typed
- * draft survive the layout folding and a list, detail, list round trip. Plain `remember` state does
- * not: hoist that out of the panes. The panes carry no semantics of their own; label them (for example with `semantics { paneTitle }`
+ * (a `SaveableStateHolder`), so a list's scroll position (`rememberLazyListState`) survives the
+ * layout folding and a list, detail, list round trip. The detail's state survives a fold while it is
+ * selected but is dropped when [selected] turns false, so the next item opens fresh. Plain
+ * `remember` state is not kept: hoist that out of the panes. The panes carry no semantics of their own; label them (for example with `semantics { paneTitle }`
  * on the modifier you receive) if they should be announced.
  *
  * Not to be confused with [com.softistx.material.components.navigation.AdaptiveNavDisplay] and the
@@ -75,6 +77,8 @@ fun ListDetailLayout(
     // saveable holder alone restores a key only after the old copy is gone, too late for the new one.
     val listPane = remember { movableContentOf { m: Modifier -> panes.SaveableStateProvider("list") { currentList(m) } } }
     val detailPane = remember { movableContentOf { m: Modifier -> panes.SaveableStateProvider("detail") { currentDetail(m) } } }
+    // Runs once the detail has left composition (and saved itself), so the next selection starts fresh.
+    LaunchedEffect(selected) { if (!selected) panes.removeState("detail") }
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         if (maxWidth >= wideThreshold) {
             Row(modifier = Modifier.fillMaxSize()) {

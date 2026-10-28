@@ -645,9 +645,10 @@ M3's, so `style` dresses the box the gesture is read on. `ResponsiveGrid` is ine
 
 `ListDetailLayout` shows the list and the detail side by side when the width it is *offered* is at
 least `wideThreshold`, and one at a time below it: the detail when `selected`, the list otherwise.
-Selection is plain state, kept by the caller. A pane that is not shown leaves composition, but its `rememberSaveable` state (a
-`rememberLazyListState` scroll position, a typed draft) is kept per pane, so it survives the fold and
-a list, detail, list round trip; plain `remember` state does not, so hoist that. `detail` runs only
+Selection is plain state, kept by the caller. A pane that is not shown leaves composition, but its `rememberSaveable` state is kept per pane: the
+list's scroll position (`rememberLazyListState`) survives the fold and a list, detail, list round
+trip, and the detail's survives a fold while selected but is dropped when `selected` turns false, so
+the next item opens fresh. Plain `remember` state is not kept, so hoist that. `detail` runs only
 when `selected`; `placeholder` fills the empty second pane (write
 `placeholder = { ListDetailLayoutDefaults.Placeholder("Select a message", it) }` for another text).
 It is built from primitives, not Material 3's `ListDetailPaneScaffold`, whose directive follows the

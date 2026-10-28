@@ -19,6 +19,8 @@ import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -189,7 +191,7 @@ class StateHostTest :
                     onNodeWithContentDescription("Loading").assert(polite)
                     state = UiState.Error("Down.")
                     waitForIdle()
-                    onNode(polite).assertExists()
+                    onNode(polite and hasAnyDescendant(hasText("Could not load")), useUnmergedTree = true).assertExists()
                     onNodeWithContentDescription("Loading").assertDoesNotExist()
                 }
             }

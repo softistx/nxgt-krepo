@@ -1,12 +1,16 @@
 package com.softistx.material.components.layout
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -27,6 +31,7 @@ import com.softistx.material.probed
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.runBlocking
 
 private class Panes {
     val list = NodeBounds()
@@ -211,6 +216,39 @@ class ListDetailLayoutTest :
                     selected = false
                     waitForIdle()
                     runOnIdle { listState.firstVisibleItemIndex shouldBe 12 }
+                }
+            }
+        }
+
+        feature("detail state") {
+            scenario("narrow: the detail's scroll resets when it is deselected and selected again") {
+                runComposeUiTest {
+                    var selected by mutableStateOf(true)
+                    lateinit var scroll: ScrollState
+                    setContent {
+                        StxTheme(isDark = false) {
+                            Box(Modifier.width(500.dp).height(200.dp)) {
+                                ListDetailLayout(
+                                    selected = selected,
+                                    list = { Typography(text = "the list", modifier = it) },
+                                    detail = { pane ->
+                                        scroll = rememberScrollState()
+                                        Column(pane.verticalScroll(scroll)) {
+                                            repeat(40) { Typography(text = "Line $it") }
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    runOnIdle { runBlocking { scroll.scrollTo(80) } }
+                    waitForIdle()
+                    runOnIdle { scroll.value shouldBe 80 }
+                    selected = false
+                    waitForIdle()
+                    selected = true
+                    waitForIdle()
+                    runOnIdle { scroll.value shouldBe 0 }
                 }
             }
         }
