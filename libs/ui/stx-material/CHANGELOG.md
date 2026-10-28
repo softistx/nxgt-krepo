@@ -1,5 +1,11 @@
 # stx-material
 
+## 0.4.1
+
+### Patch Changes
+
+- [#381](https://github.com/softistx/nxgt-krepo/pull/381) [`9abf09a`](https://github.com/softistx/nxgt-krepo/commit/9abf09af3c174088a305205c27f63660b94427db) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Internal: the button family (Button, IconButton, IconToggle, ToggleButton) now picks its Material 3 composable and colours through one shared `ButtonVariant` mapping. No visual or API change.
+
 ## 0.4.0
 
 ### Minor Changes

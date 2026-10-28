@@ -112,7 +112,7 @@
     },
     "libs/messaging/stx-workflow": {
       "name": "stx-workflow",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -128,7 +128,7 @@
     },
     "libs/ui/stx-material": {
       "name": "stx-material",
-      "version": "0.4.0",
+      "version": "0.4.1",
     },
   },
   "packages": {

@@ -1,5 +1,11 @@
 # stx-workflow
 
+## 0.4.2
+
+### Patch Changes
+
+- [#380](https://github.com/softistx/nxgt-krepo/pull/380) [`bb7c250`](https://github.com/softistx/nxgt-krepo/commit/bb7c250fc14bd38abc8774e5b9c3bea3ccdf655a) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Internal: the annotation declaration reader is split into one file per node kind. No behaviour or API change.
+
 ## 0.4.1
 
 ### Patch Changes
