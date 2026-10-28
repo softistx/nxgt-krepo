@@ -21,11 +21,11 @@ import com.softistx.material.foundation.theme.Tone
  * StateHost(state = state, onRetry = viewModel::reload) { rows -> Table(rows) }
  * ```
  *
- * The loading face defaults to [SkeletonCards]; pass [loading] for one shaped like the screen. It is
- * announced as [loadingLabel], both faces as a polite live region, so a screen reader hears
- * the change. All three faces sit in a [Box] with [modifier], so the data face is laid out within
- * the bounds the caller gave. The strings are parameters so an app can translate them. Without `style`: this is a
- * host, the look lives in the [Alert], the [Button] and the [Card]s it composes.
+ * The loading face defaults to [SkeletonCards]; pass [loading] for one shaped like the screen. The
+ * loading face is announced as [loadingLabel]; the loading and error faces are polite live regions.
+ * All three faces sit in a [Box] with [modifier], so the data face is laid out within the bounds
+ * the caller gave. The strings are parameters so an app can translate them. Without `style`: this
+ * is a host, the look lives in the [Alert], the [Button] and the [Card]s it composes.
  */
 @Composable
 fun <T> StateHost(
@@ -40,14 +40,16 @@ fun <T> StateHost(
 ) {
     Box(modifier) {
         when (state) {
-            UiState.Loading ->
+            UiState.Loading -> {
                 Column(
                     Modifier.semantics {
                         contentDescription = loadingLabel
                         liveRegion = LiveRegionMode.Polite
                     },
                 ) { loading() }
-            is UiState.Error ->
+            }
+
+            is UiState.Error -> {
                 Alert(
                     text = state.message,
                     tone = Tone.Error,
@@ -55,7 +57,11 @@ fun <T> StateHost(
                     modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
                     action = { Button(text = retryLabel, onClick = onRetry, size = ButtonSize.Medium) },
                 )
-            is UiState.Data -> content(state.data)
+            }
+
+            is UiState.Data -> {
+                content(state.data)
+            }
         }
     }
 }
