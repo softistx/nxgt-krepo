@@ -8,13 +8,18 @@
 //
 // Only README.md files are touched: the root one and those under `libs/`. `docs/` is deliberately
 // out — `docs/consuming.md` keeps old versions on purpose, to show what a pinned consumer writes.
-// An artifact no family publishes is left alone.
+// An artifact no family publishes is left alone. A kmp/lib also publishes one artifact per target
+// beside the root one (`stx-material-jvm`, `stx-material-iosarm64`, …): `<module>-<target>` follows
+// its module's family like the root coordinate does.
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { families } from "./families.ts";
 
 /** A coordinate with a version: group 1 is the `group:artifact:` part, group 2 the artifact. */
 const COORDINATE = /(io\.github\.softistx:([\w-]+):)\d+\.\d+\.\d+(?:-[\w.]+)?/g;
+
+/** The kmp targets a `kmp/lib` publishes a `<module>-<target>` artifact for. */
+const KMP_TARGET = /-(?:jvm|android|js|wasmjs|wasmwasi|(?:ios|macos|tvos|watchos)(?:arm64|x64|simulatorarm64|devicearm64|arm32)|linux(?:x64|arm64)|mingwx64|androidnative\w+)$/;
 
 /** What rewriting one README did, or would do. */
 export interface ReadmeWritten {
@@ -49,7 +54,7 @@ export function syncReadmeVersions(root: string, check = false): ReadmeWritten[]
         const before = readFileSync(root + file, "utf8");
         if (!before.match(COORDINATE)) continue;
         const after = before.replace(COORDINATE, (whole, prefix: string, artifact: string) => {
-            const version = versionOf.get(artifact);
+            const version = versionOf.get(artifact) ?? versionOf.get(artifact.replace(KMP_TARGET, ""));
             return version ? prefix + version : whole;
         });
         if (after !== before && !check) writeFileSync(root + file, after);
