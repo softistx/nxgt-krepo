@@ -242,9 +242,12 @@ jobs:
       # Pinned, and the pin must match what CONTRIBUTING.md tells a contributor to install: two
       # ktlint versions disagree about formatting, and the disagreement surfaces as a CI failure
       # nobody can reproduce locally.
+      # The binary runs with the repo's token, so the download is checked against the SHA-256
+      # GitHub publishes for the release asset; bump it together with the version.
       - name: Install ktlint 1.8.0
         run: |
           curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.8.0/ktlint
+          echo "a3fd620207d5c40da6ca789b95e7f823c54e854b7fade7f613e91096a3706d75  ktlint" | sha256sum -c -
           chmod +x ktlint
       # `!build/**` is not optional: without it ktlint lints KSP and plugin output and reports
       # thousands of violations in files nobody edits.
