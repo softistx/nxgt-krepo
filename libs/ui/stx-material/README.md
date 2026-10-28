@@ -83,7 +83,8 @@ resolved once, the padding and rhythm inside a card, the hover state M3's chip d
 `FilterBar`, `UploadField`, `StatusDot`, `Kbd`, `QuantityField`, `AvatarGroup`, `InlineEdit`,
 `ExpandableText`, `CodeBlock`, `SectionHeader`, `RelativeTime`, `ConfirmButton`,
 `PasswordMeter`, `Disclosure` and `SelectionBar` are built from primitives because M3 has nothing
-to start from. AGENTS.md's *Building a component* is the rule.
+to start from; so is `ListDetailLayout`, because M3's `ListDetailPaneScaffold` sizes its panes from
+the window, not from the width offered. AGENTS.md's *Building a component* is the rule.
 
 **Colour, shape, border and padding go through M3's own `*Colors` and `*Defaults`.** A `Style` is
 for what M3 has no parameter for:

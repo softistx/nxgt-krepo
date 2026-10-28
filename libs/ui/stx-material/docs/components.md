@@ -245,7 +245,7 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `feedback/status-badge` |
 | `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/alert` |
 | `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `feedback/skeleton` |
-| `StateHost<T>` | `state: UiState<T>`, `onRetry`, `errorTitle = "Could not load"`, `retryLabel = "Retry"`, `loadingLabel = "Loading"`, `loading = { SkeletonCards() }`, `content: (T) -> Unit` — no `style`: a host, the look is its `Alert`, `Button` and `Card`s | `feedback/state-host` |
+| `StateHost<T>` | `state: UiState<T>`, `onRetry`, `modifier`, `errorTitle = "Could not load"`, `retryLabel = "Retry"`, `loadingLabel = "Loading"`, `loading = { SkeletonCards() }`, `content: (T) -> Unit` — no `style`: a host, the look is its `Alert`, `Button` and `Card`s | `feedback/state-host` |
 | `SkeletonCards` | `count = 4` — card-shaped `Skeleton`s that arrive in turn (`animateStagger`), at once under reduced motion | `feedback/state-host` |
 | `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `feedback/status-dot` |
 | `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/announcement-bar` |
@@ -261,11 +261,12 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 
 `StateHost` is the one place a screen decides between loading, data and failure: `Loading` shows the
 loading face (announced as `loadingLabel`), `Data` calls `content`, `Error` is an `Alert(Tone.Error)`
-whose Retry button (56 dp, a button role) calls `onRetry`. Pass `loading` for a skeleton shaped like the
-screen; the default is `SkeletonCards`.
+whose Retry button (`ButtonSize.Medium`, so it clears the 48 dp target; a button role) calls `onRetry`.
+Pass `loading` for a skeleton shaped like the screen; the default is `SkeletonCards`. The three faces
+sit in a `Box(modifier)`, so the data face is laid out within the bounds you give, and the loading and
+error faces are polite live regions.
 
-`UiState` (`Loading`, `Data(data)`, `Error(message)`) lives in the same `feedback` package. Retry is a
-`ButtonSize.Medium` button so it clears the 48 dp target.
+`UiState` (`Loading`, `Data(data)`, `Error(message)`) lives in the same `feedback` package.
 
 ```kotlin
 StateHost(state = state, onRetry = vm::reload) { rows -> RowList(rows) }
@@ -627,7 +628,7 @@ Package `com.softistx.material.components.layout`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `ResponsiveGrid` | `items`, `minSize = 200.dp`, `item` | `layout/responsive-grid` |
-| `ListDetailLayout` | `selected`, `placeholderTitle = "Select an item"`, `wideThreshold = 720.dp`, `listWidth = 380.dp`, `placeholder = { ListDetailLayoutDefaults.Placeholder(placeholderTitle, it) }`, `list: (Modifier) -> Unit`, `detail: (Modifier) -> Unit` — no `style`: a layout is inert, its look is its panes' | `layout/list-detail-layout` |
+| `ListDetailLayout` | `selected`, `modifier`, `wideThreshold = 720.dp`, `listWidth = 380.dp`, `placeholder = { ListDetailLayoutDefaults.Placeholder("Select an item", it) }`, `list: (Modifier) -> Unit`, `detail: (Modifier) -> Unit` — no `style`: a layout is inert, its look is its panes' | `layout/list-detail-layout` |
 | `ScrollToTop` | `listState`, `after = 2`, `style = Style` | `layout/scroll-to-top` |
 | `LoadMoreButton` | `hasMore`, `loading`, `onClick`, `label`, `style = Style` | `layout/load-more` |
 | `SelectionBar` | `count`, `onClear`, `actions` — no `style`: a bar of `IconButton`s | `layout/selection-bar` |
@@ -644,8 +645,13 @@ M3's, so `style` dresses the box the gesture is read on. `ResponsiveGrid` is ine
 
 `ListDetailLayout` shows the list and the detail side by side when the width it is *offered* is at
 least `wideThreshold`, and one at a time below it: the detail when `selected`, the list otherwise.
-Selection is plain state, kept by the caller. The list and detail panes are separate compositions, so their state (scroll, text typed) is lost when the layout folds: hoist it. `placeholderTitle` (default "Select an item") is read only by the default placeholder. `detail` runs only when `selected`; `placeholder`
-fills the empty second pane. Back handling in the single-pane layout is the caller's: a back button
+Selection is plain state, kept by the caller. A pane that is not shown leaves composition, but its `rememberSaveable` state (a
+`rememberLazyListState` scroll position, a typed draft) is kept per pane, so it survives the fold and
+a list, detail, list round trip; plain `remember` state does not, so hoist that. `detail` runs only
+when `selected`; `placeholder` fills the empty second pane (write
+`placeholder = { ListDetailLayoutDefaults.Placeholder("Select a message", it) }` for another text).
+It is built from primitives, not Material 3's `ListDetailPaneScaffold`, whose directive follows the
+window rather than the width offered here. Back handling in the single-pane layout is the caller's: a back button
 or `BackHandler` that clears the selection. It folds inside a destination or a narrow desktop window,
 which `AdaptiveNavDisplay` (see *Navigation 3 scenes*) does not: that one follows the window size class
 and needs a back stack.
@@ -654,7 +660,7 @@ and needs a back stack.
 var open by remember { mutableStateOf<Message?>(null) }
 ListDetailLayout(
     selected = open != null,
-    placeholderTitle = "Select a message",
+    placeholder = { ListDetailLayoutDefaults.Placeholder("Select a message", it) },
     list = { pane -> MessageList(onOpen = { open = it }, modifier = pane) },
     detail = { pane -> open?.let { MessageThread(it, onBack = { open = null }, modifier = pane) } },
 )
