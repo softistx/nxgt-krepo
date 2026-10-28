@@ -627,7 +627,7 @@ Package `com.softistx.material.components.layout`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `ResponsiveGrid` | `items`, `minSize = 200.dp`, `item` | `layout/responsive-grid` |
-| `ListDetailLayout` | `selected`, `placeholderTitle`, `wideThreshold = 720.dp`, `listWidth = 380.dp`, `placeholder = { ListDetailLayoutDefaults.Placeholder(placeholderTitle, it) }`, `list: (Modifier) -> Unit`, `detail: (Modifier) -> Unit` — no `style`: a layout is inert, its look is its panes' | `layout/list-detail-layout` |
+| `ListDetailLayout` | `selected`, `placeholderTitle = "Select an item"`, `wideThreshold = 720.dp`, `listWidth = 380.dp`, `placeholder = { ListDetailLayoutDefaults.Placeholder(placeholderTitle, it) }`, `list: (Modifier) -> Unit`, `detail: (Modifier) -> Unit` — no `style`: a layout is inert, its look is its panes' | `layout/list-detail-layout` |
 | `ScrollToTop` | `listState`, `after = 2`, `style = Style` | `layout/scroll-to-top` |
 | `LoadMoreButton` | `hasMore`, `loading`, `onClick`, `label`, `style = Style` | `layout/load-more` |
 | `SelectionBar` | `count`, `onClear`, `actions` — no `style`: a bar of `IconButton`s | `layout/selection-bar` |
@@ -637,9 +637,14 @@ Package `com.softistx.material.components.layout`.
 over a list and only appears once the reader has left the top. `RefreshBox` is M3's
 `PullToRefreshBox`. `SelectionBar` is hidden at count zero.
 
+`LoadMoreButton` and `ScrollToTop` hand their `style` to the button they are made of. `RefreshBox`
+takes `style = Style` with no default look (no `StxStyles` entry): the indicator and the drag are
+M3's, so `style` dresses the box the gesture is read on. `ResponsiveGrid` is inert and `SelectionBar` hosts several controls (the clear button and the
+`actions` slot), so neither takes one.
+
 `ListDetailLayout` shows the list and the detail side by side when the width it is *offered* is at
 least `wideThreshold`, and one at a time below it: the detail when `selected`, the list otherwise.
-Selection is plain state, kept by the caller. `detail` runs only when `selected`; `placeholder`
+Selection is plain state, kept by the caller. The list and detail panes are separate compositions, so their state (scroll, text typed) is lost when the layout folds: hoist it. `placeholderTitle` (default "Select an item") is read only by the default placeholder. `detail` runs only when `selected`; `placeholder`
 fills the empty second pane. Back handling in the single-pane layout is the caller's: a back button
 or `BackHandler` that clears the selection. It folds inside a destination or a narrow desktop window,
 which `AdaptiveNavDisplay` (see *Navigation 3 scenes*) does not: that one follows the window size class
@@ -654,11 +659,6 @@ ListDetailLayout(
     detail = { pane -> open?.let { MessageThread(it, onBack = { open = null }, modifier = pane) } },
 )
 ```
-
-`LoadMoreButton` and `ScrollToTop` hand their `style` to the button they are made of. `RefreshBox`
-takes `style = Style` with no default look (no `StxStyles` entry): the indicator and the drag are
-M3's, so `style` dresses the box the gesture is read on. `ResponsiveGrid` is inert and `SelectionBar` hosts several controls (the clear button and the
-`actions` slot), so neither takes one.
 
 ### Navigation 3 scenes
 

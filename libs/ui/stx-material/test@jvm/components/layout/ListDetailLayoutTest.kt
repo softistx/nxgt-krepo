@@ -1,11 +1,17 @@
 package com.softistx.material.components.layout
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -116,4 +122,31 @@ class ListDetailLayoutTest :
                 }
             }
         }
+
+        feature("semantics") {
+            scenario("wide: the list precedes the detail in traversal; narrow with a selection: no list node") {
+                runComposeUiTest {
+                    var width by mutableStateOf(900.dp)
+                    setContent {
+                        StxTheme(isDark = false) {
+                            Box(Modifier.width(width)) {
+                                ListDetailLayout(
+                                    selected = true,
+                                    list = { Typography(text = "the list", modifier = it) },
+                                    detail = { Typography(text = "the detail", modifier = it) },
+                                )
+                            }
+                        }
+                    }
+                    val texts = onRoot().fetchSemanticsNode().children.flatMap { collectTexts(it) }
+                    texts shouldBe listOf("the list", "the detail")
+                    width = 500.dp
+                    onNodeWithText("the list").assertDoesNotExist()
+                    onNodeWithText("the detail").assertExists()
+                }
+            }
+        }
     })
+
+private fun collectTexts(node: SemanticsNode): List<String> =
+    node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } + node.children.flatMap(::collectTexts)

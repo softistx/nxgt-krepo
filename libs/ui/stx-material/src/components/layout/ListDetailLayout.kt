@@ -26,10 +26,17 @@ import com.softistx.material.foundation.icon.StxIcons
  *   [detail] when [selected], else [placeholder] in the second pane.
  * - **Narrow**: [detail] fills the space when [selected], else [list] does.
  *
+ * [placeholderTitle] is read only by the default [placeholder]; pass your own [placeholder] and it is unused.
+ *
  * [detail] runs only when [selected] is true. Each pane gets the [Modifier] it must fill.
  *
  * In the single-pane layout nothing leads the reader back from the detail to the list: back
  * handling stays the caller's (a back button or `BackHandler` that clears the selection).
+ *
+ * [list] and [detail] are not kept alive when the layout folds (a pane that is not shown is left
+ * composition), so their state is lost: hoist the list's scroll state and any draft out of them.
+ * The panes carry no semantics of their own; label them (for example with `semantics { paneTitle }`
+ * on the modifier you receive) if they should be announced.
  *
  * Not to be confused with [com.softistx.material.components.navigation.AdaptiveNavDisplay] and the
  * `ListDetail` scene metadata: those follow the window size class and a Navigation 3 back stack.
@@ -41,7 +48,7 @@ import com.softistx.material.foundation.icon.StxIcons
 @Composable
 fun ListDetailLayout(
     selected: Boolean,
-    placeholderTitle: String,
+    placeholderTitle: String = ListDetailLayoutDefaults.PlaceholderTitle,
     modifier: Modifier = Modifier,
     wideThreshold: Dp = ListDetailLayoutDefaults.WideThreshold,
     listWidth: Dp = ListDetailLayoutDefaults.ListWidth,
@@ -69,6 +76,9 @@ fun ListDetailLayout(
 object ListDetailLayoutDefaults {
     /** The offered width from which two panes are shown. */
     val WideThreshold: Dp = 720.dp
+
+    /** The default text of the empty second pane. */
+    const val PlaceholderTitle: String = "Select an item"
 
     /** The list pane's width in the two-pane layout. */
     val ListWidth: Dp = 380.dp
