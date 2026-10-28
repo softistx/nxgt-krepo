@@ -944,7 +944,7 @@ Rules that are easy to get wrong:
 
 `libs.versions.toml` at the repo root is the project catalog and **the single place where dependency versions live**. Any dependency used by more than one module — and by default any dependency at all — goes in the catalog and is referenced from modules as `$libs.<alias>`; do not paste versioned Maven coordinates into a `module.yaml`. Alias keys map with dashes becoming dots: `kotest-runner-junit5` → `$libs.kotest.runner.junit5`. Toolchain-provided catalogs (`$kotlin.*`, `$compose.*`) need no catalog entry.
 
-**The toolchain does not read `[bundles]`** — `$libs.bundles.<name>` fails with `No catalog value for the key`. The bundles in this catalog still document which stack a dependency belongs to and serve Gradle-based consumers, but modules must list individual aliases.
+**The toolchain does not read `[bundles]`** — `$libs.bundles.<name>` fails with `No catalog value for the key`. The bundles in this catalog only document which stack a dependency belongs to (nothing in the repo consumes them), and modules must list individual aliases. The catalog serves this repo's own modules and nothing else; an alias no module, template, script or doc example names is deleted rather than kept for a hypothetical consumer.
 
 **The 17 `stx-*` keys in `[versions]` are one per library family, and a script owns them.** Every
 `stx-*` alias in `[libraries]` takes `version.ref = "<its family>"` — `stx-jpa-ktor` and
@@ -958,7 +958,7 @@ To share a dependency *set* or settings across modules, use a **module template*
 
 The catalog's `[bundles]` groupings map to the intended consumer surfaces of this library, which is the fastest way to see which stack a new module belongs to:
 
-- **`compose`** / `compose-test` / `compose-android-test` / `compose-ksp` — Android + Compose client: Material3, Navigation/Compose Destinations, Room, DataStore, WorkManager, Koin, Apollo, kotlinx-rpc client.
+- **`compose`** / `compose-test` / `compose-android-test` / `compose-ksp` — Android + Compose client: Material3, Navigation Compose, Room, DataStore, WorkManager, Koin, kotlinx-rpc client.
 - **`ktor`** / `ktor-mix` / `ktor-test` — server: Ktor, kotlinx-rpc server, MongoDB Kotlin coroutine driver, Koin, Konform validation, Nimbus JOSE JWT, Spring Security crypto, simple-java-mail, Kotest.
 - **`shared`** / `shared-test` — code common to both: kotlinx-serialization, kotlinx-rpc client, bson-kotlinx.
 - **`kotlinx`**, **`faker`** — coroutines/datetime, and kotlin-faker for test data.
