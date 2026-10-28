@@ -183,8 +183,9 @@ Switching to `auto` is a one-word change in `scripts/enable-central.ts`, and its
 - **`rm -rf build/incremental.state` is load-bearing.** The publish task caches, and its
   up-to-date check does *not* notice a manifest edit — it reuses
   `build/tasks/_<module>_prepareMavenPublishables/`. The job has just rewritten up to seventeen
-  family templates *and* enabled signing, so without that line it republishes the previous version, unsigned, and reports
-  success. Deleting artifacts from the repository does not help; the task will not regenerate them.
+  family templates *and* enabled signing, so without that line it republishes the previous version,
+  unsigned, and reports success. Deleting artifacts from the repository does not help; the task
+  will not regenerate them.
 - **`kotlin publish mavenCentral` was refused until toolchain 0.12.2.** On 0.12.0 it answered
   *"Cannot publish to repository 'mavenCentral' because it's not marked as publishable"*, because
   it checks the repositories list where the built-in `mavenCentral` is resolve-only; an entry

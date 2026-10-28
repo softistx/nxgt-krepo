@@ -18,8 +18,12 @@ import { families } from "./families.ts";
 /** A coordinate with a version: group 1 is the `group:artifact:` part, group 2 the artifact. */
 const COORDINATE = /(io\.github\.softistx:([\w-]+):)\d+\.\d+\.\d+(?:-[\w.]+)?/g;
 
-/** The kmp targets a `kmp/lib` publishes a `<module>-<target>` artifact for. */
-const KMP_TARGET = /-(?:jvm|android|js|wasmjs|wasmwasi|(?:ios|macos|tvos|watchos)(?:arm64|x64|simulatorarm64|devicearm64|arm32)|linux(?:x64|arm64)|mingwx64|androidnative\w+)$/;
+/**
+ * The kmp targets this repo builds a `<module>-<target>` artifact for: `product.platforms` of
+ * `libs/ui/stx-material/module.yaml`, lowercased as Maven publishes them. `iosx64` is absent on
+ * purpose — the Compose artifacts do not publish it — so a README naming it is left alone.
+ */
+const KMP_TARGET = /-(?:jvm|android|iosarm64|iossimulatorarm64)$/;
 
 /** What rewriting one README did, or would do. */
 export interface ReadmeWritten {

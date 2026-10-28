@@ -74,16 +74,17 @@ test("--check reports the drift and writes nothing", () => {
 test("a kmp platform artifact follows the version of its module's family", () => {
     const root = fixture();
     try {
-        const platforms = ["jvm", "android", "iosarm64", "iossimulatorarm64", "iosx64"];
+        const platforms = ["jvm", "android", "iosarm64", "iossimulatorarm64"];
         writeFileSync(
             root + "README.md",
             platforms.map((t) => `io.github.softistx:stx-jpa-${t}:0.1.0\n`).join("") +
-                "io.github.softistx:elsewhere-jvm:9.9.9\nio.github.softistx:stx-jpa-ktor-jvm:0.1.0\n",
+                "io.github.softistx:elsewhere-jvm:9.9.9\nio.github.softistx:stx-jpa-ktor-jvm:0.1.0\nio.github.softistx:stx-jpa-iosx64:0.1.0\n",
         );
         syncReadmeVersions(root);
         for (const t of platforms) expect(read(root, "README.md")).toContain(`stx-jpa-${t}:0.3.1`);
         expect(read(root, "README.md")).toContain("stx-jpa-ktor-jvm:0.3.1");
         expect(read(root, "README.md")).toContain("elsewhere-jvm:9.9.9");
+        expect(read(root, "README.md")).toContain("stx-jpa-iosx64:0.1.0"); // not a built target
     } finally {
         rmSync(root, { recursive: true });
     }
