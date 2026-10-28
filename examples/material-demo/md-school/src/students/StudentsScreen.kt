@@ -2,10 +2,10 @@ package com.softistx.material.school.students
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.components.feedback.UiState
 import com.softistx.material.school.common.ListDetail
 import com.softistx.material.school.common.ScreenFrame
-import com.softistx.material.school.common.StateHost
 import com.softistx.material.school.data.Student
 import com.softistx.material.school.data.Students
 import com.softistx.material.school.session.DataState

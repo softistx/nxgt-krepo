@@ -245,6 +245,8 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `feedback/status-badge` |
 | `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/alert` |
 | `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `feedback/skeleton` |
+| `StateHost<T>` | `state: UiState<T>`, `onRetry`, `errorTitle = "Could not load"`, `retryLabel = "Retry"`, `loadingLabel = "Loading"`, `loading = { SkeletonCards() }`, `content: (T) -> Unit` — no `style`: a host, the look is its `Alert`, `Button` and `Card`s | `feedback/state-host` |
+| `SkeletonCards` | `count = 4` — card-shaped `Skeleton`s that arrive in turn (`animateStagger`), at once under reduced motion | `feedback/state-host` |
 | `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `feedback/status-dot` |
 | `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/announcement-bar` |
 | `PromoBanner` | `text`, `code?`, `tone = Success`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style` | `feedback/promo-banner` |
@@ -256,6 +258,11 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 
 `Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
 `AnimatedVisibility` for the caller to write. `Skeleton` shimmers on its own.
+
+`StateHost` is the one place a screen decides between loading, data and failure: `Loading` shows the
+loading face (announced as `loadingLabel`), `Data` calls `content`, `Error` is an `Alert(Tone.Error)`
+whose Retry button (56 dp, a button role) calls `onRetry`. Pass `loading` for a skeleton shaped like the
+screen; the default is `SkeletonCards`.
 
 `Alert`, `AnnouncementBar` and `PromoBanner` share one surface (`StxStyles.alert(tone)`): a tonal
 `surfaceContainerHigh` with no outline and a `largeIncreased` (20 dp) corner, except `Tone.Error`,
