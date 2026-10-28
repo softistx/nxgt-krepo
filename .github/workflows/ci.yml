@@ -32,7 +32,7 @@ jobs:
       # repository has for Changesets are not needed here and downloading them would be waste.
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: package.json
 
       # The wrapper downloads the Kotlin CLI and a JRE on first use, then the compiler and every
       # dependency. Without this the first step of every run is a multi-minute download.
@@ -267,7 +267,7 @@ jobs:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: package.json
 
       # Not "libs/ changed and no .changeset/*.md exists" any more. A version is now per family, so
       # a changeset naming the wrong family is worse than none: it releases a library nobody
@@ -286,7 +286,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.4.4
+          bun-version-file: package.json
       - run: bun install --frozen-lockfile
 
       # bun strips types, it does not check them — so TypeScript under `bun scripts/*.ts` buys
