@@ -140,7 +140,7 @@ the build. What is still uncovered is linking, and there are no iOS tests. The
 
 ## Publishing
 
-`io.github.softistx:stx-material:0.2.3`, like every other module under `libs/` — but a `kmp/lib` publishes one
+`io.github.softistx:stx-material:0.4.1`, like every other module under `libs/` — but a `kmp/lib` publishes one
 artifact per platform beside the root one: `stx-material-jvm`, `stx-material-android`,
 `stx-material-iosarm64`, `stx-material-iossimulatorarm64`. A consumer depends on the root artifact
 and the platform one is selected for it.

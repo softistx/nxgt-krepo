@@ -22,7 +22,9 @@ Each family owns four files:
 
 `scripts/sync-version.ts` copies each `package.json` version into the two places the Kotlin build
 reads it — the family template and the family's key in `[versions]` of `libs.versions.toml` — 34
-anchors in all, each asserted to match exactly once.
+anchors in all, each asserted to match exactly once. It also rewrites the
+`io.github.softistx:<artifact>:<version>` coordinates quoted in `README.md` files (the root one and
+those under `libs/`, never `docs/`) to the version of the family that owns the artifact.
 
 **What the split buys, honestly.** A change to `stx-material`, `stx-jpa` or `stx-kafka` — which is
 most changes — now moves one version line instead of seventeen. A change to `stx-common` still moves

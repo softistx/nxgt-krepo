@@ -19,6 +19,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { type Family, families, templateOf } from "./families.ts";
+import { syncReadmeVersions } from "./readme-versions.ts";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 
@@ -225,7 +226,9 @@ if (import.meta.main) {
         process.exit(1);
     }
 
-    const written = syncVersions(ROOT, check);
+    // The README snippets are prose, not anchors: rewritten by pattern, reported like the rest.
+    const readmes = syncReadmeVersions(ROOT, check).map((r) => ({ ...r, version: "family versions" }));
+    const written = [...syncVersions(ROOT, check), ...readmes];
     const drifted = written.filter((w) => w.changed);
     for (const { file, version, changed } of written) {
         if (changed || !check) console.log(`${changed ? "updated " : "unchanged"}  ${file}  -> ${version}`);
