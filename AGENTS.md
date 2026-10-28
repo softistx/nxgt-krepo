@@ -501,9 +501,11 @@ concluding the library is at fault.
 Running a single test:
 
 ```bash
-./kotlin test --include-test com.example.MyTest.myTestMethod
-./kotlin test --include-test 'com.example.MyTest/Nested.myTestMethod'   # '/' separates nested classes
-./kotlin test --include-classes 'com.example.*ServiceTest'              # wildcard pattern, repeatable
+# A filter needs -m: without it the CLI refuses ("required to use --include-module").
+./kotlin test -m my-module --include-classes 'com.example.MyTest'       # one class: exact FQN, repeatable
+./kotlin test -m my-module --include-test com.example.MyTest.myTestMethod   # one method; a bare class name finds nothing
+# Do not use a wildcard in --include-classes: here it did not narrow, even a pattern matching
+# nothing ran the whole module. Name each class in full.
 ```
 
 Inspecting the resolved project model — cheap, and it catches manifest errors without a compile:
