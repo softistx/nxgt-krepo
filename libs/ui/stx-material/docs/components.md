@@ -264,6 +264,16 @@ loading face (announced as `loadingLabel`), `Data` calls `content`, `Error` is a
 whose Retry button (56 dp, a button role) calls `onRetry`. Pass `loading` for a skeleton shaped like the
 screen; the default is `SkeletonCards`.
 
+`UiState` (`Loading`, `Data(data)`, `Error(message)`) lives in the same `feedback` package. Retry is a
+`ButtonSize.Medium` button so it clears the 48 dp target.
+
+```kotlin
+StateHost(state = state, onRetry = vm::reload) { rows -> RowList(rows) }
+
+// a loading face shaped like the screen
+StateHost(state = state, onRetry = vm::reload, loading = { ProfileSkeleton() }) { profile -> Profile(profile) }
+```
+
 `Alert`, `AnnouncementBar` and `PromoBanner` share one surface (`StxStyles.alert(tone)`): a tonal
 `surfaceContainerHigh` with no outline and a `largeIncreased` (20 dp) corner, except `Tone.Error`,
 which keeps the error container because it is the one tone that must interrupt. The tone lives on
