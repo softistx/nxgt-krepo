@@ -132,9 +132,12 @@ jobs:
           # The Mongo container sometimes dies at start ("container ... is not running") and used to
           # leave no trace of why. A dead one is seen at once, its logs and exit state are printed,
           # and it is started one more time before the step gives up.
+          # Not mongo:8: its TCMalloc breaks the rseq ABI of Linux 6.19–7.0.13, and mongod refuses to
+          # start on those runner kernels (SERVER-121912). 7.0 predates that allocator. Move back to 8
+          # once the runners' kernel is 7.0.14+ or an 8.0 patch ships the fixed TCMalloc.
           start_mongo() {
             docker rm -f mongo >/dev/null 2>&1 || true
-            docker run -d --name mongo -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
+            docker run -d --name mongo -p 27017:27017 mongo:7.0 --replSet rs0 --bind_ip_all
             # A replica set is not up when the process is: `available` in MongoTestCluster sends a
             # `hello` for exactly this reason, and an uninitiated set answers as a standalone.
             for _ in $(seq 1 90); do
