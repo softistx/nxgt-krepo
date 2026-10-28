@@ -123,103 +123,11 @@ bean.
 
 ## Routes
 
-Everything in `web/` is an extension, and none of it is a bean — a functional route reads its
-request and returns its response, and there is nothing to inject.
-
-```kotlin
-suspend fun list(request: ServerRequest): ServerResponse {
-    val category = request.requiredParam("category")
-    val page = products.page(category, request.page, request.size, request.sort)
-    return page.response().ok()
-}
-
-suspend fun create(request: ServerRequest): ServerResponse {
-    val body = request.validBody<ProductRequest>(validator, ValidationGroups.Create::class)
-    return products.create(body).created()
-}
-```
-
-- **Nonsense in a paging parameter is not a failure.** `?page=abc` and `?size=-1` are how a
-  hand-written link arrives; answering the first page is more useful than a 400 on a parameter the
-  caller did not mean to send. A parameter the route genuinely needs is `requiredParam`, which *does*
-  fail — as `params.required`, with the parameter's name in the arguments, so the client is told
-  which one.
-- **`sort` does not return Spring Data's `Sort`.** It returns a list of `SortOrder`, because
-  spring-data-commons has no business on the classpath of a consumer that only wanted to read a query
-  parameter. Each store's package translates it into what that store sorts by.
-- **A sort clause has to match end to end.** The property reaches a query as a field name, so the
-  pattern that accepts it is narrow and anchored. `$where:ASC` *contains* a legal clause; a scanning
-  parser sorted by `where`, which is an operator and not a field. `SortOrderTest` pins that.
-- **`Response<D, M>` has no `error` field, deliberately.** An error never comes back through a
-  route's return value here — it is thrown and answered by `ApiExceptionHandler`. A `data`/`error`
-  union means every client unwraps two levels to learn something failed, when the status already said
-  so. Using the envelope at all is a route's choice; nothing here returns it for you.
-- **`Validator.check` throws instead of returning violations**, because a caller who forgets to
-  look at a returned set has written a route that validates nothing and says so nowhere. It lives in
-  its own file for the `compile-only` reason below.
+Extensions over a functional route's request and response — paging, sort, validated bodies, the `Response` envelope. The decisions behind them (a bad paging parameter is not a failure, `sort` is not Spring Data's `Sort`, no `error` field) are in [`docs/spring-web.md`](../../../docs/spring-web.md#routes).
 
 ## Calling another service
 
-```kotlin
-interface Catalog {
-    @GetExchange("/products/{id}")
-    suspend fun product(@PathVariable id: String): Product
-}
-
-val catalog = httpClient<Catalog>("https://catalog.internal")
-```
-
-**An error response arrives as an `ApiException`, not a `WebClientResponseException`.** A failure
-from a service upstream and one raised in this one should reach a handler as the same type, or the
-translation gets written twice — and the second time is after the first outage. The upstream's status
-is carried across, so its 404 is a 404 here rather than a 500. A status `HttpStatus` does not list
-(Cloudflare's 522, nginx's 499) maps to 502 for an unknown 5xx, 400 for an unknown 4xx and 500
-otherwise.
-
-The upstream's body is read as a map rather than as `ErrorResponse`: an upstream that is not one of
-ours answers in its own shape, and a decoder that throws while handling an error would replace a
-useful 502 with a serialization failure. A body with no `message` becomes `errors.unexpected`, which
-the caller's own catalogs can still translate.
-
-The `headers` hook runs **per request**, which is what makes it usable for the header that actually
-varies — a token read off the current request, a correlation id. `defaultHeaders` would pin the first
-caller's value onto every later call.
-
-**An API split across tags takes one factory and a client per interface.**
-
-```kotlin
-val factory = httpServiceFactory(baseUrl, headers = { it.setBearerAuth(token) }) { … }
-val orders = factory.withClient<IOrdersService>()
-val health = factory.withClient<IHealthService>()
-```
-
-`httpServiceFactory` is `httpClient`'s other half, and its `factory` parameter is the escape hatch
-for the two things that belong to the proxy rather than to the `WebClient` — a conversion service and
-a request-values processor. A factory built per interface rebuilds the client underneath it, and the
-second interface is where one of those settings quietly goes missing.
-
-**A client for a *generated* interface takes four settings, and `generatedApiFactory` is all four.**
-
-```kotlin
-val factory = generatedApiFactory(
-    baseUrl,
-    json = stxWebJson,                          // only with `models: Kotlinx`
-    enums = ::registerApiEnumConverters,
-    operations = apiOperationProcessor(),
-    filters = listOf(apiAuthFilter(credentials), apiErrorFilter()),
-)
-val orders = factory.withClient<IOrdersService>()
-```
-
-The arguments are the symbols `plugins/openapi` emitted into that module's own
-`<packageName>.utils` — same shapes everywhere, different classes — so they are passed rather than
-named, and their Spring types are what lets the assembly be written once. **None of the four fails at
-build time when left out**, which is the whole reason it is a function and not a paragraph: without
-`json` a `kotlin.time.Instant` goes to Jackson, without `enums` Spring writes `IN_PROGRESS` where the
-document says `in-progress`, without `operations` a generated filter cannot tell which operation it is
-looking at, and without the error filter a documented failure arrives untyped. This is also how a
-spec drives a controller through the interface it implements; the `openapi-spec-first` skill has that
-convention, and `examples/spring-orders/test/TestHelper.kt` is the whole of what an application writes.
+`httpClient<T>(baseUrl)` and `httpServiceFactory`/`generatedApiFactory` build a typed client from an `@HttpExchange` interface, and an error response arrives as an `ApiException`. The details are in [`docs/spring-web.md`](../../../docs/spring-web.md#calling-another-service).
 
 ## What is not here
 
@@ -231,48 +139,7 @@ and this module depends on both.
 
 ## Who is calling
 
-```kotlin
-val owner = requireCurrentUser().username
-```
-
-**`ReactiveSecurityContextHolder`, never `SecurityContextHolder`.** The non-reactive holder is a
-`ThreadLocal`, and in WebFlux a request is not a thread — the same trap the locale section below
-describes, in the other half of the stack. `currentUser()` returns null for an anonymous request,
-because an endpoint that anyone may read and that is *richer* when signed in is an ordinary thing to
-write; `requireCurrentUser()` is for the rest and fails as `errors.unauthorized`.
-
-Four annotations say who may call what:
-
-```kotlin
-@RequireRole("ADMIN")
-suspend fun archive(id: String)
-
-@RequireOwnership
-suspend fun order(id: String): Order
-```
-
-- **`@RequireRole` and `@RequireAuthority` are `@PreAuthorize`.** The versions these came from were
-  `@PostAuthorize`, which runs the method *first* and denies afterwards — so a caller without the
-  role still got their write performed and only the response refused. A check on who may call
-  something has to happen before the something.
-- **`@RequireOwnership` and `@FilterByOwnership` are genuinely post-hoc**, because whether the caller
-  owns a thing cannot be known until the thing is loaded. Put `@RequireOwnership` on a read; on a
-  delete, the delete happens and only the answer is refused.
-- `@FilterByOwnership` filters what a query already returned, so the database read every row and a
-  page can come back short. A query that says `createdBy = me` is the better answer wherever one can
-  be written.
-- The expressions read `returnObject.metadata.createdBy`, which is the shape `stx-mongo`'s `Audited`
-  gives a document. Nothing here depends on that module — SpEL resolves the path at runtime.
-
-**Two things have to be switched on for these to work.** `stx.security.enabled` registers the
-`AnnotationTemplateExpressionDefaults` bean, without which `{value}` is never substituted and
-`@RequireRole("ADMIN")` denies every call as the literal expression `hasRole('{value}')`. And
-`@EnableReactiveMethodSecurity` is the application's to add, because turning method security on
-changes how every bean in the context is proxied — not something a dependency should do quietly.
-
-`stx.security` contributes a `PasswordEncoder` and that one bean, and nothing else. The filter chain,
-the permitted paths and the authentication manager are application policy: a library that guessed at
-them would either lock a service out of its own health check or open something that should not be.
+`currentUser()` / `requireCurrentUser()` read the *reactive* security context, and `@RequireRole`, `@RequireAuthority`, `@RequireOwnership` and `@FilterByOwnership` say who may call what. Why each is `@PreAuthorize` or post-hoc, and the two things that must be switched on: [`docs/spring-web.md`](../../../docs/spring-web.md#who-is-calling).
 
 ## Browsers
 
@@ -409,67 +276,7 @@ That is also why `stx-migrations`' Mongo ledger has **no secondary index at all*
 
 ## The audit trail
 
-```yaml
-stx:
-  data:
-    mongo:
-      audit:
-        enabled: true
-        collection: audits
-```
-
-```kotlin
-@Auditable
-@Document("orders")
-data class Order(@Id val id: String, val status: String, val total: Int)
-```
-
-That is the whole setup. Every save and delete of an `@Auditable` document appends an `AuditEntry`
-carrying the document's full state, the properties that changed, who changed them, and a version
-number that only goes up. Nothing is ever updated — a history that can be edited is not one.
-
-The author is the signed-in user's name, read from Spring Security when it is on the classpath. It
-is empty when nobody is signed in, and a delete carries none, because Spring Data's reactive
-template gives a delete no callback inside the request's chain. A unique index on
-`(oid, collection, version)` backs the version number, so two writers cannot append the same one.
-To query the trail like any other collection, see [what a Mongo query may say](../../../docs/spring-mongo-queries.md).
-
-The diff comes from [Javers](https://javers.org), which is `compile-only`: an application that does
-not audit anything does not carry it.
-
-**Opt-in per document, not per application.** An audit trail on everything is a second copy of the
-database that nobody budgeted for. This is for the collections where *who changed this, and to what*
-is a question somebody will actually ask.
-
-**Saves that changed nothing record nothing.** Spring Data emits an `AfterSaveEvent` for every save,
-including the ones that wrote the same values back, and a trail full of versions that differ in
-nothing is a trail nobody reads.
-
-**A delete is `TERMINAL` and the last word.** It keeps the last known state — the question asked of a
-deletion is nearly always *what was it when it went* — and saves of the same id afterwards are
-ignored rather than continuing the history. A new document reusing an id is a different thing, and
-stitching the two together would produce a diff between two unrelated objects, presented as a change
-somebody made.
-
-**The write is asynchronous, on a scope the context owns.** Auditing runs after the save has already
-happened, so failing it cannot undo anything, and blocking the request on a second write would cost
-every caller latency for a record nobody is waiting on. The consequence stated plainly: an entry can
-be lost if the process dies between the save and the append. The scope is the `stxAuditScope` bean —
-replaceable, and cancelled when the context closes. It is deliberately **not** `GlobalScope`, which
-would keep writing through shutdown, be stopped only by the process exiting, and give a test nothing
-to wait for. At shutdown the queued entries are given up to five seconds to drain before the scope
-is cancelled.
-
-**The collection name is not a SpEL `@Document`.** A configurable mapped collection is normally
-written `@Document("#{@environment.getProperty(…)}")`, because the annotation is read at mapping time
-and no bean of ours runs early enough to rename it. That expression needs a bean resolver, so it
-resolves only inside an application context: a `ReactiveMongoTemplate` built by hand fails with
-`EL1057E: No bean resolver registered`, which is how this was found. `AuditStore` holds the name and
-passes it to the template's `collectionName` overloads instead.
-
-`stx.data.mongo.audit` is not `stx.data.mongo.auditor`. The latter registers Spring Data's
-`ReactiveAuditorAware` so `@CreatedBy` stamps *who* onto the document itself; this one keeps the
-document's whole history in a collection of its own.
+`@Auditable` on a Mongo document appends an `AuditEntry` per save and delete, written asynchronously and never updated. Setup, the per-document opt-in, `TERMINAL` deletes, the asynchronous write and the collection-name decision: [`docs/spring-mongo-queries.md`](../../../docs/spring-mongo-queries.md#the-audit-trail).
 
 ## Migrations — see `libs/data/stx-migrations`
 
@@ -560,84 +367,7 @@ constructor parameter of its exception handler. What moved is the auto-configura
 
 ## Testing an application built on this
 
-`com.softistx.spring.testing` is in `src/`, not in a test tree, because it is *for consumers* — an
-application adds `//libs/core/stx-spring-boot` and `//libs/core/stx-testing` to its `test-dependencies` and
-writes four things:
-
-```kotlin
-// test/ProjectConfig.kt — in package io.kotest.provided, where Kotest looks for it
-object ProjectConfig : SpringProjectConfig()
-
-// test/OrderControllerTest.kt — no bootstrap, no base spec of its own
-class OrderControllerTest(template: ReactiveMongoTemplate, json: Json) : MongoSpec({
-    beforeEach { template.clear("orders", "audits") }
-
-    feature("POST /orders").config(enabled = mongoAvailable) { … }
-})
-```
-
-```yaml
-# testResources/application-test.yaml
-server:
-  port: 8088                       # TestServer.STX_TEST_PORT, so a client needs no URL spelled out
-spring:
-  mongodb:
-    database: spring_orders_test   # a prefix: `testDatabase` appends this run's suffix
-```
-
-That is the whole surface. `MongoSpec` is `@ActiveProfiles("test")` plus
-`@SpringBootTest(DEFINED_PORT)` plus the two `@TestConfiguration`s below; re-annotating a subclass
-overrides any of them. `SpringSpec` is the same without Mongo, for an application on something else.
-
-**Where MongoDB is, answered as a bean.** `MongoTestConfiguration` contributes a
-`MongoConnectionDetails`, and `MongoReactiveAutoConfiguration` declares its own under
-`@ConditionalOnMissingBean` of that type — so the test bean wins outright, with no property registry
-and no `@DynamicPropertySource` companion for every application to copy. The URI comes from
-`stx-testing`: `MONGO_TEST_URI` when a server is already up, a container started once for the run
-otherwise, and neither means `mongoAvailable` is `false` and every feature gated on it reports
-skipped rather than red.
-
-**A bean rather than a property, and the reason is a scar.** Spring Boot 4 split the old
-`spring.data.mongodb`: the driver's URI, credentials and database are `MongoProperties` under
-**`spring.mongodb`**, while `spring.data.mongodb` kept only GridFS and the big-decimal
-representation. A `spring.data.mongodb.uri` carried over from Boot 3 therefore binds to nothing, is
-reported by nothing, and leaves the driver on `MongoProperties.DEFAULT_URI` — `mongodb://localhost/test`,
-which on a developer machine is a real server that answers. `examples/spring-orders` was doing
-exactly that, container and all, and its suite passed the whole time. A bean is asked for by type and
-cannot be misspelled; `MongoSpecTest` pins the prefix so the next rename fails loudly.
-
-**The database is the run's, and it is given back.** What `application-test.yaml` names is a prefix:
-`testDatabase` appends `stx-testing`'s run suffix, and a `BeanPostProcessor` rewrites
-`MongoProperties.database` with the result before anything reads it. Both halves are load-bearing.
-The suffix is the convention every harness here follows — a fixed name on a server
-`MONGO_TEST_URI` points at is shared with whatever else is running, and these specs empty
-collections, so two suites at once would clear each other's; a suite run twice would also find its
-migrations already in the ledger and never re-seed what the first run cleared. And the *post-processor*
-rather than a name spliced into the URI alone, because
-`DataMongoReactiveAutoConfiguration.reactiveMongoDatabaseFactory` reads `MongoProperties.getDatabase()`
-first and only falls back to the connection string — so the URI-only version left the driver on one
-database and `ReactiveMongoTemplate` on another, which is how `MongoSpecTest` found it. Then
-`MongoTestCleanup` drops that database at JVM exit, as a shutdown hook and not a bean's destroy
-method: the database belongs to the run, and Spring's context cache may close one context while
-another is still writing. Against a container it costs a connection and nothing else; against the
-workspace's own replica set it is the difference between leaving one database per run behind and
-leaving none.
-
-**The port is not a constant anybody keeps in sync.** `TestServer.port` starts at
-`STX_TEST_PORT` — what `DEFINED_PORT` binds and what a spec body reads before any context exists —
-and `TestServerConfiguration` overwrites it with the port the server actually took, so a subclass
-re-annotated `RANDOM_PORT` works too. `webTestClient()` and an application's own client factory
-default to it. `bindToServer` and not `bindToApplicationContext`: the kotlinx codecs, the exception
-advice, the locale negotiation and the `Instant` converters are auto-configurations, and a client
-bound to a context bypasses several of them.
-
-**`extensions` is `final` on `SpringProjectConfig`.** The failure that prevents is an application
-adding a listener of its own, overriding `extensions` to say so, dropping `SpringExtension` on the
-way, and watching every spec fail on a missing bean. Extras go to the constructor and keep it.
-
-Everything behind this — `stx-testing`, `spring-boot-starter-test`, Kotest — is `compile-only`, for
-the reason the next section gives. Nothing in `src/` refers to `com.softistx.spring.testing` and no
-auto-configuration imports it, so an application that never writes a spec never loads any of it.
+`com.softistx.spring.testing` lives in `src/` because it is for consumers: a `ProjectConfig`, a spec extending `MongoSpec`, and an `application-test.yaml`. The surface and the reasons behind it (Mongo as a bean, the run's database, the port) are in [`docs/spring-testing.md`](../../../docs/spring-testing.md).
 
 ## Dependencies
 
@@ -664,6 +394,8 @@ COMPILE scope and absent from RUNTIME.
 | --- | --- |
 | [`../../docs/spring-mongo-queries.md`](../../../docs/spring-mongo-queries.md) | What a query may say — the operators, the filter and sort grammars, and the paging rules |
 | [`../../docs/spring-configuration.md`](../../../docs/spring-configuration.md) | Every `stx.*` key, its default, and what switching it on costs |
+| [`docs/spring-web.md`](../../../docs/spring-web.md) | Routes, typed clients for other services, and the annotations that say who is calling |
+| [`docs/spring-testing.md`](../../../docs/spring-testing.md) | What an application's specs write, and how the harness finds Mongo, the database and the port |
 | [`../stx-ktor/README.md`](../stx-ktor/README.md) | The Ktor seam — the same split, drawn the same way, and the resource idiom its plugins are built on |
 | [`../stx-i18n/stx-i18n/README.md`](../../api/stx-i18n/stx-i18n/README.md) | What `Messages` loads, how a key falls back, and what `Accept-Language` negotiation matches |
 | [`../../AGENTS.md`](../../../AGENTS.md) | The repo's conventions, including publishing and the catalog |

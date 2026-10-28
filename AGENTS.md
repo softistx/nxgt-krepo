@@ -776,7 +776,7 @@ is not only about repetition: a property name can be wrong and say nothing, and 
 the driver's settings from `spring.data.mongodb` to **`spring.mongodb`**, and `examples/spring-orders`
 spent a phase talking to `mongodb://localhost/test` — the workspace's own replica set — with a
 container running beside it and a green suite. A bean is asked for by type and cannot be misspelled.
-`libs/core/stx-spring-boot/README.md` has the four lines an application writes.
+`docs/spring-testing.md` has the four lines an application writes.
 
 `spring.mongodb.database` there names a *prefix*, not a database: the test support appends the run
 suffix — the `TestNames` rule above, reached through a `BeanPostProcessor` because
@@ -1159,9 +1159,11 @@ the same each time, and the mistakes are the same each time too.
   | `libs/data/stx-mongo/stx-mongo/README.md` | How is the Mongo library shaped, and why is each non-obvious part the way it is? |
   | `libs/data/stx-mongo/stx-mongo-ktor/README.md` | The Ktor plugin for it — why construction stays in the library and only the lifecycle is here, and why two handles rather than one |
   | `libs/data/stx-mongo/stx-mongo-spring/README.md` | The Spring auto-configuration for it — and the cross-module ordering that decides which `MongoDatabase` an application gets |
-  | `libs/core/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and the test beans an application's specs are built on |
+  | `libs/core/stx-spring-boot/README.md` | The Spring integrations — the opt-in `stx.*` model, why the configuration metadata is hand-written, why the locale comes off the exchange, and what `compile-only` buys a consumer |
   | `docs/spring-mongo-queries.md` | What a stx-spring-boot Mongo query may say — the predicate operators, the filter and sort grammars, and the keyset paging rules. **This is where a new operator or filter token is documented** |
   | `docs/spring-configuration.md` | Every `stx.*` key, its default and what enabling it costs. **This is where a new configuration key is documented** |
+  | `docs/spring-web.md` | What the stx-spring-boot web layer may say — routes, typed clients for other services, and the annotations that say who is calling. **This is where a new route extension, client factory or security annotation is documented** |
+  | `docs/spring-testing.md` | What an application's specs write on stx-spring-boot's test harness, and why `MongoSpec` finds Mongo, the database and the port the way it does |
   | `libs/data/stx-redis/stx-redis/README.md` | The same, for Redis — including what each layer deliberately does not do |
   | `libs/data/stx-redis/stx-redis-ktor/README.md` | The Ktor plugin for it — why the connection is shared, why `config` is defaulted where `MongoDB`'s `uri` is not, and the double close |
   | `libs/data/stx-redis/stx-redis-spring/README.md` | The Spring auto-configuration for it — the opt-in rule, and what deliberately is not a property |
