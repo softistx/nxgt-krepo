@@ -1,5 +1,13 @@
 # stx-material
 
+## 0.4.0
+
+### Minor Changes
+
+- [#369](https://github.com/softistx/nxgt-krepo/pull/369) [`0899dcd`](https://github.com/softistx/nxgt-krepo/commit/0899dcd02ae9dbf801ec89f96c0b5f1a3a889e4f) Thanks [@SteveGT96](https://github.com/SteveGT96)! - `ListDetailLayout(selected, modifier, wideThreshold, listWidth, placeholder, list, detail)` shows a list and its detail side by side when the width it is offered reaches `wideThreshold` (720 dp), and one at a time below it, with no Navigation 3 back stack, so it folds inside a destination or a narrow desktop window. The list pane is `listWidth` (380 dp) wide; selection is plain state. `ListDetailLayoutDefaults` holds the two numbers and `Placeholder(title, modifier)`, the default second pane (write `placeholder = { ListDetailLayoutDefaults.Placeholder("Select a student", it) }` for another text). Each pane keeps its `rememberSaveable` state across a fold (a list's scroll position also survives a list, detail, list round trip); the detail's state is dropped when `selected` turns false. It is not `ListDetail`, which stays the scene metadata of `AdaptiveNavDisplay`.
+
+- [#368](https://github.com/softistx/nxgt-krepo/pull/368) [`7307e4c`](https://github.com/softistx/nxgt-krepo/commit/7307e4c009671a58eda06269618057be42da5982) Thanks [@SteveGT96](https://github.com/SteveGT96)! - `StateHost(state, onRetry, modifier, errorTitle, retryLabel, loadingLabel, loading, content)` renders a `UiState<T>`: card-shaped skeletons that arrive in turn while it loads (announced as "Loading", a polite live region), your `content` on data (all three faces sit in a `Box(modifier)`), and an error `Alert` with a Retry button on failure; the strings are parameters. `SkeletonCards(modifier, count)` is the default loading face, public so a screen can compose it.
+
 ## 0.3.0
 
 ### Minor Changes
