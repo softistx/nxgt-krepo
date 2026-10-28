@@ -244,6 +244,8 @@ dont la forme se lit dans les imports.
 
 ## Maintenant
 
+- [ ] **`StateHost` (#360).** Rendre un `UiState<T>` dans la bibliothèque : chargement en `Skeleton` décalés en forme de cartes, erreur en `Alert(tone = Error)` avec un bouton Réessayer, libellés en paramètres. Une application sur `UiState` ne recopie plus ce trio.
+- [ ] **`ListDetail` à la largeur (#361).** Deux volets ou un seul selon la largeur offerte, sans pile Navigation 3 : il se replie dans une destination ou une fenêtre de bureau étroite, là où `AdaptiveNavDisplay` suit la classe de fenêtre.
 - [ ] **Suite de #297 : contraste élevé.** Lire « Augmenter le contraste » (iOS `UIAccessibilityDarkerSystemColorsEnabled`, Android `UiModeManager.getContrast`, bureau) et l'exposer au thème quand un premier composant en a besoin.
 
 ## Phases suivantes
