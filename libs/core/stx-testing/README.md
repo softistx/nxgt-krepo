@@ -114,7 +114,7 @@ does not need Redis Stack, which is what the workspace runs: the specs use only 
 ## Declaring a backend
 
 A backend's particulars — which image, what a replica set needs, how its connection string is
-spelled — live in `Backends.kt`, not in every library that talks to it. `stx-mongo` says what it
+spelled — live in `containers/`, not in every library that talks to it. `stx-mongo` says what it
 needs; it does not configure a `MongoDBContainer`.
 
 ```kotlin

@@ -723,7 +723,7 @@ its own containers, a machine that exports the variables reuses long-running ser
 with neither skips those specs while everything else still runs.
 
 A server you already have is therefore used only if you say so — a `mongod` on the default port is
-invisible to a spec until `MONGO_TEST_URI` names it. The variable per backend is in `Backends.kt`
+invisible to a spec until `MONGO_TEST_URI` names it. The variable per backend is in stx-testing's `containers/` files
 (`MONGO_TEST_URI`, `REDIS_TEST_URI`, `AMQP_TEST_URI`, …) and exporting one points every spec in the
 repo at that server. Mongo is the one worth exporting on a development machine: it has to be an
 `rs0` replica set, because `startTransaction` fails outright against a standalone `mongod`, and
@@ -755,7 +755,7 @@ everything else is pointed at.
 **A spec must not depend on the host having the right daemon up.** `libs/core/stx-testing` declares
 each backing service and resolves it in one order: the environment variable if it names a server,
 otherwise a container started once for the run, otherwise `available == false` and the spec skips.
-Mongo, Redis, AMQP and MinIO all work this way. Declare a new backend in `Backends.kt`, never in a
+Mongo, Redis, AMQP and MinIO all work this way. Declare a new backend in stx-testing's `containers/` files, never in a
 library's own test tree.
 
 **A harness reaches the endpoint with `requireEndpoint()` and names its namespace with
