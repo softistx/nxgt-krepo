@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.components.feedback.UiState
-import com.softistx.material.school.common.ListDetail
+import com.softistx.material.components.layout.ListDetailLayout
 import com.softistx.material.school.common.ScreenFrame
 import com.softistx.material.school.data.Student
 import com.softistx.material.school.data.Students
@@ -19,7 +19,7 @@ fun StudentsScreen(session: SchoolSession) {
     val state: UiState<List<Student>> = session.data.ofList(Students.all)
     val selected = session.studentId?.let(Students::byId)
     ScreenFrame(title = "Students", session = session, scroll = false) {
-        ListDetail(
+        ListDetailLayout(
             selected = selected != null,
             placeholderTitle = "Select a student",
             modifier = Modifier.weight(1f),

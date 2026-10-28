@@ -3,6 +3,7 @@ package com.softistx.material.demo.stories.components.layout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.content.Card
 import com.softistx.material.components.content.ListTile
+import com.softistx.material.components.layout.ListDetailLayout
 import com.softistx.material.components.layout.LoadMoreButton
 import com.softistx.material.components.layout.RefreshBox
 import com.softistx.material.components.layout.ResponsiveGrid
@@ -33,6 +35,30 @@ val LayoutStories =
                 minSize = 140.dp,
             ) { name ->
                 Card { Typography(text = name) }
+            }
+        }
+
+        story("List detail layout") { knobs ->
+            var open by remember { mutableStateOf<Int?>(null) }
+            val width = knobs.number("Offered width (dp)", 900f, 400f..900f, steps = 9)
+            Box(Modifier.width(width.dp).height(320.dp)) {
+                ListDetailLayout(
+                    selected = open != null,
+                    placeholderTitle = "Select a row",
+                    list = { pane ->
+                        LazyColumn(pane) {
+                            itemsIndexed((1..8).toList()) { _, n ->
+                                ListTile(title = "Row $n", onClick = { open = n })
+                            }
+                        }
+                    },
+                    detail = { pane ->
+                        Box(pane) {
+                            Typography(text = "Detail of row $open")
+                            IconButton(icon = StxIcons.Close, description = "Back to the list", onClick = { open = null })
+                        }
+                    },
+                )
             }
         }
 
