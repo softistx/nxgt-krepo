@@ -2,11 +2,11 @@ package com.softistx.workflow.annotation
 
 import com.softistx.workflow.dsl.Signal
 import com.softistx.workflow.dsl.signal
+import kotlinx.serialization.serializer
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.valueParameters
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.serialization.serializer
 
 internal fun awaitNode(
     function: KFunction<*>,

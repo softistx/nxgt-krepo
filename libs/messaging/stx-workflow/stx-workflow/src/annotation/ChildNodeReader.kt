@@ -1,12 +1,12 @@
 package com.softistx.workflow.annotation
 
 import com.softistx.workflow.Workflow
+import kotlinx.serialization.serializer
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.valueParameters
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.serialization.serializer
 
 /**
  * Reads a `@Child` and the `@ChildResult` that follows it.

@@ -2,4 +2,4 @@
 "stx-workflow": patch
 ---
 
-split Declaration.kt; no API change
+Internal: the annotation declaration reader is split into one file per node kind. No behaviour or API change.
