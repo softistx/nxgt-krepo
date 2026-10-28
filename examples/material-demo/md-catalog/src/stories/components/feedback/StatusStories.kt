@@ -14,8 +14,10 @@ import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.feedback.Alert
 import com.softistx.material.components.feedback.AlertDefaults
 import com.softistx.material.components.feedback.Skeleton
+import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.components.feedback.StatusBadge
 import com.softistx.material.components.feedback.StatusDot
+import com.softistx.material.components.feedback.UiState
 import com.softistx.material.demo.StoryGroupBuilder
 import com.softistx.material.demo.knobs.enumChoice
 import com.softistx.material.foundation.text.Typography
@@ -53,6 +55,17 @@ internal fun StoryGroupBuilder.statusStories() {
         }
     }
 
+    story("State host") { knobs ->
+        val shown = knobs.enumChoice("State", ShownState.Loading)
+        val state: UiState<String> =
+            when (shown) {
+                ShownState.Loading -> UiState.Loading
+                ShownState.Data -> UiState.Data("Three invoices reconciled.")
+                ShownState.Error -> UiState.Error("The server did not answer.")
+            }
+        StateHost(state = state, onRetry = {}) { Typography(text = it) }
+    }
+
     story("Status dot") { _ ->
         Column(verticalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm)) {
             Tone.entries.forEach { tone ->
@@ -67,3 +80,5 @@ internal fun StoryGroupBuilder.statusStories() {
         }
     }
 }
+
+private enum class ShownState { Loading, Data, Error }

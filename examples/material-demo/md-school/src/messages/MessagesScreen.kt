@@ -2,9 +2,9 @@ package com.softistx.material.school.messages
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.school.common.ListDetail
 import com.softistx.material.school.common.ScreenFrame
-import com.softistx.material.school.common.StateHost
 import com.softistx.material.school.data.Conversations
 import com.softistx.material.school.session.DataState
 import com.softistx.material.school.session.SchoolSession

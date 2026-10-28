@@ -12,9 +12,9 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.components.button.Button
 import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.datetime.Calendar
+import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.school.common.ScreenFrame
-import com.softistx.material.school.common.StateHost
 import com.softistx.material.school.common.isWide
 import com.softistx.material.school.session.DataState
 import com.softistx.material.school.session.SchoolSession

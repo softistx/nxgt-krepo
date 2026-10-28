@@ -242,9 +242,12 @@ dont la forme se lit dans les imports.
 - [x] **Accessibilité (#297, fin).** `Emphasis.Subtle` passe de 0,5 à 0,72 et `Medium` de 0,72 à 0,80 : `Subtle` tient 4,5:1 sur `surface`, `surfaceContainer` et `surfaceContainerHigh`, en clair et en sombre (avant : 2,7 à 2,8 en clair, 4,3 à 4,5 en sombre). `StxTheme` sans `motion` suit le système : « Réduire les animations » coupe `StxMotion` et installe un schéma M3 qui n'anime plus ; passer un `motion` désactive la lecture. Lecture par Android (échelle d'animation), iOS (`UIAccessibility`) et bureau (`-Dstx.material.reduceMotion` seul ; `readDesktopReducedMotion()` pour lire le système sur demande). Les specs passent au `runComposeUiTest` v2. #291 reste ouvert.
 - [x] **Ruptures de la revue approfondie (#358).** `style` est le dernier paramètre (ou le dernier avant un lambda final) de chaque composable public ; `sortable` est un champ de `TableColumn` ; `StxStyles` vit dans `components` ; les `xStyle` sont `internal` ; `motionScheme` disparaît de `StxTheme` au profit de `motion`, dont dérive le schéma M3
 
+## Livré — suites de 0.3.0
+
+- [x] **`StateHost` (#360).** `StateHost(state, onRetry, modifier, errorTitle, retryLabel, loadingLabel, loading, content)` rend un `UiState<T>` : `SkeletonCards` (cartes décalées, d'un coup sous « Réduire les animations ») annoncées « Loading » pendant le chargement, `content` sur les données, une `Alert(Tone.Error)` avec un bouton Retry de 56 dp sinon. Libellés en paramètres ; `SkeletonCards(modifier, count)` est public. md-school retire sa copie.
+
 ## Maintenant
 
-- [ ] **`StateHost` (#360).** Rendre un `UiState<T>` dans la bibliothèque : chargement en `Skeleton` décalés en forme de cartes, erreur en `Alert(tone = Error)` avec un bouton Réessayer, libellés en paramètres. Une application sur `UiState` ne recopie plus ce trio.
 - [ ] **`ListDetail` à la largeur (#361).** Deux volets ou un seul selon la largeur offerte, sans pile Navigation 3 : il se replie dans une destination ou une fenêtre de bureau étroite, là où `AdaptiveNavDisplay` suit la classe de fenêtre.
 - [ ] **Suite de #297 : contraste élevé.** Lire « Augmenter le contraste » (iOS `UIAccessibilityDarkerSystemColorsEnabled`, Android `UiModeManager.getContrast`, bureau) et l'exposer au thème quand un premier composant en a besoin.
 

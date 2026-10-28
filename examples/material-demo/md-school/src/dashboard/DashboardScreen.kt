@@ -16,11 +16,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.feedback.LoadingMark
+import com.softistx.material.components.feedback.SkeletonCards
+import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.components.layout.RefreshBox
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.school.common.ScreenFrame
-import com.softistx.material.school.common.SkeletonCards
-import com.softistx.material.school.common.StateHost
 import com.softistx.material.school.session.DataState
 import com.softistx.material.school.session.SchoolSession
 import com.softistx.material.school.session.of
