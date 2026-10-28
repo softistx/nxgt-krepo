@@ -68,8 +68,8 @@ Alongside them are the shared service libraries, which have nothing to do with t
 
 ```kotlin
 dependencies {
-    implementation("io.github.softistx:stx-jpa:0.2.1")
-    implementation("io.github.softistx:stx-jpa-ktor:0.2.1")
+    implementation("io.github.softistx:stx-jpa:0.3.1")
+    implementation("io.github.softistx:stx-jpa-ktor:0.3.1")
 }
 ```
 
