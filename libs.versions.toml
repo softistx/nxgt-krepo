@@ -230,12 +230,6 @@ spring-security-crypto = { module = "org.springframework.security:spring-securit
 javers-core = { module = "org.javers:javers-core", version.ref = "javers" }
 commons-logging = { module = "commons-logging:commons-logging", version = "1.4.0" }
 
-kotlin-faker = { module = "io.github.serpro69:kotlin-faker" }
-kotlin-faker-books = { module = "io.github.serpro69:kotlin-faker-books" }
-kotlin-faker-tech = { module = "io.github.serpro69:kotlin-faker-tech" }
-kotlin-faker-lorem = { module = "io.github.serpro69:kotlin-faker-lorem" }
-kotlin-faker-databases = { module = "io.github.serpro69:kotlin-faker-databases" }
-kotlin-faker-tvshows = { module = "io.github.serpro69:kotlin-faker-tvshows" }
 
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }

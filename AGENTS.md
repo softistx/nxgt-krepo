@@ -961,7 +961,7 @@ The catalog's `[bundles]` groupings map to the intended consumer surfaces of thi
 - **`compose`** / `compose-test` / `compose-android-test` / `compose-ksp` — Android + Compose client: Material3, Navigation Compose, Room, DataStore, WorkManager, Koin, kotlinx-rpc client.
 - **`ktor`** / `ktor-mix` / `ktor-test` — server: Ktor, kotlinx-rpc server, MongoDB Kotlin coroutine driver, Koin, Konform validation, Nimbus JOSE JWT, Spring Security crypto, simple-java-mail, Kotest.
 - **`shared`** / `shared-test` — code common to both: kotlinx-serialization, kotlinx-rpc client, bson-kotlinx.
-- **`kotlinx`**, **`faker`** — coroutines/datetime, and kotlin-faker for test data.
+- **`kotlinx`** — coroutines/datetime.
 
 **A module that turns on `settings.ktor` pins the version to the catalog's.** `ktor: enabled` gives
 `$ktor.server.core` and the rest from the toolchain's *own* default version, which matched
