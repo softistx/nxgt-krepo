@@ -50,8 +50,8 @@ fun IconButton(
     val shapes = IconButtonDefaults.shapes()
     val content = @Composable { Icon(icon = icon, description = description, size = size) }
 
-    when (variant) {
-        ButtonVariant.Filled -> {
+    when (variant.kind) {
+        ButtonKind.Filled -> {
             FilledIconButton(
                 onClick = onClick,
                 modifier = styled,
@@ -67,7 +67,7 @@ fun IconButton(
             )
         }
 
-        ButtonVariant.Tonal -> {
+        ButtonKind.Tonal -> {
             FilledTonalIconButton(
                 onClick = onClick,
                 modifier = styled,
@@ -83,7 +83,7 @@ fun IconButton(
             )
         }
 
-        ButtonVariant.Outlined -> {
+        ButtonKind.Outlined -> {
             OutlinedIconButton(
                 onClick = onClick,
                 modifier = styled,
@@ -98,7 +98,7 @@ fun IconButton(
 
         // Material 3 has no borderless-underlined icon button, and an underline under an icon
         // would mean nothing anyway: Link falls back to the plain one.
-        ButtonVariant.Ghost, ButtonVariant.Link -> {
+        ButtonKind.Quiet -> {
             MaterialIconButton(
                 onClick = onClick,
                 modifier = styled,
