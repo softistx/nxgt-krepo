@@ -8,9 +8,9 @@ import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.content.SectionHeader
 import com.softistx.material.components.data.Description
 import com.softistx.material.components.data.DescriptionItem
+import com.softistx.material.components.feedback.SkeletonCards
+import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.components.media.PersonCard
-import com.softistx.material.school.common.SkeletonCards
-import com.softistx.material.school.common.StateHost
 import com.softistx.material.school.data.CURRENT_TEACHER
 import com.softistx.material.school.session.DataState
 import com.softistx.material.school.session.SchoolSession

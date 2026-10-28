@@ -245,6 +245,8 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 | `StatusBadge` | `text`, `tone = Info` — no `style`: a badge is inert | `feedback/status-badge` |
 | `Alert` | `text`, `tone = Info`, `title?`, `visible = true`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/alert` |
 | `Skeleton` | `height = 16.dp`, `shape = shapes.extraSmall` | `feedback/skeleton` |
+| `StateHost<T>` | `state: UiState<T>`, `onRetry`, `modifier`, `errorTitle = "Could not load"`, `retryLabel = "Retry"`, `loadingLabel = "Loading"`, `loading = { SkeletonCards() }`, `content: (T) -> Unit` — no `style`: a host, the look is its `Alert`, `Button` and `Card`s | `feedback/state-host` |
+| `SkeletonCards` | `count = 4` — card-shaped `Skeleton`s that arrive in turn (`animateStagger`), at once under reduced motion | `feedback/state-host` |
 | `StatusDot` | `tone`, `description?`, `size = 8.dp` — no `style`: a dot is inert | `feedback/status-dot` |
 | `AnnouncementBar` | `text`, `tone = Info`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style`, `action?` | `feedback/announcement-bar` |
 | `PromoBanner` | `text`, `code?`, `tone = Success`, `onDismiss?`, `icon: ImageVector? = AlertDefaults.icon(tone)`, `style = Style` | `feedback/promo-banner` |
@@ -256,6 +258,22 @@ What reports state to the reader. Package `com.softistx.material.components.feed
 
 `Alert` owns its own enter and exit — pass `visible` and it animates itself; there is no
 `AnimatedVisibility` for the caller to write. `Skeleton` shimmers on its own.
+
+`StateHost` is the one place a screen decides between loading, data and failure: `Loading` shows the
+loading face (announced as `loadingLabel`), `Data` calls `content`, `Error` is an `Alert(Tone.Error)`
+whose Retry button (`ButtonSize.Medium`, so it clears the 48 dp target; a button role) calls `onRetry`.
+Pass `loading` for a skeleton shaped like the screen; the default is `SkeletonCards`. The three faces
+sit in a `Box(modifier)`, so the data face is laid out within the bounds you give, and the loading and
+error faces are polite live regions.
+
+`UiState` (`Loading`, `Data(data)`, `Error(message)`) lives in the same `feedback` package.
+
+```kotlin
+StateHost(state = state, onRetry = vm::reload) { rows -> RowList(rows) }
+
+// a loading face shaped like the screen
+StateHost(state = state, onRetry = vm::reload, loading = { ProfileSkeleton() }) { profile -> Profile(profile) }
+```
 
 `Alert`, `AnnouncementBar` and `PromoBanner` share one surface (`StxStyles.alert(tone)`): a tonal
 `surfaceContainerHigh` with no outline and a `largeIncreased` (20 dp) corner, except `Tone.Error`,
@@ -610,6 +628,7 @@ Package `com.softistx.material.components.layout`.
 | Component | Parameters | Story |
 | --- | --- | --- |
 | `ResponsiveGrid` | `items`, `minSize = 200.dp`, `item` | `layout/responsive-grid` |
+| `ListDetailLayout` | `selected`, `modifier`, `wideThreshold = 720.dp`, `listWidth = 380.dp`, `placeholder = { ListDetailLayoutDefaults.Placeholder("Select an item", it) }`, `list: (Modifier) -> Unit`, `detail: (Modifier) -> Unit` — no `style`: a layout is inert, its look is its panes' | `layout/list-detail-layout` |
 | `ScrollToTop` | `listState`, `after = 2`, `style = Style` | `layout/scroll-to-top` |
 | `LoadMoreButton` | `hasMore`, `loading`, `onClick`, `label`, `style = Style` | `layout/load-more` |
 | `SelectionBar` | `count`, `onClear`, `actions` — no `style`: a bar of `IconButton`s | `layout/selection-bar` |
@@ -624,6 +643,30 @@ takes `style = Style` with no default look (no `StxStyles` entry): the indicator
 M3's, so `style` dresses the box the gesture is read on. `ResponsiveGrid` is inert and `SelectionBar` hosts several controls (the clear button and the
 `actions` slot), so neither takes one.
 
+`ListDetailLayout` shows the list and the detail side by side when the width it is *offered* is at
+least `wideThreshold`, and one at a time below it: the detail when `selected`, the list otherwise.
+Selection is plain state, kept by the caller. A pane that is not shown leaves composition, but its `rememberSaveable` state is kept per pane: the
+list's scroll position (`rememberLazyListState`) survives the fold and a list, detail, list round
+trip, and the detail's survives a fold while selected but is dropped when `selected` turns false, so
+the next item opens fresh. Plain `remember` state is not kept, so hoist that. `detail` runs only
+when `selected`; `placeholder` fills the empty second pane (write
+`placeholder = { ListDetailLayoutDefaults.Placeholder("Select a message", it) }` for another text).
+It is built from primitives, not Material 3's `ListDetailPaneScaffold`, whose directive follows the
+window rather than the width offered here. Back handling in the single-pane layout is the caller's: a back button
+or `BackHandler` that clears the selection. It folds inside a destination or a narrow desktop window,
+which `AdaptiveNavDisplay` (see *Navigation 3 scenes*) does not: that one follows the window size class
+and needs a back stack.
+
+```kotlin
+var open by remember { mutableStateOf<Message?>(null) }
+ListDetailLayout(
+    selected = open != null,
+    placeholder = { ListDetailLayoutDefaults.Placeholder("Select a message", it) },
+    list = { pane -> MessageList(onOpen = { open = it }, modifier = pane) },
+    detail = { pane -> open?.let { MessageThread(it, onBack = { open = null }, modifier = pane) } },
+)
+```
+
 ### Navigation 3 scenes
 
 Package `com.softistx.material.components.navigation`.
@@ -633,6 +676,8 @@ Package `com.softistx.material.components.navigation`.
 | `AdaptiveNavDisplay` | `backStack`, `onBack`, `entryProvider` | `navigation/list-detail` |
 | `ListDetail.list / detail / extra` | metadata maps for the three panes | `navigation/list-detail` |
 | `SupportingPane.main / supporting / extra` | metadata maps for the inspector layout | — |
+
+For a list and detail that fold by offered width without a back stack, see `ListDetailLayout` under *Layout*.
 
 `AdaptiveNavDisplay` is Navigation 3's `NavDisplay` with Material 3 Adaptive's list-detail and
 supporting-pane strategies already installed, in that order. Compact windows fall through to a

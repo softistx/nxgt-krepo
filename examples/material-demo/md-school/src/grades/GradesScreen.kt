@@ -11,10 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.softistx.material.components.feedback.StateHost
 import com.softistx.material.components.navigation.SegmentedControl
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.school.common.ScreenFrame
-import com.softistx.material.school.common.StateHost
 import com.softistx.material.school.common.isWide
 import com.softistx.material.school.session.DataState
 import com.softistx.material.school.session.SchoolSession
