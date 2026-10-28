@@ -18,8 +18,20 @@ import { families } from "./families.ts";
 /** A coordinate with a version: group 1 is the `group:artifact:` part, group 2 the artifact. */
 const COORDINATE = /(io\.github\.softistx:([\w-]+):)\d+\.\d+\.\d+(?:-[\w.]+)?/g;
 
-/** The kmp targets a `kmp/lib` publishes a `<module>-<target>` artifact for. */
-const KMP_TARGET = /-(?:jvm|android|js|wasmjs|wasmwasi|(?:ios|macos|tvos|watchos)(?:arm64|x64|simulatorarm64|devicearm64|arm32)|linux(?:x64|arm64)|mingwx64|androidnative\w+)$/;
+/**
+ * The kmp targets the published modules build, read from the `platforms: [...]` of their
+ * `module.yaml`, lowercased as Maven publishes them (`iosSimulatorArm64` -> `iossimulatorarm64`).
+ * A target no manifest names (`iosx64`) is not an artifact, so its coordinate is left alone.
+ */
+function kmpTarget(root: string, dirs: readonly string[]): RegExp | undefined {
+    const targets = new Set<string>();
+    for (const dir of dirs) {
+        const text = readFileSync(`${root}${dir}/module.yaml`, "utf8");
+        const list = text.match(/^\s*platforms:\s*\[([^\]]*)\]/m)?.[1];
+        for (const t of list?.split(",") ?? []) if (t.trim()) targets.add(t.trim().toLowerCase());
+    }
+    return targets.size ? new RegExp(`-(?:${[...targets].join("|")})$`) : undefined;
+}
 
 /** What rewriting one README did, or would do. */
 export interface ReadmeWritten {
@@ -49,12 +61,13 @@ export function syncReadmeVersions(root: string, check = false): ReadmeWritten[]
         for (const module of family.modules) versionOf.set(module.name, family.version);
     }
 
+    const target = kmpTarget(root, families(root).flatMap((f) => f.modules.map((m) => m.dir)));
     const written: ReadmeWritten[] = [];
     for (const file of readmes(root)) {
         const before = readFileSync(root + file, "utf8");
         if (!before.match(COORDINATE)) continue;
         const after = before.replace(COORDINATE, (whole, prefix: string, artifact: string) => {
-            const version = versionOf.get(artifact) ?? versionOf.get(artifact.replace(KMP_TARGET, ""));
+            const version = versionOf.get(artifact) ?? (target && versionOf.get(artifact.replace(target, "")));
             return version ? prefix + version : whole;
         });
         if (after !== before && !check) writeFileSync(root + file, after);
