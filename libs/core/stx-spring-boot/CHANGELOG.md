@@ -1,5 +1,11 @@
 # stx-spring-boot
 
+## 0.4.1
+
+### Patch Changes
+
+- [#387](https://github.com/softistx/nxgt-krepo/pull/387) [`b2b5e84`](https://github.com/softistx/nxgt-krepo/commit/b2b5e84ed7b9de19be22acdc692c5f660f04a943) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Move reference sections of the README into docs/.
+
 ## 0.4.0
 
 ### Minor Changes
