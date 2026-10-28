@@ -1,8 +1,10 @@
 name: CI
 
 on:
+  # Slice PRs into a feat/* integration branch get no CI on purpose: they run the
+  # green bar locally, so CI is spent once per effort, on its PR into develop.
   pull_request:
-    branches: [develop, "integration/**"]
+    branches: [develop]
   push:
     branches: [develop, main]
 
