@@ -31,22 +31,22 @@ fun buttonColors(
 ): ButtonColors {
     val tone = buttonTone(color)
     val scheme = MaterialTheme.colorScheme
-    return when (variant) {
-        ButtonVariant.Filled -> {
+    return when (variant.kind) {
+        ButtonKind.Filled -> {
             ButtonDefaults.buttonColors(
                 containerColor = tone.main,
                 contentColor = tone.onMain,
             )
         }
 
-        ButtonVariant.Tonal -> {
+        ButtonKind.Tonal -> {
             ButtonDefaults.buttonColors(
                 containerColor = tone.container,
                 contentColor = tone.onContainer,
             )
         }
 
-        ButtonVariant.Outlined, ButtonVariant.Ghost, ButtonVariant.Link -> {
+        ButtonKind.Outlined, ButtonKind.Quiet -> {
             ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent,
                 contentColor = tone.main,

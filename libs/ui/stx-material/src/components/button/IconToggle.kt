@@ -45,8 +45,8 @@ fun IconToggle(
         Icon(icon = if (checked) checkedIcon else icon, description = description, size = size)
     }
 
-    when (variant) {
-        ButtonVariant.Filled -> {
+    when (variant.kind) {
+        ButtonKind.Filled -> {
             FilledIconToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
@@ -65,7 +65,7 @@ fun IconToggle(
             )
         }
 
-        ButtonVariant.Tonal -> {
+        ButtonKind.Tonal -> {
             FilledTonalIconToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
@@ -83,7 +83,7 @@ fun IconToggle(
             )
         }
 
-        ButtonVariant.Outlined -> {
+        ButtonKind.Outlined -> {
             OutlinedIconToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
@@ -101,7 +101,7 @@ fun IconToggle(
             )
         }
 
-        ButtonVariant.Ghost, ButtonVariant.Link -> {
+        ButtonKind.Quiet -> {
             MaterialIconToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,

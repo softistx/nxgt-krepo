@@ -79,8 +79,8 @@ fun ToggleButtonSurface(
     val tone = buttonTone(color)
     val shapes = ToggleButtonDefaults.shapes()
     val colors =
-        when (variant) {
-            ButtonVariant.Filled -> {
+        when (variant.kind) {
+            ButtonKind.Filled -> {
                 ToggleButtonDefaults.toggleButtonColors(
                     containerColor = tone.container,
                     contentColor = tone.onContainer,
@@ -89,7 +89,7 @@ fun ToggleButtonSurface(
                 )
             }
 
-            ButtonVariant.Tonal -> {
+            ButtonKind.Tonal -> {
                 ToggleButtonDefaults.tonalToggleButtonColors(
                     containerColor = Color.Transparent,
                     contentColor = tone.main,
@@ -98,7 +98,7 @@ fun ToggleButtonSurface(
                 )
             }
 
-            ButtonVariant.Outlined, ButtonVariant.Ghost, ButtonVariant.Link -> {
+            ButtonKind.Outlined, ButtonKind.Quiet -> {
                 ToggleButtonDefaults.outlinedToggleButtonColors(
                     containerColor = Color.Transparent,
                     contentColor = tone.main,
@@ -108,8 +108,8 @@ fun ToggleButtonSurface(
             }
         }
 
-    when (variant) {
-        ButtonVariant.Filled -> {
+    when (variant.kind) {
+        ButtonKind.Filled, ButtonKind.Quiet -> {
             MaterialToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
@@ -122,7 +122,7 @@ fun ToggleButtonSurface(
             )
         }
 
-        ButtonVariant.Tonal -> {
+        ButtonKind.Tonal -> {
             TonalToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
@@ -135,7 +135,7 @@ fun ToggleButtonSurface(
             )
         }
 
-        ButtonVariant.Outlined -> {
+        ButtonKind.Outlined -> {
             OutlinedToggleButton(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
@@ -144,19 +144,6 @@ fun ToggleButtonSurface(
                 shapes = shapes,
                 colors = colors,
                 border = buttonBorder(ButtonVariant.Outlined, color, enabled),
-                interactionSource = interactionSource,
-                content = content,
-            )
-        }
-
-        ButtonVariant.Ghost, ButtonVariant.Link -> {
-            MaterialToggleButton(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                modifier = styled,
-                enabled = enabled,
-                shapes = shapes,
-                colors = colors,
                 interactionSource = interactionSource,
                 content = content,
             )
