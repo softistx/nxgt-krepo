@@ -52,12 +52,6 @@ thing it replaced was a prefix *sweep* before the first spec, which could not te
 databases from a concurrent run's and so had two suites deleting each other's data. Never reintroduce
 a sweep; name what cannot collide. `libs/core/stx-testing/README.md` has both.
 
-**A Spring module checks its keys against the reference page with `springConfigurationDocs`.** Also in
-`stx-testing`: `springConfigurationDocs(ConfigurationDocsTest::class.java)` returns the keys the module's
-`additional-spring-configuration-metadata.json` `declared`, its `groups`, and the keys
-`docs/spring-configuration.md` `documented` for those groups only, so each module's
-`ConfigurationDocsTest` is its three specs and nothing else. Never copy the parser back into a module.
-
 **A Spring application gets its MongoDB as a bean, not as a property.** `stx-spring-boot`'s
 `com.softistx.spring.testing` ships `MongoSpec` — `@SpringBootTest` plus a `MongoConnectionDetails`
 contributed over `stx-testing` — so no application writes a `@DynamicPropertySource` of its own. That

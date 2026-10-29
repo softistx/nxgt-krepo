@@ -10,7 +10,7 @@ import kotlin.io.path.readText
 
 /**
  * What a module's hand-written Spring metadata declares, beside what the reference page spells for
- * it — the two halves a `ConfigurationDocsTest` compares.
+ * it — the two halves one module's `ConfigurationDocsTest` compares.
  *
  * One page, `docs/spring-configuration.md`, documents every `stx.*` key an application can set, but
  * its sections belong to different modules, so each module checks only the groups it declares:
