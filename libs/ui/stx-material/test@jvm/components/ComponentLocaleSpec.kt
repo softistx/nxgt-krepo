@@ -10,16 +10,21 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigation3.runtime.entryProvider
 import com.softistx.material.components.content.FileChip
 import com.softistx.material.components.data.Pagination
+import com.softistx.material.components.datetime.RelativeTime
+import com.softistx.material.components.form.PasswordMeter
 import com.softistx.material.components.form.QuantityField
 import com.softistx.material.components.form.TextField
 import com.softistx.material.components.form.ThemeToggle
 import com.softistx.material.components.layout.LoadMoreButton
+import com.softistx.material.components.layout.SelectionBar
+import com.softistx.material.components.media.SeenBy
 import com.softistx.material.components.navigation.AdaptiveNavDisplay
 import com.softistx.material.components.navigation.ListDetail
 import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.ColorMode
 import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
+import kotlin.time.Instant
 
 @OptIn(ExperimentalTestApi::class)
 class ComponentLocaleSpec :
@@ -92,6 +97,22 @@ class ComponentLocaleSpec :
                     }
                     onNodeWithText("Page 2").assertExists()
                     onNodeWithText(StxStrings.Fr.next).assertExists()
+                }
+            }
+            scenario("PasswordMeter, SelectionBar, SeenBy and RelativeTime follow the locale") {
+                runComposeUiTest {
+                    setContent {
+                        StxTheme(strings = StxStrings.Fr) {
+                            PasswordMeter(value = "abc")
+                            SelectionBar(count = 3, onClear = {})
+                            SeenBy(items = emptyList())
+                            RelativeTime(at = Instant.fromEpochSeconds(0), now = Instant.fromEpochSeconds(180))
+                        }
+                    }
+                    onNodeWithText(StxStrings.Fr.passwordWeak).assertExists()
+                    onNodeWithText(StxStrings.Fr.selected(3)).assertExists()
+                    onNodeWithText(StxStrings.Fr.sent).assertExists()
+                    onNodeWithText("il y a 3 min").assertExists()
                 }
             }
             scenario("ListDetail.list reads the catalogue unless a title is given") {

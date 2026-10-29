@@ -1,5 +1,6 @@
 package com.softistx.material.components.form.state
 
+import com.softistx.material.foundation.i18n.StxStrings
 import io.konform.validation.Validation
 import io.konform.validation.ValidationBuilder
 import io.kotest.core.spec.style.FeatureSpec
@@ -62,6 +63,23 @@ class RulesTest :
         feature("a message given at the call site") {
             scenario("replaces the English default, which is how a catalogue plugs in") {
                 complaint("") { required("Ce champ est obligatoire") } shouldBe "Ce champ est obligatoire"
+            }
+        }
+
+        feature("the French catalogue messages") {
+            val fr = StxStrings.Fr
+
+            scenario("plug into the rules through their message parameter") {
+                complaint("") { required(fr.required) } shouldBe "Ce champ est obligatoire"
+                complaint("nobody") { email(fr.invalidEmail) } shouldBe fr.invalidEmail
+                complaint("short") { minLength(8, fr.minLengthRule(8)) } shouldBe "Utilisez au moins 8 caractères"
+                complaint("12a") { digits(fr.digitsOnly) } shouldBe fr.digitsOnly
+                complaint(false) { checked(fr.mustBeTicked) } shouldBe fr.mustBeTicked
+            }
+
+            scenario("the rules keep English when no message is passed") {
+                complaint("") { required() } shouldBe StxStrings.En.required
+                complaint("short") { minLength(8) } shouldBe StxStrings.En.minLengthRule(8)
             }
         }
 
