@@ -19,6 +19,7 @@ import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A single line of text.
@@ -70,7 +71,7 @@ fun TextField(
                     {
                         IconButton(
                             icon = if (revealed) StxIcons.EyeOff else StxIcons.Eye,
-                            description = if (revealed) "Hide the value" else "Show the value",
+                            description = if (revealed) LocalStxStrings.current.hideValue else LocalStxStrings.current.showValue,
                             onClick = { revealed = !revealed },
                         )
                     }

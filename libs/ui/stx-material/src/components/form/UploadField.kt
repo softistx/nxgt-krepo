@@ -30,6 +30,7 @@ import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -41,8 +42,8 @@ import com.softistx.material.foundation.theme.StxTheme
 fun UploadField(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    label: String = "Drop a file or browse",
-    supporting: String? = "PDF, PNG or JPEG, up to 10 MB",
+    label: String = LocalStxStrings.current.uploadPrompt,
+    supporting: String? = LocalStxStrings.current.uploadHint,
     enabled: Boolean = true,
     style: Style = Style,
 ) {

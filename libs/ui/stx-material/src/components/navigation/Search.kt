@@ -13,6 +13,7 @@ import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A search field that can expand into its results.
@@ -27,7 +28,7 @@ fun Search(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search",
+    placeholder: String = LocalStxStrings.current.search,
     onSearch: (String) -> Unit = onQueryChange,
     active: Boolean = false,
     onActiveChange: (Boolean) -> Unit = {},

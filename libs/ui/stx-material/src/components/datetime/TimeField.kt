@@ -15,6 +15,7 @@ import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.form.TextField
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 import kotlinx.datetime.LocalTime
 
 /**
@@ -28,7 +29,7 @@ fun TimeField(
     value: LocalTime?,
     onValueChange: (LocalTime?) -> Unit,
     modifier: Modifier = Modifier,
-    label: String = "Time",
+    label: String = LocalStxStrings.current.time,
     enabled: Boolean = true,
     style: Style = Style,
 ) {
@@ -49,7 +50,7 @@ fun TimeField(
         trailing = {
             IconButton(
                 icon = StxIcons.Schedule,
-                description = "Pick a time",
+                description = LocalStxStrings.current.pickTime,
                 onClick = { if (enabled) open = true },
             )
         },
@@ -59,7 +60,7 @@ fun TimeField(
             onDismissRequest = { open = false },
             confirmButton = {
                 Button(
-                    text = "OK",
+                    text = LocalStxStrings.current.ok,
                     onClick = {
                         onValueChange(LocalTime(state.hour, state.minute))
                         open = false
@@ -67,7 +68,7 @@ fun TimeField(
                 )
             },
             dismissButton = {
-                Button(text = "Cancel", onClick = { open = false }, variant = ButtonVariant.Ghost)
+                Button(text = LocalStxStrings.current.cancel, onClick = { open = false }, variant = ButtonVariant.Ghost)
             },
             text = { TimePicker(state = state) },
         )

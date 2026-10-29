@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * One of many, chosen from a list that is only open while it is being used.
@@ -32,7 +33,7 @@ fun <T> SelectField(
     options: List<T>,
     modifier: Modifier = Modifier,
     label: String? = null,
-    placeholder: String = "Choose one",
+    placeholder: String = LocalStxStrings.current.chooseOne,
     helper: String? = null,
     isError: Boolean = false,
     supportingText: String? = null,

@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -25,7 +26,7 @@ fun Composer(
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Write a message",
+    placeholder: String = LocalStxStrings.current.writeMessage,
     enabled: Boolean = true,
     sendEnabled: Boolean = value.isNotBlank(),
     onAttach: (() -> Unit)? = null,
@@ -39,7 +40,7 @@ fun Composer(
         if (onAttach != null) {
             IconButton(
                 icon = StxIcons.Attach,
-                description = "Attach a file",
+                description = LocalStxStrings.current.attachFile,
                 onClick = onAttach,
                 enabled = enabled,
             )
@@ -56,7 +57,7 @@ fun Composer(
         )
         IconButton(
             icon = StxIcons.Send,
-            description = "Send",
+            description = LocalStxStrings.current.send,
             onClick = onSend,
             enabled = enabled && sendEnabled,
         )

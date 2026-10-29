@@ -17,6 +17,7 @@ import com.softistx.material.foundation.style.pressable
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -31,12 +32,13 @@ internal fun TableHeader(
     style: Style,
     modifier: Modifier = Modifier,
 ) {
+    val strings = LocalStxStrings.current
     Row(
         modifier =
             modifier
-                .pressable(sortHeaderStyle, style, onClick, "Sort by $text")
+                .pressable(sortHeaderStyle, style, onClick, strings.sortByColumn(text))
                 .semantics(mergeDescendants = true) {
-                    direction?.let { stateDescription = if (it == SortDirection.Asc) "Ascending" else "Descending" }
+                    direction?.let { stateDescription = if (it == SortDirection.Asc) strings.ascending else strings.descending }
                 },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.xxs),

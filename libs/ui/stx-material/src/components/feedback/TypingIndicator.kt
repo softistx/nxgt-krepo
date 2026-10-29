@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.foundation.motion.MotionSpeed
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -37,7 +38,7 @@ import kotlinx.coroutines.isActive
 @Composable
 fun TypingIndicator(
     modifier: Modifier = Modifier,
-    label: String = "Someone is typing",
+    label: String = LocalStxStrings.current.someoneIsTyping,
 ) {
     var beat by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {

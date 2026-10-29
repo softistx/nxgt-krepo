@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A field that offers matches as you type. Material 3's `ExposedDropdownMenuBox`, editable.
@@ -31,7 +32,7 @@ fun <T> Autocomplete(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
-    placeholder: String = "Search",
+    placeholder: String = LocalStxStrings.current.search,
     enabled: Boolean = true,
     isError: Boolean = false,
     supportingText: String? = null,

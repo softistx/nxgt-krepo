@@ -10,6 +10,7 @@ import com.softistx.material.components.content.CardVariant
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * The destructive corner of a settings screen.
@@ -22,7 +23,7 @@ import com.softistx.material.foundation.text.TypographyVariant
 fun DangerZone(
     text: String,
     modifier: Modifier = Modifier,
-    title: String = "Danger zone",
+    title: String = LocalStxStrings.current.dangerZone,
     action: @Composable () -> Unit,
 ) {
     Card(modifier = modifier, variant = CardVariant.Outlined) {

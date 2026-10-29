@@ -8,6 +8,7 @@ import com.softistx.material.components.button.ButtonColor
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A star rating. Material 3 has no rating control.
@@ -30,7 +31,7 @@ fun Rating(
             val star = index + 1
             IconButton(
                 icon = StxIcons.Star,
-                description = "$star of $max",
+                description = LocalStxStrings.current.ratingOf(star, max),
                 onClick = { onChange(if (value == star) 0 else star) },
                 color = if (star <= value) ButtonColor.Warning else ButtonColor.Neutral,
                 size = IconSize.Large,

@@ -10,6 +10,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -47,7 +48,7 @@ fun ExtendedLabel(
         }
         if (optional) {
             Typography(
-                text = "Optional",
+                text = LocalStxStrings.current.optional,
                 variant = TypographyVariant.Caption,
                 emphasis = Emphasis.Subtle,
             )

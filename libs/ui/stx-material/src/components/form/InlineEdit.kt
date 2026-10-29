@@ -24,6 +24,7 @@ import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -38,7 +39,7 @@ fun InlineEdit(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Add a title",
+    placeholder: String = LocalStxStrings.current.addTitle,
     enabled: Boolean = true,
     variant: TypographyVariant = TypographyVariant.TitleMedium,
     style: Style = Style,
@@ -84,13 +85,13 @@ fun InlineEdit(
             )
             IconButton(
                 icon = StxIcons.Check,
-                description = "Save",
+                description = LocalStxStrings.current.save,
                 onClick = { commit() },
                 enabled = enabled,
             )
             IconButton(
                 icon = StxIcons.Close,
-                description = "Cancel",
+                description = LocalStxStrings.current.cancel,
                 onClick = { cancel() },
             )
         }
@@ -113,7 +114,7 @@ fun InlineEdit(
             if (enabled) {
                 IconButton(
                     icon = StxIcons.Edit,
-                    description = "Edit",
+                    description = LocalStxStrings.current.edit,
                     onClick = { editing = true },
                 )
             }

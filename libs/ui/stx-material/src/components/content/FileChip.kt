@@ -14,6 +14,7 @@ import com.softistx.material.foundation.style.pressBase
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A file the reader has already chosen. Material 3's `InputChip`.
@@ -48,7 +49,7 @@ fun FileChip(
                 {
                     Icon(
                         icon = StxIcons.Close,
-                        description = "Remove $name",
+                        description = LocalStxStrings.current.remove(name),
                         size = IconSize.Small,
                         modifier = Modifier.clickable(enabled = enabled, onClick = remove),
                     )

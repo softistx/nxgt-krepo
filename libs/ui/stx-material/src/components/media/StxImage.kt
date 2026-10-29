@@ -8,6 +8,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil3.compose.SubcomposeAsyncImage
 import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.feedback.Skeleton
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * An image that never flashes empty. Coil's `SubcomposeAsyncImage` with this library's
@@ -30,7 +31,7 @@ fun StxImage(
         loading = { Skeleton(modifier = Modifier.fillMaxSize()) },
         error = {
             Box(Modifier.fillMaxSize()) {
-                EmptyState(title = "Couldn't load the image")
+                EmptyState(title = LocalStxStrings.current.imageLoadFailed)
             }
         },
     )

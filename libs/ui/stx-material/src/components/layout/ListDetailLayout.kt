@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.components.content.EmptyState
 import com.softistx.material.components.content.EmptyStateDefaults
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A list and its detail side by side when the width allows, one at a time when it does not.
@@ -66,7 +67,7 @@ fun ListDetailLayout(
     modifier: Modifier = Modifier,
     wideThreshold: Dp = ListDetailLayoutDefaults.WideThreshold,
     listWidth: Dp = ListDetailLayoutDefaults.ListWidth,
-    placeholder: @Composable (Modifier) -> Unit = { ListDetailLayoutDefaults.Placeholder("Select an item", it) },
+    placeholder: @Composable (Modifier) -> Unit = { ListDetailLayoutDefaults.Placeholder(LocalStxStrings.current.selectAnItem, it) },
     list: @Composable (Modifier) -> Unit,
     detail: @Composable (Modifier) -> Unit,
 ) {

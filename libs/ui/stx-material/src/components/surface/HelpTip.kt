@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A question mark next to a label. [Tooltip] wrapping an [IconButton].
@@ -16,7 +17,7 @@ import com.softistx.material.foundation.icon.StxIcons
 fun HelpTip(
     text: String,
     modifier: Modifier = Modifier,
-    description: String = "More information",
+    description: String = LocalStxStrings.current.moreInformation,
     style: Style = Style,
 ) {
     Tooltip(text = text, modifier = modifier) {

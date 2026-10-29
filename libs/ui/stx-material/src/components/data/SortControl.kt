@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.form.SelectField
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 enum class SortDirection {
@@ -35,7 +36,7 @@ fun SortControl(
     onSelectedChange: (String) -> Unit,
     onDirectionChange: (SortDirection) -> Unit,
     modifier: Modifier = Modifier,
-    label: String = "Sort by",
+    label: String = LocalStxStrings.current.sortBy,
     enabled: Boolean = true,
     style: Style = Style,
 ) {
@@ -55,7 +56,7 @@ fun SortControl(
         )
         IconButton(
             icon = if (direction == SortDirection.Asc) StxIcons.ChevronUp else StxIcons.ChevronDown,
-            description = if (direction == SortDirection.Asc) "Ascending" else "Descending",
+            description = if (direction == SortDirection.Asc) LocalStxStrings.current.ascending else LocalStxStrings.current.descending,
             onClick = { onDirectionChange(cycleSortDirection(direction)) },
             enabled = enabled,
             style = style,

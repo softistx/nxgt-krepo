@@ -6,6 +6,7 @@ import com.softistx.material.components.button.BusyButton
 import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonRow
 import com.softistx.material.components.button.ButtonVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * Back and Continue under a [Stepper].
@@ -20,8 +21,8 @@ fun StepFooter(
     onNext: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    nextLabel: String = "Continue",
-    backLabel: String = "Back",
+    nextLabel: String = LocalStxStrings.current.continueStep,
+    backLabel: String = LocalStxStrings.current.back,
     nextEnabled: Boolean = true,
     busy: Boolean = false,
 ) {

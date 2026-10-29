@@ -15,6 +15,7 @@ import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.components.form.TextField
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 import kotlinx.datetime.LocalDate
 
 /**
@@ -26,7 +27,7 @@ fun DateRangeField(
     end: LocalDate?,
     onValueChange: (LocalDate?, LocalDate?) -> Unit,
     modifier: Modifier = Modifier,
-    label: String = "Dates",
+    label: String = LocalStxStrings.current.dates,
     enabled: Boolean = true,
     style: Style = Style,
 ) {
@@ -53,7 +54,7 @@ fun DateRangeField(
         trailing = {
             IconButton(
                 icon = StxIcons.Calendar,
-                description = "Pick dates",
+                description = LocalStxStrings.current.pickDates,
                 onClick = { if (enabled) open = true },
             )
         },
@@ -63,7 +64,7 @@ fun DateRangeField(
             onDismissRequest = { open = false },
             confirmButton = {
                 Button(
-                    text = "OK",
+                    text = LocalStxStrings.current.ok,
                     onClick = {
                         onValueChange(
                             state.selectedStartDateMillis?.toLocalDate(),
@@ -74,7 +75,7 @@ fun DateRangeField(
                 )
             },
             dismissButton = {
-                Button(text = "Cancel", onClick = { open = false }, variant = ButtonVariant.Ghost)
+                Button(text = LocalStxStrings.current.cancel, onClick = { open = false }, variant = ButtonVariant.Ghost)
             },
         ) {
             DateRangePicker(state = state)

@@ -7,6 +7,7 @@ import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.feedback.Progress
 import com.softistx.material.components.feedback.ProgressKind
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * The next page of a keyset, as a control rather than an infinite scroll.
@@ -20,7 +21,7 @@ fun LoadMoreButton(
     loading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    label: String = "Load more",
+    label: String = LocalStxStrings.current.loadMore,
     style: Style = Style,
 ) {
     if (!hasMore) return

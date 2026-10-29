@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.softistx.material.components.navigation.SegmentedControl
 import com.softistx.material.foundation.theme.ColorMode
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * Light, dark or the platform. Material 3's `SingleChoiceSegmentedButtonRow` via
@@ -22,8 +23,9 @@ fun ThemeToggle(
     enabled: Boolean = true,
     style: Style = Style,
 ) {
+    val strings = LocalStxStrings.current
     SegmentedControl(
-        options = listOf("Light", "Dark", "System"),
+        options = listOf(strings.themeLight, strings.themeDark, strings.themeSystem),
         selected = value.ordinal,
         onSelect = { onChange(ColorMode.entries[it]) },
         modifier = modifier,

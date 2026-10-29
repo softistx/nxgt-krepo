@@ -10,6 +10,7 @@ import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 @Immutable
 data class FabAction(
@@ -30,7 +31,7 @@ fun FabMenu(
     onExpandedChange: (Boolean) -> Unit,
     actions: List<FabAction>,
     modifier: Modifier = Modifier,
-    description: String? = "Open actions",
+    description: String? = LocalStxStrings.current.openActions,
 ) {
     FloatingActionButtonMenu(
         expanded = expanded,
@@ -38,7 +39,7 @@ fun FabMenu(
         button = {
             Fab(
                 icon = if (expanded) StxIcons.Close else StxIcons.Add,
-                description = if (expanded) "Close actions" else description,
+                description = if (expanded) LocalStxStrings.current.closeActions else description,
                 onClick = { onExpandedChange(!expanded) },
             )
         },

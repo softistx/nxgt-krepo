@@ -18,6 +18,7 @@ import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 import kotlinx.coroutines.launch
 
 /**
@@ -69,7 +70,7 @@ fun SplitButton(
                     enabled = enabled && overflow.isNotEmpty(),
                     interactionSource = trailingSource,
                 ) {
-                    Icon(icon = if (open) StxIcons.ChevronUp else StxIcons.ChevronDown, description = "More actions")
+                    Icon(icon = if (open) StxIcons.ChevronUp else StxIcons.ChevronDown, description = LocalStxStrings.current.moreActions)
                 }
             },
         )

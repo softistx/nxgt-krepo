@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.softistx.material.foundation.theme.LocalStxStrings
 import kotlinx.coroutines.delay
 
 /**
@@ -22,7 +23,7 @@ fun ConfirmButton(
     text: String,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
-    confirmText: String = "Confirm?",
+    confirmText: String = LocalStxStrings.current.confirmQuestion,
     variant: ButtonVariant = ButtonVariant.Filled,
     color: ButtonColor = ButtonColor.Danger,
     enabled: Boolean = true,

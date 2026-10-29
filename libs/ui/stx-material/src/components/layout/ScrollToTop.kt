@@ -16,6 +16,7 @@ import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.motion.Transitions
+import com.softistx.material.foundation.theme.LocalStxStrings
 import kotlinx.coroutines.launch
 
 /**
@@ -43,7 +44,7 @@ fun BoxScope.ScrollToTop(
     ) {
         IconButton(
             icon = StxIcons.ChevronUp,
-            description = "Back to top",
+            description = LocalStxStrings.current.backToTop,
             onClick = { scope.launch { listState.animateScrollToItem(0) } },
             variant = ButtonVariant.Filled,
             color = ButtonColor.Primary,

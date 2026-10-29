@@ -18,6 +18,7 @@ import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /** One command in a [CommandPalette]. [shortcut] is decoration ("⌘K"); the host wires the key. */
@@ -61,10 +62,10 @@ fun CommandPalette(
         onDismissRequest = onDismiss,
         confirmButton = {},
         modifier = modifier,
-        title = { Typography(text = "Command", variant = TypographyVariant.TitleLarge) },
+        title = { Typography(text = LocalStxStrings.current.command, variant = TypographyVariant.TitleLarge) },
         text = {
             Column {
-                Search(query = query, onQueryChange = onQueryChange, placeholder = "Type a command")
+                Search(query = query, onQueryChange = onQueryChange, placeholder = LocalStxStrings.current.typeACommand)
                 Column(
                     modifier =
                         Modifier
@@ -96,7 +97,7 @@ fun CommandPalette(
                     }
                     if (shown.isEmpty()) {
                         Typography(
-                            text = "No matching commands",
+                            text = LocalStxStrings.current.noMatchingCommands,
                             emphasis = Emphasis.Medium,
                             modifier = Modifier.padding(StxTheme.spacing.md),
                         )

@@ -8,6 +8,7 @@ import com.softistx.material.components.button.ButtonColor
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A two-action confirmation. Material 3's `AlertDialog`.
@@ -27,8 +28,8 @@ fun ConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    confirm: String = "Confirm",
-    dismiss: String = "Cancel",
+    confirm: String = LocalStxStrings.current.confirm,
+    dismiss: String = LocalStxStrings.current.cancel,
     destructive: Boolean = false,
 ) {
     if (!visible) return

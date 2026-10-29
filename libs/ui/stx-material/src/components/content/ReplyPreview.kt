@@ -20,6 +20,7 @@ import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -67,7 +68,7 @@ fun ReplyPreview(
             if (onDismiss != null) {
                 IconButton(
                     icon = StxIcons.Close,
-                    description = "Dismiss reply",
+                    description = LocalStxStrings.current.dismissReply,
                     onClick = onDismiss,
                     style = style,
                 )
