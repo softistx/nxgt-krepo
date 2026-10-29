@@ -14,6 +14,7 @@ import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.text.style
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A paragraph that can be asked for more. Material 3 has no "read more".
@@ -29,8 +30,8 @@ fun ExpandableText(
     text: String,
     modifier: Modifier = Modifier,
     collapsedLines: Int = 3,
-    more: String = "Read more",
-    less: String = "Show less",
+    more: String = LocalStxStrings.current.readMore,
+    less: String = LocalStxStrings.current.showLess,
     style: Style = Style,
 ) {
     var expanded by remember { mutableStateOf(false) }

@@ -12,9 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.text.Emphasis
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.Tone
 
@@ -87,7 +89,7 @@ fun PasswordMeter(
         }
         if (grade != PasswordGrade.Empty) {
             Typography(
-                text = grade.label,
+                text = grade.label(LocalStxStrings.current),
                 variant = TypographyVariant.LabelSmall,
                 emphasis = Emphasis.Medium,
             )
@@ -95,15 +97,14 @@ fun PasswordMeter(
     }
 }
 
-private val PasswordGrade.label: String
-    get() =
-        when (this) {
-            PasswordGrade.Empty -> ""
-            PasswordGrade.Weak -> "Weak"
-            PasswordGrade.Fair -> "Fair"
-            PasswordGrade.Good -> "Good"
-            PasswordGrade.Strong -> "Strong"
-        }
+private fun PasswordGrade.label(strings: StxStrings): String =
+    when (this) {
+        PasswordGrade.Empty -> ""
+        PasswordGrade.Weak -> strings.passwordWeak
+        PasswordGrade.Fair -> strings.passwordFair
+        PasswordGrade.Good -> strings.passwordGood
+        PasswordGrade.Strong -> strings.passwordStrong
+    }
 
 private val PasswordGrade.filled: Int
     get() =

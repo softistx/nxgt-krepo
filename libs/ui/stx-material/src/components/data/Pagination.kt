@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -35,7 +36,7 @@ fun Pagination(
         horizontalArrangement = Arrangement.spacedBy(StxTheme.spacing.sm),
     ) {
         Button(
-            text = "Previous",
+            text = LocalStxStrings.current.previous,
             onClick = onPrevious,
             variant = ButtonVariant.Ghost,
             enabled = hasPrevious,
@@ -45,7 +46,7 @@ fun Pagination(
             Typography(text = label)
         }
         Button(
-            text = "Next",
+            text = LocalStxStrings.current.next,
             onClick = onNext,
             variant = ButtonVariant.Ghost,
             enabled = hasNext,

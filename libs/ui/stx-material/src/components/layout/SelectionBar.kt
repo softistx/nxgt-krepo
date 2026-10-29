@@ -13,6 +13,7 @@ import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -38,11 +39,11 @@ fun SelectionBar(
         ) {
             IconButton(
                 icon = StxIcons.Close,
-                description = "Clear selection",
+                description = LocalStxStrings.current.clearSelection,
                 onClick = onClear,
             )
             Typography(
-                text = "$count selected",
+                text = LocalStxStrings.current.selected(count),
                 variant = TypographyVariant.TitleSmall,
                 modifier = Modifier.weight(1f),
             )

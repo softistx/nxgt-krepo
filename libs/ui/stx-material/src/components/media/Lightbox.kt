@@ -13,6 +13,7 @@ import com.softistx.material.components.button.ButtonColor
 import com.softistx.material.components.button.ButtonVariant
 import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -42,7 +43,7 @@ fun Lightbox(
         )
         IconButton(
             icon = StxIcons.Close,
-            description = "Close",
+            description = LocalStxStrings.current.close,
             onClick = onDismiss,
             variant = ButtonVariant.Filled,
             color = ButtonColor.Neutral,
@@ -51,7 +52,7 @@ fun Lightbox(
         if (onPrevious != null) {
             IconButton(
                 icon = StxIcons.ChevronLeft,
-                description = "Previous",
+                description = LocalStxStrings.current.previous,
                 onClick = onPrevious,
                 variant = ButtonVariant.Filled,
                 color = ButtonColor.Neutral,
@@ -61,7 +62,7 @@ fun Lightbox(
         if (onNext != null) {
             IconButton(
                 icon = StxIcons.ChevronRight,
-                description = "Next",
+                description = LocalStxStrings.current.next,
                 onClick = onNext,
                 variant = ButtonVariant.Filled,
                 color = ButtonColor.Neutral,

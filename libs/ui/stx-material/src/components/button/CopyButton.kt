@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
 fun CopyButton(
     text: String,
     modifier: Modifier = Modifier,
-    description: String = "Copy",
+    description: String = LocalStxStrings.current.copy,
     variant: ButtonVariant = ButtonVariant.Ghost,
     color: ButtonColor = ButtonColor.Neutral,
     size: IconSize = IconSize.Medium,
@@ -43,7 +44,7 @@ fun CopyButton(
     }
     IconButton(
         icon = if (copied) StxIcons.Check else StxIcons.Copy,
-        description = if (copied) "Copied" else description,
+        description = if (copied) LocalStxStrings.current.copied else description,
         onClick = {
             scope.launch {
                 clipboard.setClipEntry(plainTextClip(text))

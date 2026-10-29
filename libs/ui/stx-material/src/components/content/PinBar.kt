@@ -19,6 +19,7 @@ import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.style.pressBase
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /**
@@ -56,7 +57,7 @@ fun PinBar(
             if (onDismiss != null) {
                 IconButton(
                     icon = StxIcons.Close,
-                    description = "Unpin",
+                    description = LocalStxStrings.current.unpin,
                     onClick = onDismiss,
                 )
             }

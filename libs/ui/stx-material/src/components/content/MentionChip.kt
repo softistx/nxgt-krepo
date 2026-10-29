@@ -15,6 +15,7 @@ import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * A person mentioned in a field. Material 3's `InputChip` with an [Avatar].
@@ -48,7 +49,7 @@ fun MentionChip(
                 {
                     Icon(
                         icon = StxIcons.Close,
-                        description = "Remove $name",
+                        description = LocalStxStrings.current.remove(name),
                         size = IconSize.Small,
                         modifier = Modifier.clickable(enabled = enabled, onClick = remove),
                     )

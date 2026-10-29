@@ -25,6 +25,7 @@ import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /** Adds [raw] if it is not blank and not already present, ignoring case. */
@@ -57,7 +58,7 @@ fun TagField(
     onTagsChange: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
-    placeholder: String = "Add a tag",
+    placeholder: String = LocalStxStrings.current.addTag,
     helper: String? = null,
     enabled: Boolean = true,
     style: Style = Style,
@@ -84,7 +85,7 @@ fun TagField(
                     trailingIcon = {
                         Icon(
                             icon = StxIcons.Close,
-                            description = "Remove $tag",
+                            description = LocalStxStrings.current.remove(tag),
                             size = IconSize.Small,
                             modifier =
                                 Modifier.clickable(enabled = enabled) {

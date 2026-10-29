@@ -12,6 +12,7 @@ import com.softistx.material.components.surface.Menu
 import com.softistx.material.components.surface.MenuItem
 import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
+import com.softistx.material.foundation.theme.LocalStxStrings
 
 /**
  * The trailing "more" on a row. An [IconButton] that opens a [Menu].
@@ -23,7 +24,7 @@ import com.softistx.material.foundation.icon.StxIcons
 fun MoreMenu(
     items: List<MenuItem>,
     modifier: Modifier = Modifier,
-    description: String = "More",
+    description: String = LocalStxStrings.current.more,
     variant: ButtonVariant = ButtonVariant.Ghost,
     color: ButtonColor = ButtonColor.Neutral,
     size: IconSize = IconSize.Medium,

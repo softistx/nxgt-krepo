@@ -11,6 +11,7 @@ import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 
 /** Steps [value] by [delta] and keeps it inside [range]. */
@@ -46,14 +47,14 @@ fun QuantityField(
         ) {
             IconButton(
                 icon = StxIcons.Minus,
-                description = "Decrease",
+                description = LocalStxStrings.current.decrease,
                 onClick = { onValueChange(stepQuantity(value, -1, range)) },
                 enabled = enabled && value > range.first,
             )
             Typography(text = value.toString(), variant = TypographyVariant.Metric)
             IconButton(
                 icon = StxIcons.Add,
-                description = "Increase",
+                description = LocalStxStrings.current.increase,
                 onClick = { onValueChange(stepQuantity(value, 1, range)) },
                 enabled = enabled && value < range.last,
             )

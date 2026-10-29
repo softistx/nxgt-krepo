@@ -12,6 +12,7 @@ import com.softistx.material.components.button.IconButton
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.style.styledBy
 import com.softistx.material.foundation.text.Typography
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.Tone
 
@@ -46,7 +47,7 @@ fun AnnouncementBar(
         if (onDismiss != null) {
             IconButton(
                 icon = StxIcons.Close,
-                description = "Dismiss",
+                description = LocalStxStrings.current.dismiss,
                 onClick = onDismiss,
             )
         }

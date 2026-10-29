@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import com.softistx.material.components.button.Button
 import com.softistx.material.components.button.ButtonSize
+import com.softistx.material.foundation.theme.LocalStxStrings
 import com.softistx.material.foundation.theme.Tone
 
 /**
@@ -32,9 +33,9 @@ fun <T> StateHost(
     state: UiState<T>,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    errorTitle: String = "Could not load",
-    retryLabel: String = "Retry",
-    loadingLabel: String = "Loading",
+    errorTitle: String = LocalStxStrings.current.loadFailed,
+    retryLabel: String = LocalStxStrings.current.retry,
+    loadingLabel: String = LocalStxStrings.current.loading,
     loading: @Composable () -> Unit = { SkeletonCards() },
     content: @Composable (T) -> Unit,
 ) {
