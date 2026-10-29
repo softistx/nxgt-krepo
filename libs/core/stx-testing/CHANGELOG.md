@@ -1,5 +1,11 @@
 # stx-testing
 
+## 0.2.4
+
+### Patch Changes
+
+- [#408](https://github.com/softistx/nxgt-krepo/pull/408) [`dfe5536`](https://github.com/softistx/nxgt-krepo/commit/dfe5536d85981360e32019446227906de11ff1e6) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Move the internal `Registry` and `Message` types into their own files (`Registry.kt`, `Message.kt`). No change to the public API or behaviour.
+
 ## 0.2.3
 
 ### Patch Changes
