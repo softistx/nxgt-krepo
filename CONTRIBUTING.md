@@ -106,7 +106,7 @@ bun run typecheck     # tsc --noEmit; bun strips types, it never checks them
 bun test scripts/
 ```
 
-Those files decide what version 45 modules publish under, which of them a release publishes at all,
+Those files decide what version every module publishes under, which of them a release publishes at all,
 and whether the job signs its artifacts — in a job nobody is watching while it runs. That is why
 they are typed and tested rather than left as the three-line scripts they look like.
 

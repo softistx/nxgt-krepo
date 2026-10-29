@@ -507,7 +507,7 @@ Rules that are easy to get wrong:
 **The 17 `stx-*` keys in `[versions]` are one per library family, and a script owns them.** Every
 `stx-*` alias in `[libraries]` takes `version.ref = "<its family>"` — `stx-jpa-ktor` and
 `stx-jpa-spring` both point at `stx-jpa` — so that an example resolves the same version the family
-publishes under. `scripts/sync-version.ts` writes all 17 from the families' `package.json`; never
+publishes under. `scripts/sync-version.ts` writes every one from the families' `package.json`; never
 edit one by hand, and when you add an alias for an artifact that had none, give it its **family's**
 ref rather than a version of its own. A family's name is also a `[libraries]` alias, which is why
 the script scopes its rewrite to the `[versions]` table.
@@ -817,7 +817,7 @@ the same each time, and the mistakes are the same each time too.
   declare**, because it is the only step of the release circuit nobody can automate — and because a
   changeset for the wrong family is worse than none: it releases a library nobody touched and leaves
   the touched one behind. `bun changeset --empty` is the explicit "nothing published changes" and
-  satisfies the guard. A name that is not one of the 17 families is refused. A `major` whose
+  satisfies the guard. A name that is not one of the families is refused. A `major` whose
   dependents are not named **fails**, naming them and printing the lines to paste: Changesets only
   ever gives a dependent a `patch`, and the POM pins an exact version, so a consumer would take the
   break on a patch. The escape hatch is an `unaffected: <names>` line in the changeset's prose, for

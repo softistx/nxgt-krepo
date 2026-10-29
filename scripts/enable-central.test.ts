@@ -1,4 +1,4 @@
-// Pins scripts/enable-central.ts. It edits the file that decides how 45 modules are published, in
+// Pins scripts/enable-central.ts. It edits the file that decides how every module is published, in
 // the one job where nobody is watching, so it gets the same treatment as sync-version.ts.
 
 import { describe, expect, test } from "bun:test";

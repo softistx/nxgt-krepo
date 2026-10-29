@@ -21,8 +21,7 @@ bun changeset --empty
 
 A **family** is a directory `libs/<role>/<name>/`: the library and its framework integrations.
 `stx-jpa`, `stx-jpa-ktor` and `stx-jpa-spring` are three artifacts and one release line — they ship
-together and are tested together, so they carry one version between them. There are 17 of them,
-covering 45 artifacts, and each has a `package.json` that Changesets versions and a
+together and are tested together, so they carry one version between them. `bun scripts/graph.ts` lists them. Each has a `package.json` that Changesets versions and a
 `<name>.module-template.yaml` that carries that version into the build.
 
 A changeset therefore names a family, never an artifact and never the repository:

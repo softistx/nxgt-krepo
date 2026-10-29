@@ -7,7 +7,7 @@ three human decisions are *what a change is worth*, *when to cut*, and — becau
 
 ## Seventeen release lines, not one
 
-The 45 artifacts are grouped into **17 families**, one per directory under `libs/<role>/`. A family
+The published artifacts are grouped into **families**, one per directory under `libs/<role>/`. A family
 is a library and its framework integrations: `stx-jpa`, `stx-jpa-ktor` and `stx-jpa-spring` are one
 release line and carry one version, because they are one thing, released together, or not at all.
 
@@ -282,7 +282,7 @@ directly — no build step, no emitted JavaScript — but it *strips* types rath
 so `bun run typecheck` (`tsc --noEmit`, `strict`) is what makes the annotations mean anything, and
 CI runs it before the tests. The specs are `bun:test` rather than kotest for the obvious reason:
 the kotest convention in this repo is about Kotlin. The two editing scripts rewrite files that
-decide how 45 modules publish, in a job nobody watches, so each one asserts its anchor matches
+decide how every module publishes, in a job nobody watches, so each one asserts its anchor matches
 **exactly once** and throws otherwise — `scripts/*.test.ts` pins that, including the failure modes.
 
 **`scripts/modules.ts` is where the list of published libraries comes from**, and every command
