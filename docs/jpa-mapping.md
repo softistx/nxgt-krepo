@@ -78,7 +78,7 @@ Nothing warns about this and nothing can. Treat the scalar as what the row said 
 key to look something up with, never a value to decide a write from.
 
 The reason it is worth the trouble is `@BatchMapping` in
-[`docs/graphix.md`](graphix.md) — a DataLoader has to key on something, and reading the association
+[`docs/graphix-resolvers.md`](graphix-resolvers.md) — a DataLoader has to key on something, and reading the association
 to learn its id is precisely the throw the batch was avoiding.
 
 ## Which database

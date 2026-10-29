@@ -101,7 +101,7 @@ found without a second form to learn.
 Three seats, because a throw does not always have a field: the data fetcher, the interceptor chain,
 and a subscription `Flow` that throws mid-stream. The last two were holes before this — an
 interceptor throw left `execute` as a 500, and a mid-stream throw escaped `subscribe` raw for SSE to
-lose. [`docs/graphix.md`](../../../../docs/graphix.md) has the table and the one graphql-java trap
+lose. [`docs/graphix-resolvers.md`](../../../../docs/graphix-resolvers.md) has the table and the one graphql-java trap
 worth knowing.
 
 ## Why not graphql-kotlin
@@ -149,7 +149,7 @@ payload over as `GraphqlWsInit`. It is read per operation rather than per connec
 makes a credential expiring mid-socket observable instead of a socket keeping whatever it was
 authorised with at the upgrade. A field reachable from more than one transport reads it in an
 interceptor, not as a resolver parameter, because a resolver parameter of a socket-only type fails
-everywhere else. [`docs/graphix.md`](../../../../docs/graphix.md) has the shape.
+everywhere else. [`docs/graphix-resolvers.md`](../../../../docs/graphix-resolvers.md) has the shape.
 
 The same `Flow<T>` on a **query** is a list, not a stream, and the annotation is the whole of the
 difference. It is collected before graphql-java sees anything — sugar for the `.toList()` the
@@ -190,7 +190,7 @@ The scan asks the class loader as well as `java.class.path`, which is what finds
 Spring Boot executable jar (`./kotlin package -f executable-jar`): there the classpath names only
 the outer jar, and `BOOT-INF/classes/graphql/` is reachable through the loader alone. Until 0.2.2 it
 was not, and such an application quietly fell back to its types — failing on the first `union`.
-`docs/graphix.md` (*Schema documents*) has the location syntax.
+[`docs/graphix-serving.md`](../../../../docs/graphix-serving.md) (*Schema documents*) has the location syntax.
 
 Custom scalars and field directives are declared on the builder (`scalar { }`,
 `fieldDirective { }`). The lambdas see the operation `GraphQLContext`. Spring collects
@@ -232,7 +232,7 @@ because they are graphql-java's, and `ApplicationCall` and `ServerWebExchange` a
 `stx-graphix-ktor` and `stx-graphix-spring`. That is why neither framework appears in this
 module's dependencies, and why a third one would be a call rather than a change here.
 
-[`docs/graphix.md`](../../../../docs/graphix.md) has the full table of what a resolver may see, and
+[`docs/graphix-resolvers.md`](../../../../docs/graphix-resolvers.md) has the full table of what a resolver may see, and
 the interceptor reference.
 
 ## What this slice does not do

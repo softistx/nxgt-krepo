@@ -184,4 +184,4 @@ MiB for `spring-orders`. Still, `docker compose down` what you are done with.
 - `graphix-shop`'s executable jar started with no schema documents at all and failed on
   `Serializer for class 'Any' is not found`: `stx-graphix` found `classpath:graphql/` on disk and in
   a jar named by `java.class.path`, but not inside a Spring Boot executable jar, where the class
-  loader is the only thing that can name `BOOT-INF/classes/`. `docs/graphix.md` has the fix.
+  loader is the only thing that can name `BOOT-INF/classes/`. `docs/graphix-serving.md` has the fix.

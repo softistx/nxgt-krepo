@@ -93,7 +93,7 @@ Returning `null` means *not mine*, and an exception nobody claims keeps the answ
 had.
 
 An interceptor and a handler are beans, not properties, so there is no new `stx.graphix.*` key for
-either — see [`docs/graphix.md`](../../../../docs/graphix.md) for the reference.
+either — see [`docs/graphix-resolvers.md`](../../../../docs/graphix-resolvers.md) for the reference.
 
 Introspection (`{ __schema }`, `{ __type }`) is on the same path; `stx.graphix.introspection=false`
 turns it off.
