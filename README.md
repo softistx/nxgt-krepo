@@ -103,7 +103,7 @@ Use `./kotlin`, not a bare `kotlin`: the wrapper pins the toolchain version.
 
 | | |
 | --- | --- |
-| [`docs/consuming.md`](docs/consuming.md) | How to depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain, which artifact to pick, and why all 45 share one version |
+| [`docs/consuming.md`](docs/consuming.md) | How to depend on `io.github.softistx:stx-*` from Gradle, Maven or the toolchain, which artifact to pick, and why the artifacts of a family share one version |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to set up, what a pull request needs, and what a reviewer will look for |
 | [`docs/releasing.md`](docs/releasing.md) | The release circuit — one version per library family, a changeset per PR, the Version Packages PR, and the six things about publishing here that are not guessable |
 | [`docs/openapi-support.md`](docs/openapi-support.md) | What the generator understands: type mapping, composition, enums, vendor extensions, and what it does not handle |

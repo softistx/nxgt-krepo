@@ -83,7 +83,7 @@ Two consequences worth knowing:
   arrives as a patch with a breaking transitive dependency behind it. The release notes say so — the
   family's section names the dependency that moved. Read them before taking a bump you did not ask
   for;
-- **everything up to and including 0.2.1 was released in lockstep.** All 45 artifacts share that
+- **everything up to and including 0.2.1 was released in lockstep.** Every artifact shares that
   history, which is in the [root `CHANGELOG.md`](../CHANGELOG.md). From 0.2.1 on, each family has
   its own, next to its sources under `libs/<role>/<family>/CHANGELOG.md`.
 

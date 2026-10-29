@@ -294,7 +294,7 @@ jobs:
       # tests because a type error is the cheaper failure to read.
       - run: bun run typecheck
 
-      # scripts/sync-version.ts decides what version 45 modules publish under, in a job nobody
+      # scripts/sync-version.ts decides what version every module publishes under, in a job nobody
       # watches. It gets a test.
       - run: bun test scripts/
 
