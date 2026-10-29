@@ -89,7 +89,7 @@ Two rules come out of it being persisted, and both are review's job rather than 
   *removing* a field is already safe. A context that will not decode does not crash-loop a worker:
   the instance is marked `Failed`, leaves the runnable index, and waits for somebody: repair the
   context or the definition, then `retryCompensation` unwinds it (see
-  [the operator's inbox](../../../../docs/workflow.md#the-operators-inbox)).
+  [the operator's inbox](../../../../docs/workflow-runtime.md#the-operators-inbox)).
 - **It holds references to large things, never the things.** The whole context is written again
   after every node, so a document belongs in it as a storage key — `stx-storage` is right there —
   and not as bytes.
@@ -215,7 +215,7 @@ picks up where it stopped: nodes already compensated are not undone twice, and t
 `Compensated` (or `Cancelled`). It refuses an instance that is not `Failed` with a failed
 compensation, with one exception: an instance the engine marked `Failed` because its stored context
 no longer decoded (`error` names `<context>`) is unwound once you have repaired the context or the
-definition, and refused until then. See the operator's inbox in [docs/workflow.md](../../../../docs/workflow.md).
+definition, and refused until then. See the operator's inbox in [docs/workflow-runtime.md](../../../../docs/workflow-runtime.md).
 
 ## A node is matched by its name
 

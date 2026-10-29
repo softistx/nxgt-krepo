@@ -69,7 +69,7 @@ ones are different jobs, and usually different pods.
 
 `engine.find(WorkflowStatus.Failed)` is the operator's inbox, and there is deliberately no route here
 that exposes it. A route that lists instances and restarts them is exactly the route that must not be
-open, and who may call it is a question about your application. `docs/workflow.md` has the four
+open, and who may call it is a question about your application. `docs/workflow-runtime.md` has the four
 lines; put them behind whatever your other admin routes are behind.
 
 ---
