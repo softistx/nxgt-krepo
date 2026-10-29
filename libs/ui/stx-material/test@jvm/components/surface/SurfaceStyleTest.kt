@@ -24,6 +24,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import com.softistx.material.components.layout.LoadMoreButton
 import com.softistx.material.components.layout.RefreshBox
 import com.softistx.material.components.layout.ScrollToTop
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.hidden
 import com.softistx.material.inkWith
@@ -67,7 +68,7 @@ class SurfaceStyleTest :
             scenario("Drawer sees itself disabled while gestures are off") {
                 fun painted(gestures: Boolean) =
                     renderProbe(width = 400, height = 300, content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Drawer(false, {}, gesturesEnabled = gestures, drawer = {}, style = paintedWhenDisabled) { Text("Anchor") }
                         }
                     }) { settle().count { it.isPainted() } }
@@ -87,7 +88,7 @@ class SurfaceStyleTest :
                     gestures: Boolean,
                     pointer: Boolean,
                 ) = renderProbe(width = 400, height = 300, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         Drawer(false, {}, gesturesEnabled = gestures, drawer = {}, style = states) { Text("Anchor") }
                     }
                 }) { (if (pointer) press(Offset(200f, 150f)) else settle()).count { it.isPainted() } }
@@ -102,7 +103,7 @@ class SurfaceStyleTest :
                 runComposeUiTest {
                     var archived = false
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             SwipeActions(
                                 onDismiss = {},
                                 modifier = Modifier.testTag("row"),
@@ -128,7 +129,7 @@ class SurfaceStyleTest :
             scenario("without customActions the row announces no actions at all") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             SwipeActions({}, Modifier.testTag("row"), background = {}) { Text("Row") }
                         }
                     }
@@ -141,7 +142,7 @@ class SurfaceStyleTest :
             scenario("signature guard: a trailing lambda is still the content, after style") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             ContextMenu(items) { Text("one") }
                             Tooltip("Hint") { Text("two") }
                             HoverCard("Title", "Body") { Text("three") }

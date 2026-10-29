@@ -25,6 +25,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.NodeBounds
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.probed
@@ -50,7 +51,7 @@ private fun layoutAt(
     width = width,
     height = 300,
     content = {
-        StxTheme(isDark = false) {
+        StxTheme(strings = StxStrings.En, isDark = false) {
             ListDetailLayout(
                 selected = selected,
                 wideThreshold = wideThreshold,
@@ -116,7 +117,7 @@ class ListDetailLayoutTest :
                 runComposeUiTest {
                     var selected by mutableStateOf(false)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             ListDetailLayout(
                                 selected = selected,
                                 placeholder = { ListDetailLayoutDefaults.Placeholder("Select a row", it) },
@@ -142,7 +143,7 @@ class ListDetailLayoutTest :
             scenario("without a placeholder the second pane reads \"Select an item\"") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Box(Modifier.width(900.dp)) {
                                 ListDetailLayout(
                                     selected = false,
@@ -163,7 +164,7 @@ class ListDetailLayoutTest :
                     var width by mutableStateOf(900.dp)
                     lateinit var listState: LazyListState
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Box(Modifier.width(width).height(200.dp)) {
                                 ListDetailLayout(
                                     selected = false,
@@ -193,7 +194,7 @@ class ListDetailLayoutTest :
                     var selected by mutableStateOf(false)
                     lateinit var listState: LazyListState
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Box(Modifier.width(500.dp).height(200.dp)) {
                                 ListDetailLayout(
                                     selected = selected,
@@ -226,7 +227,7 @@ class ListDetailLayoutTest :
                     var selected by mutableStateOf(true)
                     lateinit var scroll: ScrollState
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Box(Modifier.width(500.dp).height(200.dp)) {
                                 ListDetailLayout(
                                     selected = selected,
@@ -258,7 +259,7 @@ class ListDetailLayoutTest :
                 runComposeUiTest {
                     var width by mutableStateOf(900.dp)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Box(Modifier.width(width)) {
                                 ListDetailLayout(
                                     selected = true,

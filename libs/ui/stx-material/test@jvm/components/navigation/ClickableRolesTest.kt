@@ -17,6 +17,7 @@ import com.softistx.material.components.content.ListTile
 import com.softistx.material.components.surface.Accordion
 import com.softistx.material.components.surface.AccordionItem
 import com.softistx.material.components.surface.Disclosure
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
@@ -36,7 +37,7 @@ class ClickableRolesTest :
             scenario("ListTile is a focusable button") {
                 runComposeUiTest {
                     var clicks by mutableStateOf(0)
-                    setContent { StxTheme(isDark = false) { ListTile(title = "Profile", onClick = { clicks++ }) } }
+                    setContent { StxTheme(strings = StxStrings.En, isDark = false) { ListTile(title = "Profile", onClick = { clicks++ }) } }
                     onNodeWithText("Profile").shouldBeFocusableButton().performClick()
                     clicks shouldBe 1
                 }
@@ -45,7 +46,7 @@ class ClickableRolesTest :
                 runComposeUiTest {
                     var clicks by mutableStateOf(0)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Breadcrumb(
                                 items = listOf(BreadcrumbItem("Home", { clicks++ }), BreadcrumbItem("Here")),
                             )
@@ -59,7 +60,7 @@ class ClickableRolesTest :
                 runComposeUiTest {
                     var went by mutableStateOf(-1)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Stepper(
                                 steps = listOf(Step("Account"), Step("Plan"), Step("Pay")),
                                 current = 1,
@@ -75,7 +76,7 @@ class ClickableRolesTest :
                 runComposeUiTest {
                     var open by mutableStateOf<Int?>(null)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Accordion(
                                 items = listOf(AccordionItem("One", "first"), AccordionItem("Two", "second")),
                                 expanded = open,
@@ -91,7 +92,7 @@ class ClickableRolesTest :
                 runComposeUiTest {
                     var open by mutableStateOf(false)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Disclosure(title = "More", expanded = open, onExpandedChange = { open = it }) {
                                 Typography(text = "body")
                             }

@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.navigation3.runtime.entryProvider
 import com.softistx.material.components.content.ListTile
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -35,7 +36,7 @@ private fun ink(): Int {
     val scene = ImageComposeScene(width = 800, height = 600)
     try {
         scene.setContent {
-            StxTheme(isDark = false) {
+            StxTheme(strings = StxStrings.En, isDark = false) {
                 Box(Modifier.fillMaxSize().background(Color.White)) {
                     val backStack = remember { mutableStateListOf(Inbox) }
                     AdaptiveNavDisplay(

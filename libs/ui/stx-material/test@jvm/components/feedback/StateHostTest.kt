@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.motion.StxMotion
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.theme.DefaultSeed
@@ -56,7 +57,11 @@ private fun <T> loadingProbe(
         height = 520,
         content = {
             val motion = if (reducedMotion) StxMotion(enabled = false) else StxTheme.motion
-            StxTheme(isDark = false, motion = motion) { SkeletonCards(Modifier.padding(10.dp).probed(bounds), count) }
+            StxTheme(
+                strings = StxStrings.En,
+                isDark = false,
+                motion = motion,
+            ) { SkeletonCards(Modifier.padding(10.dp).probed(bounds), count) }
         },
         block = block,
     )
@@ -99,7 +104,7 @@ class StateHostTest :
                     width = 420,
                     height = 200,
                     content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             StateHost<String>(UiState.Error("Down."), onRetry = {}, modifier = Modifier.padding(10.dp).probed(bounds)) {}
                         }
                     },
@@ -114,7 +119,7 @@ class StateHostTest :
                 runComposeUiTest {
                     var retries by mutableStateOf(0)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             StateHost<String>(UiState.Error("Down."), onRetry = { retries++ }) {}
                         }
                     }
@@ -131,7 +136,7 @@ class StateHostTest :
             scenario("the loading face is described for a screen reader, and its words can be translated") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             StateHost<String>(UiState.Loading, onRetry = {}, loadingLabel = "Chargement") {}
                         }
                     }
@@ -143,7 +148,7 @@ class StateHostTest :
             scenario("the strings are parameters") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             StateHost<String>(UiState.Error("Hors ligne."), onRetry = {}, errorTitle = "Échec", retryLabel = "Réessayer") {}
                         }
                     }
@@ -157,7 +162,7 @@ class StateHostTest :
             scenario("the data face is laid out within the modifier's bounds") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             StateHost(UiState.Data("ok"), onRetry = {}, modifier = Modifier.size(120.dp, 60.dp)) {
                                 Box(Modifier.fillMaxSize().testTag("data"))
                             }
@@ -170,7 +175,7 @@ class StateHostTest :
             scenario("a custom loading slot replaces the default skeletons") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false, motion = StxMotion(enabled = false)) {
+                        StxTheme(strings = StxStrings.En, isDark = false, motion = StxMotion(enabled = false)) {
                             StateHost<String>(UiState.Loading, onRetry = {}, loading = { Typography(text = "my skeleton") }) {}
                         }
                     }
@@ -183,7 +188,7 @@ class StateHostTest :
                 runComposeUiTest {
                     var state: UiState<String> by mutableStateOf(UiState.Loading)
                     setContent {
-                        StxTheme(isDark = false, motion = StxMotion(enabled = false)) {
+                        StxTheme(strings = StxStrings.En, isDark = false, motion = StxMotion(enabled = false)) {
                             StateHost(state, onRetry = {}) {}
                         }
                     }
@@ -202,7 +207,7 @@ class StateHostTest :
                 runComposeUiTest {
                     var state: UiState<String> by mutableStateOf(UiState.Loading)
                     setContent {
-                        StxTheme(isDark = false, motion = StxMotion(enabled = false)) {
+                        StxTheme(strings = StxStrings.En, isDark = false, motion = StxMotion(enabled = false)) {
                             StateHost(state, onRetry = { state = UiState.Loading }) { Typography(text = "Loaded $it") }
                         }
                     }

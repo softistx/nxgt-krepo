@@ -18,6 +18,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.softistx.material.components.surface.MenuItem
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
@@ -35,7 +36,12 @@ class IconButtonSemanticsTest :
             scenario("IconButton is a Role.Button with a 48 dp target") {
                 runComposeUiTest {
                     var clicks = 0
-                    setContent { StxTheme(isDark = false) { IconButton(StxIcons.Add, "Add", onClick = { clicks++ }) } }
+                    setContent {
+                        StxTheme(
+                            strings = StxStrings.En,
+                            isDark = false,
+                        ) { IconButton(StxIcons.Add, "Add", onClick = { clicks++ }) }
+                    }
                     onNodeWithContentDescription("Add")
                         .assert(role(Role.Button))
                         .assertTouchHeightIsEqualTo(48.dp)
@@ -49,7 +55,7 @@ class IconButtonSemanticsTest :
                 runComposeUiTest {
                     var checked by mutableStateOf(false)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             IconToggle(StxIcons.Add, "Pin", checked = checked, onCheckedChange = { checked = it })
                         }
                     }
@@ -66,7 +72,7 @@ class IconButtonSemanticsTest :
             scenario("ToggleButton is a Role.Checkbox with its state") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) { ToggleButton("Follow", checked = true, onCheckedChange = {}) }
+                        StxTheme(strings = StxStrings.En, isDark = false) { ToggleButton("Follow", checked = true, onCheckedChange = {}) }
                     }
                     onNodeWithText("Follow").assert(role(Role.Checkbox)).assert(toggled(ToggleableState.On))
                 }
@@ -75,7 +81,7 @@ class IconButtonSemanticsTest :
             scenario("both halves of a SplitButton are Role.Button") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             SplitButton("Save", onClick = {}, overflow = listOf(MenuItem("Save as", onClick = {})))
                         }
                     }
@@ -86,7 +92,7 @@ class IconButtonSemanticsTest :
 
             scenario("Fab is a Role.Button with a 48 dp target") {
                 runComposeUiTest {
-                    setContent { StxTheme(isDark = false) { Fab(StxIcons.Add, "New", onClick = {}) } }
+                    setContent { StxTheme(strings = StxStrings.En, isDark = false) { Fab(StxIcons.Add, "New", onClick = {}) } }
                     onNodeWithContentDescription("New").assert(role(Role.Button)).assertHeightIsAtLeast(48.dp)
                 }
             }

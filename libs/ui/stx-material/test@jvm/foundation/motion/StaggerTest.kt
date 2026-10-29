@@ -14,6 +14,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.renderProbe
 import io.kotest.core.spec.style.FeatureSpec
@@ -40,7 +41,7 @@ class StaggerTest :
                 runComposeUiTest {
                     mainClock.autoAdvance = false
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Box(Modifier.fillMaxSize().background(Color.White)) { item() }
                         }
                     }
@@ -63,7 +64,7 @@ class StaggerTest :
             }
             scenario("with reduced motion the item is shown at once") {
                 renderProbe(
-                    content = { StxTheme(isDark = false, motion = StxMotion(enabled = false)) { item() } },
+                    content = { StxTheme(strings = StxStrings.En, isDark = false, motion = StxMotion(enabled = false)) { item() } },
                 ) {
                     firstFrame().ink() inkShouldBeGreaterThan 0
                 }

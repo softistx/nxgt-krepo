@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.RenderProbe
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
@@ -45,7 +46,7 @@ private fun probe(
 ) = renderProbe(
     width = 400,
     height = 200,
-    content = { StxTheme(isDark = false) { tile(Modifier.padding(20.dp).probed(bounds)) } },
+    content = { StxTheme(strings = StxStrings.En, isDark = false) { tile(Modifier.padding(20.dp).probed(bounds)) } },
     block = block,
 )
 
@@ -175,7 +176,16 @@ class ListTileTest :
                     { ListTile("A", group = ListTileGroup(0, 2)) },
                 ).forEach { tile ->
                     val failure =
-                        runCatching { runComposeUiTest { setContent { StxTheme(isDark = false) { tile() } } } }.exceptionOrNull()
+                        runCatching {
+                            runComposeUiTest {
+                                setContent {
+                                    StxTheme(
+                                        strings = StxStrings.En,
+                                        isDark = false,
+                                    ) { tile() }
+                                }
+                            }
+                        }.exceptionOrNull()
                     generateSequence(failure) { it.cause }.any { it.message?.contains("need an onClick") == true } shouldBe true
                 }
             }
@@ -188,7 +198,7 @@ class ListTileTest :
             scenario("an interactive tile is a button with a click, at least 48 dp tall") {
                 runComposeUiTest {
                     var clicks by mutableStateOf(0)
-                    setContent { StxTheme(isDark = false) { ListTile("Profile", onClick = { clicks++ }) } }
+                    setContent { StxTheme(strings = StxStrings.En, isDark = false) { ListTile("Profile", onClick = { clicks++ }) } }
                     onNodeWithText("Profile")
                         .assert(button)
                         .assertHasClickAction()
@@ -199,7 +209,7 @@ class ListTileTest :
             }
             scenario("a tile without onClick has no click action and no role") {
                 runComposeUiTest {
-                    setContent { StxTheme(isDark = false) { ListTile("Profile") } }
+                    setContent { StxTheme(strings = StxStrings.En, isDark = false) { ListTile("Profile") } }
                     onNodeWithText("Profile").assert(noClick).assert(noRole)
                 }
             }
@@ -207,7 +217,7 @@ class ListTileTest :
                 runComposeUiTest {
                     var picked by mutableStateOf(1)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Column {
                                 ListTile("One", onClick = { picked = 0 }, selected = picked == 0)
                                 ListTile("Two", onClick = { picked = 1 }, selected = picked == 1)
@@ -224,7 +234,7 @@ class ListTileTest :
             scenario("a grouped tile is a button, or a selected radio button when selected is given") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Column {
                                 ListTile("Plain", onClick = {}, group = ListTileGroup(0, 2))
                                 ListTile("Chosen", onClick = {}, group = ListTileGroup(1, 2), selected = true)
@@ -239,7 +249,7 @@ class ListTileTest :
                 runComposeUiTest {
                     var clicks by mutableStateOf(0)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Column {
                                 ListTile("Plain", onClick = { clicks++ }, enabled = false)
                                 ListTile("Selected", onClick = { clicks++ }, enabled = false, selected = false)

@@ -11,6 +11,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.textLayout
@@ -40,7 +41,7 @@ class NavigationSuiteLabelTest :
             scenario("keeps every label on one line at phone width") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             CompositionLocalProvider(LocalWindowInfo provides phone) {
                                 NavigationSuite(
                                     destinations = labels.map { NavigationDestination(it, StxIcons.Home) },
@@ -57,7 +58,7 @@ class NavigationSuiteLabelTest :
             scenario("ellipsizes a label that cannot fit on one line") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             CompositionLocalProvider(LocalWindowInfo provides phone) {
                                 NavigationSuite(
                                     destinations =

@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.components.surface.MenuItem
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.probed
 import com.softistx.material.renderProbe
@@ -83,7 +84,7 @@ class SplitButtonStyleTest :
 /** [content] in the light theme, without M3's 48 dp touch target around it. */
 @Composable
 private fun flat(content: @Composable () -> Unit) {
-    StxTheme(isDark = false) {
+    StxTheme(strings = StxStrings.En, isDark = false) {
         CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) { content() }
     }
 }

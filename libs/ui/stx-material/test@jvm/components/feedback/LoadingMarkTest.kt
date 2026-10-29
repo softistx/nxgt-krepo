@@ -7,6 +7,7 @@ import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
 import com.softistx.material.contrast
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.DefaultSeed
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.stxColorScheme
@@ -28,7 +29,9 @@ private fun <T> markProbe(
     renderProbe(
         width = 120,
         height = 120,
-        content = { StxTheme(isDark = false) { LoadingMark(Modifier.padding(10.dp).probed(bounds), progress, contained) } },
+        content = {
+            StxTheme(strings = StxStrings.En, isDark = false) { LoadingMark(Modifier.padding(10.dp).probed(bounds), progress, contained) }
+        },
         block = { settle().block() },
     )
 

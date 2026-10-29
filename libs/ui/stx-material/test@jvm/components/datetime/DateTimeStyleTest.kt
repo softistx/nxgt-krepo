@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.painted
 import com.softistx.material.paintedWhenDisabled
@@ -35,7 +36,7 @@ private fun corner(
     val bounds = NodeBounds()
     val part = fields.getValue(name)
     return renderProbe(width = 400, height = 300, content = {
-        StxTheme(isDark = false) { part(Modifier.probed(bounds), style, enabled) }
+        StxTheme(strings = StxStrings.En, isDark = false) { part(Modifier.probed(bounds), style, enabled) }
     }) { settle().pixelAt(bounds, Corner.TopLeft) }
 }
 
@@ -65,7 +66,7 @@ class DateTimeStyleTest :
             scenario("the caller's style reaches the picker: alpha 0 hides it, the default shows it") {
                 fun ink(style: Style) =
                     renderProbe(width = 400, height = 600, content = {
-                        StxTheme(isDark = false) { Calendar(LocalDate(2026, 10, 27), {}, style = style) }
+                        StxTheme(strings = StxStrings.En, isDark = false) { Calendar(LocalDate(2026, 10, 27), {}, style = style) }
                     }) { settle().ink() }
                 ink(Style) shouldBeGreaterThan 1000
                 ink(Style { alpha(0f) }) shouldBe 0

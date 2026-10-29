@@ -24,6 +24,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.PixelGrid
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.isPainted
 import com.softistx.material.painted
@@ -42,7 +43,7 @@ private fun probe(
     width: Int = 400,
     block: (PixelGrid) -> Unit,
 ) = renderProbe(width = width, height = 200, content = {
-    StxTheme(isDark = false) {
+    StxTheme(strings = StxStrings.En, isDark = false) {
         Carousel(count = 3, modifier = Modifier.fillMaxWidth(), peek = peek, style = style) {
             Box(Modifier.fillMaxWidth().height(100.dp).background(page))
         }
@@ -124,7 +125,7 @@ class CarouselTest :
             scenario("the page content is composed") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) { Carousel(count = 2) { Text("Class ${it + 1}") } }
+                        StxTheme(strings = StxStrings.En, isDark = false) { Carousel(count = 2) { Text("Class ${it + 1}") } }
                     }
                     onNodeWithText("Class 1").assertExists()
                 }
@@ -135,7 +136,7 @@ class CarouselTest :
             scenario("M3 reports the collection (1 row, count columns); each page reports its index; the dots are hidden") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Carousel(count = 3, modifier = Modifier.testTag("carousel")) { Text("Class ${it + 1}") }
                         }
                     }
@@ -159,7 +160,7 @@ class CarouselTest :
             scenario("the 8 dp dot is the first at rest and the second after a swipe left") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Carousel(count = 3, modifier = Modifier.testTag("carousel")) {
                                 Box(Modifier.fillMaxWidth().height(100.dp).background(page))
                             }
@@ -193,9 +194,12 @@ class CarouselTest :
         feature("the signature") {
             scenario("signature guard: a trailing page lambda still compiles after style") {
                 runComposeUiTest {
-                    setContent { StxTheme { Carousel(2, Modifier, 48.dp, Style) { Text("x") } } }
+                    setContent { StxTheme(strings = StxStrings.En) { Carousel(2, Modifier, 48.dp, Style) { Text("x") } } }
                 }
-                renderProbe(content = { StxTheme { Carousel(count = 2) { Text("x") } } }) { settle().ink() shouldBeGreaterThan 0 }
+                renderProbe(content = { StxTheme(strings = StxStrings.En) { Carousel(count = 2) { Text("x") } } }) {
+                    settle().ink() shouldBeGreaterThan
+                        0
+                }
             }
         }
     })

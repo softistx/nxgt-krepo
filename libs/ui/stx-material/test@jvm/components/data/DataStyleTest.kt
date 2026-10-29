@@ -20,6 +20,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.isBare
 import com.softistx.material.isPainted
@@ -49,7 +50,7 @@ class DataStyleTest :
 
             scenario("a row without onRowClick still takes the caller's style (it is never dropped), but is not a press target") {
                 renderProbe(width = 400, height = 200, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp, style = painted)
                     }
                 }) { settle().count { it.isPainted() } shouldBeGreaterThan 1000 }
@@ -58,7 +59,7 @@ class DataStyleTest :
             scenario("a collapsed card gets the caller's style too: alpha 0 hides it, the default shows it") {
                 fun ink(style: Style) =
                     renderProbe(width = 400, height = 300, content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             DataTable(oneColumn, listOf("Ada"), collapseBelow = 10_000.dp, style = style)
                         }
                     }) { settle().ink() }
@@ -83,7 +84,7 @@ class DataStyleTest :
                     val asked = mutableListOf<TableSort>()
                     var sort by mutableStateOf<TableSort?>(null)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             DataTable(
                                 columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score") { it }),
                                 rows = listOf("Ada"),
@@ -112,7 +113,7 @@ class DataStyleTest :
             scenario("the sorted header says Ascending or Descending; the others say nothing") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             DataTable(
                                 columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score") { it }),
                                 rows = listOf("Ada"),
@@ -136,7 +137,7 @@ class DataStyleTest :
             scenario("a column with sortable = false is plain text, the others are buttons") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             DataTable(
                                 columns = listOf(TableColumn<String>("Name") { it }, TableColumn("Score", sortable = false) { it }),
                                 rows = listOf("Ada"),
@@ -154,7 +155,7 @@ class DataStyleTest :
             scenario("a display-only sort (no onSortChange) still announces its direction, without a click") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp, sort = TableSort(0, SortDirection.Asc))
                         }
                     }
@@ -166,7 +167,7 @@ class DataStyleTest :
             scenario("without onSortChange a header is plain text, not a button") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) { DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp) }
+                        StxTheme(strings = StxStrings.En, isDark = false) { DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp) }
                     }
                     onNodeWithText("Name").assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
                 }
@@ -183,7 +184,7 @@ class DataStyleTest :
             scenario("Pagination hands its style to both buttons: the left edge and the right edge of the row are Red") {
                 val bounds = NodeBounds()
                 renderProbe(width = 400, height = 200, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         Pagination(true, true, {}, {}, Modifier.probed(bounds), style = painted)
                     }
                 }) {
@@ -196,7 +197,7 @@ class DataStyleTest :
             scenario("SortControl hands its style to the field: the corner is Red, not faded, when disabled") {
                 val bounds = NodeBounds()
                 renderProbe(width = 400, height = 200, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         SortControl(
                             options = listOf("A"),
                             selected = "A",
@@ -216,7 +217,7 @@ class DataStyleTest :
             scenario("the caller's style dresses the list of commands, and nothing is painted without it") {
                 fun paintedCount(style: Style) =
                     renderProbe(width = 600, height = 600, content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             CommandPalette(true, "", {}, listOf(CommandItem("Open", {})), {}, style = style)
                         }
                     }) { settle().count { it.isPainted() } }
@@ -228,7 +229,12 @@ class DataStyleTest :
         feature("the title") {
             scenario("EntityHeader announces its title as a heading") {
                 runComposeUiTest {
-                    setContent { StxTheme(isDark = false) { EntityHeader(title = "Amara Diallo", supporting = "Customer") } }
+                    setContent {
+                        StxTheme(
+                            strings = StxStrings.En,
+                            isDark = false,
+                        ) { EntityHeader(title = "Amara Diallo", supporting = "Customer") }
+                    }
                     onNodeWithText("Amara Diallo").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
                     onNodeWithText("Customer").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Heading))
                 }
@@ -240,7 +246,7 @@ class DataStyleTest :
                 runComposeUiTest {
                     var clicked: String? = null
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             DataTable(oneColumn, listOf("Ada"), collapseBelow = 100.dp) { clicked = it }
                         }
                     }

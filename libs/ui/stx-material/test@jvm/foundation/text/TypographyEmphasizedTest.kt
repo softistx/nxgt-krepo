@@ -5,6 +5,7 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.softistx.material.TestFonts
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.renderProbe
 import io.kotest.assertions.withClue
@@ -29,7 +30,7 @@ class TypographyEmphasizedTest :
                 val m3Roles = TypographyVariant.entries.take(M3_ROLES)
                 val pairs = mutableListOf<Triple<TypographyVariant, TextStyle, TextStyle>>()
                 renderProbe(width = 40, height = 40, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         m3Roles.forEach { pairs += Triple(it, it.style(false), it.style(true)) }
                     }
                 }) { settle() }
@@ -45,7 +46,7 @@ class TypographyEmphasizedTest :
             scenario("leaves the five extra variants as they were") {
                 var same = false
                 renderProbe(width = 40, height = 40, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         same = TypographyVariant.Code.style(true) == TypographyVariant.Code.style(false) &&
                             TypographyVariant.Link.style(true) == TypographyVariant.Link.style(false)
                     }
@@ -57,7 +58,7 @@ class TypographyEmphasizedTest :
                 var metric = TextStyle.Default
                 var emphasisedDisplay = TextStyle.Default
                 renderProbe(width = 40, height = 40, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         metric = TypographyVariant.Metric.style()
                         emphasisedDisplay = MaterialTheme.typography.displaySmallEmphasized
                     }
@@ -72,7 +73,7 @@ class TypographyEmphasizedTest :
                 val heavy = Typography().headlineMedium.copy(fontWeight = FontWeight.Bold)
                 val bold = Typography(headlineMediumEmphasized = heavy)
                 renderProbe(width = 40, height = 40, content = {
-                    StxTheme(isDark = false, typography = bold) {
+                    StxTheme(strings = StxStrings.En, isDark = false, typography = bold) {
                         got = TypographyVariant.HeadlineMedium.style(true).fontWeight
                     }
                 }) { settle() }
@@ -83,7 +84,7 @@ class TypographyEmphasizedTest :
                 var got: FontWeight? = null
                 val medium = Typography(titleSmall = TextStyle(fontWeight = FontWeight.Medium))
                 renderProbe(width = 40, height = 40, content = {
-                    StxTheme(isDark = false, typography = medium) {
+                    StxTheme(strings = StxStrings.En, isDark = false, typography = medium) {
                         got = TypographyVariant.TitleSmall.style(true).fontWeight
                     }
                 }) { settle() }
@@ -94,7 +95,7 @@ class TypographyEmphasizedTest :
                 var got: FontWeight? = null
                 val black = Typography(displaySmallEmphasized = TextStyle(fontWeight = FontWeight.Black))
                 renderProbe(width = 40, height = 40, content = {
-                    StxTheme(isDark = false, typography = black) {
+                    StxTheme(strings = StxStrings.En, isDark = false, typography = black) {
                         got = TypographyVariant.Metric.style().fontWeight
                     }
                 }) { settle() }
@@ -106,7 +107,7 @@ class TypographyEmphasizedTest :
 /** Ink laid down by one headline line, regular or emphasised. */
 private fun ink(emphasized: Boolean): Int =
     renderProbe(width = 520, height = 90, content = {
-        StxTheme(isDark = false, typography = TestFonts.typography()) {
+        StxTheme(strings = StxStrings.En, isDark = false, typography = TestFonts.typography()) {
             Typography("Mathematics and Physics", TypographyVariant.HeadlineMedium, emphasized = emphasized)
         }
     }) { settle().ink() }

@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.height
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
@@ -34,7 +35,7 @@ class ToggleRowsTest :
                 runComposeUiTest {
                     var checked by mutableStateOf(false)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Checkbox(value = checked, onValueChange = { checked = it }, label = "Terms")
                         }
                     }
@@ -47,7 +48,7 @@ class ToggleRowsTest :
             scenario("the caller's modifier lands on the outermost node") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Checkbox(
                                 value = false,
                                 onValueChange = {},
@@ -68,7 +69,7 @@ class ToggleRowsTest :
                 runComposeUiTest {
                     var on by mutableStateOf(false)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Switch(value = on, onValueChange = { on = it }, label = "Digest")
                         }
                     }
@@ -85,7 +86,7 @@ class ToggleRowsTest :
                 runComposeUiTest {
                     var picked by mutableStateOf("Monthly")
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             RadioGroup(
                                 value = picked,
                                 onValueChange = { picked = it },

@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
+import com.softistx.material.foundation.i18n.StxStrings
+import com.softistx.material.foundation.i18n.rememberStxStrings
 import com.softistx.material.foundation.motion.SnapMotionScheme
 import com.softistx.material.foundation.motion.StxMotion
 import com.softistx.material.foundation.motion.systemReducesMotion
@@ -41,6 +43,9 @@ import com.softistx.material.foundation.style.colors
  * **With no [motion] it follows the OS**: "Reduce motion" gives an `enabled = false` motion. Pass one
  * and the OS is not read at all. Desktop reads only `-Dstx.material.reduceMotion`;
  * `readDesktopReducedMotion()` is the app's opt-in to the OS.
+ *
+ * **[strings] is the library's text**: with none it follows the device locale (`en`, `fr`, English
+ * for anything else). Pass `StxStrings.Fr.copy(retry = "…")` to override one string.
  */
 @Composable
 fun StxTheme(
@@ -51,6 +56,7 @@ fun StxTheme(
     motion: StxMotion? = null,
     typography: Typography = MaterialTheme.typography,
     shapes: Shapes = MaterialTheme.shapes,
+    strings: StxStrings = rememberStxStrings(),
     content: @Composable () -> Unit,
 ) {
     val reduced = motion == null && systemReducesMotion()
@@ -61,6 +67,7 @@ fun StxTheme(
         LocalStrangeSpacing provides spacing,
         LocalStrangeMotion provides stxMotion,
         LocalStrangeShapes provides shapes,
+        LocalStxStrings provides strings,
     ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,
