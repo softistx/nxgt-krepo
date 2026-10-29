@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
@@ -48,7 +49,7 @@ private fun aspectAt(width: Dp): Double {
     val scene = ImageComposeScene(width = 500, height = 160)
     try {
         scene.setContent {
-            StxTheme(isDark = false) {
+            StxTheme(strings = StxStrings.En, isDark = false) {
                 Box(Modifier.fillMaxSize().background(Color.White).padding(Inset)) {
                     ResponsiveButton(
                         text = "Add item",

@@ -16,6 +16,7 @@ import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.RenderProbe
 import com.softistx.material.contrast
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.text.style
@@ -43,7 +44,7 @@ private fun <T> alertProbe(
     renderProbe(
         width = 420,
         height = 140,
-        content = { StxTheme(isDark = false) { notice(Modifier.padding(10.dp).probed(bounds)) } },
+        content = { StxTheme(strings = StxStrings.En, isDark = false) { notice(Modifier.padding(10.dp).probed(bounds)) } },
         block = block,
     )
 
@@ -131,7 +132,10 @@ class AlertSurfaceTest :
                     width = 100,
                     height = 100,
                     content = {
-                        StxTheme(isDark = false) { TonePlate(Tone.Success, StxIcons.Check, Modifier.padding(10.dp).probed(bounds)) }
+                        StxTheme(
+                            strings = StxStrings.En,
+                            isDark = false,
+                        ) { TonePlate(Tone.Success, StxIcons.Check, Modifier.padding(10.dp).probed(bounds)) }
                     },
                 ) {
                     val frame = settle()
@@ -175,7 +179,7 @@ class AlertSurfaceTest :
 
             scenario("a trailing action lambda still compiles after the icon parameter") {
                 runComposeUiTest {
-                    setContent { StxTheme { Alert("x") { } } }
+                    setContent { StxTheme(strings = StxStrings.En) { Alert("x") { } } }
                 }
             }
         }
@@ -186,7 +190,7 @@ class AlertSurfaceTest :
                 var emphasised: FontWeight? = null
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             plain = TypographyVariant.TitleSmall.style(false).fontWeight
                             emphasised = TypographyVariant.TitleSmall.style(true).fontWeight
                             Alert("Body", title = "Heads up")

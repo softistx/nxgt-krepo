@@ -1,5 +1,6 @@
 package com.softistx.material.components.content
 
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.DefaultSeed
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.Tone
@@ -41,7 +42,7 @@ private fun tonePixels(
             else -> colors.tone(tone).main
         }
     return renderProbe(width = 300, height = 160, content = {
-        StxTheme(isDark = false) {
+        StxTheme(strings = StxStrings.En, isDark = false) {
             Stat(value = "12", label = "Students", delta = "+2 this term", tone = tone)
         }
     }) { settle().count(target) }

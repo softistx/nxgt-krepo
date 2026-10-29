@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.hidden
 import com.softistx.material.inkWith
@@ -54,7 +55,10 @@ class MediaStyleTest :
                 runComposeUiTest {
                     var picked = -1
                     setContent {
-                        StxTheme(isDark = false) { Gallery(listOf("a", "b"), onSelect = { picked = it }, minSize = 100.dp) }
+                        StxTheme(
+                            strings = StxStrings.En,
+                            isDark = false,
+                        ) { Gallery(listOf("a", "b"), onSelect = { picked = it }, minSize = 100.dp) }
                     }
                     onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))[1].performClick()
                     picked shouldBe 1
@@ -71,7 +75,7 @@ class MediaStyleTest :
 
             scenario("signature guard: the trailing lambda is still the action, after style") {
                 runComposeUiTest {
-                    setContent { StxTheme(isDark = false) { PersonCard("Ada") { Text("Message") } } }
+                    setContent { StxTheme(strings = StxStrings.En, isDark = false) { PersonCard("Ada") { Text("Message") } } }
                     onNodeWithText("Message").assertExists()
                 }
             }

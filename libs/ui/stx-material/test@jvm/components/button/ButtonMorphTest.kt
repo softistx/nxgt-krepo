@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.IconSize
 import com.softistx.material.foundation.icon.StxIcons
@@ -47,7 +48,7 @@ class ButtonMorphTest :
                         width = 400,
                         height = 300,
                         content = {
-                            StxTheme(isDark = false) {
+                            StxTheme(strings = StxStrings.En, isDark = false) {
                                 // Without M3's 48 dp touch target the node's corner is the container's corner.
                                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
                                     Button("Save", onClick = {}, size = size, modifier = Modifier.padding(20.dp).probed(bounds))
@@ -73,7 +74,7 @@ class ButtonMorphTest :
                         width = 400,
                         height = 260,
                         content = {
-                            StxTheme(isDark = false) {
+                            StxTheme(strings = StxStrings.En, isDark = false) {
                                 Button("Save", onClick = {}, size = size, modifier = Modifier.probed(bounds))
                             }
                         },
@@ -97,7 +98,7 @@ class ButtonMorphTest :
                 val bounds = NodeBounds()
                 renderProbe(
                     content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             ResponsiveButton(
                                 text = "Add",
                                 icon = StxIcons.Add,
@@ -123,7 +124,7 @@ class ButtonMorphTest :
                     val bounds = NodeBounds()
                     return renderProbe(
                         content = {
-                            StxTheme(isDark = false) {
+                            StxTheme(strings = StxStrings.En, isDark = false) {
                                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
                                     Button(
                                         text = "Docs",
@@ -151,7 +152,7 @@ class ButtonMorphTest :
                 fun width(content: @Composable (Modifier) -> Unit): Float {
                     val bounds = NodeBounds()
                     return renderProbe(
-                        content = { StxTheme(isDark = false) { content(Modifier.probed(bounds)) } },
+                        content = { StxTheme(strings = StxStrings.En, isDark = false) { content(Modifier.probed(bounds)) } },
                     ) {
                         settle()
                         bounds.rect.width
@@ -178,7 +179,7 @@ class ButtonMorphTest :
                     return renderProbe(
                         width = 700,
                         height = 300,
-                        content = { StxTheme(isDark = false) { content(Modifier.probed(bounds)) } },
+                        content = { StxTheme(strings = StxStrings.En, isDark = false) { content(Modifier.probed(bounds)) } },
                     ) {
                         settle()
                         bounds.rect.width
@@ -206,7 +207,12 @@ class ButtonMorphTest :
         feature("a button's semantics") {
             scenario("keeps Role.Button") {
                 runComposeUiTest {
-                    setContent { StxTheme(isDark = false) { Button("Save", onClick = {}, size = ButtonSize.Large) } }
+                    setContent {
+                        StxTheme(
+                            strings = StxStrings.En,
+                            isDark = false,
+                        ) { Button("Save", onClick = {}, size = ButtonSize.Large) }
+                    }
                     onNodeWithText("Save").assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
                 }
             }

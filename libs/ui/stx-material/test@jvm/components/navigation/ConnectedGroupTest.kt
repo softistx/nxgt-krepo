@@ -34,6 +34,7 @@ import com.softistx.material.NodeBounds
 import com.softistx.material.RenderProbe
 import com.softistx.material.components.button.ViewMode
 import com.softistx.material.components.button.ViewToggle
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.probed
@@ -59,7 +60,7 @@ class ConnectedGroupTest :
                     width = 400,
                     height = 200,
                     content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
                                 SegmentedControl(
                                     options = listOf("XXXX", "XXXX"),
@@ -93,7 +94,7 @@ class ConnectedGroupTest :
                         width = 400,
                         height = 200,
                         content = {
-                            StxTheme(isDark = false) {
+                            StxTheme(strings = StxStrings.En, isDark = false) {
                                 SegmentedControl(
                                     options = listOf("Day", "Month"),
                                     selected = 0,
@@ -118,7 +119,7 @@ class ConnectedGroupTest :
                         width = 400,
                         height = 200,
                         content = {
-                            StxTheme(isDark = false) {
+                            StxTheme(strings = StxStrings.En, isDark = false) {
                                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
                                     SegmentedControl(
                                         options = listOf("AAAA", "BBBB"),
@@ -151,7 +152,7 @@ class ConnectedGroupTest :
                     width = 400,
                     height = 200,
                     content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Tabs(
                                 labels = listOf("Paid"),
                                 selected = 0,
@@ -174,7 +175,7 @@ class ConnectedGroupTest :
                 runComposeUiTest {
                     var picked by mutableStateOf(1)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             SegmentedControl(
                                 options = listOf("Day", "Week", "Month"),
                                 selected = picked,
@@ -196,7 +197,7 @@ class ConnectedGroupTest :
                 runComposeUiTest {
                     var mode by mutableStateOf(ViewMode.List)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { ViewToggle(value = mode, onChange = { mode = it }) }
                         }
                     }
@@ -211,7 +212,7 @@ class ConnectedGroupTest :
                 runComposeUiTest {
                     var picked by mutableStateOf(0)
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             SegmentedControl(
                                 options = listOf("Day", "Week"),
                                 selected = picked,
@@ -235,7 +236,7 @@ class ConnectedGroupTest :
                 width = 400,
                 height = 200,
                 content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
                             content(Modifier.padding(20.dp).probed(bounds))
                         }

@@ -5,6 +5,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import com.softistx.material.contrast
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.DefaultSeed
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.stxColorScheme
@@ -37,7 +38,7 @@ private fun rendered(
     isDark: Boolean,
 ): Double =
     renderProbe(width = 160, height = 90, background = surface, content = {
-        StxTheme(isDark = isDark, colorScheme = scheme) {
+        StxTheme(strings = StxStrings.En, isDark = isDark, colorScheme = scheme) {
             CompositionLocalProvider(LocalContentColor provides scheme.onSurface) {
                 Typography("MMMM", emphasis = emphasis, variant = TypographyVariant.DisplayMedium)
             }

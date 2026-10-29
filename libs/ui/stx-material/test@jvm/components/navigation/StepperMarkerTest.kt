@@ -28,6 +28,7 @@ import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
 import com.softistx.material.TestFonts
 import com.softistx.material.contrast
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.motion.StxMotion
 import com.softistx.material.foundation.motion.rememberMorphShape
 import com.softistx.material.foundation.theme.DefaultSeed
@@ -61,7 +62,7 @@ private fun <T> markerProbe(
         width = 80,
         height = 80,
         content = {
-            StxTheme(isDark = false, typography = TestFonts.typography()) {
+            StxTheme(strings = StxStrings.En, isDark = false, typography = TestFonts.typography()) {
                 Box(Modifier.probed(bounds)) { StepMarker(status, index = 0, connector = false, vertical = true) }
             }
         },
@@ -137,7 +138,7 @@ class StepperMarkerTest :
                     var shape: Shape = RectangleShape
                     mainClock.autoAdvance = false
                     setContent {
-                        StxTheme(isDark = false, motion = motion) {
+                        StxTheme(strings = StxStrings.En, isDark = false, motion = motion) {
                             shape = rememberMorphShape(target)
                             Box(Modifier.size(32.dp).clip(shape).background(scheme.primary))
                         }
@@ -168,7 +169,7 @@ class StepperMarkerTest :
                     var status by mutableStateOf(StepStatus.Upcoming)
                     mainClock.autoAdvance = false
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Box(Modifier.testTag("marker")) { StepMarker(status, index = 0, connector = false, vertical = true) }
                         }
                     }

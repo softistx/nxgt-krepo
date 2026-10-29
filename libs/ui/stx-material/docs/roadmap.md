@@ -250,6 +250,7 @@ dont la forme se lit dans les imports.
 ## Plus tard
 
 - [ ] **Suite de #297 : contraste élevé.** Lire « Augmenter le contraste » (iOS `UIAccessibilityDarkerSystemColorsEnabled`, Android `UiModeManager.getContrast`, bureau) et l'exposer au thème quand un premier composant en a besoin.
+- [ ] **Messages de validation traduits à l’affichage.** Les messages par défaut de `Rules.kt` restent en anglais pour l’instant ; ils seraient résolus au moment de l’affichage, dans la langue du catalogue actif.
 
 ## Phases suivantes
 
@@ -293,4 +294,4 @@ Esquisse. Chaque phase est indépendamment livrable ; l'ordre n'est pas figé.
       au `Canvas`, thème dérivé des tokens
 - [x] **10a — Publication.** `settings.publishing` et publication Maven Central, cibles Apple
       comprises — `stx-material@0.2.2`.
-- [ ] **10b — i18n.** Catalogue de messages multiplateforme, locales `en`/`fr`.
+- [ ] **10b — i18n — en cours (#428).** Catalogue de messages multiplateforme, locales `en`/`fr`.

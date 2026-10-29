@@ -16,6 +16,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.softistx.material.components.form.DangerZone
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.hidden
 import com.softistx.material.inkWith
@@ -103,14 +104,14 @@ class ContentStyleTest :
             scenario("Card(onClick) is a button, and a card without onClick is not") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Card(onClick = {}) { Text("Clickable") }
                         }
                     }
                     onNodeWithText("Clickable").assert(button)
                 }
                 runComposeUiTest {
-                    setContent { StxTheme(isDark = false) { Card { Text("Still") } } }
+                    setContent { StxTheme(strings = StxStrings.En, isDark = false) { Card { Text("Still") } } }
                     onNodeWithText("Still").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Role))
                 }
             }
@@ -118,7 +119,7 @@ class ContentStyleTest :
             scenario("SectionHeader, PricingCard and DangerZone announce their title as a heading, not the supporting text") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             SectionHeader("Recent orders", supporting = "Last 30 days")
                             PricingCard(name = "Pro", amount = "$12")
                             DangerZone(text = "No way back", title = "Delete account") {}
@@ -139,7 +140,7 @@ class ContentStyleTest :
                 var led = false
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             LinkPreview("Docs", "example.com", Modifier, "About", { clicked = true }) {
                                 led = true
                             }

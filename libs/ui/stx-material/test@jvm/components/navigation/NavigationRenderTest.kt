@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
 import io.kotest.core.spec.style.FeatureSpec
@@ -34,7 +35,7 @@ private fun ink(): Int {
     val scene = ImageComposeScene(width = 720, height = 1100)
     try {
         scene.setContent {
-            StxTheme(isDark = false) {
+            StxTheme(strings = StxStrings.En, isDark = false) {
                 Column(
                     modifier = Modifier.fillMaxSize().background(Color.White).padding(16.dp),
                 ) {

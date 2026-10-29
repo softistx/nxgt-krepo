@@ -4,6 +4,7 @@ import androidx.compose.animation.core.SnapSpec
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.foundation.theme.StxThemeProvider
 import com.softistx.material.renderProbe
@@ -54,25 +55,28 @@ class SystemAccessibilityTest :
     FeatureSpec({
         feature("a theme with no motion follows the OS") {
             scenario("reduce motion on: StxMotion is disabled and every spec, M3's included, snaps") {
-                val theme = installed(os = true) { StxTheme { it() } }
+                val theme = installed(os = true) { StxTheme(strings = StxStrings.En) { it() } }
                 theme.motion.enabled shouldBe false
                 theme.snaps() shouldBe true
             }
 
             scenario("reduce motion off: motion runs and springs are real") {
-                installed(os = false) { StxTheme { it() } }.runs() shouldBe true
+                installed(os = false) { StxTheme(strings = StxStrings.En) { it() } }.runs() shouldBe true
             }
         }
 
         feature("passing a motion opts out of the OS read, and M3's scheme derives from it") {
             scenario("an enabled motion keeps motion on with its own scheme, whatever the OS says") {
-                val theme = installed(os = true) { StxTheme(motion = StxMotion(MotionScheme.standard(), enabled = true)) { it() } }
+                val theme =
+                    installed(
+                        os = true,
+                    ) { StxTheme(strings = StxStrings.En, motion = StxMotion(MotionScheme.standard(), enabled = true)) { it() } }
                 theme.motion.enabled shouldBe true
                 theme.runs() shouldBe true
             }
 
             scenario("a disabled motion snaps M3's own specs too, whatever the OS says") {
-                val off = installed(os = false) { StxTheme(motion = StxMotion(enabled = false)) { it() } }
+                val off = installed(os = false) { StxTheme(strings = StxStrings.En, motion = StxMotion(enabled = false)) { it() } }
                 off.motion.enabled shouldBe false
                 off.snaps() shouldBe true
             }
@@ -90,7 +94,11 @@ class SystemAccessibilityTest :
                 try {
                     System.clearProperty(REDUCE_MOTION_PROPERTY)
                     var motion: StxMotion? = null
-                    renderProbe(width = 20, height = 20, content = { StxTheme { motion = StxTheme.motion } }) { settle() }
+                    renderProbe(
+                        width = 20,
+                        height = 20,
+                        content = { StxTheme(strings = StxStrings.En) { motion = StxTheme.motion } },
+                    ) { settle() }
                     checkNotNull(motion).enabled shouldBe true
                 } finally {
                     if (beforeProperty != null) System.setProperty(REDUCE_MOTION_PROPERTY, beforeProperty)

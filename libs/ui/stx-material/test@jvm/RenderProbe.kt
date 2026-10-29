@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.StxTheme
 import org.jetbrains.skia.EncodedImageFormat
 import java.nio.file.Files
@@ -144,7 +145,7 @@ fun renderPage(
     content: @Composable () -> Unit,
 ): Int =
     renderProbe(width, height, content = {
-        StxTheme(isDark = false) {
+        StxTheme(strings = StxStrings.En, isDark = false) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),

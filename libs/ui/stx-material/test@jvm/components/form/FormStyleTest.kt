@@ -11,6 +11,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.theme.ColorMode
 import com.softistx.material.foundation.theme.StxTheme
 import com.softistx.material.isPainted
@@ -72,7 +73,7 @@ private fun reds(name: String): Pair<Int, Int> {
     return renderProbe(
         width = 400,
         height = 300,
-        content = { StxTheme(isDark = false) { part(Modifier.padding(20.dp).probed(bounds), painted, true) } },
+        content = { StxTheme(strings = StxStrings.En, isDark = false) { part(Modifier.padding(20.dp).probed(bounds), painted, true) } },
     ) {
         val reddish = { c: Color -> c.isPainted() }
         val rest = settle().count(reddish)
@@ -103,7 +104,7 @@ private fun corner(
     return renderProbe(
         width = 400,
         height = 300,
-        content = { StxTheme(isDark = false) { part(Modifier.padding(20.dp).probed(bounds), style, enabled) } },
+        content = { StxTheme(strings = StxStrings.En, isDark = false) { part(Modifier.padding(20.dp).probed(bounds), style, enabled) } },
     ) {
         // Settle first: the node's bounds are only known after the first frame, and a press aims at them.
         val rest = settle()
@@ -176,7 +177,7 @@ class FormStyleTest :
             scenario("supportingText shows under the field, like the other fields") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Autocomplete("", {}, listOf("Ada"), {}, label = "Who", isError = true, supportingText = "Pick someone")
                         }
                     }
@@ -189,7 +190,7 @@ class FormStyleTest :
             scenario("signature guard: a trailing optionLabel or format lambda still compiles after style") {
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             Autocomplete("", {}, listOf(1), {}) { "n$it" }
                             SelectField(1, {}, listOf(1, 2)) { "n$it" }
                             RadioGroup(1, {}, listOf(1, 2)) { "n$it" }

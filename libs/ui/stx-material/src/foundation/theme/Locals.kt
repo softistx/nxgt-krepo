@@ -2,6 +2,7 @@ package com.softistx.material.foundation.theme
 
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.motion.StxMotion
 
 /**
@@ -33,3 +34,9 @@ val LocalStrangeColors =
  * not one. A composable reads `MaterialTheme.shapes` directly and never comes here.
  */
 val LocalStrangeShapes = staticCompositionLocalOf { Shapes() }
+
+/**
+ * The catalogue components read their default strings from. [StxTheme] provides it; outside a theme
+ * it is English. An explicit parameter on a component always wins over it.
+ */
+val LocalStxStrings = staticCompositionLocalOf { StxStrings.En }

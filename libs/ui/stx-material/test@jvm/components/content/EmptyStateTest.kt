@@ -15,6 +15,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.DefaultSeed
 import com.softistx.material.foundation.theme.StxTheme
@@ -43,7 +44,12 @@ class EmptyStateTest :
             scenario("the pane is invisible on the first frame, part-way after a few, and fuller once settled") {
                 runComposeUiTest {
                     mainClock.autoAdvance = false
-                    setContent { StxTheme(isDark = false) { EmptyState("Nothing here", description = "Come back later.") } }
+                    setContent {
+                        StxTheme(
+                            strings = StxStrings.En,
+                            isDark = false,
+                        ) { EmptyState("Nothing here", description = "Come back later.") }
+                    }
                     val first = opacity()
                     mainClock.advanceTimeBy(48)
                     val partway = opacity()
@@ -65,7 +71,7 @@ class EmptyStateTest :
                     width = 200,
                     height = 200,
                     content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             EmptyStateDefaults.IconPlate(StxIcons.Inbox, Modifier.padding(20.dp).probed(bounds))
                         }
                     },
@@ -79,7 +85,7 @@ class EmptyStateTest :
                     width = 400,
                     height = 300,
                     content = {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             EmptyState("Nothing here", illustration = { EmptyStateDefaults.IconPlate(StxIcons.Inbox) })
                         }
                     },
@@ -89,7 +95,7 @@ class EmptyStateTest :
                 renderProbe(
                     width = 400,
                     height = 300,
-                    content = { StxTheme(isDark = false) { EmptyState("Nothing here") } },
+                    content = { StxTheme(strings = StxStrings.En, isDark = false) { EmptyState("Nothing here") } },
                 ) {
                     settle().count(soft) shouldBe 0
                 }
@@ -99,7 +105,7 @@ class EmptyStateTest :
         feature("the title") {
             scenario("is announced as a heading") {
                 runComposeUiTest {
-                    setContent { StxTheme { EmptyState("Nothing here") } }
+                    setContent { StxTheme(strings = StxStrings.En) { EmptyState("Nothing here") } }
                     onNodeWithText("Nothing here").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
                 }
             }

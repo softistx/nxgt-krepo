@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softistx.material.components.button.IconButton
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.text.style
@@ -39,7 +40,7 @@ private const val LONG_TITLE = "Quarterly attendance and behaviour report for th
 private fun titleStyles(size: AppBarSize): List<TextStyle> {
     var styles = emptyList<TextStyle>()
     runComposeUiTest {
-        setContent { StxTheme(isDark = false) { AppBar(TITLE, size = size) } }
+        setContent { StxTheme(strings = StxStrings.En, isDark = false) { AppBar(TITLE, size = size) } }
         styles =
             onAllNodes(hasText(TITLE))
                 .fetchSemanticsNodes()
@@ -61,7 +62,7 @@ private fun plainBarHeight(size: AppBarSize): Dp {
     var height = 0.dp
     runComposeUiTest {
         setContent {
-            StxTheme(isDark = false) {
+            StxTheme(strings = StxStrings.En, isDark = false) {
                 val modifier = Modifier.testTag("old")
                 if (size == AppBarSize.Medium) {
                     MediumTopAppBar(title = { Text(TITLE) }, modifier = modifier)
@@ -83,7 +84,7 @@ class AppBarTest :
             scenario("every size's own title text node is a heading, not just a node around it") {
                 AppBarSize.entries.forEach { size ->
                     runComposeUiTest {
-                        setContent { StxTheme(isDark = false) { AppBar(TITLE, size = size) } }
+                        setContent { StxTheme(strings = StxStrings.En, isDark = false) { AppBar(TITLE, size = size) } }
                         val texts = onAllNodes(hasText(TITLE), useUnmergedTree = true).fetchSemanticsNodes()
                         texts.size shouldBeGreaterThan 0
                         texts.forEach { it.config.contains(SemanticsProperties.Heading) shouldBe true }
@@ -96,7 +97,7 @@ class AppBarTest :
                 var plain = TextStyle.Default
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             emphasised = TypographyVariant.TitleLarge.style(true)
                             plain = TypographyVariant.TitleLarge.style(false)
                         }
@@ -118,7 +119,7 @@ class AppBarTest :
                 var display = TextStyle.Default
                 runComposeUiTest {
                     setContent {
-                        StxTheme(isDark = false) {
+                        StxTheme(strings = StxStrings.En, isDark = false) {
                             headline = MaterialTheme.typography.headlineMedium
                             display = MaterialTheme.typography.displaySmall
                         }
@@ -132,7 +133,7 @@ class AppBarTest :
                 listOf(AppBarSize.Small, AppBarSize.Centered).forEach { size ->
                     runComposeUiTest {
                         setContent {
-                            StxTheme(isDark = false) {
+                            StxTheme(strings = StxStrings.En, isDark = false) {
                                 AppBar(
                                     title = LONG_TITLE,
                                     modifier = Modifier.testTag("bar").width(360.dp),
@@ -161,7 +162,7 @@ class AppBarTest :
                     runComposeUiTest {
                         lateinit var behavior: TopAppBarScrollBehavior
                         setContent {
-                            StxTheme(isDark = false) {
+                            StxTheme(strings = StxStrings.En, isDark = false) {
                                 behavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
                                 AppBar(TITLE, Modifier.testTag("bar"), size, scrollBehavior = behavior)
                             }
@@ -181,7 +182,7 @@ class AppBarTest :
                     runComposeUiTest {
                         lateinit var behavior: TopAppBarScrollBehavior
                         setContent {
-                            StxTheme(isDark = false) {
+                            StxTheme(strings = StxStrings.En, isDark = false) {
                                 behavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
                                 AppBar(TITLE, Modifier.testTag("bar"), size, scrollBehavior = behavior)
                             }
@@ -198,7 +199,7 @@ class AppBarTest :
         feature("the signature") {
             scenario("signature guard: a trailing actions lambda still compiles after the scroll behaviour") {
                 runComposeUiTest {
-                    setContent { StxTheme { AppBar("Orders") { } } }
+                    setContent { StxTheme(strings = StxStrings.En) { AppBar("Orders") { } } }
                 }
             }
         }

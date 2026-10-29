@@ -22,6 +22,7 @@ import com.softistx.material.Corner
 import com.softistx.material.NodeBounds
 import com.softistx.material.PixelGrid
 import com.softistx.material.components.surface.MenuItem
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.icon.Icon
 import com.softistx.material.foundation.icon.StxIcons
 import com.softistx.material.foundation.theme.StxTheme
@@ -235,7 +236,7 @@ private const val FAB_INSET = 3
 /** [content] in the light theme, without M3's 48 dp touch target around it. */
 @Composable
 private fun flat(content: @Composable () -> Unit) {
-    StxTheme(isDark = false) {
+    StxTheme(strings = StxStrings.En, isDark = false) {
         CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) { content() }
     }
 }

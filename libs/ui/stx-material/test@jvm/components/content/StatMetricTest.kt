@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softistx.material.NodeBounds
+import com.softistx.material.foundation.i18n.StxStrings
 import com.softistx.material.foundation.text.Typography
 import com.softistx.material.foundation.text.TypographyVariant
 import com.softistx.material.foundation.theme.StxTheme
@@ -37,7 +38,7 @@ class StatMetricTest :
                 val with = NodeBounds()
                 val without = NodeBounds()
                 renderProbe(width = 420, height = 220, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Stat("12", "Students", Modifier.probed(with), delta = "+2 this term")
                             Stat("3", "Absences", Modifier.probed(without))
@@ -51,7 +52,7 @@ class StatMetricTest :
                 val reserved = NodeBounds()
                 val tight = NodeBounds()
                 renderProbe(width = 420, height = 320, content = {
-                    StxTheme(isDark = false) {
+                    StxTheme(strings = StxStrings.En, isDark = false) {
                         Column {
                             Stat("3", "Absences", Modifier.probed(reserved))
                             Stat("3", "Absences", Modifier.probed(tight), reserveDelta = false)
@@ -66,7 +67,7 @@ class StatMetricTest :
 /** Ink of the figure "88" in the metric style, or with M3's emphasised display style (Medium). */
 private fun metricInk(emphasizedDisplay: Boolean): Int =
     renderProbe(width = 200, height = 90, content = {
-        StxTheme(isDark = false) {
+        StxTheme(strings = StxStrings.En, isDark = false) {
             if (emphasizedDisplay) {
                 Text("88", style = MaterialTheme.typography.displaySmallEmphasized)
             } else {
