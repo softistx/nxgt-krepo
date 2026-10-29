@@ -19,8 +19,8 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.softistx:stx-jpa:0.2.1")
-    implementation("io.github.softistx:stx-jpa-ktor:0.2.1")
+    implementation("io.github.softistx:stx-jpa:<version>")
+    implementation("io.github.softistx:stx-jpa-ktor:<version>")
 }
 ```
 
@@ -30,7 +30,7 @@ dependencies {
 <dependency>
   <groupId>io.github.softistx</groupId>
   <artifactId>stx-jpa</artifactId>
-  <version>0.2.1</version>
+  <version>VERSION</version>
 </dependency>
 ```
 
@@ -40,7 +40,7 @@ dependencies {
 product: jvm/app
 
 dependencies:
-  - io.github.softistx:stx-jpa:0.2.1
+  - io.github.softistx:stx-jpa:<version>
 ```
 
 Maven Central is a default repository, so there is no `repositories:` block to write.

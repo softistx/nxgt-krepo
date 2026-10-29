@@ -313,7 +313,7 @@ The toolchain finds the project by walking up from the working directory, so the
 
 ## Publishing
 
-Every module under `libs/` publishes as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:0.2.1`
+Every module under `libs/` publishes as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:<version>`
 today. The configuration lives once in `publishing.module-template.yaml` at the repo root; nothing
 about publishing is written per module. `artifactId` is deliberately not set, because it defaults to
 the module's name — so the directory name *is* the artifact name and there is no second place to
@@ -336,7 +336,7 @@ apply:
 
 settings:
   publishing:
-    version: 0.2.1   # written by scripts/sync-version.ts from package.json
+    version: <version>   # written by scripts/sync-version.ts from package.json
 ```
 
 A manifest applies **the family template, never the shared one directly** — the family template is
@@ -461,7 +461,7 @@ The feature is a preview in the toolchain and its docs say it is likely to chang
 
 **No module under `examples/` or `server/` may name a `//libs/...` dependency.** Each applies
 `//stx-artifacts.module-template.yaml`, which adds `mavenLocal` on top of the default repositories,
-and names each library through a `$libs.stx.*` catalog alias — `io.github.softistx:stx-jpa:0.2.1` and not
+and names each library through a `$libs.stx.*` catalog alias — `io.github.softistx:stx-jpa:<version>` and not
 `//libs/data/stx-jpa/stx-jpa`.
 
 That is the whole point of having examples. A module reference proves the sources compile together,
