@@ -16,6 +16,8 @@ dependencies:
   - $libs.kotlin.reflect
 
 test-dependencies:
+  # ConfigurationDocsTest reads the metadata and the reference page through springConfigurationDocs
+  - //libs/core/stx-testing
   - $spring.boot.starter.test
   - $libs.kotest.runner.junit5
   - $libs.kotest.framework.engine

@@ -19,6 +19,8 @@ dependencies:
   - $libs.kotlin.reflect
 
 test-dependencies:
+  # ConfigurationDocsTest reads the metadata and the reference page through springConfigurationDocs
+  - //libs/core/stx-testing
   # No backend: catalogs are files and a locale resolver is a bean. What the specs here ask is which
   # of two auto-configurations owns `localeContextResolver`, which needs a context and nothing else.
   - $spring.boot.starter.test

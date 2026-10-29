@@ -1,15 +1,9 @@
 package com.softistx.jpa.spring
 
+import com.softistx.testing.docs.springConfigurationDocs
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import java.nio.file.Path
-import kotlin.io.path.exists
-import kotlin.io.path.readText
 
 /**
  * `docs/spring-configuration.md` documents every `stx.jpa` key, and nothing this module no
@@ -24,7 +18,8 @@ import kotlin.io.path.readText
  */
 class ConfigurationDocsTest :
     StringSpec({
-        val documented = documentedKeys(metadataNames("groups"))
+        val docs = springConfigurationDocs(ConfigurationDocsTest::class.java)
+        val documented = docs.documented
 
         "the reference page was found" {
             // Guards the specs below: a page this cannot locate would pass them both vacuously.
@@ -33,52 +28,11 @@ class ConfigurationDocsTest :
 
         "every stx.jpa key is on the page" {
             withClue("add the key to docs/spring-configuration.md in the change that reads it") {
-                (metadataNames("properties") - documented).sorted() shouldBe emptyList()
+                (docs.declared - documented).sorted() shouldBe emptyList()
             }
         }
 
         "the page documents nothing this module no longer declares" {
-            (documented - metadataNames("properties")).sorted() shouldBe emptyList()
+            (documented - docs.declared).sorted() shouldBe emptyList()
         }
     })
-
-private const val PAGE = "docs/spring-configuration.md"
-
-private const val RESOURCE = "/META-INF/additional-spring-configuration-metadata.json"
-
-/** Every key the page spells under a group this module declares. */
-private fun documentedKeys(owned: Set<String>): Set<String> {
-    val page = repositoryRoot()?.resolve(PAGE)?.takeIf { it.exists() } ?: return emptySet()
-
-    var group: String? = null
-    return buildSet {
-        page.readText().lineSequence().forEach { line ->
-            HEADING.matchEntire(line.trim())?.let { group = it.groupValues[1] }
-                ?: group?.takeIf { it in owned }?.let { prefix ->
-                    ROW.find(line)?.let { add("$prefix.${it.groupValues[1]}") }
-                }
-        }
-    }
-}
-
-private fun metadataNames(section: String): Set<String> {
-    val stream =
-        checkNotNull(ConfigurationDocsTest::class.java.getResourceAsStream(RESOURCE)) {
-            "$RESOURCE is not on the classpath"
-        }
-    return Json
-        .parseToJsonElement(stream.use { it.readBytes() }.decodeToString())
-        .jsonObject[section]!!
-        .jsonArray
-        .map { it.jsonObject["name"]!!.jsonPrimitive.content }
-        .toSet()
-}
-
-private val HEADING = Regex("""### `(stx[a-z0-9.]*)`""")
-
-private val ROW = Regex("""^\| `([a-z][a-z0-9-]*)` \|""")
-
-/** The checkout this spec is running inside, found by walking up to `project.yaml`. */
-private fun repositoryRoot(): Path? =
-    generateSequence(Path.of("").toAbsolutePath()) { it.parent }
-        .firstOrNull { it.resolve("project.yaml").exists() }

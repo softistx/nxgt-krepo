@@ -31,6 +31,8 @@ dependencies:
   - $libs.kotlinx.coroutines.reactor
 
 test-dependencies:
+  # ConfigurationDocsTest reads the metadata and the reference page through springConfigurationDocs
+  - //libs/core/stx-testing
   - //libs/observability/stx-telemetry/stx-telemetry-otlp
   # Brings the Slf4jExporter class the wiring spec asks the context for — and, unavoidably, the
   # provider that binds SLF4J to this pipeline, which is why $libs.slf4j.nop is not here beside it:

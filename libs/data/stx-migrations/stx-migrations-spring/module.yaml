@@ -23,6 +23,8 @@ dependencies:
   - $libs.kotlin.reflect
 
 test-dependencies:
+  # ConfigurationDocsTest reads the metadata and the reference page through springConfigurationDocs
+  - //libs/core/stx-testing
   # No container: what this module adds is the gate and the wiring, and InMemoryLedger from the core
   # is a real ledger. That the ledger works on a real server is stx-migrations-db's question, and
   # examples/spring-orders is where the whole path is run end to end. The store libraries are here

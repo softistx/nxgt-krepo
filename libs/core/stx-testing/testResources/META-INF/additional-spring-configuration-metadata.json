@@ -1,0 +1,4 @@
+{
+  "groups": [{ "name": "stx.alpha" }],
+  "properties": [{ "name": "stx.alpha.one" }, { "name": "stx.alpha.two" }]
+}
