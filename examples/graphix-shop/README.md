@@ -47,7 +47,7 @@ In-memory, no database. The point is the plugin: `install(GraphQL) { schema { qu
 `Catalog` is the store, the roots and the type fields: `reviews` is a `@BatchMapping` on Product, one
 load for the list, not one per product. A Spring app would put `OrderService` on the controller
 constructor instead; that is still not GraphQL context.
-[`docs/graphix.md`](../../docs/graphix.md) draws the line.
+[`docs/graphix-resolvers.md`](../../docs/graphix-resolvers.md) draws the line.
 
 ---
 

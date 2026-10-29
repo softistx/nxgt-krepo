@@ -38,7 +38,7 @@ fun me(call: ApplicationCall): String = call.request.headers["X-User"] ?: "anony
 It is the same call over POST, over SSE and over graphql-ws — deliberately, so one resolver
 signature works without knowing which transport it is on. On a socket it is the handshake's, that
 being the only request a socket has; what changes mid-socket arrives in the client's
-`connection_init` payload instead. [`docs/graphix.md`](../../../../docs/graphix.md) has the full
+`connection_init` payload instead. [`docs/graphix-resolvers.md`](../../../../docs/graphix-resolvers.md) has the full
 table of what a resolver may see and the interceptor reference.
 
 `errors { }` says what a thrown exception becomes, and `exceptionHandler(...)` registers one

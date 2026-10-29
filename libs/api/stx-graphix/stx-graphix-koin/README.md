@@ -62,7 +62,7 @@ to answer wins, so a handler for a specific exception is declared before a broad
 also claim it. A `fallback { }` is asked last whatever the order — it has to be, since nothing
 decides the order a container's singles were declared in across modules.
 
-[`docs/graphix.md`](../../../../docs/graphix.md) has the interceptor and exception-handler reference,
+[`docs/graphix-resolvers.md`](../../../../docs/graphix-resolvers.md) has the interceptor and exception-handler reference,
 and the table of what a resolver may see.
 
 ---
