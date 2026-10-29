@@ -52,7 +52,7 @@
     },
     "libs/core/stx-testing": {
       "name": "stx-testing",
-      "version": "0.2.4",
+      "version": "0.3.0",
     },
     "libs/data/stx-jpa": {
       "name": "stx-jpa",

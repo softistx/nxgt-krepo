@@ -1,5 +1,11 @@
 # stx-testing
 
+## 0.3.0
+
+### Minor Changes
+
+- [#422](https://github.com/softistx/nxgt-krepo/pull/422) [`d9c4557`](https://github.com/softistx/nxgt-krepo/commit/d9c45570c5e2fbea186387ece7c2ce5e1cdf5be1) Thanks [@SteveGT96](https://github.com/SteveGT96)! - `stx-testing` adds `springConfigurationDocs(resourceOwner, page)`, which reads a module's Spring configuration metadata and the keys the reference page spells for its groups, so a `ConfigurationDocsTest` is a spec and its owned groups rather than a 70-line copy.
+
 ## 0.2.4
 
 ### Patch Changes
