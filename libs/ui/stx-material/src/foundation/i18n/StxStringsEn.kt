@@ -1,10 +1,7 @@
 package com.softistx.material.foundation.i18n
 
 /** The English catalogue, and the fallback of every unknown language. */
-val StxStrings.Companion.En: StxStrings
-    get() = EnStrings
-
-private val EnStrings =
+internal val EnCatalogue =
     StxStrings(
         ok = "OK",
         cancel = "Cancel",

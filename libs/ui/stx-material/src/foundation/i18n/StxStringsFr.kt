@@ -1,10 +1,7 @@
 package com.softistx.material.foundation.i18n
 
 /** The French catalogue. */
-val StxStrings.Companion.Fr: StxStrings
-    get() = FrStrings
-
-private val FrStrings =
+internal val FrCatalogue =
     StxStrings(
         ok = "OK",
         cancel = "Annuler",

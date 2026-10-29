@@ -1,107 +1,15 @@
 package com.softistx.material.foundation.i18n
 
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeBlank
-import kotlin.reflect.KProperty1
 
 /** The words that are the same in English and in French. */
 private val SameInBoth = setOf("ok", "date", "dates")
 
 private val Both = listOf(StxStrings.En, StxStrings.Fr)
-
-private val Fixed: List<KProperty1<StxStrings, String>> =
-    listOf(
-        StxStrings::ok,
-        StxStrings::cancel,
-        StxStrings::confirm,
-        StxStrings::confirmQuestion,
-        StxStrings::close,
-        StxStrings::save,
-        StxStrings::edit,
-        StxStrings::retry,
-        StxStrings::loading,
-        StxStrings::loadFailed,
-        StxStrings::previous,
-        StxStrings::next,
-        StxStrings::continueStep,
-        StxStrings::back,
-        StxStrings::search,
-        StxStrings::more,
-        StxStrings::moreActions,
-        StxStrings::moreInformation,
-        StxStrings::dismiss,
-        StxStrings::dismissReply,
-        StxStrings::unpin,
-        StxStrings::send,
-        StxStrings::attachFile,
-        StxStrings::writeMessage,
-        StxStrings::decrease,
-        StxStrings::increase,
-        StxStrings::showValue,
-        StxStrings::hideValue,
-        StxStrings::chooseOne,
-        StxStrings::addTitle,
-        StxStrings::addTag,
-        StxStrings::uploadPrompt,
-        StxStrings::uploadHint,
-        StxStrings::optional,
-        StxStrings::dangerZone,
-        StxStrings::passwordWeak,
-        StxStrings::passwordFair,
-        StxStrings::passwordGood,
-        StxStrings::passwordStrong,
-        StxStrings::date,
-        StxStrings::pickDate,
-        StxStrings::dates,
-        StxStrings::pickDates,
-        StxStrings::time,
-        StxStrings::pickTime,
-        StxStrings::loadMore,
-        StxStrings::backToTop,
-        StxStrings::selectAnItem,
-        StxStrings::clearSelection,
-        StxStrings::justNow,
-        StxStrings::yesterday,
-        StxStrings::openActions,
-        StxStrings::closeActions,
-        StxStrings::copy,
-        StxStrings::copied,
-        StxStrings::sortBy,
-        StxStrings::ascending,
-        StxStrings::descending,
-        StxStrings::command,
-        StxStrings::typeACommand,
-        StxStrings::noMatchingCommands,
-        StxStrings::sent,
-        StxStrings::imageLoadFailed,
-        StxStrings::someoneIsTyping,
-        StxStrings::themeLight,
-        StxStrings::themeDark,
-        StxStrings::themeSystem,
-        StxStrings::readMore,
-        StxStrings::showLess,
-    )
-
-private val Counted: Map<String, (StxStrings, Int) -> String> =
-    mapOf(
-        "selected" to { s, n -> s.selected(n) },
-        "inMinutes" to { s, n -> s.inMinutes(n) },
-        "inHours" to { s, n -> s.inHours(n) },
-        "minutesAgo" to { s, n -> s.minutesAgo(n) },
-        "hoursAgo" to { s, n -> s.hoursAgo(n) },
-        "daysAgo" to { s, n -> s.daysAgo(n) },
-        "seenBy" to { s, n -> s.seenBy(n) },
-    )
-
-private val Named: Map<String, (StxStrings) -> String> =
-    mapOf(
-        "copyCode" to { it.copyCode("SAVE10") },
-        "sortByColumn" to { it.sortByColumn("Name") },
-        "remove" to { it.remove("Ada") },
-        "ratingOf" to { it.ratingOf(3, 5) },
-    )
 
 class StxStringsTest :
     FeatureSpec({
@@ -120,22 +28,21 @@ class StxStringsTest :
         }
 
         feature("the catalogues") {
-            scenario("no fixed string is blank, in either locale") {
-                for (s in Both) for (p in Fixed) p.get(s).shouldNotBeBlank()
+            scenario("no entry is blank, in either locale") {
+                for (s in Both) for ((key, value) in s.entries()) withClue(key) { value.shouldNotBeBlank() }
             }
             scenario("French differs from English outside the allow-list") {
-                for (p in Fixed) {
-                    if (p.name !in SameInBoth) p.get(StxStrings.Fr) shouldNotBe p.get(StxStrings.En)
+                val en = StxStrings.En.entries()
+                for ((key, value) in StxStrings.Fr.entries()) {
+                    if (key !in SameInBoth) withClue(key) { value shouldNotBe en.getValue(key) }
                 }
             }
-            scenario("every allow-listed word really is a key") {
-                SameInBoth shouldBe Fixed.map { it.name }.filter { it in SameInBoth }.toSet()
-            }
-            scenario("a counted string is not blank for 0, 1 and 2") {
-                for (s in Both) {
-                    for (f in Counted.values) for (n in 0..2) f(s, n).shouldNotBeBlank()
-                    for (f in Named.values) f(s).shouldNotBeBlank()
-                }
+            scenario("both catalogues list the same keys, and the allow-list names real ones") {
+                StxStrings.Fr.entries().keys shouldBe StxStrings.En.entries().keys
+                StxStrings.En
+                    .entries()
+                    .keys
+                    .containsAll(SameInBoth) shouldBe true
             }
             scenario("French plurals keep zero and one singular") {
                 StxStrings.Fr.selected(0) shouldBe "0 sélectionné"
