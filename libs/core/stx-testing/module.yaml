@@ -23,3 +23,8 @@ test-dependencies:
   - $libs.kotest.assertions.core
   # Testcontainers logs through SLF4J; a no-op provider keeps the test output readable
   - $libs.slf4j.nop
+
+settings:
+  kotlin:
+    # springConfigurationDocs reads a module's Spring metadata JSON with kotlinx
+    serialization: json

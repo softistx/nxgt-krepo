@@ -57,6 +57,18 @@ line; this answers with `describe()` — *"mongodb: unavailable — MONGO_TEST_U
 not reachable"*, or the exception the container start threw. That distinction is the entire reason
 `describe()` exists, and 29 call sites were throwing it away.
 
+**`springConfigurationDocs` for a Spring module's `ConfigurationDocsTest`.** One page documents every
+`stx.*` key, so each module checks only the groups it declares:
+
+```kotlin
+val docs = springConfigurationDocs(ConfigurationDocsTest::class.java)
+
+(docs.declared - docs.documented) shouldBe emptySet() // a key with no entry on the page
+```
+
+`docs.documented` is already narrowed to the module's `groups`, and is empty when
+`docs/spring-configuration.md` cannot be found, so a spec asserting it is non-empty guards the rest.
+
 **`TestNames` for the namespace a spec owns.** A database, a schema, a topic, a bucket, a key prefix:
 
 ```kotlin
