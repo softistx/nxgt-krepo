@@ -23,8 +23,9 @@ fun ThemeToggle(
     enabled: Boolean = true,
     style: Style = Style,
 ) {
+    val strings = LocalStxStrings.current
     SegmentedControl(
-        options = listOf(LocalStxStrings.current.themeLight, LocalStxStrings.current.themeDark, LocalStxStrings.current.themeSystem),
+        options = listOf(strings.themeLight, strings.themeDark, strings.themeSystem),
         selected = value.ordinal,
         onSelect = { onChange(ColorMode.entries[it]) },
         modifier = modifier,
