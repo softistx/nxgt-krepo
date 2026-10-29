@@ -1,5 +1,11 @@
 # stx-testing
 
+## 0.2.3
+
+### Patch Changes
+
+- [#402](https://github.com/softistx/nxgt-krepo/pull/402) [`4ce4632`](https://github.com/softistx/nxgt-krepo/commit/4ce4632ad6bcc831728ab65f42fde9769e188e55) Thanks [@SteveGT96](https://github.com/SteveGT96)! - Split `Backends.kt` into one file per backend (`MongoContainer.kt`, `PostgresEndpoint.kt`, `Db2Endpoint.kt`, ...) with the three-variable environment override of Postgres, MySQL and DB2 read by one shared helper. No change to the public API or to any environment variable.
+
 ## 0.2.2
 
 ### Patch Changes
