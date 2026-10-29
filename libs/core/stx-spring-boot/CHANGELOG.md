@@ -1,5 +1,12 @@
 # stx-spring-boot
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [[`dfe5536`](https://github.com/softistx/nxgt-krepo/commit/dfe5536d85981360e32019446227906de11ff1e6)]:
+  - stx-i18n@0.3.2
+
 ## 0.4.1
 
 ### Patch Changes

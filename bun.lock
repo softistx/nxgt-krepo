@@ -21,7 +21,7 @@
     },
     "libs/api/stx-i18n": {
       "name": "stx-i18n",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-ktor": "workspace:*",
@@ -44,7 +44,7 @@
     },
     "libs/core/stx-spring-boot": {
       "name": "stx-spring-boot",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "stx-common": "workspace:*",
         "stx-i18n": "workspace:*",
@@ -52,7 +52,7 @@
     },
     "libs/core/stx-testing": {
       "name": "stx-testing",
-      "version": "0.2.3",
+      "version": "0.2.4",
     },
     "libs/data/stx-jpa": {
       "name": "stx-jpa",
