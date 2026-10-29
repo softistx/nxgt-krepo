@@ -314,7 +314,7 @@ Spring Boot.
 ./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)   # or: bun run publish:local
 ```
 
-Five things about it that are not guessable:
+What `kotlin publish` does not tell you:
 
 - **`kotlin publish <id>` with no `-m` fails**, and not on the modules being published: it walks
   *every* module in the project and stops at the first one without that repository id —
@@ -337,16 +337,9 @@ Five things about it that are not guessable:
   that from a transitive POM. So a published library pins its own versions: give the catalog alias a
   `version.ref` and drop the `bom:` line. `libs/data/stx-mongo/stx-mongo` and
   `libs/observability/stx-telemetry/stx-telemetry-mongo` both carry a comment saying so.
-- **The publish task caches, and its up-to-date check does not notice a `module.yaml` edit.** It
-  copies `build/tasks/_<module>_prepareMavenPublishables/`, so a manifest change can be rebuilt,
-  republished and reported successful while the installed `.pom` and `.module` are the *old* ones —
-  `publish=0` with byte-identical metadata, and deleting the artifacts from `~/.m2` does not help
-  because the task will not regenerate them either. `rm -rf build/incremental.state` is what
-  invalidates it. Check the result rather than the exit code:
-
-  ```bash
-  python3 -c 'import json,glob,os
-  (the check script is under *Releasing by hand* below).
+- **The publish task caches and does not notice a `module.yaml` edit** — see
+  `rm -rf build/incremental.state` under *Six things that are not guessable*. Check the result with the
+  script under *Releasing by hand* below.
 
 ## Secrets
 
@@ -420,10 +413,7 @@ for p in glob.glob(os.path.expanduser("~/.m2/repository/io/github/softistx/*/*/*
                 print("NO VERSION:", os.path.basename(p), v["name"], x["module"])'
 ```
 
-That happens when a library names a `- bom:` entry: a BOM does not survive publication. It lands in
-the Gradle metadata as an ordinary dependency with no `dependencyConstraints`, so everything it was
-managing publishes with no version at all and a consumer fails with *"its version could not be
-resolved"*. Give the catalog alias a `version.ref` and drop the `bom:` line.
+That happens when a library names a `- bom:` entry; see *Publishing to mavenLocal* above.
 
 ## The bootstrap, and why it mattered once
 
