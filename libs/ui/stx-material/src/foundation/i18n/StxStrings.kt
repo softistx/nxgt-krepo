@@ -152,6 +152,20 @@ data class StxStrings(
     val readMore: String,
     /** Collapses an expanded text. */
     val showLess: String,
+    /** Message of a missing required value. */
+    val required: String,
+    /** Message of a malformed email address. */
+    val invalidEmail: String,
+    /** Message of a value that must be digits. */
+    val digitsOnly: String,
+    /** Message of a confirmation that differs. */
+    val notMatching: String,
+    /** Message of an unticked required checkbox. */
+    val mustBeTicked: String,
+    /** Message of an empty required choice. */
+    val chooseRequired: String,
+    /** Message of an empty required multi-choice. */
+    val chooseAtLeastOne: String,
     /** Size of the current selection. */
     val selected: (count: Int) -> String,
     /** A future time in minutes. */
@@ -164,6 +178,12 @@ data class StxStrings(
     val hoursAgo: (count: Int) -> String,
     /** A past time in days. */
     val daysAgo: (count: Int) -> String,
+    /** Message of a value shorter than [min]. */
+    val minLengthRule: (min: Int) -> String,
+    /** Message of a value longer than [max]. */
+    val maxLengthRule: (max: Int) -> String,
+    /** Message of a number outside its range. */
+    val outOfRange: (min: Float, max: Float) -> String,
     /** Copies a promo code. */
     val copyCode: (code: String) -> String,
     /** Sorts a table by a column. */
