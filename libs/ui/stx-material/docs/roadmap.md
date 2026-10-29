@@ -250,7 +250,7 @@ dont la forme se lit dans les imports.
 ## Plus tard
 
 - [ ] **Suite de #297 : contraste élevé.** Lire « Augmenter le contraste » (iOS `UIAccessibilityDarkerSystemColorsEnabled`, Android `UiModeManager.getContrast`, bureau) et l'exposer au thème quand un premier composant en a besoin.
-- [ ] **Messages de validation traduits à l’affichage.** Les messages par défaut de `Rules.kt` restent en anglais pour l’instant ; ils seraient résolus au moment de l’affichage, dans la langue du catalogue actif.
+- [ ] **Messages de validation traduits à l’affichage.** Les messages de validation par défaut restent en anglais pour l’instant ; ils seraient résolus au moment de l’affichage, dans la langue du catalogue actif.
 
 ## Phases suivantes
 
