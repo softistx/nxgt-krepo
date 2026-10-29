@@ -178,7 +178,7 @@ library already does well is a second name for one idea:
 | A queue you own both ends of | `Channel`, or `Mailbox` | Neither blocks a thread at all. `consumeAsFlow` is for the `BlockingQueue` a Java library handed you and will not take a `Channel` instead of |
 | A snapshot-read list of listeners | `CopyOnWriteArrayList` | Already the right shape; a wrapper would only rename it |
 | A concurrent set | `ConcurrentHashMap.newKeySet()` | Same |
-| A pool of threads | `Dispatchers`, or `Thread.ofVirtual()` | See AGENTS.md on why a shutdown hook takes `unstarted` and never `startVirtualThread` |
+| A pool of threads | `Dispatchers`, or `Thread.ofVirtual()` | See `docs/shared-code.md` on why a shutdown hook takes `unstarted` and never `startVirtualThread` |
 | A request-scoped value | a `CoroutineContext.Element` | Never a `ThreadLocal`: `stx-telemetry`'s README has that argument at length |
 
 ## Serialization
