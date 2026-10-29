@@ -81,7 +81,7 @@ stream of *separate responses*, one per element. Anywhere else — a query, a mu
 the operation's `CoroutineScope`, before graphql-java sees anything. That is the `.toList()` the
 resolver would otherwise write, and writing it in the library rather than in the resolver is what
 puts the collection under the request's cancellation and inside the seat where a throw becomes an
-`errors[]` entry. It is **not** incremental delivery — see *Documents* for why there is none.
+`errors[]` entry. It is **not** incremental delivery — see [*Documents*](graphix-serving.md#documents) for why there is none.
 
 The reason it exists is that the answer should not depend on the store: `stx-mongo`'s `findAll`
 hands a resolver a `Flow` and `stx-jpa`'s a `List`, and a resolver body should not differ for that.
