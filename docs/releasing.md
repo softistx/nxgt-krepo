@@ -31,6 +31,38 @@ most changes — now moves one version line instead of seventeen. A change to `s
 fourteen, because the POMs of those fourteen really do name `stx-common:<version>`. That is not a
 shortcoming of the setup; it is what depending on something means.
 
+## How a module is wired to its family
+
+Every module under `libs/` publishes as `io.github.softistx:<module-name>:<version>` — `io.github.softistx:stx-mongo:<version>`
+today. The configuration lives once in `publishing.module-template.yaml` at the repo root; nothing
+about publishing is written per module. `artifactId` is deliberately not set, because it defaults to
+the module's name — so the directory name *is* the artifact name and there is no second place to
+keep in sync. The module's `description:` becomes the POM `<description>`, which is the other reason
+every library has one. The POM also carries the project URL, the SCM, Apache-2.0 and a developer —
+everything Maven Central will require — and `publishSources: true` ships a sources jar beside each
+artifact.
+
+A family's `module-template.yaml` is six lines:
+
+```yaml
+# libs/data/stx-jpa/stx-jpa.module-template.yaml
+apply:
+  - //publishing.module-template.yaml
+
+settings:
+  publishing:
+    version: <version>   # written by scripts/sync-version.ts from package.json
+```
+
+A manifest applies **the family template, never the shared one directly** — the family template is
+what applies the shared one, and precedence exists only between a file and what it applies. Two
+templates applied side by side, with no `apply` relation between them, setting the same property, is
+a *conflict*. The shared template deliberately carries **no `version:` fallback**: a module wired to
+no family would otherwise publish silently under someone else's version, and the measured behaviour
+without a fallback is a hard failure at `kotlin publish` — *"Missing 'version' in publishing settings
+of fragment 'main'"* — which `bun scripts/sync-version.ts --check` moves forward to the pull
+request.
+
 ## The circuit
 
 ```
@@ -64,6 +96,8 @@ of its own because neither failure shows up anywhere else: a **missing** edge bu
 publishes perfectly well, and merely stops releasing a library whose POM names a version that
 moved; an **extra** one releases a library that nothing obliged to move. `bun scripts/graph.ts`
 with no argument prints the graph.
+
+**Adding a `//libs/...` dependency across families means editing that family's `package.json` in the same change.**
 
 A **`major` has to name its own dependents**, and the guard fails the pull request until it does,
 printing the lines to paste. Changesets gives a dependent only a `patch` however far the dependency
@@ -212,6 +246,11 @@ Switching to `auto` is a one-word change in `scripts/enable-central.ts`, and its
   contributor does on every change under `libs/`. So the template ships with neither and
   `scripts/enable-central.ts` adds both in the release job, with a test pinning where it inserts
   and that it refuses when the template no longer matches.
+
+  Credentials for Central come from the environment; a *custom* repository would instead need a
+  `.properties` file, resolved relative to the file that declares it and read when the project model
+  loads, not when it publishes. The feature is a preview in the toolchain and its docs say it is
+  likely to change.
 - **A tag says *uploaded*, not *released*.** The Portal is in `manual` mode, so the job tags a
   family once its bundle is up and validated — long before anyone decides what to do with it. If you
   then *drop* a deployment in the Portal, the tag lies, and the next run will skip that family
@@ -235,6 +274,79 @@ Switching to `auto` is a one-word change in `scripts/enable-central.ts`, and its
   ever made `publish` skip them the way `build` does, nothing else would notice. What no host here
   covers is *linking* — a klib is compiled, never linked into a framework — and the Compose
   resources, which are not in the publication at all (KTC-5698).
+
+## The scripts
+
+**Everything under `scripts/` is TypeScript, run by bun and checked by `tsc`.** Bun executes `.ts`
+directly — no build step, no emitted JavaScript — but it *strips* types rather than checking them,
+so `bun run typecheck` (`tsc --noEmit`, `strict`) is what makes the annotations mean anything, and
+CI runs it before the tests. The specs are `bun:test` rather than kotest for the obvious reason:
+the kotest convention in this repo is about Kotlin. The two editing scripts rewrite files that
+decide how 45 modules publish, in a job nobody watches, so each one asserts its anchor matches
+**exactly once** and throws otherwise — `scripts/*.test.ts` pins that, including the failure modes.
+
+**`scripts/modules.ts` is where the list of published libraries comes from**, and every command
+that publishes takes it from there — `kotlin publish mavenLocal $(bun scripts/modules.ts
+--publish-args)`, and the same `--publish-args` against `mavenCentral`. It is every `module.yaml` under
+`libs/`, and the module's name is its directory's name. It replaced a `grep -rl
+publishing.module-template.yaml` repeated in five places, whose criterion was "applies the
+publishing template" — true only while every manifest named that template directly, and silently
+empty otherwise: `kotlin publish` with no `-m` publishes nothing and exits 0, so the examples would
+then build against whatever stale artifacts the runner's `~/.m2` happened to hold.
+
+## Why `stx-spring-boot` is named as it is
+
+`stx-spring-boot` is the one library not named `stx-<technology>`, and the suffix is deliberate.
+Spring reserves the `spring-boot*` prefix for itself and asks a third party for its own namespace,
+naming an auto-configuration module `<ns>-spring-boot` and a dependency-only aggregator
+`<ns>-spring-boot-starter`. This module is the first: it ships `AutoConfiguration.imports` and the
+configuration metadata, and every optional library behind it is `compile-only`, so it hands a
+consumer no opinionated dependencies — which is the one job a starter has. Merging the two is
+allowed only for an auto-configuration with no optional features, and this one is almost entirely
+optional features. `stx-spring` was also the wrong half of the name: nothing here works outside
+Spring Boot.
+
+## Publishing to mavenLocal
+
+```bash
+./kotlin publish -m stx-mongo --transitive mavenLocal   # one library and what it depends on
+# all of them — `ls libs` lists role folders, not modules, so the selection comes from the manifests
+./kotlin publish mavenLocal $(bun scripts/modules.ts --publish-args)   # or: bun run publish:local
+```
+
+Five things about it that are not guessable:
+
+- **`kotlin publish <id>` with no `-m` fails**, and not on the modules being published: it walks
+  *every* module in the project and stops at the first one without that repository id —
+  `Module 'demo-api' does not have repository with id 'mavenLocal'`. The examples are not products
+  and must not carry a publishing block, so a selection is always passed. Note that they *do* carry
+  `mavenLocal` in `repositories:` — a **resolution** repository, which this check does not accept
+  in place of a publication one.
+- **Publishing is all-or-nothing across a dependency chain.** The toolchain refuses a module
+  configured for publishing that depends on one that is not — `ERROR: Module 'stx-mongo' is
+  configured for publishing but depends on module 'stx-common' which is not` — with a pointer at the
+  offending dependency line. That is why every module under `libs/` publishes, `stx-testing` included.
+- **A `kmp/lib` publishes one artifact per platform** plus a root one: `stx-material`,
+  `stx-material-jvm`, `stx-material-android`, `stx-material-iosarm64`,
+  `stx-material-iossimulatorarm64`. Its `composeResources` are *not* in the publication yet
+  (KTC-5698) — the jar publishes, the resources do not.
+- **A `- bom:` entry does not survive publication.** It lands in the Gradle metadata as an ordinary
+  dependency rather than a platform, with no `dependencyConstraints`, so every artifact it was
+  managing publishes with **no version at all** and a consumer fails with *"its version could not be
+  resolved"*. The POM does get a `<dependencyManagement>` import, and the resolver does not honour
+  that from a transitive POM. So a published library pins its own versions: give the catalog alias a
+  `version.ref` and drop the `bom:` line. `libs/data/stx-mongo/stx-mongo` and
+  `libs/observability/stx-telemetry/stx-telemetry-mongo` both carry a comment saying so.
+- **The publish task caches, and its up-to-date check does not notice a `module.yaml` edit.** It
+  copies `build/tasks/_<module>_prepareMavenPublishables/`, so a manifest change can be rebuilt,
+  republished and reported successful while the installed `.pom` and `.module` are the *old* ones —
+  `publish=0` with byte-identical metadata, and deleting the artifacts from `~/.m2` does not help
+  because the task will not regenerate them either. `rm -rf build/incremental.state` is what
+  invalidates it. Check the result rather than the exit code:
+
+  ```bash
+  python3 -c 'import json,glob,os
+  (the check script is under *Releasing by hand* below).
 
 ## Secrets
 
