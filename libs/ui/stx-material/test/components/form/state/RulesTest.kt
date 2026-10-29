@@ -77,6 +77,13 @@ class RulesTest :
                 complaint(false) { checked(fr.mustBeTicked) } shouldBe fr.mustBeTicked
             }
 
+            scenario("the other rules take their French messages too") {
+                complaint("abcdef") { maxLength(3, fr.maxLengthRule(3)) } shouldBe "Utilisez au plus 3 caractères"
+                complaint(11f) { inRange(0f..10f, fr.outOfRange(0f, 10f)) } shouldBe "Choisissez entre 0.0 et 10.0"
+                complaint<String?>(null) { chosen(fr.chooseRequired) } shouldBe fr.chooseRequired
+                complaint(emptySet<String>()) { anyOf(fr.chooseAtLeastOne) } shouldBe fr.chooseAtLeastOne
+            }
+
             scenario("the rules keep English when no message is passed") {
                 complaint("") { required() } shouldBe StxStrings.En.required
                 complaint("short") { minLength(8) } shouldBe StxStrings.En.minLengthRule(8)

@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 /**
- * Turns two instants into a short relative label: strings.justNow, "3 min ago", "Yesterday", or the
+ * Turns two instants into a short relative label: "Just now", "3 min ago", "Yesterday", or the
  * ISO date once a week has passed.
  *
  * [zone] is only used past the 24-hour mark, where "yesterday" is a calendar fact and not a

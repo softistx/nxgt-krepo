@@ -26,7 +26,7 @@ fun seenByLabel(
 /**
  * Who has opened a message. An [AvatarGroup] plus a caption.
  *
- * The faces are the group; the words are [seenByLabel] unless the host passes [label]. Material 3
+ * The faces are the group; the words are [seenByLabel] unless the host passes [label], in the language of [strings]. Material 3
  * has no read-receipt control.
  */
 @Composable
@@ -35,6 +35,7 @@ fun SeenBy(
     modifier: Modifier = Modifier,
     max: Int = 3,
     label: String? = null,
+    strings: StxStrings = LocalStxStrings.current,
 ) {
     Row(
         modifier = modifier,
@@ -45,7 +46,7 @@ fun SeenBy(
             AvatarGroup(items = items, max = max, size = 20.dp)
         }
         Typography(
-            text = label ?: seenByLabel(items.size, LocalStxStrings.current),
+            text = label ?: seenByLabel(items.size, strings),
             variant = TypographyVariant.Caption,
             emphasis = Emphasis.Medium,
         )
