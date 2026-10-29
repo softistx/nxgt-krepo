@@ -12,6 +12,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Read-only for every job: none of them writes to the repository, comments on a pull request, or
+# calls the GitHub API. actions/cache uses the Actions cache service, which needs no permission.
+permissions:
+  contents: read
+
 env:
   # The wrapper prints a welcome banner the first time it provisions a distribution.
   KOTLIN_CLI_NO_WELCOME_BANNER: 1
